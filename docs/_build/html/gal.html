@@ -101,7 +101,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#inclined-exponential-profile">Inclined Exponential Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inclined-sersic-profile">Inclined Sersic Profile</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#spergel-profile">Spergel Profile</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#knots-defined-by-a-random-walk">Knots defined by a “random walk”</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#knots-of-star-formation">Knots of Star Formation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
@@ -236,6 +236,25 @@ without lookup tables.</p>
 <dd><p>The scale radius of the profile.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="galsim.Exponential.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/exponential.html#Exponential.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Exponential.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -272,6 +291,25 @@ untruncated profile? See the docstring for Sersic for more details.
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.DeVaucouleurs.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#DeVaucouleurs.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeVaucouleurs.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -463,6 +501,25 @@ untruncated profile? See below for more details. [default: False]</p></li>
 <dd><p>The truncation radius (if any).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="galsim.Sersic.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sersic.html#Sersic.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sersic.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -539,6 +596,25 @@ scale height to the scale radius. [default: 0.1]</p></li>
 <dt id="galsim.InclinedExponential.scale_radius">
 <em class="property">property </em><code class="sig-name descname">scale_radius</code><a class="headerlink" href="#galsim.InclinedExponential.scale_radius" title="Permalink to this definition">¶</a></dt>
 <dd><p>The scale radius of the exponential disk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.InclinedExponential.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedExponential.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedExponential.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -646,6 +722,25 @@ more details. [default: False]</p></li>
 <dd><p>The truncation radius (if any).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="galsim.InclinedSersic.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/inclined.html#InclinedSersic.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InclinedSersic.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -739,29 +834,51 @@ modified Bessel function of the second kind.</p>
 <dd><p>The scale radius</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="galsim.Spergel.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/spergel.html#Spergel.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Spergel.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
-<div class="section" id="knots-defined-by-a-random-walk">
-<h2>Knots defined by a “random walk”<a class="headerlink" href="#knots-defined-by-a-random-walk" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="knots-of-star-formation">
+<h2>Knots of Star Formation<a class="headerlink" href="#knots-of-star-formation" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="galsim.RandomWalk">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">RandomWalk</code><span class="sig-paren">(</span><em class="sig-param">npoints</em>, <em class="sig-param">**kw</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk" title="Permalink to this definition">¶</a></dt>
+<dt id="galsim.RandomKnots">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">RandomKnots</code><span class="sig-paren">(</span><em class="sig-param">npoints</em>, <em class="sig-param">half_light_radius=None</em>, <em class="sig-param">flux=None</em>, <em class="sig-param">profile=None</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
-<p>A class for generating a set of point sources distributed using a random
-walk of points drawn from a specified distribution.</p>
+<p>A class for generating a set of point sources, following either a <a class="reference internal" href="simple.html#galsim.Gaussian" title="galsim.Gaussian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Gaussian</span></code></a> profile or a
+specified input profile.</p>
 <p>Uses of this profile include representing an “irregular” galaxy, or
 adding this profile to an Exponential to represent knots of star formation.</p>
-<p>Random walk profiles have “shape noise” that depends on the number of point
+<p>RandomKnots profiles have “shape noise” that depends on the number of point
 sources used.  For example, using the default Gaussian distribution, with
 100 points, the shape noise is g~0.05, and this will decrease as more
 points are added.  The profile can be sheared to give additional
 ellipticity, for example to follow that of an associated disk.</p>
-<p>We use the analytic approximation of an infinite number of steps, which is
-a good approximation even if the desired number of steps were less than 10.</p>
 <p>The requested half light radius (hlr) should be thought of as a rough
 value.  With a finite number point sources the actual realized hlr will be
 noisy.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If providing an input <code class="docutils literal notranslate"><span class="pre">profile</span></code> object, it must be “shoot-able”.  Objects that
+cannot be drawn with <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code> cannot be used as the <code class="docutils literal notranslate"><span class="pre">profile</span></code> parameter here.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -772,9 +889,9 @@ This is the mean half light radius produced by an infinite number of
 points.  A single instance will be noisy.  [default None]</p></li>
 <li><p><strong>flux</strong> – Optional total flux in all point sources.  This value is used for a
 Gaussian distribution if an explicit profile is not sent. Defaults to
-None if profile is sent, otherwise 1.  [default: 1]</p></li>
+None if profile is sent, otherwise 1.  [default: None]</p></li>
 <li><p><strong>profile</strong> – Optional profile to use for drawing points.  If a profile is sent, the
-half_light_radius and flux keywords are ignored.  [default: None]</p></li>
+half_light_radius and flux keywords are invalid.  [default: None]</p></li>
 <li><p><strong>rng</strong> – Optional random number generator. Can be any <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.BaseDeviate</span></code></a>.  If
 None, the rng is created internally.  [default: None]</p></li>
 <li><p><strong>gsparams</strong> – Optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for the objects representing each point source.
@@ -783,7 +900,7 @@ None, the rng is created internally.  [default: None]</p></li>
 </dd>
 <dt class="field-even">Attributes</dt>
 <dd class="field-even"><ul class="simple">
-<li><p><strong>npoints</strong> – The number of random walk points</p></li>
+<li><p><strong>npoints</strong> – The number of points to use as knots</p></li>
 <li><p><strong>input_half_light_radius</strong> – The input half_light_radius</p></li>
 <li><p><strong>flux</strong> – The flux</p></li>
 <li><p><strong>points</strong> – The array of x,y offsets used to create the point sources</p></li>
@@ -792,23 +909,60 @@ None, the rng is created internally.  [default: None]</p></li>
 </dl>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The algorithm is a modified version of that presented in
-<a class="reference external" href="https://arxiv.org/abs/1312.5514v3">https://arxiv.org/abs/1312.5514v3</a></p>
-<p>Modifications are:</p>
-<ul class="simple">
-<li><p>There is no outer cutoff to how far a point can wander</p></li>
-<li><p>We use the approximation of an infinite number of steps.</p></li>
-</ul>
+<p>The algorithm was originally a modified version of that presented in
+<a class="reference external" href="https://arxiv.org/abs/1312.5514v3">https://arxiv.org/abs/1312.5514v3</a>.  However, we now use the GalSim photon shooting
+mechanism, which allows the knots to trace any profile, not just a <a class="reference internal" href="simple.html#galsim.Gaussian" title="galsim.Gaussian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Gaussian</span></code></a>.</p>
 </div>
 <dl class="method">
-<dt id="galsim.RandomWalk.calculateHLR">
-<code class="sig-name descname">calculateHLR</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/randwalk.html#RandomWalk.calculateHLR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomWalk.calculateHLR" title="Permalink to this definition">¶</a></dt>
+<dt id="galsim.RandomKnots.calculateHLR">
+<code class="sig-name descname">calculateHLR</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.calculateHLR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.calculateHLR" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculate the half-light radius of the generated points</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.RandomWalk.input_half_light_radius">
-<em class="property">property </em><code class="sig-name descname">input_half_light_radius</code><a class="headerlink" href="#galsim.RandomWalk.input_half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dt id="galsim.RandomKnots.dilate">
+<code class="sig-name descname">dilate</code><span class="sig-paren">(</span><em class="sig-param">scale</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.dilate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.dilate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dilate the linear size of the profile by the given <code class="docutils literal notranslate"><span class="pre">scale</span></code> factor, while preserving
+flux.</p>
+<p>e.g. <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> &lt;– <code class="docutils literal notranslate"><span class="pre">half_light_radius</span> <span class="pre">*</span> <span class="pre">scale</span></code></p>
+<p>See expand() and magnify() for versions that preserve surface brightness, and thus
+changes the flux.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scale</strong> – The linear rescaling factor to apply.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the dilated object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomKnots.expand">
+<code class="sig-name descname">expand</code><span class="sig-paren">(</span><em class="sig-param">scale</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.expand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.expand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Expand the linear size of the profile by the given <code class="docutils literal notranslate"><span class="pre">scale</span></code> factor, while preserving
+surface brightness.</p>
+<p>e.g. <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> &lt;– <code class="docutils literal notranslate"><span class="pre">half_light_radius</span> <span class="pre">*</span> <span class="pre">scale</span></code></p>
+<p>This doesn’t correspond to either of the normal operations one would typically want to do to
+a galaxy.  The functions dilate() and magnify() are the more typical usage.  But this
+function is conceptually simple.  It rescales the linear dimension of the profile, while
+preserving surface brightness.  As a result, the flux will necessarily change as well.</p>
+<p>See dilate() for a version that applies a linear scale factor while preserving flux.</p>
+<p>See magnify() for a version that applies a scale factor to the area while preserving surface
+brightness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scale</strong> – The factor by which to scale the linear dimension of the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the expanded object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomKnots.input_half_light_radius">
+<em class="property">property </em><code class="sig-name descname">input_half_light_radius</code><a class="headerlink" href="#galsim.RandomKnots.input_half_light_radius" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the input half light radius (HLR).</p>
 <p>Note the input HLR is not necessarily the realized HLR,
 due to the finite number of points used in the profile.</p>
@@ -819,15 +973,174 @@ method.  That value will be valid in all cases.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.RandomWalk.npoints">
-<em class="property">property </em><code class="sig-name descname">npoints</code><a class="headerlink" href="#galsim.RandomWalk.npoints" title="Permalink to this definition">¶</a></dt>
+<dt id="galsim.RandomKnots.npoints">
+<em class="property">property </em><code class="sig-name descname">npoints</code><a class="headerlink" href="#galsim.RandomKnots.npoints" title="Permalink to this definition">¶</a></dt>
 <dd><p>The number of point sources.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="galsim.RandomWalk.points">
-<em class="property">property </em><code class="sig-name descname">points</code><a class="headerlink" href="#galsim.RandomWalk.points" title="Permalink to this definition">¶</a></dt>
-<dd><p>A list of the locations (x,y) of the point sources.</p>
+<dt id="galsim.RandomKnots.rotate">
+<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotate this object by an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>theta</strong> – Rotation angle (<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object, positive means anticlockwise).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the rotated object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomKnots.shear">
+<code class="sig-name descname">shear</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.shear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with an area-preserving shear applied to it.</p>
+<p>The arguments may be either a <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> instance or arguments to be used to initialize one.</p>
+<p>For more details about the allowed keyword arguments, see the <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> docstring.</p>
+<p>The shear() method precisely preserves the area.  To include a lensing distortion with
+the appropriate change in area, either use shear() with magnify(), or use lens(), which
+combines both operations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>shear</strong> – The <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> to be applied. Or, as described above, you may instead supply
+parameters do construct a shear directly.  eg. <code class="docutils literal notranslate"><span class="pre">obj.shear(g1=g1,g2=g2)</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the sheared object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomKnots.shift">
+<code class="sig-name descname">shift</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.shift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object shifted by some amount in real space.</p>
+<p>After this call, the caller’s type will be a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.
+This means that if the caller was a derived type that had extra methods or properties
+beyond those defined in <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> (e.g. <a class="reference internal" href="simple.html#galsim.Gaussian.sigma" title="galsim.Gaussian.sigma"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Gaussian.sigma</span></code></a>), then these methods are no
+longer available.</p>
+<p>Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,
+or as a <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> object.</p>
+<p>The shift coordinates here are sky coordinates.  <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> profiles are always defined in
+sky coordinates and only later (when they are drawn) is the connection to pixel coordinates
+established (via a pixel_scale or WCS).  So a shift of dx moves the object horizontally
+in the sky (e.g. west in the local tangent plane of the observation), and dy moves the
+object vertically (north in the local tangent plane).</p>
+<p>The units are typically arcsec, but we don’t enforce that anywhere.  The units here just
+need to be consistent with the units used for any size values used by the <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.
+The connection of these units to the eventual image pixels is defined by either the
+<code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> or the <code class="docutils literal notranslate"><span class="pre">wcs</span></code> parameter of <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p>
+<p>Note: if you want to shift the object by a set number (or fraction) of pixels in the
+drawn image, you probably want to use the <code class="docutils literal notranslate"><span class="pre">offset</span></code> parameter of <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>
+rather than this method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dx</strong> – Horizontal shift to apply.</p></li>
+<li><p><strong>dy</strong> – Vertical shift to apply.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Alternatively, you may supply a single parameter as a <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a> instance, rather than
+the two components separately if that is more convenient.</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>offset:     The shift to apply, given as PositionD(dx,dy) or PositionI(dx,dy)</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the shifted object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomKnots.transform">
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">dudx</em>, <em class="sig-param">dudy</em>, <em class="sig-param">dvdx</em>, <em class="sig-param">dvdy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with an arbitrary Jacobian matrix transformation
+applied to it.</p>
+<p>This applies a Jacobian matrix to the coordinate system in which this object
+is defined.  It changes a profile defined in terms of (x,y) to one defined in
+terms of (u,v) where:</p>
+<blockquote>
+<div><p>u = dudx x + dudy y
+v = dvdx x + dvdy y</p>
+</div></blockquote>
+<p>That is, an arbitrary affine transform, but without the translation (which is
+easily effected via the <a class="reference internal" href="#galsim.RandomKnots.shift" title="galsim.RandomKnots.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">shift</span></code></a> method).</p>
+<p>Note that this function is similar to expand in that it preserves surface brightness,
+not flux.  If you want to preserve flux, you should also do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">prof</span> <span class="o">*=</span> <span class="mf">1.</span><span class="o">/</span><span class="nb">abs</span><span class="p">(</span><span class="n">dudx</span><span class="o">*</span><span class="n">dvdy</span> <span class="o">-</span> <span class="n">dudy</span><span class="o">*</span><span class="n">dvdx</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dudx</strong> – du/dx, where (x,y) are the current coords, and (u,v) are the new coords.</p></li>
+<li><p><strong>dudy</strong> – du/dy, where (x,y) are the current coords, and (u,v) are the new coords.</p></li>
+<li><p><strong>dvdx</strong> – dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.</p></li>
+<li><p><strong>dvdy</strong> – dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the transformed object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomKnots.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.RandomKnots.withScaledFlux">
+<code class="sig-name descname">withScaledFlux</code><span class="sig-paren">(</span><em class="sig-param">flux_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/knots.html#RandomKnots.withScaledFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.RandomKnots.withScaledFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with the flux scaled by the given <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code>.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withFlux(flux_ratio</span> <span class="pre">*</span> <span class="pre">obj.flux)</span></code>.  Indeed, withFlux()
+is implemented in terms of this one.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location scaled by the given amount.  If <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code> is an
+<a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, then the returned object is a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> multiplied by
+its current <code class="docutils literal notranslate"><span class="pre">flux</span></code>.</p>
+<p>Note that in this case the <code class="docutils literal notranslate"><span class="pre">flux</span></code> attribute of the <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> being scaled gets
+interpreted as being dimensionless, instead of having its normal units of [photons/s/cm^2].
+The photons/s/cm^2 units are (optionally) carried by the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> instead, or even left out
+entirely if the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> is dimensionless itself (see discussion in the <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>
+docstring).  The <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> <code class="docutils literal notranslate"><span class="pre">flux</span></code> attribute <em>does</em> still contribute to the
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> normalization, though.  For example, the following are equivalent:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">chrom_obj</span> <span class="o">=</span> <span class="n">gsobj</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">sed</span> <span class="o">*</span> <span class="mf">3.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">chrom_obj2</span> <span class="o">=</span> <span class="p">(</span><span class="n">gsobj</span> <span class="o">*</span> <span class="mf">3.0</span><span class="p">)</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">sed</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>An equivalent, and usually simpler, way to effect this scaling is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span> <span class="o">*</span> <span class="n">flux_ratio</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux_ratio</strong> – The ratio by which to rescale the flux of the object when creating a new
+one.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

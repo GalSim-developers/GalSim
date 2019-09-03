@@ -185,7 +185,11 @@
 <span class="c1">#</span>
 
 <span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
-<span class="kn">import</span> <span class="nn">galsim</span>
+
+<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">ExtraOutputBuilder</span><span class="p">,</span> <span class="n">RegisterExtraOutput</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetCurrentValue</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..catalog</span> <span class="k">import</span> <span class="n">OutputCatalog</span>
 
 <span class="c1"># The truth extra output type builds an OutputCatalog with truth information about each of the</span>
 <span class="c1"># objects being built by the configuration processing.  It stores the appropriate row information</span>
@@ -199,7 +203,6 @@
 <span class="c1"># in the order specified.  The standard galsim executable reads the config file into an</span>
 <span class="c1"># OrderedDict for precisely this reason.</span>
 
-<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">ExtraOutputBuilder</span>
 <div class="viewcode-block" id="TruthBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.extra_truth.TruthBuilder">[docs]</a><span class="k">class</span> <span class="nc">TruthBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Build an output truth catalog with user-defined columns, typically taken from</span>
 <span class="sd">    current values of various quantities for each constructed object.</span>
@@ -231,20 +234,20 @@
                 <span class="c1"># Caveat: We don&#39;t know the value_type here, so we give None.  This allows</span>
                 <span class="c1"># only a limited subset of the parsing.  Usually enough for truth items, but</span>
                 <span class="c1"># not fully featured.</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">basestring</span><span class="p">):</span>
                 <span class="c1"># The item can just be a constant value.</span>
                 <span class="n">value</span> <span class="o">=</span> <span class="n">key</span>
             <span class="k">elif</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;$&#39;</span><span class="p">:</span>
                 <span class="c1"># This can also be handled by ParseValue</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="kc">None</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">elif</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;@&#39;</span><span class="p">:</span>
                 <span class="c1"># Pop off an initial @ if there is one.</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetCurrentValue</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="n">base</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="n">base</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># str(key) handles the possibility of unicode.  In particular, this happens with</span>
                 <span class="c1"># JSON files.</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetCurrentValue</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">base</span><span class="p">)</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">base</span><span class="p">)</span>
             <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
             <span class="n">types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
         <span class="k">if</span> <span class="s1">&#39;types&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">:</span>
@@ -254,7 +257,7 @@
                          <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">])</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Types for current object = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="nb">repr</span><span class="p">(</span><span class="n">types</span><span class="p">))</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Expecting types = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="s1">&#39;types&#39;</span><span class="p">]))</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Type mismatch found when building truth catalog.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Type mismatch found when building truth catalog.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span>
 
     <span class="c1"># The function to call at the end of building each file to finalize the truth catalog</span>
@@ -264,7 +267,7 @@
         <span class="c1"># Note: Provide a default here, because if all items were skipped it would otherwise</span>
         <span class="c1"># lead to a KeyError.</span>
         <span class="n">types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;types&#39;</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">OutputCatalog</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="n">cols</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">types</span><span class="o">=</span><span class="n">types</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat</span> <span class="o">=</span> <span class="n">OutputCatalog</span><span class="p">(</span><span class="n">names</span><span class="o">=</span><span class="n">cols</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">types</span><span class="o">=</span><span class="n">types</span><span class="p">)</span>
 
         <span class="c1"># Add all the rows in order to the OutputCatalog</span>
         <span class="c1"># Note: types was popped above, so only the obj_num keys are left.</span>
@@ -283,7 +286,6 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">writeFitsHdu</span><span class="p">()</span></div>
 
 <span class="c1"># Register this as a valid extra output</span>
-<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">RegisterExtraOutput</span>
 <span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;truth&#39;</span><span class="p">,</span> <span class="n">TruthBuilder</span><span class="p">())</span>
 </pre></div>
 

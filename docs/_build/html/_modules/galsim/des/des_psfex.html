@@ -187,12 +187,21 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">galsim</span>
-<span class="kn">import</span> <span class="nn">galsim.config</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..fits</span> <span class="k">import</span> <span class="n">FitsHeader</span>
+<span class="kn">from</span> <span class="nn">..wcs</span> <span class="k">import</span> <span class="n">readFromFitsHeader</span><span class="p">,</span> <span class="n">PixelScale</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="k">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="k">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">..interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
+<span class="kn">from</span> <span class="nn">..interpolant</span> <span class="k">import</span> <span class="n">Lanczos</span>
+<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">RegisterInputType</span><span class="p">,</span> <span class="n">RegisterObjectType</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">GetInputObj</span>
+
 
 <div class="viewcode-block" id="DES_PSFEx"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_PSFEx">[docs]</a><span class="k">class</span> <span class="nc">DES_PSFEx</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated principal component images</span>
-<span class="sd">    of the PSF.  These are usually stored as ``*_psfcat.psf`` files.</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated principal component images</span>
+<span class="sd">    of the PSF.  These are usually stored as \*_psfcat.psf files.</span>
 
 <span class="sd">    PSFEx is software written by Emmanuel Bertin.  If you want more detail about PSFEx, please</span>
 <span class="sd">    check out the web site:</span>
@@ -276,11 +285,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">file_name</span>
         <span class="k">if</span> <span class="n">image_file_name</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;Cannot provide both image_file_name and wcs&quot;</span><span class="p">,</span>
                     <span class="n">image_file_name</span><span class="o">=</span><span class="n">image_file_name</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">wcs</span><span class="p">)</span>
-            <span class="n">header</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">image_file_name</span><span class="p">)</span>
-            <span class="n">wcs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">readFromFitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="n">FitsHeader</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="n">image_file_name</span><span class="p">)</span>
+            <span class="n">wcs</span><span class="p">,</span> <span class="n">origin</span> <span class="o">=</span> <span class="n">readFromFitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
         <span class="k">elif</span> <span class="n">wcs</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
@@ -289,7 +298,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">galsim._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">.._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span>
             <span class="n">hdu</span> <span class="o">=</span> <span class="n">hdu_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -426,11 +435,11 @@
 <span class="sd">           the PSF as a `GSObject`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Build an image version of the numpy array</span>
-        <span class="n">im</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getPSFArray</span><span class="p">(</span><span class="n">image_pos</span><span class="p">))</span>
+        <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getPSFArray</span><span class="p">(</span><span class="n">image_pos</span><span class="p">))</span>
 
         <span class="c1"># Build the PSF profile in the image coordinate system.</span>
-        <span class="n">psf</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_scale</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                                       <span class="n">x_interpolant</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_scale</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
 
         <span class="c1"># This brings if from image coordinates to world coordinates.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">:</span>
@@ -465,25 +474,25 @@
         <span class="k">return</span> <span class="n">xto</span></div>
 
 
-<span class="k">class</span> <span class="nc">PSFExLoader</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">InputLoader</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">PSFExLoader</span><span class="p">(</span><span class="n">InputLoader</span><span class="p">):</span>
     <span class="c1"># Allow the user to not provide the image file.  In this case, we&#39;ll grab the wcs from the</span>
     <span class="c1"># config dict.</span>
     <span class="k">def</span> <span class="nf">getKwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
         <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;dir&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;image_file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
-        <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s1">&#39;image_file_name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;wcs&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
                 <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Then we aren&#39;t doing normal config processing, so just use pixel scale = 1.</span>
-                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span>
 
 <span class="c1"># First we need to add the class itself as a valid input_type.</span>
-<span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">,</span> <span class="n">PSFExLoader</span><span class="p">(</span><span class="n">DES_PSFEx</span><span class="p">))</span>
+<span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">,</span> <span class="n">PSFExLoader</span><span class="p">(</span><span class="n">DES_PSFEx</span><span class="p">))</span>
 
 <span class="c1"># Also make a builder to create the PSF object for a given position.</span>
 <span class="c1"># The builders require 4 args.</span>
@@ -498,20 +507,20 @@
 
 <span class="sd">    It requires the use of the ``des_psfex`` input field.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">des_psfex</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;DES_PSFEx&#39;</span><span class="p">)</span>
+    <span class="n">des_psfex</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;DES_PSFEx&#39;</span><span class="p">)</span>
 
-    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;flux&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span> <span class="p">}</span>
-    <span class="n">params</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;flux&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span> <span class="p">:</span> <span class="n">PositionD</span> <span class="p">}</span>
+    <span class="n">params</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
         <span class="n">image_pos</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span>
     <span class="k">elif</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
         <span class="n">image_pos</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;DES_PSFEx requested, but no image_pos defined in base.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;DES_PSFEx requested, but no image_pos defined in base.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Convert gsparams from a dict to an actual GSParams object</span>
-    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1">#psf = des_psfex.getPSF(image_pos, gsparams=gsparams)</span>
@@ -520,9 +529,9 @@
     <span class="c1"># Also, this is why we have getSampleScale and getLocalWCS.  The multiprocessing.managers</span>
     <span class="c1"># stuff only makes available methods of classes that are proxied, not all the attributes.</span>
     <span class="c1"># So this is the only way to access these attributes.</span>
-    <span class="n">im</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">des_psfex</span><span class="o">.</span><span class="n">getPSFArray</span><span class="p">(</span><span class="n">image_pos</span><span class="p">))</span>
-    <span class="n">psf</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">des_psfex</span><span class="o">.</span><span class="n">getSampleScale</span><span class="p">(),</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                                   <span class="n">x_interpolant</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">des_psfex</span><span class="o">.</span><span class="n">getPSFArray</span><span class="p">(</span><span class="n">image_pos</span><span class="p">))</span>
+    <span class="n">psf</span> <span class="o">=</span><span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">des_psfex</span><span class="o">.</span><span class="n">getSampleScale</span><span class="p">(),</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                           <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
     <span class="n">psf</span> <span class="o">=</span> <span class="n">des_psfex</span><span class="o">.</span><span class="n">getLocalWCS</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">psf</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
@@ -534,7 +543,7 @@
     <span class="k">return</span> <span class="n">psf</span><span class="p">,</span> <span class="kc">False</span>
 
 <span class="c1"># Register this builder with the config framework:</span>
-<span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;DES_PSFEx&#39;</span><span class="p">,</span> <span class="n">BuildDES_PSFEx</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;DES_PSFEx&#39;</span><span class="p">,</span> <span class="n">BuildDES_PSFEx</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;des_psfex&#39;</span><span class="p">)</span>
 </pre></div>
 
            </div>

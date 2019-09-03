@@ -188,6 +188,12 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">SetDefaultExt</span><span class="p">,</span> <span class="n">RetryIO</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="k">import</span> <span class="n">ensure_dir</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigValueError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..fits</span> <span class="k">import</span> <span class="n">writeMulti</span>
+
 <span class="c1"># This file handles the processing of extra output items in addition to the primary output file</span>
 <span class="c1"># in config[&#39;output&#39;]. The ones that are defined natively in GalSim are psf, weight, badpix,</span>
 <span class="c1"># and truth.  See extra_*.py for the specific functions for each of these.</span>
@@ -197,9 +203,6 @@
 <span class="c1"># The keys will be the (string) names of the extra output types, and the values will be</span>
 <span class="c1"># builder classes that will perform the different processing functions.</span>
 <span class="n">valid_extra_outputs</span> <span class="o">=</span> <span class="p">{}</span>
-
-<span class="kn">import</span> <span class="nn">galsim</span>
-
 
 <div class="viewcode-block" id="SetupExtraOutput"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupExtraOutput">[docs]</a><span class="k">def</span> <span class="nf">SetupExtraOutput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -211,7 +214,7 @@
 <span class="sd">        config:     The configuration dict.</span>
 <span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="n">output</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
     <span class="n">file_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
 
@@ -223,7 +226,7 @@
     <span class="n">use_manager</span> <span class="o">=</span> <span class="p">(</span>
             <span class="s1">&#39;current_nproc&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span>
             <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;nproc&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="ow">and</span>
-            <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span> <span class="p">)</span>
+            <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span> <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">use_manager</span> <span class="ow">and</span> <span class="s1">&#39;output_manager&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="k">import</span> <span class="n">BaseManager</span><span class="p">,</span> <span class="n">ListProxy</span><span class="p">,</span> <span class="n">DictProxy</span>
@@ -287,8 +290,7 @@
     <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;extra_builder&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">SetupExtraOutput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_extra_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]):</span>
-            <span class="n">builder</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">field</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
             <span class="n">builder</span><span class="o">.</span><span class="n">setupImage</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
 
@@ -306,8 +308,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">obj_num</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_extra_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]):</span>
-            <span class="n">builder</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">,{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">field</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
                 <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_skipped_obj_nums&#39;</span><span class="p">][</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -326,7 +327,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">obj_nums</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_extra_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">,{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">image_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
             <span class="n">start_image_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">obj_nums</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -341,7 +342,6 @@
                 <span class="c1"># Omit skipped obj_nums</span>
                 <span class="n">skipped</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_skipped_obj_nums&#39;</span><span class="p">]</span>
                 <span class="n">obj_nums</span> <span class="o">=</span> <span class="p">[</span> <span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">obj_nums</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">skipped</span> <span class="p">]</span>
-            <span class="n">builder</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
             <span class="n">field</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">image_num</span> <span class="o">-</span> <span class="n">start_image_num</span>
             <span class="n">builder</span><span class="o">.</span><span class="n">processImage</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">obj_nums</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
@@ -357,45 +357,45 @@
 <span class="sd">        main_data:  The main file data in case it is needed.</span>
 <span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="n">output</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
     <span class="k">if</span> <span class="s1">&#39;retry_io&#39;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-        <span class="n">ntries</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span><span class="s1">&#39;retry_io&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ntries</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span><span class="s1">&#39;retry_io&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="c1"># This is how many retries.  Do at least 1, so ntries is 1 more than this.</span>
         <span class="n">ntries</span> <span class="o">=</span> <span class="n">ntries</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">ntries</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="k">if</span> <span class="s1">&#39;dir&#39;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-        <span class="n">default_dir</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="s1">&#39;dir&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">default_dir</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="s1">&#39;dir&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">default_dir</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="s1">&#39;noclobber&#39;</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-        <span class="n">noclobber</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="s1">&#39;noclobber&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">noclobber</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">output</span><span class="p">,</span><span class="s1">&#39;noclobber&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">noclobber</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">if</span> <span class="s1">&#39;extra_last_file&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_last_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_extra_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">output</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">field</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">if</span> <span class="s1">&#39;file_name&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
-            <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SetDefaultExt</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
-            <span class="n">file_name</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;file_name&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">SetDefaultExt</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="s1">&#39;.fits&#39;</span><span class="p">)</span>
+            <span class="n">file_name</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;file_name&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (it is covered, but codecov wrongly thinks it isn&#39;t.)</span>
             <span class="c1"># If no file_name, then probably writing to hdu</span>
             <span class="k">continue</span>
         <span class="k">if</span> <span class="s1">&#39;dir&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
-            <span class="nb">dir</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;dir&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="nb">dir</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;dir&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="nb">dir</span> <span class="o">=</span> <span class="n">default_dir</span>
 
         <span class="k">if</span> <span class="nb">dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
 
-        <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ensure_dir</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="n">ensure_dir</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">noclobber</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not writing </span><span class="si">%s</span><span class="s1"> file </span><span class="si">%d</span><span class="s1"> = </span><span class="si">%s</span><span class="s1"> because output.noclobber = True &#39;</span>
@@ -409,15 +409,13 @@
                         <span class="n">key</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_num&#39;</span><span class="p">],</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">continue</span>
 
-        <span class="n">builder</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
-
         <span class="c1"># Do any final processing that needs to happen.</span>
         <span class="n">builder</span><span class="o">.</span><span class="n">ensureFinalized</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
         <span class="c1"># Call the write function, possibly multiple times to account for IO failures.</span>
         <span class="n">write_func</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">writeFile</span>
         <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="n">field</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RetryIO</span><span class="p">(</span><span class="n">write_func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">ntries</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">RetryIO</span><span class="p">(</span><span class="n">write_func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">ntries</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_last_file&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_name</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;file </span><span class="si">%d</span><span class="s1">: Wrote </span><span class="si">%s</span><span class="s1"> to </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;file_num&#39;</span><span class="p">],</span><span class="n">key</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span></div>
 
@@ -442,17 +440,15 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">output</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
     <span class="n">hdus</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_extra_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">output</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">field</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">if</span> <span class="s1">&#39;hdu&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
-            <span class="n">hdu</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;hdu&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;hdu&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (it is covered, but codecov wrongly thinks it isn&#39;t.)</span>
             <span class="c1"># If no hdu, then probably writing to file</span>
             <span class="k">continue</span>
         <span class="k">if</span> <span class="n">hdu</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="n">hdus</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;hdu is invalid or a duplicate.&quot;</span><span class="p">,</span><span class="n">hdu</span><span class="p">)</span>
-
-        <span class="n">builder</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">][</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;hdu is invalid or a duplicate.&quot;</span><span class="p">,</span><span class="n">hdu</span><span class="p">)</span>
 
         <span class="c1"># Do any final processing that needs to happen.</span>
         <span class="n">builder</span><span class="o">.</span><span class="n">ensureFinalized</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">main_data</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
@@ -463,7 +459,7 @@
     <span class="n">first</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">main_data</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">hdus</span><span class="p">)</span><span class="o">+</span><span class="n">first</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">h</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hdus</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Cannot skip hdus.  No output found for hdu </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">h</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Cannot skip hdus.  No output found for hdu </span><span class="si">%d</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">h</span><span class="p">)</span>
     <span class="c1"># Turn hdus into a list (in order)</span>
     <span class="n">hdulist</span> <span class="o">=</span> <span class="p">[</span> <span class="n">hdus</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">hdus</span><span class="p">)</span><span class="o">+</span><span class="n">first</span><span class="p">)</span> <span class="p">]</span>
     <span class="k">return</span> <span class="n">main_data</span> <span class="o">+</span> <span class="n">hdulist</span></div>
@@ -479,14 +475,14 @@
 <span class="sd">                        had a problem.</span>
 <span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="n">output</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">valid_extra_outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">output</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
         <span class="n">field</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
         <span class="k">if</span> <span class="s1">&#39;hdu&#39;</span> <span class="ow">in</span> <span class="n">field</span><span class="p">:</span>
-            <span class="n">hdu</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;hdu&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">hdu</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">field</span><span class="p">,</span><span class="s1">&#39;hdu&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Extra output </span><span class="si">%s</span><span class="s2"> requesting to write to hdu </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">hdu</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Output type </span><span class="si">%s</span><span class="s2"> cannot add extra images as HDUs&quot;</span><span class="o">%</span><span class="n">output_type</span><span class="p">)</span></div>
 
 
@@ -661,7 +657,7 @@
 <span class="sd">            base:       The base configuration dict.</span>
 <span class="sd">            logger:     If given, a logger object to log progress. [default: None]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span></div>
+        <span class="n">writeMulti</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">final_data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ExtraOutputBuilder.writeHdu"><a class="viewcode-back" href="../../../config_output.html#galsim.config.ExtraOutputBuilder.writeHdu">[docs]</a>    <span class="k">def</span> <span class="nf">writeHdu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Write the data to a FITS HDU with the data for this output object.</span>
@@ -678,7 +674,7 @@
 <span class="sd">            an HDU with the output data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (Not sure if this is possible.)</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                     <span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> images were created. Expecting 1.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_output_key</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div></div>
 

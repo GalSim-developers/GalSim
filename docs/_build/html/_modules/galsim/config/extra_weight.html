@@ -184,15 +184,16 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">galsim</span>
+<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">ExtraOutputBuilder</span><span class="p">,</span> <span class="n">RegisterExtraOutput</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetCurrentValue</span>
+<span class="kn">from</span> <span class="nn">.noise</span> <span class="k">import</span> <span class="n">AddNoiseVariance</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="k">import</span> <span class="n">ImageF</span>
 
 <span class="c1"># The weight extra output type builds an ImageF of the inverse noise variance in the image.</span>
 <span class="c1"># It builds up the variance either from the stamp information if noise is being added then</span>
 <span class="c1"># or at the end from the full image if that is when noise is added.  Then at the end of</span>
 <span class="c1"># the image processing, it inverts the image to get the appropriate weight map.</span>
 
-
-<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">ExtraOutputBuilder</span>
 <div class="viewcode-block" id="WeightBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.extra_weight.WeightBuilder">[docs]</a><span class="k">class</span> <span class="nc">WeightBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This builds a weight map image to go along with each regular data image.</span>
 
@@ -207,19 +208,18 @@
     <span class="c1"># The function to call at the end of building each stamp</span>
     <span class="k">def</span> <span class="nf">processStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;do_noise_in_stamps&#39;</span><span class="p">]:</span>
-            <span class="n">weight_im</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageF</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">],</span> <span class="n">init_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+            <span class="n">weight_im</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">],</span> <span class="n">init_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
             <span class="k">if</span> <span class="s1">&#39;include_obj_var&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-                <span class="n">include_obj_var</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span>
-                        <span class="n">config</span><span class="p">,</span> <span class="s1">&#39;include_obj_var&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">include_obj_var</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;include_obj_var&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">include_obj_var</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span>
-            <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">AddNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">weight_im</span><span class="p">,</span><span class="n">include_obj_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+            <span class="n">AddNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">weight_im</span><span class="p">,</span><span class="n">include_obj_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">weight_im</span>
 
     <span class="c1"># The function to call at the end of building each image</span>
     <span class="k">def</span> <span class="nf">processImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">obj_nums</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageF</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_bounds&#39;</span><span class="p">],</span> <span class="n">wcs</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">],</span> <span class="n">init_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_bounds&#39;</span><span class="p">],</span> <span class="n">wcs</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">],</span> <span class="n">init_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="c1"># If we have been accumulating the variance on the stamps, build the total from them.</span>
             <span class="k">for</span> <span class="n">obj_num</span> <span class="ow">in</span> <span class="n">obj_nums</span><span class="p">:</span>
@@ -234,12 +234,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Otherwise, build the variance map now.</span>
             <span class="k">if</span> <span class="s1">&#39;include_obj_var&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-                <span class="n">include_obj_var</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span>
-                        <span class="n">config</span><span class="p">,</span> <span class="s1">&#39;include_obj_var&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">include_obj_var</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;include_obj_var&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">include_obj_var</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span>
-            <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">AddNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">include_obj_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+            <span class="n">AddNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">include_obj_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
 
         <span class="c1"># Now invert the variance image to get weight map.</span>
         <span class="c1"># Note that any zeros present in the image are maintained as zeros after inversion.</span>
@@ -250,7 +249,6 @@
 
 
 <span class="c1"># Register this as a valid extra output</span>
-<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">RegisterExtraOutput</span>
 <span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">WeightBuilder</span><span class="p">())</span>
 </pre></div>
 

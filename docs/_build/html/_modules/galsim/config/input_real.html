@@ -183,53 +183,59 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="kn">import</span> <span class="nn">galsim</span>
+
+<span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">GetInputObj</span><span class="p">,</span> <span class="n">RegisterInputType</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">GetRNG</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">RegisterObjectType</span>
+<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..real</span> <span class="k">import</span> <span class="n">RealGalaxyCatalog</span><span class="p">,</span> <span class="n">RealGalaxy</span>
 
 <span class="c1"># This file adds input type real_catalog and gsobject types RealGalaxy and RealGalaxyOriginal.</span>
 
 <span class="c1"># The RealGalaxyCatalog doesn&#39;t need anything special other than registration as a valid</span>
 <span class="c1"># input type.</span>
-<span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">RegisterInputType</span><span class="p">,</span> <span class="n">InputLoader</span>
-<span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;real_catalog&#39;</span><span class="p">,</span> <span class="n">InputLoader</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxyCatalog</span><span class="p">))</span>
+<span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;real_catalog&#39;</span><span class="p">,</span> <span class="n">InputLoader</span><span class="p">(</span><span class="n">RealGalaxyCatalog</span><span class="p">))</span>
 
 <span class="c1"># There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.</span>
 
 <div class="viewcode-block" id="_BuildRealGalaxy"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_real._BuildRealGalaxy">[docs]</a><span class="k">def</span> <span class="nf">_BuildRealGalaxy</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">param_name</span><span class="o">=</span><span class="s1">&#39;RealGalaxy&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Build a RealGalaxy from the real_catalog input item.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">real_cat</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;real_catalog&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">param_name</span><span class="p">)</span>
+    <span class="n">real_cat</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;real_catalog&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">param_name</span><span class="p">)</span>
 
     <span class="c1"># Special: if index is Sequence or Random, and max isn&#39;t set, set it to nobjects-1.</span>
     <span class="c1"># But not if they specify &#39;id&#39; or have &#39;random=True&#39;, which overrides that.</span>
     <span class="k">if</span> <span class="s1">&#39;id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;random&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+            <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">]:</span>
-                <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+                <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
                 <span class="c1"># Need to do this to avoid being caught by the GetAllParams() call, which will flag</span>
                 <span class="c1"># it if it has &#39;index&#39; and &#39;random&#39; set (but &#39;random&#39; is False, so really it&#39;s OK).</span>
                 <span class="k">del</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">]</span>
 
-    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span>
-        <span class="n">req</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;RealGalaxy&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">_req_params</span><span class="p">,</span>
-        <span class="n">opt</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;RealGalaxy&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">_opt_params</span><span class="p">,</span>
-        <span class="n">single</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s1">&#39;RealGalaxy&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">_single_params</span><span class="p">,</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span>
+        <span class="n">req</span> <span class="o">=</span> <span class="n">RealGalaxy</span><span class="o">.</span><span class="n">_req_params</span><span class="p">,</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="n">RealGalaxy</span><span class="o">.</span><span class="n">_opt_params</span><span class="p">,</span>
+        <span class="n">single</span> <span class="o">=</span> <span class="n">RealGalaxy</span><span class="o">.</span><span class="n">_single_params</span><span class="p">,</span>
         <span class="n">ignore</span> <span class="o">=</span> <span class="n">ignore</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;num&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;gsparams&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;gsparams&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
 
-    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">param_name</span><span class="p">)</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">param_name</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s1">&#39;index&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">()</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;index=</span><span class="si">%s</span><span class="s2"> has gone past the number of entries in the RealGalaxyCatalog&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
 
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;real_galaxy_catalog&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">real_cat</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: </span><span class="si">%s</span><span class="s1"> kwargs = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">param_name</span><span class="p">,</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="n">gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxy</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">gal</span> <span class="o">=</span> <span class="n">RealGalaxy</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">gal</span><span class="p">,</span> <span class="n">safe</span></div>
 
@@ -243,7 +249,6 @@
 
 
 <span class="c1"># Register these as valid gsobject types</span>
-<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">RegisterObjectType</span>
 <span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;RealGalaxy&#39;</span><span class="p">,</span> <span class="n">_BuildRealGalaxy</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;real_catalog&#39;</span><span class="p">)</span>
 <span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;RealGalaxyOriginal&#39;</span><span class="p">,</span> <span class="n">_BuildRealGalaxyOriginal</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;real_catalog&#39;</span><span class="p">)</span>
 </pre></div>

@@ -102,6 +102,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Config Processing From Python</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#running-the-whole-script">Running the Whole Script</a></li>
@@ -232,7 +233,7 @@ infer the file type from the extension.]</p></li>
 
 <dl class="function">
 <dt id="galsim.config.CopyConfig">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">CopyConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#CopyConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.CopyConfig" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">CopyConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#CopyConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.CopyConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>If you want to use a config dict for multiprocessing, you need to deep copy
 the gal, psf, and pix fields, since they cache values that are not picklable.
 If you don’t do the deep copy, then python balks when trying to send the updated
@@ -258,6 +259,22 @@ register additional custom types that can then be used in the current config dic
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>config</strong> – The configuration dict.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="galsim.config.ProcessTemplate">
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ProcessTemplate</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ProcessTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ProcessTemplate" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the config dict has a ‘template’ item, read in the appropriate file and
+make any requested updates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>
@@ -302,6 +319,9 @@ dict after any template loading (if any). [default: None]</p></li>
 or just report errors and continue on (False). [default: False]</p></li>
 </ul>
 </dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the final config dict that was used.</p>
+</dd>
 </dl>
 </dd></dl>
 
@@ -324,6 +344,9 @@ dict:</p>
 <li><p><strong>except_abort</strong> – Whether to abort processing when a file raises an exception (True)
 or just report errors and continue on (False). [default: False]</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the final config dict that was used.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -734,20 +757,7 @@ automatic sizing.]</p></li>
 <code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SetupConfigStampSize</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">xsize</em>, <em class="sig-param">ysize</em>, <em class="sig-param">image_pos</em>, <em class="sig-param">world_pos</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#SetupConfigStampSize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SetupConfigStampSize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do further setup of the config dict at the stamp (or object) processing level reflecting
 the stamp size and position in either image or world coordinates.</p>
-<p>Includes:</p>
-<ul class="simple">
-<li><p>If given, set config[‘stamp_xsize’] = xsize</p></li>
-<li><p>If given, set config[‘stamp_ysize’] = ysize</p></li>
-<li><p>If only image_pos or world_pos is given, compute the other from config[‘wcs’]</p></li>
-<li><p>Set config[‘index_pos’] = image_pos</p></li>
-<li><p>Set config[‘world_pos’] = world_pos</p></li>
-<li><p>Calculate the appropriate value of the center of the stamp, to be used with the
-command: stamp_image.setCenter(stamp_center).  Save this as config[‘stamp_center’]</p></li>
-<li><p>Calculate the appropriate offset for the position of the object from the center of
-the stamp due to just the fractional part of the image position, not including
-any config[‘stamp’][‘offset’] item that may be present in the config dict.
-Save this as config[‘stamp_offset’]</p></li>
-</ul>
+<p>Note: This is now a StampBuilder method.  So this function just calls StampBuilder.locateStamp.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -806,7 +816,7 @@ e.g. you can add add_to_image=True or setup_only=True if these are helpful.</p>
 <li><p><strong>offset</strong> – The offset to apply when drawing.</p></li>
 <li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
 <li><p><strong>base</strong> – The base configuration dict.</p></li>
-<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
 <li><p><strong>**kwargs</strong> – Any additional kwargs are passed along to the drawImage function.</p></li>
 </ul>
 </dd>
@@ -1008,6 +1018,50 @@ size of the list, catalog, etc.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the tuple (kwargs, safe).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="galsim.config.ParseWorldPos">
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ParseWorldPos</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">param_name</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#ParseWorldPos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ParseWorldPos" title="Permalink to this definition">¶</a></dt>
+<dd><p>A helper function to parse the ‘world_pos’ value.</p>
+<p>The world_pos can be specified either as a regular RA, Dec (which in GalSim is known as a
+CelestialCoord) or as Euclidean coordinates in the local tangent plane relative to the
+image center (a PositionD).</p>
+<ol class="arabic">
+<li><p>For the RA/Dec option, the world_pos field should use the type RADec, which includes two
+values named ra and dec, each of which should be an Angle type.  e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">world_pos</span><span class="p">:</span>
+    <span class="nb">type</span> <span class="p">:</span> <span class="n">RADec</span>
+    <span class="n">ra</span> <span class="p">:</span> <span class="mi">37</span> <span class="n">hours</span>
+    <span class="n">dec</span><span class="p">:</span> <span class="o">-</span><span class="mi">23</span> <span class="n">degrees</span>
+</pre></div>
+</div>
+<p>Technically, any other type that results in a CelestialCoord is valid, but RADec is the
+only one that is defined natively in GalSim.</p>
+</li>
+<li><p>For the relative position in the local tangent plane (where 0,0 is the position of the
+image center), you can use any PositionD type.  e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">world_pos</span><span class="p">:</span>
+    <span class="nb">type</span> <span class="p">:</span> <span class="n">RandomCircle</span>
+    <span class="n">radius</span> <span class="p">:</span> <span class="mi">12</span>       <span class="c1"># arcsec</span>
+    <span class="n">inner_radius</span> <span class="p">:</span> <span class="mi">3</span>  <span class="c1"># arcsec</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
+<li><p><strong>param_name</strong> – The name of the field in the config dict to parse as a world_pos.
+Normally, this is just ‘world_pos’.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>either a CelestialCoord or a PositionD instance.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1268,9 +1322,26 @@ had a problem.</p></li>
 <h2>Config Utilities<a class="headerlink" href="#config-utilities" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are used internally by the various <code class="docutils literal notranslate"><span class="pre">galsim.config</span></code> functions,
 but they might be useful for some users.</p>
+<dl class="class">
+<dt id="galsim.config.LoggerWrapper">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">LoggerWrapper</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#LoggerWrapper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.LoggerWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrap around a Logger object that checks whether a debug or info or warn call will
+actually produce any output before calling the functions.</p>
+<p>This seems like a gratuitous wrapper, and it is if the object being wrapped is a real
+Logger object.  However, we use it to wrap proxy objects (returned from GetLoggerProxy)
+that would otherwise send the arguments of logger.debug(…) calls through a multiprocessing
+pipe before (typically) being ignored.  Here, we check whether the call will actually
+produce any output before calling the functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>logger</strong> – The logger object to wrap.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="function">
 <dt id="galsim.config.ReadYaml">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ReadYaml</code><span class="sig-paren">(</span><em class="sig-param">config_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ReadYaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ReadYaml" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ReadYaml</code><span class="sig-paren">(</span><em class="sig-param">config_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#ReadYaml"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ReadYaml" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read in a YAML configuration file and return the corresponding dicts.</p>
 <p>A YAML file is allowed to define several dicts using multiple documents. The GalSim parser
 treats this as a set of multiple jobs to be done.  The first document is taken to be a “base”
@@ -1290,7 +1361,7 @@ demo9.yaml in the GalSim/examples directory for example usage.</p>
 
 <dl class="function">
 <dt id="galsim.config.ReadJson">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ReadJson</code><span class="sig-paren">(</span><em class="sig-param">config_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ReadJson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ReadJson" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ReadJson</code><span class="sig-paren">(</span><em class="sig-param">config_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#ReadJson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ReadJson" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read in a JSON configuration file and return the corresponding dicts.</p>
 <p>A JSON file only defines a single dict.  However to be parallel to the functionality of
 ReadYaml, the output is a list with a single item, which is the dict defined by the JSON file.</p>
@@ -1306,7 +1377,7 @@ ReadYaml, the output is a list with a single item, which is the dict defined by 
 
 <dl class="function">
 <dt id="galsim.config.MergeConfig">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">MergeConfig</code><span class="sig-paren">(</span><em class="sig-param">config1</em>, <em class="sig-param">config2</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#MergeConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.MergeConfig" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">MergeConfig</code><span class="sig-paren">(</span><em class="sig-param">config1</em>, <em class="sig-param">config2</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#MergeConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.MergeConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge config2 into config1 such that it has all the information from either config1 or
 config2 including places where both input dicts have some of a field defined.</p>
 <p>e.g. If config1 has image.pixel_scale, and config2 has image.noise, then the returned dict
@@ -1316,7 +1387,7 @@ will have both.</p>
 
 <dl class="function">
 <dt id="galsim.config.ConvertNones">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ConvertNones</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ConvertNones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ConvertNones" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ConvertNones</code><span class="sig-paren">(</span><em class="sig-param">config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#ConvertNones"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ConvertNones" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert any items whose value is ‘None’ to None.</p>
 <p>To allow some parameters to be set to None in the config dict (e.g. in a list, where only
 some values need to be None), we convert all values == ‘None’ to None.</p>
@@ -1329,7 +1400,7 @@ some values need to be None), we convert all values == ‘None’ to None.</p>
 
 <dl class="function">
 <dt id="galsim.config.RemoveCurrent">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RemoveCurrent</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">keep_safe=False</em>, <em class="sig-param">type=None</em>, <em class="sig-param">index_key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#RemoveCurrent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RemoveCurrent" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RemoveCurrent</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">keep_safe=False</em>, <em class="sig-param">type=None</em>, <em class="sig-param">index_key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#RemoveCurrent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RemoveCurrent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove any “current” values stored in the config dict at any level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1350,7 +1421,7 @@ obj_num_in_file).  [default: None]</p></li>
 
 <dl class="function">
 <dt id="galsim.config.GetLoggerProxy">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetLoggerProxy</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#GetLoggerProxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetLoggerProxy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetLoggerProxy</code><span class="sig-paren">(</span><em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#GetLoggerProxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetLoggerProxy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a proxy for the given logger that can be passed into multiprocessing Processes
 and used safely.</p>
 <dl class="field-list simple">
@@ -1365,7 +1436,7 @@ and used safely.</p>
 
 <dl class="function">
 <dt id="galsim.config.UpdateNProc">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">UpdateNProc</code><span class="sig-paren">(</span><em class="sig-param">nproc</em>, <em class="sig-param">ntot</em>, <em class="sig-param">config</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#UpdateNProc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.UpdateNProc" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">UpdateNProc</code><span class="sig-paren">(</span><em class="sig-param">nproc</em>, <em class="sig-param">ntot</em>, <em class="sig-param">config</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#UpdateNProc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.UpdateNProc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update nproc</p>
 <ul class="simple">
 <li><p>If nproc &lt; 0, set nproc to ncpu</p></li>
@@ -1389,20 +1460,20 @@ processes that would make sense.</p></li>
 
 <dl class="function">
 <dt id="galsim.config.ParseRandomSeed">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ParseRandomSeed</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">param_name</em>, <em class="sig-param">base</em>, <em class="sig-param">seed_offset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ParseRandomSeed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ParseRandomSeed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ParseRandomSeed</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">param_name</em>, <em class="sig-param">base</em>, <em class="sig-param">seed_offset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#ParseRandomSeed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ParseRandomSeed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse the random_seed field, converting an integer (initial) seed value into a
 Sequence.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="galsim.config.PropagateIndexKeyRNGNum">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">PropagateIndexKeyRNGNum</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">index_key</em>, <em class="sig-param">rng_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#PropagateIndexKeyRNGNum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.PropagateIndexKeyRNGNum" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">PropagateIndexKeyRNGNum</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">index_key=None</em>, <em class="sig-param">rng_num=None</em>, <em class="sig-param">rng_index_key=None</em>, <em class="sig-param">key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#PropagateIndexKeyRNGNum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.PropagateIndexKeyRNGNum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Propagate any index_key or rng_num specification in a dict to all sub-fields</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="galsim.config.SetupConfigRNG">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SetupConfigRNG</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">seed_offset=0</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#SetupConfigRNG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SetupConfigRNG" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SetupConfigRNG</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">seed_offset=0</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#SetupConfigRNG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SetupConfigRNG" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set up the RNG in the config dict.</p>
 <ul class="simple">
 <li><p>Setup config[‘image’][‘random_seed’] if necessary</p></li>
@@ -1425,7 +1496,7 @@ Sequence.</p>
 
 <dl class="function">
 <dt id="galsim.config.ParseExtendedKey">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ParseExtendedKey</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ParseExtendedKey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ParseExtendedKey" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ParseExtendedKey</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#ParseExtendedKey"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ParseExtendedKey" title="Permalink to this definition">¶</a></dt>
 <dd><p>Traverse all but the last item in an extended key and return the resulting config, key.</p>
 <p>If key is an extended key like gal.items.0.ellip.e, then this will return the tuple.
 (config[‘gal’][‘items’][0][‘ellip’], ‘e’).</p>
@@ -1445,7 +1516,7 @@ Sequence.</p>
 
 <dl class="function">
 <dt id="galsim.config.GetFromConfig">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetFromConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#GetFromConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetFromConfig" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetFromConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#GetFromConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetFromConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value for the (possibly extended) key from a config dict.</p>
 <p>If key is a simple string, then this is equivalent to config[key].
 However, key is allowed to be a chain of keys such as ‘gal.items.0.ellip.e’, in which
@@ -1465,7 +1536,7 @@ case this function will return config[‘gal’][‘items’][0][‘ellip’][�
 
 <dl class="function">
 <dt id="galsim.config.SetInConfig">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SetInConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#SetInConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SetInConfig" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SetInConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#SetInConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SetInConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the value of a (possibly extended) key in a config dict.</p>
 <p>If key is a simple string, then this is equivalent to config[key] = value.
 However, key is allowed to be a chain of keys such as ‘gal.items.0.ellip.e’, in which
@@ -1485,7 +1556,7 @@ case this function will set config[‘gal’][‘items’][0][‘ellip’][‘e�
 
 <dl class="function">
 <dt id="galsim.config.UpdateConfig">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">UpdateConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">new_params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#UpdateConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.UpdateConfig" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">UpdateConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">new_params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#UpdateConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.UpdateConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the given config dict with additional parameters/values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1500,24 +1571,8 @@ parsed to update config[‘gal’][‘first’][‘dilate’].</p></li>
 </dd></dl>
 
 <dl class="function">
-<dt id="galsim.config.ProcessTemplate">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ProcessTemplate</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ProcessTemplate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ProcessTemplate" title="Permalink to this definition">¶</a></dt>
-<dd><p>If the config dict has a ‘template’ item, read in the appropriate file and
-make any requested updates.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – The configuration dict.</p></li>
-<li><p><strong>base</strong> – The base configuration dict.</p></li>
-<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
 <dt id="galsim.config.MultiProcess">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">MultiProcess</code><span class="sig-paren">(</span><em class="sig-param">nproc</em>, <em class="sig-param">config</em>, <em class="sig-param">job_func</em>, <em class="sig-param">tasks</em>, <em class="sig-param">item</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">done_func=None</em>, <em class="sig-param">except_func=None</em>, <em class="sig-param">except_abort=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#MultiProcess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.MultiProcess" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">MultiProcess</code><span class="sig-paren">(</span><em class="sig-param">nproc</em>, <em class="sig-param">config</em>, <em class="sig-param">job_func</em>, <em class="sig-param">tasks</em>, <em class="sig-param">item</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">done_func=None</em>, <em class="sig-param">except_func=None</em>, <em class="sig-param">except_abort=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#MultiProcess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.MultiProcess" title="Permalink to this definition">¶</a></dt>
 <dd><p>A helper function for performing a task using multiprocessing.</p>
 <p>A note about the nomenclature here.  We use the term “job” to mean the job of building a single
 file or image or stamp.  The output of each job is gathered into the list of results that
@@ -1570,7 +1625,7 @@ for the jobs that failed.  [default: True]</p></li>
 
 <dl class="function">
 <dt id="galsim.config.GetIndex">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetIndex</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">is_sequence=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#GetIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetIndex" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetIndex</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">is_sequence=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#GetIndex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetIndex" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the index to use for the current object or parameter and the index_key.</p>
 <p>First check for an explicit index_key value given by the user.
 Then if base[index_key] is other than obj_num, use that.
@@ -1584,7 +1639,7 @@ Finally, if this is a sequence, default to ‘obj_num_in_file’, otherwise ‘o
 
 <dl class="function">
 <dt id="galsim.config.GetRNG">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetRNG</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">tag=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#GetRNG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetRNG" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetRNG</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger=None</em>, <em class="sig-param">tag=''</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#GetRNG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetRNG" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the appropriate current rng according to whatever the current index_key is.</p>
 <p>If a logger is provided, then it will emit a warning if there is no current rng setup.</p>
 <dl class="field-list simple">
@@ -1605,7 +1660,7 @@ warning message. [default: ‘’]</p></li>
 
 <dl class="function">
 <dt id="galsim.config.CleanConfig">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">CleanConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">keep_current=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#CleanConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.CleanConfig" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">CleanConfig</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">keep_current=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#CleanConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.CleanConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a “clean” config dict without any leading-underscore values</p>
 <p>GalSim config dicts store a lot of ancillary information internally to help improve
 efficiency.  However, some of these are actually pointers to other places in the dict, so
@@ -1619,7 +1674,7 @@ leading-underscore values, so that printing the dict is reasonable.</p>
 
 <dl class="function">
 <dt id="galsim.config.SetDefaultExt">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SetDefaultExt</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">default_ext</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#SetDefaultExt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SetDefaultExt" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SetDefaultExt</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">default_ext</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#SetDefaultExt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SetDefaultExt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set a default ext in a config ‘file_name’ field if appropriate.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1634,7 +1689,7 @@ a default ‘ext’ value.</p></li>
 
 <dl class="function">
 <dt id="galsim.config.RetryIO">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RetryIO</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">args</em>, <em class="sig-param">ntries</em>, <em class="sig-param">file_name</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#RetryIO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RetryIO" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RetryIO</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">args</em>, <em class="sig-param">ntries</em>, <em class="sig-param">file_name</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#RetryIO"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RetryIO" title="Permalink to this definition">¶</a></dt>
 <dd><p>A helper function to retry I/O commands</p>
 </dd></dl>
 
@@ -1681,55 +1736,11 @@ cf. stamp type=Ring.</p>
 <li><p><strong>config</strong> – The configuration dict</p></li>
 <li><p><strong>jobs</strong> – A list of jobs to split up into tasks.  Each job in the list is a
 dict of parameters that includes ‘obj_num’.</p></li>
-<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+<li><p><strong>logger</strong> – A logger object to log progress.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>a list of tasks</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="galsim.config.ParseWorldPos">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ParseWorldPos</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">param_name</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#ParseWorldPos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ParseWorldPos" title="Permalink to this definition">¶</a></dt>
-<dd><p>A helper function to parse the ‘world_pos’ value.</p>
-<p>The world_pos can be specified either as a regular RA, Dec (which in GalSim is known as a
-CelestialCoord) or as Euclidean coordinates in the local tangent plane relative to the
-image center (a PositionD).</p>
-<ol class="arabic">
-<li><p>For the RA/Dec option, the world_pos field should use the type RADec, which includes two
-values named ra and dec, each of which should be an Angle type.  e.g.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">world_pos</span><span class="p">:</span>
-    <span class="nb">type</span> <span class="p">:</span> <span class="n">RADec</span>
-    <span class="n">ra</span> <span class="p">:</span> <span class="mi">37</span> <span class="n">hours</span>
-    <span class="n">dec</span><span class="p">:</span> <span class="o">-</span><span class="mi">23</span> <span class="n">degrees</span>
-</pre></div>
-</div>
-<p>Technically, any other type that results in a CelestialCoord is valid, but RADec is the
-only one that is defined natively in GalSim.</p>
-</li>
-<li><p>For the relative position in the local tangent plane (where 0,0 is the position of the
-image center), you can use any PositionD type.  e.g.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">world_pos</span><span class="p">:</span>
-    <span class="nb">type</span> <span class="p">:</span> <span class="n">RandomCircle</span>
-    <span class="n">radius</span> <span class="p">:</span> <span class="mi">12</span>       <span class="c1"># arcsec</span>
-    <span class="n">inner_radius</span> <span class="p">:</span> <span class="mi">3</span>  <span class="c1"># arcsec</span>
-</pre></div>
-</div>
-</li>
-</ol>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – The configuration dict for the stamp field.</p></li>
-<li><p><strong>param_name</strong> – The name of the field in the config dict to parse as a world_pos.
-Normally, this is just ‘world_pos’.</p></li>
-<li><p><strong>base</strong> – The base configuration dict.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>either a CelestialCoord or a PositionD instance.</p>
 </dd>
 </dl>
 </dd></dl>

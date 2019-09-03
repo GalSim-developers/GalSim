@@ -348,7 +348,6 @@
 
     <span class="k">def</span> <span class="nf">_load_from_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">astropy.wcs</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">fits</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
             <span class="c1"># The constructor might emit warnings if it wants to fix the header</span>
             <span class="c1"># information (e.g. RADECSYS -&gt; RADESYSa).  We&#39;d rather ignore these</span>
@@ -459,7 +458,6 @@
         <span class="k">return</span> <span class="n">d</span>
 
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="kn">import</span> <span class="nn">galsim</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_from_header</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span></div>
 
@@ -745,7 +743,6 @@
         <span class="k">return</span> <span class="n">d</span>
 
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="kn">import</span> <span class="nn">galsim</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_wcsinfo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_from_header</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span></div>
 

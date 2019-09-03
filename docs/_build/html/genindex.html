@@ -203,7 +203,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gsobject.html#galsim.GSObject.__add__">__add__() (galsim.GSObject method)</a>
+
+      <ul>
+        <li><a href="zernike.html#galsim.zernike.Zernike.__add__">(galsim.zernike.Zernike method)</a>
 </li>
+      </ul></li>
       <li><a href="bandpass.html#galsim.Bandpass.__call__">__call__() (galsim.Bandpass method)</a>
 
       <ul>
@@ -235,6 +239,8 @@
 </li>
         <li><a href="powerspectrum.html#galsim.lensing_ps.PowerSpectrumRealizer.__call__">(galsim.lensing_ps.PowerSpectrumRealizer method)</a>
 </li>
+        <li><a href="zernike.html#galsim.zernike.Zernike.__call__">(galsim.zernike.Zernike method)</a>
+</li>
       </ul></li>
       <li><a href="noise.html#galsim.BaseNoise.__div__">__div__() (galsim.BaseNoise method)</a>
 
@@ -259,13 +265,25 @@
 </li>
         <li><a href="sed.html#galsim.SED.__mul__">(galsim.SED method)</a>
 </li>
-      </ul></li>
-      <li><a href="gsobject.html#galsim.GSObject.__rmul__">__rmul__() (galsim.GSObject method)</a>
+        <li><a href="zernike.html#galsim.zernike.Zernike.__mul__">(galsim.zernike.Zernike method)</a>
 </li>
+      </ul></li>
+      <li><a href="zernike.html#galsim.zernike.Zernike.__neg__">__neg__() (galsim.zernike.Zernike method)</a>
+</li>
+      <li><a href="gsobject.html#galsim.GSObject.__rmul__">__rmul__() (galsim.GSObject method)</a>
+
+      <ul>
+        <li><a href="zernike.html#galsim.zernike.Zernike.__rmul__">(galsim.zernike.Zernike method)</a>
+</li>
+      </ul></li>
       <li><a href="image_class.html#galsim.Image.__setitem__">__setitem__() (galsim.Image method)</a>
 </li>
       <li><a href="gsobject.html#galsim.GSObject.__sub__">__sub__() (galsim.GSObject method)</a>
+
+      <ul>
+        <li><a href="zernike.html#galsim.zernike.Zernike.__sub__">(galsim.zernike.Zernike method)</a>
 </li>
+      </ul></li>
       <li><a href="image_class.html#galsim.Image._addValue">_addValue() (galsim.Image method)</a>
 </li>
       <li><a href="units.html#galsim._Angle">_Angle() (in module galsim)</a>
@@ -282,14 +300,14 @@
 </li>
       <li><a href="config_objects.html#galsim.config.gsobject._BuildList">_BuildList() (in module galsim.config.gsobject)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="config_objects.html#galsim.config.gsobject._BuildOpticalPSF">_BuildOpticalPSF() (in module galsim.config.gsobject)</a>
 </li>
       <li><a href="config_input.html#galsim.config.input_real._BuildRealGalaxy">_BuildRealGalaxy() (in module galsim.config.input_real)</a>
 </li>
       <li><a href="config_input.html#galsim.config.input_real._BuildRealGalaxyOriginal">_BuildRealGalaxyOriginal() (in module galsim.config.input_real)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="gsobject.html#galsim.GSObject._calculate_nphotons">_calculate_nphotons() (galsim.GSObject method)</a>
 </li>
       <li><a href="gsobject.html#galsim.GSObject._drawKImage">_drawKImage() (galsim.GSObject method)</a>
@@ -580,10 +598,10 @@
 </li>
       <li><a href="bounds.html#galsim.BoundsD">BoundsD (class in galsim)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="bounds.html#galsim.BoundsI">BoundsI (class in galsim)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="simple.html#galsim.Box">Box (class in galsim)</a>
 </li>
       <li><a href="chromaticobject.html#galsim.ChromaticAtmosphere.build_obj">build_obj() (galsim.ChromaticAtmosphere method)</a>
@@ -609,6 +627,8 @@
       <li><a href="config_process.html#galsim.config.BuildImages">BuildImages() (in module galsim.config)</a>
 </li>
       <li><a href="config_stamp.html#galsim.config.StampBuilder.buildProfile">buildProfile() (galsim.config.StampBuilder method)</a>
+</li>
+      <li><a href="config_stamp.html#galsim.config.StampBuilder.buildPSF">buildPSF() (galsim.config.StampBuilder method)</a>
 </li>
       <li><a href="config_process.html#galsim.config.BuildStamp">BuildStamp() (in module galsim.config)</a>
 </li>
@@ -657,7 +677,7 @@
       <ul>
         <li><a href="image_class.html#galsim.Image.calculateHLR">(galsim.Image method)</a>
 </li>
-        <li><a href="gal.html#galsim.RandomWalk.calculateHLR">(galsim.RandomWalk method)</a>
+        <li><a href="gal.html#galsim.RandomKnots.calculateHLR">(galsim.RandomKnots method)</a>
 </li>
       </ul></li>
       <li><a href="gal.html#galsim.Sersic.calculateHLRFactor">calculateHLRFactor() (galsim.Sersic method)</a>
@@ -728,10 +748,10 @@
 </li>
       <li><a href="chromaticobject.html#galsim.ChromaticAiry">ChromaticAiry (class in galsim)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chromaticobject.html#galsim.ChromaticAtmosphere">ChromaticAtmosphere (class in galsim)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chromaticobject.html#galsim.ChromaticAutoConvolution">ChromaticAutoConvolution (class in galsim)</a>
 </li>
       <li><a href="chromaticobject.html#galsim.ChromaticAutoCorrelation">ChromaticAutoCorrelation (class in galsim)</a>
@@ -754,6 +774,8 @@
 </li>
       <li><a href="config_process.html#galsim.config.CleanConfig">CleanConfig() (in module galsim.config)</a>
 </li>
+      <li><a href="fits.html#galsim.fits.FitsHeader.clear">clear() (galsim.fits.FitsHeader method)</a>
+</li>
       <li><a href="deviate.html#galsim.BaseDeviate.clearCache">clearCache() (galsim.BaseDeviate method)</a>
 </li>
       <li><a href="fits.html#galsim.fits.closeHDUList">closeHDUList() (in module galsim.fits)</a>
@@ -761,6 +783,8 @@
       <li><a href="gsparams.html#galsim.GSParams.combine">combine() (galsim.GSParams static method)</a>
 </li>
       <li><a href="misc.html#galsim.utilities.combine_wave_list">combine_wave_list() (in module galsim.utilities)</a>
+</li>
+      <li><a href="fits.html#galsim.fits.FitsHeader.comment">comment() (galsim.fits.FitsHeader method)</a>
 </li>
       <li><a href="wcs.html#galsim.wcs.compatible">compatible() (in module galsim.wcs)</a>
 </li>
@@ -873,6 +897,8 @@
 </li>
         <li><a href="gsobject.html#galsim.GSObject.dilate">(galsim.GSObject method)</a>
 </li>
+        <li><a href="gal.html#galsim.RandomKnots.dilate">(galsim.RandomKnots method)</a>
+</li>
       </ul></li>
       <li><a href="chromaticobject.html#galsim.ChromaticObject.dimensionless">dimensionless() (galsim.ChromaticObject property)</a>
 
@@ -894,10 +920,10 @@
 </li>
       <li><a href="units.html#galsim.Angle.dms">dms() (galsim.Angle method)</a>
 </li>
-      <li><a href="psf.html#galsim.VonKarman.do_delta">do_delta() (galsim.VonKarman property)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="psf.html#galsim.VonKarman.do_delta">do_delta() (galsim.VonKarman property)</a>
+</li>
       <li><a href="misc.html#galsim.utilities.doc_inherit">doc_inherit (class in galsim.utilities)</a>
 </li>
       <li><a href="misc.html#galsim.utilities.dol_to_lod">dol_to_lod() (in module galsim.utilities)</a>
@@ -1010,6 +1036,8 @@
 </li>
       <li><a href="zernike.html#galsim.zernike.Zernike.evalCartesian">evalCartesian() (galsim.zernike.Zernike method)</a>
 </li>
+      <li><a href="zernike.html#galsim.zernike.Zernike.evalCartesianGrad">evalCartesianGrad() (galsim.zernike.Zernike method)</a>
+</li>
       <li><a href="zernike.html#galsim.zernike.Zernike.evalPolar">evalPolar() (galsim.zernike.Zernike method)</a>
 </li>
       <li><a href="chromaticobject.html#galsim.ChromaticAiry.evaluateAtWavelength">evaluateAtWavelength() (galsim.ChromaticAiry method)</a>
@@ -1051,8 +1079,12 @@
 </li>
         <li><a href="gsobject.html#galsim.GSObject.expand">(galsim.GSObject method)</a>
 </li>
+        <li><a href="gal.html#galsim.RandomKnots.expand">(galsim.RandomKnots method)</a>
+</li>
       </ul></li>
       <li><a href="gal.html#galsim.Exponential">Exponential (class in galsim)</a>
+</li>
+      <li><a href="fits.html#galsim.fits.FitsHeader.extend">extend() (galsim.fits.FitsHeader method)</a>
 </li>
       <li><a href="config_output.html#galsim.config.ExtraOutputBuilder">ExtraOutputBuilder (class in galsim.config)</a>
 </li>
@@ -1219,6 +1251,12 @@
       <li><a href="deviate.html#galsim.GaussianDeviate.generate_from_variance">generate_from_variance() (galsim.GaussianDeviate method)</a>
 </li>
       <li><a href="catalog.html#galsim.Catalog.get">get() (galsim.Catalog method)</a>
+
+      <ul>
+        <li><a href="fits.html#galsim.fits.FitsHeader.get">(galsim.fits.FitsHeader method)</a>
+</li>
+      </ul></li>
+      <li><a href="image_class.html#galsim.Image.get_pixel_centers">get_pixel_centers() (galsim.Image method)</a>
 </li>
       <li><a href="dcr.html#galsim.dcr.get_refraction">get_refraction() (in module galsim.dcr)</a>
 </li>
@@ -1243,6 +1281,8 @@
       <li><a href="config_process.html#galsim.config.GetCurrentValue">GetCurrentValue() (in module galsim.config)</a>
 </li>
       <li><a href="wcs.html#galsim.JacobianWCS.getDecomposition">getDecomposition() (galsim.JacobianWCS method)</a>
+</li>
+      <li><a href="config_stamp.html#galsim.config.StampBuilder.getDrawMethod">getDrawMethod() (galsim.config.StampBuilder method)</a>
 </li>
       <li><a href="config_output.html#galsim.config.OutputBuilder.getFilename">getFilename() (galsim.config.OutputBuilder method)</a>
 </li>
@@ -1324,6 +1364,8 @@
 </li>
       <li><a href="config_image.html#galsim.config.NoiseBuilder.getNoiseVariance">getNoiseVariance() (galsim.config.NoiseBuilder method)</a>
 </li>
+      <li><a href="config_stamp.html#galsim.config.StampBuilder.getOffset">getOffset() (galsim.config.StampBuilder method)</a>
+</li>
       <li><a href="real_gal.html#galsim.COSMOSCatalog.getParametricRecord">getParametricRecord() (galsim.COSMOSCatalog method)</a>
 </li>
       <li><a href="arbitrary.html#galsim.Shapelet.getPQ">getPQ() (galsim.Shapelet method)</a>
@@ -1352,6 +1394,8 @@
         <li><a href="powerspectrum.html#galsim.PowerSpectrum.getShear">(galsim.PowerSpectrum method)</a>
 </li>
       </ul></li>
+      <li><a href="config_stamp.html#galsim.config.StampBuilder.getSkip">getSkip() (galsim.config.StampBuilder method)</a>
+</li>
       <li><a href="config_process.html#galsim.config.GetSky">GetSky() (in module galsim.config)</a>
 </li>
       <li><a href="wfirst.html#galsim.wfirst.getSkyLevel">getSkyLevel() (in module galsim.wfirst)</a>
@@ -1524,7 +1568,7 @@
 </li>
       <li><a href="phase_psf.html#galsim.phase_screens.initWorkerArgs">initWorkerArgs() (in module galsim.phase_screens)</a>
 </li>
-      <li><a href="gal.html#galsim.RandomWalk.input_half_light_radius">input_half_light_radius() (galsim.RandomWalk property)</a>
+      <li><a href="gal.html#galsim.RandomKnots.input_half_light_radius">input_half_light_radius() (galsim.RandomKnots property)</a>
 </li>
       <li><a href="config_input.html#galsim.config.InputLoader">InputLoader (class in galsim.config)</a>
 </li>
@@ -1542,10 +1586,10 @@
 </li>
       <li><a href="chromaticobject.html#galsim.ChromaticObject.interpolate">interpolate() (galsim.ChromaticObject method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="chromaticobject.html#galsim.InterpolatedChromaticObject">InterpolatedChromaticObject (class in galsim)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="arbitrary.html#galsim.InterpolatedImage">InterpolatedImage (class in galsim)</a>
 </li>
       <li><a href="arbitrary.html#galsim.InterpolatedKImage">InterpolatedKImage (class in galsim)</a>
@@ -1604,6 +1648,8 @@
         <li><a href="wcs.html#galsim.wcs.UniformWCS.isUniform">(galsim.wcs.UniformWCS method)</a>
 </li>
       </ul></li>
+      <li><a href="fits.html#galsim.fits.FitsHeader.items">items() (galsim.fits.FitsHeader method)</a>
+</li>
       <li><a href="bessel.html#galsim.bessel.iv">iv() (in module galsim.bessel)</a>
 </li>
       <li><a href="interpolant.html#galsim.Cubic.ixrange">ixrange() (galsim.Cubic property)</a>
@@ -1670,6 +1716,8 @@
         <li><a href="phase_psf.html#galsim.SecondKick.kcrit">(galsim.SecondKick property)</a>
 </li>
       </ul></li>
+      <li><a href="fits.html#galsim.fits.FitsHeader.keys">keys() (galsim.fits.FitsHeader method)</a>
+</li>
       <li><a href="arbitrary.html#galsim.InterpolatedKImage.kimage">kimage() (galsim.InterpolatedKImage property)</a>
 </li>
       <li><a href="phase_psf.html#galsim.AtmosphericScreen.kmax">kmax() (galsim.AtmosphericScreen property)</a>
@@ -1747,6 +1795,10 @@
       <li><a href="wcs.html#galsim.BaseWCS.local">local() (galsim.BaseWCS method)</a>
 </li>
       <li><a href="wcs.html#galsim.wcs.LocalWCS">LocalWCS (class in galsim.wcs)</a>
+</li>
+      <li><a href="config_stamp.html#galsim.config.StampBuilder.locateStamp">locateStamp() (galsim.config.StampBuilder method)</a>
+</li>
+      <li><a href="config_process.html#galsim.config.LoggerWrapper">LoggerWrapper (class in galsim.config)</a>
 </li>
       <li><a href="table.html#galsim.LookupTable">LookupTable (class in galsim)</a>
 </li>
@@ -1878,7 +1930,7 @@
 </li>
       <li><a href="phase_psf.html#galsim.Aperture.npix">npix() (galsim.Aperture property)</a>
 </li>
-      <li><a href="gal.html#galsim.RandomWalk.npoints">npoints() (galsim.RandomWalk property)</a>
+      <li><a href="gal.html#galsim.RandomKnots.npoints">npoints() (galsim.RandomKnots property)</a>
 </li>
       <li><a href="powerspectrum.html#galsim.PowerSpectrum.nRandCallsForBuildGrid">nRandCallsForBuildGrid() (galsim.PowerSpectrum method)</a>
 </li>
@@ -2016,13 +2068,13 @@
 </li>
       <li><a href="wcs.html#galsim.PixelScale">PixelScale (class in galsim)</a>
 </li>
-      <li><a href="gal.html#galsim.RandomWalk.points">points() (galsim.RandomWalk property)</a>
-</li>
       <li><a href="deviate.html#galsim.PoissonDeviate">PoissonDeviate (class in galsim)</a>
 </li>
       <li><a href="noise.html#galsim.PoissonNoise">PoissonNoise (class in galsim)</a>
 </li>
       <li><a href="config_image.html#galsim.config.PoissonNoiseBuilder">PoissonNoiseBuilder (class in galsim.config)</a>
+</li>
+      <li><a href="fits.html#galsim.fits.FitsHeader.pop">pop() (galsim.fits.FitsHeader method)</a>
 </li>
       <li><a href="pos.html#galsim.Position">Position (class in galsim)</a>
 </li>
@@ -2106,9 +2158,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shear.html#galsim.Shear.q">q() (galsim.Shear property)</a>
 </li>
+      <li><a href="image_class.html#galsim.Image.quantize">quantize() (galsim.Image method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="image_class.html#galsim.Image.quantize">quantize() (galsim.Image method)</a>
+      <li><a href="config_stamp.html#galsim.config.StampBuilder.quickSkip">quickSkip() (galsim.config.StampBuilder method)</a>
 </li>
       <li><a href="interpolant.html#galsim.Quintic">Quintic (class in galsim)</a>
 </li>
@@ -2148,7 +2202,7 @@
 </li>
       <li><a href="misc.html#galsim.utilities.rand_with_replacement">rand_with_replacement() (in module galsim.utilities)</a>
 </li>
-      <li><a href="gal.html#galsim.RandomWalk">RandomWalk (class in galsim)</a>
+      <li><a href="gal.html#galsim.RandomKnots">RandomKnots (class in galsim)</a>
 </li>
       <li><a href="deviate.html#galsim.BaseDeviate.raw">raw() (galsim.BaseDeviate method)</a>
 </li>
@@ -2256,6 +2310,8 @@
         <li><a href="chromaticobject.html#galsim.ChromaticObject.rotate">(galsim.ChromaticObject method)</a>
 </li>
         <li><a href="gsobject.html#galsim.GSObject.rotate">(galsim.GSObject method)</a>
+</li>
+        <li><a href="gal.html#galsim.RandomKnots.rotate">(galsim.RandomKnots method)</a>
 </li>
         <li><a href="zernike.html#galsim.zernike.Zernike.rotate">(galsim.zernike.Zernike method)</a>
 </li>
@@ -2378,12 +2434,12 @@
 </li>
       <li><a href="config_process.html#galsim.config.SetupConfigStampSize">SetupConfigStampSize() (in module galsim.config)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="config_process.html#galsim.config.SetupExtraOutput">SetupExtraOutput() (in module galsim.config)</a>
 </li>
       <li><a href="config_process.html#galsim.config.SetupExtraOutputsForImage">SetupExtraOutputsForImage() (in module galsim.config)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="config_output.html#galsim.config.ExtraOutputBuilder.setupImage">setupImage() (galsim.config.ExtraOutputBuilder method)</a>
 
       <ul>
@@ -2393,6 +2449,8 @@
       <li><a href="config_process.html#galsim.config.SetupInput">SetupInput() (in module galsim.config)</a>
 </li>
       <li><a href="config_process.html#galsim.config.SetupInputsForImage">SetupInputsForImage() (in module galsim.config)</a>
+</li>
+      <li><a href="config_stamp.html#galsim.config.StampBuilder.setupRNG">setupRNG() (galsim.config.StampBuilder method)</a>
 </li>
       <li><a href="image_class.html#galsim.Image.setValue">setValue() (galsim.Image method)</a>
 </li>
@@ -2413,6 +2471,8 @@
 </li>
         <li><a href="wcs.html#galsim.OffsetShearWCS.shear">(galsim.OffsetShearWCS property)</a>
 </li>
+        <li><a href="gal.html#galsim.RandomKnots.shear">(galsim.RandomKnots method)</a>
+</li>
         <li><a href="shear.html#galsim.Shear.shear">(galsim.Shear property)</a>
 </li>
         <li><a href="wcs.html#galsim.ShearWCS.shear">(galsim.ShearWCS property)</a>
@@ -2428,6 +2488,8 @@
         <li><a href="gsobject.html#galsim.GSObject.shift">(galsim.GSObject method)</a>
 </li>
         <li><a href="image_class.html#galsim.Image.shift">(galsim.Image method)</a>
+</li>
+        <li><a href="gal.html#galsim.RandomKnots.shift">(galsim.RandomKnots method)</a>
 </li>
       </ul></li>
       <li><a href="gsobject.html#galsim.GSObject.shoot">shoot() (galsim.GSObject method)</a>
@@ -2531,6 +2593,8 @@
 </li>
         <li><a href="gsobject.html#galsim.GSObject.transform">(galsim.GSObject method)</a>
 </li>
+        <li><a href="gal.html#galsim.RandomKnots.transform">(galsim.RandomKnots method)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -2582,15 +2646,19 @@
 </li>
       <li><a href="misc.html#galsim.utilities.unweighted_moments">unweighted_moments() (in module galsim.utilities)</a>
 </li>
+      <li><a href="misc.html#galsim.utilities.unweighted_shape">unweighted_shape() (in module galsim.utilities)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="misc.html#galsim.utilities.unweighted_shape">unweighted_shape() (in module galsim.utilities)</a>
+      <li><a href="fits.html#galsim.fits.FitsHeader.update">update() (galsim.fits.FitsHeader method)</a>
 </li>
       <li><a href="config_process.html#galsim.config.UpdateConfig">UpdateConfig() (in module galsim.config)</a>
 </li>
       <li><a href="config_process.html#galsim.config.UpdateGSParams">UpdateGSParams() (in module galsim.config)</a>
 </li>
       <li><a href="config_process.html#galsim.config.UpdateNProc">UpdateNProc() (in module galsim.config)</a>
+</li>
+      <li><a href="config_stamp.html#galsim.config.StampBuilder.updateOrigin">updateOrigin() (galsim.config.StampBuilder method)</a>
 </li>
       <li><a href="config_stamp.html#galsim.config.StampBuilder.updateSkip">updateSkip() (galsim.config.StampBuilder method)</a>
 </li>
@@ -2611,6 +2679,8 @@
       <li><a href="deviate.html#galsim.DistDeviate.val">val() (galsim.DistDeviate method)</a>
 </li>
       <li><a href="units.html#galsim.AngleUnit.value">value() (galsim.AngleUnit property)</a>
+</li>
+      <li><a href="fits.html#galsim.fits.FitsHeader.values">values() (galsim.fits.FitsHeader method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -2674,12 +2744,50 @@
 </li>
       <li><a href="bounds.html#galsim.Bounds.withBorder">withBorder() (galsim.Bounds method)</a>
 </li>
-      <li><a href="chromaticobject.html#galsim.ChromaticObject.withFlux">withFlux() (galsim.ChromaticObject method)</a>
+      <li><a href="psf.html#galsim.Airy.withFlux">withFlux() (galsim.Airy method)</a>
 
       <ul>
+        <li><a href="simple.html#galsim.Box.withFlux">(galsim.Box method)</a>
+</li>
+        <li><a href="chromaticobject.html#galsim.ChromaticObject.withFlux">(galsim.ChromaticObject method)</a>
+</li>
+        <li><a href="gal.html#galsim.DeVaucouleurs.withFlux">(galsim.DeVaucouleurs method)</a>
+</li>
+        <li><a href="simple.html#galsim.DeltaFunction.withFlux">(galsim.DeltaFunction method)</a>
+</li>
+        <li><a href="gal.html#galsim.Exponential.withFlux">(galsim.Exponential method)</a>
+</li>
         <li><a href="gsobject.html#galsim.GSObject.withFlux">(galsim.GSObject method)</a>
 </li>
+        <li><a href="simple.html#galsim.Gaussian.withFlux">(galsim.Gaussian method)</a>
+</li>
+        <li><a href="gal.html#galsim.InclinedExponential.withFlux">(galsim.InclinedExponential method)</a>
+</li>
+        <li><a href="gal.html#galsim.InclinedSersic.withFlux">(galsim.InclinedSersic method)</a>
+</li>
+        <li><a href="psf.html#galsim.Kolmogorov.withFlux">(galsim.Kolmogorov method)</a>
+</li>
+        <li><a href="psf.html#galsim.Moffat.withFlux">(galsim.Moffat method)</a>
+</li>
+        <li><a href="psf.html#galsim.OpticalPSF.withFlux">(galsim.OpticalPSF method)</a>
+</li>
+        <li><a href="phase_psf.html#galsim.PhaseScreenPSF.withFlux">(galsim.PhaseScreenPSF method)</a>
+</li>
+        <li><a href="simple.html#galsim.Pixel.withFlux">(galsim.Pixel method)</a>
+</li>
+        <li><a href="gal.html#galsim.RandomKnots.withFlux">(galsim.RandomKnots method)</a>
+</li>
         <li><a href="sed.html#galsim.SED.withFlux">(galsim.SED method)</a>
+</li>
+        <li><a href="phase_psf.html#galsim.SecondKick.withFlux">(galsim.SecondKick method)</a>
+</li>
+        <li><a href="gal.html#galsim.Sersic.withFlux">(galsim.Sersic method)</a>
+</li>
+        <li><a href="gal.html#galsim.Spergel.withFlux">(galsim.Spergel method)</a>
+</li>
+        <li><a href="simple.html#galsim.TopHat.withFlux">(galsim.TopHat method)</a>
+</li>
+        <li><a href="psf.html#galsim.VonKarman.withFlux">(galsim.VonKarman method)</a>
 </li>
       </ul></li>
       <li><a href="chromaticobject.html#galsim.ChromaticObject.withFluxDensity">withFluxDensity() (galsim.ChromaticObject method)</a>
@@ -2762,6 +2870,8 @@
         <li><a href="chromaticobject.html#galsim.ChromaticSum.withScaledFlux">(galsim.ChromaticSum method)</a>
 </li>
         <li><a href="gsobject.html#galsim.GSObject.withScaledFlux">(galsim.GSObject method)</a>
+</li>
+        <li><a href="gal.html#galsim.RandomKnots.withScaledFlux">(galsim.RandomKnots method)</a>
 </li>
       </ul></li>
       <li><a href="corr_noise.html#galsim.BaseCorrelatedNoise.withScaledVariance">withScaledVariance() (galsim.BaseCorrelatedNoise method)</a>

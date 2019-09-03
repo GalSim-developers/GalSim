@@ -403,7 +403,12 @@
 
     <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Airy.withFlux"><a class="viewcode-back" href="../../psf.html#galsim.Airy.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Airy</span><span class="p">(</span><span class="n">lam_over_diam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span>
+                    <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

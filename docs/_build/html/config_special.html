@@ -107,6 +107,12 @@
 <li class="toctree-l3"><a class="reference internal" href="#template">template</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#special-specifications">Special Specifications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#index-key">index_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rng-index-key">rng_index_key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rng-num">rng_num</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
 </ul>
@@ -296,6 +302,47 @@ E.g. To have a bulge plus disk that have the same kinds of parameters, except th
 <li><p><a class="reference download internal" download="" href="_downloads/b06d696f13310734c255a97eff088d67/cgc_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc_psf.yaml</span></code></a></p></li>
 </ul>
 <p>for examples of this feature.</p>
+</div>
+</div>
+<div class="section" id="special-specifications">
+<h1>Special Specifications<a class="headerlink" href="#special-specifications" title="Permalink to this headline">¶</a></h1>
+<p>A few specifications may be used almost anywhere in the config to adjust how the values in those
+fields are processed.  They are automatically propagated to lower levels in the dictionary.
+For instance, if you set <code class="docutils literal notranslate"><span class="pre">index_key</span> <span class="pre">:</span> <span class="pre">image_num</span></code> in the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field, then all values
+generated for any aspect of the psf will be constant for a whole image and only change
+when the processing goes on to the next image.</p>
+<div class="section" id="index-key">
+<h2>index_key<a class="headerlink" href="#index-key" title="Permalink to this headline">¶</a></h2>
+<p>This specifies the cadence on which to generate a new value for each non-constant value.
+There are default cadences for each of the major top-level fields, but if you want to specify
+a different cadence for some value or field, then you can override it.</p>
+<p>Options are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘file_num’  Update the values for each new file.  This is the default for items in the <code class="docutils literal notranslate"><span class="pre">input</span></code> and <code class="docutils literal notranslate"><span class="pre">output</span></code> fields.</p></li>
+<li><p>‘image_num’  Update the values for each new image.  This is the default for items in the <code class="docutils literal notranslate"><span class="pre">image</span></code> field that apply to the full image (i.e. not including <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>, etc.).</p></li>
+<li><p>‘obj_num’  Update the values for each object. This is the default for the other items in <code class="docutils literal notranslate"><span class="pre">image</span></code>, and also for items in <code class="docutils literal notranslate"><span class="pre">stamp</span></code>, <code class="docutils literal notranslate"><span class="pre">gal</span></code>, and <code class="docutils literal notranslate"><span class="pre">psf</span></code>.</p></li>
+<li><p>‘obj_num_in_file’  For this purpose, equivalent to ‘obj_num’.  (For ‘Sequence’ value types, there is an important distinction between the two.  See its description in <a class="reference internal" href="config_values.html#config-values"><span class="std std-ref">Config Values</span></a> for more details.)</p></li>
+</ul>
+</div></blockquote>
+<p>It is also possible for a custom module to add additional valid values here by adding to <code class="docutils literal notranslate"><span class="pre">galsim.config.valid_index_keys</span></code>, which is a list of strings, which are allowed.</p>
+</div>
+<div class="section" id="rng-index-key">
+<h2>rng_index_key<a class="headerlink" href="#rng-index-key" title="Permalink to this headline">¶</a></h2>
+<p>Each <code class="docutils literal notranslate"><span class="pre">index_key</span></code> has its own random number generator to use for generatinv values that need an rng object.  Normally you want these to match up, but this lets you specify to use the rng for a different key than is used for the actual sequencing.</p>
+<p>For instance, if you set <code class="docutils literal notranslate"><span class="pre">rng_index_key</span> <span class="pre">=</span> <span class="pre">'image_num'</span></code> for a <code class="docutils literal notranslate"><span class="pre">gal</span></code> value, then it will use the rng normally used for image_num items, but it will still generate a new value for each obj_num.</p>
+</div>
+<div class="section" id="rng-num">
+<h2>rng_num<a class="headerlink" href="#rng-num" title="Permalink to this headline">¶</a></h2>
+<p>Normally you specify a single random number seed, which spawns a sequence of rng objects that
+update according to the above index keys.  So an rng for each object is stored in <code class="docutils literal notranslate"><span class="pre">obj_num_rng</span></code>,
+one for image_num values is in <code class="docutils literal notranslate"><span class="pre">image_num_rng</span></code>, etc.</p>
+<p>However, you are allowed to specify this seed sequence manually, and in particular, you can
+have it be a list of several different sequences which update at different rates, and may
+repeat.  For instance, this may be useful to have some galaxy properties repeat for several
+exposures, while other properties of the observations are different for each exposure.</p>
+<p>You would specify which random number you want to use from such a list using <code class="docutils literal notranslate"><span class="pre">rng_num</span></code> in a
+field. See the description of <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> in  <a class="reference internal" href="config_image.html#image-field-attributes"><span class="std std-ref">Image Field Attributes</span></a> for more information.</p>
 </div>
 </div>
 

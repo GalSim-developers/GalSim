@@ -183,12 +183,17 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
-<span class="kn">import</span> <span class="nn">galsim</span>
+
+<span class="kn">from</span> <span class="nn">.stamp</span> <span class="k">import</span> <span class="n">StampBuilder</span><span class="p">,</span> <span class="n">RegisterStampType</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">BuildGSObject</span><span class="p">,</span> <span class="n">TransformObject</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..convolve</span> <span class="k">import</span> <span class="n">Convolve</span>
+<span class="kn">from</span> <span class="nn">..angle</span> <span class="k">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">radians</span>
 
 <span class="c1"># This file adds stamp type Ring which builds an object once every n times, and then</span>
 <span class="c1"># rotates it in a ring for the other n-1 times per per group.</span>
 
-<span class="kn">from</span> <span class="nn">.stamp</span> <span class="k">import</span> <span class="n">StampBuilder</span>
 <div class="viewcode-block" id="RingBuilder"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.stamp_ring.RingBuilder">[docs]</a><span class="k">class</span> <span class="nc">RingBuilder</span><span class="p">(</span><span class="n">StampBuilder</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This performs the tasks necessary for building a Ring stamp type.</span>
 
@@ -215,26 +220,25 @@
 <span class="sd">            xsize, ysize, image_pos, world_pos</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
-        <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;full_rotation&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">,</span> <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+        <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;full_rotation&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">,</span> <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
         <span class="c1"># Ignore the transformation specifications that are allowed in stamp for Ring types.</span>
         <span class="n">ignore</span> <span class="o">=</span> <span class="n">ignore</span> <span class="o">+</span> <span class="p">[</span>
             <span class="s1">&#39;dilate&#39;</span><span class="p">,</span> <span class="s1">&#39;dilation&#39;</span><span class="p">,</span> <span class="s1">&#39;ellip&#39;</span><span class="p">,</span> <span class="s1">&#39;rotate&#39;</span><span class="p">,</span> <span class="s1">&#39;rotation&#39;</span><span class="p">,</span> <span class="s1">&#39;scale_flux&#39;</span><span class="p">,</span>
             <span class="s1">&#39;magnify&#39;</span><span class="p">,</span> <span class="s1">&#39;magnification&#39;</span><span class="p">,</span> <span class="s1">&#39;shear&#39;</span><span class="p">,</span> <span class="s1">&#39;shift&#39;</span> <span class="p">]</span>
 
-        <span class="n">params</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">num</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;num&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">num</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Attribute num for gal.type == Ring must be &gt; 0&quot;</span><span class="p">,</span>
-                                                <span class="n">num</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Attribute num for gal.type == Ring must be &gt; 0&quot;</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
 
         <span class="c1"># Setup the indexing sequence if it hasn&#39;t been specified using the number of items.</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+        <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
 
         <span class="c1"># Set the default full_rotation to pi radians</span>
         <span class="k">if</span> <span class="s1">&#39;full_rotation&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
             <span class="kn">import</span> <span class="nn">math</span>
-            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;full_rotation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">galsim</span><span class="o">.</span><span class="n">radians</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;full_rotation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">radians</span>
 
         <span class="c1"># Now go on and do the base class setup.</span>
         <span class="n">ignore</span> <span class="o">=</span> <span class="n">ignore</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">req</span><span class="p">)</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">opt</span><span class="p">)</span>
@@ -260,34 +264,34 @@
 <span class="sd">            the final profile</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># These have all already been checked to exist in SetupRing.</span>
-        <span class="n">num</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">index</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">num</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;index </span><span class="si">%d</span><span class="s2"> out of bounds for Ring&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;index </span><span class="si">%d</span><span class="s2"> out of bounds for Ring&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">index</span> <span class="o">%</span> <span class="n">num</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># Then we are on the first item in the ring, so make it normally.</span>
-            <span class="n">gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildGSObject</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;gal&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">gal</span> <span class="o">=</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;gal&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">gal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                     <span class="s2">&quot;The gal field must define a valid galaxy for stamp type=Ring.&quot;</span><span class="p">)</span>
             <span class="c1"># Save the galaxy profile for next time.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">first</span> <span class="o">=</span> <span class="n">gal</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Grab the saved first galaxy.</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;first&#39;</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                     <span class="s2">&quot;Building Ring after the first item, but no first gal stored.&quot;</span><span class="p">)</span>
             <span class="n">gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">first</span>
-            <span class="n">full_rot</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;full_rotation&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">full_rot</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;full_rotation&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">Angle</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">dtheta</span> <span class="o">=</span> <span class="n">full_rot</span> <span class="o">/</span> <span class="n">num</span>
             <span class="n">gal</span> <span class="o">=</span> <span class="n">gal</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">index</span><span class="o">*</span><span class="n">dtheta</span><span class="p">)</span>
 
         <span class="c1"># Apply any transformations that are given in the stamp field.</span>
-        <span class="n">gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">TransformObject</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">gal</span> <span class="o">=</span> <span class="n">TransformObject</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span><span class="n">psf</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Convolve</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span><span class="n">psf</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">gal</span>
 
@@ -308,7 +312,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            whether the galaxy was rejected.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">index</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">index</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">RingBuilder</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">reject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -331,15 +335,14 @@
 <span class="sd">            a list of tasks</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;num&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Attribute num is required for type = Ring&quot;</span><span class="p">)</span>
-        <span class="n">num</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Attribute num is required for type = Ring&quot;</span><span class="p">)</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">ntot</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">jobs</span><span class="p">)</span>
         <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span> <span class="p">(</span><span class="n">jobs</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="nb">min</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="n">num</span><span class="p">,</span><span class="n">ntot</span><span class="p">))</span> <span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntot</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span> <span class="p">]</span>
         <span class="k">return</span> <span class="n">tasks</span></div>
 
 
 <span class="c1"># Register this as a valid stamp type</span>
-<span class="kn">from</span> <span class="nn">.stamp</span> <span class="k">import</span> <span class="n">RegisterStampType</span>
 <span class="n">RegisterStampType</span><span class="p">(</span><span class="s1">&#39;Ring&#39;</span><span class="p">,</span> <span class="n">RingBuilder</span><span class="p">())</span>
 
 </pre></div>

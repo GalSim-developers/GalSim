@@ -117,6 +117,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
 </ul>
@@ -722,9 +723,11 @@ attribute that defines what kind of WCS to use.  The wcs types that are defined 
 </li>
 </ul>
 <p>In addition, all wcs types can define an origin in either image coordinates, world coordinates, or
-both:
-* <code class="docutils literal notranslate"><span class="pre">origin</span></code> = <em>pos_value</em> (default = (0,0))  Optionally set the image coordinates to use as the origin position, if not (x,y) = (0,0).  Special: You can also specify <code class="docutils literal notranslate"><span class="pre">origin</span></code> to be ‘center’, in which case the origin is taken to be the center of the image rather than the corner.
-* <code class="docutils literal notranslate"><span class="pre">world_origin</span></code> = <em>pos_value</em> (default = (0,0))  Optionally set the world coordinates to use as the origin position, if not (u,v) = (0,0).  (Not available for the celestial WCS types: ‘RaDecFunction’, ‘Fits’, and ‘Tan’.)</p>
+both:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">origin</span></code> = <em>pos_value</em> (default = (0,0))  Optionally set the image coordinates to use as the origin position, if not (x,y) = (0,0).  Special: You can also specify <code class="docutils literal notranslate"><span class="pre">origin</span></code> to be ‘center’, in which case the origin is taken to be the center of the image rather than the corner.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_origin</span></code> = <em>pos_value</em> (default = (0,0))  Optionally set the world coordinates to use as the origin position, if not (u,v) = (0,0).  (Not available for the celestial WCS types: ‘RaDecFunction’, ‘Fits’, and ‘Tan’.)</p></li>
+</ul>
 <p>In addition to the above, you may also define your own custom WCS type in the usual way
 with an importable module where you define a custom Builder class and register it with GalSim.
 The class should be a subclass of <a class="reference internal" href="#galsim.config.WCSBuilder" title="galsim.config.WCSBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.WCSBuilder</span></code></a>.</p>

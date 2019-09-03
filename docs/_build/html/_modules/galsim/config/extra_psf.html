@@ -166,7 +166,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.config.extra_psf</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -184,13 +184,20 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">galsim</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="c1"># The psf extra output type builds an Image of the PSF at the same locations as the galaxies.</span>
+<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">ExtraOutputBuilder</span><span class="p">,</span> <span class="n">RegisterExtraOutput</span>
 <span class="kn">from</span> <span class="nn">.stamp</span> <span class="k">import</span> <span class="n">valid_draw_methods</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetCurrentValue</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">GetRNG</span>
+<span class="kn">from</span> <span class="nn">.noise</span> <span class="k">import</span> <span class="n">CalculateNoiseVariance</span><span class="p">,</span> <span class="n">AddNoise</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="k">import</span> <span class="n">ImageF</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="k">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigValueError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+
+<span class="c1"># The psf extra output type builds an Image of the PSF at the same locations as the galaxies.</span>
 
 <span class="c1"># The code the actually draws the PSF on a postage stamp.</span>
 <span class="k">def</span> <span class="nf">DrawPSFStamp</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -201,42 +208,42 @@
 <span class="sd">        the resulting image.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="s1">&#39;draw_method&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="n">method</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;draw_method&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;draw_method&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_draw_methods</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid draw_method.&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">valid_draw_methods</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid draw_method.&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">valid_draw_methods</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">method</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>
 
     <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="n">flux</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">flux</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
-        <span class="n">rng</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
         <span class="n">n_photons</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">flux</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">rng</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">n_photons</span> <span class="o">=</span> <span class="mi">0</span>
 
     <span class="n">wcs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">])</span>
-    <span class="n">im</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageF</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">wcs</span><span class="p">)</span>
+    <span class="n">im</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">wcs</span><span class="p">)</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">image</span><span class="o">=</span><span class="n">im</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">n_photons</span><span class="o">=</span><span class="n">n_photons</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s1">&#39;signal_to_noise&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Cannot specify both flux and signal_to_noise for psf output&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;signal_to_noise option not implemented for draw_method = phot&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="s1">&#39;noise&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]:</span>
-            <span class="n">noise_var</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">CalculateNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">noise_var</span> <span class="o">=</span> <span class="n">CalculateNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Need to specify noise level when using psf.signal_to_noise&quot;</span><span class="p">)</span>
 
-        <span class="n">sn_target</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;signal_to_noise&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">sn_target</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;signal_to_noise&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">sn_meas</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">array</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">noise_var</span> <span class="p">)</span>
         <span class="n">flux</span> <span class="o">=</span> <span class="n">sn_target</span> <span class="o">/</span> <span class="n">sn_meas</span>
@@ -246,7 +253,6 @@
 
 
 <span class="c1"># The function to call at the end of building each stamp</span>
-<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">ExtraOutputBuilder</span>
 <div class="viewcode-block" id="ExtraPSFBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.extra_psf.ExtraPSFBuilder">[docs]</a><span class="k">class</span> <span class="nc">ExtraPSFBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Build an image that draws the PSF at the same location as each object on the main image.</span>
 
@@ -257,7 +263,7 @@
     <span class="k">def</span> <span class="nf">processStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="c1"># If this doesn&#39;t exist, an appropriate exception will be raised.</span>
         <span class="n">psf</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">][</span><span class="s1">&#39;current&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">draw_method</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;draw_method&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+        <span class="n">draw_method</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;draw_method&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span> <span class="nb">str</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
         <span class="n">bounds</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span>
 
         <span class="c1"># Check if we should shift the psf:</span>
@@ -266,14 +272,12 @@
             <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;shift&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;galaxy&#39;</span><span class="p">:</span>
                 <span class="c1"># This shift value might be in either stamp or gal.</span>
                 <span class="k">if</span> <span class="s1">&#39;shift&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]:</span>
-                    <span class="n">shift</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;shift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span>
-                                                          <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+                    <span class="n">shift</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;shift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># This will raise an appropriate error if there is no gal.shift or stamp.shift.</span>
-                    <span class="n">shift</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;shift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;gal&#39;</span><span class="p">],</span>
-                                                          <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+                    <span class="n">shift</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;shift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;gal&#39;</span><span class="p">],</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">shift</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;shift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">shift</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;shift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: psf shift: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">shift</span><span class="p">))</span>
             <span class="n">psf</span> <span class="o">=</span> <span class="n">psf</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span>
 
@@ -284,21 +288,20 @@
             <span class="c1"># Special: output.psf.offset = &#39;galaxy&#39; means use the same offset as in the galaxy</span>
             <span class="c1">#          image, which is actually in config.stamp, not config.gal.</span>
             <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;galaxy&#39;</span><span class="p">:</span>
-                <span class="n">offset</span> <span class="o">+=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span>
-                                                        <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">offset</span> <span class="o">+=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: psf offset: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span>
 
         <span class="n">psf_im</span> <span class="o">=</span> <span class="n">DrawPSFStamp</span><span class="p">(</span><span class="n">psf</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="n">bounds</span><span class="p">,</span><span class="n">offset</span><span class="p">,</span><span class="n">draw_method</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;signal_to_noise&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span>
-            <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">AddNoise</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">psf_im</span><span class="p">,</span><span class="n">current_var</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+            <span class="n">AddNoise</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">psf_im</span><span class="p">,</span><span class="n">current_var</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">psf_im</span>
 
     <span class="c1"># The function to call at the end of building each image</span>
     <span class="k">def</span> <span class="nf">processImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">obj_nums</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageF</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_bounds&#39;</span><span class="p">],</span> <span class="n">wcs</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">],</span> <span class="n">init_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_bounds&#39;</span><span class="p">],</span> <span class="n">wcs</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">],</span> <span class="n">init_value</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
         <span class="c1"># Make sure to only use the stamps for objects in this image.</span>
         <span class="k">for</span> <span class="n">obj_num</span> <span class="ow">in</span> <span class="n">obj_nums</span><span class="p">:</span>
             <span class="n">stamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span>
@@ -312,7 +315,6 @@
 
 
 <span class="c1"># Register this as a valid extra output</span>
-<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">RegisterExtraOutput</span>
 <span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="n">ExtraPSFBuilder</span><span class="p">())</span>
 </pre></div>
 

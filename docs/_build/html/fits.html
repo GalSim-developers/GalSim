@@ -210,7 +210,7 @@ different ways while maintaining a intuitive front-end user interface.</p>
 <h2>Reading FITS Files<a class="headerlink" href="#reading-fits-files" title="Permalink to this headline">¶</a></h2>
 <dl class="function">
 <dt id="galsim.fits.read">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">compression='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">read_header=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> from a FITS file or HDUList.</p>
 <p>The normal usage for this function is to read a fits file and return the image contained
 therein, automatically decompressing it if necessary.  However, you may also pass it
@@ -258,6 +258,7 @@ want.)]</p></li>
 </ul>
 <p>[default: ‘auto’]</p>
 </p></li>
+<li><p><strong>read_header</strong> – Whether to read the header and store it as image.header.[default: False]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -268,7 +269,7 @@ want.)]</p></li>
 
 <dl class="function">
 <dt id="galsim.fits.readMulti">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readMulti</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">compression='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readMulti" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readMulti</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">read_headers=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readMulti" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances from a FITS file or HDUList.</p>
 <p>The normal usage for this function is to read a fits file and return a list of all the images
 contained therein, automatically decompressing them if necessary.  However, you may also pass
@@ -309,6 +310,7 @@ already include it. [default: None]</p></li>
 </ul>
 <p>[default: ‘auto’]</p>
 </p></li>
+<li><p><strong>read_headers</strong> – Whether to read the headers and store them as image.header.[default: False]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -746,7 +748,7 @@ to parse the file this way.  [default: False]</p></li>
 </dl>
 <dl class="method">
 <dt id="galsim.fits.FitsHeader.append">
-<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value=''</em>, <em class="sig-param">useblanks=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.append" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value=''</em>, <em class="sig-param">comment=None</em>, <em class="sig-param">useblanks=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.append" title="Permalink to this definition">¶</a></dt>
 <dd><p>Append an item to the end of the header.</p>
 <p>This breaks convention a bit by treating the header more like a list than a dict,
 but sometimes that is necessary to get the header structured the way you want it.</p>
@@ -754,10 +756,132 @@ but sometimes that is necessary to get the header structured the way you want it
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>key</strong> – The key of the entry to append</p></li>
-<li><p><strong>value</strong> – The value of the entry to append</p></li>
+<li><p><strong>value</strong> – The value of the entry to append [default: ‘’]</p></li>
+<li><p><strong>comment</strong> – A comment field if desired [default: None]</p></li>
 <li><p><strong>useblanks</strong> – If there are blank entries currently at the end, should they be
 overwritten with the new entry? [default: True]</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.clear">
+<code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear all values in the header.  Works like dict.clear.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.comment">
+<code class="sig-name descname">comment</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.comment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.comment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the comment field for the given key.</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>key:    The header key for which to get the comment field.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the comment field.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.extend">
+<code class="sig-name descname">extend</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">replace=False</em>, <em class="sig-param">useblanks=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extend this <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a> with items from another <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a>.</p>
+<p>Equivalent to appending all the other’s items to the end of this one with the
+exception that it ignores items that are already in self.
+If you want to replace existing values rather than ignore duplicates, use
+<code class="docutils literal notranslate"><span class="pre">replace=True</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>other</strong> – Another FitsHeader object.</p></li>
+<li><p><strong>replace</strong> – Replace duplicate entries rather than ignore them. [default: False]</p></li>
+<li><p><strong>useblanks</strong> – If there are blank entries currently at the end, should they be
+overwritten with the new entry? [default: True]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the value of a given key.  Works like dict.get.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The header key for which to get the value</p></li>
+<li><p><strong>default</strong> – Optionally, A value to use if the key is not present. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the value of the given key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.items">
+<code class="sig-name descname">items</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all header items.  Works like dict.items.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list of (key, value) tuples.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.keys">
+<code class="sig-name descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all header keys.  Works like dict.keys</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list of keys.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.pop">
+<code class="sig-name descname">pop</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.pop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pop off a value from the header.  Works like dict.pop.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> – The header key for which to get the value</p></li>
+<li><p><strong>default</strong> – Optionally, A value to use if the key is not present. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the value of the given key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">dict2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the header with a dict-like object.  Works like dict.update.</p>
+<p>If there are any items in <code class="docutils literal notranslate"><span class="pre">dict2</span></code> that are duplicates of items already in the header,
+the current items will ber overwritten.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>dict2</strong> – Another header or dict-like object with keys and values to update.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.fits.FitsHeader.values">
+<code class="sig-name descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all header values.  Works like dict.values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A list of values.</p>
 </dd>
 </dl>
 </dd></dl>

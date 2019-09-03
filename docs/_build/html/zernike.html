@@ -238,6 +238,11 @@ This convention is used consistently throughout GalSim, e.g., <a class="referenc
 </tr>
 </tbody>
 </table>
+<p>A few mathematical convenience operations are additionally available.  Zernikes can be added,
+subtracted, or multiplied together, or multiplied by scalars.  Note, however, that two
+Zernikes can only be combined this way if they have matching <code class="docutils literal notranslate"><span class="pre">R_outer</span></code> and <code class="docutils literal notranslate"><span class="pre">R_inner</span></code>
+attributes.  Zernike gradients, Laplacians and the determinant of the Hessian matrix are also
+available as properties that return new <a class="reference internal" href="#galsim.zernike.Zernike" title="galsim.zernike.Zernike"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Zernike</span></code></a> objects.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -249,6 +254,58 @@ coef[4] is ‘defocus’, …)</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__add__">
+<code class="sig-name descname">__add__</code><span class="sig-paren">(</span><em class="sig-param">rhs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__add__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__add__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add two Zernikes.</p>
+<p>Requires that each operand’s <code class="docutils literal notranslate"><span class="pre">R_outer</span></code> and <code class="docutils literal notranslate"><span class="pre">R_inner</span></code> attributes are the same.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__sub__">
+<code class="sig-name descname">__sub__</code><span class="sig-paren">(</span><em class="sig-param">rhs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__sub__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__sub__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtract two Zernikes.</p>
+<p>Requires that each operand’s <code class="docutils literal notranslate"><span class="pre">R_outer</span></code> and <code class="docutils literal notranslate"><span class="pre">R_inner</span></code> attributes are the same.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__neg__">
+<code class="sig-name descname">__neg__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__neg__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__neg__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Negate a Zernike.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__mul__">
+<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param">rhs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__mul__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiply two Zernikes, or multiply a Zernike by a scalar.</p>
+<p>If both operands are Zernikes, then the <code class="docutils literal notranslate"><span class="pre">R_outer</span></code> and <code class="docutils literal notranslate"><span class="pre">R_inner</span></code> attributes of each must
+be the same.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__rmul__">
+<code class="sig-name descname">__rmul__</code><span class="sig-paren">(</span><em class="sig-param">rhs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__rmul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__rmul__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Equivalent to obj * rhs.  See <a class="reference internal" href="#galsim.zernike.Zernike.__mul__" title="galsim.zernike.Zernike.__mul__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">__mul__</span></code></a> for details.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.__call__">
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__call__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
+Synonym for <a class="reference internal" href="#galsim.zernike.Zernike.evalCartesian" title="galsim.zernike.Zernike.evalCartesian"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evalCartesian</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x-coordinate of evaluation points.  Can be list-like.</p></li>
+<li><p><strong>y</strong> – y-coordinate of evaluation points.  Can be list-like.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Series evaluations as numpy array.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="method">
 <dt id="galsim.zernike.Zernike.evalCartesian">
 <code class="sig-name descname">evalCartesian</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalCartesian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalCartesian" title="Permalink to this definition">¶</a></dt>
@@ -262,6 +319,24 @@ coef[4] is ‘defocus’, …)</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>Series evaluations as numpy array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.zernike.Zernike.evalCartesianGrad">
+<code class="sig-name descname">evalCartesianGrad</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalCartesianGrad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalCartesianGrad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate the gradient of this Zernike polynomial series at cartesian coordinates
+x and y.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – x-coordinate of evaluation points.  Can be list-like.</p></li>
+<li><p><strong>y</strong> – y-coordinate of evaluation points.  Can be list-like.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Tuple of arrays for x-gradient and y-gradient.</p>
 </dd>
 </dl>
 </dd></dl>

@@ -1648,7 +1648,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_negative_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geometric_shooting</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mi">0</span>
+            <span class="k">return</span> <span class="mf">0.</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">negative_flux</span>
 
@@ -1722,7 +1722,17 @@
     <span class="k">def</span> <span class="nf">finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
         <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;finalized&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;This functionality has been removed.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span>
+
+<div class="viewcode-block" id="PhaseScreenPSF.withFlux"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span><span class="p">:</span>
+            <span class="c1"># Then it&#39;s probably not faster to rebuild with a different flux.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">flux</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">PhaseScreenPSF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span>
+                                  <span class="n">aper</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
+                                  <span class="n">scale_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="OpticalPSF"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF">[docs]</a><span class="k">class</span> <span class="nc">OpticalPSF</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
@@ -2142,7 +2152,16 @@
 
     <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OpticalPSF.withFlux"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">OpticalPSF</span><span class="p">(</span>
+                <span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="n">aper</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span>
+                <span class="n">aberrations</span><span class="o">=</span><span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">annular_zernike</span><span class="o">=</span><span class="n">screen</span><span class="o">.</span><span class="n">annular_zernike</span><span class="p">,</span>
+                <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span>
+                <span class="n">ii_pad_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

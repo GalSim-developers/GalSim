@@ -184,10 +184,27 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">galsim</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">GetRNG</span><span class="p">,</span> <span class="n">UpdateNProc</span><span class="p">,</span> <span class="n">MultiProcess</span><span class="p">,</span> <span class="n">SetupConfigRNG</span><span class="p">,</span> <span class="n">RemoveCurrent</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">SetupInput</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">UpdateGSParams</span><span class="p">,</span> <span class="n">SkipThisObject</span>
+<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">ProcessExtraOutputsForStamp</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">BuildGSObject</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">CheckAllParams</span>
+<span class="kn">from</span> <span class="nn">.noise</span> <span class="k">import</span> <span class="n">CalculateNoiseVariance</span><span class="p">,</span> <span class="n">AddSky</span><span class="p">,</span> <span class="n">AddNoise</span>
+<span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">BuildWCS</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageF</span>
+<span class="kn">from</span> <span class="nn">..wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="k">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
+<span class="kn">from</span> <span class="nn">..bounds</span> <span class="k">import</span> <span class="n">_BoundsI</span>
+<span class="kn">from</span> <span class="nn">..celestial</span> <span class="k">import</span> <span class="n">CelestialCoord</span>
+<span class="kn">from</span> <span class="nn">..angle</span> <span class="k">import</span> <span class="n">arcsec</span>
+<span class="kn">from</span> <span class="nn">..gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">..convolve</span> <span class="k">import</span> <span class="n">Convolve</span>
 
 <span class="c1"># This file handles the building of postage stamps to place onto a larger image.</span>
 <span class="c1"># There is only one type of stamp currently, called Basic, which builds a galaxy from</span>
@@ -227,15 +244,15 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        the tuple (images, current_vars).  Both are lists.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: BuildStamps nobjects = </span><span class="si">%d</span><span class="s1">: obj = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>
                  <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">nobjects</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
 
     <span class="c1"># Figure out how many processes we will use for building the stamps:</span>
     <span class="k">if</span> <span class="n">nobjects</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;nproc&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]:</span>
-        <span class="n">nproc</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="c1"># Update this in case the config value is -1</span>
-        <span class="n">nproc</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">UpdateNProc</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">nobjects</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="n">UpdateNProc</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">nobjects</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
 
@@ -271,9 +288,8 @@
     <span class="c1"># Each task is a list of (job, k) tuples.</span>
     <span class="n">tasks</span> <span class="o">=</span> <span class="n">MakeStampTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
-    <span class="n">results</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">MultiProcess</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">BuildStamp</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="s1">&#39;stamp&#39;</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span>
-                                         <span class="n">done_func</span> <span class="o">=</span> <span class="n">done_func</span><span class="p">,</span>
-                                         <span class="n">except_func</span> <span class="o">=</span> <span class="n">except_func</span><span class="p">)</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">MultiProcess</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">BuildStamp</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="s1">&#39;stamp&#39;</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span>
+                           <span class="n">done_func</span> <span class="o">=</span> <span class="n">done_func</span><span class="p">,</span> <span class="n">except_func</span> <span class="o">=</span> <span class="n">except_func</span><span class="p">)</span>
 
     <span class="n">images</span><span class="p">,</span> <span class="n">current_vars</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">results</span><span class="p">)</span>
 
@@ -287,7 +303,7 @@
 <span class="c1"># and backwards-compatibility reasons.  Any of these present will be copied over to</span>
 <span class="c1"># config[&#39;stamp&#39;] if they exist in config[&#39;image&#39;].</span>
 <span class="n">stamp_image_keys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="s1">&#39;retry_failures&#39;</span><span class="p">,</span> <span class="s1">&#39;gsparams&#39;</span><span class="p">,</span> <span class="s1">&#39;draw_method&#39;</span><span class="p">,</span>
-                    <span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;poisson_flux&#39;</span><span class="p">]</span>
+                    <span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;poisson_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;obj_rng&#39;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="SetupConfigObjNum"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigObjNum">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigObjNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Do the basic setup of the config dict at the stamp (or object) processing level.</span>
@@ -307,7 +323,7 @@
 <span class="sd">        obj_num:        The current obj_num.</span>
 <span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj_num</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;obj_num&#39;</span>
 
@@ -315,8 +331,12 @@
     <span class="k">if</span> <span class="s1">&#39;stamp&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">stamp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">&#39;_done&#39;</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span> <span class="k">return</span>
+
+    <span class="c1"># Everything after here only needs to be done once.</span>
+
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;config.stamp is not a dict.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;config.stamp is not a dict.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
         <span class="n">stamp</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Basic&#39;</span>
 
@@ -329,37 +349,28 @@
     <span class="c1"># These are things that we used to advertise as being in the image field, but now that</span>
     <span class="c1"># we have a stamp field, they really make more sense here.  But for backwards compatibility,</span>
     <span class="c1"># or just because they can make sense in either place, we allow them to be in &#39;image&#39; still.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_copied_image_keys_to_stamp&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">stamp_image_keys</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">image</span> <span class="ow">and</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
                 <span class="n">stamp</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_copied_image_keys_to_stamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">if</span> <span class="s1">&#39;draw_method&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
         <span class="n">stamp</span><span class="p">[</span><span class="s1">&#39;draw_method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;auto&#39;</span>
 
     <span class="c1"># In case this hasn&#39;t been done yet.</span>
-    <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SetupInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+    <span class="n">SetupInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
+    <span class="c1"># Mark this as done, so later passes can skip a lot of this.</span>
+    <span class="n">stamp</span><span class="p">[</span><span class="s1">&#39;_done&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="SetupConfigStampSize"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetupConfigStampSize">[docs]</a><span class="k">def</span> <span class="nf">SetupConfigStampSize</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Do further setup of the config dict at the stamp (or object) processing level reflecting</span>
 <span class="sd">    the stamp size and position in either image or world coordinates.</span>
 
-<span class="sd">    Includes:</span>
-
-<span class="sd">    - If given, set config[&#39;stamp_xsize&#39;] = xsize</span>
-<span class="sd">    - If given, set config[&#39;stamp_ysize&#39;] = ysize</span>
-<span class="sd">    - If only image_pos or world_pos is given, compute the other from config[&#39;wcs&#39;]</span>
-<span class="sd">    - Set config[&#39;index_pos&#39;] = image_pos</span>
-<span class="sd">    - Set config[&#39;world_pos&#39;] = world_pos</span>
-<span class="sd">    - Calculate the appropriate value of the center of the stamp, to be used with the</span>
-<span class="sd">      command: stamp_image.setCenter(stamp_center).  Save this as config[&#39;stamp_center&#39;]</span>
-<span class="sd">    - Calculate the appropriate offset for the position of the object from the center of</span>
-<span class="sd">      the stamp due to just the fractional part of the image position, not including</span>
-<span class="sd">      any config[&#39;stamp&#39;][&#39;offset&#39;] item that may be present in the config dict.</span>
-<span class="sd">      Save this as config[&#39;stamp_offset&#39;]</span>
+<span class="sd">    Note: This is now a StampBuilder method.  So this function just calls StampBuilder.locateStamp.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:         A configuration dict.</span>
@@ -369,74 +380,18 @@
 <span class="sd">        world_pos:      The position of the stamp in world coordinates. [may be None]</span>
 <span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">stamp</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;stamp&#39;</span><span class="p">,{})</span>
+    <span class="n">stamp_type</span> <span class="o">=</span> <span class="n">stamp</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="s1">&#39;Basic&#39;</span><span class="p">)</span>
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">valid_stamp_types</span><span class="p">[</span><span class="n">stamp_type</span><span class="p">]</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">locateStamp</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
 
-    <span class="c1"># Make sure we have a valid wcs in case image-level processing was skipped.</span>
-    <span class="k">if</span> <span class="s1">&#39;wcs&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildWCS</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">xsize</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_xsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xsize</span>
-    <span class="k">if</span> <span class="n">ysize</span><span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_ysize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ysize</span>
-
-    <span class="k">if</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Calculate and save the position relative to the image center</span>
-        <span class="k">if</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isCelestial</span><span class="p">():</span>
-            <span class="c1"># Wherever we use the world position, we expect a Euclidean position, not a</span>
-            <span class="c1"># CelestialCoord.  So if it is the latter, project it onto a tangent plane at the</span>
-            <span class="c1"># image center.</span>
-            <span class="n">world_center</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">]))</span>
-            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">project_center</span><span class="o">=</span><span class="n">world_center</span><span class="p">,</span>
-                                              <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
-
-    <span class="k">elif</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Calculate and save the position relative to the image center</span>
-        <span class="n">image_pos</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">world_pos</span><span class="p">)</span>
-
-    <span class="c1"># Wherever we use the world position, we expect a Euclidean position, not a</span>
-    <span class="c1"># CelestialCoord.  So if it is the latter, project it onto a tangent plane at the</span>
-    <span class="c1"># image center.</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">):</span>
-        <span class="c1"># Then project this position relative to the image center.</span>
-        <span class="n">world_center</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">]))</span>
-        <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">world_center</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
-        <span class="n">world_pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="n">u</span><span class="o">/</span><span class="n">galsim</span><span class="o">.</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">v</span><span class="o">/</span><span class="n">galsim</span><span class="o">.</span><span class="n">arcsec</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># The image_pos refers to the location of the true center of the image, which is</span>
-        <span class="c1"># not necessarily the nominal center we need for adding to the final image.  In</span>
-        <span class="c1"># particular, even-sized images have their nominal center offset by 1/2 pixel up</span>
-        <span class="c1"># and to the right.</span>
-        <span class="c1"># N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces</span>
-        <span class="c1"># even sized images.</span>
-        <span class="n">nominal_x</span> <span class="o">=</span> <span class="n">image_pos</span><span class="o">.</span><span class="n">x</span>        <span class="c1"># Make sure we don&#39;t change image_pos, which is</span>
-        <span class="n">nominal_y</span> <span class="o">=</span> <span class="n">image_pos</span><span class="o">.</span><span class="n">y</span>        <span class="c1"># stored in config[&#39;image_pos&#39;].</span>
-        <span class="k">if</span> <span class="n">xsize</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">nominal_x</span> <span class="o">+=</span> <span class="mf">0.5</span>
-        <span class="k">if</span> <span class="n">ysize</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">nominal_y</span> <span class="o">+=</span> <span class="mf">0.5</span>
-
-        <span class="n">stamp_center</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">nominal_x</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)),</span>
-                                        <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">nominal_y</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)))</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stamp_center</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="n">nominal_x</span><span class="o">-</span><span class="n">stamp_center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
-                                                  <span class="n">nominal_y</span><span class="o">-</span><span class="n">stamp_center</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_pos</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;world_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">world_pos</span>
-
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
-        <span class="c1"># Set the image_pos to the image center in case the wcs needs it.  Probably, if</span>
-        <span class="c1"># there is no image_pos or world_pos defined, then it is unlikely a</span>
-        <span class="c1"># non-trivial wcs will have been set.  So anything would actually be fine.</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span> <span class="p">(</span><span class="n">xsize</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">ysize</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="p">)</span>
-        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;world_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">world_pos</span></div>
 
 <span class="c1"># Ignore these when parsing the parameters for specific stamp types:</span>
 <span class="n">stamp_ignore</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;xsize&#39;</span><span class="p">,</span> <span class="s1">&#39;ysize&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="s1">&#39;retry_failures&#39;</span><span class="p">,</span> <span class="s1">&#39;gsparams&#39;</span><span class="p">,</span> <span class="s1">&#39;draw_method&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;poisson_flux&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="s1">&#39;reject&#39;</span><span class="p">,</span> <span class="s1">&#39;min_flux_frac&#39;</span><span class="p">,</span> <span class="s1">&#39;min_snr&#39;</span><span class="p">,</span> <span class="s1">&#39;max_snr&#39;</span><span class="p">]</span>
+                <span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="s1">&#39;reject&#39;</span><span class="p">,</span> <span class="s1">&#39;min_flux_frac&#39;</span><span class="p">,</span> <span class="s1">&#39;min_snr&#39;</span><span class="p">,</span> <span class="s1">&#39;max_snr&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;quick_skip&#39;</span><span class="p">,</span> <span class="s1">&#39;obj_rng&#39;</span><span class="p">,</span> <span class="s1">&#39;index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_num&#39;</span><span class="p">]</span>
 
 <span class="n">valid_draw_methods</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="s1">&#39;fft&#39;</span><span class="p">,</span> <span class="s1">&#39;phot&#39;</span><span class="p">,</span> <span class="s1">&#39;real_space&#39;</span><span class="p">,</span> <span class="s1">&#39;no_pixel&#39;</span><span class="p">,</span> <span class="s1">&#39;sb&#39;</span><span class="p">)</span>
 
@@ -456,21 +411,23 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        the tuple (image, current_var)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="n">SetupConfigObjNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
     <span class="n">stamp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]</span>
     <span class="n">stamp_type</span> <span class="o">=</span> <span class="n">stamp</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">stamp_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_stamp_types</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid stamp.type.&quot;</span><span class="p">,</span> <span class="n">stamp_type</span><span class="p">,</span> <span class="n">valid_stamp_types</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid stamp.type.&quot;</span><span class="p">,</span> <span class="n">stamp_type</span><span class="p">,</span> <span class="n">valid_stamp_types</span><span class="p">)</span>
     <span class="n">builder</span> <span class="o">=</span> <span class="n">valid_stamp_types</span><span class="p">[</span><span class="n">stamp_type</span><span class="p">]</span>
 
-    <span class="c1"># Add 1 to the seed here so the first object has a different rng than the file or image.</span>
-    <span class="n">seed</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">SetupConfigRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">seed_offset</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: seed = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span><span class="n">seed</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">builder</span><span class="o">.</span><span class="n">quickSkip</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">ProcessExtraOutputsForStamp</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">0</span>
+
+    <span class="n">builder</span><span class="o">.</span><span class="n">setupRNG</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s1">&#39;retry_failures&#39;</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
-        <span class="n">ntries</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span><span class="s1">&#39;retry_failures&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">ntries</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span><span class="s1">&#39;retry_failures&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="c1"># This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.</span>
         <span class="n">ntries</span> <span class="o">=</span> <span class="n">ntries</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="k">elif</span> <span class="p">(</span><span class="s1">&#39;reject&#39;</span> <span class="ow">in</span> <span class="n">stamp</span> <span class="ow">or</span> <span class="s1">&#39;min_flux_frac&#39;</span> <span class="ow">in</span> <span class="n">stamp</span> <span class="ow">or</span>
@@ -494,23 +451,13 @@
             <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span>
                     <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">stamp_ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
-            <span class="c1"># Save these values for possible use in Evals or other modules</span>
-            <span class="n">SetupConfigStampSize</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-            <span class="n">stamp_center</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_center&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">xsize</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: xsize,ysize = </span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span><span class="n">xsize</span><span class="p">,</span><span class="n">ysize</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">image_pos</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: image_pos = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span><span class="n">image_pos</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">world_pos</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: world_pos = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span><span class="n">world_pos</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">stamp_center</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_center = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span><span class="n">stamp_center</span><span class="p">)</span>
+            <span class="c1"># Determine the stamp size and location</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">locateStamp</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
             <span class="c1"># Get the global gsparams kwargs.  Individual objects can add to this.</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">if</span> <span class="s1">&#39;gsparams&#39;</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
-                <span class="n">gsparams</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">UpdateGSParams</span><span class="p">(</span>
-                    <span class="n">gsparams</span><span class="p">,</span> <span class="n">stamp</span><span class="p">[</span><span class="s1">&#39;gsparams&#39;</span><span class="p">],</span> <span class="n">config</span><span class="p">)</span>
+                <span class="n">gsparams</span> <span class="o">=</span> <span class="n">UpdateGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">stamp</span><span class="p">[</span><span class="s1">&#39;gsparams&#39;</span><span class="p">],</span> <span class="n">config</span><span class="p">)</span>
 
             <span class="c1"># Note: Skip is different from Reject.</span>
             <span class="c1">#       Skip means we return None for this stamp image and continue on.</span>
@@ -521,52 +468,36 @@
             <span class="c1">#       Skip is also different from prof = None.</span>
             <span class="c1">#       If prof is None, then the user indicated that no object should be</span>
             <span class="c1">#       drawn on this stamp, but that a noise image is still desired.</span>
-            <span class="k">if</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
-                <span class="n">skip</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Skipping object </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">builder</span><span class="o">.</span><span class="n">getSkip</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">SkipThisObject</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
-                <span class="k">try</span> <span class="p">:</span>
-                    <span class="n">psf</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildGSObject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span>
-                                                      <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-                    <span class="n">prof</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">buildProfile</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-                <span class="k">except</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">gsobject</span><span class="o">.</span><span class="n">SkipThisObject</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Caught SkipThisObject: e = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span><span class="n">e</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Skipping object </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
-                    <span class="n">skip</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="c1"># Build the object to draw</span>
+            <span class="n">psf</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">buildPSF</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="n">prof</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">buildProfile</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
+            <span class="c1"># Make an empty image</span>
             <span class="n">im</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">makeStamp</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
-                <span class="n">method</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span><span class="s1">&#39;draw_method&#39;</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_draw_methods</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid draw_method.&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span>
-                                                        <span class="n">valid_draw_methods</span><span class="p">)</span>
+            <span class="c1"># Determine which draw method to use</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">getDrawMethod</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
-                <span class="n">offset</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span>
-                <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
-                    <span class="n">offset</span> <span class="o">+=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_offset = </span><span class="si">%s</span><span class="s1">, offset = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span>
-                             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">],</span> <span class="n">offset</span><span class="p">)</span>
+            <span class="c1"># Determine the net offset (starting from config[&#39;stamp_offset&#39;] typically.</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">getOffset</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
-                <span class="n">skip</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">updateSkip</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="c1"># At this point, we may want to update whether the object should be skipped</span>
+            <span class="c1"># based on other information about the profile and location.</span>
+            <span class="k">if</span> <span class="n">builder</span><span class="o">.</span><span class="n">updateSkip</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">SkipThisObject</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
-                <span class="n">im</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="c1"># Draw the object on the postage stamp</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
-                <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">getSNRScale</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-                <span class="n">im</span><span class="p">,</span> <span class="n">prof</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">applySNRScale</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="c1"># Update the drawn image according to the SNR if desired.</span>
+            <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">getSNRScale</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="n">im</span><span class="p">,</span> <span class="n">prof</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">applySNRScale</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">scale_factor</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
             <span class="c1"># Set the origin appropriately</span>
-            <span class="k">if</span> <span class="n">im</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># Note: im might be None here if the stamp size isn&#39;t given and skip==True.</span>
-                <span class="k">pass</span>
-            <span class="k">elif</span> <span class="n">stamp_center</span><span class="p">:</span>
-                <span class="n">im</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="n">stamp_center</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">im</span><span class="o">.</span><span class="n">setOrigin</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_origin&#39;</span><span class="p">,</span><span class="n">galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">updateOrigin</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">im</span><span class="p">)</span>
 
             <span class="c1"># Store the current stamp in the base-level config for reference</span>
             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">im</span>
@@ -574,37 +505,39 @@
             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;do_noise_in_stamps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">do_noise</span>
 
             <span class="c1"># Check if this object should be rejected.</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
-                <span class="n">reject</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">reject</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">reject</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="n">itry</span> <span class="o">&lt;</span> <span class="n">ntries</span><span class="p">:</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Object </span><span class="si">%d</span><span class="s1">: Rejecting this object and rebuilding&#39;</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">)</span>
-                        <span class="n">builder</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-                        <span class="k">continue</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
-                                <span class="s2">&quot;Rejected an object </span><span class="si">%d</span><span class="s2"> times. If this is expected, &quot;</span>
-                                <span class="s2">&quot;you should specify a larger stamp.retry_failures.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ntries</span><span class="p">))</span>
+            <span class="n">reject</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">reject</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">reject</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">itry</span> <span class="o">&lt;</span> <span class="n">ntries</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Object </span><span class="si">%d</span><span class="s1">: Rejecting this object and rebuilding&#39;</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">)</span>
+                    <span class="n">builder</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                            <span class="s2">&quot;Rejected an object </span><span class="si">%d</span><span class="s2"> times. If this is expected, &quot;</span>
+                            <span class="s2">&quot;you should specify a larger stamp.retry_failures.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">ntries</span><span class="p">))</span>
 
-            <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ProcessExtraOutputsForStamp</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">skip</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="n">ProcessExtraOutputsForStamp</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
             <span class="c1"># We always need to do the whiten step here in the stamp processing</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
-                <span class="n">current_var</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">whiten</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">current_var</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: whitening noise brought current var to </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
-                                 <span class="n">config</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">current_var</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">current_var</span> <span class="o">=</span> <span class="mf">0.</span>
+            <span class="n">current_var</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">whiten</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">current_var</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: whitening noise brought current var to </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
+                                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">current_var</span><span class="p">)</span>
 
             <span class="c1"># Sometimes, depending on the image type, we go on to do the rest of the noise as well.</span>
-            <span class="k">if</span> <span class="n">do_noise</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">skip</span><span class="p">:</span>
-                <span class="n">im</span><span class="p">,</span> <span class="n">current_var</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">im</span><span class="p">,</span><span class="n">skip</span><span class="p">,</span><span class="n">current_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">do_noise</span><span class="p">:</span>
+                <span class="n">im</span><span class="p">,</span> <span class="n">current_var</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span><span class="n">config</span><span class="p">,</span><span class="n">im</span><span class="p">,</span><span class="n">current_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">current_var</span>
+        <span class="k">except</span> <span class="n">SkipThisObject</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Caught SkipThisObject: e = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span><span class="n">e</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Skipping object </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
+            <span class="c1"># If xsize, ysize != 0, then this makes a blank stamp for this object.</span>
+            <span class="c1"># Otherwise, it&#39;s just None here.</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">makeStamp</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="n">ProcessExtraOutputsForStamp</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="mf">0.</span>
 
-        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
-            <span class="k">raise</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">itry</span> <span class="o">&gt;=</span> <span class="n">ntries</span><span class="p">:</span>
                 <span class="c1"># Then this was the last try.  Just re-raise the exception.</span>
@@ -623,7 +556,12 @@
                 <span class="c1"># Need to remove the &quot;current&quot;s from the config dict.  Otherwise,</span>
                 <span class="c1"># the value generators will do a quick return with the cached value.</span>
                 <span class="n">builder</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-                <span class="k">continue</span></div>
+                <span class="k">continue</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># No exception.</span>
+            <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="n">current_var</span></div>
+
 
 <div class="viewcode-block" id="MakeStampTasks"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MakeStampTasks">[docs]</a><span class="k">def</span> <span class="nf">MakeStampTasks</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Turn a list of jobs into a list of tasks.</span>
@@ -641,7 +579,7 @@
 <span class="sd">        config:         The configuration dict</span>
 <span class="sd">        jobs:           A list of jobs to split up into tasks.  Each job in the list is a</span>
 <span class="sd">                        dict of parameters that includes &#39;obj_num&#39;.</span>
-<span class="sd">        logger:         If given, a logger object to log progress.</span>
+<span class="sd">        logger:         A logger object to log progress.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        a list of tasks</span>
@@ -669,13 +607,13 @@
 <span class="sd">        offset:     The offset to apply when drawing.</span>
 <span class="sd">        config:     The configuration dict for the stamp field.</span>
 <span class="sd">        base:       The base configuration dict.</span>
-<span class="sd">        logger:     If given, a logger object to log progress.</span>
+<span class="sd">        logger:     A logger object to log progress.</span>
 <span class="sd">        **kwargs:   Any additional kwargs are passed along to the drawImage function.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        the resulting image</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="c1"># Setup the kwargs to pass to drawImage</span>
     <span class="c1"># (Start with any additional kwargs given as extra kwargs to DrawBasic and add to it.)</span>
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span>
@@ -684,43 +622,43 @@
     <span class="k">if</span> <span class="s1">&#39;wcs&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="s1">&#39;scale&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">and</span> <span class="s1">&#39;rng&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="s2">&quot;method=&#39;phot&#39;&quot;</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="s2">&quot;method=&#39;phot&#39;&quot;</span><span class="p">)</span>
 
     <span class="c1"># Check validity of extra phot options:</span>
     <span class="n">max_extra_noise</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="s1">&#39;n_photons&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;n_photons&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s1">&#39;n_photons is invalid with method != phot&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s1">&#39;n_photons is invalid with method != phot&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;max_extra_noise&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;Both &#39;max_extra_noise&#39; and &#39;n_photons&#39; are set in config dict, &quot;</span>
                 <span class="s2">&quot;ignoring &#39;max_extra_noise&#39;.&quot;</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;n_photons&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;n_photons&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">elif</span> <span class="s1">&#39;max_extra_noise&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="n">max_extra_noise</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">max_extra_noise</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">and</span> <span class="n">max_extra_noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s1">&#39;max_extra_noise is invalid with method != phot&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s1">&#39;max_extra_noise is invalid with method != phot&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="s1">&#39;poisson_flux&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;poisson_flux&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s1">&#39;poisson_flux is invalid with method != phot&#39;</span><span class="p">)</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;poisson_flux&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;poisson_flux&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s1">&#39;poisson_flux is invalid with method != phot&#39;</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;poisson_flux&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;poisson_flux&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">max_extra_noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s1">&#39;max_extra_noise&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">max_extra_noise</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;image.max_extra_noise cannot be negative&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;image.max_extra_noise cannot be negative&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="s1">&#39;noise&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]:</span>
-            <span class="n">noise_var</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">CalculateNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">noise_var</span> <span class="o">=</span> <span class="n">CalculateNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Need to specify noise level when using max_extra_noise&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Need to specify noise level when using max_extra_noise&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">noise_var</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;noise_var calculated to be &lt; 0.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;noise_var calculated to be &lt; 0.&quot;</span><span class="p">)</span>
         <span class="n">max_extra_noise</span> <span class="o">*=</span> <span class="n">noise_var</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;max_extra_noise&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_extra_noise</span>
 
     <span class="k">if</span> <span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
         <span class="c1"># Don&#39;t output the full image array.  Use str(image) for that kwarg.</span>
-        <span class="n">alt_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">)</span> <span class="k">else</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="n">alt_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">Image</span><span class="p">)</span> <span class="k">else</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
                            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">])</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: drawImage kwargs = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">alt_kwargs</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: prof = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">prof</span><span class="p">)</span>
@@ -767,11 +705,11 @@
 <span class="sd">        either a CelestialCoord or a PositionD instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">param</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
-    <span class="n">wcs</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">))</span> <span class="c1"># should be here, but just in case...</span>
+    <span class="n">wcs</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">))</span> <span class="c1"># should be here, but just in case...</span>
     <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isCelestial</span><span class="p">():</span>
-        <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="StampBuilder"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder">[docs]</a><span class="k">class</span> <span class="nc">StampBuilder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A base class for building stamp images of individual objects.</span>
@@ -798,52 +736,214 @@
 <span class="sd">            ysize:      The ysize of the image to build (if known).</span>
 <span class="sd">            ignore:     A list of parameters that are allowed to be in config that we can</span>
 <span class="sd">                        ignore here. i.e. it won&#39;t be an error if these parameters are present.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            xsize, ysize, image_pos, world_pos</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Check for spurious parameters</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+        <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
 
         <span class="c1"># Update the size if necessary</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">xsize</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;xsize&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-                <span class="n">xsize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;xsize&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">xsize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;xsize&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">elif</span> <span class="s1">&#39;size&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-                <span class="n">xsize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">xsize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">elif</span> <span class="s1">&#39;stamp_xsize&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
-                <span class="n">xsize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;stamp_xsize&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">xsize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;stamp_xsize&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">elif</span> <span class="s1">&#39;stamp_size&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
-                <span class="n">xsize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;stamp_size&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">xsize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;stamp_size&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ysize</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;ysize&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-                <span class="n">ysize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;ysize&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">ysize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;ysize&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">elif</span> <span class="s1">&#39;size&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-                <span class="n">ysize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">ysize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">elif</span> <span class="s1">&#39;stamp_ysize&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
-                <span class="n">ysize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;stamp_ysize&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">ysize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;stamp_ysize&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">elif</span> <span class="s1">&#39;stamp_size&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
-                <span class="n">ysize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;stamp_size&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">ysize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span><span class="s1">&#39;stamp_size&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="c1"># Determine where this object is going to go:</span>
         <span class="k">if</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">image_pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">image_pos</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">elif</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
-            <span class="n">image_pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">image_pos</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">image_pos</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="s1">&#39;world_pos&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseWorldPos</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">ParseWorldPos</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
         <span class="k">elif</span> <span class="s1">&#39;world_pos&#39;</span> <span class="ow">in</span> <span class="n">image</span><span class="p">:</span>
-            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseWorldPos</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">ParseWorldPos</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">world_pos</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">return</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span></div>
+
+<div class="viewcode-block" id="StampBuilder.quickSkip"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.quickSkip">[docs]</a>    <span class="k">def</span> <span class="nf">quickSkip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check whether this object should be skipped before doing any work.</span>
+
+<span class="sd">        The base class looks for stamp.quick_skip and returns True if it is preset and</span>
+<span class="sd">        evaluates to True.</span>
+
+<span class="sd">        @param config       The configuration dict for the stamp field.</span>
+<span class="sd">        @param base         The base configuration dict.</span>
+
+<span class="sd">        @returns skip</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;quick_skip&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;quick_skip&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="StampBuilder.setupRNG"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.setupRNG">[docs]</a>    <span class="k">def</span> <span class="nf">setupRNG</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Setup the RNG for this object.</span>
+
+<span class="sd">        @param config       The configuration dict for the stamp field.</span>
+<span class="sd">        @param base         The base configuration dict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;obj_rng&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;obj_rng&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="c1"># Just use the image_num rng(s).</span>
+                <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num_rngs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num_rngs&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+                <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num_rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num_rng&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+                <span class="k">return</span>
+
+        <span class="c1"># Add 1 to the seed here so the first object has a different rng than the file or image.</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="n">SetupConfigRNG</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">seed_offset</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: seed = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">seed</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StampBuilder.locateStamp"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.locateStamp">[docs]</a>    <span class="k">def</span> <span class="nf">locateStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determine where and how large the stamp should be.</span>
+
+<span class="sd">        The base class version does the followin:</span>
+
+<span class="sd">        - If given, set base[&#39;stamp_xsize&#39;] = xsize</span>
+<span class="sd">        - If given, set base[&#39;stamp_ysize&#39;] = ysize</span>
+<span class="sd">        - If only image_pos or world_pos is given, compute the other from base[&#39;wcs&#39;]</span>
+<span class="sd">        - Set base[&#39;index_pos&#39;] = image_pos</span>
+<span class="sd">        - Set base[&#39;world_pos&#39;] = world_pos</span>
+<span class="sd">        - Calculate the appropriate value of the center of the stamp, to be used with the</span>
+<span class="sd">          command: stamp_image.setCenter(stamp_center).  Save this as base[&#39;stamp_center&#39;]</span>
+<span class="sd">        - Calculate the appropriate offset for the position of the object from the center of</span>
+<span class="sd">          the stamp due to just the fractional part of the image position, not including</span>
+<span class="sd">          any base[&#39;stamp&#39;][&#39;offset&#39;] item that may be present in the base dict.</span>
+<span class="sd">          Save this as base[&#39;stamp_offset&#39;]</span>
+
+<span class="sd">        @param config       The configuration dict for the stamp field.</span>
+<span class="sd">        @param base         The base configuration dict.</span>
+<span class="sd">        @param xsize        The size of the stamp in the x-dimension. [may be None]</span>
+<span class="sd">        @param ysize        The size of the stamp in the y-dimension. [may be None]</span>
+<span class="sd">        @param image_pos    The position of the stamp in image coordinates. [may be None]</span>
+<span class="sd">        @param world_pos    The position of the stamp in world coordinates. [may be None]</span>
+<span class="sd">        @param logger       A logger object to log progress.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+
+        <span class="c1"># Make sure we have a valid wcs in case image-level processing was skipped.</span>
+        <span class="k">if</span> <span class="s1">&#39;wcs&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">BuildWCS</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">wcs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">xsize</span><span class="p">:</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_xsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xsize</span>
+        <span class="k">if</span> <span class="n">ysize</span><span class="p">:</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_ysize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ysize</span>
+
+        <span class="k">if</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Calculate and save the position relative to the image center</span>
+            <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isCelestial</span><span class="p">():</span>
+                <span class="c1"># Wherever we use the world position, we expect a Euclidean position, not a</span>
+                <span class="c1"># CelestialCoord.  So if it is the latter, project it onto a tangent plane at the</span>
+                <span class="c1"># image center.</span>
+                <span class="n">world_center</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">]))</span>
+                <span class="n">world_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">project_center</span><span class="o">=</span><span class="n">world_center</span><span class="p">,</span>
+                                                <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">world_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Calculate and save the position relative to the image center</span>
+            <span class="n">image_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">world_pos</span><span class="p">)</span>
+
+        <span class="c1"># Wherever we use the world position, we expect a Euclidean position, not a</span>
+        <span class="c1"># CelestialCoord.  So if it is the latter, project it onto a tangent plane at the</span>
+        <span class="c1"># image center.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">):</span>
+            <span class="c1"># Then project this position relative to the image center.</span>
+            <span class="n">world_center</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">]))</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">world_center</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
+            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">u</span><span class="o">/</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">v</span><span class="o">/</span><span class="n">arcsec</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># The image_pos refers to the location of the true center of the image, which is</span>
+            <span class="c1"># not necessarily the nominal center we need for adding to the final image.  In</span>
+            <span class="c1"># particular, even-sized images have their nominal center offset by 1/2 pixel up</span>
+            <span class="c1"># and to the right.</span>
+            <span class="c1"># N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces</span>
+            <span class="c1"># even sized images.</span>
+            <span class="n">nominal_x</span> <span class="o">=</span> <span class="n">image_pos</span><span class="o">.</span><span class="n">x</span>        <span class="c1"># Make sure we don&#39;t change image_pos, which is</span>
+            <span class="n">nominal_y</span> <span class="o">=</span> <span class="n">image_pos</span><span class="o">.</span><span class="n">y</span>        <span class="c1"># stored in base[&#39;image_pos&#39;].</span>
+            <span class="k">if</span> <span class="n">xsize</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">nominal_x</span> <span class="o">+=</span> <span class="mf">0.5</span>
+            <span class="k">if</span> <span class="n">ysize</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">nominal_y</span> <span class="o">+=</span> <span class="mf">0.5</span>
+
+            <span class="n">stamp_center</span> <span class="o">=</span> <span class="n">PositionI</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">nominal_x</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)),</span>
+                                     <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">nominal_y</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)))</span>
+            <span class="n">stamp_offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">nominal_x</span><span class="o">-</span><span class="n">stamp_center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                     <span class="n">nominal_y</span><span class="o">-</span><span class="n">stamp_center</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">stamp_center</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">stamp_offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
+            <span class="c1"># Set the image_pos to the image center in case the wcs needs it.  Probably, if</span>
+            <span class="c1"># there is no image_pos or world_pos defined, then it is unlikely a</span>
+            <span class="c1"># non-trivial wcs will have been set.  So anything would actually be fine.</span>
+            <span class="n">image_pos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span> <span class="p">(</span><span class="n">xsize</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">ysize</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span> <span class="p">)</span>
+
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_center&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stamp_center</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">stamp_offset</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_pos</span>
+        <span class="n">base</span><span class="p">[</span><span class="s1">&#39;world_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">world_pos</span>
+
+        <span class="k">if</span> <span class="n">xsize</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: xsize,ysize = </span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">xsize</span><span class="p">,</span><span class="n">ysize</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: image_pos = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">image_pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">world_pos</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: world_pos = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">world_pos</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stamp_center</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_center = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">stamp_center</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="StampBuilder.getSkip"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.getSkip">[docs]</a>    <span class="k">def</span> <span class="nf">getSkip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initial check of whether to skip this object based on the stamp.skip field.</span>
+
+<span class="sd">        @param config       The configuration dict for the stamp field.</span>
+<span class="sd">        @param base         The base configuration dict.</span>
+<span class="sd">        @param logger       A logger object to log progress.</span>
+
+<span class="sd">        @returns skip</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;obj </span><span class="si">%d</span><span class="s2">: stamp.skip = True&quot;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">skip</span></div>
+
+<div class="viewcode-block" id="StampBuilder.buildPSF"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.buildPSF">[docs]</a>    <span class="k">def</span> <span class="nf">buildPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build the PSF object.</span>
+
+<span class="sd">        For the Basic stamp type, this builds a PSF from the base[&#39;psf&#39;] dict, if present,</span>
+<span class="sd">        else returns None.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            config:     The configuration dict for the stamp field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this</span>
+<span class="sd">                        list by the galaxy object.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the PSF</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="StampBuilder.buildProfile"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.buildProfile">[docs]</a>    <span class="k">def</span> <span class="nf">buildProfile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Build the surface brightness profile (a GSObject) to be drawn.</span>
@@ -858,16 +958,16 @@
 <span class="sd">            psf:        The PSF, if any.  This may be None, in which case, no PSF is convolved.</span>
 <span class="sd">            gsparams:   A dict of kwargs to use for a GSParams.  More may be added to this</span>
 <span class="sd">                        list by the galaxy object.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the final profile</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">gal</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildGSObject</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;gal&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">gal</span> <span class="o">=</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s1">&#39;gal&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">psf</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">gal</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span><span class="n">psf</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">Convolve</span><span class="p">(</span><span class="n">gal</span><span class="p">,</span><span class="n">psf</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">psf</span>
         <span class="k">else</span><span class="p">:</span>
@@ -876,7 +976,7 @@
             <span class="k">elif</span> <span class="s1">&#39;gal&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">or</span> <span class="s1">&#39;psf&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">None</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                     <span class="s2">&quot;At least one of gal or psf must be specified in config. &quot;</span>
                     <span class="s2">&quot;If you really don&#39;t want any object, use gal type = None.&quot;</span><span class="p">)</span></div>
 
@@ -891,17 +991,50 @@
 <span class="sd">            base:       The base configuration dict.</span>
 <span class="sd">            xsize:      The xsize of the image to build (if known).</span>
 <span class="sd">            ysize:      The ysize of the image to build (if known).</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the image</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">xsize</span> <span class="ow">and</span> <span class="n">ysize</span><span class="p">:</span>
-            <span class="n">im</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageF</span><span class="p">(</span><span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">)</span>
+            <span class="n">im</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">)</span>
             <span class="n">im</span><span class="o">.</span><span class="n">setZero</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">im</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="StampBuilder.getDrawMethod"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.getDrawMethod">[docs]</a>    <span class="k">def</span> <span class="nf">getDrawMethod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determine the draw method to use.</span>
+
+<span class="sd">        @param config       The configuration dict for the stamp field.</span>
+<span class="sd">        @param base         The base configuration dict.</span>
+<span class="sd">        @param logger       A logger object to log progress.</span>
+
+<span class="sd">        @returns method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;draw_method&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">str</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_draw_methods</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid draw_method.&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">valid_draw_methods</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">method</span></div>
+
+<div class="viewcode-block" id="StampBuilder.getOffset"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.getOffset">[docs]</a>    <span class="k">def</span> <span class="nf">getOffset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Determine the offset to use.</span>
+
+<span class="sd">        The base class version adds the stamp_offset, which comes from calculations related to</span>
+<span class="sd">        world_pos and image_pos, to the field stamp.offset if any.</span>
+
+<span class="sd">        @param config       The configuration dict for the stamp field.</span>
+<span class="sd">        @param base         The base configuration dict.</span>
+<span class="sd">        @param logger       A logger object to log progress.</span>
+
+<span class="sd">        @returns offset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_offset = </span><span class="si">%s</span><span class="s1">, offset = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span>
+                     <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">],</span> <span class="n">offset</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">offset</span></div>
 
 <div class="viewcode-block" id="StampBuilder.updateSkip"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.updateSkip">[docs]</a>    <span class="k">def</span> <span class="nf">updateSkip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Before drawing the profile, see whether this object can be trivially skipped.</span>
@@ -917,17 +1050,17 @@
 <span class="sd">            offset:     The offset to apply when drawing.</span>
 <span class="sd">            config:     The configuration dict for the stamp field.</span>
 <span class="sd">            base:       The base configuration dict.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            whether to skip drawing this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span><span class="n">galsim</span><span class="o">.</span><span class="n">GSObject</span><span class="p">)</span> <span class="ow">and</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;current_image&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span><span class="n">GSObject</span><span class="p">)</span> <span class="ow">and</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;current_image&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">prof</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">image_pos</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">])</span>
                 <span class="n">N</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">getGoodImageSize</span><span class="p">(</span><span class="mf">1.</span><span class="p">)</span>
                 <span class="n">N</span> <span class="o">+=</span> <span class="mi">2</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
-                <span class="n">bounds</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">_BoundsI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">)</span>
+                <span class="n">bounds</span> <span class="o">=</span> <span class="n">_BoundsI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">N</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">bounds</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span>
 
@@ -936,8 +1069,8 @@
             <span class="k">if</span> <span class="n">stamp_center</span><span class="p">:</span>
                 <span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">stamp_center</span> <span class="o">-</span> <span class="n">bounds</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_origin&#39;</span><span class="p">,</span><span class="n">galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">-</span>
-                                      <span class="n">galsim</span><span class="o">.</span><span class="n">PositionI</span><span class="p">(</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span><span class="p">))</span>
+                <span class="n">bounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_origin&#39;</span><span class="p">,</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">-</span>
+                                      <span class="n">PositionI</span><span class="p">(</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span><span class="p">))</span>
 
             <span class="n">overlap</span> <span class="o">=</span> <span class="n">bounds</span> <span class="o">&amp;</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">overlap</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
@@ -957,7 +1090,7 @@
 <span class="sd">            offset:     The offset to apply when drawing.</span>
 <span class="sd">            config:     The configuration dict for the stamp field.</span>
 <span class="sd">            base:       The base configuration dict.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the resulting image</span>
@@ -976,26 +1109,26 @@
 <span class="sd">            image:      The image onto which to draw the profile.</span>
 <span class="sd">            config:     The configuration dict for the stamp field.</span>
 <span class="sd">            base:       The base configuration dict.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the variance of the resulting whitened (or symmetrized) image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># If the object has a noise attribute, then check if we need to do anything with it.</span>
         <span class="n">current_var</span> <span class="o">=</span> <span class="mf">0.</span>  <span class="c1"># Default if not overwritten</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span><span class="n">galsim</span><span class="o">.</span><span class="n">GSObject</span><span class="p">)</span> <span class="ow">and</span> <span class="n">prof</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span><span class="n">GSObject</span><span class="p">)</span> <span class="ow">and</span> <span class="n">prof</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="s1">&#39;noise&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]:</span>
                 <span class="n">noise</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">][</span><span class="s1">&#39;noise&#39;</span><span class="p">]</span>
                 <span class="n">whiten</span> <span class="o">=</span> <span class="n">symmetrize</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="k">if</span> <span class="s1">&#39;whiten&#39;</span> <span class="ow">in</span> <span class="n">noise</span><span class="p">:</span>
-                    <span class="n">whiten</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="s1">&#39;whiten&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">whiten</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="s1">&#39;whiten&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">if</span> <span class="s1">&#39;symmetrize&#39;</span> <span class="ow">in</span> <span class="n">noise</span><span class="p">:</span>
-                    <span class="n">symmetrize</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="s1">&#39;symmetrize&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">symmetrize</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="s1">&#39;symmetrize&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">whiten</span> <span class="ow">and</span> <span class="n">symmetrize</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s1">&#39;Only one of whiten or symmetrize is allowed&#39;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s1">&#39;Only one of whiten or symmetrize is allowed&#39;</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">whiten</span> <span class="ow">or</span> <span class="n">symmetrize</span><span class="p">:</span>
                     <span class="c1"># In case the galaxy was cached, update the rng</span>
-                    <span class="n">rng</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetRNG</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="s2">&quot;whiten&quot;</span><span class="p">)</span>
+                    <span class="n">rng</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="s2">&quot;whiten&quot;</span><span class="p">)</span>
                     <span class="n">prof</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">whiten</span><span class="p">:</span>
                     <span class="n">current_var</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">whitenImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
@@ -1014,7 +1147,7 @@
 <span class="sd">            image:      The current image.</span>
 <span class="sd">            config:     The configuration dict for the stamp field.</span>
 <span class="sd">            base:       The base configuration dict.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            scale_factor</span>
@@ -1027,15 +1160,15 @@
             <span class="k">return</span> <span class="mf">1.</span>
 
         <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s1">&#39;Only one of signal_to_noise or flux may be specified for </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">key</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="s1">&#39;noise&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]:</span>
-            <span class="n">noise_var</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">CalculateNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">noise_var</span> <span class="o">=</span> <span class="n">CalculateNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Need to specify noise level when using </span><span class="si">%s</span><span class="s2">.signal_to_noise&quot;</span><span class="o">%</span><span class="n">key</span><span class="p">)</span>
-        <span class="n">sn_target</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;signal_to_noise&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">sn_target</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;signal_to_noise&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># In case noise variance is an image</span>
             <span class="n">noise_var</span> <span class="o">=</span> <span class="n">noise_var</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -1069,7 +1202,7 @@
 <span class="sd">            prof:           The profile that was drawn.</span>
 <span class="sd">            scale_factor:   The factor by which to scale both image and prof.</span>
 <span class="sd">            method:         The method used by drawImage.</span>
-<span class="sd">            logger:         If given, a logger object to log progress.</span>
+<span class="sd">            logger:         A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            image, prof  (after being properly scaled)</span>
@@ -1082,6 +1215,20 @@
             <span class="n">prof</span> <span class="o">*=</span> <span class="n">scale_factor</span>
         <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">prof</span></div>
 
+<div class="viewcode-block" id="StampBuilder.updateOrigin"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.updateOrigin">[docs]</a>    <span class="k">def</span> <span class="nf">updateOrigin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the image origin to be centered at the right place</span>
+
+<span class="sd">        @param config       The configuration dict for the stamp field.</span>
+<span class="sd">        @param base         The base configuration dict.</span>
+<span class="sd">        @param image        The postage stamp image.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stamp_center</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_center&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">stamp_center</span><span class="p">:</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="n">stamp_center</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">setOrigin</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_origin&#39;</span><span class="p">,</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)))</span></div>
+
+
 <div class="viewcode-block" id="StampBuilder.reject"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.reject">[docs]</a>    <span class="k">def</span> <span class="nf">reject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">prof</span><span class="p">,</span> <span class="n">psf</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check to see if this object should be rejected.</span>
 
@@ -1091,7 +1238,7 @@
 <span class="sd">            prof:       The profile that was drawn.</span>
 <span class="sd">            psf:        The psf that was used to build the profile.</span>
 <span class="sd">            image:      The postage stamp image.  No noise is on it yet at this point.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            whether to reject this object</span>
@@ -1101,17 +1248,17 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="s1">&#39;reject&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;reject&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;reject&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: reject evaluated to True&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">])</span>
                 <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="s1">&#39;min_flux_frac&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSObject</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                     <span class="s2">&quot;Cannot apply min_flux_frac for stamp types that do not use &quot;</span>
                     <span class="s2">&quot;a single GSObject profile.&quot;</span><span class="p">)</span>
             <span class="n">expected_flux</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">flux</span>
             <span class="n">measured_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-            <span class="n">min_flux_frac</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;min_flux_frac&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">min_flux_frac</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;min_flux_frac&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: flux_frac = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
                          <span class="n">measured_flux</span> <span class="o">/</span> <span class="n">expected_flux</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">measured_flux</span> <span class="o">&lt;</span> <span class="n">min_flux_frac</span> <span class="o">*</span> <span class="n">expected_flux</span><span class="p">:</span>
@@ -1119,22 +1266,22 @@
                                <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span> <span class="n">measured_flux</span><span class="p">,</span> <span class="n">min_flux_frac</span><span class="p">,</span> <span class="n">expected_flux</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="s1">&#39;min_snr&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">or</span> <span class="s1">&#39;max_snr&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSObject</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                     <span class="s2">&quot;Cannot apply min_snr for stamp types that do not use &quot;</span>
                     <span class="s2">&quot;a single GSObject profile.&quot;</span><span class="p">)</span>
-            <span class="n">var</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">CalculateNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">var</span> <span class="o">=</span> <span class="n">CalculateNoiseVariance</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
             <span class="n">sumsq</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
             <span class="n">snr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sumsq</span> <span class="o">/</span> <span class="n">var</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: snr = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">snr</span><span class="p">)</span>
             <span class="k">if</span> <span class="s1">&#39;min_snr&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-                <span class="n">min_snr</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;min_snr&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">min_snr</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;min_snr&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">snr</span> <span class="o">&lt;</span> <span class="n">min_snr</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Object </span><span class="si">%d</span><span class="s1">: Measured snr = </span><span class="si">%f</span><span class="s1"> &lt; </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="p">,</span>
                                    <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span> <span class="n">snr</span><span class="p">,</span> <span class="n">min_snr</span><span class="p">)</span>
                     <span class="k">return</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="s1">&#39;max_snr&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-                <span class="n">max_snr</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;max_snr&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">max_snr</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;max_snr&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">snr</span> <span class="o">&gt;</span> <span class="n">max_snr</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Object </span><span class="si">%d</span><span class="s1">: Measured snr = </span><span class="si">%f</span><span class="s1"> &gt; </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="p">,</span>
                                    <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span> <span class="n">snr</span><span class="p">,</span> <span class="n">max_snr</span><span class="p">)</span>
@@ -1147,15 +1294,15 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            base:       The base configuration dict.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Clear current values out of psf, gal, and stamp if they are not safe to reuse.</span>
         <span class="c1"># This means they are either marked as safe or indexed by something other than obj_num.</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="s1">&#39;gal&#39;</span><span class="p">,</span> <span class="s1">&#39;stamp&#39;</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
-                <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RemoveCurrent</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="n">field</span><span class="p">],</span> <span class="n">keep_safe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index_key</span><span class="o">=</span><span class="s1">&#39;obj_num&#39;</span><span class="p">)</span></div>
+                <span class="n">RemoveCurrent</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="n">field</span><span class="p">],</span> <span class="n">keep_safe</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index_key</span><span class="o">=</span><span class="s1">&#39;obj_num&#39;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="StampBuilder.addNoise"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.addNoise">[docs]</a>    <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">skip</span><span class="p">,</span> <span class="n">current_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+<div class="viewcode-block" id="StampBuilder.addNoise"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.addNoise">[docs]</a>    <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">current_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add the sky level and the noise to the stamp.</span>
 
@@ -1166,18 +1313,15 @@
 <span class="sd">            config:         The configuration dict for the stamp field.</span>
 <span class="sd">            base:           The base configuration dict.</span>
 <span class="sd">            image:          The current image.</span>
-<span class="sd">            skip:           Are we skipping this image? (Usually this is irrelevant, since we</span>
-<span class="sd">                            need sky and noise regardless, but user-defined classes might choose</span>
-<span class="sd">                            to do something different if skipping this object.)</span>
 <span class="sd">            current_var:    The current noise variance present in the image already.</span>
-<span class="sd">            logger:         If given, a logger object to log progress.</span>
+<span class="sd">            logger:         A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the new values of image, current_var</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">AddSky</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">AddSky</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">)</span>
         <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_stamp&#39;</span><span class="p">]</span>
-        <span class="n">current_var</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">AddNoise</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">current_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">current_var</span> <span class="o">=</span> <span class="n">AddNoise</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">current_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">image</span><span class="p">,</span> <span class="n">current_var</span></div>
 
 <div class="viewcode-block" id="StampBuilder.makeTasks"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.makeTasks">[docs]</a>    <span class="k">def</span> <span class="nf">makeTasks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">jobs</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -1192,7 +1336,7 @@
 <span class="sd">            base:       The base configuration dict.</span>
 <span class="sd">            jobs:       A list of jobs to split up into tasks.  Each job in the list is a</span>
 <span class="sd">                        dict of parameters that includes &#39;obj_num&#39;.</span>
-<span class="sd">            logger:     If given, a logger object to log progress.</span>
+<span class="sd">            logger:     A logger object to log progress.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            a list of tasks</span>

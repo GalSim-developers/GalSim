@@ -354,7 +354,11 @@
 
     <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Gaussian.withFlux"><a class="viewcode-back" href="../../simple.html#galsim.Gaussian.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Gaussian</span><span class="p">(</span><span class="n">sigma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

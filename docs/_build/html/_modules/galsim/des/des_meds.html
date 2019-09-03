@@ -185,10 +185,17 @@
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">galsim</span>
-<span class="kn">import</span> <span class="nn">galsim.config</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..wcs</span> <span class="k">import</span> <span class="n">UniformWCS</span><span class="p">,</span> <span class="n">AffineTransform</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageI</span>
+<span class="kn">from</span> <span class="nn">..fits</span> <span class="k">import</span> <span class="n">writeFile</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="k">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">OutputBuilder</span><span class="p">,</span> <span class="n">ExtraOutputBuilder</span><span class="p">,</span> <span class="n">BuildImages</span><span class="p">,</span> <span class="n">GetFinalExtraOutput</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">GetCurrentValue</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">RegisterOutputType</span><span class="p">,</span> <span class="n">RegisterExtraOutput</span>
 
 <span class="c1"># these image stamp sizes are available in MEDS format</span>
 <span class="n">BOX_SIZES</span> <span class="o">=</span> <span class="p">[</span><span class="mi">32</span><span class="p">,</span><span class="mi">48</span><span class="p">,</span><span class="mi">64</span><span class="p">,</span><span class="mi">96</span><span class="p">,</span><span class="mi">128</span><span class="p">,</span><span class="mi">192</span><span class="p">,</span><span class="mi">256</span><span class="p">]</span>
@@ -239,19 +246,19 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">images</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;images should be a list&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;no cutouts in this object&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;no cutouts in this object&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
 
         <span class="c1"># Check that the box sizes are valid</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)):</span>
             <span class="n">s</span> <span class="o">=</span> <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span>
             <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Must be square&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)),</span>
-                                              <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Must be square&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)),</span>
+                                       <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BOX_SIZES</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Size must be in </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
-                                              <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">BOX_SIZES</span><span class="p">)),</span> <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Size must be in </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
+                                       <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">BOX_SIZES</span><span class="p">)),</span> <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">images</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Images must all be the same shape&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;Images must all be the same shape&#39;</span><span class="p">,</span> <span class="n">images</span><span class="p">)</span>
 
         <span class="c1"># The others are optional, but if given, make sure they are ok.</span>
         <span class="k">for</span> <span class="n">lst</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">isim</span> <span class="ow">in</span> <span class="p">(</span> <span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="p">(</span><span class="n">badpix</span><span class="p">,</span> <span class="s1">&#39;badpix&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
@@ -260,13 +267,13 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> should be a list&#39;</span><span class="o">%</span><span class="n">name</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> is the wrong length&#39;</span><span class="o">%</span><span class="n">name</span><span class="p">,</span> <span class="n">lst</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> is the wrong length&#39;</span><span class="o">%</span><span class="n">name</span><span class="p">,</span> <span class="n">lst</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">isim</span><span class="p">:</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)):</span>
                         <span class="n">im1</span> <span class="o">=</span> <span class="n">lst</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                         <span class="n">im2</span> <span class="o">=</span> <span class="n">images</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
                         <span class="k">if</span> <span class="p">(</span><span class="n">im1</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">im2</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
-                            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span>
+                            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
                                 <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">[</span><span class="si">%d</span><span class="s2">] has the wrong shape.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">i</span><span class="p">),</span> <span class="n">im1</span><span class="p">)</span>
 
         <span class="c1"># The PSF images don&#39;t have to be the same shape as the main images.</span>
@@ -274,21 +281,21 @@
         <span class="k">if</span> <span class="n">psf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">=</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span>
             <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
                     <span class="s1">&#39;PSF array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Must be square&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)),</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BOX_SIZES</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
                     <span class="s1">&#39;PSF array shape </span><span class="si">%s</span><span class="s1"> is invalid.  Size must be in </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
                         <span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">BOX_SIZES</span><span class="p">)),</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">s</span> <span class="o">!=</span> <span class="n">psf</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;PSF images must all be the same shape&#39;</span><span class="p">,</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;PSF images must all be the same shape&#39;</span><span class="p">,</span> <span class="n">psf</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
         <span class="c1"># Check that wcs are Uniform and convert them to AffineTransforms in case they aren&#39;t.</span>
         <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">wcs</span><span class="p">)):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">galsim</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">UniformWCS</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;wcs list should contain UniformWCS objects&#39;</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">galsim</span><span class="o">.</span><span class="n">AffineTransform</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">UniformWCS</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;wcs list should contain UniformWCS objects&#39;</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">AffineTransform</span><span class="p">):</span>
                     <span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">affine</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">=</span> <span class="nb">id</span>
@@ -308,7 +315,7 @@
         <span class="k">if</span> <span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cutouts</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="p">[</span><span class="n">Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cutouts</span>
 
         <span class="c1"># If badpix is provided, combine it into the weight image.</span>
         <span class="k">if</span> <span class="n">badpix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -320,7 +327,7 @@
         <span class="k">if</span> <span class="n">seg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">seg</span> <span class="o">=</span> <span class="n">seg</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">seg</span> <span class="o">=</span> <span class="p">[</span><span class="n">galsim</span><span class="o">.</span><span class="n">ImageI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cutouts</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seg</span> <span class="o">=</span> <span class="p">[</span><span class="n">ImageI</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">box_size</span><span class="p">,</span> <span class="n">init_value</span><span class="o">=</span><span class="mi">1</span><span class="p">)]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n_cutouts</span>
 
         <span class="c1"># If wcs is not provided, get it from the images.</span>
         <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -355,7 +362,7 @@
 <span class="sd">                    existing files. [default True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="kn">from</span> <span class="nn">galsim._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+    <span class="kn">from</span> <span class="nn">.._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
 
     <span class="c1"># initialise the catalog</span>
     <span class="n">cat</span> <span class="o">=</span> <span class="p">{}</span>
@@ -446,7 +453,7 @@
 
             <span class="c1"># check if we are running out of memory</span>
             <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_MEMORY</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span>
                     <span class="s2">&quot;Running out of memory &gt; </span><span class="si">%1.0f</span><span class="s2">GB - you can increase the limit by changing &quot;</span>
                     <span class="s2">&quot;galsim.des_meds.MAX_MEMORY&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">MAX_MEMORY</span><span class="o">/</span><span class="mf">1.e9</span><span class="p">))</span>
 
@@ -596,11 +603,11 @@
         <span class="n">psf_cutouts</span>     <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ImageHDU</span><span class="p">(</span> <span class="n">vec</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;psf&#39;</span><span class="p">)</span>
         <span class="n">hdu_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">psf_cutouts</span><span class="p">)</span>
 
-    <span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">))</span></div>
+    <span class="n">writeFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">))</span></div>
 
 
 <span class="c1"># Make the class that will</span>
-<div class="viewcode-block" id="MEDSBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder">[docs]</a><span class="k">class</span> <span class="nc">MEDSBuilder</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">OutputBuilder</span><span class="p">):</span>
+<div class="viewcode-block" id="MEDSBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.MEDSBuilder">[docs]</a><span class="k">class</span> <span class="nc">MEDSBuilder</span><span class="p">(</span><span class="n">OutputBuilder</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This class lets you use the `MultiExposureObject` very simply as a special ``output``</span>
 <span class="sd">    type when using config processing.</span>
 
@@ -629,36 +636,35 @@
         <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image&#39;</span><span class="p">,{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;Single&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;Single&#39;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;MEDS files are not compatible with image type </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">])</span>
 
         <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;nobjects&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;nstamps_per_object&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
         <span class="n">opt</span>  <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;first_id&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
         <span class="n">ignore</span> <span class="o">+=</span> <span class="p">[</span> <span class="s1">&#39;file_name&#39;</span><span class="p">,</span> <span class="s1">&#39;dir&#39;</span><span class="p">,</span> <span class="s1">&#39;nfiles&#39;</span> <span class="p">]</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span><span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span><span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">first_id</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;first_id&#39;</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">)</span>
 
         <span class="n">nobjects</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;nobjects&#39;</span><span class="p">]</span>
         <span class="n">nstamps_per_object</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;nstamps_per_object&#39;</span><span class="p">]</span>
         <span class="n">ntot</span> <span class="o">=</span> <span class="n">nobjects</span> <span class="o">*</span> <span class="n">nstamps_per_object</span>
 
-        <span class="n">main_images</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildImages</span><span class="p">(</span><span class="n">ntot</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="o">=</span><span class="n">image_num</span><span class="p">,</span>  <span class="n">obj_num</span><span class="o">=</span><span class="n">obj_num</span><span class="p">,</span>
-                                                <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">main_images</span> <span class="o">=</span> <span class="n">BuildImages</span><span class="p">(</span><span class="n">ntot</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="o">=</span><span class="n">image_num</span><span class="p">,</span>  <span class="n">obj_num</span><span class="o">=</span><span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
 
         <span class="c1"># grab list of offsets for cutout_row/cutout_col.</span>
-        <span class="n">offsets</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;meds_get_offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">offsets</span> <span class="o">=</span> <span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;meds_get_offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
         <span class="c1"># cutout_row/col is the stamp center (**with the center of the first pixel</span>
         <span class="c1"># being (0,0)**) + offset</span>
         <span class="n">centers</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="o">*</span><span class="n">im</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mf">0.5</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">main_images</span><span class="p">]</span>
         <span class="n">cutout_rows</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span><span class="n">offset</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span><span class="n">offsets</span><span class="p">)]</span>
         <span class="n">cutout_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">+</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span><span class="n">offset</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">centers</span><span class="p">,</span><span class="n">offsets</span><span class="p">)]</span>
 
-        <span class="n">weight_images</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">weight_images</span> <span class="o">=</span> <span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;badpix&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">badpix_images</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;badpix&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="n">badpix_images</span> <span class="o">=</span> <span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;badpix&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">badpix_images</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">psf_images</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">psf_images</span> <span class="o">=</span> <span class="n">GetFinalExtraOutput</span><span class="p">(</span><span class="s1">&#39;psf&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
         <span class="n">obj_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nobjects</span><span class="p">):</span>
@@ -707,15 +713,15 @@
         <span class="k">if</span> <span class="s1">&#39;meds_get_offset&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;meds_get_offset&#39;</span><span class="p">]</span><span class="o">=</span><span class="p">{}</span>
 
-        <span class="n">nobjects</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nobjects&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">nstamps_per_object</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nstamps_per_object&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nobjects</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nobjects&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nstamps_per_object</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nstamps_per_object&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">ntot</span> <span class="o">=</span> <span class="n">nobjects</span> <span class="o">*</span> <span class="n">nstamps_per_object</span>
         <span class="k">return</span> <span class="n">ntot</span></div></div>
 
 <span class="c1"># This extra output type simply saves the values of the image offsets when an</span>
 <span class="c1"># object is drawn into the stamp.</span>
-<div class="viewcode-block" id="OffsetBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder">[docs]</a><span class="k">class</span> <span class="nc">OffsetBuilder</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
+<div class="viewcode-block" id="OffsetBuilder"><a class="viewcode-back" href="../../../des.html#galsim.des.OffsetBuilder">[docs]</a><span class="k">class</span> <span class="nc">OffsetBuilder</span><span class="p">(</span><span class="n">ExtraOutputBuilder</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This &quot;extra&quot; output builder saves the stamp offset values for later use.</span>
 
 <span class="sd">    It is used as a ``meds_get_offset`` field in the ``output`` section.</span>
@@ -726,7 +732,7 @@
         <span class="n">offset</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span>
         <span class="n">stamp</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">stamp</span><span class="p">:</span>
-            <span class="n">offset</span> <span class="o">+=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">],</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scratch</span><span class="p">[</span><span class="n">obj_num</span><span class="p">]</span> <span class="o">=</span> <span class="n">offset</span></div>
 
     <span class="c1"># The function to call at the end of building each file to finalize the truth catalog</span>
@@ -738,8 +744,8 @@
         <span class="k">return</span> <span class="n">offsets_list</span></div></div>
 
 <span class="c1"># Register these</span>
-<span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterOutputType</span><span class="p">(</span><span class="s1">&#39;MEDS&#39;</span><span class="p">,</span> <span class="n">MEDSBuilder</span><span class="p">())</span>
-<span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;meds_get_offset&#39;</span><span class="p">,</span> <span class="n">OffsetBuilder</span><span class="p">())</span>
+<span class="n">RegisterOutputType</span><span class="p">(</span><span class="s1">&#39;MEDS&#39;</span><span class="p">,</span> <span class="n">MEDSBuilder</span><span class="p">())</span>
+<span class="n">RegisterExtraOutput</span><span class="p">(</span><span class="s1">&#39;meds_get_offset&#39;</span><span class="p">,</span> <span class="n">OffsetBuilder</span><span class="p">())</span>
 
 </pre></div>
 

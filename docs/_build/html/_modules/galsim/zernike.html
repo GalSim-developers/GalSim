@@ -195,8 +195,7 @@
 <span class="n">_noll_n</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]</span>
 <span class="n">_noll_m</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
 <div class="viewcode-block" id="noll_to_zern"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.noll_to_zern">[docs]</a><span class="k">def</span> <span class="nf">noll_to_zern</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert linear Noll index to tuple of Zernike indices.</span>
+    <span class="sd">&quot;&quot;&quot;Convert linear Noll index to tuple of Zernike indices.</span>
 <span class="sd">    j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike</span>
 <span class="sd">    index.</span>
 
@@ -605,6 +604,12 @@
 <span class="sd">         4          sqrt(3) (2 (x^2 + y^2) - 1)</span>
 <span class="sd">    ==========      ===========================</span>
 
+<span class="sd">    A few mathematical convenience operations are additionally available.  Zernikes can be added,</span>
+<span class="sd">    subtracted, or multiplied together, or multiplied by scalars.  Note, however, that two</span>
+<span class="sd">    Zernikes can only be combined this way if they have matching ``R_outer`` and ``R_inner``</span>
+<span class="sd">    attributes.  Zernike gradients, Laplacians and the determinant of the Hessian matrix are also</span>
+<span class="sd">    available as properties that return new `Zernike` objects.</span>
+
 <span class="sd">    Parameters:</span>
 <span class="sd">        coef:       Zernike series coefficients.  Note that coef[i] corresponds to Z_i under the</span>
 <span class="sd">                    Noll index convention, and coef[0] is ignored.  (I.e., coef[1] is &#39;piston&#39;,</span>
@@ -618,6 +623,120 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">R_outer</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">R_inner</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Zernike.__add__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__add__">[docs]</a>    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add two Zernikes.</span>
+
+<span class="sd">        Requires that each operand&#39;s ``R_outer`` and ``R_inner`` attributes are the same.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Zernike</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot add Zernike to type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">rhs</span><span class="p">)))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">!=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">R_outer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add Zernikes with inconsistent R_outer&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">!=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">R_inner</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add Zernikes with inconsistent R_inner&quot;</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">coef</span><span class="p">))</span>
+        <span class="n">newCoef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">newCoef</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+        <span class="n">newCoef</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">coef</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">coef</span>
+        <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Zernike.__sub__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__sub__">[docs]</a>    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Subtract two Zernikes.</span>
+
+<span class="sd">        Requires that each operand&#39;s ``R_outer`` and ``R_inner`` attributes are the same.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="o">-</span><span class="n">rhs</span></div>
+
+<div class="viewcode-block" id="Zernike.__neg__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__neg__">[docs]</a>    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Negate a Zernike.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span></div>
+
+<div class="viewcode-block" id="Zernike.__mul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__mul__">[docs]</a>    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Multiply two Zernikes, or multiply a Zernike by a scalar.</span>
+
+<span class="sd">        If both operands are Zernikes, then the ``R_outer`` and ``R_inner`` attributes of each must</span>
+<span class="sd">        be the same.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Real</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Real</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">rhs</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Zernike</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">!=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">R_outer</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply Zernikes with inconsistent R_outer&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">!=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">R_inner</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply Zernikes with inconsistent R_inner&quot;</span><span class="p">)</span>
+            <span class="n">n1</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">noll_to_zern</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">n2</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">noll_to_zern</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">nTarget</span> <span class="o">=</span> <span class="n">n1</span><span class="o">+</span><span class="n">n2</span>  <span class="c1"># Maximum possible radial degree is sum of input radial degrees</span>
+            <span class="n">jTarget</span> <span class="o">=</span> <span class="p">(</span><span class="n">nTarget</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">nTarget</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>  <span class="c1"># Largest Noll index with above radial degree</span>
+
+            <span class="c1"># To multiply, we first convolve in 2D the xy coefficients of each polynomial</span>
+            <span class="n">sxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coef_array_xy</span>
+            <span class="n">rxy</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">_coef_array_xy</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">sxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">rxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                     <span class="n">sxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">rxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">newXY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">sxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">sxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">rxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">rxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">sxy</span><span class="p">,</span> <span class="n">rxy</span> <span class="o">=</span> <span class="n">rxy</span><span class="p">,</span> <span class="n">sxy</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndenumerate</span><span class="p">(</span><span class="n">sxy</span><span class="p">):</span>
+                <span class="n">newXY</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">rxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="n">rxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">c</span><span class="o">*</span><span class="n">rxy</span>
+
+            <span class="c1"># Each multiplier has adjustments for R_outer present, leading to the new coefficients</span>
+            <span class="c1"># having adjustments for R_outer^2.  So unadjust by 1 factor of R_outer here.</span>
+            <span class="n">adjustedXY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">newXY</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+                <span class="n">n</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+                <span class="n">adjustedXY</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*=</span> <span class="n">norm</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+                    <span class="n">adjustedXY</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">norm</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span>
+
+            <span class="c1"># We now have the XY coefficients for the product polynomial in newXY.  What we want,</span>
+            <span class="c1"># however, is the contribution from each Zernike term.  We can use lstsq and knowledge</span>
+            <span class="c1"># of each individual Zernike term&#39;s xy contribution (from _noll_coef_array_xy) to solve</span>
+            <span class="c1"># for the appropriate coefficients.</span>
+            <span class="n">obscuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span>
+            <span class="n">nca</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span>
+                <span class="n">_noll_coef_array_xy</span><span class="p">(</span><span class="n">jTarget</span><span class="p">,</span> <span class="n">obscuration</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">jTarget</span><span class="p">),</span>
+                <span class="n">adjustedXY</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+                <span class="n">rcond</span><span class="o">=-</span><span class="mf">1.</span>
+            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">newCoef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">nca</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">newCoef</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="n">newCoef</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">nca</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
+            <span class="c1"># We&#39;ve already computed the XY coefficients for the product, so insert those now</span>
+            <span class="c1"># instead of waiting on the lazy_property to compute them again.</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_coef_array_xy</span> <span class="o">=</span> <span class="n">newXY</span>
+            <span class="k">return</span> <span class="n">ret</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply Zernike by type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">rhs</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="Zernike.__rmul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__rmul__">[docs]</a>    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to obj * rhs.  See `__mul__` for details.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="n">rhs</span></div>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The determinant of the Hessian matrix of this Zernike polynomial expressed as a new</span>
+<span class="sd">        Zernike polynomial.  The Hessian matrix is the matrix of second derivatives, to the</span>
+<span class="sd">        determinant is d^2Z/dx^2 * d^Z/dy^2 - (d^Z/dxdy)^2, and is an expression of the local</span>
+<span class="sd">        curvature of the Zernike polynomial.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dxx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradX</span><span class="o">.</span><span class="n">gradX</span>
+        <span class="n">dxy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradX</span><span class="o">.</span><span class="n">gradY</span>
+        <span class="n">dyy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradY</span><span class="o">.</span><span class="n">gradY</span>
+        <span class="k">return</span> <span class="n">dxx</span><span class="o">*</span><span class="n">dyy</span> <span class="o">-</span> <span class="n">dxy</span><span class="o">*</span><span class="n">dxy</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">laplacian</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The Laplacian of this Zernike polynomial expressed as a new Zernike polynomial. The</span>
+<span class="sd">        Laplacian is d^2Z/dx^2 + d^2Z/dy^2 (the trace of the Hessian matrix), and is an expression</span>
+<span class="sd">        of the local divergence of the Zernike polynomial.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradX</span><span class="o">.</span><span class="n">gradX</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradY</span><span class="o">.</span><span class="n">gradY</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_coef_array_xy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -659,6 +778,18 @@
         <span class="n">newCoef</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Zernike.__call__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate this Zernike polynomial series at Cartesian coordinates x and y.</span>
+<span class="sd">        Synonym for `evalCartesian`.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            x:    x-coordinate of evaluation points.  Can be list-like.</span>
+<span class="sd">            y:    y-coordinate of evaluation points.  Can be list-like.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Series evaluations as numpy array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="Zernike.evalCartesian"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalCartesian">[docs]</a>    <span class="k">def</span> <span class="nf">evalCartesian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluate this Zernike polynomial series at Cartesian coordinates x and y.</span>
 
@@ -686,8 +817,17 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">evalCartesianGrad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradX</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradY</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+<div class="viewcode-block" id="Zernike.evalCartesianGrad"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.evalCartesianGrad">[docs]</a>    <span class="k">def</span> <span class="nf">evalCartesianGrad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate the gradient of this Zernike polynomial series at cartesian coordinates</span>
+<span class="sd">        x and y.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            x:  x-coordinate of evaluation points.  Can be list-like.</span>
+<span class="sd">            y:  y-coordinate of evaluation points.  Can be list-like.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of arrays for x-gradient and y-gradient.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradX</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradY</span><span class="o">.</span><span class="n">evalCartesian</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Zernike.rotate"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return new Zernike polynomial series rotated by angle theta.</span>
@@ -704,7 +844,6 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            A new Zernike object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
         <span class="n">M</span> <span class="o">=</span> <span class="n">zernikeRotMatrix</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span></div>
 

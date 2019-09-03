@@ -189,7 +189,7 @@
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
 <span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">Position</span>
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">parse_pos_args</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
@@ -596,7 +596,7 @@
     <span class="c1"># Note: we don&#39;t define __iadd__ and similar.  Let python handle this automatically</span>
     <span class="c1"># to make obj += obj2 be equivalent to obj = obj + obj2.</span>
 <div class="viewcode-block" id="GSObject.__add__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__add__">[docs]</a>    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Add to GSObjects.</span>
+        <span class="sd">&quot;&quot;&quot;Add two GSObjects.</span>
 
 <span class="sd">        Equivalent to Add(self, other)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -605,7 +605,7 @@
 
     <span class="c1"># op- is unusual, but allowed.  It subtracts off one profile from another.</span>
 <div class="viewcode-block" id="GSObject.__sub__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__sub__">[docs]</a>    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Subtract to GSObjects.</span>
+        <span class="sd">&quot;&quot;&quot;Subtract two GSObjects.</span>
 
 <span class="sd">        Equivalent to Add(self, -1 * other)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1171,11 +1171,11 @@
 <span class="sd">        The units are typically arcsec, but we don&#39;t enforce that anywhere.  The units here just</span>
 <span class="sd">        need to be consistent with the units used for any size values used by the `GSObject`.</span>
 <span class="sd">        The connection of these units to the eventual image pixels is defined by either the</span>
-<span class="sd">        ``pixel_scale`` or the ``wcs`` parameter of `drawImage`.</span>
+<span class="sd">        ``pixel_scale`` or the ``wcs`` parameter of `GSObject.drawImage`.</span>
 
 <span class="sd">        Note: if you want to shift the object by a set number (or fraction) of pixels in the</span>
-<span class="sd">        drawn image, you probably want to use the ``offset`` parameter of `drawImage` rather than</span>
-<span class="sd">        this method.</span>
+<span class="sd">        drawn image, you probably want to use the ``offset`` parameter of `GSObject.drawImage`</span>
+<span class="sd">        rather than this method.</span>
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            dx:         Horizontal shift to apply.</span>
@@ -1214,7 +1214,7 @@
         <span class="k">return</span> <span class="n">new_obj</span></div>
 
     <span class="c1"># Make sure the image is defined with the right size and wcs for drawImage()</span>
-    <span class="k">def</span> <span class="nf">_setup_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">odd</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_setup_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">odd</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
         <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">_BoundsI</span>
 
@@ -1263,14 +1263,19 @@
                     <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                         <span class="s2">&quot;Must set either both or neither of nx, ny&quot;</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">ny</span><span class="p">)</span>
                 <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">image</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="mf">0.5</span><span class="o">-</span><span class="n">image</span><span class="o">.</span><span class="n">true_center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span>
+                                          <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="mf">0.5</span><span class="o">-</span><span class="n">image</span><span class="o">.</span><span class="n">true_center</span><span class="o">.</span><span class="n">y</span><span class="p">)))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getGoodImageSize</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">odd</span><span class="p">:</span> <span class="n">N</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">image</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="n">PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">)))</span>
 
         <span class="k">return</span> <span class="n">image</span>
 
-    <span class="k">def</span> <span class="nf">_local_wcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">,</span> <span class="n">new_bounds</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_local_wcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">,</span> <span class="n">new_bounds</span><span class="p">):</span>
         <span class="c1"># Get the local WCS at the location of the object.</span>
 
         <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isUniform</span><span class="p">():</span>
@@ -1283,6 +1288,8 @@
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                 <span class="s2">&quot;Cannot provide non-local wcs with automatically sized image&quot;</span><span class="p">,</span>
                 <span class="n">wcs</span><span class="o">=</span><span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="n">new_bounds</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">obj_cen</span> <span class="o">=</span> <span class="n">center</span>
         <span class="k">elif</span> <span class="n">use_true_center</span><span class="p">:</span>
             <span class="n">obj_cen</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">true_center</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1296,27 +1303,46 @@
     <span class="k">def</span> <span class="nf">_parse_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">Position</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c1"># Let python raise the appropriate exception if this isn&#39;t valid.</span>
-                <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># Let python raise the appropriate exception if this isn&#39;t valid.</span>
+            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">_get_new_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_parse_center</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
+        <span class="c1"># Almost the same as _parse_offset, except we leave it as None in that case.</span>
+        <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">Position</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Let python raise the appropriate exception if this isn&#39;t valid.</span>
+            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_get_new_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">BoundsI</span>
         <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span>
         <span class="k">elif</span> <span class="n">nx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ny</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">BoundsI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">ny</span><span class="p">)</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="n">BoundsI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">ny</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                      <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">b</span>
         <span class="k">elif</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">bounds</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">BoundsI</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_adjust_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_bounds</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_adjust_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_bounds</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">):</span>
         <span class="c1"># Note: this assumes self is in terms of image coordinates.</span>
-        <span class="k">if</span> <span class="n">use_true_center</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">new_bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">center</span> <span class="o">-</span> <span class="n">new_bounds</span><span class="o">.</span><span class="n">center</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Then will be created as even sized image.</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">use_true_center</span><span class="p">:</span>
             <span class="c1"># For even-sized images, the SBProfile draw function centers the result in the</span>
             <span class="c1"># pixel just up and right of the real center.  So shift it back to make sure it really</span>
             <span class="c1"># draws in the center.</span>
@@ -1360,7 +1386,8 @@
 
 <div class="viewcode-block" id="GSObject.drawImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">method</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">area</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                  <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_photons</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+                  <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">n_photons</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                   <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">n_subsample</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">save_photons</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draws an `Image` of the object.</span>
@@ -1498,12 +1525,17 @@
 <span class="sd">        image.  There is thus a qualitative difference in the appearance of the rendered profile</span>
 <span class="sd">        when drawn on even- and odd-sized images.  For a profile with a maximum at (0,0), this</span>
 <span class="sd">        maximum will fall in the central pixel of an odd-sized image, but in the corner of the four</span>
-<span class="sd">        central pixels of an even-sized image.  There are two parameters that can affect this</span>
-<span class="sd">        behavior.  If you want the nominal center to always fall at the center of a pixel, you can</span>
-<span class="sd">        use ``use_true_center=False``.  This will put the object&#39;s center at the position</span>
-<span class="sd">        ``image.center`` which is an integer pixel value, and is not the true center of an</span>
-<span class="sd">        even-sized image.  You can also arbitrarily offset the profile from the image center with</span>
-<span class="sd">        the ``offset`` parameter to handle any sub-pixel dithering you want.</span>
+<span class="sd">        central pixels of an even-sized image.  There are three parameters that can affect this</span>
+<span class="sd">        behavior.  First, you can specify any arbitrary pixel position to center the object using</span>
+<span class="sd">        the ``center`` parameter.  If this is None, then it will pick one of the two potential</span>
+<span class="sd">        &quot;centers&quot; of the image, either ``image.true_center`` or ``image.center``.  The latter is</span>
+<span class="sd">        an integer position, which always corresponds to the center of some pixel, which for even</span>
+<span class="sd">        sized images won&#39;t (cannot) be the actual &quot;true&quot; center of the image.  You can choose which</span>
+<span class="sd">        of these two centers you want to use with the ``use_true_center`` parameters, which</span>
+<span class="sd">        defaults to False.  You can also arbitrarily offset the profile from the image center with</span>
+<span class="sd">        the ``offset`` parameter to handle any aribtrary offset you want from the chosen center.</span>
+<span class="sd">        (Typically, one would use only one of ``center`` or ``offset`` but it is permissible to use</span>
+<span class="sd">        both.)</span>
 
 <span class="sd">        Setting the overall normalization:</span>
 
@@ -1636,14 +1668,16 @@
 <span class="sd">                            anything in the image before drawing.</span>
 <span class="sd">                            Note: This requires that ``image`` be provided and that it have defined</span>
 <span class="sd">                            bounds. [default: False]</span>
-<span class="sd">            use_true_center: Normally, the profile is drawn to be centered at the true center</span>
-<span class="sd">                            of the image (using the property image.true_center).</span>
+<span class="sd">            center:         The position on the image at which to place the nominal center of the</span>
+<span class="sd">                            object (usually the centroid, but not necessarily).  [default: None]</span>
+<span class="sd">            use_true_center: If ``center`` is None, then the object is normally centered at the</span>
+<span class="sd">                            true center of the image (using the property image.true_center).</span>
 <span class="sd">                            If you would rather use the integer center (given by image.center),</span>
 <span class="sd">                            set this to ``False``.  [default: True]</span>
-<span class="sd">            offset:         The location in pixel coordinates at which to center the profile being</span>
-<span class="sd">                            drawn relative to the center of the image (either the true center if</span>
-<span class="sd">                            ``use_true_center=True`` or nominal center if</span>
-<span class="sd">                            ``use_true_center=False``).  [default: None]</span>
+<span class="sd">            offset:         The offset in pixel coordinates at which to center the profile being</span>
+<span class="sd">                            drawn relative to either ``center`` (if given) or the center of the</span>
+<span class="sd">                            image (either the true center or integer center according to the</span>
+<span class="sd">                            ``use_true_center`` parameter). [default: None]</span>
 <span class="sd">            n_photons:      If provided, the number of photons to use for photon shooting.</span>
 <span class="sd">                            If not provided (i.e. ``n_photons = 0``), use as many photons as</span>
 <span class="sd">                            necessary to result in an image with the correct Poisson shot</span>
@@ -1772,14 +1806,16 @@
         <span class="c1"># Figure out what wcs we are going to use.</span>
         <span class="n">wcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_determine_wcs</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
 
-        <span class="c1"># Make sure offset is a PositionD</span>
+        <span class="c1"># Make sure offset and center are PositionD, converting from other formats (tuple, array,..)</span>
+        <span class="c1"># Note: If None, offset is converted to PositionD(0,0), but center will remain None.</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_offset</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_center</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
 
         <span class="c1"># Determine the bounds of the new image for use below (if it can be known yet)</span>
-        <span class="n">new_bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_new_bounds</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">)</span>
+        <span class="n">new_bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_new_bounds</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
 
         <span class="c1"># Get the local WCS, accounting for the offset correctly.</span>
-        <span class="n">local_wcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="p">(</span><span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">,</span> <span class="n">new_bounds</span><span class="p">)</span>
+        <span class="n">local_wcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span><span class="p">(</span><span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">,</span> <span class="n">new_bounds</span><span class="p">)</span>
 
         <span class="c1"># Account for area and exptime.</span>
         <span class="n">flux_scale</span> <span class="o">=</span> <span class="n">area</span> <span class="o">*</span> <span class="n">exptime</span>
@@ -1792,7 +1828,7 @@
             <span class="n">flux_scale</span> <span class="o">/=</span> <span class="n">gain</span>
 
         <span class="c1"># Determine the offset, and possibly fix the centering for even-sized images</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjust_offset</span><span class="p">(</span><span class="n">new_bounds</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adjust_offset</span><span class="p">(</span><span class="n">new_bounds</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">)</span>
 
         <span class="c1"># Convert the profile in world coordinates to the profile in image coordinates:</span>
         <span class="n">prof</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">profileToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_scale</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
@@ -1812,7 +1848,7 @@
                             <span class="n">real_space</span><span class="o">=</span><span class="n">real_space</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
 
         <span class="c1"># Make sure image is setup correctly</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">_setup_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">_setup_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">center</span><span class="p">)</span>
         <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
 
         <span class="k">if</span> <span class="n">setup_only</span><span class="p">:</span>
@@ -2178,30 +2214,23 @@
             <span class="c1"># We want the variance to be equal to flux, so we need an extra:</span>
             <span class="c1"># delta Var = (1 - 4*eta + 4*eta^2) * flux</span>
             <span class="c1">#           = (1-2eta)^2 * flux</span>
-            <span class="n">mean</span> <span class="o">=</span> <span class="n">eta_factor</span><span class="o">*</span><span class="n">eta_factor</span> <span class="o">*</span> <span class="n">flux</span>
+            <span class="n">absflux</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+            <span class="n">mean</span> <span class="o">=</span> <span class="n">eta_factor</span><span class="o">*</span><span class="n">eta_factor</span> <span class="o">*</span> <span class="n">absflux</span>
             <span class="n">pd</span> <span class="o">=</span> <span class="n">PoissonDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">mean</span><span class="p">)</span>
-            <span class="n">pd_val</span> <span class="o">=</span> <span class="n">pd</span><span class="p">()</span> <span class="o">-</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">flux</span>
-            <span class="n">ratio</span> <span class="o">=</span> <span class="n">pd_val</span> <span class="o">/</span> <span class="n">flux</span>
+            <span class="n">pd_val</span> <span class="o">=</span> <span class="n">pd</span><span class="p">()</span> <span class="o">-</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">absflux</span>
+            <span class="n">ratio</span> <span class="o">=</span> <span class="n">pd_val</span> <span class="o">/</span> <span class="n">absflux</span>
             <span class="n">g</span> <span class="o">*=</span> <span class="n">ratio</span>
             <span class="n">mod_flux</span> <span class="o">*=</span> <span class="n">ratio</span>
 
         <span class="k">if</span> <span class="n">n_photons</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
-            <span class="n">n_photons</span> <span class="o">=</span> <span class="n">mod_flux</span>
+            <span class="n">n_photons</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">mod_flux</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">max_extra_noise</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
-                <span class="n">gfactor</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">+</span> <span class="n">max_extra_noise</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_sb</span>
+                <span class="n">gfactor</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">+</span> <span class="n">max_extra_noise</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_sb</span><span class="p">)</span>
                 <span class="n">n_photons</span> <span class="o">/=</span> <span class="n">gfactor</span>
                 <span class="n">g</span> <span class="o">*=</span> <span class="n">gfactor</span>
 
         <span class="c1"># Make n_photons an integer.</span>
         <span class="n">iN</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n_photons</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">iN</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Automatic n_photons calculation did not end up with positive N. &quot;</span>
-                        <span class="s2">&quot;(n_photons = </span><span class="si">{0}</span><span class="s2">)  No photons will be shot.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="s2">&quot;  prof = </span><span class="si">{1}</span><span class="se">\n</span><span class="s2">  flux = </span><span class="si">{2}</span><span class="se">\n</span><span class="s2">  poisson_flux = </span><span class="si">{3}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="s2">&quot;  max_extra_noise = </span><span class="si">{4}</span><span class="se">\n</span><span class="s2">  g = </span><span class="si">{5}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                <span class="n">n_photons</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">g</span><span class="p">))</span>
-            <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.</span>
 
         <span class="k">return</span> <span class="n">iN</span><span class="p">,</span> <span class="n">g</span></div>
 
@@ -2471,7 +2500,8 @@
         <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="n">real_prof</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="n">dx</span><span class="p">)</span><span class="o">.</span><span class="n">profileToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
             <span class="n">dtype</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span> <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span>
-            <span class="n">image</span> <span class="o">=</span> <span class="n">real_prof</span><span class="o">.</span><span class="n">_setup_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">odd</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">real_prof</span><span class="o">.</span><span class="n">_setup_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span>
+                                           <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">odd</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Do some checks that setup_image would have done for us</span>
             <span class="k">if</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>

@@ -301,8 +301,11 @@
 
     <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
 
+<div class="viewcode-block" id="Box.withFlux"><a class="viewcode-back" href="../../simple.html#galsim.Box.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Box</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 
 <div class="viewcode-block" id="Pixel"><a class="viewcode-back" href="../../simple.html#galsim.Pixel">[docs]</a><span class="k">class</span> <span class="nc">Pixel</span><span class="p">(</span><span class="n">Box</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class describing a pixel profile.  This is just a 2D square top-hat function.</span>
@@ -340,7 +343,11 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, flux=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
-        <span class="k">return</span> <span class="n">s</span></div>
+        <span class="k">return</span> <span class="n">s</span>
+
+<div class="viewcode-block" id="Pixel.withFlux"><a class="viewcode-back" href="../../simple.html#galsim.Pixel.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Pixel</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="TopHat"><a class="viewcode-back" href="../../simple.html#galsim.TopHat">[docs]</a><span class="k">class</span> <span class="nc">TopHat</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
@@ -443,7 +450,11 @@
 
     <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TopHat.withFlux"><a class="viewcode-back" href="../../simple.html#galsim.TopHat.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TopHat</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

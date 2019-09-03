@@ -918,7 +918,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">fits</span>
     <span class="kn">from</span> <span class="nn">.fitswcs</span> <span class="k">import</span> <span class="n">FitsWCS</span>
-    <span class="kn">import</span> <span class="nn">galsim</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">fits</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">):</span>
         <span class="n">header</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
     <span class="n">xmin</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GS_XMIN&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -926,7 +925,10 @@
     <span class="n">origin</span> <span class="o">=</span> <span class="n">PositionI</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">)</span>
     <span class="n">wcs_name</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GS_WCS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">wcs_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">wcs_type</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s1">&#39;galsim.&#39;</span> <span class="o">+</span> <span class="n">wcs_name</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">exec_</span>
+        <span class="n">gdict</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">exec_</span><span class="p">(</span><span class="s1">&#39;import galsim&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+        <span class="n">wcs_type</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s1">&#39;galsim.&#39;</span> <span class="o">+</span> <span class="n">wcs_name</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
         <span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs_type</span><span class="o">.</span><span class="n">_readHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># If we aren&#39;t told which type to use, this should find something appropriate</span>

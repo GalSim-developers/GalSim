@@ -729,6 +729,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="Image.get_pixel_centers"><a class="viewcode-back" href="../../image_class.html#galsim.Image.get_pixel_centers">[docs]</a>    <span class="k">def</span> <span class="nf">get_pixel_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A convenience function to get the x and y values at the centers of the image pixels.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (x, y), each of which is a numpy array the same shape as ``self.array``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+                          <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span>
+        <span class="n">y</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
     <span class="k">def</span> <span class="nf">_make_empty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Helper function to make an empty numpy array of the given shape, making sure that</span>
 <span class="sd">        the array is 16-btye aligned so it is usable by FFTW.</span>
@@ -1573,9 +1585,9 @@
             <span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
         <span class="c1"># Use radii at centers of pixels as approximation to the radial integral</span>
-        <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">center</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pixel_centers</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="n">center</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">y</span> <span class="o">-=</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span>
         <span class="n">rsq</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span>
 
         <span class="c1"># Sort by radius</span>
@@ -1639,9 +1651,9 @@
             <span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
         <span class="c1"># Use radii at centers of pixels as approximation to the radial integral</span>
-        <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">center</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pixel_centers</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="n">center</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">y</span> <span class="o">-=</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span>
 
         <span class="k">if</span> <span class="n">rtype</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;trace&#39;</span><span class="p">,</span> <span class="s1">&#39;both&#39;</span><span class="p">):</span>
             <span class="c1"># Calculate trace measure:</span>
@@ -1696,9 +1708,9 @@
         <span class="k">if</span> <span class="n">Imax2</span> <span class="o">&gt;</span> <span class="n">Imax</span><span class="p">:</span> <span class="n">Imax</span> <span class="o">=</span> <span class="n">Imax2</span>
 
         <span class="c1"># Use radii at centers of pixels.</span>
-        <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">center</span><span class="o">.</span><span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_pixel_centers</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">-=</span> <span class="n">center</span><span class="o">.</span><span class="n">x</span>
+        <span class="n">y</span> <span class="o">-=</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span>
         <span class="n">rsq</span> <span class="o">=</span> <span class="n">x</span><span class="o">*</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span><span class="o">*</span><span class="n">y</span>
 
         <span class="c1"># Sort by radius</span>

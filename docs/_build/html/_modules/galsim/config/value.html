@@ -183,11 +183,20 @@
 <span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
+
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
 
 <span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">import</span> <span class="nn">galsim</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">PropagateIndexKeyRNGNum</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">ParseExtendedKey</span>
+
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">..angle</span> <span class="k">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="k">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..celestial</span> <span class="k">import</span> <span class="n">CelestialCoord</span>
+<span class="kn">from</span> <span class="nn">..shear</span> <span class="k">import</span> <span class="n">Shear</span>
 
 <span class="c1"># This file handles the parsing of values given in the config dict.  It includes the basic</span>
 <span class="c1"># parsing functionality along with generators for most of the simple value types.</span>
@@ -204,7 +213,7 @@
 
 <span class="c1"># Standard keys to ignore while parsing values:</span>
 <span class="n">standard_ignore</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;current&#39;</span><span class="p">,</span> <span class="s1">&#39;index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_num&#39;</span><span class="p">,</span> <span class="s1">&#39;_gen_fn&#39;</span><span class="p">,</span> <span class="s1">&#39;_get&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;current&#39;</span><span class="p">,</span> <span class="s1">&#39;index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_num&#39;</span><span class="p">,</span> <span class="s1">&#39;_gen_fn&#39;</span><span class="p">,</span> <span class="s1">&#39;_get&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_index_key&#39;</span><span class="p">,</span>
     <span class="s1">&#39;#&#39;</span> <span class="c1"># When we read in json files, there represent comments</span>
 <span class="p">]</span>
 
@@ -221,9 +230,11 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        the tuple (value, safe).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">BuildGSObject</span>
+
     <span class="c1"># Special: if the &quot;value_type&quot; is GSObject, then switch over to that builder instead.</span>
-    <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GSObject</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildGSObject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">GSObject</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
 
     <span class="n">param</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
     <span class="c1">#print(&#39;ParseValue for key = &#39;,key,&#39;, value_type = &#39;,str(value_type))</span>
@@ -237,7 +248,7 @@
         <span class="c1">#print(param[&#39;type&#39;], value_type)</span>
 
         <span class="c1"># Check what index key we want to use for this value.</span>
-        <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetIndex</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_sequence</span><span class="o">=</span><span class="p">(</span><span class="n">type_name</span><span class="o">==</span><span class="s1">&#39;Sequence&#39;</span><span class="p">))</span>
+        <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_sequence</span><span class="o">=</span><span class="p">(</span><span class="n">type_name</span><span class="o">==</span><span class="s1">&#39;Sequence&#39;</span><span class="p">))</span>
         <span class="c1">#print(&#39;index, index_key = &#39;,index,index_key)</span>
 
         <span class="k">if</span> <span class="s1">&#39;_gen_fn&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
@@ -246,14 +257,14 @@
             <span class="k">if</span> <span class="s1">&#39;current&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
                 <span class="n">cval</span><span class="p">,</span> <span class="n">csafe</span><span class="p">,</span> <span class="n">cvalue_type</span><span class="p">,</span> <span class="n">cindex</span><span class="p">,</span> <span class="n">cindex_key</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span>
                 <span class="k">if</span> <span class="s1">&#39;repeat&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
-                    <span class="n">repeat</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">repeat</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                     <span class="n">use_current</span> <span class="o">=</span> <span class="p">(</span><span class="n">cindex</span><span class="o">//</span><span class="n">repeat</span> <span class="o">==</span> <span class="n">index</span><span class="o">//</span><span class="n">repeat</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">use_current</span> <span class="o">=</span> <span class="p">(</span><span class="n">cindex</span> <span class="o">==</span> <span class="n">index</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">use_current</span><span class="p">:</span>
                     <span class="k">if</span> <span class="p">(</span><span class="n">value_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cvalue_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
                             <span class="n">cvalue_type</span> <span class="o">!=</span> <span class="n">value_type</span><span class="p">):</span>
-                        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+                        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                             <span class="s2">&quot;Attempt to parse </span><span class="si">%s</span><span class="s2"> multiple times with different value types: &quot;</span>
                             <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> and </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">cvalue_type</span><span class="p">))</span>
                     <span class="c1">#print(index,&#39;Using current value of &#39;,key,&#39; = &#39;,param[&#39;current&#39;][0])</span>
@@ -261,20 +272,20 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Only need to check this the first time.</span>
             <span class="k">if</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                     <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">.type attribute required when providing a dict.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
 
             <span class="c1"># Check if the value_type is valid.</span>
             <span class="c1"># (See valid_value_types defined at the top of the file.)</span>
             <span class="k">if</span> <span class="n">type_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_value_types</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized </span><span class="si">%s</span><span class="s2">.type&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">type_name</span><span class="p">,</span>
-                                                    <span class="n">valid_value_types</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized </span><span class="si">%s</span><span class="s2">.type&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">),</span> <span class="n">type_name</span><span class="p">,</span>
+                                             <span class="n">valid_value_types</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
             <span class="c1"># Get the generating function and the list of valid types for it.</span>
             <span class="n">generate_func</span><span class="p">,</span> <span class="n">valid_types</span> <span class="o">=</span> <span class="n">valid_value_types</span><span class="p">[</span><span class="n">type_name</span><span class="p">]</span>
 
             <span class="k">if</span> <span class="n">value_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_types</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span>
                     <span class="s2">&quot;Invalid value_type specified for parameter </span><span class="si">%s</span><span class="s2"> with type=</span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">type_name</span><span class="p">),</span>
                     <span class="n">value_type</span><span class="p">,</span> <span class="n">valid_types</span><span class="p">)</span>
 
@@ -308,9 +319,11 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;$&#39;</span><span class="p">:</span>
                 <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Eval&#39;</span><span class="p">,</span> <span class="s1">&#39;str&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="p">}</span>
+                <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;@&#39;</span><span class="p">:</span>
                 <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;Current&#39;</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="p">}</span>
+                <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
 
         <span class="c1"># See if it&#39;s already the right kind of object, in which case we can just return it.</span>
@@ -321,17 +334,18 @@
         <span class="c1"># Convert lists to dicts with type=List</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">list</span><span class="p">:</span>
             <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;List&#39;</span><span class="p">,</span> <span class="s1">&#39;items&#39;</span><span class="p">:</span> <span class="n">param</span> <span class="p">}</span>
+            <span class="n">PropagateIndexKeyRNGNum</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
 
         <span class="c1"># The rest of these are special processing options for specific value_types:</span>
-        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">Angle</span><span class="p">:</span>
             <span class="c1"># Angle is a special case.  Angles are specified with a final string to</span>
             <span class="c1"># declare what unit to use.</span>
             <span class="n">val</span> <span class="o">=</span> <span class="n">_GetAngleValue</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
             <span class="c1"># For bool, we allow a few special string conversions</span>
             <span class="n">val</span> <span class="o">=</span> <span class="n">_GetBoolValue</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">PositionD</span><span class="p">:</span>
             <span class="c1"># For PositionD, we allow a string of x,y</span>
             <span class="n">val</span> <span class="o">=</span> <span class="n">_GetPositionValue</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">param</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -346,7 +360,7 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">val</span> <span class="o">=</span> <span class="n">value_type</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Could not parse </span><span class="si">%s</span><span class="s2"> as a </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">value_type</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Could not parse </span><span class="si">%s</span><span class="s2"> as a </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">value_type</span><span class="p">))</span>
         <span class="c1">#print(key,&#39; = &#39;,val)</span>
 
         <span class="c1"># Save the converted type for next time so it will hit the first if statement here</span>
@@ -373,7 +387,7 @@
         <span class="n">base</span> <span class="o">=</span> <span class="n">config</span>
 
     <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
-        <span class="n">config</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">,</span> <span class="n">key</span> <span class="o">=</span> <span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
 
     <span class="n">val</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">EvaluateCurrentValue</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">val</span></div>
@@ -389,7 +403,12 @@
 <span class="sd">        value_type: The value_type expected.  [default: None, which means it won&#39;t check</span>
 <span class="sd">                    that the value is the right type.]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">GetInputObj</span>
+
+    <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># If we are trying to access a current input, then use GetInputObj instead.</span>
+        <span class="k">return</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;Current&#39;</span><span class="p">),</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span><span class="s1">&#39;$&#39;</span><span class="p">)):</span>
             <span class="c1"># This will work fine to evaluate the current value, but will also</span>
             <span class="c1"># compute it if necessary</span>
@@ -486,7 +505,7 @@
         <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">get</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_type</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Attribute </span><span class="si">%s</span><span class="s2"> is required for type = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)))</span>
 
     <span class="c1"># Check optional items:</span>
@@ -502,12 +521,12 @@
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
                 <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+                    <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                         <span class="s2">&quot;Only one of the attributes </span><span class="si">%s</span><span class="s2"> is allowed for type = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
                             <span class="n">s</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)))</span>
                 <span class="n">get</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value_type</span>
         <span class="k">if</span> <span class="n">count</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;One of the attributes </span><span class="si">%s</span><span class="s2"> is required for type = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
                     <span class="n">s</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)))</span>
 
@@ -517,7 +536,7 @@
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="c1"># Generators are allowed to use item names that start with _, which we ignore here.</span>
         <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_keys</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unexpected attribute </span><span class="si">%s</span><span class="s2"> found&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unexpected attribute </span><span class="si">%s</span><span class="s2"> found&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
 
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_get&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get</span>
     <span class="k">return</span> <span class="n">get</span></div>
@@ -559,10 +578,10 @@
     <span class="k">try</span> <span class="p">:</span>
         <span class="n">value</span><span class="p">,</span> <span class="n">unit</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="n">unit</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
+        <span class="n">unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">unit</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Angle</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as an Angle. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as an Angle. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
 
 
 <span class="k">def</span> <span class="nf">_GetPositionValue</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
@@ -577,15 +596,14 @@
             <span class="n">x</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
             <span class="n">y</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
-                <span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as a PositionD. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as a PositionD. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_GetBoolValue</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Convert a string to a bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="nb">str</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;TRUE&#39;</span><span class="p">,</span> <span class="s1">&#39;YES&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">True</span>
         <span class="k">elif</span> <span class="n">param</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;FALSE&#39;</span><span class="p">,</span> <span class="s1">&#39;NO&#39;</span><span class="p">):</span>
@@ -595,8 +613,7 @@
                 <span class="n">val</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
                 <span class="k">return</span> <span class="n">val</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
-                    <span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as a bool. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%s</span><span class="s2"> as a bool. Caught </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="n">e</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># This always works.</span>
         <span class="c1"># Everything in Python is convertible to bool.</span>
@@ -613,7 +630,7 @@
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;g1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;g2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from G1G2: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromE1E2</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (e1, e2)</span>
@@ -621,7 +638,7 @@
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;e1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;e2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from E1E2: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromEta1Eta2</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (eta1, eta2)</span>
@@ -629,39 +646,39 @@
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;eta1&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;eta2&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from Eta1Eta2: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromGBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (g, beta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;g&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;g&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from GBeta: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromEBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (e, beta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;e&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;e&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from EBeta: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromEtaBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (eta, beta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;eta&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;eta&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from EtaBeta: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromQBeta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a Shear constructed from given (q, beta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;q&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;q&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from QBeta: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromXY</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a PositionD constructed from given (x,y)</span>
@@ -669,26 +686,26 @@
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;x&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from XY: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromRTheta</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a PositionD constructed from given (r,theta)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;r&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;r&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;r&#39;</span><span class="p">]</span>
     <span class="n">theta</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span>
     <span class="kn">import</span> <span class="nn">math</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from RTheta: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">theta</span><span class="o">.</span><span class="n">cos</span><span class="p">(),</span> <span class="n">r</span><span class="o">*</span><span class="n">theta</span><span class="o">.</span><span class="n">sin</span><span class="p">()),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">r</span><span class="o">*</span><span class="n">theta</span><span class="o">.</span><span class="n">cos</span><span class="p">(),</span> <span class="n">r</span><span class="o">*</span><span class="n">theta</span><span class="o">.</span><span class="n">sin</span><span class="p">()),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromRADec</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return a CelestialCoord constructed from given (ra,dec)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;ra&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span><span class="p">,</span> <span class="s1">&#39;dec&#39;</span> <span class="p">:</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">}</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;ra&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span> <span class="s1">&#39;dec&#39;</span> <span class="p">:</span> <span class="n">Angle</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from RADec: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">CelestialCoord</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromRad</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return an Angle constructed from given theta in radians</span>
@@ -696,7 +713,7 @@
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from Rad: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">galsim</span><span class="o">.</span><span class="n">radians</span><span class="p">,</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">radians</span><span class="p">,</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromDeg</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return an Angle constructed from given theta in degrees</span>
@@ -704,7 +721,7 @@
     <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;theta&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
     <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;Generate from Deg: kwargs = &#39;,kwargs)</span>
-    <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">galsim</span><span class="o">.</span><span class="n">degrees</span><span class="p">,</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">safe</span>
 
 <span class="k">def</span> <span class="nf">_GenerateFromSequence</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Return next in a sequence of integers</span>
@@ -721,13 +738,13 @@
     <span class="n">nitems</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;nitems&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">repeat</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span>
             <span class="s2">&quot;Invalid repeat for type = Sequence (must be &gt; 0)&quot;</span><span class="p">,</span> <span class="n">repeat</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">last</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">nitems</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
             <span class="s2">&quot;At most one of the attributes last and nitems is allowed for type = Sequence&quot;</span><span class="p">)</span>
 
-    <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetIndex</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_sequence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">is_sequence</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="c1">#print(&#39;in GenFromSequence: index = &#39;,index,index_key)</span>
 
     <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
@@ -807,7 +824,7 @@
             <span class="k">continue</span>
         <span class="n">token</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;0123456789lLh&#39;</span><span class="p">)</span> <span class="c1"># ignore field size, and long/short specification</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%r</span><span class="s2"> as a valid format string&quot;</span><span class="o">%</span><span class="nb">format</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%r</span><span class="s2"> as a valid format string&quot;</span><span class="o">%</span><span class="nb">format</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="s1">&#39;diouxX&#39;</span><span class="p">:</span>
             <span class="n">val_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="s1">&#39;eEfFgG&#39;</span><span class="p">:</span>
@@ -815,10 +832,10 @@
         <span class="k">elif</span> <span class="n">token</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="s1">&#39;rs&#39;</span><span class="p">:</span>
             <span class="n">val_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%r</span><span class="s2"> as a valid format string&quot;</span><span class="o">%</span><span class="nb">format</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Unable to parse </span><span class="si">%r</span><span class="s2"> as a valid format string&quot;</span><span class="o">%</span><span class="nb">format</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val_types</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
             <span class="s2">&quot;Number of items for FormatStr (</span><span class="si">%d</span><span class="s2">) does not match number expected from &quot;</span>
             <span class="s2">&quot;format string (</span><span class="si">%d</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">val_types</span><span class="p">)))</span>
     <span class="n">vals</span> <span class="o">=</span> <span class="p">[]</span>
@@ -840,15 +857,17 @@
     <span class="c1"># Only Check, not Get.  We need to handle items a bit differently, since it&#39;s a list.</span>
     <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
     <span class="n">items</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;items entry for type=List is not a list.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Any iterable except string.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span><span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;items entry for type=List is not list-like.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Setup the indexing sequence if it hasn&#39;t been specified using the length of items.</span>
     <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">))</span>
     <span class="n">index</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;index </span><span class="si">%d</span><span class="s2"> out of bounds for type=List&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;index </span><span class="si">%d</span><span class="s2"> out of bounds for type=List&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
     <span class="n">val</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
     <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
     <span class="c1">#print(base[&#39;obj_num&#39;],&#39;List index = %d, val = %s&#39;%(index,val))</span>
@@ -862,7 +881,7 @@
     <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
     <span class="n">items</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;items entry for type=List is not a list.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;items entry for type=List is not a list.&quot;</span><span class="p">)</span>
 
     <span class="nb">sum</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
 
@@ -880,17 +899,17 @@
         <span class="n">k</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_kd&#39;</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;key&#39;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
-        <span class="n">params</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;_kd&#39;</span><span class="p">])</span>
+        <span class="n">params</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;_kd&#39;</span><span class="p">,</span><span class="s1">&#39;num&#39;</span><span class="p">])</span>
         <span class="n">key</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">]</span>
         <span class="c1">#print(&#39;GetCurrent %s.  value_type = %s&#39;%(key,value_type))</span>
 
-        <span class="n">d</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+        <span class="n">d</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
         <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_kd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span><span class="p">,</span><span class="n">d</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">EvaluateCurrentValue</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">Error generating Current value with key = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">k</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">Error generating Current value with key = </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">e</span><span class="p">,</span><span class="n">k</span><span class="p">))</span>
 
 
 <div class="viewcode-block" id="RegisterValueType"><a class="viewcode-back" href="../../../config_values.html#galsim.config.RegisterValueType">[docs]</a><span class="k">def</span> <span class="nf">RegisterValueType</span><span class="p">(</span><span class="n">type_name</span><span class="p">,</span> <span class="n">gen_func</span><span class="p">,</span> <span class="n">valid_types</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -938,30 +957,27 @@
 
 
 <span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;List&#39;</span><span class="p">,</span> <span class="n">_GenerateFromList</span><span class="p">,</span>
-              <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span>
-                <span class="n">galsim</span><span class="o">.</span><span class="n">CelestialCoord</span> <span class="p">])</span>
+                  <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">Shear</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">CelestialCoord</span> <span class="p">])</span>
 <span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Current&#39;</span><span class="p">,</span> <span class="n">_GenerateFromCurrent</span><span class="p">,</span>
-                 <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">,</span>
-                   <span class="n">galsim</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">,</span> <span class="kc">None</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Sum&#39;</span><span class="p">,</span> <span class="n">_GenerateFromSum</span><span class="p">,</span>
-             <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span> <span class="p">])</span>
+                  <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">Shear</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">,</span> <span class="kc">None</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Sum&#39;</span><span class="p">,</span> <span class="n">_GenerateFromSum</span><span class="p">,</span> <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">Shear</span><span class="p">,</span> <span class="n">PositionD</span> <span class="p">])</span>
 <span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Sequence&#39;</span><span class="p">,</span> <span class="n">_GenerateFromSequence</span><span class="p">,</span> <span class="p">[</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span> <span class="p">])</span>
 <span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;NumberedFile&#39;</span><span class="p">,</span> <span class="n">_GenerateFromNumberedFile</span><span class="p">,</span> <span class="p">[</span> <span class="nb">str</span> <span class="p">])</span>
 <span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;FormattedStr&#39;</span><span class="p">,</span> <span class="n">_GenerateFromFormattedStr</span><span class="p">,</span> <span class="p">[</span> <span class="nb">str</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Rad&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRad</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Radians&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRad</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Deg&#39;</span><span class="p">,</span> <span class="n">_GenerateFromDeg</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Degrees&#39;</span><span class="p">,</span> <span class="n">_GenerateFromDeg</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Angle</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;E1E2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromE1E2</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;EBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;G1G2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromG1G2</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;GBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromGBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Eta1Eta2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEta1Eta2</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;EtaBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEtaBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;QBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromQBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Shear</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;XY&#39;</span><span class="p">,</span> <span class="n">_GenerateFromXY</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;RTheta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRTheta</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span> <span class="p">])</span>
-<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;RADec&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRADec</span><span class="p">,</span> <span class="p">[</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CelestialCoord</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Rad&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRad</span><span class="p">,</span> <span class="p">[</span> <span class="n">Angle</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Radians&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRad</span><span class="p">,</span> <span class="p">[</span> <span class="n">Angle</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Deg&#39;</span><span class="p">,</span> <span class="n">_GenerateFromDeg</span><span class="p">,</span> <span class="p">[</span> <span class="n">Angle</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Degrees&#39;</span><span class="p">,</span> <span class="n">_GenerateFromDeg</span><span class="p">,</span> <span class="p">[</span> <span class="n">Angle</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;E1E2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromE1E2</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;EBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;G1G2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromG1G2</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;GBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromGBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;Eta1Eta2&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEta1Eta2</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;EtaBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromEtaBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;QBeta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromQBeta</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;XY&#39;</span><span class="p">,</span> <span class="n">_GenerateFromXY</span><span class="p">,</span> <span class="p">[</span> <span class="n">PositionD</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;RTheta&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRTheta</span><span class="p">,</span> <span class="p">[</span> <span class="n">PositionD</span> <span class="p">])</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;RADec&#39;</span><span class="p">,</span> <span class="n">_GenerateFromRADec</span><span class="p">,</span> <span class="p">[</span> <span class="n">CelestialCoord</span> <span class="p">])</span>
 </pre></div>
 
            </div>

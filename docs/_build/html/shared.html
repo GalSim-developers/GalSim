@@ -109,6 +109,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#shared-sensor-models">Shared Sensor models</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#shared-hst-noise-model">Shared HST noise model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#shared-wfirst-files">Shared WFIRST files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shared-cosmos-files">Shared COSMOS files</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
@@ -193,10 +194,10 @@ the sub-directory <code class="docutils literal notranslate"><span class="pre">s
 the above variable automatically to the installation directory on your machine.</p>
 <p>However, if you install into a temporary location and then move the entire galsim directory to
 a different location, this will not have the correct location.  (It will instead be set to the
-temporary location.)  If you do this, you should edit the <code class="docutils literal notranslate"><span class="pre">meta_data.py</span></code> file by hand to point
-to the correct location of the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory.  Alternatively, you can set the value of
-<a class="reference internal" href="#galsim.meta_data.share_dir" title="galsim.meta_data.share_dir"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code></a> by hand in your Python programs that might need it.</p>
-<p>See also Issue #1014.</p>
+temporary location.)  If you do this, you should define an environment variable,
+GALSIM_SHARE_DIR, to the correct location of the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory.  Alternatively, you can
+set the value of <a class="reference internal" href="#galsim.meta_data.share_dir" title="galsim.meta_data.share_dir"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code></a> by hand in any Python programs that might need
+it.</p>
 </div>
 <p>Usually, you do not need to use the <a class="reference internal" href="#galsim.meta_data.share_dir" title="galsim.meta_data.share_dir"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code></a> variable directly.  Routines
 that open files that might be in the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory will automatically prepend this directory
@@ -469,6 +470,29 @@ Relevant for bands F184 and W149</p>
 </dd>
 <dt>sip_7_6_8.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.wfirst.getWCS(world_pos)</span></code></p>
 <p>WFIRST WCS information for all SCAs.</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="shared-cosmos-files">
+<h2>Shared COSMOS files<a class="headerlink" href="#shared-cosmos-files" title="Permalink to this headline">¶</a></h2>
+<p>These files are not shipped with GalSim, but can be installed into the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory
+by the executable <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code>.  See <a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog"><span class="std std-ref">Downloading the COSMOS Catalog</span></a> for details.</p>
+<dl>
+<dt>COSMOS_25.2_training_sample</dt><dd><div class="line-block">
+<div class="line">Use <code class="docutils literal notranslate"><span class="pre">galsim.RealGalaxyCatalog(sample=25.2)</span></code></div>
+<div class="line">Or <code class="docutils literal notranslate"><span class="pre">galsim.COSMOSCatalog(sample=25.2)</span></code></div>
+</div>
+<p>Download with <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span> <span class="pre">-s</span> <span class="pre">25.2</span></code></p>
+<p>A directory containing files for creating a <a class="reference internal" href="real_gal.html#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> or a <a class="reference internal" href="real_gal.html#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a> using the
+F814W &lt; 25.2 sample.</p>
+</dd>
+<dt>COSMOS_23.5_training_sample</dt><dd><div class="line-block">
+<div class="line">Use <code class="docutils literal notranslate"><span class="pre">galsim.RealGalaxyCatalog(sample=23.5)</span></code></div>
+<div class="line">Or <code class="docutils literal notranslate"><span class="pre">galsim.COSMOSCatalog(sample=23.5)</span></code></div>
+</div>
+<p>Download with <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span> <span class="pre">-s</span> <span class="pre">23.5</span></code></p>
+<p>A directory containing files for creating a <a class="reference internal" href="real_gal.html#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a> or a <a class="reference internal" href="real_gal.html#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a> using the
+F814W &lt; 23.5 sample.</p>
 </dd>
 </dl>
 </div>

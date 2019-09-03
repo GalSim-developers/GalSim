@@ -108,6 +108,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#deprecated-features">Deprecated Features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#api-changes">API Changes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#changes-to-shared-files">Changes to Shared Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#config-updates">Config Updates</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#documentation-updates">Documentation Updates</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#new-features">New Features</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bug-fixes">Bug Fixes</a></li>
@@ -205,6 +206,7 @@
 <ul class="simple">
 <li><p>Deprecated the nominally private class galsim.correlatednoise._BaseCorrelatedNoise.  If you
 were using it for any purpose, you should now use <a class="reference internal" href="corr_noise.html#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.BaseCorrelatedNoise</span></code></a>. (#160)</p></li>
+<li><p>Deprecated the class <code class="docutils literal notranslate"><span class="pre">RandomWalk</span></code> in favor of <code class="docutils literal notranslate"><span class="pre">RandomKnots</span></code>. (#977)</p></li>
 <li><p>Deprecated the <code class="docutils literal notranslate"><span class="pre">tol</span></code> parameter of the various Interpolant classes.  Users should use the
 <code class="docutils literal notranslate"><span class="pre">kvalue_accuracy</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> instead. (#1038)</p></li>
 </ul>
@@ -214,14 +216,29 @@ were using it for any purpose, you should now use <a class="reference internal" 
 <ul class="simple">
 <li><p>Removed functionality to store and re-load WFIRST PSFs, and to obtain multiple WFIRST
 PSFs simultaneously. (#919)</p></li>
+<li><p>Changed the function signature of StampBuilder.addNoise.  If you have a custom module that
+uses that, you should remove the <code class="docutils literal notranslate"><span class="pre">skip</span></code> parameter (which had always been False). (#1048)</p></li>
 </ul>
 </div>
 <div class="section" id="changes-to-shared-files">
 <h3>Changes to Shared Files<a class="headerlink" href="#changes-to-shared-files" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
-<li><p>The RealGalaxy COSMOS catalog is now hosted at <a class="reference external" href="https://zenodo.org/record/3242143">Zenodo</a>,
+<li><p>Added option to set the <a class="reference internal" href="shared.html#galsim.meta_data.share_dir" title="galsim.meta_data.share_dir"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code></a> via environment variable GALSIM_SHARE_DIR.
+(#1014)</p></li>
+<li><p>Changed hosting of the RealGalaxy COSMOS catalog to <a class="reference external" href="https://zenodo.org/record/3242143">Zenodo</a>,
 which seems to have solved some flakiness in the previous hosting at the University of
 Manchester. (#1033)</p></li>
+</ul>
+</div>
+<div class="section" id="config-updates">
+<h3>Config Updates<a class="headerlink" href="#config-updates" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Added some more cumstomization hooks in the StampBuilder class. (#1048)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">quick_skip</span></code> option to skip an object before doing any work. (#1048)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">obj_rng=False</span></code> option to use the same rng for all objects in image. (#1048)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">rng_index_key</span></code> option to use a different rng just for particular values. (#1048)</p></li>
+<li><p>Fixed <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> strings to work with input objects as well as normal variables. (#1048)</p></li>
+<li><p>Fixed various minor bugs when doing complicated things with index_key and rng_num. (#1048)</p></li>
 </ul>
 </div>
 <div class="section" id="documentation-updates">
@@ -234,21 +251,31 @@ new docs are accessible at <a class="reference external" href="http://galsim-dev
 <div class="section" id="new-features">
 <h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li><p>Added <a class="reference internal" href="fits.html#galsim.fits.FitsHeader.extend" title="galsim.fits.FitsHeader.extend"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">FitsHeader.extend</span></code></a> method.  Also, read_header option to <a class="reference internal" href="fits.html#galsim.fits.read" title="galsim.fits.read"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.fits.read</span></code></a>. (#877)</p></li>
 <li><p>Updated WFIRST WCS and PSF routines to use Cycle 7 specifications for detector configurations,
 pupil planes, and aberrations. In particular, there is now a different
 pupil plane image for shorter- and longer-wavelength bands.  (#919)</p></li>
 <li><p>Enabled Zernikes up to 22 (previously 11) in WFIRST PSFs, and added dependence on position
 within the SCA. (#919)</p></li>
+<li><p>Improved efficiency of drawing <a class="reference internal" href="gal.html#galsim.RandomKnots" title="galsim.RandomKnots"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomKnots</span></code></a> objects when transformed. (#977)</p></li>
 <li><p>Added WFIRST fermi persistence model. (#992)</p></li>
 <li><p>Added <code class="docutils literal notranslate"><span class="pre">r0_500</span></code> argument to VonKarman. (#1005)</p></li>
+<li><p>Improved ability of <a class="reference internal" href="phase_psf.html#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> to use shared memory in multiprocessing context. (#1006)</p></li>
 <li><p>Use OpenMP when appropriate in <a class="reference internal" href="sensor.html#galsim.SiliconSensor.accumulate" title="galsim.SiliconSensor.accumulate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SiliconSensor.accumulate</span></code></a> (#1008)</p></li>
 <li><p>Added array versions of <a class="reference internal" href="wcs.html#galsim.BaseWCS.toWorld" title="galsim.BaseWCS.toWorld"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.toWorld</span></code></a> and <a class="reference internal" href="wcs.html#galsim.BaseWCS.toImage" title="galsim.BaseWCS.toImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.toImage</span></code></a>. (#1026)</p></li>
 <li><p>Exposed some methods of <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> classes that had only been in the C++ layer. (#1038)</p></li>
+<li><p>Added Zernike polynomial +, -, and * operators. (#1047)</p></li>
+<li><p>Added Zernike polynomial properties .laplacian and .hessian. (#1047)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">center</span></code> option to the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method. (#1053)</p></li>
 </ul>
 </div>
 <div class="section" id="bug-fixes">
 <h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
+<li><p>Fixed a couple places where negative fluxes were not working correctly. (#472)</p></li>
+<li><p>Fixed FITS I/O to write out comments of header items properly. (#877)</p></li>
+<li><p>Fixed error in the serialization of <a class="reference internal" href="gal.html#galsim.RandomKnots" title="galsim.RandomKnots"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomKnots</span></code></a> instances. (#977)</p></li>
+<li><p>Fixed error in <a class="reference internal" href="phase_psf.html#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a> when aberrations has len=1. (#1006, #1029)</p></li>
 <li><p>Fixed error in <a class="reference internal" href="wcs.html#galsim.BaseWCS.makeSkyImage" title="galsim.BaseWCS.makeSkyImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.makeSkyImage</span></code></a> when crossing ra=0 line for some WCS classes. (#1030)</p></li>
 <li><p>Fixed slight error in the realized flux of some profiles when using photon shooting.
 The bug was most apparent for Kolmogorov and VonKarman, where the realized flux

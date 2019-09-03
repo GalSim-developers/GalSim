@@ -146,10 +146,11 @@ Galaxy Types
     * ``scale_h_over_r`` = *float_value* (exactly one of ``scale_height`` or ``scale_h_over_r`` is required) The ratio h_s/R_s as an alternative to ``scale_height``.
 
 * 'DeltaFunction'  A delta function profile with a specified flux.  This is typically not used for galaxies, but rather for stars in a scene that includes both.  So when convolved by the PSF, the stars will have the profile from the PSF, but the correct flux.
-* 'RandomWalk'  A profile made of a sum of a number of delta functions distributed according to a random walk.  This is intended to represent knots of star formation, so it would typically be added to a smooth disk component and have the same size and shape.
+* 'RandomKnots'  A profile made of a sum of a number of delta functions distributed according to either a Gaussian profile or a given specified profile.  This is intended to represent knots of star formation, so it would typically be added to a smooth disk component and have the same size and shape.
 
-    * ``npoints`` (required) How many points to include.
-    * ``half_light_radius`` (required) The expectation of the half light radius, setting the overall scale of the random walk.  Note: any given realized profile will not necessarily have exactly this half-light radius.
+    * ``npoints`` = *int_value* (required) How many points to include.
+    * ``half_light_radius`` = *float_value* (either ``half_light_radius`` or ``profile`` is required) The expectation of the half light radius, setting the overall scale of the Gaussian profile.  Note: any given realized profile will not necessarily have exactly this half-light radius.
+    * ``profile`` = *GSObject* (either ``half_light_radius`` or ``profile`` is required) The profile you want to use for the distribution of knots.
 
 
 Generic Types

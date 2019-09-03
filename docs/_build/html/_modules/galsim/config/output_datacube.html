@@ -185,10 +185,15 @@
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">galsim</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">.output</span> <span class="k">import</span> <span class="n">OutputBuilder</span>
+<span class="kn">from</span> <span class="nn">.output</span> <span class="k">import</span> <span class="n">OutputBuilder</span><span class="p">,</span> <span class="n">RegisterOutputType</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">CopyConfig</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">BuildImages</span><span class="p">,</span> <span class="n">BuildImage</span><span class="p">,</span> <span class="n">GetNObjForImage</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">ProcessInputNObjects</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">CheckAllParams</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..fits</span> <span class="k">import</span> <span class="n">writeCube</span>
 
 <div class="viewcode-block" id="DataCubeBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.output_datacube.DataCubeBuilder">[docs]</a><span class="k">class</span> <span class="nc">DataCubeBuilder</span><span class="p">(</span><span class="n">OutputBuilder</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Builder class for constructing and writing DataCube output types.</span>
@@ -221,15 +226,15 @@
         <span class="c1"># invalid parameters in the config dict.</span>
         <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;nimages&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
         <span class="n">ignore</span> <span class="o">+=</span> <span class="p">[</span> <span class="s1">&#39;file_name&#39;</span><span class="p">,</span> <span class="s1">&#39;dir&#39;</span><span class="p">,</span> <span class="s1">&#39;nfiles&#39;</span> <span class="p">]</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
+        <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">)</span>
 
         <span class="c1"># All images need to be the same size for a data cube.</span>
         <span class="c1"># Enforce this by building the first image outside the below loop and setting</span>
         <span class="c1"># config[&#39;image_force_xsize&#39;] and config[&#39;image_force_ysize&#39;] to be the size of the first</span>
         <span class="c1"># image.</span>
         <span class="n">t1</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-        <span class="n">base1</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">CopyConfig</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
-        <span class="n">image0</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildImage</span><span class="p">(</span><span class="n">base1</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">base1</span> <span class="o">=</span> <span class="n">CopyConfig</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+        <span class="n">image0</span> <span class="o">=</span> <span class="n">BuildImage</span><span class="p">(</span><span class="n">base1</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
         <span class="n">t2</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
         <span class="c1"># Note: numpy shape is y,x</span>
         <span class="n">ys</span><span class="p">,</span> <span class="n">xs</span> <span class="o">=</span> <span class="n">image0</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span>
@@ -243,9 +248,9 @@
         <span class="n">images</span> <span class="o">=</span> <span class="p">[</span> <span class="n">image0</span> <span class="p">]</span>
 
         <span class="k">if</span> <span class="n">nimages</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">obj_num</span> <span class="o">+=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetNObjForImage</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">)</span>
-            <span class="n">images</span> <span class="o">+=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildImages</span><span class="p">(</span><span class="n">nimages</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
-                                                <span class="n">image_num</span><span class="o">=</span><span class="n">image_num</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="n">obj_num</span><span class="p">)</span>
+            <span class="n">obj_num</span> <span class="o">+=</span> <span class="n">GetNObjForImage</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">)</span>
+            <span class="n">images</span> <span class="o">+=</span> <span class="n">BuildImages</span><span class="p">(</span><span class="n">nimages</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span>
+                                  <span class="n">image_num</span><span class="o">=</span><span class="n">image_num</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="n">obj_num</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">images</span>
 
@@ -264,13 +269,13 @@
         <span class="k">if</span> <span class="p">(</span> <span class="s1">&#39;nimages&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span>
             <span class="p">(</span> <span class="s1">&#39;image&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">or</span> <span class="s1">&#39;type&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]</span> <span class="ow">or</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;Single&#39;</span> <span class="p">)</span> <span class="p">):</span>
-            <span class="n">nimages</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ProcessInputNObjects</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">nimages</span> <span class="o">=</span> <span class="n">ProcessInputNObjects</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">nimages</span><span class="p">:</span>
                 <span class="n">config</span><span class="p">[</span><span class="s1">&#39;nimages&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nimages</span>
         <span class="k">if</span> <span class="s1">&#39;nimages&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Attribute output.nimages is required for output.type = MultiFits&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nimages&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nimages&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">writeFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Write the data to a file.</span>
@@ -284,7 +289,7 @@
 <span class="sd">            base:           The base configuration dict.</span>
 <span class="sd">            logger:         If given, a logger object to log progress.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeCube</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
+        <span class="n">writeCube</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">canAddHdus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns whether it is permissible to add extra HDUs to the end of the data list.</span>
@@ -295,7 +300,6 @@
 
 
 <span class="c1"># Register this as a valid output type</span>
-<span class="kn">from</span> <span class="nn">.output</span> <span class="k">import</span> <span class="n">RegisterOutputType</span>
 <span class="n">RegisterOutputType</span><span class="p">(</span><span class="s1">&#39;DataCube&#39;</span><span class="p">,</span> <span class="n">DataCubeBuilder</span><span class="p">())</span>
 </pre></div>
 

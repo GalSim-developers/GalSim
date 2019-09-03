@@ -184,13 +184,19 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">galsim</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">ImageBuilder</span><span class="p">,</span> <span class="n">FlattenNoiseVariance</span><span class="p">,</span> <span class="n">RegisterImageType</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span>
+<span class="kn">from</span> <span class="nn">.stamp</span> <span class="k">import</span> <span class="n">BuildStamps</span>
+<span class="kn">from</span> <span class="nn">.noise</span> <span class="k">import</span> <span class="n">AddSky</span><span class="p">,</span> <span class="n">AddNoise</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">ProcessInputNObjects</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="k">import</span> <span class="n">ImageF</span>
 
 <span class="c1"># This file adds image type Scattered, which places individual stamps at arbitrary</span>
 <span class="c1"># locations on a larger image.</span>
 
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">ImageBuilder</span>
 <div class="viewcode-block" id="ScatteredImageBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.image_scattered.ScatteredImageBuilder">[docs]</a><span class="k">class</span> <span class="nc">ScatteredImageBuilder</span><span class="p">(</span><span class="n">ImageBuilder</span><span class="p">):</span>
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -220,20 +226,20 @@
         <span class="n">extra_ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;stamp_size&#39;</span><span class="p">,</span> <span class="s1">&#39;stamp_xsize&#39;</span><span class="p">,</span> <span class="s1">&#39;stamp_ysize&#39;</span><span class="p">,</span>
                          <span class="s1">&#39;nobjects&#39;</span> <span class="p">]</span>
         <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;size&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;xsize&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s1">&#39;ysize&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="o">+</span><span class="n">extra_ignore</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="o">+</span><span class="n">extra_ignore</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="n">size</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">full_xsize</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;xsize&#39;</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
         <span class="n">full_ysize</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ysize&#39;</span><span class="p">,</span><span class="n">size</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="p">(</span><span class="n">full_xsize</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">full_ysize</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Both image.xsize and image.ysize need to be defined and &gt; 0.&quot;</span><span class="p">)</span>
 
         <span class="c1"># If image_force_xsize and image_force_ysize were set in config, make sure it matches.</span>
         <span class="k">if</span> <span class="p">(</span> <span class="p">(</span><span class="s1">&#39;image_force_xsize&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="n">full_xsize</span> <span class="o">!=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_force_xsize&#39;</span><span class="p">])</span> <span class="ow">or</span>
              <span class="p">(</span><span class="s1">&#39;image_force_ysize&#39;</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="n">full_ysize</span> <span class="o">!=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_force_ysize&#39;</span><span class="p">])</span> <span class="p">):</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Unable to reconcile required image xsize and ysize with provided &quot;</span>
                 <span class="s2">&quot;xsize=</span><span class="si">%d</span><span class="s2">, ysize=</span><span class="si">%d</span><span class="s2">, &quot;</span><span class="o">%</span><span class="p">(</span><span class="n">full_xsize</span><span class="p">,</span><span class="n">full_ysize</span><span class="p">))</span>
 
@@ -257,14 +263,14 @@
         <span class="n">full_ysize</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_ysize&#39;</span><span class="p">]</span>
         <span class="n">wcs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span>
 
-        <span class="n">full_image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageF</span><span class="p">(</span><span class="n">full_xsize</span><span class="p">,</span> <span class="n">full_ysize</span><span class="p">)</span>
+        <span class="n">full_image</span> <span class="o">=</span> <span class="n">ImageF</span><span class="p">(</span><span class="n">full_xsize</span><span class="p">,</span> <span class="n">full_ysize</span><span class="p">)</span>
         <span class="n">full_image</span><span class="o">.</span><span class="n">setOrigin</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_origin&#39;</span><span class="p">])</span>
         <span class="n">full_image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
         <span class="n">full_image</span><span class="o">.</span><span class="n">setZero</span><span class="p">()</span>
         <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">full_image</span>
 
         <span class="k">if</span> <span class="s1">&#39;image_pos&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;world_pos&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigValueError</span><span class="p">(</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Both image_pos and world_pos specified for Scattered image.&quot;</span><span class="p">,</span>
                 <span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">],</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;world_pos&#39;</span><span class="p">]))</span>
 
@@ -279,7 +285,7 @@
                 <span class="s1">&#39;y&#39;</span> <span class="p">:</span> <span class="p">{</span> <span class="s1">&#39;type&#39;</span> <span class="p">:</span> <span class="s1">&#39;Random&#39;</span> <span class="p">,</span> <span class="s1">&#39;min&#39;</span> <span class="p">:</span> <span class="n">ymin</span> <span class="p">,</span> <span class="s1">&#39;max&#39;</span> <span class="p">:</span> <span class="n">ymax</span> <span class="p">}</span>
             <span class="p">}</span>
 
-        <span class="n">stamps</span><span class="p">,</span> <span class="n">current_vars</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">BuildStamps</span><span class="p">(</span>
+        <span class="n">stamps</span><span class="p">,</span> <span class="n">current_vars</span> <span class="o">=</span> <span class="n">BuildStamps</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">,</span> <span class="n">obj_num</span><span class="o">=</span><span class="n">obj_num</span><span class="p">,</span> <span class="n">do_noise</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
         <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
@@ -302,7 +308,7 @@
                         <span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="n">full_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymax</span><span class="p">))</span>
 
         <span class="c1"># Bring the image so far up to a flat noise variance</span>
-        <span class="n">current_var</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">FlattenNoiseVariance</span><span class="p">(</span>
+        <span class="n">current_var</span> <span class="o">=</span> <span class="n">FlattenNoiseVariance</span><span class="p">(</span>
                 <span class="n">base</span><span class="p">,</span> <span class="n">full_image</span><span class="p">,</span> <span class="n">stamps</span><span class="p">,</span> <span class="n">current_vars</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">full_image</span><span class="p">,</span> <span class="n">current_var</span>
@@ -337,8 +343,8 @@
 <span class="sd">            logger:         If given, a logger object to log progress.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">AddSky</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">)</span>
-        <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">AddNoise</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">current_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
+        <span class="n">AddSky</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">)</span>
+        <span class="n">AddNoise</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="n">image</span><span class="p">,</span><span class="n">current_var</span><span class="p">,</span><span class="n">logger</span><span class="p">)</span>
 
 
     <span class="k">def</span> <span class="nf">getNObj</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">image_num</span><span class="p">):</span>
@@ -358,17 +364,16 @@
 
         <span class="c1"># Allow nobjects to be automatic based on input catalog</span>
         <span class="k">if</span> <span class="s1">&#39;nobjects&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">nobj</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ProcessInputNObjects</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">nobj</span> <span class="o">=</span> <span class="n">ProcessInputNObjects</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">nobj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">galsim</span><span class="o">.</span><span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                     <span class="s2">&quot;Attribute nobjects is required for image.type = Scattered&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">nobj</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nobjects&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">nobj</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;nobjects&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_index_key</span>
         <span class="k">return</span> <span class="n">nobj</span></div>
 
 <span class="c1"># Register this as a valid image type</span>
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">RegisterImageType</span>
 <span class="n">RegisterImageType</span><span class="p">(</span><span class="s1">&#39;Scattered&#39;</span><span class="p">,</span> <span class="n">ScatteredImageBuilder</span><span class="p">())</span>
 
 

@@ -117,6 +117,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
 </ul>
@@ -374,11 +375,12 @@ which we describe in <a class="reference internal" href="#custom-object-types"><
 </div></blockquote>
 </li>
 <li><p>‘DeltaFunction’  A delta function profile with a specified flux.  This is typically not used for galaxies, but rather for stars in a scene that includes both.  So when convolved by the PSF, the stars will have the profile from the PSF, but the correct flux.</p></li>
-<li><p>‘RandomWalk’  A profile made of a sum of a number of delta functions distributed according to a random walk.  This is intended to represent knots of star formation, so it would typically be added to a smooth disk component and have the same size and shape.</p>
+<li><p>‘RandomKnots’  A profile made of a sum of a number of delta functions distributed according to either a Gaussian profile or a given specified profile.  This is intended to represent knots of star formation, so it would typically be added to a smooth disk component and have the same size and shape.</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">npoints</span></code> (required) How many points to include.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> (required) The expectation of the half light radius, setting the overall scale of the random walk.  Note: any given realized profile will not necessarily have exactly this half-light radius.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">npoints</span></code> = <em>int_value</em> (required) How many points to include.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> = <em>float_value</em> (either <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">profile</span></code> is required) The expectation of the half light radius, setting the overall scale of the Gaussian profile.  Note: any given realized profile will not necessarily have exactly this half-light radius.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">profile</span></code> = <em>GSObject</em> (either <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> or <code class="docutils literal notranslate"><span class="pre">profile</span></code> is required) The profile you want to use for the distribution of knots.</p></li>
 </ul>
 </div></blockquote>
 </li>

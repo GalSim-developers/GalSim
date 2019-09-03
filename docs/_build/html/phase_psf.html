@@ -1123,6 +1123,25 @@ adjusting the pupil size.  [default: None]</p></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="galsim.PhaseScreenPSF.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.PhaseScreenPSF.withGSParams">
 <code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#PhaseScreenPSF.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhaseScreenPSF.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
@@ -1223,6 +1242,25 @@ construct one (e.g., ‘arcsec’, ‘radians’, etc.). [default: galsim.arcsec
 <dt id="galsim.SecondKick.scale_unit">
 <em class="property">property </em><code class="sig-name descname">scale_unit</code><a class="headerlink" href="#galsim.SecondKick.scale_unit" title="Permalink to this definition">¶</a></dt>
 <dd><p>The input scale_unit value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="galsim.SecondKick.withFlux">
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/second_kick.html#SecondKick.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SecondKick.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

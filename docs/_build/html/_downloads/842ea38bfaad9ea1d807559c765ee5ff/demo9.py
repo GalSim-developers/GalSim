@@ -123,7 +123,7 @@ def main(argv):
 
     logger.info('Starting demo script 9')
 
-    def build_file(seed, file_name, mass, nobj, rng, truth_file_name, halo_id, first_obj_id):
+    def build_file(file_name, mass, nobj, ud, truth_file_name, halo_id, first_obj_id):
         """A function that does all the work to build a single file.
            Returns the total time taken.
         """
@@ -273,9 +273,6 @@ def main(argv):
 
         for k in range(nobj):
 
-            # Initialize the random number generator we will be using for this object:
-            ud = galsim.UniformDeviate(seed+k+1)
-
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
             # in order to avoid placing galaxies too close to the halo center where the lensing
@@ -296,24 +293,6 @@ def main(argv):
             # We also need the position in pixels to determine where to place the postage
             # stamp on the full image.
             image_pos = wcs.toImage(pos)
-
-            # For even-sized postage stamps, the nominal center (available as stamp.center)
-            # cannot be at the true center (available as stamp.true_center) of the postage stamp,
-            # since the nominal center values have to be integers.  Thus, the nominal center is
-            # 1/2 pixel up and to the right of the true center.
-            # If we used odd-sized postage stamps, we wouldn't need to do this.
-            x_nominal = image_pos.x + 0.5
-            y_nominal = image_pos.y + 0.5
-
-            # Get the integer values of these which will be the actual nominal center of the
-            # postage stamp image.
-            ix_nominal = int(math.floor(x_nominal+0.5))
-            iy_nominal = int(math.floor(y_nominal+0.5))
-
-            # The remainder will be accounted for in an offset when we draw.
-            dx = x_nominal - ix_nominal
-            dy = y_nominal - iy_nominal
-            offset = galsim.PositionD(dx,dy)
 
             # Draw the flux from a power law distribution: N(f) ~ f^-1.5
             # For this, we use the class DistDeviate which can draw deviates from an arbitrary
@@ -407,15 +386,13 @@ def main(argv):
             final = galsim.Convolve([gal, psf])
 
             # Draw the stamp image
-            # To draw the image at a position other than the center of the image, you can
-            # use the offset parameter, which applies an offset in pixels relative to the
-            # center of the image.
+            # This will construct an appropriately sized postage-stamp image with the galaxy
+            # drawn near the center of the image.  The bounds of the postage stamp will be set
+            # such that the given center is close to the stamp center.  And the galaxy will be drawn
+            # centered at that sub-pixel location on the image.
             # We also need to provide the local wcs at the current position.
             local_wcs = wcs.local(image_pos)
-            stamp = final.drawImage(wcs=local_wcs, offset=offset)
-
-            # Recenter the stamp at the desired position:
-            stamp.setCenter(ix_nominal,iy_nominal)
+            stamp = final.drawImage(wcs=local_wcs, center=image_pos)
 
             # Find overlapping bounds
             bounds = stamp.bounds & full_image.bounds
@@ -428,7 +405,7 @@ def main(argv):
 
             # Also draw the PSF
             psf_stamp = galsim.ImageF(stamp.bounds) # Use same bounds as galaxy stamp
-            psf.drawImage(psf_stamp, wcs=local_wcs, offset=offset)
+            psf.drawImage(psf_stamp, wcs=local_wcs, center=image_pos)
             psf_image[bounds] += psf_stamp[bounds]
 
             # Add the truth information for this object to the truth catalog
@@ -451,14 +428,7 @@ def main(argv):
         full_image += weight_image
 
         # Add Poisson noise, given the current full_image.
-        # The config parser uses a different random number generator for file-level and
-        # image-level values than for the individual objects.  This makes it easier to
-        # parallelize the calculation if desired.  In fact, this is why we've been adding 1
-        # to each seed value all along.  The seeds for the objects take the values
-        # random_seed+1 .. random_seed+nobj.  The seed for the image is just random_seed,
-        # which we built already (below) when we calculated how many objects need to
-        # be in each file.  Use the same rng again here, since this is also at image scope.
-        full_image.addNoise(galsim.PoissonNoise(rng))
+        full_image.addNoise(galsim.PoissonNoise(ud))
 
         # Subtract the sky back off.
         full_image -= weight_image
@@ -540,9 +510,10 @@ def main(argv):
             # We put on the task queue the args to the buld_file function and
             # some extra info to pass through to the output queue.
             # Our extra info is just the file name that we use to write out which file finished.
-            args = (seed, file_name, mass, nobj, ud, truth_file_name, halo_id, first_obj_id)
+            args = (file_name, mass, nobj, ud, truth_file_name, halo_id, first_obj_id)
             task_queue.put( (args, file_name) )
-            # Need to step by the number of galaxies in each file.
+            # Need to step by the number of galaxies in each file to match the behavior
+            # of the config parser.
             seed += nobj
             halo_id += 1
             first_obj_id += nobj

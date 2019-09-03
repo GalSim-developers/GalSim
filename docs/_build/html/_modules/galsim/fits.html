@@ -616,8 +616,7 @@
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="s1">&#39;header&#39;</span><span class="p">):</span>
         <span class="c1"># Automatically handle old pyfits versions correctly...</span>
         <span class="n">hdu_header</span> <span class="o">=</span> <span class="n">FitsHeader</span><span class="p">(</span><span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">image</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">hdu_header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">hdu_header</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="p">:</span>
         <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">writeToFitsHeader</span><span class="p">(</span><span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
 
@@ -875,7 +874,7 @@
 <span class="c1">##############################################################################################</span>
 
 
-<div class="viewcode-block" id="read"><a class="viewcode-back" href="../../fits.html#galsim.fits.read">[docs]</a><span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="read"><a class="viewcode-back" href="../../fits.html#galsim.fits.read">[docs]</a><span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">read_header</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Construct an `Image` from a FITS file or HDUList.</span>
 
 <span class="sd">    The normal usage for this function is to read a fits file and return the image contained</span>
@@ -923,6 +922,7 @@
 <span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">        read_header:    Whether to read the header and store it as image.header.[default: False]</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        the image as an `Image` instance.</span>
@@ -959,6 +959,9 @@
         <span class="n">image</span><span class="o">.</span><span class="n">setOrigin</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
         <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs</span>
 
+        <span class="k">if</span> <span class="n">read_header</span><span class="p">:</span>
+            <span class="n">image</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">FitsHeader</span><span class="p">(</span><span class="n">hdu</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
+
     <span class="k">finally</span><span class="p">:</span>
         <span class="c1"># If we opened a file, don&#39;t forget to close it.</span>
         <span class="k">if</span> <span class="n">file_name</span><span class="p">:</span>
@@ -966,7 +969,7 @@
 
     <span class="k">return</span> <span class="n">image</span></div>
 
-<div class="viewcode-block" id="readMulti"><a class="viewcode-back" href="../../fits.html#galsim.fits.readMulti">[docs]</a><span class="k">def</span> <span class="nf">readMulti</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="readMulti"><a class="viewcode-back" href="../../fits.html#galsim.fits.readMulti">[docs]</a><span class="k">def</span> <span class="nf">readMulti</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Construct a list of `Image` instances from a FITS file or HDUList.</span>
 
 <span class="sd">    The normal usage for this function is to read a fits file and return a list of all the images</span>
@@ -1007,6 +1010,7 @@
 <span class="sd">                          - otherwise None</span>
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
+<span class="sd">        read_headers:   Whether to read the headers and store them as image.header.[default: False]</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        a Python list of `Image` instances.</span>
@@ -1038,7 +1042,8 @@
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s1">&#39;Expecting at least one HDU in galsim.readMulti&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">first</span><span class="p">,</span><span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)):</span>
-            <span class="n">image_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">read</span><span class="p">(</span><span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="n">hdu</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">pyfits_compress</span><span class="p">))</span>
+            <span class="n">image_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">read</span><span class="p">(</span><span class="n">hdu_list</span><span class="o">=</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="n">hdu</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="n">pyfits_compress</span><span class="p">,</span>
+                                   <span class="n">read_header</span><span class="o">=</span><span class="n">read_headers</span><span class="p">))</span>
 
     <span class="k">finally</span><span class="p">:</span>
         <span class="c1"># If we opened a file, don&#39;t forget to close it.</span>
@@ -1392,18 +1397,54 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span>
 
-    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FitsHeader.comment"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.comment">[docs]</a>    <span class="k">def</span> <span class="nf">comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the comment field for the given key.</span>
+
+<span class="sd">        Parameter:</span>
+<span class="sd">            key:    The header key for which to get the comment field.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the comment field.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">comments</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span></div>
+
+<div class="viewcode-block" id="FitsHeader.clear"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear all values in the header.  Works like dict.clear.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+<div class="viewcode-block" id="FitsHeader.get"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the value of a given key.  Works like dict.get.</span>
 
-    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            key:        The header key for which to get the value</span>
+<span class="sd">            default:    Optionally, A value to use if the key is not present. [default: None]</span>
 
-    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            the value of the given key</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FitsHeader.pop"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.pop">[docs]</a>    <span class="k">def</span> <span class="nf">pop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Pop off a value from the header.  Works like dict.pop.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            key:        The header key for which to get the value</span>
+<span class="sd">            default:    Optionally, A value to use if the key is not present. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the value of the given key</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FitsHeader.items"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.items">[docs]</a>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all header items.  Works like dict.items.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of (key, value) tuples.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
@@ -1414,18 +1455,36 @@
     <span class="k">def</span> <span class="nf">itervalues</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">itervalues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<div class="viewcode-block" id="FitsHeader.keys"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all header keys.  Works like dict.keys</span>
 
-    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict2</span><span class="p">):</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of keys.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.update"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update the header with a dict-like object.  Works like dict.update.</span>
+
+<span class="sd">        If there are any items in ``dict2`` that are duplicates of items already in the header,</span>
+<span class="sd">        the current items will ber overwritten.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            dict2:      Another header or dict-like object with keys and values to update.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">dict2</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">item</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">item</span></div>
 
-    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+<div class="viewcode-block" id="FitsHeader.values"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.values">[docs]</a>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get all header values.  Works like dict.values.</span>
 
-<div class="viewcode-block" id="FitsHeader.append"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">useblanks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            A list of values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">values</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="FitsHeader.append"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">useblanks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Append an item to the end of the header.</span>
 
 <span class="sd">        This breaks convention a bit by treating the header more like a list than a dict,</span>
@@ -1433,12 +1492,30 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            key:            The key of the entry to append</span>
-<span class="sd">            value:          The value of the entry to append</span>
+<span class="sd">            value:          The value of the entry to append [default: &#39;&#39;]</span>
+<span class="sd">            comment:        A comment field if desired [default: None]</span>
 <span class="sd">            useblanks:      If there are blank entries currently at the end, should they be</span>
 <span class="sd">                            overwritten with the new entry? [default: True]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">value</span><span class="p">),</span> <span class="n">useblanks</span><span class="o">=</span><span class="n">useblanks</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">value</span><span class="p">,</span> <span class="n">comment</span><span class="p">),</span> <span class="n">useblanks</span><span class="o">=</span><span class="n">useblanks</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FitsHeader.extend"><a class="viewcode-back" href="../../fits.html#galsim.fits.FitsHeader.extend">[docs]</a>    <span class="k">def</span> <span class="nf">extend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">useblanks</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Extend this `FitsHeader` with items from another `FitsHeader`.</span>
+
+<span class="sd">        Equivalent to appending all the other&#39;s items to the end of this one with the</span>
+<span class="sd">        exception that it ignores items that are already in self.</span>
+<span class="sd">        If you want to replace existing values rather than ignore duplicates, use</span>
+<span class="sd">        ``replace=True``.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            other:          Another FitsHeader object.</span>
+<span class="sd">            replace:        Replace duplicate entries rather than ignore them. [default: False]</span>
+<span class="sd">            useblanks:      If there are blank entries currently at the end, should they be</span>
+<span class="sd">                            overwritten with the new entry? [default: True]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="ow">not</span> <span class="n">replace</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="n">replace</span><span class="p">,</span> <span class="n">useblanks</span><span class="o">=</span><span class="n">useblanks</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>

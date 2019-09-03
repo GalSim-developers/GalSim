@@ -382,7 +382,13 @@
 
     <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InclinedExponential.withFlux"><a class="viewcode-back" href="../../gal.html#galsim.InclinedExponential.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">InclinedExponential</span><span class="p">(</span><span class="n">inclination</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span>
+                                   <span class="n">scale_height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span>
+                                   <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="InclinedSersic"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic">[docs]</a><span class="k">class</span> <span class="nc">InclinedSersic</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
@@ -631,7 +637,13 @@
 
     <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InclinedSersic.withFlux"><a class="viewcode-back" href="../../gal.html#galsim.InclinedSersic.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">InclinedSersic</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">inclination</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inclination</span><span class="p">,</span>
+                              <span class="n">scale_radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="n">scale_height</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_height</span><span class="p">,</span>
+                              <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

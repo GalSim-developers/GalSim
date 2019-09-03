@@ -334,14 +334,14 @@ accuracy parameters.</p>
 <dl class="method">
 <dt id="galsim.GSObject.__add__">
 <code class="sig-name descname">__add__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__add__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__add__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add to GSObjects.</p>
+<dd><p>Add two GSObjects.</p>
 <p>Equivalent to Add(self, other)</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="galsim.GSObject.__sub__">
 <code class="sig-name descname">__sub__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__sub__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__sub__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subtract to GSObjects.</p>
+<dd><p>Subtract two GSObjects.</p>
 <p>Equivalent to Add(self, -1 * other)</p>
 </dd></dl>
 
@@ -698,7 +698,7 @@ the result should be wrapped before doing the inverse fft.</p>
 
 <dl class="method">
 <dt id="galsim.GSObject.drawImage">
-<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param">image=None</em>, <em class="sig-param">nx=None</em>, <em class="sig-param">ny=None</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">method='auto'</em>, <em class="sig-param">area=1.0</em>, <em class="sig-param">exptime=1.0</em>, <em class="sig-param">gain=1.0</em>, <em class="sig-param">add_to_image=False</em>, <em class="sig-param">use_true_center=True</em>, <em class="sig-param">offset=None</em>, <em class="sig-param">n_photons=0.0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">max_extra_noise=0.0</em>, <em class="sig-param">poisson_flux=None</em>, <em class="sig-param">sensor=None</em>, <em class="sig-param">surface_ops=()</em>, <em class="sig-param">n_subsample=3</em>, <em class="sig-param">maxN=None</em>, <em class="sig-param">save_photons=False</em>, <em class="sig-param">setup_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param">image=None</em>, <em class="sig-param">nx=None</em>, <em class="sig-param">ny=None</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">method='auto'</em>, <em class="sig-param">area=1.0</em>, <em class="sig-param">exptime=1.0</em>, <em class="sig-param">gain=1.0</em>, <em class="sig-param">add_to_image=False</em>, <em class="sig-param">center=None</em>, <em class="sig-param">use_true_center=True</em>, <em class="sig-param">offset=None</em>, <em class="sig-param">n_photons=0.0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">max_extra_noise=0.0</em>, <em class="sig-param">poisson_flux=None</em>, <em class="sig-param">sensor=None</em>, <em class="sig-param">surface_ops=()</em>, <em class="sig-param">n_subsample=3</em>, <em class="sig-param">maxN=None</em>, <em class="sig-param">save_photons=False</em>, <em class="sig-param">setup_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draws an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the object.</p>
 <p>The drawImage() method is used to draw an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the current object using one of several
 possible rendering methods (see below).  It can create a new <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> or can draw onto an
@@ -823,12 +823,17 @@ such artifacts in your images.</p>
 image.  There is thus a qualitative difference in the appearance of the rendered profile
 when drawn on even- and odd-sized images.  For a profile with a maximum at (0,0), this
 maximum will fall in the central pixel of an odd-sized image, but in the corner of the four
-central pixels of an even-sized image.  There are two parameters that can affect this
-behavior.  If you want the nominal center to always fall at the center of a pixel, you can
-use <code class="docutils literal notranslate"><span class="pre">use_true_center=False</span></code>.  This will put the object’s center at the position
-<code class="docutils literal notranslate"><span class="pre">image.center</span></code> which is an integer pixel value, and is not the true center of an
-even-sized image.  You can also arbitrarily offset the profile from the image center with
-the <code class="docutils literal notranslate"><span class="pre">offset</span></code> parameter to handle any sub-pixel dithering you want.</p>
+central pixels of an even-sized image.  There are three parameters that can affect this
+behavior.  First, you can specify any arbitrary pixel position to center the object using
+the <code class="docutils literal notranslate"><span class="pre">center</span></code> parameter.  If this is None, then it will pick one of the two potential
+“centers” of the image, either <code class="docutils literal notranslate"><span class="pre">image.true_center</span></code> or <code class="docutils literal notranslate"><span class="pre">image.center</span></code>.  The latter is
+an integer position, which always corresponds to the center of some pixel, which for even
+sized images won’t (cannot) be the actual “true” center of the image.  You can choose which
+of these two centers you want to use with the <code class="docutils literal notranslate"><span class="pre">use_true_center</span></code> parameters, which
+defaults to False.  You can also arbitrarily offset the profile from the image center with
+the <code class="docutils literal notranslate"><span class="pre">offset</span></code> parameter to handle any aribtrary offset you want from the chosen center.
+(Typically, one would use only one of <code class="docutils literal notranslate"><span class="pre">center</span></code> or <code class="docutils literal notranslate"><span class="pre">offset</span></code> but it is permissible to use
+both.)</p>
 <p>Setting the overall normalization:</p>
 <p>Normally, the flux of the object should be equal to the sum of all the pixel values in the
 image, less some small amount of flux that may fall off the edge of the image (assuming you
@@ -951,14 +956,16 @@ the numbers output from a CCD).  [default: 1]</p></li>
 anything in the image before drawing.
 Note: This requires that <code class="docutils literal notranslate"><span class="pre">image</span></code> be provided and that it have defined
 bounds. [default: False]</p></li>
-<li><p><strong>use_true_center</strong> – Normally, the profile is drawn to be centered at the true center
-of the image (using the property image.true_center).
+<li><p><strong>center</strong> – The position on the image at which to place the nominal center of the
+object (usually the centroid, but not necessarily).  [default: None]</p></li>
+<li><p><strong>use_true_center</strong> – If <code class="docutils literal notranslate"><span class="pre">center</span></code> is None, then the object is normally centered at the
+true center of the image (using the property image.true_center).
 If you would rather use the integer center (given by image.center),
 set this to <code class="docutils literal notranslate"><span class="pre">False</span></code>.  [default: True]</p></li>
-<li><p><strong>offset</strong> – The location in pixel coordinates at which to center the profile being
-drawn relative to the center of the image (either the true center if
-<code class="docutils literal notranslate"><span class="pre">use_true_center=True</span></code> or nominal center if
-<code class="docutils literal notranslate"><span class="pre">use_true_center=False</span></code>).  [default: None]</p></li>
+<li><p><strong>offset</strong> – The offset in pixel coordinates at which to center the profile being
+drawn relative to either <code class="docutils literal notranslate"><span class="pre">center</span></code> (if given) or the center of the
+image (either the true center or integer center according to the
+<code class="docutils literal notranslate"><span class="pre">use_true_center</span></code> parameter). [default: None]</p></li>
 <li><p><strong>n_photons</strong> – If provided, the number of photons to use for photon shooting.
 If not provided (i.e. <code class="docutils literal notranslate"><span class="pre">n_photons</span> <span class="pre">=</span> <span class="pre">0</span></code>), use as many photons as
 necessary to result in an image with the correct Poisson shot
@@ -1439,10 +1446,10 @@ object vertically (north in the local tangent plane).</p>
 <p>The units are typically arcsec, but we don’t enforce that anywhere.  The units here just
 need to be consistent with the units used for any size values used by the <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.
 The connection of these units to the eventual image pixels is defined by either the
-<code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> or the <code class="docutils literal notranslate"><span class="pre">wcs</span></code> parameter of <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>.</p>
+<code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> or the <code class="docutils literal notranslate"><span class="pre">wcs</span></code> parameter of <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p>
 <p>Note: if you want to shift the object by a set number (or fraction) of pixels in the
-drawn image, you probably want to use the <code class="docutils literal notranslate"><span class="pre">offset</span></code> parameter of <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> rather than
-this method.</p>
+drawn image, you probably want to use the <code class="docutils literal notranslate"><span class="pre">offset</span></code> parameter of <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>
+rather than this method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">

@@ -980,6 +980,17 @@ im(pos) or im(x=x,y=y))</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="galsim.Image.get_pixel_centers">
+<code class="sig-name descname">get_pixel_centers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.get_pixel_centers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.get_pixel_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>A convenience function to get the x and y values at the centers of the image pixels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(x, y), each of which is a numpy array the same shape as <code class="docutils literal notranslate"><span class="pre">self.array</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="galsim.Image.good_fft_size">
 <em class="property">classmethod </em><code class="sig-name descname">good_fft_size</code><span class="sig-paren">(</span><em class="sig-param">input_size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/image.html#Image.good_fft_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Image.good_fft_size" title="Permalink to this definition">¶</a></dt>
 <dd><p>Round the given input size up to the next higher power of 2 or 3 times a power of 2.</p>
