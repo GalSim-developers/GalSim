@@ -98,7 +98,7 @@ CWW_Sbc_ext.sed
     with fast_search=False.  See devel/modules/getSEDs.py for details.
 
 CWW_Sbc_ext_more.sed
-    Use ``galsim.SED('CWW_Sbc_ext_more.sed', wave_type='A', flux_type='flam')`` 
+    Use ``galsim.SED('CWW_Sbc_ext_more.sed', wave_type='A', flux_type='flam')``
 
     Same as CWW_Sbc_ext.sed, but thinned to a relative error of 1.e-3
 
@@ -390,13 +390,13 @@ WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_18.txt
 WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz
     Use ``galsim.wfirst.getPSF(sca, bandpass)``
 
-    WFIRST Pupil Mask for the shorter wavelength bandpasses. 
+    WFIRST Pupil Mask for the shorter wavelength bandpasses.
     Relevant for bands Z087, Y106, J129, and H158
 
 WFIRST_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz
     Use ``galsim.wfirst.getPSF(sca, bandpass)``
 
-    WFIRST Pupil Mask for the longer wavelength bandpasses. 
+    WFIRST Pupil Mask for the longer wavelength bandpasses.
     Relevant for bands F184 and W149
 
 afta_throughput.txt
@@ -408,3 +408,27 @@ sip_7_6_8.txt
     Use ``galsim.wfirst.getWCS(world_pos)``
 
     WFIRST WCS information for all SCAs.
+
+Shared COSMOS files
+===================
+
+These files are not shipped with GalSim, but can be installed into the ``share`` directory
+by the executable ``galsim_download_cosmos``.  See `Downloading the COSMOS Catalog` for details.
+
+COSMOS_25.2_training_sample
+    | Use ``galsim.RealGalaxyCatalog(sample=25.2)``
+    | Or ``galsim.COSMOSCatalog(sample=25.2)``
+
+    Download with ``galsim_download_cosmos -s 25.2``
+
+    A directory containing files for creating a `RealGalaxyCatalog` or a `COSMOSCatalog` using the
+    F814W < 25.2 sample.
+
+COSMOS_23.5_training_sample
+    | Use ``galsim.RealGalaxyCatalog(sample=23.5)``
+    | Or ``galsim.COSMOSCatalog(sample=23.5)``
+
+    Download with ``galsim_download_cosmos -s 23.5``
+
+    A directory containing files for creating a `RealGalaxyCatalog` or a `COSMOSCatalog` using the
+    F814W < 23.5 sample.
