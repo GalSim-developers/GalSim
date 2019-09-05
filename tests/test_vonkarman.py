@@ -62,7 +62,7 @@ def test_vk(slow=False):
                     check_basic(vk, "VonKarman")
                     do_pickle(vk)
 
-                    img = galsim.Image(16, 16, scale=0.2)
+                    img = galsim.Image(16, 16, scale=0.25)
                     if not do_delta:
                         do_shoot(vk, img, "VonKarman")
                         do_kvalue(vk, img, "VonKarman")
