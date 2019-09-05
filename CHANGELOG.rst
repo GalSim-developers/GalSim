@@ -1,6 +1,17 @@
 Changes from v2.1 to v2.2
 =========================
 
+The most visible change in this version is likely the `new documentation.
+<http://galsim-developers.github.io/GalSim/_build/html/index.html>`_.
+Other important changes are updates to the WFIRST module to conform to
+Cycle 7 specifications and some efficiency improvements in the atmospheric PSF
+modeling.
+
+See below for a complete listing of all features, bug fixes, etc.
+The numbers in parentheses refer to the GitHub issues where the change was made.
+cf. https://github.com/GalSim-developers/GalSim/milestone/19?closed=1
+
+
 Deprecated Features
 -------------------
 
