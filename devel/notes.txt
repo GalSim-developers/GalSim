@@ -8,6 +8,9 @@ Checklist for making a new release:
   - check_yaml (in examples directory)
   - check_json (in examples directory)
   - check_des (in examples directory)
+- Make the release branch for the new minor version. (or switch to it if doing a bugfix release)
+    git checkout -b releases/M.m
+    git push -u origin releases/M.m
 - Update the version number to the new M.m.r value in galsim/_version.py
 - Read over the CHANGELOG.rst file and edit as needed.
 - Update any docs that might need updating.
@@ -18,13 +21,10 @@ Checklist for making a new release:
 - Commit and push new docs.  (Assuming there were any changes from the last time this was done.)
     git add docs/_build
     git commit -m "update docs"
+- Cherry pick this commit back on master.
 - Tag the current version
     git tag -a vM.m.r -m "vM.m.r"
     git push --tags
-- Make the corresponding release branch in case we need to do any bug fixes.  (Assuming this is
-  a new minor release, not just a revision.)
-    git checkout -b releases/M.m
-    git push -u origin releases/M.m
 - Get the current version onto pip.  (Maybe check again that the current version is installed!)
     rm -r GalSim.egg-info
     python setup.py sdist
