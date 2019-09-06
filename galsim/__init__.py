@@ -76,7 +76,7 @@ software or any products related to or derived from the software, or for
 lost profits, business interruption, or indirect special or consequential
 damages of any kind.
 """
-import re
+import re, os, glob
 
 # The version is stored in _version.py as recommended here:
 # http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
@@ -89,6 +89,22 @@ __version_info__ = tuple([int(x) for x in vi if x.isdigit()])
 # Define the current code version, in addition to the hidden attribute, to be consistent with
 # previous GalSim versions that indicated the version number in this way.
 version = __version__
+
+# Tell people where the headers and lib are in case they want to use and link to the
+# C++ layer directly.  (Basically copied from TreeCorr's __init__.py.)
+galsim_dir = os.path.dirname(__file__)
+include_dir = os.path.join(galsim_dir,'include')
+
+lib_file = os.path.join(galsim_dir,'_galsim.so')
+# Some installation (e.g. Travis with python 3.x) name this e.g. _galsim.cpython-34m.so,
+# so if the normal name doesn't exist, look for something else.
+if not os.path.exists(lib_file): # pragma: no cover
+    alt_files = glob.glob(os.path.join(os.path.dirname(__file__),'_galsim*.so'))
+    if len(alt_files) == 0:
+        raise IOError("No file '_galsim.so' found in %s"%galsim_dir)
+    if len(alt_files) > 1:
+        raise IOError("Multiple files '_galsim*.so' found in %s: %s"%(galsim_dir,alt_files))
+    lib_file = alt_files[0]
 
 # Import things from other files we want to be in the galsim namespace
 

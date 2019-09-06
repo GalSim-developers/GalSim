@@ -826,6 +826,66 @@ def test_noncontiguous():
     np.testing.assert_almost_equal(meas_shape3.g2, -0.2, decimal=3,
                                    err_msg="HSM measured wrong shear on image with step=2")
 
+def test_headers():
+    # This isn't really an HSM test per se, but it's testing a feature that we added so
+    # LSST DM can use the C++-layer HSM code from their C++ code.
+    # It also adds a bit of stability guarantee to the HSM function signatures at least.
+
+    # Check that the named files exist.
+    include_dir = galsim.include_dir
+    lib_file = galsim.lib_file
+    print('include_dir = ',include_dir)
+    print('lib_file = ',lib_file)
+    assert os.path.isfile(lib_file)
+    assert os.path.isfile(os.path.join(include_dir, 'GalSim.h'))
+
+    # Check version code
+    version_h = os.path.join(include_dir, 'galsim', 'Version.h')
+    with open(version_h) as fin:
+        lines = fin.read()
+    assert '#define GALSIM_MAJOR %d'%(galsim.__version_info__[0]) in lines
+    assert '#define GALSIM_MINOR %d'%(galsim.__version_info__[1]) in lines
+
+    # Check the function signatudes of the code that LSST DM uses from the C++ layer.
+    psfcorr_h = os.path.join(include_dir, 'galsim', 'hsm', 'PSFCorr.h')
+    assert os.path.isfile(os.path.join(include_dir, 'galsim', 'hsm', 'PSFCorr.h'))
+
+    fam_signature = """
+    void FindAdaptiveMomView(
+        ShapeData& results,
+        const BaseImage<T> &object_image, const BaseImage<int> &object_mask_image,
+        double guess_sig = 5.0, double precision = 1.0e-6,
+        galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
+        bool round_moments = false,
+        const HSMParams& hsmparams=HSMParams());"""
+
+    esv_signature = """
+    void EstimateShearView(
+        ShapeData& results,
+        const BaseImage<T> &gal_image, const BaseImage<U> &PSF_image,
+        const BaseImage<int> &gal_mask_image,
+        float sky_var = 0.0, const char *shear_est = "REGAUSS",
+        const char* recompute_flux = "FIT",
+        double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
+        galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
+        const HSMParams& hsmparams=HSMParams());"""
+
+    # Note: If these fail (because we change the above signature for some reason), let LSST-DM
+    # devs know that their code will break on the next version of GalSim.
+    # They know we don't guarantee this to be stable, but it's a courtesy to let them know if
+    # they might have problems.
+    with open(psfcorr_h) as fin:
+        lines = fin.read()
+    assert fam_signature in lines
+    assert esv_signature in lines
+
+    # Check that the library is loadable.  (C++ name mangling means we can't actually check
+    # that the right functions are there, but that should be implicitly tested by the fact
+    # that calls from python actaully work...)
+    import ctypes
+    lib = ctypes.cdll.LoadLibrary(galsim.lib_file)
+    # The test was that this doesn't raise an OSError or something.
+
 
 if __name__ == "__main__":
     test_moments_basic()
@@ -840,3 +900,4 @@ if __name__ == "__main__":
     test_bounds_centroid()
     test_ksb_sig()
     test_noncontiguous()
+    test_headers()
