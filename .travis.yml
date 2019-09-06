@@ -62,13 +62,6 @@ script:
 
     - cd tests
 
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.5 ]]; then ls -l /home/travis/virtualenv/python3.6.7/lib/python3.6/site-packages/GalSim-2.2-py3.6-linux-x86_64.egg/galsim/
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.5 ]]; then ls -l /home/travis/virtualenv/python3.6.7/lib/python3.6/site-packages/GalSim-2.2-py3.6-linux-x86_64.egg/galsim/include/
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.5 ]]; then ls -l /home/travis/virtualenv/python3.6.7/lib/python3.6/site-packages/GalSim-2.2-py3.6-linux-x86_64.egg/galsim/include/galsim/
-    - if [[ $TRAVIS_PYTHON_VERSION < 3.0 ]]; then ls -l /home/travis/virtualenv/python2.7.15/lib/python2.7/site-packages/GalSim-2.2-py2.7-linux-x86_64.egg/galsim/
-    - if [[ $TRAVIS_PYTHON_VERSION < 3.0 ]]; then ls -l /home/travis/virtualenv/python2.7.15/lib/python2.7/site-packages/GalSim-2.2-py2.7-linux-x86_64.egg/galsim/include/
-    - if [[ $TRAVIS_PYTHON_VERSION < 3.0 ]]; then ls -l /home/travis/virtualenv/python2.7.15/lib/python2.7/site-packages/GalSim-2.2-py2.7-linux-x86_64.egg/galsim/include/galsim/
-
     # Use this rather than setup.py test, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
     # Without cover-erase, this will append to the .coverage file

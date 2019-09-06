@@ -1008,6 +1008,8 @@ version_h_file = os.path.join('include', 'galsim', 'Version.h')
 with open(version_h_file, 'w') as f:
     f.write(version_h_text)
 
+headers.append(version_h_file)
+
 dist = setup(name="GalSim",
     version=galsim_version,
     author="GalSim Developers (point of contact: Mike Jarvis)",
