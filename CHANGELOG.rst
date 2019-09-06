@@ -60,14 +60,14 @@ New Features
 - Added `FitsHeader.extend` method.  Also, read_header option to `galsim.fits.read`. (#877)
 - Updated WFIRST WCS and PSF routines to use Cycle 7 specifications for detector configurations,
   pupil planes, and aberrations. In particular, there is now a different
-  pupil plane image for shorter- and longer-wavelength bands.  (#919)
+  pupil plane image for shorter- and longer-wavelength bands.  (#919, #1019)
 - Enabled Zernikes up to 22 (previously 11) in WFIRST PSFs, and added dependence on position
   within the SCA. (#919)
 - Improved efficiency of drawing `RandomKnots` objects when transformed. (#977)
 - Added WFIRST fermi persistence model. (#992)
 - Added ``r0_500`` argument to VonKarman. (#1005)
 - Improved ability of `AtmosphericScreen` to use shared memory in multiprocessing context. (#1006)
-- Use OpenMP when appropriate in `SiliconSensor.accumulate` (#1008)
+- Use OpenMP when appropriate in `SiliconSensor.accumulate` (#1008, #1046)
 - Added array versions of `BaseWCS.toWorld` and `BaseWCS.toImage`. (#1026)
 - Exposed some methods of `Interpolant` classes that had only been in the C++ layer. (#1038)
 - Added Zernike polynomial +, -, and * operators. (#1047)
@@ -81,6 +81,7 @@ Bug Fixes
 - Fixed FITS I/O to write out comments of header items properly. (#877)
 - Fixed error in the serialization of `RandomKnots` instances. (#977)
 - Fixed error in `PhaseScreenPSF` when aberrations has len=1. (#1006, #1029)
+- Fixed treatment of quantization in WFIRST detector effects. (#1016)
 - Fixed error in `BaseWCS.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
 - Fixed slight error in the realized flux of some profiles when using photon shooting.
   The bug was most apparent for Kolmogorov and VonKarman, where the realized flux
