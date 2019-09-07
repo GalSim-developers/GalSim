@@ -3,11 +3,11 @@ branches:
         - master
         - releases/2.2
 
-language: python
-python:
-    - 2.7
-    - 3.5
-    - 3.6
+#language: python
+#python:
+    #- 2.7
+    #- 3.5
+    #- 3.6
 
 compiler:
     - g++
@@ -16,19 +16,19 @@ matrix:
     # cf. https://blog.travis-ci.com/2019-08-07-extensive-python-testing-on-travis-ci
     include:
         # Add 3.7 builds by hand.  This is the officially supported method for now.
-        - python: 3.7
-          dist: xenial
-          sudo: true
-          name: "Python 3.7"
+        #- python: 3.7
+          #dist: xenial
+          #sudo: true
+          #name: "Python 3.7"
 
         # Add a linux build with clang
-        - python: 3.6
-          env:
-            - COMPILER=clang
-            - CC=clang
-            - CXX=clang++
-            - LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
-          name: "Linux clang (Python 3.6)"
+        #- python: 3.6
+          #env:
+            #- COMPILER=clang
+            #- CC=clang
+            #- CXX=clang++
+            #- LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
+          #name: "Linux clang (Python 3.6)"
 
         # Add a couple macos builds
         - os: osx
@@ -49,7 +49,7 @@ matrix:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo apt-get -qq update; sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen gfortran; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
