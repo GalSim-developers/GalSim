@@ -84,6 +84,14 @@
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 
+#if __has_warning("-Wparentheses-equality")
+#pragma GCC diagnostic ignored "-Wparentheses-equality"
+#endif
+
+#if __has_warning("-Wunused-value")
+#pragma GCC diagnostic ignored "-Wunused-value"
+#endif
+
 #endif // clang
 
 #endif // intel
