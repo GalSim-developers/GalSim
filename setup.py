@@ -481,7 +481,19 @@ int main() {
     return 0;
 }
 """
-    return try_compile(cpp_code, compiler, copt[cc_type], lopt[cc_type])
+    extra_cflags = copt[cc_type]
+    extra_lflags = lopt[cc_type]
+    success = try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
+    if not success:
+        # In case libc++ doesn't work, try letting the system use the default stdlib
+        try:
+            extra_cflags.remove('-stdlib=libc++')
+            extra_lflags.remove('-stdlib=libc++')
+        except (AttributeError, ValueError):
+            pass
+        else:
+            success = try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
+    return success
 
 
 def try_cpp(compiler, cflags=[], lflags=[], prepend=None):
@@ -627,6 +639,7 @@ def fix_compiler(compiler, njobs):
         # In case libc++ doesn't work, try letting the system use the default stdlib
         try:
             extra_cflags.remove('-stdlib=libc++')
+            extra_lflags.remove('-stdlib=libc++')
         except (AttributeError, ValueError):
             pass
         else:
