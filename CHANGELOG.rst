@@ -87,3 +87,8 @@ Bug Fixes
   The bug was most apparent for Kolmogorov and VonKarman, where the realized flux
   could be too small by about 1.e-3. (#1036)
 - Fixed error in `Sersic` class when n is very, very close to 0.5. (#1041)
+
+Changes from v2.2.0 to v2.2.1
+=============================
+
+- Fixed an inadvertant backwards incompatibility introduced in #1048
