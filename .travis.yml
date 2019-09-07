@@ -1,7 +1,7 @@
 branches:
     only:
         - master
-        - noboost
+        - releases/2.2
 
 language: python
 python:
@@ -11,6 +11,27 @@ python:
 
 compiler:
     - g++
+
+matrix:
+    include:
+        # Add 3.7 builds by hand.  This is the officially supported method for now.
+        - python: 3.7
+          dist: xenial
+          sudo: true
+
+        # Add a linux build with clang
+        - python: 3.6
+          env:
+            - COMPILER=clang
+            - CC=clang
+            - CXX=clang++
+
+        # Add a couple macos builds
+        - os: osx
+          osx_image: xcode10.1
+
+        - os: osx
+          osx_image: xcode10.1
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
