@@ -56,7 +56,8 @@ before_install:
     - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
 
     # Get the des data needed for the check_des test.
-    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
+    # Note: --wildcards is invalid on Mac, but allowing wildcards is the default.
+    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; if [[$TRAVIS_OS_NAME=="linux"]]; then tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; else tar xfz des_data.tar.gz -C $HOME *_01*; fi; fi
     - ln -s $HOME/des_data examples/des/
 
     # On OSX, need to use pip3, not pip and python3, not python
