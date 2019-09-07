@@ -13,11 +13,13 @@ compiler:
     - g++
 
 matrix:
+    # cf. https://blog.travis-ci.com/2019-08-07-extensive-python-testing-on-travis-ci
     include:
         # Add 3.7 builds by hand.  This is the officially supported method for now.
         - python: 3.7
           dist: xenial
           sudo: true
+          name: Python 3.7
 
         # Add a linux build with clang
         - python: 3.6
@@ -25,13 +27,24 @@ matrix:
             - COMPILER=clang
             - CC=clang
             - CXX=clang++
+            - LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
+          name: Linux clang (Python 3.6)
 
         # Add a couple macos builds
         - os: osx
-          osx_image: xcode10.1
+          osx_image: xcode10.2  # Has python 3.7.3
+          language: shell
+          name: OSX (Python 3.7)
 
         - os: osx
-          osx_image: xcode10.1
+          osx_image: xcode9.4  # Has python 3.6.5
+          language: shell
+          name: OSX (Python 3.6)
+
+        - os: osx
+          osx_image: xcode9.3  # Has python 2.7.14_2
+          language: shell
+          name: OSX (Python 2.7)
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
@@ -45,6 +58,9 @@ before_install:
     # Get the des data needed for the check_des test.
     - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
     - ln -s $HOME/des_data examples/des/
+
+    # On OSX, need to use pip3, not pip and python3, not python
+    if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3 ]]; then alias pip=pip3 && alias python=python3; fi
 
 cache:
     ccache: true
