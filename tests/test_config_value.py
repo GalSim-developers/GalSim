@@ -1358,10 +1358,17 @@ def test_pos_value():
                                galsim.PositionD(-0.5, 0.2),
                                galsim.PositionD(0.1, 0.0) ] },
         'radec' : { 'type' : 'RADec', 'ra' : 13.4 * galsim.hours, 'dec' : -0.3 * galsim.degrees },
+        'cur1' : { 'type' : 'Current', 'key' : 'input.val1' },
+        'cur2' : '@input.val2',
         'bad1' : '0.1, 0.2, 0.3',
         'bad2' : '0.1,',
         'bad3' : '0.1',
         'bad4' : 'red, blue',
+
+        # This one tests @ with input, not used as a normal input field, but rather used as just
+        # a regular field in the dict.
+        'input' : { 'val1' : galsim.PositionD(0.1,0.2),
+                    'val2' : '0.3, 0.4' },
     }
     # Also use this to check CopyConfig and CleanConfig.  Processing adds a lot to the
     # config dict for efficiency.  But CopyConfig should copy the current state, and
@@ -1384,6 +1391,14 @@ def test_pos_value():
     xy1 = galsim.config.ParseValue(config,'xy1',config, galsim.PositionD)[0]
     np.testing.assert_almost_equal(xy1.x, 1.3)
     np.testing.assert_almost_equal(xy1.y, 2.4)
+
+    # Test Current
+    cur1 = galsim.config.ParseValue(config,'cur1',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(cur1.x, 0.1)
+    np.testing.assert_almost_equal(cur1.y, 0.2)
+    cur2 = galsim.config.ParseValue(config,'cur2',config, galsim.PositionD)[0]
+    np.testing.assert_almost_equal(cur2.x, 0.3)
+    np.testing.assert_almost_equal(cur2.y, 0.4)
 
     # Test values generated in a random circle
     rng = galsim.UniformDeviate(1234)
@@ -1462,11 +1477,11 @@ def test_pos_value():
         del clean_config[key]
     # And one extra thing that gets set as a default, but CleanConfig doesn't remove
     del clean_config['list1']['index']
-    # Finally, this value got changed to a real Position, so it won't match the original
-    # unless we manually set it back to a string.
+    # Finally, these value got changed, so they won't match the original
+    # unless we manually set them back to the original strings.
     clean_config['val2'] = '0.1, 0.2'
-    print('orig_config = ',orig_config)
-    print('cleaned config = ',clean_config)
+    clean_config['cur2'] = '@input.val2'
+    clean_config['input']['val2'] = '0.3, 0.4'
     assert clean_config == orig_config
 
 @timer

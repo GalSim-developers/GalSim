@@ -238,9 +238,15 @@ def EvaluateCurrentValue(key, config, base, value_type=None):
     from .input import GetInputObj
 
     if config is base.get('input',None):
-        # If we are trying to access a current input, then use GetInputObj instead.
-        return GetInputObj(key, base, base, 'Current'), True
-    elif not isinstance(config[key], dict):
+        try:
+            # If we are trying to access a current input, then use GetInputObj instead.
+            return GetInputObj(key, base, base, 'Current'), True
+        except GalSimConfigError:
+            # If ProcessInput hasn't been called, then the above won't work.
+            # Try the normal Current processing in that case.
+            pass
+
+    if not isinstance(config[key], dict):
         if value_type is not None or (isinstance(config[key],str) and config[key][0] in ('@','$')):
             # This will work fine to evaluate the current value, but will also
             # compute it if necessary
