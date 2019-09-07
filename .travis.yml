@@ -48,19 +48,19 @@ matrix:
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-    - sudo apt-get -qq update
-    - sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo apt-get -qq update; sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
+    - if [[ $TRAVIS_OS_NAME" == "osx" ]]; then brew update; brew install fftw libav eigen; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
     - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
 
     # Get the des data needed for the check_des test.
-    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
+    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
     - ln -s $HOME/des_data examples/des/
 
     # On OSX, need to use pip3, not pip and python3, not python
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3 ]]; then alias pip=pip3 && alias python=python3; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3 ]]; then alias pip=pip3; alias python=python3; fi
 
 cache:
     ccache: true
