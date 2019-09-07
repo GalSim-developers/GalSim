@@ -1068,4 +1068,3 @@ if hasattr(dist,'script_install_dir'):
         print('         Alternatively, you can specify a different prefix with --prefix=PREFIX,')
         print('         in which case the scripts will be installed in PREFIX/bin.')
         print('         If you are installing via pip use --install-option="--prefix=PREFIX"')
-
