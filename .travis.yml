@@ -1,7 +1,7 @@
 branches:
     only:
         - master
-        - releases/2.2
+        - /^releases\/.*/
 
 #language: python
 #python:
@@ -92,7 +92,7 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - pip install -U pip    # Helpful to do these two first.
+    - sudo pip install -U pip    # Helpful to do these two first.
     - pip install -U numpy
     - pip install -U -r requirements.txt
 
