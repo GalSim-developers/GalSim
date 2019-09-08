@@ -89,7 +89,7 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - sudo -H $PIP uninstall numpy
+    - sudo -H $PIP uninstall -y numpy
     - sudo -H $PIP install -U pip    # Helpful to do these two first.
     # cf. https://stackoverflow.com/questions/39187374/how-to-correctly-uninstall-numpy-on-macosx
     - sudo -H $PIP install -U numpy
