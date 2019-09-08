@@ -74,10 +74,10 @@ before_install:
     - ln -s $HOME/des_data examples/des/
 
     # On OSX, need to use pip3, not pip and python3, not python
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then alias pip=pip3; alias python=python3; shopt -s expand_aliases; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then export PIP=pip3; export PYTHON=python3; else export PIP=pip; export PYTHON=python; fi
     - alias
-    - pip --version
-    - python --version
+    - $PIP --version
+    - $PYTHON --version
 
 cache:
     ccache: true
@@ -89,32 +89,32 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - sudo pip install -U pip    # Helpful to do these two first.
-    - sudo pip install -U --ignore-installed numpy
-    - sudo pip install -U -r requirements.txt
+    - sudo $PIP install -U pip    # Helpful to do these two first.
+    - sudo $PIP install -U --ignore-installed numpy
+    - sudo $PIP install -U -r requirements.txt
 
     # Also some things just required for tests
     # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
-    - travis_wait 30 sudo pip install -U -r test_requirements.txt
+    - travis_wait 30 sudo $PIP install -U -r test_requirements.txt
     # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then sudo pip install astroplan; fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then sudo $PIP install astroplan; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - sudo pip install matplotlib
+    - sudo $PIP install matplotlib
 
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo pip install --force -v nose; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo $PIP install --force -v nose; fi
 
     # Finally, a few things for the code coverage
-    - sudo pip install -U nose codecov coveralls coverage
+    - sudo $PIP install -U nose codecov coveralls coverage
 
-    - pip list
+    - $PIP list
 
 script:
     # Install GalSim
-    - python setup.py install
+    - $PYTHON setup.py install
 
     # If galsim_download_cosmos.py changed, then run it.
     - echo $TRAVIS_COMMIT_RANGE
