@@ -33,7 +33,6 @@ matrix:
         # Add a couple macos builds
         - os: osx
           osx_image: xcode10.2  # Has python 3.7.3
-          sudo: true
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.7
@@ -41,7 +40,6 @@ matrix:
 
         - os: osx
           osx_image: xcode9.4  # Has python 3.6.5
-          sudo: true
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.6
@@ -49,7 +47,6 @@ matrix:
 
         - os: osx
           osx_image: xcode9.3  # Has python 2.7.14_2
-          sudo: true
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=2.7
@@ -93,25 +90,25 @@ install:
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
     - sudo pip install -U pip    # Helpful to do these two first.
-    - pip install -U numpy
-    - pip install -U -r requirements.txt
+    - sudo pip install -U numpy
+    - sudo pip install -U -r requirements.txt
 
     # Also some things just required for tests
     # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
-    - travis_wait 30 pip install -U -r test_requirements.txt
+    - travis_wait 30 sudo pip install -U -r test_requirements.txt
     # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan; fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then sudo pip install astroplan; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - pip install matplotlib
+    - sudo pip install matplotlib
 
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo pip install --force -v nose; fi
 
     # Finally, a few things for the code coverage
-    - pip install -U nose codecov coveralls coverage
+    - sudo pip install -U nose codecov coveralls coverage
 
     - pip list
 
