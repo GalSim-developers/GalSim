@@ -108,6 +108,8 @@ install:
     # Finally, a few things for the code coverage
     - pip install -U nose codecov coveralls coverage
 
+    - pip install --force -v nose
+
     - pip list
 
 script:
