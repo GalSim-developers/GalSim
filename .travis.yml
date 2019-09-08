@@ -1,7 +1,6 @@
 branches:
     only:
         - master
-        - noboost
 
 language: python
 python:
@@ -12,29 +11,82 @@ python:
 compiler:
     - g++
 
+matrix:
+    # cf. https://blog.travis-ci.com/2019-08-07-extensive-python-testing-on-travis-ci
+    include:
+        # Add 3.7 builds by hand.  This is the officially supported method for now.
+        - python: 3.7
+          dist: xenial
+          sudo: true
+          name: "Python 3.7"
+
+        # Add a linux build with clang
+        - python: 3.6
+          env:
+            - COMPILER=clang
+            - CC=clang
+            - CXX=clang++
+            - LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
+          name: "Linux clang (Python 3.6)"
+
+        # Add macos builds.  Python version set by osx_image.
+        - os: osx
+          osx_image: xcode10.2  # Has python 3.7.3
+          sudo: true
+          language: shell
+          env:
+            - TRAVIS_PYTHON_VERSION=3.7
+          name: "OSX (Python 3.7)"
+
+        - os: osx
+          osx_image: xcode9.4  # Has python 3.6.5
+          sudo: true
+          language: shell
+          env:
+            - TRAVIS_PYTHON_VERSION=3.6
+          name: "OSX (Python 3.6)"
+
+        - os: osx
+          osx_image: xcode9.3  # Has python 2.7.14_2
+          sudo: true
+          language: shell
+          env:
+            - TRAVIS_PYTHON_VERSION=2.7
+          name: "OSX (Python 2.7)"
+
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-    - sudo apt-get -qq update
-    - sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo apt-get -qq update; sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; brew cask install gfortran; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
     - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
 
     # Get the des data needed for the check_des test.
-    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
+    # Note: --wildcards is invalid on Mac, but allowing wildcards is the default.
+    - if [[$TRAVIS_OS_NAME=="linux"]]; then export WILDCARDS=--wildcards; fi
+    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME $WILDCARDS *_01*; fi
     - ln -s $HOME/des_data examples/des/
+
+    # On OSX, need to use pip3, not pip and python3, not python
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then alias pip=pip3; alias python=python3; shopt -s expand_aliases; fi
+    - alias
+    - pip --version
+    - python --version
 
 cache:
     ccache: true
     pip: true
     directories:
-    - $HOME/des_data
+        - $HOME/des_data
 
 install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
+    - pip install -U pip    # Helpful to do these two first.
+    - pip install -U numpy
     - pip install -U -r requirements.txt
 
     # Also some things just required for tests
@@ -45,10 +97,14 @@ install:
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - pip install matplotlib 
+    - pip install matplotlib
+
+    # On Travix OSX, nose is already installed, but nosetests isn't in the path.
+    # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo pip install --force -v nose; fi
 
     # Finally, a few things for the code coverage
-    - pip install nose codecov coveralls coverage
+    - pip install -U nose codecov coveralls coverage
 
     - pip list
 
@@ -63,9 +119,9 @@ script:
     - cd tests
 
     # Use this rather than setup.py test, so we can get the coverage options.
-    - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
+    - nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase
     # Without cover-erase, this will append to the .coverage file
-    - "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest"
+    - nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest
 
 after_success:
     # The multiprocessing stages don't get properly incorporated into the .coverage file unless
