@@ -33,6 +33,7 @@ matrix:
         # Add a couple macos builds
         - os: osx
           osx_image: xcode10.2  # Has python 3.7.3
+          sudo: true
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.7
@@ -40,6 +41,7 @@ matrix:
 
         - os: osx
           osx_image: xcode9.4  # Has python 3.6.5
+          sudo: true
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.6
@@ -47,6 +49,7 @@ matrix:
 
         - os: osx
           osx_image: xcode9.3  # Has python 2.7.14_2
+          sudo: true
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=2.7
@@ -54,7 +57,7 @@ matrix:
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-    - export PATH=$PATH:/Users/travis/Library/Python/$TRAVIS_PYTHON_VERSION/bin
+    - export PATH=/Users/travis/Library/Python/$TRAVIS_PYTHON_VERSION/bin:$PATH
     - echo $PATH
     - echo $TRAVIS_PYTHON_VERSION
     - echo $TRAVIS_OS_NAME
@@ -88,22 +91,22 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - pip install -U pip --user
-    - pip install -U numpy --user
-    - pip install -U -r requirements.txt --user
+    - pip install -U pip
+    - pip install -U numpy
+    - pip install -U -r requirements.txt
 
     # Also some things just required for tests
     # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
-    - travis_wait 30 pip install -U -r test_requirements.txt --user
+    - travis_wait 30 pip install -U -r test_requirements.txt
     # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan --user; fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - pip install matplotlib --user
+    - pip install matplotlib
 
     # Finally, a few things for the code coverage
-    - pip install -U nose codecov coveralls coverage --user
+    - pip install -U nose codecov coveralls coverage
 
     - pip list
 
