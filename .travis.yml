@@ -73,21 +73,21 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - pip install -U numpy
-    - pip install -U -r requirements.txt
+    - pip install -U numpy --user
+    - pip install -U -r requirements.txt --user
 
     # Also some things just required for tests
     # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
-    - travis_wait 30 pip install -U -r test_requirements.txt
+    - travis_wait 30 pip install -U -r test_requirements.txt --user
     # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan; fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan --user; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - pip install matplotlib
+    - pip install matplotlib --user
 
     # Finally, a few things for the code coverage
-    - pip install nose codecov coveralls coverage
+    - pip install -U nose codecov coveralls coverage --user
 
     - pip list
 
