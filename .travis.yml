@@ -54,6 +54,7 @@ matrix:
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
+    - export PATH=$PATH:/Users/travis/Library/Python/$TRAVIS_PYTHON_VERSION/bin
     - echo $PATH
     - echo $TRAVIS_PYTHON_VERSION
     - echo $TRAVIS_OS_NAME
