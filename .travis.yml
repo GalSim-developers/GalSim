@@ -90,7 +90,7 @@ install:
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
     - sudo pip install -U pip    # Helpful to do these two first.
-    - sudo pip install -U numpy
+    - sudo pip install -U --ignore-installed numpy
     - sudo pip install -U -r requirements.txt
 
     # Also some things just required for tests
