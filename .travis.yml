@@ -60,7 +60,7 @@ before_install:
     #- echo $TRAVIS_OS_NAME
     #- pip --version
     #- python --version
-    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo apt-get -qq update; sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; brew cask install gfortran; fi
 
     # List current contents of directories that should be being cached.
@@ -89,27 +89,28 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - sudo $PIP install -U pip    # Helpful to do these two first.
+    - sudo -H $PIP uninstall numpy
+    - sudo -H $PIP install -U pip    # Helpful to do these two first.
     # cf. https://stackoverflow.com/questions/39187374/how-to-correctly-uninstall-numpy-on-macosx
-    - sudo $PIP install -U --ignore-installed --install-option '--install-data=/usr/local' numpy
-    - sudo $PIP install -U -r requirements.txt
+    - sudo -H $PIP install -U numpy
+    - sudo -H $PIP install -U -r requirements.txt
 
     # Also some things just required for tests
     # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
-    - travis_wait 30 sudo $PIP install -U -r test_requirements.txt
+    - travis_wait 30 sudo -H $PIP install -U -r test_requirements.txt
     # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then sudo $PIP install astroplan; fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then sudo -H $PIP install astroplan; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - sudo $PIP install matplotlib
+    - sudo -H $PIP install matplotlib
 
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo $PIP install --force -v nose; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force -v nose; fi
 
     # Finally, a few things for the code coverage
-    - sudo $PIP install -U nose codecov coveralls coverage
+    - sudo -H $PIP install -U nose codecov coveralls coverage
 
     - $PIP list
 
