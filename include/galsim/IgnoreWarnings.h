@@ -70,7 +70,7 @@
 #endif
 
 // register is deprecated in g++-17
-#if __has_warning("-Wdeprecated-register")
+#if defined(__GNUC__) && __GNUC__ >= 5
 #pragma GCC diagnostic ignored "-Wdeprecated-register"
 #endif
 
