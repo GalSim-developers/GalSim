@@ -34,19 +34,22 @@ matrix:
         - os: osx
           osx_image: xcode10.2  # Has python 3.7.3
           language: shell
-          python: 3.7
+          env:
+            - TRAVIS_PYTHON_VERSION=3.7
           name: "OSX (Python 3.7)"
 
         - os: osx
           osx_image: xcode9.4  # Has python 3.6.5
           language: shell
-          python: 3.6
+          env:
+            - TRAVIS_PYTHON_VERSION=3.6
           name: "OSX (Python 3.6)"
 
         - os: osx
           osx_image: xcode9.3  # Has python 2.7.14_2
           language: shell
-          python: 2.7
+          env:
+            - TRAVIS_PYTHON_VERSION=2.7
           name: "OSX (Python 2.7)"
 
 before_install:
