@@ -73,6 +73,7 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
+    - pip install -U pip --user
     - pip install -U numpy --user
     - pip install -U -r requirements.txt --user
 
