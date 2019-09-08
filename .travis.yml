@@ -72,7 +72,7 @@ before_install:
     - ln -s $HOME/des_data examples/des/
 
     # On OSX, need to use pip3, not pip and python3, not python
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then alias pip=pip3; alias python=python3; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then alias pip=pip3; alias python=python3; shopt -s expand_aliases; fi
     - alias
     - pip --version
     - python --version
