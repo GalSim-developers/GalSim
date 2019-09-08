@@ -57,12 +57,12 @@ matrix:
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-    - export PATH=/Users/travis/Library/Python/$TRAVIS_PYTHON_VERSION/bin:$PATH
-    - echo $PATH
-    - echo $TRAVIS_PYTHON_VERSION
-    - echo $TRAVIS_OS_NAME
-    - pip --version
-    - python --version
+    #- export PATH=/Users/travis/Library/Python/$TRAVIS_PYTHON_VERSION/bin:$PATH
+    #- echo $PATH
+    #- echo $TRAVIS_PYTHON_VERSION
+    #- echo $TRAVIS_OS_NAME
+    #- pip --version
+    #- python --version
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo apt-get -qq update; sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; brew cask install gfortran; fi
 
@@ -72,7 +72,8 @@ before_install:
 
     # Get the des data needed for the check_des test.
     # Note: --wildcards is invalid on Mac, but allowing wildcards is the default.
-    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; if [[$TRAVIS_OS_NAME=="linux"]]; then tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; else tar xfz des_data.tar.gz -C $HOME *_01*; fi; fi
+    - if [[$TRAVIS_OS_NAME=="linux"]]; then export WILDCARDS=--wildcards; fi
+    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME $WILDCARDS *_01*; fi
     - ln -s $HOME/des_data examples/des/
 
     # On OSX, need to use pip3, not pip and python3, not python
@@ -91,8 +92,8 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - pip install -U pip
-    - pip install -U numpy
+    #- pip install -U pip
+    #- pip install -U numpy
     - pip install -U -r requirements.txt
 
     # Also some things just required for tests
@@ -105,10 +106,12 @@ install:
     # code, despite that not being a dependency.
     - pip install matplotlib
 
+    # On Travix OSX, nose is already installed, but nosetests isn't in the path.
+    # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
+    - if [[ $TRAVIS_OSX_NAME == "osx" ]]; then sudo pip install --force -v nose; fi
+
     # Finally, a few things for the code coverage
     - pip install -U nose codecov coveralls coverage
-
-    - sudo pip install --force -v nose
 
     - pip list
 
@@ -122,11 +125,11 @@ script:
 
     - cd tests
 
-    - echo $PATH
-    - ls /Users/travis/Library/Python/$TRAVIS_PYTHON_VERSION/bin
-    - which -a nosetests
-    - which -a pytest
-    - locate nosetests
+    #- echo $PATH
+    #- ls /Users/travis/Library/Python/$TRAVIS_PYTHON_VERSION/bin
+    #- which -a nosetests
+    #- which -a pytest
+    #- locate nosetests
 
     # Use this rather than setup.py test, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
