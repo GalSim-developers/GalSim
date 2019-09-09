@@ -81,12 +81,16 @@ cache:
         - $HOME/Library/Caches/Homebrew
 
 install:
+    # Upate pip executable.  (Needs sudo on some systems.)
+    - sudo -H $PIP install -U pip
+
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - $PIP install -U --user pip    # Helpful to do these first.
-    - $PIP install -U --user numpy   # user, since previous can be in System/Library
-                                     # which doesn't allow the overwrite operations.
+    # Note: More convenient to use --user to supersede existing versions without having
+    #       to delete old versions.  Particularly on some osx where old version is in
+    #       /System directory where delete operations are forbidden.
+    - $PIP install -U --user numpy      # Do these two first to clarify potential conflicts.
     - $PIP install -U --user setuptools
     - $PIP install -U --user -r requirements.txt
 
