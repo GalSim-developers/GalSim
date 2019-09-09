@@ -106,7 +106,7 @@ install:
 
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force -v nose; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force --user -v nose; fi
 
     # Finally, a few things for the code coverage
     - $PIP install -U --user nose codecov coveralls coverage
