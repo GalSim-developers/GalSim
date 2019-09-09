@@ -84,6 +84,7 @@ cache:
     pip: true
     directories:
         - $HOME/des_data
+        - $HOME/Library/Caches/Homebrew
 
 install:
     # Install the requirements
@@ -147,3 +148,4 @@ after_success:
 before_cache:
     - rm -rfv $HOME/.cache/pip/log
     - rm -rfv $HOME/.cache/pip/http
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cleanup; fi
