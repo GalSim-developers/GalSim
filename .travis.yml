@@ -79,17 +79,6 @@ before_install:
     - $PIP --version
     - $PYTHON --version
 
-    # Get rid of old numpy on osx.  It's distutils installation, which means pip can't actually
-    # remove it itself.  So if we rely on the below pip install -U stuff, it gives errors.
-    - ls -la /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/numpy
-    - ls -la /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/
-    - ls -la /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/
-    - ls -la /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/
-    - sudo chmod -R a+w /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.0 ]]; then sudo rm -rf /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/numpy; fi
-    # On slightly newer versions, pip can uninstall.  Can fail later if we don't do this.
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then sudo -H $PIP uninstall -y numpy; fi
-
 cache:
     ccache: true
     pip: true
@@ -101,7 +90,8 @@ install:
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
     - sudo -H $PIP install -U pip    # Helpful to do these two first.
-    - sudo -H $PIP install -U numpy
+    - $PIP install -U --user numpy   # user, since previous can be in System/Library
+                                     # which doesn't allow the overwrite operations.
     - sudo -H $PIP install -U -r requirements.txt
 
     # Also some things just required for tests
