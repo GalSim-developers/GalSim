@@ -35,6 +35,8 @@ matrix:
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.7
+            - USER=--user
+            - PATH=/Users/travis/Library/Python/3.7/bin:$PATH
           name: OSX (Python 3.7)
 
         - os: osx
@@ -42,6 +44,8 @@ matrix:
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.6
+            - USER=--user
+            - PATH=/Users/travis/Library/Python/3.6/bin:$PATH
           name: OSX (Python 3.6)
 
         - os: osx
@@ -49,6 +53,11 @@ matrix:
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=2.7
+            # Note: Use --user to supersede existing versions rather than sudo pip -U ...
+            #       since existing versions of some packages (e.g. numpy) live in /System/
+            #       directory where delete operations are forbidden.
+            - USER=--user
+            - PATH=/Users/travis/Library/Python/2.7/bin:$PATH
           name: OSX (Python 2.7)
 
 before_install:
@@ -73,9 +82,6 @@ before_install:
     - $PIP --version
     - $PYTHON --version
 
-    # We'll be pip installing with --user, so add the appropriate directory to the path
-    - export PATH=/Users/travis/Library/Python/$TRAVIS_PYTHON_VERSION/bin:$PATH
-
 cache:
     ccache: true
     pip: true
@@ -90,35 +96,32 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    # Note: More convenient to use --user to supersede existing versions without having
-    #       to delete old versions.  Particularly on some osx where old version is in
-    #       /System directory where delete operations are forbidden.
-    - $PIP install -U --user numpy      # Do these two first to clarify potential conflicts.
-    - $PIP install -U --user setuptools
-    - $PIP install -U --user -r requirements.txt
+    - $PIP install -U $USER numpy      # Do these two first to clarify potential conflicts.
+    - $PIP install -U $USER setuptools
+    - $PIP install -U $USER -r requirements.txt
 
     # Also some things just required for tests
     # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
-    - travis_wait 30 $PIP install -U --user -r test_requirements.txt
+    - travis_wait 30 $PIP install -U $USER -r test_requirements.txt
     # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then $PIP install --user astroplan; fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then $PIP install $USER astroplan; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - $PIP install --user matplotlib
+    - $PIP install $USER matplotlib
 
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force --user -v nose; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force $USER -v nose; fi
 
     # Finally, a few things for the code coverage
-    - $PIP install -U --user nose codecov coveralls coverage
+    - $PIP install -U $USER nose codecov coveralls coverage
 
     - $PIP list
 
 script:
     # Install GalSim
-    - $PYTHON setup.py install --user
+    - $PYTHON setup.py install $USER
 
     # If galsim_download_cosmos.py changed, then run it.
     - echo $TRAVIS_COMMIT_RANGE
