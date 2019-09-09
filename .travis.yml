@@ -3,11 +3,10 @@ branches:
         - master
         - /^releases\/.*/
 
-#language: python
-#python:
-    #- 2.7
-    #- 3.5
-    #- 3.6
+python:
+    - 2.7
+    - 3.5
+    - 3.6
 
 compiler:
     - g++
@@ -16,38 +15,34 @@ matrix:
     # cf. https://blog.travis-ci.com/2019-08-07-extensive-python-testing-on-travis-ci
     include:
         # Add 3.7 builds by hand.  This is the officially supported method for now.
-        #- python: 3.7
-          #dist: xenial
-          #sudo: true
-          #name: Python 3.7
+        - python: 3.7
+          dist: xenial
+          name: Python 3.7
 
         # Add a linux build with clang
-        #- python: 3.6
-          #env:
-            #- COMPILER=clang
-            #- CC=clang
-            #- CXX=clang++
-            #- LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
-          #name: Linux clang (Python 3.6)
+        - python: 3.6
+          env:
+            - COMPILER=clang
+            - CC=clang
+            - CXX=clang++
+            - LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
+          name: Linux clang (Python 3.6)
 
         # Add a couple macos builds
-        #- os: osx
-          #osx_image: xcode10.2  # Has python 3.7.3
-          #language: shell
-          #env:
-            #- TRAVIS_PYTHON_VERSION=3.7
-          #name: OSX (Python 3.7)
+        - os: osx
+          osx_image: xcode10.2  # Has python 3.7.3
+          env:
+            - TRAVIS_PYTHON_VERSION=3.7
+          name: OSX (Python 3.7)
 
-        #- os: osx
-          #osx_image: xcode9.4  # Has python 3.6.5
-          #language: shell
-          #env:
-            #- TRAVIS_PYTHON_VERSION=3.6
-          #name: OSX (Python 3.6)
+        - os: osx
+          osx_image: xcode9.4  # Has python 3.6.5
+          env:
+            - TRAVIS_PYTHON_VERSION=3.6
+          name: OSX (Python 3.6)
 
         - os: osx
           osx_image: xcode9.3  # Has python 2.7.14_2
-          language: shell
           env:
             - TRAVIS_PYTHON_VERSION=2.7
           name: OSX (Python 2.7)
