@@ -58,7 +58,9 @@ before_install:
 
     # Get the des data needed for the check_des test.
     # Note: --wildcards is invalid on Mac, but allowing wildcards is the default.
-    - if [[$TRAVIS_OS_NAME=="linux"]]; then export WILDCARDS=--wildcards; fi
+    - if [[ $TRAVIS_OS_NAME=="linux" ]]; then export WILDCARDS="--wildcards"; fi
+    - echo $WILDCARDS
+    - echo tar xfz des_data.tar.gz -C $HOME $WILDCARDS *_01*
     - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME $WILDCARDS *_01*; fi
     - ln -s $HOME/des_data examples/des/
 
