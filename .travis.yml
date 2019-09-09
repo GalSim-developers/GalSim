@@ -1,6 +1,7 @@
 branches:
     only:
         - master
+        - /^releases\/.*/
 
 language: python
 python:
@@ -14,11 +15,14 @@ compiler:
 matrix:
     # cf. https://blog.travis-ci.com/2019-08-07-extensive-python-testing-on-travis-ci
     include:
-        # Add 3.7 builds by hand.  This is the officially supported method for now.
+        # Add 3.7 build by hand.  This is the officially supported method for now.
         - python: 3.7
           dist: xenial
-          sudo: true
-          name: "Python 3.7"
+          name: Python: 3.7
+
+        # Note: All the rest are technically allowed to fail.  This is mostly so the
+        # Travis runs can finish faster, since they often only do 4 at a time.
+        # But we should periodically check them and try to make sure they all work.
 
         # Add a linux build with clang
         - python: 3.6
@@ -27,36 +31,57 @@ matrix:
             - CC=clang
             - CXX=clang++
             - LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
-          name: "Linux clang (Python 3.6)"
+          name: Linux clang (Python 3.6)
 
-        # Add macos builds.  Python version set by osx_image.
+        # Add a few macos builds
+        # Here, the python version is set by the xcode version.
         - os: osx
-          osx_image: xcode10.2  # Has python 3.7.3
-          sudo: true
-          language: shell
+          osx_image: xcode9.3  # Has python 2.7.14_2
+          language: shell  # language: python is an error on macos
           env:
-            - TRAVIS_PYTHON_VERSION=3.7
-          name: "OSX (Python 3.7)"
+            - TRAVIS_PYTHON_VERSION=2.7
+            # Note: Use --user to supersede existing versions rather than sudo pip -U ...
+            #       since existing versions of some packages (e.g. numpy) live in /System/
+            #       directory where delete operations are forbidden.
+            - __USER=--user
+            - PATH=/Users/travis/Library/Python/2.7/bin:$PATH
+          name: OSX (Python 2.7)
 
         - os: osx
           osx_image: xcode9.4  # Has python 3.6.5
-          sudo: true
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.6
-          name: "OSX (Python 3.6)"
+          name: OSX (Python 3.6)
 
         - os: osx
-          osx_image: xcode9.3  # Has python 2.7.14_2
-          sudo: true
+          osx_image: xcode11  # Has python 3.7.4
           language: shell
           env:
-            - TRAVIS_PYTHON_VERSION=2.7
-          name: "OSX (Python 2.7)"
+            - TRAVIS_PYTHON_VERSION=3.7
+          name: OSX (Python 3.7)
+
+        # Check 3.8-dev, but less concerned if this fails.
+        - python: 3.8-dev
+          dist: xenial
+          name: Python: 3.8-dev
+
+        # For grins, add pypy.
+        - python: pypy3
+          name: PyPy
+
+    allow_failures:
+        - name: Linux clang (Python 3.6)
+        - os: osx
+        - python: 3.8-dev
+        - python: pypy3
+    fast_finish: true
+
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo apt-get -qq update; sudo apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
+    # Install the non-python dependencies: fftw, libav, eigen
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; brew cask install gfortran; fi
 
     # List current contents of directories that should be being cached.
@@ -65,52 +90,54 @@ before_install:
 
     # Get the des data needed for the check_des test.
     # Note: --wildcards is invalid on Mac, but allowing wildcards is the default.
-    - if [[$TRAVIS_OS_NAME=="linux"]]; then export WILDCARDS=--wildcards; fi
-    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME $WILDCARDS *_01*; fi
+    - __WILDCARDS=$([[ $TRAVIS_OS_NAME = "linux" ]] && echo "--wildcards" || echo "")
+    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME $__WILDCARDS *_01*; fi
     - ln -s $HOME/des_data examples/des/
 
     # On OSX, need to use pip3, not pip and python3, not python
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then alias pip=pip3; alias python=python3; shopt -s expand_aliases; fi
-    - alias
-    - pip --version
-    - python --version
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then export PIP=pip3; export PYTHON=python3; else export PIP=pip; export PYTHON=python; fi
+    - $PIP --version
+    - $PYTHON --version
 
 cache:
     ccache: true
     pip: true
     directories:
         - $HOME/des_data
+        - $HOME/Library/Caches/Homebrew
 
 install:
+    # Upate pip executable.  (Needs sudo on some systems.)
+    - sudo -H $PIP install -U pip
+
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - pip install -U pip    # Helpful to do these two first.
-    - pip install -U numpy
-    - pip install -U -r requirements.txt
+    - $PIP install -U $__USER numpy      # Do these two first to clarify potential conflicts.
+    - $PIP install -U $__USER setuptools
+    - $PIP install -U $__USER -r requirements.txt
 
     # Also some things just required for tests
-    # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
-    - travis_wait 30 pip install -U -r test_requirements.txt
+    - $PIP install -U $__USER -r test_requirements.txt
     # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then pip install astroplan; fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then $PIP install $__USER astroplan; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - pip install matplotlib
+    - $PIP install $__USER matplotlib
 
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo pip install --force -v nose; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force $__USER -v nose; fi
 
     # Finally, a few things for the code coverage
-    - pip install -U nose codecov coveralls coverage
+    - $PIP install -U $__USER nose codecov coveralls coverage
 
-    - pip list
+    - $PIP list
 
 script:
     # Install GalSim
-    - python setup.py install
+    - $PYTHON setup.py install $__USER
 
     # If galsim_download_cosmos.py changed, then run it.
     - echo $TRAVIS_COMMIT_RANGE
@@ -136,3 +163,4 @@ after_success:
 before_cache:
     - rm -rfv $HOME/.cache/pip/log
     - rm -rfv $HOME/.cache/pip/http
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cleanup; fi
