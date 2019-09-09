@@ -33,7 +33,7 @@ matrix:
         # Here, the python version is set by the xcode version.
         - os: osx
           osx_image: xcode9.3  # Has python 2.7.14_2
-          language: shell
+          language: shell  # language: python is an error on macos
           env:
             - TRAVIS_PYTHON_VERSION=2.7
             # Note: Use --user to supersede existing versions rather than sudo pip -U ...
@@ -48,17 +48,13 @@ matrix:
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.6
-            - __USER=--user
-            - PATH=/Users/travis/Library/Python/3.6/bin:$PATH
           name: OSX (Python 3.6)
 
         - os: osx
-          osx_image: xcode10.2  # Has python 3.7.3
+          osx_image: xcode11  # Has python 3.7.4
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.7
-            - __USER=--user
-            - PATH=/Users/travis/Library/Python/3.7/bin:$PATH
           name: OSX (Python 3.7)
 
         # Check 3.8-dev, but let it fail for now.
@@ -94,7 +90,6 @@ before_install:
 
     # On OSX, need to use pip3, not pip and python3, not python
     - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then export PIP=pip3; export PYTHON=python3; else export PIP=pip; export PYTHON=python; fi
-    - alias
     - $PIP --version
     - $PYTHON --version
 
