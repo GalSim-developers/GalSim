@@ -35,7 +35,7 @@ matrix:
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.7
-            - USER=--user
+            - __USER=--user
             - PATH=/Users/travis/Library/Python/3.7/bin:$PATH
           name: OSX (Python 3.7)
 
@@ -44,7 +44,7 @@ matrix:
           language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.6
-            - USER=--user
+            - __USER=--user
             - PATH=/Users/travis/Library/Python/3.6/bin:$PATH
           name: OSX (Python 3.6)
 
@@ -56,7 +56,7 @@ matrix:
             # Note: Use --user to supersede existing versions rather than sudo pip -U ...
             #       since existing versions of some packages (e.g. numpy) live in /System/
             #       directory where delete operations are forbidden.
-            - USER=--user
+            - __USER=--user
             - PATH=/Users/travis/Library/Python/2.7/bin:$PATH
           name: OSX (Python 2.7)
 
@@ -96,32 +96,32 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - $PIP install -U $USER numpy      # Do these two first to clarify potential conflicts.
-    - $PIP install -U $USER setuptools
-    - $PIP install -U $USER -r requirements.txt
+    - $PIP install -U $__USER numpy      # Do these two first to clarify potential conflicts.
+    - $PIP install -U $__USER setuptools
+    - $PIP install -U $__USER -r requirements.txt
 
     # Also some things just required for tests
     # (This includes scipy, which can take a while to install.  So tell Travis to be patient.)
-    - travis_wait 30 $PIP install -U $USER -r test_requirements.txt
+    - travis_wait 30 $PIP install -U $__USER -r test_requirements.txt
     # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then $PIP install $USER astroplan; fi
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then $PIP install $__USER astroplan; fi
 
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - $PIP install $USER matplotlib
+    - $PIP install $__USER matplotlib
 
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force $USER -v nose; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force $__USER -v nose; fi
 
     # Finally, a few things for the code coverage
-    - $PIP install -U $USER nose codecov coveralls coverage
+    - $PIP install -U $__USER nose codecov coveralls coverage
 
     - $PIP list
 
 script:
     # Install GalSim
-    - $PYTHON setup.py install $USER
+    - $PYTHON setup.py install $__USER
 
     # If galsim_download_cosmos.py changed, then run it.
     - echo $TRAVIS_COMMIT_RANGE
