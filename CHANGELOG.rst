@@ -91,4 +91,5 @@ Bug Fixes
 Changes from v2.2.0 to v2.2.1
 =============================
 
-- Fixed an inadvertant backwards incompatibility introduced in #1048
+- Fixed an inadvertant backwards incompatibility introduced in #1048.
+- Fixed a compiler error for clang on linux systems.
