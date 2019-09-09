@@ -15,7 +15,7 @@ compiler:
 matrix:
     # cf. https://blog.travis-ci.com/2019-08-07-extensive-python-testing-on-travis-ci
     include:
-        # Add 3.7 builds by hand.  This is the officially supported method for now.
+        # Add 3.7 build by hand.  This is the officially supported method for now.
         - python: 3.7
           dist: xenial
           name: Python 3.7
@@ -29,25 +29,8 @@ matrix:
             - LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
           name: Linux clang (Python 3.6)
 
-        # Add a couple macos builds
-        - os: osx
-          osx_image: xcode10.2  # Has python 3.7.3
-          language: shell
-          env:
-            - TRAVIS_PYTHON_VERSION=3.7
-            - __USER=--user
-            - PATH=/Users/travis/Library/Python/3.7/bin:$PATH
-          name: OSX (Python 3.7)
-
-        - os: osx
-          osx_image: xcode9.4  # Has python 3.6.5
-          language: shell
-          env:
-            - TRAVIS_PYTHON_VERSION=3.6
-            - __USER=--user
-            - PATH=/Users/travis/Library/Python/3.6/bin:$PATH
-          name: OSX (Python 3.6)
-
+        # Add a few macos builds
+        # Here, the python version is set by the xcode version.
         - os: osx
           osx_image: xcode9.3  # Has python 2.7.14_2
           language: shell
@@ -59,6 +42,39 @@ matrix:
             - __USER=--user
             - PATH=/Users/travis/Library/Python/2.7/bin:$PATH
           name: OSX (Python 2.7)
+
+        - os: osx
+          osx_image: xcode9.4  # Has python 3.6.5
+          language: shell
+          env:
+            - TRAVIS_PYTHON_VERSION=3.6
+            - __USER=--user
+            - PATH=/Users/travis/Library/Python/3.6/bin:$PATH
+          name: OSX (Python 3.6)
+
+        - os: osx
+          osx_image: xcode10.2  # Has python 3.7.3
+          language: shell
+          env:
+            - TRAVIS_PYTHON_VERSION=3.7
+            - __USER=--user
+            - PATH=/Users/travis/Library/Python/3.7/bin:$PATH
+          name: OSX (Python 3.7)
+
+        # Check 3.8-dev, but let it fail for now.
+        - python: 3.8-dev
+          dist: xenial
+          name: Python 3.8-dev
+
+        # For grins, add pypy.  Also allowed to fail.
+        - python: pypy3
+          name: PyPy
+
+    allow_failures:
+        - python: 3.8-dev
+        - python: pypy3
+    fast_finish: true
+
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
