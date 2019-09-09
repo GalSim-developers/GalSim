@@ -3,6 +3,7 @@ branches:
         - master
         - /^releases\/.*/
 
+language: python
 python:
     - 2.7
     - 3.5
@@ -31,18 +32,21 @@ matrix:
         # Add a couple macos builds
         - os: osx
           osx_image: xcode10.2  # Has python 3.7.3
+          language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.7
           name: OSX (Python 3.7)
 
         - os: osx
           osx_image: xcode9.4  # Has python 3.6.5
+          language: shell
           env:
             - TRAVIS_PYTHON_VERSION=3.6
           name: OSX (Python 3.6)
 
         - os: osx
           osx_image: xcode9.3  # Has python 2.7.14_2
+          language: shell
           env:
             - TRAVIS_PYTHON_VERSION=2.7
           name: OSX (Python 2.7)
@@ -58,9 +62,8 @@ before_install:
 
     # Get the des data needed for the check_des test.
     # Note: --wildcards is invalid on Mac, but allowing wildcards is the default.
-    - if [[ $TRAVIS_OS_NAME=="linux" ]]; then export WILDCARDS="--wildcards"; fi
+    - WILDCARDS=$([[ $TRAVIS_OS_NAME=="linux" ]] && echo "--wildcards" || echo "")
     - echo $WILDCARDS
-    - echo tar xfz des_data.tar.gz -C $HOME $WILDCARDS *_01*
     - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME $WILDCARDS *_01*; fi
     - ln -s $HOME/des_data examples/des/
 
