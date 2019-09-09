@@ -406,9 +406,15 @@
     <span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">GetInputObj</span>
 
     <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
-        <span class="c1"># If we are trying to access a current input, then use GetInputObj instead.</span>
-        <span class="k">return</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;Current&#39;</span><span class="p">),</span> <span class="kc">True</span>
-    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If we are trying to access a current input, then use GetInputObj instead.</span>
+            <span class="k">return</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;Current&#39;</span><span class="p">),</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="n">GalSimConfigError</span><span class="p">:</span>
+            <span class="c1"># If ProcessInput hasn&#39;t been called, then the above won&#39;t work.</span>
+            <span class="c1"># Try the normal Current processing in that case.</span>
+            <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span><span class="s1">&#39;$&#39;</span><span class="p">)):</span>
             <span class="c1"># This will work fine to evaluate the current value, but will also</span>
             <span class="c1"># compute it if necessary</span>
