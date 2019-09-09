@@ -79,6 +79,11 @@ before_install:
     - $PIP --version
     - $PYTHON --version
 
+    # Get rid of numpy on old osx.  It's distutils installation, which means pip can't actually
+    # remove it itself.  So if we rely on the below pip install -U stuff, it gives errors.
+    - $PYTHON -c "import numpy; print(numpy.__file__)"
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.0 ]]; then sudo rm -r /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/numpy*; fi
+
 cache:
     ccache: true
     pip: true
@@ -89,9 +94,7 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.
-    - sudo -H $PIP uninstall -y numpy
     - sudo -H $PIP install -U pip    # Helpful to do these two first.
-    # cf. https://stackoverflow.com/questions/39187374/how-to-correctly-uninstall-numpy-on-macosx
     - sudo -H $PIP install -U numpy
     - sudo -H $PIP install -U -r requirements.txt
 
