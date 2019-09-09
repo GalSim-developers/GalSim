@@ -79,10 +79,11 @@ before_install:
     - $PIP --version
     - $PYTHON --version
 
-    # Get rid of numpy on old osx.  It's distutils installation, which means pip can't actually
+    # Get rid of old numpy on osx.  It's distutils installation, which means pip can't actually
     # remove it itself.  So if we rely on the below pip install -U stuff, it gives errors.
-    - $PYTHON -c "import numpy; print(numpy.__file__)"
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.0 ]]; then sudo rm -r /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/numpy*; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.0 ]]; then sudo rm -rf /System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/numpy; fi
+    # On slightly newer versions, pip can uninstall.  Can fail later if we don't do this.
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then sudo -H $PIP uninstall -U -y numpy; fi
 
 cache:
     ccache: true
