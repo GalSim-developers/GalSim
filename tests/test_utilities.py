@@ -1258,6 +1258,77 @@ def test_horner2d():
     with assert_raises(galsim.GalSimIncompatibleValuesError):
         galsim.utilities.horner2d(x, y[:10], coef)
 
+@timer
+def test_horner_complex():
+    # Make a random 2d polynomial
+    rcoef = [ [1.2332, 3.4324, 4.1231, -0.2342, 0.4242],
+              [-0.2341, 1.4689, 3.5322, -1.0039, 0.02142],
+              [4.02342, -2.2352, 0.1414, 2.9352, -1.3521] ]
+    icoef = [ [0.1234, -5.4324, 6.12345, 3.9393, -0.7373],
+              [-0.9999, 1.7655, -5.2344, -1.1111, 5.3432],
+              [-1.2345, 3.2130, -4.4444, 0.3242, -8.0013] ]
+    rcoef = np.array(rcoef)
+    icoef = np.array(icoef)
+    coef = rcoef + 1j * icoef
+
+    # Make a random list of values to test
+    rx = np.empty(20)
+    ry = np.empty(20)
+    rng = galsim.UniformDeviate(1234)
+    rng.generate(rx)
+    rng.generate(ry)
+
+    ix = np.empty(20)
+    iy = np.empty(20)
+    rng = galsim.UniformDeviate(1234)
+    rng.generate(ix)
+    rng.generate(iy)
+
+    x = rx + 1j*ix
+    y = ry + 1j*iy
+
+    # Check all combinations of which things are complex and which are real.
+    # First, just 1 of the three complex:
+    result = galsim.utilities.horner2d(rx, ry, coef, dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, ry, coef))
+
+    result = galsim.utilities.horner2d(rx, y, rcoef, dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, rcoef))
+
+    result = galsim.utilities.horner2d(x, ry, rcoef, dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, rcoef))
+
+    # Now two complex:
+    result = galsim.utilities.horner2d(rx, y, coef, dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(rx, y, coef))
+
+    result = galsim.utilities.horner2d(x, ry, coef, dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, ry, coef))
+
+    result = galsim.utilities.horner2d(x, y, rcoef, dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, rcoef))
+
+    # All three complex
+    result = galsim.utilities.horner2d(x, y, coef, dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(x, y, coef))
+
+    # Check scalar complex x, y
+    result = galsim.utilities.horner2d(3.9+2.1j, 1.7-0.9j, coef, dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval2d(
+            [3.9+2.1j],[1.7-0.9j],coef))
+
+    # Repeast for 1d
+    result = galsim.utilities.horner(rx, coef[0], dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(rx, coef[0]))
+
+    result = galsim.utilities.horner(x, rcoef[0], dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x, rcoef[0]))
+
+    result = galsim.utilities.horner(x, coef[0], dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval(x, coef[0]))
+
+    result = galsim.utilities.horner(3.9+2.1j, coef[0], dtype=complex)
+    np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
 
 if __name__ == "__main__":
     test_pos()
@@ -1278,3 +1349,4 @@ if __name__ == "__main__":
     test_nCr()
     test_horner()
     test_horner2d()
+    test_horner_complex()

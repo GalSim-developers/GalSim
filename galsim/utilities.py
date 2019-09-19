@@ -651,8 +651,8 @@ def horner(x, coef, dtype=None):
         x = np.ascontiguousarray(x, dtype=float)
         coef = np.ascontiguousarray(coef, dtype=float)
     else:
-        x = np.array(x, copy=False, dtype=float)
-        coef = np.array(coef, copy=False, dtype=float)
+        x = np.array(x, copy=False)
+        coef = np.array(coef, copy=False)
     if len(coef.shape) != 1:
         raise GalSimValueError("coef must be 1-dimensional", coef)
     _horner(x, coef, result)
@@ -705,13 +705,12 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
         y = np.ascontiguousarray(y, dtype=float)
         coefs = np.ascontiguousarray(coefs, dtype=float)
     else:
-        x = np.array(x, copy=False, dtype=float)
-        y = np.array(y, copy=False, dtype=float)
-        coefs = np.array(coefs, copy=False, dtype=float)
+        x = np.array(x, copy=False)
+        y = np.array(y, copy=False)
+        coefs = np.array(coefs, copy=False)
 
-    if len(x) != len(y):
-        raise GalSimIncompatibleValuesError("x and y are not the same size",
-                                            x=x, y=y)
+    if x.shape != y.shape:
+        raise GalSimIncompatibleValuesError("x and y are not the same size", x=x, y=y)
     if len(coefs.shape) != 2:
         raise GalSimValueError("coefs must be 2-dimensional", coefs)
     if triangle and coefs.shape[0] != coefs.shape[1]:
