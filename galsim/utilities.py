@@ -659,8 +659,10 @@ def horner(x, coef, dtype=None):
     return result
 
 def _horner(x, coef, result):
-    """Equivalent to `horner`, but ``x``, ``coeff``, and ``result`` must be contiguous arrays
-    with dtype == float.
+    """Equivalent to `horner`, but ``x``, ``coef``, and ``result`` must be contiguous arrays.
+
+    In particular, ``result`` must be already allocated as an array in which to put the answer.
+    This is the thing that is returned from the regular `horner`.
 
     Parameters:
         x:      A numpy array of values at which to evaluate the polynomial.
@@ -710,7 +712,7 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
         coefs = np.array(coefs, copy=False)
 
     if x.shape != y.shape:
-        raise GalSimIncompatibleValuesError("x and y are not the same size", x=x, y=y)
+        raise GalSimIncompatibleValuesError("x and y are not the same shape", x=x, y=y)
     if len(coefs.shape) != 2:
         raise GalSimValueError("coefs must be 2-dimensional", coefs)
     if triangle and coefs.shape[0] != coefs.shape[1]:
@@ -720,8 +722,12 @@ def horner2d(x, y, coefs, dtype=None, triangle=False):
     return result
 
 def _horner2d(x, y, coefs, result, temp, triangle=False):
-    """Equivalent to `horner2d`, but ``x``, ``y``, ``coeff``, ``result``, and ``temp``
-    must be contiguous arrays with dtype == float.
+    """Equivalent to `horner2d`, but ``x``, ``y``, ``coefs``, ``result``, and ``temp``
+    must be contiguous arrays.
+
+    In particular, ``result`` must be already allocated as an array in which to put the answer.
+    This is the thing that is returned from the regular `horner`.  In addition, ``temp`` must
+    be allocated for the function to use as temporary work space.
 
     Parameters:
         x:          A numpy array of the x values at which to evaluate the polynomial.
