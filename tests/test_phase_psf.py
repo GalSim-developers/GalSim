@@ -24,6 +24,11 @@ import galsim
 import unittest
 from galsim_test_helpers import *
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
 
 imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images.
 pp_file = 'sample_pupil_rolled.fits'
@@ -1265,8 +1270,69 @@ def test_shared_memory():
             initargs=galsim.phase_screens.initWorkerArgs()
         )
 
+@timer
+def test_pickle():
+    # This is response to ImSim issue #234
+    # https://github.com/LSSTDESC/imSim/issues/234
+
+    import multiprocessing
+
+    # Pull out the relevant bits from the imsim code base.
+
+    rng = galsim.BaseDeviate(1234)
+    ud = galsim.UniformDeviate(rng)
+    gd = galsim.GaussianDeviate(rng)
+
+    altitudes = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]
+    altitudes[0] = 0.2
+
+    weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
+    weights = [np.abs(w*(1.0 + 0.1*gd())) for w in weights]
+    weights = np.clip(weights, 0.01, 0.8)  # keep weights from straying too far.
+    weights /= np.sum(weights)  # renormalize
+
+    L0 = 0
+    while L0 < 10.0 or L0 > 100:
+        L0 = np.exp(gd() * 0.6 + np.log(25.0))
+    r0_500 = 0.2
+
+    L0 = [L0]*6
+
+    maxSpeed = 20.0
+    speeds = [ud()*maxSpeed for _ in range(6)]
+    directions = [ud()*360.0*galsim.degrees for _ in range(6)]
+
+    #screen_size = 819.2
+    screen_size = 32
+    screen_scale = 0.1
+    kmax = 1
+
+    kwargs = dict(r0_500=r0_500, L0=L0, speed=speeds, direction=directions,
+                  altitude=altitudes, r0_weights=weights, rng=rng,
+                  screen_size=screen_size, screen_scale=screen_scale)
+    atm = galsim.Atmosphere(**kwargs)
+
+    pkl_file = 'output/atm_pickle_test.pkl'
+    with open(pkl_file, 'wb') as fd:
+        pickle.dump(atm, fd)
+
+    with open(pkl_file, 'rb') as fd:
+        atm2 = pickle.load(fd)
+    assert atm2 == atm
+
+    # The above read works, but it relies on the objDict being in the _GSScreenShare directory.
+    # Running this from a fresh program, it won't be in there yet.
+    galsim.phase_screens._GSScreenShare.pop(atm[0]._shareKey)
+
+    with open(pkl_file, 'rb') as fd:
+        atm3 = pickle.load(fd)   # Fails here.
+    assert atm3 == atm
+
 
 if __name__ == "__main__":
+    test_pickle()
+    sys.exit()
+
     test_aperture()
     test_atm_screen_size()
     test_structure_function()
