@@ -1275,8 +1275,6 @@ def test_pickle():
     # This is response to ImSim issue #234
     # https://github.com/LSSTDESC/imSim/issues/234
 
-    import multiprocessing
-
     # Pull out the relevant bits from the imsim code base.
 
     rng = galsim.BaseDeviate(1234)
@@ -1309,10 +1307,7 @@ def test_pickle():
 
     if sys.version_info >= (3,4):
         import multiprocessing as mp
-        if __name__ == "__main__":
-            ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
-        else:
-            ctxs = [None, mp.get_context("fork")]
+        ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
     else:
         ctxs = [None]  # Only supported ctx on py27
 
