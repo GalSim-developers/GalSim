@@ -1307,46 +1307,55 @@ def test_pickle():
     screen_scale = 0.1
     kmax = 1
 
-    kwargs = dict(r0_500=r0_500, L0=L0, speed=speeds, direction=directions,
-                  altitude=altitudes, r0_weights=weights, rng=rng,
-                  screen_size=screen_size, screen_scale=screen_scale)
-    atm = galsim.Atmosphere(**kwargs)
+    if sys.version_info >= (3,4):
+        import multiprocessing as mp
+        if __name__ == "__main__":
+            ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
+        else:
+            ctxs = [None, mp.get_context("fork")]
+    else:
+        ctxs = [None]  # Only supported ctx on py27
 
-    pkl_file = 'output/atm_pickle_test.pkl'
-    with open(pkl_file, 'wb') as fd:
-        pickle.dump(atm, fd)
+    for ctx in ctxs:
+        kwargs = dict(r0_500=r0_500, L0=L0, speed=speeds, direction=directions,
+                      altitude=altitudes, r0_weights=weights, rng=rng,
+                      screen_size=screen_size, screen_scale=screen_scale, mp_context=ctx)
+        atm = galsim.Atmosphere(**kwargs)
 
-    with open(pkl_file, 'rb') as fd:
-        atm2 = pickle.load(fd)
-    assert atm2 == atm
+        pkl_file = 'output/atm_pickle_test.pkl'
+        with open(pkl_file, 'wb') as fd:
+            pickle.dump(atm, fd)
 
-    # The above read works, but it relies on the objDict being in the _GSScreenShare directory.
-    # Running this from a fresh program, it won't be in there yet.
-    # For file persistence, we need to use read/writeScreenShare.
-
-    # Write the phase screen shared memory to disk
-    galsim.phase_screens.writeScreenShare('output/screen_share.pkl')
-
-    # Simulate a new session by clearing out the relevant item in the global dict.
-    galsim.phase_screens._GSScreenShare.pop(atm[0]._shareKey)
-
-    with assert_raises(KeyError):
         with open(pkl_file, 'rb') as fd:
             atm2 = pickle.load(fd)
+        assert atm2 == atm
 
-    # Read it back in.  Now we should be able to unpickle.
-    galsim.phase_screens.readScreenShare('output/screen_share.pkl')
+        # The above read works, but it relies on the objDict being in the _GSScreenShare directory.
+        # Running this from a fresh program, it won't be in there yet.
+        # For file persistence, we need to use read/writeScreenShare.
 
-    # Increment refcount manually, since atm still points there.
-    galsim.phase_screens._GSScreenShare[atm[0]._shareKey]['refcount'].value += 1
+        # Write the phase screen shared memory to disk
+        galsim.phase_screens.writeScreenShare('output/screen_share.pkl')
 
-    with open(pkl_file, 'rb') as fd:
-        atm3 = pickle.load(fd)
-    assert atm3 == atm
+        # Simulate a new session by clearing out the relevant item in the global dict.
+        galsim.phase_screens._GSScreenShare.pop(atm[0]._shareKey)
+
+        with assert_raises(KeyError):
+            with open(pkl_file, 'rb') as fd:
+                atm2 = pickle.load(fd)
+
+        # Read it back in.  Now we should be able to unpickle.
+        galsim.phase_screens.readScreenShare('output/screen_share.pkl')
+
+        # Increment refcount manually, since atm still points there.
+        galsim.phase_screens._GSScreenShare[atm[0]._shareKey]['refcount'].value += 1
+
+        with open(pkl_file, 'rb') as fd:
+            atm3 = pickle.load(fd)
+        assert atm3 == atm
 
 
 if __name__ == "__main__":
-    test_pickle()
     test_aperture()
     test_atm_screen_size()
     test_structure_function()
@@ -1366,3 +1375,4 @@ if __name__ == "__main__":
     test_gc()
     test_withGSP()
     test_shared_memory()
+    test_pickle()
