@@ -1317,6 +1317,11 @@ def test_pickle():
                       screen_size=screen_size, screen_scale=screen_scale, mp_context=ctx)
         atm = galsim.Atmosphere(**kwargs)
 
+        xs = np.linspace(-1, 1, 10)
+        ys = np.linspace(1, -1, 10)
+        ts = np.linspace(0, 2, 10)
+        atmwf = atm.wavefront(xs, ys, ts)
+
         pkl_file = 'output/atm_pickle_test.pkl'
         with open(pkl_file, 'wb') as fd:
             pickle.dump(atm, fd)
@@ -1324,6 +1329,8 @@ def test_pickle():
         with open(pkl_file, 'rb') as fd:
             atm2 = pickle.load(fd)
         assert atm2 == atm
+        atm2wf = atm2.wavefront(xs, ys, ts)
+        np.testing.assert_equal(atmwf, atm2wf)
 
         # The above read works, but it relies on the objDict being in the _GSScreenShare directory.
         # Running this from a fresh program, it won't be in there yet.
@@ -1348,6 +1355,8 @@ def test_pickle():
         with open(pkl_file, 'rb') as fd:
             atm3 = pickle.load(fd)
         assert atm3 == atm
+        atm3wf = atm3.wavefront(xs, ys, ts)
+        np.testing.assert_equal(atmwf, atm3wf)
 
 
 if __name__ == "__main__":
