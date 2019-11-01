@@ -1320,9 +1320,18 @@ def test_pickle():
         atm2 = pickle.load(fd)
     assert atm2 == atm
 
+    # Write the phase screen shared memory to disk
+    galsim.phase_screens.writeScreenShare('output/screen_share.pkl')
+
     # The above read works, but it relies on the objDict being in the _GSScreenShare directory.
     # Running this from a fresh program, it won't be in there yet.
     galsim.phase_screens._GSScreenShare.pop(atm[0]._shareKey)
+
+    # Read it back in.  Now we should be able to unpickle.
+    galsim.phase_screens.readScreenShare('output/screen_share.pkl')
+
+    # Increment refcount manually, since atm still points there.
+    galsim.phase_screens._GSScreenShare[atm[0]._shareKey]['refcount'].value += 1
 
     with open(pkl_file, 'rb') as fd:
         atm3 = pickle.load(fd)   # Fails here.
@@ -1331,8 +1340,6 @@ def test_pickle():
 
 if __name__ == "__main__":
     test_pickle()
-    sys.exit()
-
     test_aperture()
     test_atm_screen_size()
     test_structure_function()
