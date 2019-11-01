@@ -1341,7 +1341,7 @@ def test_pickle():
     galsim.phase_screens._GSScreenShare[atm[0]._shareKey]['refcount'].value += 1
 
     with open(pkl_file, 'rb') as fd:
-        atm3 = pickle.load(fd)   # Fails here.
+        atm3 = pickle.load(fd)
     assert atm3 == atm
 
 
