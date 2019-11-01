@@ -94,7 +94,7 @@ def readScreenShare(filename):
         for k, v in screenShare.items():
             if k in _GSScreenShare:  # Ignore if screen already loaded?
                 continue
-            npix = len(v['x'])
+            npix = len(v['x'])-1
             if v['ctx_name'] is None:
                 from multiprocessing.sharedctypes import RawArray, RawValue
                 from multiprocessing import Lock
@@ -120,6 +120,9 @@ def readScreenShare(filename):
                 'refcount':RawValue('i', 0),  # a little weird, but I think ok?
                 'lock':Lock()
             }
+            np.frombuffer(objDict['x'], dtype=np.float64)[:] = v['x']
+            np.frombuffer(objDict['y'], dtype=np.float64)[:] = v['y']
+            np.frombuffer(objDict['f'], dtype=np.float64)[:] = v['f']
             _GSScreenShare[k] = objDict
 
 
