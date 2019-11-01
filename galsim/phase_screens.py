@@ -53,6 +53,76 @@ _calcOptStepK = LRU_Cache(__calcOptStepK)
 _GSScreenShare = {}
 
 
+def writeScreenShare(filename):
+    """Write `AtmosphericScreen` shared memory to a file.  See discussion in `AtmosphericScreen`
+    docstring for more information.
+
+    Parameters:
+        filename: Filename to which to write.
+    """
+    import pickle
+    screenShare = {}
+    for k, v in _GSScreenShare.items():
+        oneScreen = {}
+        oneScreen['f'] = np.frombuffer(v['f'], dtype=np.float64)
+        oneScreen['x'] = np.frombuffer(v['x'], dtype=np.float64)
+        oneScreen['y'] = np.frombuffer(v['y'], dtype=np.float64)
+        oneScreen['alpha'] = v['alpha'].value
+        oneScreen['kmin'] = v['kmin'].value
+        oneScreen['kmax'] = v['kmax'].value
+        oneScreen['x0'] = v['x0'].value
+        oneScreen['y0'] = v['y0'].value
+        oneScreen['xperiod'] = v['xperiod'].value
+        oneScreen['yperiod'] = v['yperiod'].value
+        oneScreen['instantiated'] = v['instantiated'].value
+        oneScreen['ctx_name'] = v['ctx_name'].value
+        screenShare[k] = oneScreen
+    with open(filename, 'wb') as f:
+        pickle.dump(screenShare, f)
+
+
+def readScreenShare(filename):
+    """Read `AtmosphericScreen` shared memory from file.  See discussion in `AtmosphericScreen`
+    docstring for more information.
+
+    Parameters:
+        filename: Filename from which to read.
+    """
+    import pickle
+    with open(filename, 'rb') as f:
+        screenShare = pickle.load(f)
+        for k, v in screenShare.items():
+            if k in _GSScreenShare:  # Ignore if screen already loaded?
+                continue
+            npix = len(v['x'])
+            if v['ctx_name'] is None:
+                from multiprocessing.sharedctypes import RawArray, RawValue
+                from multiprocessing import Lock
+            else:
+                ctx = multiprocessing.get_context(v['ctx_name'])
+                RawArray = ctx.RawArray
+                RawValue = ctx.RawValue
+                Lock = ctx.Lock
+            from ctypes import c_wchar_p
+            objDict = {
+                'f':RawArray('d', (npix+1)*(npix+1)),
+                'x':RawArray('d', npix+1),
+                'y':RawArray('d', npix+1),
+                'alpha':RawValue('d', v['alpha']),
+                'kmin':RawValue('d', v['kmin']),
+                'kmax':RawValue('d', v['kmax']),
+                'x0':RawValue('d', v['x0']),
+                'y0':RawValue('d', v['y0']),
+                'xperiod':RawValue('d', v['xperiod']),
+                'yperiod':RawValue('d', v['yperiod']),
+                'instantiated':RawValue('b', v['instantiated']),
+                'ctx_name':RawValue(c_wchar_p, v['ctx_name']),
+                'refcount':RawValue('i', 0),  # a little weird, but I think ok?
+                'lock':Lock()
+            }
+            _GSScreenShare[k] = objDict
+
+
 def initWorkerArgs():
     """Function used to generate worker arguments to pass to multiprocessing.Pool initializer.
 
@@ -163,6 +233,25 @@ class AtmosphericScreen(object):
     Finally, the above multiprocessing shared memory tricks are only currently supported for
     non-time-evolving screens (alpha=1).
 
+    **Pickling**:
+
+    The shared memory portion of an atmospheric screen is not included in the pickle of an
+    `AtmosphericScreen` instance.  This means that while it is possible to successfully
+    pickle/unpickle an `AtmosphericScreen` within a single launch of a potentially-multiprocess
+    program, it will generally not work to create an `AtmosphericScreen` pickle, quit python,
+    restart python, and unpickle the screen.  To get around this limitation, the functions
+    `writeScreenShare` and `readScreenShare` can be used.  For example, we can write the shared
+    memory and pickle the screen instance::
+
+        screen = galsim.AtmosphericScreen(...)
+        galsim.phase_screens.writeScreenShare('screenShare.pkl')
+        pickle.dump(screen, open('myScreen.pkl', 'wb'))
+
+    We can then read the shared memory back in and unpickle the screen::
+
+        galsim.phase_screens.readScreenShare('screenShare.pkl')
+        screen = pickle.load(open('myScreen.pkl', 'rb'))
+
     Parameters:
         screen_size:        Physical extent of square phase screen in meters.  This should be large
                             enough to accommodate the desired field-of-view of the telescope as
@@ -269,9 +358,12 @@ class AtmosphericScreen(object):
             RawArray = ctx.RawArray
             RawValue = ctx.RawValue
             Lock = ctx.Lock
+            ctx_name = ctx.get_start_method()
         else:
             from multiprocessing.sharedctypes import RawArray, RawValue
             from multiprocessing import Lock
+            ctx_name = None
+        from ctypes import c_wchar_p
         global _GSScreenShare
         self._objDict = {
             'f':RawArray('d', (self.npix+1)*(self.npix+1)),
@@ -285,8 +377,9 @@ class AtmosphericScreen(object):
             'xperiod':RawValue('d', 0.0),
             'yperiod':RawValue('d', 0.0),
             'instantiated':RawValue('b', False),
+            'ctx_name':RawValue(c_wchar_p, ctx_name),
             'refcount':RawValue('i', 1),
-            'lock':Lock()
+            'lock':Lock(),
         }
         # A unique id for this screen, created in the parent process, that can be used to find the
         # correct shared memory object in child processes.
