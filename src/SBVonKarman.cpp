@@ -222,7 +222,9 @@ namespace galsim {
         if (r > 0.) {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
-            for (int s=1; s<=10; ++s) {
+            // Emplirically, around r/2 is a decent number of oscillations to include explicitly.
+            int nsplits = int(r/2);
+            for (int s=1; s<=nsplits; ++s) {
                 double root = math::getBesselRoot0(s);
                 xdbg<<"Add split at "<<root/r<<std::endl;
                 reg.addSplit(root/r);
