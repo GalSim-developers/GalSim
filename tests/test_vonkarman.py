@@ -260,12 +260,16 @@ def vk_benchmark():
 def test_vk_r0():
     """Test a special r0 value that resulted in an error, reported in issue #957.
     """
-    r0 = 0.146068884
-    vk = galsim.VonKarman(L0=25.,lam=700.,r0=r0)
-    # Note: the resolution of the bug was to add explicit split points for the first several
-    # j0 zeros.  Without that, the integral in rawXValue can spuriously fail badly, leading to
-    # an invalid estimate of the total integrated flux within R=pi/stepk.
-    check_basic(vk, "VonKarman, r0=%s"%r0)
+    # The first one was issue #957.
+    # Aaron Roodman ran across another, which is now included here as well.
+    r0_list = [0.146068884, 0.16879518207956518]
+
+    for r0 in r0_list:
+        vk = galsim.VonKarman(L0=25.,lam=700.,r0=r0)
+        # Note: the resolution of the bug was to add explicit split points for the first several
+        # j0 zeros.  Without that, the integral in rawXValue can spuriously fail badly, leading to
+        # an invalid estimate of the total integrated flux within R=pi/stepk.
+        check_basic(vk, "VonKarman, r0=%s"%r0)
 
 
 if __name__ == "__main__":
