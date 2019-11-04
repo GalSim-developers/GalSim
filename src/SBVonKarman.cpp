@@ -241,7 +241,10 @@ namespace galsim {
         //       There are a number of more sophisticated techniquest for handling oscillating
         //       functions that just adding explicit split points.  Might be worth looking into
         //       whether any of these would be more robust and/or more efficient.
+        int max_iter = 10;  // Don't do this forever!
         while (result < 0) {
+            if (max_iter-- == 0)
+                throw SBError("Invalid von Karman XValue unresolved after 10 attempts");
             dbg<<"Bad result: "<<result<<std::endl;
             int nsplits = reg.getNSplit();
             for (int s=nsplits+1; s<=2*nsplits; ++s) {
