@@ -223,6 +223,7 @@ namespace galsim {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             // Emplirically, around r/2 is a decent number of oscillations to include explicitly.
+            // This is tested by test_vk_r0 in test_vonkarman.py.
             int nsplits = int(r/2);
             for (int s=1; s<=nsplits; ++s) {
                 double root = math::getBesselRoot0(s);
@@ -230,9 +231,30 @@ namespace galsim {
                 reg.addSplit(root/r);
             }
         }
-        return integ::int1d(I, reg,
-                            _gsparams->integration_relerr,
-                            _gsparams->integration_abserr)/(2.*M_PI);
+        double relerr = _gsparams->integration_relerr;
+        double abserr = _gsparams->integration_abserr;
+        double result = integ::int1d(I, reg, relerr, abserr);
+        // Sometimes this still fails.  The failure mode is always that the result is
+        // negative.  If this happens, double the number of split points and try again.
+        // Also cut the relerr down by a factor of 10.
+        // TODO: This is probably a sign that we should rethink how we are doing this integral.
+        //       There are a number of more sophisticated techniquest for handling oscillating
+        //       functions that just adding explicit split points.  Might be worth looking into
+        //       whether any of these would be more robust and/or more efficient.
+        while (result < 0) {
+            dbg<<"Bad result: "<<result<<std::endl;
+            int nsplits = reg.getNSplit();
+            for (int s=nsplits+1; s<=2*nsplits; ++s) {
+                double root = math::getBesselRoot0(s);
+                xdbg<<"Add split at "<<root/r<<std::endl;
+                reg.addSplit(root/r);
+            }
+            relerr /= 10;
+            abserr /= 10;
+            result = integ::int1d(I, reg, relerr, abserr);
+        }
+        // We've been ignoring a factor of 2 pi so far.  Apply it here.
+        return result / (2.*M_PI);
     }
 
     double VonKarmanInfo::xValue(double r) const {
@@ -244,7 +266,7 @@ namespace galsim {
         dbg<<"lam = "<<_lam<<std::endl;
         dbg<<"L0 = "<<_L0<<std::endl;
         dbg<<"doDelta = "<<_doDelta<<"  "<<_delta<<"  "<<_deltaScale<<std::endl;
-        set_verbose(2);
+        //set_verbose(2);
         double val = rawXValue(0.0); // This is the value without the delta function (clearly).
         _radial.addEntry(0., val);
         dbg<<"L0^5/3 = "<<_L053<<std::endl;
@@ -290,14 +312,14 @@ namespace galsim {
         for(double logr=log(r0); logr<log(maxR) && sum < thresh2; logr+=dlogr) {
             double r = exp(logr);
             val = rawXValue(r);
-            xdbg<<"f("<<r<<") = "<<val<<std::endl;
+            dbg<<"f("<<r<<") = "<<val<<std::endl;
             _radial.addEntry(r, val);
 
             // Accumulate integral int(r f(r) dr) = int(r^2 f(r) dlogr), but without dlogr factor,
             // since it is constant for all terms.  (Also not including 2pi which would be in
             // the normal integral for the enclosed flux.)
             sum += val*r*r;
-            xdbg<<"sum = "<<sum<<'\n';
+            dbg<<"sum = "<<sum<<'\n';
 
             if (_hlr == 0. && sum > thresh0) _hlr = r;
             if (R == 0. && sum > thresh1) R = r;

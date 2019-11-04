@@ -259,6 +259,10 @@ def vk_benchmark():
 @timer
 def test_vk_r0():
     """Test a special r0 value that resulted in an error, reported in issue #957.
+
+    Note: the resolution of the bug was to add explicit split points for the first several
+    j0 zeros.  Without that, the integral in rawXValue can spuriously fail badly, leading to
+    an invalid estimate of the total integrated flux within R=pi/stepk.
     """
     # The first one was issue #957.
     # Aaron Roodman ran across another, which is now included here as well.
@@ -266,11 +270,16 @@ def test_vk_r0():
 
     for r0 in r0_list:
         vk = galsim.VonKarman(L0=25.,lam=700.,r0=r0)
-        # Note: the resolution of the bug was to add explicit split points for the first several
-        # j0 zeros.  Without that, the integral in rawXValue can spuriously fail badly, leading to
-        # an invalid estimate of the total integrated flux within R=pi/stepk.
         check_basic(vk, "VonKarman, r0=%s"%r0)
 
+    if __name__ == '__main__':
+        # Josh then tried a bunch more random triples of r0_500, lam, L0 to find more failures,
+        # which are given in input/vk_fail.txt.
+        r0_500_list, lam_list, L0_list = np.loadtxt('input/vk_fail.txt').T
+        for r0_500, lam, L0 in zip(r0_500_list, lam_list, L0_list):
+            print(r0_500,lam,L0)
+            vk = galsim.VonKarman(L0=L0,lam=lam,r0_500=r0_500)
+            #check_basic(vk, "VonKarman, r0_500=%s"%r0_500)
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
