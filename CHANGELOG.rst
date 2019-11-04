@@ -93,3 +93,12 @@ Changes from v2.2.0 to v2.2.1
 
 - Fixed an inadvertant backwards incompatibility introduced in #1048.
 - Fixed a compiler error for clang on linux systems.
+
+Changes from v2.2.1 to v2.2.2
+=============================
+
+- Provided a work around for a regression wherein AtmosphericScreens no longer roundtrip
+  properly through a pickle file.  Now need to write/read the shared screen object explicitly
+  using ``galsim.phase_screens.writeScreenShare`` and ``galsim.phase_screens.readScreenShare``.
+  (#1057)
+- Fixed integration in VonKarman for some problematic r0 values. (#1058)
