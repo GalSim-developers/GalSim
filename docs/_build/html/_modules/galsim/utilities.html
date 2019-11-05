@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.utilities &mdash; GalSim 2.2.1 documentation</title>
+  <title>galsim.utilities &mdash; GalSim 2.2.2 documentation</title>
   
 
   
@@ -1326,7 +1326,7 @@
 
 <span class="sd">    .. note::</span>
 <span class="sd">        It seems Numpy finally added this feature in version 1.15.  So this is probably</span>
-<span class="sd">        equivalent to using ``numpy.prinoptions`` instead of ``galsim.utilities.printoptions``.</span>
+<span class="sd">        equivalent to using ``numpy.printoptions`` instead of ``galsim.utilities.printoptions``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">original</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">get_printoptions</span><span class="p">()</span>
     <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1336,6 +1336,37 @@
         <span class="k">yield</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="o">**</span><span class="n">original</span><span class="p">)</span></div>
+
+
+<span class="n">_pickle_shared</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="pickle_shared"><a class="viewcode-back" href="../../misc.html#galsim.utilities.pickle_shared">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">pickle_shared</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;A context manager to flag that one wishes to include object state from shared memory in</span>
+<span class="sd">    pickle objects.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        obj = galsim_obj_with_shared_state()  # e.g., galsim.phase_screens.AtmosphericScreen</span>
+<span class="sd">        pickle.dump(obj, file)</span>
+
+<span class="sd">        # restart python, unloading shared state</span>
+<span class="sd">        obj = pickle.load(file)  # fails due to missing shared state.</span>
+
+<span class="sd">        obj = galsim_obj_with_shared_state()</span>
+<span class="sd">        with pickle_shared():</span>
+<span class="sd">            pickle.dump(obj, filename)</span>
+
+<span class="sd">        # restart python, again unloading shared state</span>
+<span class="sd">        obj = pickle.load(file)  # loads both obj and required shared state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">global</span> <span class="n">_pickle_shared</span>
+    <span class="n">original</span> <span class="o">=</span> <span class="n">_pickle_shared</span>
+    <span class="n">_pickle_shared</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_pickle_shared</span> <span class="o">=</span> <span class="n">original</span></div>
 
 
 <div class="viewcode-block" id="listify"><a class="viewcode-back" href="../../misc.html#galsim.utilities.listify">[docs]</a><span class="k">def</span> <span class="nf">listify</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
@@ -2001,7 +2032,6 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unable to use multiple threads, since OpenMP is not enabled.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">num_threads</span>
-
 </pre></div>
 
            </div>

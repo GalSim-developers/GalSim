@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Miscellaneous Utilities &mdash; GalSim 2.2.1 documentation</title>
+  <title>Miscellaneous Utilities &mdash; GalSim 2.2.2 documentation</title>
   
 
   
@@ -111,6 +111,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Miscellaneous Utilities</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#decorators">Decorators</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#lru-cache">LRU Cache</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#context-manager-for-writing-atmosphericscreen-pickles">Context Manager for writing AtmosphericScreen pickles</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#other-possibly-useful-classes">Other Possibly Useful Classes</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#math-calculations">Math Calculations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#utilities-related-to-numpy-functions">Utilities Related to NumPy Functions</a></li>
@@ -289,6 +290,31 @@ cache if the cache is already filled.  Items are removed in least recently used 
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+</div>
+<div class="section" id="context-manager-for-writing-atmosphericscreen-pickles">
+<h2>Context Manager for writing AtmosphericScreen pickles<a class="headerlink" href="#context-manager-for-writing-atmosphericscreen-pickles" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="galsim.utilities.pickle_shared">
+<code class="sig-prename descclassname">galsim.utilities.</code><code class="sig-name descname">pickle_shared</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/utilities.html#pickle_shared"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.utilities.pickle_shared" title="Permalink to this definition">¶</a></dt>
+<dd><p>A context manager to flag that one wishes to include object state from shared memory in
+pickle objects.</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">obj</span> <span class="o">=</span> <span class="n">galsim_obj_with_shared_state</span><span class="p">()</span>  <span class="c1"># e.g., galsim.phase_screens.AtmosphericScreen</span>
+<span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+
+<span class="c1"># restart python, unloading shared state</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>  <span class="c1"># fails due to missing shared state.</span>
+
+<span class="n">obj</span> <span class="o">=</span> <span class="n">galsim_obj_with_shared_state</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">pickle_shared</span><span class="p">():</span>
+    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+<span class="c1"># restart python, again unloading shared state</span>
+<span class="n">obj</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>  <span class="c1"># loads both obj and required shared state.</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -526,7 +552,7 @@ specifying ellipses.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>It seems Numpy finally added this feature in version 1.15.  So this is probably
-equivalent to using <code class="docutils literal notranslate"><span class="pre">numpy.prinoptions</span></code> instead of <code class="docutils literal notranslate"><span class="pre">galsim.utilities.printoptions</span></code>.</p>
+equivalent to using <code class="docutils literal notranslate"><span class="pre">numpy.printoptions</span></code> instead of <code class="docutils literal notranslate"><span class="pre">galsim.utilities.printoptions</span></code>.</p>
 </div>
 </dd></dl>
 

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.phase_screens &mdash; GalSim 2.2.1 documentation</title>
+  <title>galsim.phase_screens &mdash; GalSim 2.2.2 documentation</title>
   
 
   
@@ -331,6 +331,28 @@
 <span class="sd">    Finally, the above multiprocessing shared memory tricks are only currently supported for</span>
 <span class="sd">    non-time-evolving screens (alpha=1).</span>
 
+<span class="sd">    **Pickling**:</span>
+
+<span class="sd">    The shared memory portion of an atmospheric screen is not included by default in the pickle of</span>
+<span class="sd">    an `AtmosphericScreen` instance.  This means that while it is possible to pickle/unpickle an</span>
+<span class="sd">    `AtmosphericScreen` as normal within a single launch of a potentially-multiprocess program, (as</span>
+<span class="sd">    long as the shared memory is persistent), a different path is needed to say, create an</span>
+<span class="sd">    `AtmosphericScreen` pickle, quit python, restart python, and unpickle the screen.  The same</span>
+<span class="sd">    holds for any object that wraps an `AtmosphericScreen` as an attribute as well, which could</span>
+<span class="sd">    include, e.g., `PhaseScreenList` or `PhaseScreenPSF`.</span>
+
+<span class="sd">    To get around this limitation, the context manager `galsim.utilities.pickle_shared` can be</span>
+<span class="sd">    used.  For example::</span>
+
+<span class="sd">        screen = galsim.AtmosphericScreen(...)</span>
+<span class="sd">        with galsim.utilities.pickle_shared():</span>
+<span class="sd">            pickle.dump(screen, open(&#39;myScreen.pkl&#39;, &#39;wb&#39;))</span>
+
+<span class="sd">    will pickle both the screen object and any required shared memory used in its definition.</span>
+<span class="sd">    Unpickling then proceeds exactly as normal::</span>
+
+<span class="sd">        screen = pickle.load(open(&#39;myScreen.pkl&#39;, &#39;rb&#39;))</span>
+
 <span class="sd">    Parameters:</span>
 <span class="sd">        screen_size:        Physical extent of square phase screen in meters.  This should be large</span>
 <span class="sd">                            enough to accommodate the desired field-of-view of the telescope as</span>
@@ -417,7 +439,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">vx</span> <span class="o">=</span> <span class="n">vx</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vy</span> <span class="o">=</span> <span class="n">vy</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">=</span> <span class="mf">0.0</span>
 
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">()</span>
@@ -430,57 +451,99 @@
         <span class="c1"># Use shared memory for screens.  Allocate it here; fill it in on demand.</span>
         <span class="c1"># Shared memory implementation depends on python version.</span>
         <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mp_context</span><span class="p">,</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">BaseContext</span><span class="p">):</span>
-                <span class="n">ctx</span> <span class="o">=</span> <span class="n">mp_context</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">ctx</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">mp_context</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mp_context</span><span class="p">,</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">BaseContext</span><span class="p">):</span>
+                <span class="n">mp_context</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">mp_context</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mp_context</span> <span class="o">=</span> <span class="n">mp_context</span>
+
+        <span class="c1"># A unique id for this screen, created in the parent process, that can be used to find the</span>
+        <span class="c1"># correct shared memory object in child processes.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span> <span class="o">=</span> <span class="n">AtmosphericScreen</span><span class="o">.</span><span class="n">_initObjDict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mp_context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">_GSScreenShare</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_initObjDict</span><span class="p">(</span>
+        <span class="n">ctx</span><span class="p">,</span> <span class="n">npix</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">kmin</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">kmax</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">x0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">y0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">xperiod</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">yperiod</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">instantiated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">refcount</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">f</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">ctx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">RawArray</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">RawArray</span>
             <span class="n">RawValue</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">RawValue</span>
             <span class="n">Lock</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Lock</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">multiprocessing.sharedctypes</span> <span class="k">import</span> <span class="n">RawArray</span><span class="p">,</span> <span class="n">RawValue</span>
             <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Lock</span>
-        <span class="k">global</span> <span class="n">_GSScreenShare</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;f&#39;</span><span class="p">:</span><span class="n">RawArray</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">)),</span>
-            <span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">RawArray</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
-            <span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">RawArray</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+        <span class="n">_objDict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;f&#39;</span><span class="p">:</span><span class="n">RawArray</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">)),</span>
+            <span class="s1">&#39;x&#39;</span><span class="p">:</span><span class="n">RawArray</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+            <span class="s1">&#39;y&#39;</span><span class="p">:</span><span class="n">RawArray</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">npix</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
             <span class="s1">&#39;alpha&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="p">),</span>
-            <span class="s1">&#39;kmin&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
-            <span class="s1">&#39;kmax&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
-            <span class="s1">&#39;x0&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-            <span class="s1">&#39;y0&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-            <span class="s1">&#39;xperiod&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-            <span class="s1">&#39;yperiod&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span>
-            <span class="s1">&#39;instantiated&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
-            <span class="s1">&#39;refcount&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
-            <span class="s1">&#39;lock&#39;</span><span class="p">:</span><span class="n">Lock</span><span class="p">()</span>
+            <span class="s1">&#39;time&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">time</span><span class="p">),</span>
+            <span class="s1">&#39;kmin&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">kmin</span><span class="p">),</span>
+            <span class="s1">&#39;kmax&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">kmax</span><span class="p">),</span>
+            <span class="s1">&#39;x0&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">x0</span><span class="p">),</span>
+            <span class="s1">&#39;y0&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">y0</span><span class="p">),</span>
+            <span class="s1">&#39;xperiod&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">xperiod</span><span class="p">),</span>
+            <span class="s1">&#39;yperiod&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">yperiod</span><span class="p">),</span>
+            <span class="s1">&#39;instantiated&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">instantiated</span><span class="p">),</span>
+            <span class="s1">&#39;refcount&#39;</span><span class="p">:</span><span class="n">RawValue</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="n">refcount</span><span class="p">),</span>
+            <span class="s1">&#39;lock&#39;</span><span class="p">:</span><span class="n">Lock</span><span class="p">(),</span>
         <span class="p">}</span>
-        <span class="c1"># A unique id for this screen, created in the parent process, that can be used to find the</span>
-        <span class="c1"># correct shared memory object in child processes.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span> <span class="o">=</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">_GSScreenShare</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span>
+        <span class="k">if</span> <span class="n">f</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;f&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)[:]</span> <span class="o">=</span> <span class="n">f</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)[:]</span> <span class="o">=</span> <span class="n">x</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)[:]</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="k">return</span> <span class="n">_objDict</span>
 
-    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span> <span class="o">=</span> <span class="n">_GSScreenShare</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+        <span class="n">screenShare</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;screenShare&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">shareKey</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span>
+        <span class="k">if</span> <span class="n">screenShare</span> <span class="ow">and</span> <span class="n">shareKey</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_GSScreenShare</span><span class="p">:</span>
+            <span class="n">_GSScreenShare</span><span class="p">[</span><span class="n">shareKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">AtmosphericScreen</span><span class="o">.</span><span class="n">_initObjDict</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mp_context</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npix</span><span class="p">,</span>
+                <span class="n">refcount</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">screenShare</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span> <span class="o">=</span> <span class="n">_GSScreenShare</span><span class="p">[</span><span class="n">shareKey</span><span class="p">]</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;lock&#39;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;refcount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">+=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_objDict&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">d</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_objDict&#39;</span><span class="p">)</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_tab2d&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">utilities</span><span class="o">.</span><span class="n">_pickle_shared</span><span class="p">:</span>
+            <span class="n">state</span><span class="p">[</span><span class="s1">&#39;screenShare&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getScreenShare</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">state</span>
 
     <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_objDict&#39;</span><span class="p">):</span>  <span class="c1"># for if __init__ raised exception</span>
             <span class="k">return</span>
-
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;lock&#39;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;refcount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">-=</span> <span class="mi">1</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;lock&#39;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;refcount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">del</span> <span class="n">_GSScreenShare</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_getScreenShare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">screenShare</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;lock&#39;</span><span class="p">]:</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;f&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;f&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;kmin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;kmin&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;kmax&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;kmax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;x0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;x0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;y0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;y0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;xperiod&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;xperiod&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;yperiod&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;yperiod&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">screenShare</span><span class="p">[</span><span class="s1">&#39;instantiated&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;instantiated&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">return</span> <span class="n">screenShare</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">altitude</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -570,7 +633,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_init_psi</span><span class="p">()</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_reset</span><span class="p">()</span>
                     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">reversible</span><span class="p">:</span>
-                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span>
+                        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psi</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ys</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;instantiated&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">if</span> <span class="n">check</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suppress_warning</span><span class="p">:</span>
@@ -594,6 +657,15 @@
         <span class="sd">&quot;&quot;&quot;The maximum k value being used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;kmax&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Should only be set in serial context, so no lock</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+    <span class="nd">@_time</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">_time</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
 
     <span class="c1"># Note the magic number 0.00058 is actually ... wait for it ...</span>
     <span class="c1"># (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2</span>
