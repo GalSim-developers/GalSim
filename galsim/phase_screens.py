@@ -377,23 +377,6 @@ class AtmosphericScreen(object):
             screenShare['instantiated'] = self._objDict['instantiated'].value
         return screenShare
 
-    def _setScreenShare(self, screenShare):
-        if self._shareKey in _GSScreenShare:
-            return
-        objDict = AtmosphericScreen._initObjDict(self.mp_context, self.npix, self.alpha)
-        objDict['time'].value = screenShare['time']
-        objDict['kmin'].value = screenShare['kmin']
-        objDict['kmax'].value = screenShare['kmax']
-        objDict['x0'].value = screenShare['x0']
-        objDict['y0'].value = screenShare['y0']
-        objDict['xperiod'].value = screenShare['xperiod']
-        objDict['yperiod'].value = screenShare['yperiod']
-        objDict['instantiated'].value = screenShare['instantiated']
-        np.frombuffer(objDict['f'], dtype=np.float64)[:] = screenShare['f']
-        np.frombuffer(objDict['x'], dtype=np.float64)[:] = screenShare['x']
-        np.frombuffer(objDict['y'], dtype=np.float64)[:] = screenShare['y']
-        _GSScreenShare[self._shareKey] = objDict
-
     @property
     def altitude(self):
         """The altitude of the screen in km.
