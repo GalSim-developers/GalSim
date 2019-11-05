@@ -53,79 +53,6 @@ _calcOptStepK = LRU_Cache(__calcOptStepK)
 _GSScreenShare = {}
 
 
-def writeScreenShare(filename):
-    """Write `AtmosphericScreen` shared memory to a file.  See discussion in `AtmosphericScreen`
-    docstring for more information.
-
-    Parameters:
-        filename: Filename to which to write.
-    """
-    import pickle
-    screenShare = {}
-    for k, v in _GSScreenShare.items():
-        oneScreen = {}
-        oneScreen['f'] = np.frombuffer(v['f'], dtype=np.float64)
-        oneScreen['x'] = np.frombuffer(v['x'], dtype=np.float64)
-        oneScreen['y'] = np.frombuffer(v['y'], dtype=np.float64)
-        oneScreen['alpha'] = v['alpha'].value
-        oneScreen['kmin'] = v['kmin'].value
-        oneScreen['kmax'] = v['kmax'].value
-        oneScreen['x0'] = v['x0'].value
-        oneScreen['y0'] = v['y0'].value
-        oneScreen['xperiod'] = v['xperiod'].value
-        oneScreen['yperiod'] = v['yperiod'].value
-        oneScreen['instantiated'] = v['instantiated'].value
-        oneScreen['ctx_name'] = v['ctx_name'].value
-        screenShare[k] = oneScreen
-    with open(filename, 'wb') as f:
-        pickle.dump(screenShare, f)
-
-
-def readScreenShare(filename):
-    """Read `AtmosphericScreen` shared memory from file.  See discussion in `AtmosphericScreen`
-    docstring for more information.
-
-    Parameters:
-        filename: Filename from which to read.
-    """
-    import pickle
-    with open(filename, 'rb') as f:
-        screenShare = pickle.load(f)
-        for k, v in screenShare.items():
-            if k in _GSScreenShare:  # Ignore if screen already loaded?
-                continue
-            npix = len(v['x'])-1
-            if v['ctx_name'] is None:
-                from multiprocessing.sharedctypes import RawArray, RawValue
-                from multiprocessing import Lock
-            else:
-                ctx = multiprocessing.get_context(v['ctx_name'])
-                RawArray = ctx.RawArray
-                RawValue = ctx.RawValue
-                Lock = ctx.Lock
-            from ctypes import c_wchar_p
-            objDict = {
-                'f':RawArray('d', (npix+1)*(npix+1)),
-                'x':RawArray('d', npix+1),
-                'y':RawArray('d', npix+1),
-                'alpha':RawValue('d', v['alpha']),
-                'kmin':RawValue('d', v['kmin']),
-                'kmax':RawValue('d', v['kmax']),
-                'x0':RawValue('d', v['x0']),
-                'y0':RawValue('d', v['y0']),
-                'xperiod':RawValue('d', v['xperiod']),
-                'yperiod':RawValue('d', v['yperiod']),
-                'instantiated':RawValue('b', v['instantiated']),
-                'ctx_name':RawValue(c_wchar_p, v['ctx_name']),
-                'refcount':RawValue('i', 0),  # a little weird, but I think ok?
-                'lock':Lock()
-            }
-            np.frombuffer(objDict['x'], dtype=np.float64)[:] = v['x']
-            np.frombuffer(objDict['y'], dtype=np.float64)[:] = v['y']
-            np.frombuffer(objDict['f'], dtype=np.float64)[:] = v['f']
-            _GSScreenShare[k] = objDict
-
-
 def initWorkerArgs():
     """Function used to generate worker arguments to pass to multiprocessing.Pool initializer.
 
@@ -238,21 +165,24 @@ class AtmosphericScreen(object):
 
     **Pickling**:
 
-    The shared memory portion of an atmospheric screen is not included in the pickle of an
-    `AtmosphericScreen` instance.  This means that while it is possible to successfully
-    pickle/unpickle an `AtmosphericScreen` within a single launch of a potentially-multiprocess
-    program, it will generally not work to create an `AtmosphericScreen` pickle, quit python,
-    restart python, and unpickle the screen.  To get around this limitation, the functions
-    `writeScreenShare` and `readScreenShare` can be used.  For example, we can write the shared
-    memory and pickle the screen instance::
+    The shared memory portion of an atmospheric screen is not included by default in the pickle of
+    an `AtmosphericScreen` instance.  This means that while it is possible to pickle/unpickle an
+    `AtmosphericScreen` as normal within a single launch of a potentially-multiprocess program, (as
+    long as the shared memory is persistent), a different path is needed to say, create an
+    `AtmosphericScreen` pickle, quit python, restart python, and unpickle the screen.  The same
+    holds for any object that wraps an `AtmosphericScreen` as an attribute as well, which could
+    include, e.g., `PhaseScreenList` or `PhaseScreenPSF`.
+
+    To get around this limitation, the context manager `galsim.utilities.pickle_shared` can be
+    used.  For example::
 
         screen = galsim.AtmosphericScreen(...)
-        galsim.phase_screens.writeScreenShare('screenShare.pkl')
-        pickle.dump(screen, open('myScreen.pkl', 'wb'))
+        with galsim.utilities.pickle_shared():
+            pickle.dump(screen, open('myScreen.pkl', 'wb'))
 
-    We can then read the shared memory back in and unpickle the screen::
+    will pickle both the screen object and any required shared memory used in its definition.
+    Unpickling then proceeds exactly as normal::
 
-        galsim.phase_screens.readScreenShare('screenShare.pkl')
         screen = pickle.load(open('myScreen.pkl', 'rb'))
 
     Parameters:
@@ -341,7 +271,6 @@ class AtmosphericScreen(object):
         self.vx = vx
         self.vy = vy
         self.alpha = alpha
-        self._time = 0.0
 
         if rng is None:
             rng = BaseDeviate()
@@ -354,61 +283,116 @@ class AtmosphericScreen(object):
         # Use shared memory for screens.  Allocate it here; fill it in on demand.
         # Shared memory implementation depends on python version.
         if sys.version_info >= (3,4):
-            if isinstance(mp_context, multiprocessing.context.BaseContext):
-                ctx = mp_context
-            else:
-                ctx = multiprocessing.get_context(mp_context)
-            RawArray = ctx.RawArray
-            RawValue = ctx.RawValue
-            Lock = ctx.Lock
-            ctx_name = ctx.get_start_method()
-        else:
-            from multiprocessing.sharedctypes import RawArray, RawValue
-            from multiprocessing import Lock
-            ctx_name = None
-        from ctypes import c_wchar_p
-        global _GSScreenShare
-        self._objDict = {
-            'f':RawArray('d', (self.npix+1)*(self.npix+1)),
-            'x':RawArray('d', self.npix+1),
-            'y':RawArray('d', self.npix+1),
-            'alpha':RawValue('d', alpha),
-            'kmin':RawValue('d', -1.0),
-            'kmax':RawValue('d', -1.0),
-            'x0':RawValue('d', 0.0),
-            'y0':RawValue('d', 0.0),
-            'xperiod':RawValue('d', 0.0),
-            'yperiod':RawValue('d', 0.0),
-            'instantiated':RawValue('b', False),
-            'ctx_name':RawValue(c_wchar_p, ctx_name),
-            'refcount':RawValue('i', 1),
-            'lock':Lock(),
-        }
+            if not isinstance(mp_context, multiprocessing.context.BaseContext):
+                mp_context = multiprocessing.get_context(mp_context)
+        self.mp_context = mp_context
+
         # A unique id for this screen, created in the parent process, that can be used to find the
         # correct shared memory object in child processes.
         self._shareKey = id(self)
+        self._objDict = AtmosphericScreen._initObjDict(self.mp_context, self.npix, alpha=self.alpha)
         _GSScreenShare[self._shareKey] = self._objDict
 
-    def __setstate__(self, d):
-        self.__dict__.update(d)
-        self._objDict = _GSScreenShare[self._shareKey]
+    @staticmethod
+    def _initObjDict(
+        ctx, npix,
+        alpha=1.0, time=0.0, kmin=-1.0, kmax=-1.0,
+        x0=0.0, y0=0.0, xperiod=0.0, yperiod=0.0,
+        instantiated=False, refcount=1,
+        f=None, x=None, y=None, **kwargs
+    ):
+        if ctx is not None:
+            RawArray = ctx.RawArray
+            RawValue = ctx.RawValue
+            Lock = ctx.Lock
+        else:
+            from multiprocessing.sharedctypes import RawArray, RawValue
+            from multiprocessing import Lock
+        _objDict = {
+            'f':RawArray('d', (npix+1)*(npix+1)),
+            'x':RawArray('d', npix+1),
+            'y':RawArray('d', npix+1),
+            'alpha':RawValue('d', alpha),
+            'time':RawValue('d', time),
+            'kmin':RawValue('d', kmin),
+            'kmax':RawValue('d', kmax),
+            'x0':RawValue('d', x0),
+            'y0':RawValue('d', y0),
+            'xperiod':RawValue('d', xperiod),
+            'yperiod':RawValue('d', yperiod),
+            'instantiated':RawValue('b', instantiated),
+            'refcount':RawValue('i', refcount),
+            'lock':Lock(),
+        }
+        if f is not None:
+            np.frombuffer(_objDict['f'], dtype=np.float64)[:] = f
+            np.frombuffer(_objDict['x'], dtype=np.float64)[:] = x
+            np.frombuffer(_objDict['y'], dtype=np.float64)[:] = y
+        return _objDict
+
+    def __setstate__(self, state):
+        screenShare = state.pop('screenShare', None)
+        self.__dict__.update(state)
+        shareKey = self._shareKey
+        if screenShare and shareKey not in _GSScreenShare:
+            _GSScreenShare[shareKey] = AtmosphericScreen._initObjDict(
+                self.mp_context, self.npix,
+                refcount=0, **screenShare
+            )
+        self._objDict = _GSScreenShare[shareKey]
         with self._objDict['lock']:
             self._objDict['refcount'].value += 1
 
     def __getstate__(self):
-        d = self.__dict__.copy()
-        d.pop('_objDict')
-        return d
+        state = self.__dict__.copy()
+        state.pop('_objDict')
+        state.pop('_tab2d', None)
+        if utilities._pickle_shared:
+            state['screenShare'] = self._getScreenShare()
+        return state
 
     def __del__(self):
         if not hasattr(self, '_objDict'):  # for if __init__ raised exception
             return
-
         with self._objDict['lock']:
             self._objDict['refcount'].value -= 1
         with self._objDict['lock']:
             if self._objDict['refcount'].value == 0:
                 del _GSScreenShare[self._shareKey]
+
+    def _getScreenShare(self):
+        screenShare = {}
+        with self._objDict['lock']:
+            screenShare['f'] = np.frombuffer(self._objDict['f'], dtype=np.float64)
+            screenShare['x'] = np.frombuffer(self._objDict['x'], dtype=np.float64)
+            screenShare['y'] = np.frombuffer(self._objDict['y'], dtype=np.float64)
+            screenShare['alpha'] = self._objDict['alpha'].value
+            screenShare['time'] = self._objDict['time'].value
+            screenShare['kmin'] = self._objDict['kmin'].value
+            screenShare['kmax'] = self._objDict['kmax'].value
+            screenShare['x0'] = self._objDict['x0'].value
+            screenShare['y0'] = self._objDict['y0'].value
+            screenShare['xperiod'] = self._objDict['xperiod'].value
+            screenShare['yperiod'] = self._objDict['yperiod'].value
+            screenShare['instantiated'] = self._objDict['instantiated'].value
+        return screenShare
+
+    def _setScreenShare(self, screenShare):
+        if self._shareKey in _GSScreenShare:
+            return
+        objDict = AtmosphericScreen._initObjDict(self.mp_context, self.npix, self.alpha)
+        objDict['time'].value = screenShare['time']
+        objDict['kmin'].value = screenShare['kmin']
+        objDict['kmax'].value = screenShare['kmax']
+        objDict['x0'].value = screenShare['x0']
+        objDict['y0'].value = screenShare['y0']
+        objDict['xperiod'].value = screenShare['xperiod']
+        objDict['yperiod'].value = screenShare['yperiod']
+        objDict['instantiated'].value = screenShare['instantiated']
+        np.frombuffer(objDict['f'], dtype=np.float64)[:] = screenShare['f']
+        np.frombuffer(objDict['x'], dtype=np.float64)[:] = screenShare['x']
+        np.frombuffer(objDict['y'], dtype=np.float64)[:] = screenShare['y']
+        _GSScreenShare[self._shareKey] = objDict
 
     @property
     def altitude(self):
@@ -498,7 +482,7 @@ class AtmosphericScreen(object):
                     self._init_psi()
                     self._reset()
                     if self.reversible:
-                        del self._psi, self._screen
+                        del self._psi, self._screen, self._xs, self._ys
                     self._objDict['instantiated'].value = True
 
         if check is not None and not self._suppress_warning:
@@ -522,6 +506,15 @@ class AtmosphericScreen(object):
         """The maximum k value being used.
         """
         return self._objDict['kmax'].value
+
+    @property
+    def _time(self):
+        # Should only be set in serial context, so no lock
+        return self._objDict['time'].value
+
+    @_time.setter
+    def _time(self, value):
+        self._objDict['time'].value = value
 
     # Note the magic number 0.00058 is actually ... wait for it ...
     # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2

@@ -1270,6 +1270,7 @@ def test_shared_memory():
             initargs=galsim.phase_screens.initWorkerArgs()
         )
 
+
 @timer
 def test_pickle():
     # This is response to ImSim issue #234
@@ -1320,7 +1321,7 @@ def test_pickle():
         xs = np.linspace(-1, 1, 10)
         ys = np.linspace(1, -1, 10)
         ts = np.linspace(0, 2, 10)
-        atmwf = atm.wavefront(xs, ys, ts)
+        wf = atm.wavefront(xs, ys, ts)
 
         pkl_file = 'output/atm_pickle_test.pkl'
         with open(pkl_file, 'wb') as fd:
@@ -1329,34 +1330,39 @@ def test_pickle():
         with open(pkl_file, 'rb') as fd:
             atm2 = pickle.load(fd)
         assert atm2 == atm
-        atm2wf = atm2.wavefront(xs, ys, ts)
-        np.testing.assert_equal(atmwf, atm2wf)
+        wf2 = atm2.wavefront(xs, ys, ts)
+        np.testing.assert_equal(wf, wf2)
 
         # The above read works, but it relies on the objDict being in the _GSScreenShare directory.
         # Running this from a fresh program, it won't be in there yet.
-        # For file persistence, we need to use read/writeScreenShare.
+        # For file persistence, we need to use the pickle_shared context manager
 
-        # Write the phase screen shared memory to disk
-        galsim.phase_screens.writeScreenShare('output/screen_share.pkl')
+        # Write the psf + phase screen shared memory to disk
+        pkl_file2 = 'output/atm_pickle_test2.pkl'
+        with open(pkl_file2, 'wb') as fd:
+            with galsim.utilities.pickle_shared():
+                pickle.dump(atm, fd)
 
-        # Simulate a new session by clearing out the relevant item in the global dict.
-        galsim.phase_screens._GSScreenShare.pop(atm[0]._shareKey)
+        # Simulate a new session by deleting atm and atm2, which should also clear out
+        # _GSScreenShare
+        del atm, atm2
 
+        # Now if we read in pkl_file, it fails because __setstate__ can't find the required
+        # screens.
         with assert_raises(KeyError):
             with open(pkl_file, 'rb') as fd:
                 atm2 = pickle.load(fd)
 
-        # Read it back in.  Now we should be able to unpickle.
-        galsim.phase_screens.readScreenShare('output/screen_share.pkl')
+        # But we should be able to unpickle pkl_file2 since it includes the screens.
+        with open(pkl_file2, 'rb') as fd:
+            atm2 = pickle.load(fd)
 
-        # Increment refcount manually, since atm still points there.
-        galsim.phase_screens._GSScreenShare[atm[0]._shareKey]['refcount'].value += 1
-
+        # And *now* we can unpickle pkl_file again
         with open(pkl_file, 'rb') as fd:
-            atm3 = pickle.load(fd)
-        assert atm3 == atm
-        atm3wf = atm3.wavefront(xs, ys, ts)
-        np.testing.assert_equal(atmwf, atm3wf)
+            atm = pickle.load(fd)
+        assert atm == atm2
+        wf3 = atm.wavefront(xs, ys, ts)
+        np.testing.assert_equal(wf, wf3)
 
 
 if __name__ == "__main__":
