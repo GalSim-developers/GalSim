@@ -20,6 +20,12 @@ LRU Cache
     :members:
 
 
+Context Manager for writing AtmosphericScreen pickles
+-----------------------------------------------------
+
+.. autofunction:: galsim.utilities.pickle_shared
+
+
 Other Possibly Useful Classes
 -----------------------------
 
