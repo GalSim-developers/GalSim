@@ -97,8 +97,7 @@ Changes from v2.2.0 to v2.2.1
 Changes from v2.2.1 to v2.2.2
 =============================
 
-- Provided a work around for a regression wherein AtmosphericScreens no longer roundtrip
-  properly through a pickle file.  Now need to write/read the shared screen object explicitly
-  using ``galsim.phase_screens.writeScreenShare`` and ``galsim.phase_screens.readScreenShare``.
-  (#1057)
+- Provided a work around for a regression wherein an `AtmosphericScreen` didn't roundtrip
+  properly through a pickle file.  Now a new context, `galsim.utilities.pickle_shared`
+  can be used to include the shared data in the pickle file. (#1057)
 - Fixed integration in VonKarman for some problematic r0 values. (#1058)
