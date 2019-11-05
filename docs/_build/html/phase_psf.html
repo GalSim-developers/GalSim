@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Phase-screen PSFs &mdash; GalSim 2.2.1 documentation</title>
+  <title>Phase-screen PSFs &mdash; GalSim 2.2.2 documentation</title>
   
 
   
@@ -515,6 +515,26 @@ truncate the screen at:</p>
 </div>
 <p>Finally, the above multiprocessing shared memory tricks are only currently supported for
 non-time-evolving screens (alpha=1).</p>
+<p><strong>Pickling</strong>:</p>
+<p>The shared memory portion of an atmospheric screen is not included by default in the pickle of
+an <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> instance.  This means that while it is possible to pickle/unpickle an
+<a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> as normal within a single launch of a potentially-multiprocess program, (as
+long as the shared memory is persistent), a different path is needed to say, create an
+<a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> pickle, quit python, restart python, and unpickle the screen.  The same
+holds for any object that wraps an <a class="reference internal" href="#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> as an attribute as well, which could
+include, e.g., <a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a> or <a class="reference internal" href="#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a>.</p>
+<p>To get around this limitation, the context manager <a class="reference internal" href="misc.html#galsim.utilities.pickle_shared" title="galsim.utilities.pickle_shared"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.utilities.pickle_shared</span></code></a> can be
+used.  For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">screen</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">AtmosphericScreen</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">galsim</span><span class="o">.</span><span class="n">utilities</span><span class="o">.</span><span class="n">pickle_shared</span><span class="p">():</span>
+    <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">screen</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;myScreen.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>will pickle both the screen object and any required shared memory used in its definition.
+Unpickling then proceeds exactly as normal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">screen</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;myScreen.pkl&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
