@@ -1158,7 +1158,7 @@ def printoptions(*args, **kwargs):
 
     .. note::
         It seems Numpy finally added this feature in version 1.15.  So this is probably
-        equivalent to using ``numpy.prinoptions`` instead of ``galsim.utilities.printoptions``.
+        equivalent to using ``numpy.printoptions`` instead of ``galsim.utilities.printoptions``.
     """
     original = np.get_printoptions()
     np.set_printoptions(*args, **kwargs)
@@ -1168,6 +1168,37 @@ def printoptions(*args, **kwargs):
         yield
     finally:
         np.set_printoptions(**original)
+
+
+_pickle_shared = False
+
+@contextmanager
+def pickle_shared():
+    """A context manager to flag that one wishes to include object state from shared memory in
+    pickle objects.
+
+    Example::
+
+        obj = galsim_obj_with_shared_state()  # e.g., galsim.phase_screens.AtmosphericScreen
+        pickle.dump(obj, file)
+
+        # restart python, unloading shared state
+        obj = pickle.load(file)  # fails due to missing shared state.
+
+        obj = galsim_obj_with_shared_state()
+        with pickle_shared():
+            pickle.dump(obj, filename)
+
+        # restart python, again unloading shared state
+        obj = pickle.load(file)  # loads both obj and required shared state.
+    """
+    global _pickle_shared
+    original = _pickle_shared
+    _pickle_shared = True
+    try:
+        yield
+    finally:
+        _pickle_shared = original
 
 
 def listify(arg):
@@ -1833,4 +1864,3 @@ def set_omp_threads(num_threads, logger=None):
             logger.warning("Unable to use multiple threads, since OpenMP is not enabled.")
 
     return num_threads
-
