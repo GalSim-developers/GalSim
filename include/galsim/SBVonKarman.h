@@ -48,7 +48,8 @@ namespace galsim {
          * @param[in] gsparams     GSParams.
          */
         SBVonKarman(double lam, double r0, double L0, double flux,
-                    double scale, bool doDelta, const GSParams& gsparams);
+                    double scale, bool doDelta, const GSParams& gsparams,
+                    double force_stepk);
 
         /// @brief Copy constructor
         SBVonKarman(const SBVonKarman& rhs);

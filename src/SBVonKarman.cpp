@@ -44,8 +44,9 @@ namespace galsim {
     //
 
     SBVonKarman::SBVonKarman(double lam, double r0, double L0, double flux,
-                             double scale, bool doDelta, const GSParams& gsparams) :
-        SBProfile(new SBVonKarmanImpl(lam, r0, L0, flux, scale, doDelta, gsparams)) {}
+                             double scale, bool doDelta, const GSParams& gsparams,
+                             double force_stepk) :
+        SBProfile(new SBVonKarmanImpl(lam, r0, L0, flux, scale, doDelta, gsparams, force_stepk)) {}
 
     SBVonKarman::SBVonKarman(const SBVonKarman &rhs) : SBProfile(rhs) {}
 
@@ -125,14 +126,15 @@ namespace galsim {
 
     // Note: lam and L0 are both in units of r0, so are dimensionless within VKInfo.
     VonKarmanInfo::VonKarmanInfo(double lam, double L0, bool doDelta,
-                                 const GSParamsPtr& gsparams) :
+                                 const GSParamsPtr& gsparams, double force_stepk) :
         _lam(lam), _L0(L0),
         _L0_invcuberoot(fast_pow(_L0, -1./3)), _L053(fast_pow(L0, 5./3)),
+        _stepk(0.0), _maxk(0.0),
         _delta(exp(-0.5*magic1*_L053)),
         _deltaScale(1./(1.-_delta)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
         _doDelta(doDelta), _gsparams(gsparams),
-        _radial(Table::spline)
+        _radial(Table::spline), _sampler(nullptr)
     {
         // determine maxK
         // want kValue(maxK)/kValue(0.0) = _gsparams->maxk_threshold;
@@ -160,7 +162,10 @@ namespace galsim {
         dbg<<"_delta = "<<_delta<<'\n';
 
         // build the radial function, and along the way, set _stepk, _hlr.
-        _buildRadialFunc();
+        if (force_stepk == 0.0)
+            _buildRadialFunc();
+        else
+            _stepk = force_stepk;
     }
 
     double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053) {
@@ -194,7 +199,9 @@ namespace galsim {
         // We're subtracting the asymptotic kValue limit here so that kValue->0 as k->inf.
         // This means we should also rescale by (1-_delta) though, so we still retain
         // kValue(0)=1.d
+        xxdbg<<"kValue(k="<<k<<") = ";
         double val = (kValueNoTrunc(k) - _delta) * _deltaScale;
+        xxdbg<<val<<'\n';
         if (std::abs(val) < std::numeric_limits<double>::epsilon())
             return 0.0;
         else
@@ -261,10 +268,11 @@ namespace galsim {
     }
 
     double VonKarmanInfo::xValue(double r) const {
+        if (!_radial.finalized()) _buildRadialFunc();
         return r < _radial.argMax() ? _radial(r) : 0.;
     }
 
-    void VonKarmanInfo::_buildRadialFunc() {
+    void VonKarmanInfo::_buildRadialFunc() const {
         dbg<<"Start buildRadialFunc:\n";
         dbg<<"lam = "<<_lam<<std::endl;
         dbg<<"L0 = "<<_L0<<std::endl;
@@ -335,7 +343,8 @@ namespace galsim {
         dbg<<"R = "<<R<<" arcsec\n";
         dbg<<"HLR = "<<_hlr<<" arcsec\n";
         R = std::max(R, _gsparams->stepk_minimum_hlr*_hlr);
-        _stepk = M_PI / R;
+        if (_stepk == 0.0)
+            _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<" arcsec^-1\n";
         sum *= 2.*M_PI * dlogr;
         dbg<<"sum = "<<sum<<"   (should be > 0.995)\n";
@@ -349,11 +358,13 @@ namespace galsim {
 
     void VonKarmanInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
-        assert(_sampler.get());
+        if (!_sampler)
+            _buildRadialFunc();
+
         _sampler->shoot(photons,ud);
     }
 
-    LRUCache<Tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo>
+    LRUCache<Tuple<double,double,bool,GSParamsPtr,double>,VonKarmanInfo>
         SBVonKarman::SBVonKarmanImpl::cache(sbp::max_vonKarman_cache);
 
     //
@@ -366,7 +377,7 @@ namespace galsim {
 
     SBVonKarman::SBVonKarmanImpl::SBVonKarmanImpl(double lam, double r0, double L0, double flux,
                                                   double scale, bool doDelta,
-                                                  const GSParams& gsparams) :
+                                                  const GSParams& gsparams, double force_stepk) :
         SBProfileImpl(gsparams),
         _lam(lam),
         _r0(r0),
@@ -374,7 +385,7 @@ namespace galsim {
         _flux(flux),
         _scale(scale),
         _doDelta(doDelta),
-        _info(cache.get(MakeTuple(1e-9*lam/r0, L0/r0, doDelta, GSParamsPtr(gsparams))))
+        _info(cache.get(MakeTuple(1e-9*lam/r0, L0/r0, doDelta, GSParamsPtr(gsparams), force_stepk/_scale)))
     {}
 
     double SBVonKarman::SBVonKarmanImpl::maxK() const

@@ -168,7 +168,8 @@ def test_vk_ne():
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, do_delta=True),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, scale_unit=galsim.arcmin),
-            galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, gsparams=gsp)]
+            galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, gsparams=gsp),
+            galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, gsparams=gsp, _force_stepk=1.0)]
     all_obj_diff(objs)
 
 
@@ -281,6 +282,49 @@ def test_vk_r0():
             vk = galsim.VonKarman(L0=L0,lam=lam,r0_500=r0_500)
             #check_basic(vk, "VonKarman, r0_500=%s"%r0_500)
 
+
+@timer
+def test_vk_force_stepk():
+    """Check that manually forcing stepk works"""
+    vk1 = galsim.VonKarman(r0_500=0.1, L0=25.0, lam=750.0)
+    vk2 = galsim.VonKarman(r0_500=0.1, L0=25.0, lam=750.0, _force_stepk=10.0)
+
+    # Make sure we get expected stepk
+    assert vk1.stepk != vk2.stepk
+    assert vk2.stepk == 10.0
+
+    # Many products will actually be the same for both
+    # Asking for the half_light_radius or xValue will trigger the table build,
+    # which is identical for each.
+    assert vk1.half_light_radius == vk2.half_light_radius
+    assert vk1.xValue(0, 1) == vk2.xValue(0, 1)
+
+    # Images will be the same if you assert specific bounds
+    img1 = vk1.drawImage(nx=50, ny=50, scale=0.2, method='fft')
+    img2 = vk2.drawImage(nx=50, ny=50, scale=0.2, method='fft')
+
+    np.testing.assert_equal(img1.array, img2.array)
+
+    # Though "goodImageSize" will differ.
+    assert vk1.getGoodImageSize(0.2) != vk2.getGoodImageSize(0.2)
+
+    # Can we pickle?
+    do_pickle(vk2)
+    do_pickle(vk2, lambda obj:obj.stepk)
+    check_basic(vk2, 'vk2', do_x=False)  # x fails b/c stamp size is bad
+
+    img = galsim.Image(50, 50, scale=0.2)
+    do_shoot(vk2, img, "VonKarman")
+
+    # Check works with scale
+    vk3 = galsim.VonKarman(
+        r0_500=0.1, L0=25.0, lam=750.0, _force_stepk=10.0,
+        scale_unit=galsim.radians
+    )
+    assert vk3.stepk == 10.0
+    assert vk3.scale_unit == galsim.radians
+
+
 if __name__ == "__main__":
     from argparse import ArgumentParser
     parser = ArgumentParser()
@@ -303,6 +347,7 @@ if __name__ == "__main__":
     test_vk_fitting_formulae()
     test_vk_gsp()
     test_vk_r0()
+    test_vk_force_stepk()
     if args.benchmark:
         vk_benchmark()
 

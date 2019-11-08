@@ -26,8 +26,8 @@
 namespace galsim {
 
     // A very simple tuple class that just does what we need for the LRUCache.
-    // It can hold up to a maximum of 4 parameters.
-    template <typename T1, typename T2=int, typename T3=int, typename T4=int>
+    // It can hold up to a maximum of 5 parameters.
+    template <typename T1, typename T2=int, typename T3=int, typename T4=int, typename T5=int>
     class Tuple
     {
     public:
@@ -35,15 +35,20 @@ namespace galsim {
         T2 second;
         T3 third;
         T4 fourth;
+        T5 fifth;
 
-        Tuple(const T1& a) : first(a), second(0), third(0), fourth(0) {}
-        Tuple(const T1& a, const T2& b) : first(a), second(b), third(0), fourth(0) {}
-        Tuple(const T1& a, const T2& b, const T3& c) : first(a), second(b), third(c), fourth(0) {}
+        Tuple(const T1& a) : first(a), second(0), third(0), fourth(0), fifth(0) {}
+        Tuple(const T1& a, const T2& b) : first(a), second(b), third(0), fourth(0), fifth(0) {}
+        Tuple(const T1& a, const T2& b, const T3& c) :
+            first(a), second(b), third(c), fourth(0), fifth(0) {}
         Tuple(const T1& a, const T2& b, const T3& c, const T4& d) :
-            first(a), second(b), third(c), fourth(d) {}
+            first(a), second(b), third(c), fourth(d), fifth(0) {}
+        Tuple(const T1& a, const T2& b, const T3& c, const T4& d, const T5& e) :
+            first(a), second(b), third(c), fourth(d), fifth(e) {}
 
         Tuple(const Tuple& rhs) :
-            first(rhs.first), second(rhs.second), third(rhs.third), fourth(rhs.fourth) {}
+            first(rhs.first), second(rhs.second), third(rhs.third), fourth(rhs.fourth),
+            fifth(rhs.fifth) {}
 
         Tuple& operator=(const Tuple& rhs)
         {
@@ -52,6 +57,7 @@ namespace galsim {
                 second = rhs.second;
                 third = rhs.third;
                 fourth = rhs.fourth;
+                fifth = rhs.fifth;
             }
             return *this;
         }
@@ -66,6 +72,8 @@ namespace galsim {
                 third < rhs.third ? true :
                 rhs.third < third ? false :
                 fourth < rhs.fourth ? true :
+                rhs.fourth < fourth ? false :
+                fifth < rhs.fifth ? true :
                 false);
         }
     };
@@ -82,6 +90,9 @@ namespace galsim {
     template <typename T1, typename T2, typename T3, typename T4>
     Tuple<T1,T2,T3,T4> MakeTuple(const T1& a, const T2& b, const T3& c, const T4& d)
     { return Tuple<T1,T2,T3,T4>(a,b,c,d); }
+    template <typename T1, typename T2, typename T3, typename T4, typename T5>
+    Tuple<T1,T2,T3,T4,T5> MakeTuple(const T1& a, const T2& b, const T3& c, const T4& d, const T5& e)
+    { return Tuple<T1,T2,T3,T4,T5>(a,b,c,d,e); }
 
     // Helper to build a Value from a Key
     // Normal case is that the Value take Key as a single parameter
@@ -120,6 +131,16 @@ namespace galsim {
         static Value* NewValue(const Tuple<Key1,Key2,Key3,Key4>& key)
         {
             return new Value(key.first, key.second, key.third, key.fourth);
+        }
+    };
+
+    template <typename Value, typename Key1, typename Key2, typename Key3, typename Key4,
+              typename Key5>
+    struct LRUCacheHelper<Value,Tuple<Key1,Key2,Key3,Key4,Key5> >
+    {
+        static Value* NewValue(const Tuple<Key1,Key2,Key3,Key4,Key5>& key)
+        {
+            return new Value(key.first, key.second, key.third, key.fourth, key.fifth);
         }
     };
 
