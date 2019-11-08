@@ -98,7 +98,7 @@ class VonKarman(GSObject):
     _is_analytic_k = True
 
     def __init__(self, lam, r0=None, r0_500=None, L0=25.0, flux=1, scale_unit=arcsec,
-                 do_delta=False, suppress_warning=False, gsparams=None):
+                 do_delta=False, suppress_warning=False, gsparams=None, _force_stepk=0.0):
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
         if L0 > 1e10:
@@ -128,13 +128,15 @@ class VonKarman(GSObject):
         self._do_delta = bool(do_delta)
         self._gsparams = GSParams.check(gsparams)
         self._suppress = bool(suppress_warning)
+        self._force_stepk = _force_stepk
         self._sbvk  # Make this now, so we get the warning if appropriate.
 
     @lazy_property
     def _sbvk(self):
         with convert_cpp_errors():
             sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0, self._flux,
-                                       self._scale, self._do_delta, self._gsparams._gsp)
+                                       self._scale, self._do_delta, self._gsparams._gsp,
+                                       self._force_stepk)
 
         self._delta = sbvk.getDelta()
         if not self._suppress:
@@ -146,7 +148,8 @@ class VonKarman(GSObject):
             with convert_cpp_errors():
                 sbvk = _galsim.SBVonKarman(self._lam, self._r0, self._L0,
                                            self._flux-self._delta, self._scale,
-                                           self._do_delta, self._gsparams._gsp)
+                                           self._do_delta, self._gsparams._gsp,
+                                           self._force_stepk)
         return sbvk
 
     @lazy_property
@@ -225,11 +228,12 @@ class VonKarman(GSObject):
                  self.flux == other.flux and
                  self.scale_unit == other.scale_unit and
                  self.do_delta == other.do_delta and
-                 self.gsparams == other.gsparams))
+                 self.gsparams == other.gsparams and
+                 self._force_stepk == other._force_stepk))
 
     def __hash__(self):
         return hash(("galsim.VonKarman", self.lam, self.r0, self.L0, self.flux, self.scale_unit,
-                     self.do_delta, self.gsparams))
+                     self.do_delta, self.gsparams, self._force_stepk))
 
     def __repr__(self):
         out = "galsim.VonKarman(lam=%r, r0=%r, L0=%r"%(self.lam, self.r0, self.L0)
@@ -241,6 +245,8 @@ class VonKarman(GSObject):
         if self._suppress:
             out += ", suppress_warning=True"
         out += ", gsparams=%r"%self.gsparams
+        if self._force_stepk:
+            out += ", _force_stepk=%r"%self._force_stepk
         out += ")"
         return out
 

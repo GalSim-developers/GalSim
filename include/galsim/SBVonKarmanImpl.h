@@ -39,14 +39,18 @@ namespace galsim {
     class VonKarmanInfo
     {
     public:
-        VonKarmanInfo(double lam, double L0, bool doDelta, const GSParamsPtr& gsparams);
+        VonKarmanInfo(double lam, double L0, bool doDelta, const GSParamsPtr& gsparams,
+                      double force_stepk);
 
         ~VonKarmanInfo() {}
 
         double stepK() const { return _stepk; }
         double maxK() const { return _maxk; }
         double getDelta() const { return _delta; }
-        double getHalfLightRadius() const { return _hlr; }
+        double getHalfLightRadius() const {
+            if (!_radial.finalized()) _buildRadialFunc();
+            return _hlr;
+        }
 
         double kValue(double) const;
         double xValue(double) const;
@@ -64,20 +68,20 @@ namespace galsim {
         double _L0; // Outer scale in units of the Fried parameter, r0
         double _L0_invcuberoot;  // (r0/L0)^(1/3)
         double _L053; // (r0/L0)^(-5/3)
-        double _stepk;
+        mutable double _stepk;
         double _maxk;
         double _delta;
         double _deltaScale;  // 1/(1-_delta)
         double _lam_arcsec;  // _lam * ARCSEC2RAD / 2pi
         bool _doDelta;
-        double _hlr; // half-light-radius
+        mutable double _hlr; // half-light-radius
 
-        const GSParamsPtr& _gsparams;
+        GSParamsPtr _gsparams;
 
-        TableBuilder _radial;
-        shared_ptr<OneDimensionalDeviate> _sampler;
+        mutable TableBuilder _radial;
+        mutable shared_ptr<OneDimensionalDeviate> _sampler;
 
-        void _buildRadialFunc();
+        void _buildRadialFunc() const;
     };
 
     //
@@ -92,7 +96,7 @@ namespace galsim {
     {
     public:
         SBVonKarmanImpl(double lam, double r0, double L0, double flux, double scale, bool doDelta,
-                        const GSParams& gsparams);
+                        const GSParams& gsparams, double force_stepk);
         ~SBVonKarmanImpl() {}
 
         bool isAxisymmetric() const { return true; }
@@ -167,7 +171,7 @@ namespace galsim {
         SBVonKarmanImpl(const SBVonKarmanImpl& rhs);
         void operator=(const SBVonKarmanImpl& rhs);
 
-        static LRUCache<Tuple<double,double,bool,GSParamsPtr>,VonKarmanInfo> cache;
+        static LRUCache<Tuple<double,double,bool,GSParamsPtr,double>,VonKarmanInfo> cache;
     };
 
     double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053);
