@@ -44,7 +44,10 @@ namespace galsim {
 
         ~VonKarmanInfo() {}
 
-        double stepK() const { return _stepk; }
+        double stepK() const {
+            if(_stepk == 0.0) _buildRadialFunc();
+            return _stepk;
+        }
         double maxK() const { return _maxk; }
         double getDelta() const { return _delta; }
         double getHalfLightRadius() const {
