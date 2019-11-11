@@ -169,7 +169,7 @@ def test_vk_ne():
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, do_delta=True),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, scale_unit=galsim.arcmin),
             galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, gsparams=gsp),
-            galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, gsparams=gsp, _force_stepk=1.0)]
+            galsim.VonKarman(lam=550.0, r0=0.1, L0=20.0, gsparams=gsp, force_stepk=1.0)]
     all_obj_diff(objs)
 
 
@@ -287,7 +287,7 @@ def test_vk_r0():
 def test_vk_force_stepk():
     """Check that manually forcing stepk works"""
     vk1 = galsim.VonKarman(r0_500=0.1, L0=25.0, lam=750.0)
-    vk2 = galsim.VonKarman(r0_500=0.1, L0=25.0, lam=750.0, _force_stepk=10.0)
+    vk2 = galsim.VonKarman(r0_500=0.1, L0=25.0, lam=750.0, force_stepk=10.0)
 
     # Make sure we get expected stepk
     assert vk1.stepk != vk2.stepk
@@ -318,11 +318,16 @@ def test_vk_force_stepk():
 
     # Check works with scale
     vk3 = galsim.VonKarman(
-        r0_500=0.1, L0=25.0, lam=750.0, _force_stepk=10.0,
+        r0_500=0.1, L0=25.0, lam=750.0, force_stepk=10.0,
         scale_unit=galsim.radians
     )
     assert vk3.stepk == 10.0
     assert vk3.scale_unit == galsim.radians
+
+    # force_stepk is retained through a reflux
+    vk4 = vk3.withFlux(11.0)
+    assert vk4.flux == 11.0
+    assert vk3.force_stepk == vk4.force_stepk
 
 
 if __name__ == "__main__":

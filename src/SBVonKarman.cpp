@@ -129,12 +129,12 @@ namespace galsim {
                                  const GSParamsPtr& gsparams, double force_stepk) :
         _lam(lam), _L0(L0),
         _L0_invcuberoot(fast_pow(_L0, -1./3)), _L053(fast_pow(L0, 5./3)),
-        _stepk(0.0), _maxk(0.0),
+        _stepk(force_stepk), _maxk(0.0),
         _delta(exp(-0.5*magic1*_L053)),
         _deltaScale(1./(1.-_delta)),
         _lam_arcsec(_lam * ARCSEC2RAD / (2.*M_PI)),
         _doDelta(doDelta), _gsparams(gsparams),
-        _radial(Table::spline), _sampler(nullptr)
+        _radial(Table::spline)
     {
         // determine maxK
         // want kValue(maxK)/kValue(0.0) = _gsparams->maxk_threshold;
@@ -160,12 +160,6 @@ namespace galsim {
         dbg<<"_maxk = "<<_maxk<<" arcsec^-1\n";
         dbg<<"SB(maxk) = "<<kValue(_maxk)<<'\n';
         dbg<<"_delta = "<<_delta<<'\n';
-
-        // build the radial function, and along the way, set _stepk, _hlr.
-        if (force_stepk == 0.0)
-            _buildRadialFunc();
-        else
-            _stepk = force_stepk;
     }
 
     double vkStructureFunction(double rho, double L0, double L0_invcuberoot, double L053) {

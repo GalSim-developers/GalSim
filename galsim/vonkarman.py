@@ -78,6 +78,19 @@ class VonKarman(GSObject):
                             etc.  Should be a `galsim.AngleUnit` or a string that can be used to
                             construct one (e.g., 'arcsec', 'radians', etc.).
                             [default: galsim.arcsec]
+        force_stepk:        By default, VonKarman will derive a value of stepk from a computed
+                            real-space surface brightness profile and gsparams settings.  Although
+                            this profile is cached for future instantiations of identical VonKarman
+                            objects, it is relatively slow to compute for the first instance and
+                            can dominate the compute time when drawing many VonKaman's with
+                            different parameters using method 'fft', 'sb', or 'no_pixel', a
+                            situation that may occur, e.g., in a fitting context.  This keyword
+                            enables a user to bypass the real-space profile computation by directly
+                            specifying a stepk value.  Note that if the ``.half_light_radius``
+                            property is queried, or the object is drawn using method 'phot' or
+                            'real_space', then the real-space profile calculation is performed (if
+                            not cached) at that point.  [default: 0.0, which means do not force a
+                            value of stepk]
         do_delta:           Include delta-function at origin? (not recommended; see above).
                             [default: False]
         suppress_warning:   For some combinations of r0 and L0, it may become impossible to satisfy
@@ -98,7 +111,7 @@ class VonKarman(GSObject):
     _is_analytic_k = True
 
     def __init__(self, lam, r0=None, r0_500=None, L0=25.0, flux=1, scale_unit=arcsec,
-                 do_delta=False, suppress_warning=False, gsparams=None, _force_stepk=0.0):
+                 force_stepk=0.0, do_delta=False, suppress_warning=False, gsparams=None):
         # We lose stability if L0 gets too large.  This should be close enough to infinity for
         # all practical purposes though.
         if L0 > 1e10:
@@ -128,7 +141,7 @@ class VonKarman(GSObject):
         self._do_delta = bool(do_delta)
         self._gsparams = GSParams.check(gsparams)
         self._suppress = bool(suppress_warning)
-        self._force_stepk = _force_stepk
+        self._force_stepk = force_stepk
         self._sbvk  # Make this now, so we get the warning if appropriate.
 
     @lazy_property
@@ -194,6 +207,12 @@ class VonKarman(GSObject):
         return self._scale_unit
 
     @property
+    def force_stepk(self):
+        """Forced value of stepk or 0.0.
+        """
+        return self._force_stepk
+
+    @property
     def do_delta(self):
         """Whether to include the delta function at the center.
         """
@@ -227,26 +246,26 @@ class VonKarman(GSObject):
                  self.L0 == other.L0 and
                  self.flux == other.flux and
                  self.scale_unit == other.scale_unit and
+                 self.force_stepk == other.force_stepk and
                  self.do_delta == other.do_delta and
-                 self.gsparams == other.gsparams and
-                 self._force_stepk == other._force_stepk))
+                 self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.VonKarman", self.lam, self.r0, self.L0, self.flux, self.scale_unit,
-                     self.do_delta, self.gsparams, self._force_stepk))
+                     self.force_stepk, self.do_delta, self.gsparams))
 
     def __repr__(self):
         out = "galsim.VonKarman(lam=%r, r0=%r, L0=%r"%(self.lam, self.r0, self.L0)
         out += ", flux=%r"%self.flux
         if self.scale_unit != arcsec:
             out += ", scale_unit=%r"%self.scale_unit
+        if self.force_stepk:
+            out += ", force_stepk=%r"%self.force_stepk
         if self.do_delta:
             out += ", do_delta=True"
         if self._suppress:
             out += ", suppress_warning=True"
         out += ", gsparams=%r"%self.gsparams
-        if self._force_stepk:
-            out += ", _force_stepk=%r"%self._force_stepk
         out += ")"
         return out
 
@@ -297,5 +316,6 @@ class VonKarman(GSObject):
     @doc_inherit
     def withFlux(self, flux):
         return VonKarman(lam=self.lam, r0=self.r0, L0=self.L0, flux=flux,
-                         scale_unit=self.scale_unit, do_delta=self.do_delta,
+                         scale_unit=self.scale_unit,
+                         force_stepk=self.force_stepk, do_delta=self.do_delta,
                          suppress_warning=self._suppress, gsparams=self.gsparams)
