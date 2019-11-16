@@ -100,6 +100,7 @@ def test_OpticalPSF_flux():
     do_pickle(optics_test._psf, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     check_basic(optics_test, "OpticalPSF")
     assert optics_test._psf._screen_list.r0_500_effective is None
+    assert optics_test._screen == optics_test._psf.screen_list[0]
 
     interpolant_test = galsim.OpticalPSF(lam_over_diam=4., interpolant='linear')
     do_pickle(interpolant_test)
@@ -399,18 +400,6 @@ def test_OpticalPSF_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 
-try:
-    from contextlib import ExitStack
-except ImportError:
-    # ExitStack was introduced in python 3.3, so need to do something else in python 2.7.
-    # Really just need a dummy context manager, not the real ExitStack, so this is vv simple.
-    class ExitStack():
-        def __enter__(self):
-            return None
-        def __exit__(self, exc_type, exc_value, traceback):
-            return False
-
-
 @timer
 def test_OpticalPSF_pupil_plane():
     """Test the ability to generate a PSF using an image of the pupil plane.
@@ -479,9 +468,10 @@ def test_OpticalPSF_pupil_plane():
         do_pickle(test_psf)
 
     # Make a smaller pupil plane image to test the pickling of this, even without slow tests.
-    with assert_warns(galsim.GalSimWarning) if not do_slow_tests else ExitStack():
+    factor = 4 if not do_slow_tests else 16
+    with assert_warns(galsim.GalSimWarning):
         alt_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
-                                    oversampling=1., pupil_plane_im=im.bin(4,4),
+                                    oversampling=1., pupil_plane_im=im.bin(factor,factor),
                                     pad_factor=1.)
         do_pickle(alt_psf)
 
