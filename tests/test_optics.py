@@ -101,6 +101,9 @@ def test_OpticalPSF_flux():
     check_basic(optics_test, "OpticalPSF")
     assert optics_test._screens.r0_500_effective is None
 
+    interpolant_test = galsim.OpticalPSF(lam_over_diam=4., interpolant='linear')
+    do_pickle(interpolant_test)
+
 
 @timer
 def test_OpticalPSF_vs_Airy():

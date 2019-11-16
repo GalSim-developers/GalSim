@@ -1898,6 +1898,8 @@ class OpticalPSF(GSObject):
         if screen.annular_zernike:
             s += ", annular_zernike=True"
             s += ", obscuration=%r"%self.obscuration
+        if self._interpolant != None:
+            s += ", interpolant=%r"%self._interpolant
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
         if self._force_stepk != 0.:
