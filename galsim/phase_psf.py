@@ -1900,6 +1900,8 @@ class OpticalPSF(GSObject):
             s += ", obscuration=%r"%self.obscuration
         if self._interpolant != None:
             s += ", interpolant=%r"%self._interpolant
+        if self._scale_unit != arcsec:
+            s += ", scale_unit=%r"%self._scale_unit
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
         if self._force_stepk != 0.:
