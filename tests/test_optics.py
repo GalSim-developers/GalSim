@@ -44,10 +44,10 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # `scons tests`, you will get faster, less stringent tests.
 
 do_slow_tests = False
-#do_slow_tests = True   # uncomment out for more rigorous testing
-                        # Warning: some of them require a LOT of memory.
-#if __name__ == "__main__":
-    #do_slow_tests = True
+# do_slow_tests = True   # uncomment out for more rigorous testing
+#                         Warning: some of them require a LOT of memory.
+# if __name__ == "__main__":
+#     do_slow_tests = True
 
 if do_slow_tests:
     pp_decimal = 5
@@ -399,6 +399,18 @@ def test_OpticalPSF_flux_scaling():
         err_msg="Flux param inconsistent after __div__ (result).")
 
 
+try:
+    from contextlib import ExitStack
+except ImportError:
+    # ExitStack was introduced in python 3.3, so need to do something else in python 2.7.
+    # Really just need a dummy context manager, not the real ExitStack, so this is vv simple.
+    class ExitStack():
+        def __enter__(self):
+            return None
+        def __exit__(self, exc_type, exc_value, traceback):
+            return False
+
+
 @timer
 def test_OpticalPSF_pupil_plane():
     """Test the ability to generate a PSF using an image of the pupil plane.
@@ -467,7 +479,7 @@ def test_OpticalPSF_pupil_plane():
         do_pickle(test_psf)
 
     # Make a smaller pupil plane image to test the pickling of this, even without slow tests.
-    with assert_warns(galsim.GalSimWarning):
+    with assert_warns(galsim.GalSimWarning) if not do_slow_tests else ExitStack():
         alt_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                     oversampling=1., pupil_plane_im=im.bin(4,4),
                                     pad_factor=1.)
@@ -809,6 +821,7 @@ def test_ne():
     gsp2 = galsim.GSParams(maxk_threshold=5.1e-2, folding_threshold=5e-2, kvalue_accuracy=1e-3,
                            xvalue_accuracy=1e-3)
     pupil_plane_im = galsim.fits.read(os.path.join(imgdir, pp_file))
+    pupil_plane_im.wcs = None
 
     # Params include: lam_over_diam, (lam/diam), aberrations by name, aberrations by list, nstruts,
     # strut_thick, strut_angle, obscuration, oversampling, pad_factor, flux, gsparams,
@@ -838,7 +851,7 @@ def test_ne():
     objs += [galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_stepk=stepk/1.5),
              galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1, _force_maxk=maxk*2)]
 
-    if __name__ == do_slow_tests:
+    if do_slow_tests:
         objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
                                    suppress_warning=True),
                  galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
