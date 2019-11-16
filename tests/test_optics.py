@@ -104,6 +104,9 @@ def test_OpticalPSF_flux():
     interpolant_test = galsim.OpticalPSF(lam_over_diam=4., interpolant='linear')
     do_pickle(interpolant_test)
 
+    scale_unit_test = galsim.OpticalPSF(lam_over_diam=4., scale_unit=galsim.arcmin)
+    do_pickle(scale_unit_test)
+
 
 @timer
 def test_OpticalPSF_vs_Airy():
