@@ -1830,11 +1830,10 @@ class OpticalPSF(GSObject):
                     lam_over_diam=lam_over_diam, lam=lam, diam=diam)
 
         # Make the optical screen.
-        optics_screen = OpticalScreen(
+        self._screen = OpticalScreen(
                 diam=diam, defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
                 trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations,
                 obscuration=obscuration, annular_zernike=annular_zernike, lam_0=lam)
-        self._screens = PhaseScreenList(optics_screen)
 
         # Make the aperture.
         if aper is None:
@@ -1864,7 +1863,7 @@ class OpticalPSF(GSObject):
 
     @lazy_property
     def _psf(self):
-        psf = PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
+        psf = PhaseScreenPSF(PhaseScreenList(self._screen), lam=self._lam, flux=self._flux,
                              aper=self._aper, interpolant=self._interpolant,
                              scale_unit=self._scale_unit, gsparams=self._gsparams,
                              suppress_warning=self._suppress_warning,
@@ -1875,7 +1874,7 @@ class OpticalPSF(GSObject):
         return psf
 
     def __str__(self):
-        screen = self._psf.screen_list[0]
+        screen = self._screen
         s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
@@ -1890,7 +1889,7 @@ class OpticalPSF(GSObject):
         return s
 
     def __repr__(self):
-        screen = self._psf.screen_list[0]
+        screen = self._screen
         s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._aper.diam)
         s += ", aper=%r"%self._aper
         if any(screen.aberrations):
@@ -1920,7 +1919,7 @@ class OpticalPSF(GSObject):
                 (isinstance(other, OpticalPSF) and
                  self._lam == other._lam and
                  self._aper == other._aper and
-                 self._psf.screen_list == other._psf.screen_list and
+                 self._screen == other._screen and
                  self._flux == other._flux and
                  self._interpolant == other._interpolant and
                  self._scale_unit == other._scale_unit and
@@ -1930,7 +1929,7 @@ class OpticalPSF(GSObject):
                  self._gsparams == other._gsparams))
 
     def __hash__(self):
-        return hash(("galsim.OpticalPSF", self._lam, self._aper, self._psf.screen_list[0],
+        return hash(("galsim.OpticalPSF", self._lam, self._aper, self._screen,
                      self._flux, self._interpolant, self._scale_unit, self._force_stepk,
                      self._force_maxk, self._ii_pad_factor, self._gsparams))
 
@@ -1994,7 +1993,7 @@ class OpticalPSF(GSObject):
 
     @doc_inherit
     def withFlux(self, flux):
-        screen = self._psf.screen_list[0]
+        screen = self._screen
         return OpticalPSF(
                 lam=self._lam, diam=self._aper.diam, aper=self._aper,
                 aberrations=screen.aberrations, annular_zernike=screen.annular_zernike,
