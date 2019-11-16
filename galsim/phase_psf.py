@@ -1876,11 +1876,11 @@ class OpticalPSF(GSObject):
 
     def __str__(self):
         screen = self._psf.screen_list[0]
-        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._psf.aper.diam)
+        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        if self._psf.aper._pupil_plane_im is None:
-            s += self._psf.aper._geometry_str()
+        if self._aper._pupil_plane_im is None:
+            s += self._aper._geometry_str()
         if screen.annular_zernike:
             s += ", annular_zernike=True"
             s += ", obscuration=%r"%self.obscuration
@@ -1891,8 +1891,8 @@ class OpticalPSF(GSObject):
 
     def __repr__(self):
         screen = self._psf.screen_list[0]
-        s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
-        s += ", aper=%r"%self._psf.aper
+        s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._aper.diam)
+        s += ", aper=%r"%self._aper
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(repr(ab) for ab in screen.aberrations) + "]"
         if screen.annular_zernike:
@@ -1902,6 +1902,8 @@ class OpticalPSF(GSObject):
             s += ", interpolant=%r"%self._interpolant
         if self._scale_unit != arcsec:
             s += ", scale_unit=%r"%self._scale_unit
+        if self._gsparams != GSParams():
+            s += ", gsparams=%r"%self._gsparams
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
         if self._force_stepk != 0.:
@@ -1994,7 +1996,7 @@ class OpticalPSF(GSObject):
     def withFlux(self, flux):
         screen = self._psf.screen_list[0]
         return OpticalPSF(
-                lam=self._lam, diam=self._psf.aper.diam, aper=self._psf.aper,
+                lam=self._lam, diam=self._aper.diam, aper=self._aper,
                 aberrations=screen.aberrations, annular_zernike=screen.annular_zernike,
                 flux=flux, _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
                 ii_pad_factor=self._ii_pad_factor)
