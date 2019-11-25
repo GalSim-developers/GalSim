@@ -305,8 +305,11 @@ class RandomKnots(GSObject):
 
     @doc_inherit
     def withScaledFlux(self, flux_ratio):
-        return RandomKnots(self._npoints, profile=self._profile.withScaledFlux(flux_ratio),
-                           rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
+        if hasattr(flux_ratio, '__call__'):
+            return GSObject.withScaledFlux(self, flux_ratio)
+        else:
+            return RandomKnots(self._npoints, profile=self._profile.withScaledFlux(flux_ratio),
+                               rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
     @doc_inherit
     def expand(self, scale):

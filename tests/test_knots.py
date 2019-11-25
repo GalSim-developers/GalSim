@@ -416,8 +416,19 @@ def test_knots_sed():
     """
     sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
     knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
-    gal = knots * sed  # This line used to fail.
-    do_pickle(gal)
+    gal1 = galsim.ChromaticObject(knots) * sed
+    gal2 = knots * sed  # This line used to fail.
+    do_pickle(gal1)
+    do_pickle(gal2)
+
+    # They don't test as ==, since they are formed differently.  But they are functionally equal:
+    bandpass = galsim.Bandpass('LSST_r.dat', 'nm')
+    psf = galsim.Gaussian(fwhm=0.7)
+    final1 = galsim.Convolve(gal1, psf)
+    final2 = galsim.Convolve(gal2, psf)
+    im1 = final1.drawImage(bandpass, scale=0.4)
+    im2 = final2.drawImage(bandpass, scale=0.4)
+    np.testing.assert_array_equal(im1.array, im2.array)
 
 
 if __name__ == "__main__":
