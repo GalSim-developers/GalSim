@@ -408,6 +408,17 @@ def test_knots_transform():
         test_op(rw, 'magnify(1.2)')
         test_op(rw, 'lens(0.03, 0.07, 1.12)')
 
+@timer
+def test_knots_sed():
+    """Test RandomKnots with an SED
+
+    This test is in response to isse #1064, a bug discovered by Troxel.
+    """
+    sed = galsim.SED('CWW_E_ext.sed', 'A', 'flambda')
+    knots = galsim.RandomKnots(10, half_light_radius=1.3, flux=100)
+    gal = knots * sed  # This line used to fail.
+    do_pickle(gal)
+
 
 if __name__ == "__main__":
     test_knots_defaults()
@@ -417,3 +428,4 @@ if __name__ == "__main__":
     test_knots_config()
     test_knots_hlr()
     test_knots_transform()
+    test_knots_sed()
