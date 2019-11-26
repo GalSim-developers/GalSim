@@ -108,7 +108,7 @@ cache:
 
 install:
     # Upate pip executable.  (Needs sudo on some systems.)
-    - sudo -H $PIP install -U pip
+    - sudo -H $PIP install -U pip --trusted-host pypi.python.org --trusted-host files.pythonhosted.org --trusted-host pypi.org
 
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
