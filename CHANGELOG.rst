@@ -101,3 +101,8 @@ Changes from v2.2.1 to v2.2.2
   properly through a pickle file.  Now a new context, `galsim.utilities.pickle_shared`
   can be used to include the shared data in the pickle file. (#1057)
 - Fixed integration in VonKarman for some problematic r0 values. (#1058)
+
+Change from v2.2.2 to v2.2.3
+=============================
+
+- Fix a bug in RandomKnots when multiplied by an SED. (#1064)
