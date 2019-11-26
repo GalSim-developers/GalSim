@@ -23,4 +23,4 @@ pandas>=0.20
 
 # This is not in conda.  Let pip install these.
 LSSTDESC.Coord>=1.1.2
-starlink-pyast>=3.9.0  # Also not required, but useful.
+starlink-pyast>=3.9.0,<=3.12  # Also not required, but useful.  Note: 3.13.1 is broken.
