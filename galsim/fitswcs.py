@@ -118,7 +118,7 @@ class AstropyWCS(CelestialWCS):
                 self._tag = repr(file_name)
             if hdu is not None:
                 self._tag += ', hdu=%r'%hdu
-            if compression is not 'auto':
+            if compression != 'auto':
                 self._tag += ', compression=%r'%compression
             if header is not None:
                 raise GalSimIncompatibleValuesError(
@@ -356,7 +356,7 @@ class PyAstWCS(CelestialWCS):
                 self._tag = repr(file_name)
             if hdu is not None:
                 self._tag += ', hdu=%r'%hdu
-            if compression is not 'auto':
+            if compression != 'auto':
                 self._tag += ', compression=%r'%compression
             if header is not None:
                 raise GalSimIncompatibleValuesError(
@@ -921,7 +921,7 @@ class GSFitsWCS(CelestialWCS):
                 self._tag = repr(file_name)
             if hdu is not None:
                 self._tag += ', hdu=%r'%hdu
-            if compression is not 'auto':
+            if compression != 'auto':
                 self._tag += ', compression=%r'%compression
             if header is not None:
                 raise GalSimIncompatibleValuesError(
@@ -1729,7 +1729,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
         try:
             wcs = wcs_type._readHeader(header)
             # Give it a better tag for the repr if appropriate.
-            if hasattr(wcs,'_tag') and file_name is not 'header':
+            if hasattr(wcs,'_tag') and file_name != 'header':
                 if dir is not None:
                     import os
                     wcs._tag = repr(os.path.join(dir,file_name))
@@ -1737,7 +1737,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                     wcs._tag = repr(file_name)
                 if hdu is not None:
                     wcs._tag += ', hdu=%r'%hdu
-                if compression is not 'auto':
+                if compression != 'auto':
                     wcs._tag += ', compression=%r'%compression
             return wcs
         except KeyboardInterrupt:
