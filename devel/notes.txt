@@ -3,7 +3,7 @@ Checklist for making a new release:
 
 - Run test suite on as many machines as possible.
 - On each machine, run:
-  - python setup.py tests
+  - python setup.py test
   - run_all_tests (in tests directory. go get some coffee...)
   - check_yaml (in examples directory)
   - check_json (in examples directory)
