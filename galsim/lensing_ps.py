@@ -1255,7 +1255,7 @@ class PowerSpectrumRealizer(object):
         #k = np.ascontiguousarray(np.real(kappa))
 
         # But, since we don't care about imag(kappa), this is a bit faster:
-        if E_k is 0:
+        if np.all(E_k == 0):
             k = np.zeros((self.ny,self.nx))
         else:
             k = self.nx * np.fft.irfft2(E_k[:,self.ikx], s=(self.ny,self.nx))

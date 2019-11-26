@@ -1161,7 +1161,7 @@ class FitsHeader(object):
                 self._tag = 'file_name='+repr(file_name)
             if hdu is not None:
                 self._tag += ', hdu=%r'%hdu
-            if compression is not 'auto':
+            if compression != 'auto':
                 self._tag += ', compression=%r'%compression
 
             if text_file:
