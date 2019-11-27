@@ -110,7 +110,9 @@ cache:
 
 install:
     # Upate pip executable.  (Needs sudo on some systems.)
-    - sudo -H $PYTHON -m pip install --upgrade pip
+    # Also the first bit is to get past pip 9.0 on MacOS.
+    - curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+    - sudo -H $PYTHON get-pip.py
     - sudo -H $PIP install -U pip
 
     # Install the requirements
