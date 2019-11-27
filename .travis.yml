@@ -110,7 +110,7 @@ cache:
 
 install:
     # Upate pip executable.  (Needs sudo on some systems.)
-    - sudo -H $PIP install -U pip
+    - sudo -H CPPFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib" $PIP install -U pip
 
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
