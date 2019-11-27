@@ -82,7 +82,7 @@ before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     # Install the non-python dependencies: fftw, libav, eigen
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; brew cask install gfortran; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen openssl xz; brew cask install gfortran; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
@@ -110,9 +110,6 @@ cache:
 
 install:
     # Upate pip executable.  (Needs sudo on some systems.)
-    # Also the first bit is to get past pip 9.0 on MacOS.
-    - curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-    - sudo -H $PYTHON get-pip.py
     - sudo -H $PIP install -U pip
 
     # Install the requirements
