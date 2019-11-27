@@ -96,6 +96,8 @@ before_install:
 
     # On OSX, need to use pip3, not pip and python3, not python
     - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then export PIP=pip3; export PYTHON=python3; else export PIP=pip; export PYTHON=python; fi
+    - echo $PIP
+    - echo $PYTHON
     - $PIP --version
     - $PYTHON --version
 
@@ -108,10 +110,7 @@ cache:
 
 install:
     # Upate pip executable.  (Needs sudo on some systems.)
-    - curl https://bootstrap.pypa.io/get-pip.py | $PYTHON
-    - echo $PIP
-    - pip --version
-    - $PIP --version
+    - sudo -H $PYTHON -m pip install --upgrade pip
     - sudo -H $PIP install -U pip
 
     # Install the requirements
