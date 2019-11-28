@@ -83,7 +83,9 @@ before_install:
     # Install the non-python dependencies: fftw, libav, eigen
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; brew cask install gfortran; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then curl https://files.pythonhosted.org/packages/60/64/73b729587b6b0d13e690a7c3acd2231ee561e8dd28a58ae1b0409a5a2b20/pip-19.0-py2.py3-none-any.whl -o pip-19.0-py2.py3-none-any.whl; $PIP install pip-19.0-py2.py3-none-any.whl; fi
+    # XCode 9.4 has a problem with pip and TLS/SSL.  So install a newer pip directly from the
+    # github clone, then we'll update it later to the latest current stable version.
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then git clone git@github.com:pypa/pip.git; cd pip; $PIP install .; $PIP install pip==19.0; cd ..; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
