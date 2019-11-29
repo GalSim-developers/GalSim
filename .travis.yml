@@ -85,7 +85,7 @@ before_install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; brew cask install gfortran; fi
     # XCode 9.4 has a problem with pip and TLS/SSL.  So install a newer pip directly from the
     # github clone, then we'll update it later to the latest current stable version.
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then yes | git clone git@github.com:pypa/pip.git; cd pip; $PIP install .; $PIP install pip==19.0; cd ..; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then ssh-keyscan -H github.com >> ~/.ssh/known_hosts; git clone git@github.com:pypa/pip.git; cd pip; $PIP install .; $PIP install pip==19.0; cd ..; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
