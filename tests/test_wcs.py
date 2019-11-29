@@ -2650,9 +2650,9 @@ def test_int_args():
         wcs = galsim.FitsWCS(file_name, dir=dir)
         t1 = time.time()
     # Before fixing #1024, this took about 0.5 sec.
-    # Now it takes about 0.04 sec.  Testing at 0.2 seems like a reasonable midpoint.
+    # Now it usually takes about 0.04 sec.  Testing at 0.25 seems like a reasonable midpoint.
     print('Time = ',t1-t0)
-    assert t1-t0 < 0.2
+    assert t1-t0 < 0.25
 
     posi = galsim.PositionI(5,6)
     posd = galsim.PositionD(5,6)
