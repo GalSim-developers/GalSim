@@ -877,6 +877,109 @@ def test_dcr_moments():
     assert moments['Mxy'] > 0  # e2 > 0
 
 
+@timer
+def test_refract():
+    ud = galsim.UniformDeviate(57721)
+    for _ in range(1000):
+        photon_array = galsim.PhotonArray(1000, flux=1)
+        ud.generate(photon_array.dxdz)
+        ud.generate(photon_array.dydz)
+        photon_array.dxdz *= 1.2  # -0.6 to 0.6
+        photon_array.dydz *= 1.2
+        photon_array.dxdz -= 0.6
+        photon_array.dydz -= 0.6
+        # copy for testing later
+        dxdz0 = np.array(photon_array.dxdz)
+        dydz0 = np.array(photon_array.dydz)
+        index_ratio = ud()*4+0.25  # 0.25 to 4.25
+        refract = galsim.Refraction(index_ratio)
+        refract.applyTo(photon_array)
+
+        # Triangle is length 1 in the z direction and length sqrt(dxdz**2+dydz**2)
+        # in the 'r' direction.
+        rsqr0 = dxdz0**2 + dydz0**2
+        sintheta0 = np.sqrt(rsqr0)/np.sqrt(1+rsqr0)
+        # See if total internal reflection applies
+        w = sintheta0 < index_ratio
+        np.testing.assert_array_equal(photon_array.dxdz[~w], np.nan)
+        np.testing.assert_array_equal(photon_array.dydz[~w], np.nan)
+        np.testing.assert_array_equal(
+            photon_array.flux,
+            np.where(w, 1.0, 0.0)
+        )
+
+        sintheta0 = sintheta0[w]
+        dxdz0 = dxdz0[w]
+        dydz0 = dydz0[w]
+        dxdz1 = photon_array.dxdz[w]
+        dydz1 = photon_array.dydz[w]
+        rsqr1 = dxdz1**2 + dydz1**2
+        sintheta1 = np.sqrt(rsqr1)/np.sqrt(1+rsqr1)
+        # Check Snell's law
+        np.testing.assert_allclose(sintheta0, index_ratio*sintheta1)
+
+        # Check azimuthal angle stays constant
+        phi0 = np.arctan2(dydz0, dxdz0)
+        phi1 = np.arctan2(dydz1, dxdz1)
+        np.testing.assert_allclose(phi0, phi1)
+
+        # Check plane of refraction is perpendicular to (0,0,1)
+        np.testing.assert_allclose(
+            np.dot(
+                np.cross(
+                    np.stack([dxdz0, dydz0, -np.ones(len(dxdz0))], axis=1),
+                    np.stack([dxdz1, dydz1, -np.ones(len(dxdz1))], axis=1),
+                ),
+                [0,0,1]
+            ),
+            0.0,
+            rtol=0, atol=1e-13
+        )
+
+    # Try a wavelength dependent index_ratio
+    index_ratio = lambda w: np.where(w < 1, 1.1, 2.2)
+    photon_array = galsim.PhotonArray(100)
+    ud.generate(photon_array.wavelength)
+    ud.generate(photon_array.dxdz)
+    ud.generate(photon_array.dydz)
+    photon_array.dxdz *= 1.2  # -0.6 to 0.6
+    photon_array.dydz *= 1.2
+    photon_array.dxdz -= 0.6
+    photon_array.dydz -= 0.6
+    photon_array.wavelength *= 2  # 0 to 2
+    dxdz0 = photon_array.dxdz.copy()
+    dydz0 = photon_array.dydz.copy()
+
+    refract_func = galsim.Refraction(index_ratio=index_ratio)
+    refract_func.applyTo(photon_array)
+    dxdz_func = photon_array.dxdz.copy()
+    dydz_func = photon_array.dydz.copy()
+
+    photon_array.dxdz = dxdz0.copy()
+    photon_array.dydz = dydz0.copy()
+    refract11 = galsim.Refraction(index_ratio=1.1)
+    refract11.applyTo(photon_array)
+    dxdz11 = photon_array.dxdz.copy()
+    dydz11 = photon_array.dydz.copy()
+
+    photon_array.dxdz = dxdz0.copy()
+    photon_array.dydz = dydz0.copy()
+    refract22 = galsim.Refraction(index_ratio=2.2)
+    refract22.applyTo(photon_array)
+    dxdz22 = photon_array.dxdz.copy()
+    dydz22 = photon_array.dydz.copy()
+
+    w = photon_array.wavelength < 1
+    np.testing.assert_allclose(
+        dxdz_func,
+        np.where(w, dxdz11, dxdz22)
+    )
+    np.testing.assert_allclose(
+        dydz_func,
+        np.where(w, dydz11, dydz22)
+    )
+
+
 if __name__ == '__main__':
     test_photon_array()
     test_convolve()
@@ -887,3 +990,4 @@ if __name__ == '__main__':
     if not no_astroplan:
         test_dcr_angles()
     test_dcr_moments()
+    test_refract()

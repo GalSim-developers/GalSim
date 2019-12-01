@@ -130,7 +130,7 @@ from .errors import GalSimWarning, GalSimDeprecationWarning
 from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, ImageUS, ImageUI, _Image
 
 # PhotonArray
-from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles, PhotonDCR
+from .photon_array import PhotonArray, WavelengthSampler, FRatioAngles, PhotonDCR, Refraction
 
 # Noise
 from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate

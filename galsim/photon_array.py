@@ -647,3 +647,36 @@ class PhotonDCR(object):
         dy = local_wcs._y(du, dv)
         photon_array.x += dx
         photon_array.y += dy
+
+
+class Refraction(object):
+    """A surface-layer operator that refracts photons (manipulating their dxdz and dydz values) at
+    an interface, commonly the interface between vacuum and silicon at the surface of a CCD.
+
+    Assumes that the surface normal is along the z-axis.  If the refraction would result in total
+    internal reflection, then those photon's dxdz and dydz values are set to NaN, and flux values
+    set to 0.0.
+
+    Parameters:
+        index_ratio:    The ratio of the refractive index on the far side of the interface to the
+                        near side.  Can be given as a number or a callable function.  In the
+                        latter case, the function should accept a numpy array of vacuum wavelengths
+                        as input and return a numpy array of refractive index ratios.
+    """
+    def __init__(self, index_ratio):
+        self.index_ratio = index_ratio
+
+    def applyTo(self, photon_array, local_wcs=None):
+        """Refract photons
+        """
+        if hasattr(self.index_ratio, '__call__'):
+            index_ratio = self.index_ratio(photon_array.wavelength)
+        else:
+            index_ratio = self.index_ratio
+        normsqr = 1 + photon_array.dxdz**2 + photon_array.dydz**2
+        with np.errstate(invalid='ignore'):
+            # NaN below <=> total internal reflection
+            factor = np.sqrt(1 - normsqr*(1-index_ratio**2))
+        photon_array.dxdz /= factor
+        photon_array.dydz /= factor
+        photon_array.flux = np.where(np.isnan(factor), 0.0, photon_array.flux)
