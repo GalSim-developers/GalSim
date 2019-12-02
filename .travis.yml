@@ -103,7 +103,7 @@ before_install:
 
     # XCode 9.4 has a problem with pip and TLS/SSL.  Use brew openssl and python
     # cf. https://stackoverflow.com/questions/51125013/how-can-i-install-a-previous-version-of-python-3-in-macos-using-homebrew
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION == 3.6 ]]; then brew reinstall openssl; export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"; export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"; export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"; brew install --ignore-dependencies https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION == 3.6 ]]; then brew reinstall openssl; export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"; export LDFLAGS="-L/usr/local/opt/openssl@1.1/lib"; export CPPFLAGS="-I/usr/local/opt/openssl@1.1/include"; brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/f2a764ef944b1080be64bd88dca9a1d80130c558/Formula/python.rb; fi
     - which -a $PIP
     - which -a $PYTHON
     - $PIP --version
