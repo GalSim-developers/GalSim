@@ -101,11 +101,10 @@ before_install:
     - $PIP --version
     - $PYTHON --version
 
-    # XCode 9.4 has a problem with pip and TLS/SSL.  So install a newer pip directly from the
-    # github clone, then we'll update it later to the latest current stable version.
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION == 3.6 ]]; then git clone git://github.com/pypa/pip.git; cd pip; git checkout 19.0.3; sudo -H $PYTHON setup.py install; cd ..; fi
+    # XCode 9.4 has a problem with pip and TLS/SSL.  Use brew openssl and python
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION == 3.6 ]]; then brew reinstall openssl; brew reinstall python; fi
     - which -a pip
-    - which -a pip3
+    - which -a $PIP
     - pip --version
     - $PIP --version
 
