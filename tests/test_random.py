@@ -549,11 +549,17 @@ def test_gaussian():
     assert vals.shape == (10, nvals//10)
     checkGaussianMethod(vals, 3.4, 5.5)
 
+    bd.reset(testseed)
     loc = np.hstack([np.ones(nvals)*(-1.1), np.ones(nvals)*2.2])
     scale = np.hstack([np.ones(nvals)*(3.1), np.ones(nvals)*2.2])
     vals = bd.gaussian(loc, scale)
     checkGaussianMethod(vals[:nvals], -1.1, 3.1)
     checkGaussianMethod(vals[nvals:], 2.2, 2.2)
+
+    # normal is a synonym for gaussian
+    bd.reset(testseed)
+    vals2 = bd.normal(loc, scale)
+    np.testing.assert_array_equal(vals, vals2)
 
 
 @timer

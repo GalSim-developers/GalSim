@@ -259,6 +259,9 @@ class BaseDeviate(object):
         array += loc
         return array
 
+    def normal(self, loc=0.0, scale=1.0, size=None):
+        return self.gaussian(loc, scale, size)
+
 
 class UniformDeviate(BaseDeviate):
     """Pseudo-random number generator with uniform distribution in interval [0.,1.).
