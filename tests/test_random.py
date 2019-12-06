@@ -282,6 +282,8 @@ def test_uniform():
         bd.uniform(high=-1.1, size=nvals)
     with np.testing.assert_raises(TypeError):
         bd.uniform(low=0.9, high=0.2, size=nvals)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(low=0.9, high=0.2)
     # 1 positional
     checkUniformMethod(bd.uniform(0.1, size=nvals), 0.1, 1.0)
     checkUniformMethod(bd.uniform(-0.5, size=nvals), -0.5, 1.0)

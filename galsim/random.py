@@ -229,12 +229,12 @@ class BaseDeviate(object):
         return "galsim.BaseDeviate(%r)"%self._seed_repr()
 
     def uniform(self, low=0.0, high=1.0, size=None):
+        if np.any(high<low):
+            raise TypeError("high must be larger than low")
         if size is None:
             if np.ndim(low) == np.ndim(high) == 0.0:
                 return UniformDeviate(self)() * (high-low) + low
             size = np.broadcast(low, high).shape
-        if np.any(high<low):
-            raise TypeError("high must be larger than low")
         array = np.empty(size)
         UniformDeviate(self).generate(array)
         array *= high-low
