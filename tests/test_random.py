@@ -480,6 +480,81 @@ def test_gaussian():
 
     assert_raises(ValueError, galsim.GaussianDeviate, testseed, mean=1, sigma=-1)
 
+    # Test numpy.random.RandomState-like interface
+    bd = galsim.BaseDeviate(testseed)
+    np.testing.assert_array_equal(bd.gaussian(loc=gMean, scale=gSigma, size=3), gResult)
+    # Works after reset
+    bd.reset(testseed)
+    np.testing.assert_array_equal(bd.gaussian(loc=gMean, scale=gSigma, size=3), gResult)
+    # Works generating one at a time
+    bd.reset(testseed)
+    np.testing.assert_array_equal([bd.gaussian(gMean, gSigma) for _ in range(3)], gResult)
+
+    bd.reset(testseed)
+    vals0 = bd.gaussian(gMean, gSigma, size=100)
+    bd.reset(testseed)
+    vals1 = bd.gaussian(gMean+1, gSigma, size=100)
+    np.testing.assert_allclose(vals1-vals0, 1.0, rtol=0, atol=1e-15)
+
+    bd.reset(testseed)
+    vals0 = bd.gaussian(0.0, gSigma, size=100)
+    bd.reset(testseed)
+    vals1 = bd.gaussian(0.0, 2*gSigma, size=100)
+    np.testing.assert_allclose(vals1/vals0, 2.0, rtol=0, atol=1e-15)
+
+    # Try out some loc/scale combinations
+    def checkGaussianMethod(array, loc, scale):
+        np.testing.assert_allclose(np.mean(array), loc, rtol=0, atol=3e-2)
+        np.testing.assert_allclose(np.median(array), loc, rtol=0, atol=3e-2)
+        np.testing.assert_allclose(np.std(array), scale, rtol=0, atol=3e-2)
+
+    # 0 positional
+    checkGaussianMethod(bd.gaussian(size=nvals), 0.0, 1.0)
+    checkGaussianMethod(bd.gaussian(loc=1.1, size=nvals), 1.1, 1.0)
+    checkGaussianMethod(bd.gaussian(scale=3.1, size=nvals), 0, 3.1)
+    checkGaussianMethod(bd.gaussian(loc=-0.6, scale=3.1, size=nvals), -0.6, 3.1)
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.gaussian(scale=-3.0)
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.gaussian(scale=-3.1, size=nvals)
+    # 1 positional
+    checkGaussianMethod(bd.gaussian(0.1, size=nvals), 0.1, 1.0)
+    checkGaussianMethod(bd.gaussian(0.1, scale=3.0, size=nvals), 0.1, 3.0)
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.gaussian(0.2, scale=-3.0)
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.gaussian(0.2, scale=-3.0, size=nvals)
+    # 2 positional
+    checkGaussianMethod(bd.gaussian(0.1, 2.0, size=nvals), 0.1, 2.0)
+    checkGaussianMethod(bd.gaussian(-5.5, 5.0, size=nvals), -5.5, 5.0)
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.gaussian(0.2, -3.0, size=nvals)
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.gaussian(0.2, -1.0)
+
+    # size/shape
+    vals = bd.gaussian(0.1, 0.3, size=(10, nvals//10))
+    assert vals.shape == (10, nvals//10)
+    checkGaussianMethod(vals, 0.1, 0.3)
+
+    # broadcasting
+    checkGaussianMethod(bd.gaussian(0.0, np.ones(nvals)), 0.0, 1.0)
+    checkGaussianMethod(bd.gaussian(0.0, scale=np.ones(nvals)), 0.0, 1.0)
+    checkGaussianMethod(bd.gaussian(np.zeros(nvals)), 0.0, 1.0)
+
+    vals = bd.gaussian(np.ones(10)*0.1, np.ones(nvals//10).reshape(-1, 1)*2.2)
+    assert vals.shape == (nvals//10, 10)
+    checkGaussianMethod(vals, 0.1, 2.2)
+    vals = bd.gaussian(np.ones(10).reshape(-1, 1)*3.4, np.ones(nvals//10)*5.5)
+    assert vals.shape == (10, nvals//10)
+    checkGaussianMethod(vals, 3.4, 5.5)
+
+    loc = np.hstack([np.ones(nvals)*(-1.1), np.ones(nvals)*2.2])
+    scale = np.hstack([np.ones(nvals)*(3.1), np.ones(nvals)*2.2])
+    vals = bd.gaussian(loc, scale)
+    checkGaussianMethod(vals[:nvals], -1.1, 3.1)
+    checkGaussianMethod(vals[nvals:], 2.2, 2.2)
+
 
 @timer
 def test_binomial():

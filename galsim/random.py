@@ -22,7 +22,7 @@ import weakref
 from . import _galsim
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import convert_cpp_errors
-from .utilities import isinteger
+from .utilities import isinteger, lazy_property
 
 class BaseDeviate(object):
     """Base class for all the various random deviates.
@@ -112,6 +112,7 @@ class BaseDeviate(object):
         else:
             raise TypeError("BaseDeviate must be initialized with either an int or another "
                             "BaseDeviate")
+        self.__dict__.pop('_gdev', None)
 
     def _reset(self, rng):
         """Equivalent to `reset`, but rng must be a `BaseDeviate` (not an int), and there
@@ -239,6 +240,23 @@ class BaseDeviate(object):
         UniformDeviate(self).generate(array)
         array *= high-low
         array += low
+        return array
+
+    @lazy_property
+    def _gdev(self):
+        return GaussianDeviate(self)
+
+    def gaussian(self, loc=0.0, scale=1.0, size=None):
+        if np.any(scale < 0.0):
+            raise GalSimRangeError("scale must be positive", scale, 0.0)
+        if size is None:
+            if np.ndim(loc) == np.ndim(scale) == 0.0:
+                return self._gdev() * scale + loc
+            size = np.broadcast(loc, scale).shape
+        array = np.empty(size)
+        self._gdev.generate(array)
+        array *= scale
+        array += loc
         return array
 
 
