@@ -253,6 +253,79 @@ def test_uniform():
     assert_raises(TypeError, u.seed, '123')
     assert_raises(TypeError, u.seed, 12.3)
 
+    # Test numpy.random.RandomState-like interface
+    bd = galsim.BaseDeviate(testseed)
+    np.testing.assert_array_equal(bd.uniform(size=3), uResult)
+    # Works after reset
+    bd.reset(testseed)
+    np.testing.assert_array_equal(bd.uniform(size=3), uResult)
+    # Works generating one at a time
+    bd.reset(testseed)
+    np.testing.assert_array_equal([bd.uniform() for _ in range(3)], uResult)
+
+    # Try out some low/high combinations
+    def checkUniformMethod(array, low, high):
+        np.testing.assert_allclose(np.min(array), low, rtol=0, atol=1e-3)
+        np.testing.assert_allclose(np.max(array), high, rtol=0, atol=1e-3)
+        np.testing.assert_allclose(np.mean(array), 0.5*(low+high), rtol=0, atol=1e-2)
+        np.testing.assert_allclose(np.median(array), 0.5*(low+high), rtol=0, atol=1e-2)
+        np.testing.assert_allclose(np.std(array), (high-low)/np.sqrt(12), rtol=0, atol=1e-2)
+
+    # 0 positional
+    checkUniformMethod(bd.uniform(size=nvals), 0.0, 1.0)
+    checkUniformMethod(bd.uniform(low=-1.0, size=nvals), -1.0, 1.0)
+    checkUniformMethod(bd.uniform(high=2.0, size=nvals), 0.0, 2.0)
+    checkUniformMethod(bd.uniform(low=-1.0, high=0.2, size=nvals), -1.0, 0.2)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(low=2.0, size=nvals)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(high=-1.1, size=nvals)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(low=0.9, high=0.2, size=nvals)
+    # 1 positional
+    checkUniformMethod(bd.uniform(0.1, size=nvals), 0.1, 1.0)
+    checkUniformMethod(bd.uniform(-0.5, size=nvals), -0.5, 1.0)
+    checkUniformMethod(bd.uniform(0.1, high=0.3, size=nvals), 0.1, 0.3)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(10.0, size=nvals)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(10.0, high=9.0, size=nvals)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(0.1, low=0.3, size=nvals)
+    # 2 positional
+    checkUniformMethod(bd.uniform(0.1, 0.2, size=nvals), 0.1, 0.2)
+    checkUniformMethod(bd.uniform(-0.1, 0.2, size=nvals), -0.1, 0.2)
+    checkUniformMethod(bd.uniform(-2.2, -1.3, size=nvals), -2.2, -1.3)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(0.2, 0.1, size=nvals)
+    with np.testing.assert_raises(TypeError):
+        bd.uniform(-0.1, -0.2, size=nvals)
+
+    # size/shape
+    vals = bd.uniform(0.1, 0.3, size=(10, nvals//10))
+    assert vals.shape == (10, nvals//10)
+    checkUniformMethod(vals, 0.1, 0.3)
+
+    # Try out some broadcasting
+    checkUniformMethod(bd.uniform(0.0, np.ones(nvals)), 0.0, 1.0)
+    checkUniformMethod(bd.uniform(0.0, high=np.ones(nvals)), 0.0, 1.0)
+    checkUniformMethod(bd.uniform(low=0.0, high=np.ones(nvals)), 0.0, 1.0)
+    checkUniformMethod(bd.uniform(np.zeros(nvals)), 0.0, 1.0)
+    checkUniformMethod(bd.uniform(np.zeros(nvals), high=1.0), 0.0, 1.0)
+
+    vals = bd.uniform(np.ones(10)*0.1, np.ones(nvals//10).reshape(-1, 1)*0.2)
+    assert vals.shape == (nvals//10, 10)
+    checkUniformMethod(vals, 0.1, 0.2)
+    vals = bd.uniform(np.ones(10).reshape(-1, 1)*3.4, np.ones(nvals//10)*4.4)
+    assert vals.shape == (10, nvals//10)
+    checkUniformMethod(vals, 3.4, 4.4)
+
+    low = np.hstack([np.ones(nvals)*(-1.1), np.ones(nvals)*2.2])
+    high = np.hstack([np.ones(nvals)*(-0.3), np.ones(nvals)*3.4])
+    vals = bd.uniform(low, high)
+    checkUniformMethod(vals[:nvals], -1.1, -0.3)
+    checkUniformMethod(vals[nvals:], 2.2, 3.4)
+
 
 @timer
 def test_gaussian():
