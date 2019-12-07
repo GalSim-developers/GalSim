@@ -262,6 +262,21 @@ class BaseDeviate(object):
     def normal(self, loc=0.0, scale=1.0, size=None):
         return self.gaussian(loc, scale, size)
 
+    def binomial(self, n, p, size=None):
+        is_scalar = np.ndim(n) == np.ndim(p) == 0
+        if size is None:
+            if is_scalar:
+                return BinomialDeviate(self, N=n, p=p)()
+            size = np.broadcast(n, p).shape
+        array = np.empty(size)
+        if is_scalar:
+            BinomialDeviate(self, N=n, p=p).generate(array)
+            return array
+        for idx, n_ in np.ndenumerate(np.broadcast_to(n, size)):
+            p_ = np.broadcast_to(p, size)[idx]
+            array[idx] = BinomialDeviate(self, N=n_, p=p_)()
+        return array
+
 
 class UniformDeviate(BaseDeviate):
     """Pseudo-random number generator with uniform distribution in interval [0.,1.).
@@ -388,6 +403,10 @@ class BinomialDeviate(BaseDeviate):
         p:          The probability of success per coin flip. [default: 0.5; Must be > 0]
     """
     def __init__(self, seed=None, N=1, p=0.5):
+        if N < 0:
+            raise GalSimRangeError("Invalid BinomialDeviate value N", N, 0.0)
+        if p < 0 or p > 1:
+            raise GalSimRangeError("Invalid BinomialDeviate value p", p, 0.0, 1.0)
         self._rng_type = _galsim.BinomialDeviateImpl
         self._rng_args = (int(N), float(p))
         self.reset(seed)

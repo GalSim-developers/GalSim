@@ -694,6 +694,51 @@ def test_binomial():
     assert_raises(TypeError, galsim.BinomialDeviate, list())
     assert_raises(TypeError, galsim.BinomialDeviate, set())
 
+    # Test numpy.random.RandomState-like interface
+    bd = galsim.BaseDeviate(testseed)
+    np.testing.assert_array_equal(bd.binomial(bN, bp, size=3), bResult)
+    # Works after reset
+    bd.reset(testseed)
+    np.testing.assert_array_equal(bd.binomial(bN, bp, size=3), bResult)
+    # Works generating one at a time
+    bd.reset(testseed)
+    np.testing.assert_array_equal([bd.binomial(bN, bp) for _ in range(3)], bResult)
+
+    # Try out some different combinations of N, p
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.binomial(n=-10, p=0.1)
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.binomial(n=10, p=2)
+    with np.testing.assert_raises(galsim.GalSimRangeError):
+        bd.binomial(n=10, p=-2)
+
+    # size/shape
+    bd.reset(testseed)
+    vals = bd.binomial(bN, bp, size=nvals)
+    bd.reset(testseed)
+    vals2 = bd.binomial(bN, bp, size=(10, nvals//10))
+    assert vals2.shape == (10, nvals//10)
+    np.testing.assert_array_equal(vals, vals2.ravel())
+
+    # broadcasting
+    bd.reset(testseed)
+    vals2 = bd.binomial(bN, np.ones(10)*bp)
+    np.testing.assert_array_equal(vals[:10], vals2)
+    bd.reset(testseed)
+    vals2 = bd.binomial(np.ones(10)*bN, bp)
+    np.testing.assert_array_equal(vals[:10], vals2)
+    bd.reset(testseed)
+    vals2 = bd.binomial(np.ones(2)*bN, (np.ones(5)*bp).reshape(-1, 1))
+    np.testing.assert_array_equal(vals[:10], vals2.ravel())
+
+    bd.reset(testseed)
+    N = np.hstack([np.ones(10)*10, np.ones(10)*8])
+    p = np.hstack([np.ones(10)*0.2, np.ones(10)*0.7])
+    vals = bd.binomial(N, p)
+    bd.reset(testseed)
+    np.testing.assert_array_equal(vals[:10], bd.binomial(10, 0.2, 10))
+    np.testing.assert_array_equal(vals[10:], bd.binomial(8, 0.7, 10))
+
 
 @timer
 def test_poisson():
