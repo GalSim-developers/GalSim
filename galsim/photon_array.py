@@ -673,7 +673,34 @@ class Refraction(object):
             index_ratio = self.index_ratio(photon_array.wavelength)
         else:
             index_ratio = self.index_ratio
-        normsqr = 1 + photon_array.dxdz**2 + photon_array.dydz**2
+        # Here's the math avoiding any actual trig function calls:
+        #
+        #        x1 = dr/dz
+        #        ------+
+        #         \    |
+        #          \   |
+        #           \  |  dz/dz = 1
+        #            \ |
+        #             \|         n1
+        #  ------------------------
+        #              |\        n2
+        #              |\
+        # dz'/dz' = 1  | \
+        #              | \
+        #              |  \
+        #              +---
+        #              x2 = dr'/dz'
+        #
+        # Solve Snell's law for x2 as fn of x1:
+        #   n1 sin(th1) = n2 sin(th2)
+        #   n1 x1 / sqrt(1 + x1^2) = n2 x2 / sqrt(1 + x2^2)
+        #   n1^2 x1^2 (1 + x2^2) = n2^2 x2^2 (1 + x1^2)
+        #   n1^2 x1^2 = x2^2 (n2^2 (1 + x1^2) - n1^2 x1^2)
+        #   x1^2 = x2^2 ((n2/n1)^2 (1 + x1^2) - x1^2)
+        #   x1 = x2 sqrt( (n2/n1)^2 (1 + x1^2) - x1^2 )
+        #      = x2 sqrt( (n2/n1)^2 (1 + x1^2) - (1 + x1^2) + 1 )
+        #      = x2 sqrt( 1 - (1 + x1^2) (1 - (n2/n1)^2) )
+        normsqr = 1 + photon_array.dxdz**2 + photon_array.dydz**2  # (1 + x1^2)
         with np.errstate(invalid='ignore'):
             # NaN below <=> total internal reflection
             factor = np.sqrt(1 - normsqr*(1-index_ratio**2))
