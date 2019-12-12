@@ -42,7 +42,10 @@ def getPSF(SCA, bandpass,
     plane configuration and when interpolating chromatic information, if requested.
 
     This routine carries out linear interpolation of the aberrations within a given SCA, based on
-    the WFIRST Cycle 7 specification of the aberrations as a function of focal plane position.
+    the WFIRST Cycle 7 specification of the aberrations as a function of focal plane position, more
+    specifically from a file `WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727.xlsm` downloaded
+    from https://wfirst.gsfc.nasa.gov/science/WFIRST_Reference_Information.html.  Phase B updates
+    that became available in mid-2019 have not yet been incorporated into this module.
 
     The default is to do the calculations using the full specification of the WFIRST pupil plane,
     which is a costly calculation in terms of memory.  For this, we use the provided pupil plane for
@@ -81,13 +84,16 @@ def getPSF(SCA, bandpass,
     provide an optional keyword ``extra_aberrations`` that will be included on top of those that are
     part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
     with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order
-    22 (Noll convention) are simulated.  For WFIRST, the current tolerance for additional
-    aberrations is a total of 90 nanometers RMS:
+    22 (Noll convention) are simulated.  For WFIRST, the tolerance for additional
+    aberrations was a total of 90 nanometers RMS as of mid-2015, distributed largely among coma,
+    astigmatism, trefoil, and spherical aberrations (NOT defocus).  This information might serve as
+    a guide for reasonable ``extra_aberrations`` inputs.  The reference for that number is
+    an earlier Cycle 5 document:
 
     http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf
 
-    distributed largely among coma, astigmatism, trefoil, and spherical aberrations (NOT defocus).
-    This information might serve as a guide for reasonable ``extra_aberrations`` inputs.
+    However, the default (non-extra) aberrations are from Cycle 7 material linked earlier in this
+    docstring.
 
     Jitter and charge diffusion are, by default, not included.  Users who wish to include these can
     find some guidelines for typical length scales of the Gaussians that can represent these
