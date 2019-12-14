@@ -218,9 +218,9 @@ def download(url, target, unpack_dir, args, logger):
                 # Skip some keys that don't imply obselescence.
                 if k.startswith('X-') or k.startswith('Retry') or k.startswith('Set-Cookie'):
                     continue
-                if k.lower() == 'date':
-                    continue  # This one isn't expected to match.
-                elif k not in saved_meta_dict:
+                if k.lower() in ['date', 'last-modified', 'server']:
+                    continue  # These aren't necessarily expected to match.
+                if k not in saved_meta_dict:
                     logger.debug("key %s is missing in saved meta information",k)
                     obsolete = True
                 elif meta_dict[k] != saved_meta_dict[k]:
