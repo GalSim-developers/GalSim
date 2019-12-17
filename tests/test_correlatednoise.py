@@ -1163,6 +1163,71 @@ def test_uncorrelated_noise_tracking():
     assert isinstance(noise, galsim.BaseCorrelatedNoise)
     assert not isinstance(noise, galsim.UncorrelatedNoise)
 
+@timer
+def test_noise_tracking():
+    """More in depth testing of the noise tracking to make sure the public interface does
+    what we expect.
+    """
+    def check_noise(im, noise):
+        # Note: assumes that the image has mean=0.
+        print('noise.var = ',noise.getVariance())
+        var = np.var(im.array)
+        print('im.var = ',var)
+        factor = im.wcs.pixelArea() / noise.wcs.pixelArea()
+        print('factor = ',factor)
+        # Why factor**1.5?  That's pixel_scale**3!?!
+        np.testing.assert_allclose(noise.getVariance()*factor**1.5, var, rtol=0.1)
+        im2 = im.copy()
+        im2.setZero()
+        noise.applyTo(im2)
+        var2 = np.var(im2.array)
+        print('im2.var = ',var2)
+        np.testing.assert_allclose(var2 * factor**1.5, var, rtol=0.1)
+        new_var1 = noise.whitenImage(im)
+        new_var2 = np.var(im.array)
+        print('new var = ',new_var1,new_var2)
+        # This doesn't work when the scales are different.
+        np.testing.assert_allclose(new_var2, new_var1, rtol=0.1)
+
+
+    # Start with an UncorrelatedNoise instance that we attach to an InterpolatedImage GSObject as a
+    # 'noise' attribute
+    noise_var = 16
+    seed = 1234
+    rng = galsim.BaseDeviate(seed)
+    pix_scale = 0.1
+    orig_ucn = galsim.UncorrelatedNoise(variance=noise_var, scale=pix_scale, rng=rng)
+    im = galsim.ImageF(32,32,scale=pix_scale)
+    im.addNoise(galsim.GaussianNoise(sigma=noise_var**0.5, rng=rng))
+    print('im = ',im.array)
+    print('im var = ',np.var(im.array))
+    print('im sum = ',np.sum(im.array))
+    int_im = galsim.InterpolatedImage(im, noise_pad_size=256, noise_pad=orig_ucn,
+                                      calculate_stepk=False, calculate_maxk=False)
+    # Nose: There is no object here -- just noise.  This makes it easier to check that the
+    # nominal noise being tracked in the noise attribute matches the actual noise in the image.
+    int_im.noise = orig_ucn
+    print('int_im = ',int_im)
+    print('int_im.noise = ',int_im.noise)
+    print('int_im.flux = ',int_im.flux)
+    print('int_im.image_flux = ',int_im._image_flux)
+    print('im var = ',np.var(int_im._image.array))
+    print('xim var = ',np.var(int_im._xim.array))
+    print('_image = ',int_im._image.array)
+    print('_xim = ',int_im._xim.array)
+
+    # Start easy.  If we draw this object onto an image with the same pixel scale, the noise
+    # in the image should match the nominal noise.
+    im1 = int_im.drawImage(nx=128,ny=128,scale=pix_scale, method='no_pixel')
+    print('im1 = ',im1.array)
+    check_noise(im1, int_im.noise)
+
+    # Next keep with no_pixel, but change the pixel scale.
+    im2 = int_im.drawImage(nx=128,ny=128,scale=2*pix_scale, method='no_pixel')
+    print('im2 = ',im1.array)
+    check_noise(im2, int_im.noise)
+
+
 
 @timer
 def test_variance_changes():
