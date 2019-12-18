@@ -902,7 +902,7 @@ class GSFitsWCS(CelestialWCS):
             self.pv = _data[4]
             self.ab = _data[5]
             self.abp = _data[6]
-            if self.wcs_type in ('TAN', 'TPV'):
+            if self.wcs_type in ('TAN', 'TPV', 'TNX', 'TAN-SIP'):
                 self.projection = 'gnomonic'
             elif self.wcs_type == 'STG':
                 self.projection = 'stereographic'
