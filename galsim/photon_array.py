@@ -615,7 +615,7 @@ class PhotonDCR(object):
                 raise TypeError("Got unexpected keyword: {0}".format(kw))
 
         self.base_refraction = dcr.get_refraction(self.base_wavelength, self.zenith_angle,
-                                                         **self.kw)
+                                                  **self.kw)
 
     def applyTo(self, photon_array, local_wcs):
         """Apply the DCR effect to the photons
@@ -707,3 +707,21 @@ class Refraction(object):
         photon_array.dxdz /= factor
         photon_array.dydz /= factor
         photon_array.flux = np.where(np.isnan(factor), 0.0, photon_array.flux)
+
+
+class FocusDepth(object):
+    """Surface-layer operator that focuses/defocuses photons by changing the height of the focal
+    surface with respect to the conical beam.
+
+    Parameters:
+        depth:   The z-distance by which to displace the focal surface, in units of pixels.  A
+                 positive (negative) number here indicates an extra- (intra-) focal sensor height.
+    """
+    def __init__(self, depth):
+        self.depth = depth
+
+    def applyTo(self, photon_array, local_wcs=None):
+        if not photon_array.hasAllocatedAngles():
+            raise GalSimError("FocusDepth requires that angles be set")
+        photon_array.x += self.depth * photon_array.dxdz
+        photon_array.y += self.depth * photon_array.dydz

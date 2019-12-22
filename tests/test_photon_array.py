@@ -980,6 +980,69 @@ def test_refract():
     )
 
 
+@timer
+def test_focus_depth():
+    bd = galsim.BaseDeviate(1234)
+    for _ in range(100):
+        # Test that FocusDepth is additive
+        photon_array = galsim.PhotonArray(1000)
+        photon_array2 = galsim.PhotonArray(1000)
+        photon_array.x = 0.0
+        photon_array.y = 0.0
+        photon_array2.x = 0.0
+        photon_array2.y = 0.0
+        galsim.FRatioAngles(1.234, obscuration=0.606, rng=bd).applyTo(photon_array)
+        photon_array2.dxdz[:] = photon_array.dxdz
+        photon_array2.dydz[:] = photon_array.dydz
+        fd1 = galsim.FocusDepth(1.1)
+        fd2 = galsim.FocusDepth(2.2)
+        fd3 = galsim.FocusDepth(3.3)
+        fd1.applyTo(photon_array)
+        fd2.applyTo(photon_array)
+        fd3.applyTo(photon_array2)
+        np.testing.assert_allclose(photon_array.x, photon_array2.x, rtol=0, atol=1e-15)
+        np.testing.assert_allclose(photon_array.y, photon_array2.y, rtol=0, atol=1e-15)
+        # Assuming focus is at x=y=0, then
+        #   intrafocal (depth < 0) => (x > 0 => dxdz < 0)
+        #   extrafocal (depth > 0) => (x > 0 => dxdz > 0)
+        # We applied an extrafocal operation above, so check for corresponding
+        # relation between x, dxdz
+        np.testing.assert_array_less(0, photon_array.x * photon_array.dxdz)
+
+        # transforming by depth and -depth is null
+        fd4 = galsim.FocusDepth(-3.3)
+        fd4.applyTo(photon_array)
+        np.testing.assert_allclose(photon_array.x, 0.0, rtol=0, atol=1e-15)
+        np.testing.assert_allclose(photon_array.y, 0.0, rtol=0, atol=1e-15)
+
+    # Check that invalid photon array is trapped
+    pa = galsim.PhotonArray(10)
+    fd = galsim.FocusDepth(1.0)
+    with np.testing.assert_raises(galsim.GalSimError):
+        fd.applyTo(pa)
+
+    # Check that we can infer depth from photon positions before and after...
+    for _ in range(100):
+        photon_array = galsim.PhotonArray(1000)
+        photon_array2 = galsim.PhotonArray(1000)
+        ud = galsim.UniformDeviate(bd)
+        ud.generate(photon_array.x)
+        ud.generate(photon_array.y)
+        photon_array.x -= 0.5
+        photon_array.y -= 0.5
+        galsim.FRatioAngles(1.234, obscuration=0.606, rng=bd).applyTo(photon_array)
+        photon_array2.x[:] = photon_array.x
+        photon_array2.y[:] = photon_array.y
+        photon_array2.dxdz[:] = photon_array.dxdz
+        photon_array2.dydz[:] = photon_array.dydz
+        depth = ud()-0.5
+        galsim.FocusDepth(depth).applyTo(photon_array2)
+        np.testing.assert_allclose((photon_array2.x - photon_array.x)/photon_array.dxdz, depth)
+        np.testing.assert_allclose((photon_array2.y - photon_array.y)/photon_array.dydz, depth)
+        np.testing.assert_allclose(photon_array.dxdz, photon_array2.dxdz)
+        np.testing.assert_allclose(photon_array.dydz, photon_array2.dydz)
+
+
 if __name__ == '__main__':
     test_photon_array()
     test_convolve()
@@ -991,3 +1054,4 @@ if __name__ == '__main__':
         test_dcr_angles()
     test_dcr_moments()
     test_refract()
+    test_focus_depth()
