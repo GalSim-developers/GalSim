@@ -49,8 +49,14 @@ class PhotonArray(object):
         x:          The incidence x position at the top of the detector
         y:          The incidence y position at the top of the detector
         flux:       The flux of the photons
-        dxdz:       The tangent of the inclination angles in the x direction
-        dydz:       The tangent of the inclination angles in the y direction
+        dxdz:       The tangent of the inclination angles in the x direction.  Note that we define
+                    the +z direction as towards towards the dielectric medium of the detector and
+                    -z as towards vacuum; consequently, a photon with increasing x in time has
+                    positive dxdz.
+        dydz:       The tangent of the inclination angles in the y direction.  Note that we define
+                    the +z direction as towards towards the dielectric medium of the detector and
+                    -z as towards vacuum; consequently, a photon with increasing y in time has
+                    positive dydz.
         wavelength  The wavelength of the photons (in nm)
 
     Unlike most GalSim objects (but like `Image`), PhotonArrays are mutable.  It is permissible
@@ -716,6 +722,9 @@ class FocusDepth(object):
     Parameters:
         depth:   The z-distance by which to displace the focal surface, in units of pixels.  A
                  positive (negative) number here indicates an extra- (intra-) focal sensor height.
+                 I.e., depth > 0 means the sensor surface intersects the beam after it has
+                 converged, and depth < 0 means the sensor surface intersects the beam before it
+                 has converged.
     """
     def __init__(self, depth):
         self.depth = depth
