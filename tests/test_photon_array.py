@@ -1043,6 +1043,64 @@ def test_focus_depth():
         np.testing.assert_allclose(photon_array.dydz, photon_array2.dydz)
 
 
+@timer
+def test_lsst_y_focus():
+    # Check that applying reasonable focus depth (from O'Connor++06) indeed leads to smaller spot
+    # size for LSST y-band.
+    rng = galsim.BaseDeviate(9876543210)
+    bandpass = galsim.Bandpass("LSST_y.dat", wave_type='nm')
+    sed = galsim.SED("1", wave_type='nm', flux_type='flambda')
+    obj = galsim.Gaussian(fwhm=1e-5)
+    oversampling = 32
+    surface_ops0 = [
+        galsim.WavelengthSampler(sed, bandpass, rng=rng),
+        galsim.FRatioAngles(1.234, 0.606, rng=rng),
+        galsim.FocusDepth(0.0),
+        galsim.Refraction(3.9)
+    ]
+    img0 = obj.drawImage(
+        sensor=galsim.SiliconSensor(),
+        method='phot',
+        n_photons=100000,
+        surface_ops=surface_ops0,
+        scale=0.2/oversampling,
+        nx=32*oversampling,
+        ny=32*oversampling,
+        rng=rng
+    )
+    T0 = img0.calculateMomentRadius()
+    T0 *= 10*oversampling/0.2  # arcsec => microns
+
+    # O'Connor finds minimum spot size when the focus depth is ~ -12 microns.  Our sensor isn't
+    # necessarily the same as the one there though; our minimum seems to be around -6 microns.
+    # That could be due to differences in the design of the sensor though.  We just use -6 microns
+    # here, which is still useful to test the sign of the `depth` parameter and the interaction of
+    # the 4 different surface operators required to produce this effect, and is roughly consistent
+    # with O'Connor.
+
+    depth1 = -6.  # microns, negative means surface is intrafocal
+    depth1 /= 10  # microns => pixels
+    surface_ops1 = [
+        galsim.WavelengthSampler(sed, bandpass, rng=rng),
+        galsim.FRatioAngles(1.234, 0.606, rng=rng),
+        galsim.FocusDepth(depth1),
+        galsim.Refraction(3.9)
+    ]
+    img1 = obj.drawImage(
+        sensor=galsim.SiliconSensor(),
+        method='phot',
+        n_photons=100000,
+        surface_ops=surface_ops1,
+        scale=0.2/oversampling,
+        nx=32*oversampling,
+        ny=32*oversampling,
+        rng=rng
+    )
+    T1 = img1.calculateMomentRadius()
+    T1 *= 10*oversampling/0.2  # arcsec => microns
+    np.testing.assert_array_less(T1, T0)
+
+
 if __name__ == '__main__':
     test_photon_array()
     test_convolve()
@@ -1055,3 +1113,4 @@ if __name__ == '__main__':
     test_dcr_moments()
     test_refract()
     test_focus_depth()
+    test_lsst_y_focus()
