@@ -69,12 +69,12 @@
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
 
+#ifdef __clang__
 // register is deprecated in g++-17
 #if defined(__GNUC__) && __GNUC__ >= 5
 #pragma GCC diagnostic ignored "-Wdeprecated-register"
 #endif
 
-#ifdef __clang__
 // Only clang seems to have this
 #if __has_warning("-Wlogical-op-parentheses")
 #pragma GCC diagnostic ignored "-Wlogical-op-parentheses"

@@ -614,9 +614,21 @@ def fix_compiler(compiler, njobs):
 
     # Make sure the compiler works with a simple c++ code
     if not try_cpp(compiler):
-        print("There seems to be something wrong with the compiler or cflags")
-        print(str(compiler.compiler_so))
-        raise OSError("Compiler does not work for compiling C++ code")
+        # One failure mode is that sometimes there is a -B /path/to/compiler_compat
+        # which can cause problems.  If we get here, try removing that.
+        success = False
+        if '-B' in compiler.linker_so:
+            for i in range(len(compiler.linker_so)):
+                if (compiler.linker_so[i] == '-B' and
+                    'compiler_compat' in compiler.linker_so[i+1]):
+                    print('Removing potentially problematic -B compiler_compat flags')
+                    del compiler.linker_so[i:i+2]
+                    success = try_cpp(compiler)
+                    break
+        if not success:
+            print("There seems to be something wrong with the compiler or cflags")
+            print(str(compiler.compiler_so))
+            raise OSError("Compiler does not work for compiling C++ code")
 
     # Check if we can use ccache to speed up repeated compilation.
     if not already_have_ccache and try_cpp(compiler, prepend='ccache'):
