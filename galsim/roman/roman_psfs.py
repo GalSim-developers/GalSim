@@ -221,36 +221,32 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
     from .. import Image, OpticalPSF, ChromaticOpticalPSF
     from . import pupil_plane_file_longwave, pupil_plane_file_shortwave, pupil_plane_scale
     from . import diameter, obscuration
+    from ..bounds import BoundsI
     from .roman_bandpass import getBandpasses
+
+    # Load the pupil plane image.
+    if pupil_plane_type == 'long':
+        pupil_plane_im = pupil_plane_file_longwave
+    else:
+        pupil_plane_im = pupil_plane_file_shortwave
+    # There is a weird artifact here -- a square around the main pupil image with
+    # amplitude ~0.03.  This eventually gets turned into 1 when cast as a boolean.
+    # The easiest way to deal with it is to simply take everything < 0.5 => 0.0.
+    pupil_plane_im = fits.read(pupil_plane_im)
+    pupil_plane_im.array[pupil_plane_im.array < 0.5] = 0.
+    pupil_plane_im.scale = pupil_plane_scale
 
     # Deal with some accuracy settings.
     if high_accuracy:
-        if approximate_struts:
-            oversampling = 3.5
-        else:
-            oversampling = 2.0
-
-            # In this case, we need to pad the edges of the pupil plane image, so we cannot just use
-            # the stored file.
-            if pupil_plane_type == 'long':
-                tmp_pupil_plane_im = fits.read(pupil_plane_file_longwave)
-            else:
-                tmp_pupil_plane_im = fits.read(pupil_plane_file_shortwave)
-            old_bounds = tmp_pupil_plane_im.bounds
-            new_bounds = old_bounds.withBorder((old_bounds.xmax+1-old_bounds.xmin)/2)
-            pupil_plane_im = Image(bounds=new_bounds)
-            pupil_plane_im[old_bounds] = tmp_pupil_plane_im
-            pupil_plane_scale = pupil_plane_scale
+        pad_factor = 2
+        oversampling = 3
     else:
-        if approximate_struts:
-            oversampling = 1.5
-        else:
-            oversampling = 1.2
-            if pupil_plane_type == 'long':
-                pupil_plane_im = pupil_plane_file_longwave
-            else:
-                pupil_plane_im = pupil_plane_file_shortwave
-            pupil_plane_scale = pupil_plane_scale
+        pad_factor = 1.5
+        oversampling = 1.5
+
+    #print('get_single_PSF: ',high_accuracy,approximate_struts)
+    if approximate_struts:
+        pupil_plane_im = pupil_plane_im.bin(4,4)
 
     # Start reading in the aberrations for that SCA
     if logger: logger.debug('Beginning to get the PSF aberrations for SCA %d.'%SCA)
@@ -267,18 +263,12 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
 
     # Now set up the PSF, including the option to simplify the pupil plane.
     if wavelength is None:
-        if approximate_struts:
-            PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
-                                      diam=diameter, aberrations=use_aberrations,
-                                      obscuration=obscuration, nstruts=6,
-                                      oversampling=oversampling, gsparams=gsparams)
-        else:
-            PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
-                                      diam=diameter, aberrations=use_aberrations,
-                                      obscuration=obscuration,
-                                      pupil_plane_im=pupil_plane_im,
-                                      pupil_plane_scale=pupil_plane_scale,
-                                      oversampling=oversampling, pad_factor=2., gsparams=gsparams)
+        PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
+                                  diam=diameter, aberrations=use_aberrations,
+                                  obscuration=obscuration,
+                                  pupil_plane_im=pupil_plane_im,
+                                  ii_pad_factor=pad_factor,
+                                  oversampling=oversampling, gsparams=gsparams)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
             bp_dict = getBandpasses()
@@ -289,18 +279,12 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
         if not isinstance(wavelength, float):
             raise TypeError("wavelength should either be a Bandpass, float, or None.")
         tmp_aberrations = use_aberrations * zemax_wavelength / wavelength
-        if approximate_struts:
-            PSF = OpticalPSF(lam=wavelength, diam=diameter,
-                             aberrations=tmp_aberrations,
-                             obscuration=obscuration, nstruts=6,
-                             oversampling=oversampling, gsparams=gsparams)
-        else:
-            PSF = OpticalPSF(lam=wavelength, diam=diameter,
-                             aberrations=tmp_aberrations,
-                             obscuration=obscuration,
-                             pupil_plane_im=pupil_plane_im,
-                             pupil_plane_scale=pupil_plane_scale,
-                             oversampling=oversampling, pad_factor=2., gsparams=gsparams)
+        PSF = OpticalPSF(lam=wavelength, diam=diameter,
+                         aberrations=tmp_aberrations,
+                         obscuration=obscuration,
+                         pupil_plane_im=pupil_plane_im,
+                         ii_pad_factor=pad_factor,
+                         oversampling=oversampling, gsparams=gsparams)
 
     return PSF
 
