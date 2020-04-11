@@ -978,7 +978,7 @@ try:
 except OSError:
     print('Adding eigency to build_dep')
     # Once 1.78 is out I *think* we can remove the cython dependency here.
-    build_dep += ['cython', 'eigency>=1.77']
+    build_dep += ['cython', 'rmjarvis.eigency>=1.77']
 
 
 with open('README.rst') as file:
