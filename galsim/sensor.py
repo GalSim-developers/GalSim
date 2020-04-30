@@ -130,7 +130,7 @@ class SiliconSensor(Sensor):
                             that are in the ``galsim.meta_data.share_dir/sensors`` directory.
                             name.cfg should be the file used to simulate the pixel distortions,
                             and name.dat should containt the distorted pixel information.
-                            [default: 'lsst_itl_8']
+                            [default: 'lsst_itl_50_8']
         strength:           Set the strength of the brighter-fatter effect relative to the
                             amount specified by the Poisson simulation results.  [default: 1]
         rng:                A `BaseDeviate` object to use for the random number generation
@@ -151,7 +151,7 @@ class SiliconSensor(Sensor):
         transpose:          Transpose the meaning of (x,y) so the brighter-fatter effect is
                             stronger along the x direction. [default: False]
     """
-    def __init__(self, name='lsst_itl_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
+    def __init__(self, name='lsst_itl_50_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000, treering_func=None, treering_center=PositionD(0,0),
                  transpose=False):
         self.name = name
