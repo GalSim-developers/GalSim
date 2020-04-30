@@ -84,21 +84,24 @@ class SiliconSensor(Sensor):
     into account the repulsion of previously accumulated electrons (known as the brighter-fatter
     effect).
 
-    There are currently three sensors shipped with GalSim, which you can specify as the ``name``
-    parameter mentioned below.
+    There are currently four up-to-date sensors shipped with GalSim, which you can specify as the ``name``
+    parameter mentioned below. The _50_ indicates 50V back-bias.
 
-        lsst_itl_8
+        lsst_itl_50_8
                     The ITL sensor being used for LSST, using 8 points along each side of the
                     pixel boundaries.
 
-        lsst_itl_32
+        lsst_itl_50_32
                     The ITL sensor being used for LSST, using 32 points along each side of the
                     pixel boundaries.  (This is more accurate than the lsst_itl_8, but slower.)
 
-        lsst_etv_32
-                    The ETV sensor being used for LSST, using 32 points along each side of the
-                    pixel boundaries.  (This file is still somewhat preliminary and may be
-                    updated in the future.)
+        lsst_e2v_50_8
+                    The E2V sensor being used for LSST, using 8 points along each side of the
+                    pixel boundaries. 
+
+        lsst_e2v_50_32
+                    The E2V sensor being used for LSST, using 32 points along each side of the
+                    pixel boundaries.  (This is more accurate than the lsst_e2v_8, but slower.)
 
     The SiliconSensor model is asymmetric in the behavior along rows and columns in the CCD.
     The traditional meaning of (x,y) is (col,row), and the brighter-fatter effect is stronger
