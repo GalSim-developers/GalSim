@@ -270,13 +270,13 @@ def test_silicon():
 
     # Check the construction with an explicit name
     s0 = galsim.SiliconSensor(rng=rng1)
-    name = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl_8')
+    name = os.path.join(galsim.meta_data.share_dir, 'sensors', 'lsst_itl_50_8')
     s1 = galsim.SiliconSensor(name=name, strength=1.0, rng=rng1, diffusion_factor=1.0, qdist=3,
                               nrecalc=10000)
     assert s0 == s1
     s1 = galsim.SiliconSensor(name, 1.0, rng1, 1.0, 3, 10000)
     assert s0 == s1
-    s2 = galsim.SiliconSensor(rng=rng1, name='lsst_itl_8')
+    s2 = galsim.SiliconSensor(rng=rng1, name='lsst_itl_50_8')
     assert s0 == s2
     s3 = galsim.SiliconSensor(rng=rng1, strength=10.)
     s4 = galsim.SiliconSensor(rng=rng1, diffusion_factor=2.0)
@@ -403,7 +403,9 @@ def test_silicon_area():
     im.setCenter(0,0)
 
     rng = galsim.BaseDeviate(5678)
-    silicon = galsim.SiliconSensor(rng=rng)
+    # We compare to an explicit Poisson simulation that was equivalent to the model
+    # save as lsst_itl_8, so use that here, not the default lsst_itl_50_8.
+    silicon = galsim.SiliconSensor(name='lsst_itl_8', rng=rng)
     area_image = silicon.calculate_pixel_areas(im)
     # Get the area data from the Poisson simulation
     area_filename = silicon.vertex_file.split('/')[-1].strip('.dat')+'_areas.dat'
@@ -430,7 +432,7 @@ def test_silicon_area():
     np.testing.assert_almost_equal(im(0,0), 149462.06966413918)
 
     rng = galsim.BaseDeviate(5678)
-    silicon = galsim.SiliconSensor(rng=rng, diffusion_factor=0.0)
+    silicon = galsim.SiliconSensor(rng=rng, name='lsst_itl_8', diffusion_factor=0.0)
     area_image = silicon.calculate_pixel_areas(im)
     print('area min = ',area_image.array.min())
     print('area max = ',area_image.array.max())
@@ -465,7 +467,7 @@ def test_silicon_area():
     np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59031.0)
 
     # Repeat with transpose=True to check that things are transposed properly.
-    siliconT = galsim.SiliconSensor(rng=rng, transpose=True, diffusion_factor=0.0)
+    siliconT = galsim.SiliconSensor(rng=rng, name='lsst_itl_8', transpose=True, diffusion_factor=0.0)
     area_imageT = siliconT.calculate_pixel_areas(im)
     print('with transpose=True:')
     print('area min = ',area_imageT.array.min())
