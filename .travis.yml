@@ -92,6 +92,9 @@ before_install:
     # Install the non-python dependencies: fftw, libav, eigen
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; brew install fftw libav eigen; brew cask install gfortran; fi
+    # This next line fixes a problem with using OpenSSL 1.1.  Just roll back to v1.0.0
+    # cf. https://github.com/kelaberetiv/TagUI/issues/86
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew uninstall openssl; brew uninstall openssl; brew install https://github.com/tebelorg/Tump/releases/download/v1.0.0/openssl.rb; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
