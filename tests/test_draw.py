@@ -1125,9 +1125,17 @@ def test_shoot():
     np.testing.assert_equal(image4.array, 0)
 
     # Warns if flux is 1 and n_photons not given.
+    psf = galsim.Gaussian(sigma=3)
     with assert_warns(galsim.GalSimWarning):
-        psf = galsim.Gaussian(sigma=3)
         psf.drawImage(method='phot')
+    with assert_warns(galsim.GalSimWarning):
+        psf.drawPhot(image4)
+    with assert_warns(galsim.GalSimWarning):
+        psf.makePhot()
+    # With n_photons=1, it's fine.
+    psf.drawImage(method='phot', n_photons=1)
+    psf.drawPhot(image4, n_photons=1)
+    psf.makePhot(n_photons=1)
 
     # Check negative flux shooting with poisson_flux=True
     # The do_shoot test in galsim_test_helpers checks negative flux with a fixed number of photons.
@@ -1187,6 +1195,16 @@ def test_drawImage_area_exptime():
     # But not if we explicitly tell it to shoot 1 photon
     with assert_raises(AssertionError):
         assert_warns(galsim.GalSimWarning, obj1.drawImage, method='phot', n_photons=1)
+    # Likewise for makePhot
+    with assert_warns(galsim.GalSimWarning):
+        obj1.makePhot()
+    with assert_raises(AssertionError):
+        assert_warns(galsim.GalSimWarning, obj1.makePhot, n_photons=1)
+    # And drawPhot
+    with assert_warns(galsim.GalSimWarning):
+        obj1.drawPhot(im1)
+    with assert_raises(AssertionError):
+        assert_warns(galsim.GalSimWarning, obj1.drawPhot, im1, n_photons=1)
 
 
 @timer
@@ -1601,13 +1619,25 @@ def test_direct_scale():
                                    "drawReal made different image when off-center")
 
     obj.drawImage(im1, method='phot', rng=rng.duplicate())
-    obj.drawPhot(im2, rng=rng.duplicate())
-    obj.drawPhot(im3, rng=rng.duplicate())
+    _, phot1 = obj.drawPhot(im2, rng=rng.duplicate())
+    _, phot2 = obj.drawPhot(im3, rng=rng.duplicate())
+    phot3 = obj.makePhot(rng=rng.duplicate())
+    phot3.scaleXY(1./scale)
+    phot4 = im3.wcs.toImage(obj).makePhot(rng=rng.duplicate())
     print('phot: max diff = ',np.max(np.abs(im1.array - im2.array)))
     np.testing.assert_almost_equal(im1.array, im2.array, 15,
                                    "drawPhot made different image than method='phot'")
     np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawPhot made different image when off-center")
+    assert phot2 == phot1, "drawPhot made different photons than method='phot'"
+    assert phot3 == phot1, "makePhot made different photons than method='phot'"
+    # phot4 has a different order of operations for the math, so it doesn't come out exact.
+    np.testing.assert_almost_equal(phot4.x, phot3.x, 15,
+                                   "two ways to have makePhot apply scale have different x")
+    np.testing.assert_almost_equal(phot4.y, phot3.y, 15,
+                                   "two ways to have makePhot apply scale have different y")
+    np.testing.assert_almost_equal(phot4.flux, phot3.flux, 15,
+                                   "two ways to have makePhot apply scale have different flux")
 
     # Check images with invalid wcs raise ValueError
     im4 = galsim.ImageD(65, 65)
@@ -1621,6 +1651,7 @@ def test_direct_scale():
     # Also some other errors from drawPhot
     assert_raises(ValueError, obj.drawPhot, im2, n_photons=-20)
     assert_raises(TypeError, obj.drawPhot, im2, sensor=5)
+    assert_raises(ValueError, obj.makePhot, n_photons=-20)
 
 if __name__ == "__main__":
     test_drawImage()

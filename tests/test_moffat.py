@@ -439,23 +439,27 @@ def test_moffat_shoot():
     obj = galsim.Moffat(fwhm=3.5, beta=4.7, flux=1.e4)
     im = galsim.Image(500,500, scale=1)
     im.setCenter(0,0)
-    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng.duplicate())
     print('obj.flux = ',obj.flux)
     print('added_flux = ',added_flux)
     print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
     print('image flux = ',im.array.sum())
     assert np.isclose(added_flux, obj.flux)
     assert np.isclose(im.array.sum(), obj.flux)
+    photons2 = obj.makePhot(poisson_flux=False, rng=rng)
+    assert photons2 == photons, "Moffat makePhot not equivalent to drawPhot"
 
     # Note: low beta has large wings, so don't go too low.  Also, reduce fwhm a bit.
     obj = galsim.Moffat(fwhm=1.5, beta=1.9, flux=1.e4)
-    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+    added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng.duplicate())
     print('obj.flux = ',obj.flux)
     print('added_flux = ',added_flux)
     print('photon fluxes = ',photons.flux.min(),'..',photons.flux.max())
     print('image flux = ',im.array.sum())
     assert np.isclose(added_flux, obj.flux)
     assert np.isclose(im.array.sum(), obj.flux)
+    photons2 = obj.makePhot(poisson_flux=False, rng=rng)
+    assert photons2 == photons, "Moffat makePhot not equivalent to drawPhot"
 
 
 @timer

@@ -152,6 +152,7 @@ def test_convolve():
     assert_raises(galsim.GalSimError, deconv.xValue, galsim.PositionD(0,0))
     assert_raises(galsim.GalSimError, deconv.drawReal, myImg)
     assert_raises(galsim.GalSimError, deconv.drawPhot, myImg, n_photons=10)
+    assert_raises(galsim.GalSimError, deconv.makePhot, n_photons=10)
 
 
 @timer

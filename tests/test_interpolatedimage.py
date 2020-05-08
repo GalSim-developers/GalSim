@@ -1515,7 +1515,7 @@ def test_ii_shoot():
         flux = 1.e4
     for interp in interp_list:
         obj = galsim.InterpolatedImage(image_in, x_interpolant=interp, scale=3.3, flux=flux)
-        added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng)
+        added_flux, photons = obj.drawPhot(im, poisson_flux=False, rng=rng.duplicate())
         print('interp = ',interp)
         print('obj.flux = ',obj.flux)
         print('added_flux = ',added_flux)
@@ -1533,6 +1533,8 @@ def test_ii_shoot():
             rtol = 1.e-7
         assert np.isclose(added_flux, obj.flux, rtol=rtol)
         assert np.isclose(im.array.sum(), obj.flux, rtol=rtol)
+        photons2 = obj.makePhot(poisson_flux=False, rng=rng)
+        assert photons2 == photons, "InterpolatedImage makePhot not equivalent to drawPhot"
 
 
 @timer

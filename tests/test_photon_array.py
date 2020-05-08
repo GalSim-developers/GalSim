@@ -358,9 +358,17 @@ def test_wavelength_sampler():
     rng2 = galsim.BaseDeviate(1234)
     sampler2 = galsim.WavelengthSampler(sed, bandpass, rng2)
     obj.drawImage(im2, method='phot', n_photons=nphotons, use_true_center=False,
-                  surface_ops=[sampler2,clip600], rng=rng2)
+                  surface_ops=[sampler2,clip600], rng=rng2, save_photons=True)
     print('sum = ',im1.array.sum(),im2.array.sum())
     np.testing.assert_array_equal(im1.array, im2.array)
+
+    # Equivalent version just getting photons back
+    rng2.seed(1234)
+    photons = obj.makePhot(n_photons=nphotons, surface_ops=[sampler2,clip600], rng=rng2)
+    print('phot.x = ',photons.x)
+    print('im2.photons.x = ',im2.photons.x)
+    assert photons == im2.photons
+
 
 @timer
 def test_photon_angles():

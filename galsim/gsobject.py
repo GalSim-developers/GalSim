@@ -2067,6 +2067,101 @@ class GSObject(object):
         return iN, g
 
 
+    def makePhot(self, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
+                 sensor=None, surface_ops=(), maxN=None, orig_center=PositionI(0,0),
+                 local_wcs=None):
+        """
+        Make photons for a profile.
+
+        This is equivalent to drawPhot, except that the photons are not placed onto
+        an image.  Instead, it just returns the PhotonArray.
+
+        .. note::
+
+            The (x,y) positions returned are in the same units as the distance units
+            of the GSObject being rendered.  If you want (x,y) in pixel coordinates, you
+            should call this function for the profile in image coordinates::
+
+                >>> photons = image.wcs.toImage(obj).makePhot()
+
+            Or if you just want a simple pixel scale conversion from sky coordinates to image
+            coordinates, you can instead do
+
+                >>> photons = obj.makePhot()
+                >>> photons.scaleXY(1./pixel_scale)
+
+        Parameters:
+            n_photons:      If provided, the number of photons to use for photon shooting.
+                            If not provided (i.e. ``n_photons = 0``), use as many photons as
+                            necessary to result in an image with the correct Poisson shot
+                            noise for the object's flux.  For positive definite profiles, this
+                            is equivalent to ``n_photons = flux``.  However, some profiles need
+                            more than this because some of the shot photons are negative
+                            (usually due to interpolants).  [default: 0]
+            rng:            If provided, a random number generator to use for photon shooting,
+                            which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+            max_extra_noise: If provided, the allowed extra noise in each pixel when photon
+                            shooting.  This is only relevant if ``n_photons=0``, so the number of
+                            photons is being automatically calculated.  In that case, if the image
+                            noise is dominated by the sky background, then you can get away with
+                            using fewer shot photons than the full ``n_photons = flux``.
+                            Essentially each shot photon can have a ``flux > 1``, which increases
+                            the noise in each pixel.  The ``max_extra_noise`` parameter specifies
+                            how much extra noise per pixel is allowed because of this approximation.
+                            A typical value for this might be ``max_extra_noise = sky_level / 100``
+                            where ``sky_level`` is the flux per pixel due to the sky.  Note that
+                            this uses a "variance" definition of noise, not a "sigma" definition.
+                            [default: 0.]
+            poisson_flux:   Whether to allow total object flux scaling to vary according to
+                            Poisson statistics for ``n_photons`` samples when photon shooting.
+                            [default: True, unless ``n_photons`` is given, in which case the default
+                            is False]
+            surface_ops:    A list of operators that can modify the photon array that will be
+                            applied in order before accumulating the photons on the sensor.
+                            [default: ()]
+            orig_center:    The position of the image center in the original image coordinates.
+                            [default: (0,0)]
+            local_wcs:      The local wcs in the original image. [default: None]
+
+        Returns:
+            - a `PhotonArray` with the data about the photons.
+        """
+        from .sensor import Sensor
+        # Make sure the type of n_photons is correct and has a valid value:
+        if n_photons < 0.:
+            raise GalSimRangeError("Invalid n_photons < 0.", n_photons, 0., None)
+
+        if poisson_flux is None:
+            # If n_photons is given, poisson_flux = False
+            poisson_flux = (n_photons == 0.)
+
+        # Check that either n_photons is set to something or flux is set to something
+        if n_photons == 0. and self.flux == 1.:
+            galsim_warn(
+                    "Warning: drawImage for object with flux == 1, area == 1, and "
+                    "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
+
+        Ntot, g = self._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, rng)
+
+        try:
+            photons = self.shoot(Ntot, rng)
+        except (GalSimError, NotImplementedError) as e:
+            raise GalSimNotImplementedError(
+                    "Unable to draw this GSObject with photon shooting.  Perhaps it "
+                    "is a Deconvolve or is a compound including one or more "
+                    "Deconvolve objects.\nOriginal error: %r"%(e))
+
+        if g != 1.:
+            photons.scaleFlux(g)
+
+        for op in surface_ops:
+            op.applyTo(photons, local_wcs)
+
+        return photons
+
+
     def drawPhot(self, image, gain=1., add_to_image=False,
                  n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
                  sensor=None, surface_ops=(), maxN=None, orig_center=PositionI(0,0),
@@ -2145,8 +2240,8 @@ class GSObject(object):
             raise GalSimRangeError("Invalid n_photons < 0.", n_photons, 0., None)
 
         if poisson_flux is None:
-            if n_photons == 0.: poisson_flux = True
-            else: poisson_flux = False
+            # If n_photons is given, poisson_flux = False
+            poisson_flux = (n_photons == 0.)
 
         # Check that either n_photons is set to something or flux is set to something
         if n_photons == 0. and self.flux == 1.:
