@@ -910,6 +910,8 @@ class GSFitsWCS(CelestialWCS):
                 self.projection = 'lambert'
             elif self.wcs_type == 'ARC':
                 self.projection = 'postel'
+            else:
+                raise ValueError("Invalid wcs_type in _data")
             return
 
         # Read the file if given.

@@ -2261,6 +2261,7 @@ def test_gsfitswcs():
 
     assert_raises(TypeError, galsim.GSFitsWCS)
     assert_raises(TypeError, galsim.GSFitsWCS, file_name, header='dummy')
+    assert_raises(ValueError, galsim.GSFitsWCS, _data=('invalid',0,0,0,0,0,0))
 
 @timer
 def test_tanwcs():
