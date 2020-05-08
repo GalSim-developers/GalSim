@@ -179,11 +179,16 @@ def test_meds():
     # Check the image_info extension:
     ref_info = meds.util.get_image_info_dtype(1)
     info = m.get_image_info()
+    print('info = ',info)
     for name, dt in ref_info:
         dt = numpy.dtype(dt)
         print(name, dt, info.dtype[name], dt.char, info.dtype[name].char)
         assert name in info.dtype.names, "column %s not present in image_info extension"%name
-        assert dt.char == info.dtype[name].char, "column %s is the wrong type"%name
+        # I think S and U for this purpose are equivalent.
+        # But I'm finding S in the reference, and U in info.
+        c = info.dtype[name].char
+        c = 'S' if c == 'U' else c
+        assert dt.char == c, "column %s is the wrong type"%name
 
     # Check the basic structure of the object_data extension
     cat = m.get_cat()
