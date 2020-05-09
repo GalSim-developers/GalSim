@@ -97,18 +97,22 @@ namespace galsim {
         scaleFlux(flux / oldFlux);
     }
 
+    struct Scaler
+    {
+        Scaler(double _scale): scale(_scale) {}
+        double operator()(double x) { return x * scale; }
+        double scale;
+    };
+
     void PhotonArray::scaleFlux(double scale)
     {
-        std::transform(_flux, _flux+_N, _flux,
-                       std::bind2nd(std::multiplies<double>(),scale));
+        std::transform(_flux, _flux+_N, _flux, Scaler(scale));
     }
 
     void PhotonArray::scaleXY(double scale)
     {
-        std::transform(_x, _x+_N, _x,
-                       std::bind2nd(std::multiplies<double>(),scale));
-        std::transform(_y, _y+_N, _y,
-                       std::bind2nd(std::multiplies<double>(),scale));
+        std::transform(_x, _x+_N, _x, Scaler(scale));
+        std::transform(_y, _y+_N, _y, Scaler(scale));
     }
 
     void PhotonArray::assignAt(int istart, const PhotonArray& rhs)
