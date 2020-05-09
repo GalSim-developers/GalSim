@@ -357,7 +357,10 @@ class AtmosphericScreen(object):
         with self._objDict['lock']:
             self._objDict['refcount'].value -= 1
         with self._objDict['lock']:
-            if self._objDict['refcount'].value == 0:
+            # Normally, shareKey is present, but on final cleanup, we have no control over
+            # the order than things are deleted, so it might already be gone, in which
+            # case there can be a KeyError here.
+            if self._objDict['refcount'].value == 0 and self._shareKey in _GSScreenShare:
                 del _GSScreenShare[self._shareKey]
 
     def _getScreenShare(self):
