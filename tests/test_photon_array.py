@@ -682,7 +682,7 @@ def test_dcr_angles():
 
     # Stars that are visible from the north in summer time.
     names = ['Vega', 'Polaris', 'Altair', 'Regulus', 'Spica', 'Algol', 'Fomalhaut', 'Markab',
-             'Deneb', 'Mizar', 'Dubhe', 'Sirius', 'Rigel', 'Etamin', 'Alderamin']
+             'Deneb', 'Mizar', 'Dubhe', 'Sirius', 'Rigel', 'Alderamin']
 
     for name in names:
         try:
@@ -694,15 +694,17 @@ def test_dcr_angles():
             return
         print(star)
 
-        ap_z = subaru.altaz(time, star).zen
-        ap_q = subaru.parallactic_angle(time, star)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore")
+            ap_z = subaru.altaz(time, star).zen
+            ap_q = subaru.parallactic_angle(time, star)
+            local_sidereal_time = subaru.local_sidereal_time(time)
         print('According to astroplan:')
         print('  z,q = ', ap_z.deg, ap_q.deg)
 
         # Repeat with GalSim
         coord = galsim.CelestialCoord(star.ra.deg * galsim.degrees, star.dec.deg * galsim.degrees)
         lat = subaru.location.lat.deg * galsim.degrees
-        local_sidereal_time = subaru.local_sidereal_time(time)
         ha = local_sidereal_time.deg * galsim.degrees - coord.ra
         zenith = galsim.CelestialCoord(local_sidereal_time.deg * galsim.degrees, lat)
 
