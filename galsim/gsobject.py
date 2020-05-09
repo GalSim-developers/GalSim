@@ -2068,8 +2068,7 @@ class GSObject(object):
 
 
     def makePhot(self, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 sensor=None, surface_ops=(), maxN=None, orig_center=PositionI(0,0),
-                 local_wcs=None):
+                 sensor=None, surface_ops=(), maxN=None, local_wcs=None):
         """
         Make photons for a profile.
 
@@ -2121,8 +2120,6 @@ class GSObject(object):
             surface_ops:    A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
                             [default: ()]
-            orig_center:    The position of the image center in the original image coordinates.
-                            [default: (0,0)]
             local_wcs:      The local wcs in the original image. [default: None]
 
         Returns:
