@@ -119,6 +119,7 @@ cache:
     directories:
         - $HOME/des_data
         - $HOME/Library/Caches/Homebrew
+        - /usr/local/Cellar/
 
 install:
     # Upate pip executable.  (Needs sudo on some systems.)
