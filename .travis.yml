@@ -71,6 +71,7 @@ matrix:
             # This one doesn't have problems with /System stuff, but one of the dependencies
             # wants to write into /usr/local/man.  So use --user to avoid that.
             - __USER=--user
+            - PATH=/Users/travis/Library/Python/3.7/bin:$PATH
           name: OSX (Python 3.7)
 
         # Check 3.8-dev, but less concerned if this fails.
