@@ -2068,7 +2068,7 @@ class GSObject(object):
 
 
     def makePhot(self, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 sensor=None, surface_ops=(), maxN=None, local_wcs=None):
+                 surface_ops=(), local_wcs=None):
         """
         Make photons for a profile.
 
@@ -2125,7 +2125,6 @@ class GSObject(object):
         Returns:
             - a `PhotonArray` with the data about the photons.
         """
-        from .sensor import Sensor
         # Make sure the type of n_photons is correct and has a valid value:
         if n_photons < 0.:
             raise GalSimRangeError("Invalid n_photons < 0.", n_photons, 0., None)
