@@ -20,11 +20,11 @@
 #include <cmath>
 #include <cstdlib>
 #include <stdexcept>
-#include <assert.h>
 #include <limits>
 #include <algorithm>
 
 #include "math/Gamma.h"
+#include "Std.h"
 
 // The functions in this file and the other Bessel?.cpp files are manual conversions from the
 // public domain fortran code here:

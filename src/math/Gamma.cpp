@@ -20,8 +20,8 @@
 #include <cmath>
 #include <limits>
 
-#include "Std.h"
 #include "math/Gamma.h"
+#include "Std.h"
 
 //#define TEST // Uncomment this to turn on testing of this code against boost code.
                // It does some additional testing beyond just what we get from the SBSersic
