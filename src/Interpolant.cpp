@@ -571,8 +571,8 @@ namespace galsim {
 
     double Lanczos::xCalc(double x) const
     {
-        assert(x >= 0);
-        assert(x <= _nd);
+        xassert(x >= 0);
+        xassert(x <= _nd);
 
         double res; // res will be the result to return.
         double s;   // s will be sin(pi x) which we save for the flux conservation correction.

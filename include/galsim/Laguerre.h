@@ -92,7 +92,7 @@ namespace galsim {
         int m() const { return p-q; }
         PQIndex& setNm(const int N, const int m)
         {
-            assert(std::abs(m)<=N && (N-m)%2==0);
+            xassert(std::abs(m)<=N && (N-m)%2==0);
             p=(N+m)/2;
             q=(N-m)/2;
             return *this;
@@ -234,7 +234,7 @@ namespace galsim {
         {
             allocateMem();
             *_v = v;
-            assert(v.size() == PQIndex::size(order));
+            xassert(v.size() == PQIndex::size(order));
         }
 
         LVector(const LVector& rhs) : _order(rhs._order), _v(rhs._v) {}

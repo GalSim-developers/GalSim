@@ -23,7 +23,6 @@
 
 #include <limits>
 #include <vector>
-#include <cassert>
 #include "FFT.h"
 #include "Std.h"
 
