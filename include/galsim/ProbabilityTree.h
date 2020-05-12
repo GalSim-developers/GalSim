@@ -110,6 +110,7 @@ namespace galsim {
                 std::upper_bound(begin(), end(), threshold, FluxCompare());
             const int nelem = last-start;
             dbg<<"N elements to build tree with = "<<nelem<<std::endl;
+            xassert(nelem > 0);
             // Figure out what the total absolute flux is
             // NB. Accumulate from end for better numerical accuracy adding up small values.
             _totalAbsFlux = 0.;
@@ -147,8 +148,10 @@ namespace galsim {
                 _dataPtr(0), _left(0), _right(0),
                 _leftAbsFlux(leftAbsFlux), _absFlux(absFlux), _invAbsFlux(1./absFlux)
             {
-                xassert(start != end);
+                xdbg<<"Start making Element: "<<end-start<<"  "<<leftAbsFlux<<"  "<<absFlux<<std::endl;
+                assert(start < end);
                 if (start + 1 == end) {
+                    xdbg<<"single element\n";
                     // Only one element.
                     _dataPtr = *start;
                     // absFlux on input should equal the absolute flux in this dataPtr.
@@ -157,11 +160,13 @@ namespace galsim {
                     // Update the running total of leftAbsFlux.
                     leftAbsFlux += std::abs(_dataPtr->getFlux());
                 } else if (start + 2 == end) {
+                    xdbg<<"two elements\n";
                     // Two elements, so just split
                     VecIter mid = start+1;
                     _left = new Element(start, mid, leftAbsFlux, std::abs((*start)->getFlux()));
                     _right = new Element(mid, end, leftAbsFlux, std::abs((*mid)->getFlux()));
                 } else {
+                    xdbg<<"n elements = "<<end-start<<std::endl;
                     xassert(end > start+2);
                     xassert(absFlux > 0.);
                     VecIter mid = start;
@@ -170,19 +175,22 @@ namespace galsim {
                     // stops quickly with the large flux Elements on the left.
                     double half_tot = absFlux/2.;
                     double leftSum=0.;
-                    for (; leftSum < half_tot; ++mid) leftSum += std::abs((*mid)->getFlux());
+                    for (; leftSum < half_tot && mid < end; ++mid) {
+                        leftSum += std::abs((*mid)->getFlux());
+                    }
 
                     if (mid == end) {
                         dbg<<"mid passed the end.  Backtracking...\n";
-                        dbg<<"leftSum = "<<leftSum<<std::endl;
+                        xdbg<<"leftSum = "<<leftSum<<std::endl;
                         // Shouldn't happen in exact arithmetic, but just in case...
                         --mid;
                         leftSum -= std::abs((*mid)->getFlux());
-                        dbg<<"leftSum => "<<leftSum<<std::endl;
+                        xdbg<<"leftSum => "<<leftSum<<std::endl;
                     }
 
                     double rightSum;
                     if (leftSum > 0.9 * absFlux) {
+                        dbg<<"leftSum > 0.9 * absFlux\n";
                         // Then we're likely to start accumulating inaccuracies in absFlux
                         // if we just subtract, so recalculate.  Indeed, numerical inaccuracies
                         // can make leftSum come out > absFlux, in which case the recalculation
@@ -201,6 +209,8 @@ namespace galsim {
                         rightSum = absFlux - leftSum;
                     }
 
+                    assert(start < mid);
+                    assert(mid < end);
                     _left = new Element(start, mid, leftAbsFlux, leftSum);
                     _right = new Element(mid, end, leftAbsFlux, rightSum);
                     // this element's absFlux should equal the sum of the two children's fluxes.
