@@ -327,13 +327,13 @@ def test_meds_config():
     import logging
     logging.basicConfig(format="%(message)s", level=logging.WARN, stream=sys.stdout)
     logger = logging.getLogger('test_meds_config')
-    galsim.config.BuildFile(config, logger=logger)
+    galsim.config.BuildFile(galsim.config.CopyConfig(config), logger=logger)
 
     # Add in badpix and offset so we run both with and without options.
     config = galsim.config.CleanConfig(config)
     config['image']['offset'] = { 'type' : 'XY' , 'x' : offset_x, 'y' : offset_y }
     config['output']['badpix'] = {}
-    galsim.config.BuildFile(config, logger=logger)
+    galsim.config.BuildFile(galsim.config.CopyConfig(config), logger=logger)
 
     # Scattered image is invalid with MEDS output
     config = galsim.config.CleanConfig(config)
@@ -344,7 +344,7 @@ def test_meds_config():
         'size' : stamp_size ,
     }
     with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildFile(config, logger=logger)
+        galsim.config.BuildFile(galsim.config.CopyConfig(config), logger=logger)
 
     # Now repeat, making a separate file for each
     config = galsim.config.CleanConfig(config)
@@ -366,7 +366,7 @@ def test_meds_config():
                         'stamp_size' : stamp_size,
                         'random_seed' : seed
                       }
-    galsim.config.Process(config, logger=logger)
+    galsim.config.Process(galsim.config.CopyConfig(config), logger=logger)
 
     try:
         import meds
