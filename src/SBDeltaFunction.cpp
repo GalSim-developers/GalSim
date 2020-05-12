@@ -73,11 +73,11 @@ namespace galsim {
     }
 
     std::complex<double>
-    SBDeltaFunction::SBDeltaFunctionImpl::kValue(const Position<double>& k) const
-    {
-        std::complex<double> result(_flux,0);
-        return result;
-    }
+        SBDeltaFunction::SBDeltaFunctionImpl::kValue(const Position<double>& k) const
+        {
+            std::complex<double> result(_flux,0);
+            return result;
+        }
 
     void SBDeltaFunction::SBDeltaFunctionImpl::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
