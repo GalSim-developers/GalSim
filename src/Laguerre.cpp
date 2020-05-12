@@ -162,11 +162,11 @@ namespace galsim {
         MatrixXd& psi, int order, double sigma)
     {
 #ifdef USE_TMV
-        assert(y.size() == x.size() && psi.nrows() == x.size());
-        assert(psi.ncols()==PQIndex::size(order));
+        xassert(y.size() == x.size() && psi.nrows() == x.size());
+        xassert(psi.ncols()==PQIndex::size(order));
 #else
-        assert(y.size() == x.size() && psi.rows() == x.size());
-        assert(psi.cols()==PQIndex::size(order));
+        xassert(y.size() == x.size() && psi.rows() == x.size());
+        xassert(psi.cols()==PQIndex::size(order));
 #endif
         CalculateBasis(x, y, 0, psi, order, sigma);
     }
@@ -186,11 +186,11 @@ namespace galsim {
         MatrixXd& psi, int order, double sigma)
     {
 #ifdef USE_TMV
-        assert(y.size() == x.size() && psi.nrows() == x.size() && invsig.size() == x.size());
-        assert(psi.ncols()==PQIndex::size(order));
+        xassert(y.size() == x.size() && psi.nrows() == x.size() && invsig.size() == x.size());
+        xassert(psi.ncols()==PQIndex::size(order));
 #else
-        assert(y.size() == x.size() && psi.rows() == x.size() && invsig.size() == x.size());
-        assert(psi.cols()==PQIndex::size(order));
+        xassert(y.size() == x.size() && psi.rows() == x.size() && invsig.size() == x.size());
+        xassert(psi.cols()==PQIndex::size(order));
 #endif
         CalculateBasis(x, y, &invsig, psi, order, sigma);
     }
@@ -210,11 +210,11 @@ namespace galsim {
         MatrixXcd& psi_k, int order, double sigma)
     {
 #ifdef USE_TMV
-        assert(ky.size() == kx.size() && psi_k.nrows() == kx.size());
-        assert(psi_k.ncols()==PQIndex::size(order));
+        xassert(ky.size() == kx.size() && psi_k.nrows() == kx.size());
+        xassert(psi_k.ncols()==PQIndex::size(order));
 #else
-        assert(ky.size() == kx.size() && psi_k.rows() == kx.size());
-        assert(psi_k.cols()==PQIndex::size(order));
+        xassert(ky.size() == kx.size() && psi_k.rows() == kx.size());
+        xassert(psi_k.cols()==PQIndex::size(order));
 #endif
         CalculateBasis(kx, ky, 0, psi_k, order, sigma);
     }
@@ -262,9 +262,9 @@ namespace galsim {
     {
         assert (y.size()==x.size());
 #ifdef USE_TMV
-        assert (psi.nrows()==x.size() && psi.ncols()==PQIndex::size(order));
+        xassert (psi.nrows()==x.size() && psi.ncols()==PQIndex::size(order));
 #else
-        assert (psi.rows()==x.size() && psi.cols()==PQIndex::size(order));
+        xassert (psi.rows()==x.size() && psi.cols()==PQIndex::size(order));
 #endif
 
         const int N=order;

@@ -122,7 +122,7 @@ namespace galsim {
             int n = index % _nv;
             int j = (index / _nv) % _ny;
             int i = index / (_nv * _ny);
-            assert(index == (i * _ny + j) * _nv + n);
+            xassert(index == (i * _ny + j) * _nv + n);
             double x0 = vertex_data[5*index+0];
             double y0 = vertex_data[5*index+1];
             double x1 = vertex_data[5*index+3];
