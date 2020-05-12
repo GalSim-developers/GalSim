@@ -1615,6 +1615,23 @@ def test_ne():
             galsim.InterpolatedKImage(kim, gsparams=gsp)]
     all_obj_diff(gals)
 
+def test_quintic_glagn():
+    """This is code that was giving a seg fault.  cf. Issue 1079.
+    """
+
+    fname = os.path.join('fits_files','GLAGN_host_427_0_disk.fits')
+    for interpolant in 'linear cubic quintic'.split():
+        print(interpolant)
+        fits_image = galsim.InterpolatedImage(fname, scale=0.04, x_interpolant=interpolant)
+        fits_image.withFlux(529.2666077544975)
+
+        atm = galsim.Kolmogorov(lam_over_r0=0.7763974062349864)
+        gaus = galsim.Gaussian(sigma=0.18368260871093112)
+        gsobj = galsim.Convolve(fits_image, atm, gaus) * 4.7367431900462575
+
+        image = galsim.Image(bounds=galsim.BoundsI(1391,1440,3416,3465), dtype=np.float32)
+
+        gsobj.drawImage(method='phot', image=image, add_to_image=True)
 
 if __name__ == "__main__":
     setup()
@@ -1638,3 +1655,4 @@ if __name__ == "__main__":
     test_multihdu_readin()
     test_ii_shoot()
     test_ne()
+    test_quintic_glagn()
