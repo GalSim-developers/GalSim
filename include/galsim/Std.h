@@ -27,7 +27,6 @@
 #include <sstream>
 #include <cstdlib>
 #include <string>
-#include <cassert>
 #include <stdexcept>
 #include <cstddef>
 
@@ -80,7 +79,19 @@ inline bool IsAligned(const void* p) { return (reinterpret_cast<size_t>(p) & 0xf
 // doesn't take any CPU cycles.
 //
 
+// The regular assert is turned off by NDEBUG, which Python always sets.
+// It's easier to just make our own than to try to undo the NDEBUG definition.
+// Plus by making our own we can have it raise an exception, rather than abort, which
+// is nicer behavior anyway.
+#ifdef assert
+#undef assert
+#endif
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define assert(x) do { if (!(x)) { dbg<<"Failed Assert: "<<#x<<std::endl; throw std::runtime_error("Failed Assert: " #x " at " __FILE__ ":" TOSTRING(__LINE__)); } } while (false)
+
 #ifdef DEBUGLOGGING
+
 class Debugger // Use a Singleton model so it can be included multiple times.
 {
 public:

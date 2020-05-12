@@ -20,7 +20,6 @@
 #ifndef GalSim_GSParams_H
 #define GalSim_GSParams_H
 
-#include <cassert>
 #include <ostream>
 
 #include "Std.h"
