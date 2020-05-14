@@ -105,4 +105,10 @@ Changes from v2.2.1 to v2.2.2
 Change from v2.2.2 to v2.2.3
 =============================
 
-- Fix a bug in RandomKnots when multiplied by an SED. (#1064)
+- Fixed a bug in RandomKnots when multiplied by an SED. (#1064)
+
+Change from v2.2.3 to v2.2.4
+=============================
+
+- Fixed a bug in photon shooting which could cause seg faults when drawing an
+  InterpolatedImage with many values near 1.e-16. (#1079)
