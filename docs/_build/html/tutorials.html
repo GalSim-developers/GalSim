@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Tutorials &mdash; GalSim 2.2.3 documentation</title>
+  <title>Tutorials &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -208,8 +208,8 @@ test of the config parsing code.  But it also serves as a kind of implicit docum
 about how some of the config features are handled by GalSim.</p>
 <div class="section" id="demo-1">
 <h2>Demo 1<a class="headerlink" href="#demo-1" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/1ae6d5f7dd61387408073f38d69dc64c/demo1.py"><code class="xref download docutils literal notranslate"><span class="pre">demo1.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/755d246a848513acfe844b3d74db8164/demo1.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo1.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/e66e741ebb2339223f0a56a6e400a84c/demo1.py"><code class="xref download docutils literal notranslate"><span class="pre">demo1.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/c435324ccd9edf980676889cd542c3f1/demo1.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo1.yaml</span></code></a></p>
 <p>This first demo is about as simple as it gets.  We draw an image of a single galaxy
 convolved with a PSF and write it to disk.  We use a circular Gaussian profile for both the
 PSF and the galaxy, and add a constant level of Gaussian noise to the image.</p>
@@ -236,8 +236,8 @@ PSF and the galaxy, and add a constant level of Gaussian noise to the image.</p>
 </div>
 <div class="section" id="demo-2">
 <h2>Demo 2<a class="headerlink" href="#demo-2" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/f3bc3ff5a99980c6b3ac446c6fdb0c84/demo2.py"><code class="xref download docutils literal notranslate"><span class="pre">demo2.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/9cb7e54099a06ef6bb68f256c52d94c5/demo2.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo2.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/be85e7e268a56341a9e2f179525d2ab6/demo2.py"><code class="xref download docutils literal notranslate"><span class="pre">demo2.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/7bcc3fcf60c4572581b75664b73e7f12/demo2.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo2.yaml</span></code></a></p>
 <p>This demo is a bit more sophisticated, but still pretty basic.  We still only make
 a single image, but now the galaxy has an exponential radial profile and is sheared.
 The PSF is a circular Moffat profile.  The noise is drawn from a Poisson distribution
@@ -264,8 +264,8 @@ variance in each pixel.</p>
 </div>
 <div class="section" id="demo-3">
 <h2>Demo 3<a class="headerlink" href="#demo-3" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/d1e9aef4d4cda29103cad11e3d11b678/demo3.py"><code class="xref download docutils literal notranslate"><span class="pre">demo3.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/169f9e28d385f60b600cbb58e0d8de6f/demo3.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo3.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/06b1aa4ac217e5bc4f81274b1df76753/demo3.py"><code class="xref download docutils literal notranslate"><span class="pre">demo3.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/f85377f76a015883aeb43892693e55c3/demo3.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo3.yaml</span></code></a></p>
 <p>This demo gets reasonably close to including all the principal features of an image
 from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk,
 where each component is represented by a sheared Sersic profile (with different Sersic
@@ -312,8 +312,8 @@ telescope distortion.</p>
 </div>
 <div class="section" id="demo-4">
 <h2>Demo 4<a class="headerlink" href="#demo-4" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/015dcf217777c095ea920b4b033680ce/demo4.py"><code class="xref download docutils literal notranslate"><span class="pre">demo4.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/655f0ad3566668e54f5eb80218f1576d/demo4.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo4.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/e43c9b9a5ac4ed18caa041fc5162d396/demo4.py"><code class="xref download docutils literal notranslate"><span class="pre">demo4.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/e4749ba8eeadea4729c69d17915df064/demo4.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo4.yaml</span></code></a></p>
 <p>This demo is our first one to create multiple images.  Typically, you would want each object
 to have at least some of its attributes vary when you are drawing multiple images (although
 not necessarily – you might just want different noise realization of the same profile).
@@ -352,8 +352,8 @@ We write the images out into a multi-extension fits file.</p>
 </div>
 <div class="section" id="demo-5">
 <h2>Demo 5<a class="headerlink" href="#demo-5" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/209d1b36e7b8c5b59840d481eb3b26c1/demo5.py"><code class="xref download docutils literal notranslate"><span class="pre">demo5.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/9f7d9467253992905087b6f72d226b8e/demo5.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo5.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/30cc573e70357474f6b63711e1144fa1/demo5.py"><code class="xref download docutils literal notranslate"><span class="pre">demo5.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/d4f300e24ce20acbbbe642fd20d9f9cf/demo5.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo5.yaml</span></code></a></p>
 <p>This demo is intended to mimic a Great08 (Bridle, et al, 2010) LowNoise image.
 We produce a single image made up of tiles of postage stamps for each individual object.
 (We only do 10 x 10 postage stamps rather than 100 x 100 as they did in the interest of time.)
@@ -394,8 +394,8 @@ shape noise.  The applied shear is the same for each galaxy.</p>
 </div>
 <div class="section" id="demo-6">
 <h2>Demo 6<a class="headerlink" href="#demo-6" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/a7e890c522fd443731ee3b800d62bd23/demo6.py"><code class="xref download docutils literal notranslate"><span class="pre">demo6.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/e6c59a51cab850d52300a6a5410dc043/demo6.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo6.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/4b4e73e7d79a8b14a6f1be75d2cfce22/demo6.py"><code class="xref download docutils literal notranslate"><span class="pre">demo6.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/be30b22059d1fd255b9b712e0a7f262e/demo6.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo6.yaml</span></code></a></p>
 <p>This demo uses real galaxy images from COSMOS observations.  The catalog of real galaxy
 images distributed with GalSim only includes 100 galaxies, but you can download a much
 larger set of images as described in <a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog"><span class="std std-ref">Downloading the COSMOS Catalog</span></a>.</p>
@@ -434,8 +434,8 @@ slider to quickly move through the different images.</p>
 </div>
 <div class="section" id="demo-7">
 <h2>Demo 7<a class="headerlink" href="#demo-7" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/8d285f28b6b13e6f8dcab76c6765b76e/demo7.py"><code class="xref download docutils literal notranslate"><span class="pre">demo7.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/cacdd11bb607477d473641d996354c26/demo7.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo7.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/23fd3f6d546ca741af251164f4b68748/demo7.py"><code class="xref download docutils literal notranslate"><span class="pre">demo7.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/d618642074c056a8a5b3fc75b11626e5/demo7.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo7.yaml</span></code></a></p>
 <p>This demo introduces drawing profiles with photon shooting rather than doing the
 convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
 kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so
@@ -475,8 +475,8 @@ which makes it easy to scroll through the images comparing the two drawing metho
 </div>
 <div class="section" id="demo-8">
 <h2>Demo 8<a class="headerlink" href="#demo-8" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/98251f8e0f5818320a4bab9515823870/demo8.py"><code class="xref download docutils literal notranslate"><span class="pre">demo8.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/dc9481b5ddc74e96d9d841f28a8ac058/demo8.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo8.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/6ad302df39711687604bb7971a0b3f9b/demo8.py"><code class="xref download docutils literal notranslate"><span class="pre">demo8.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/b923d18c7572a30e87bb1d8585343468/demo8.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo8.yaml</span></code></a></p>
 <p>In this demo, we show how to run the GalSim config processing using a python dict rather
 than using a config file.  The previous demos have shown what Python code corresponds to
 the given YAML files.  Now we turn the tables
@@ -502,8 +502,8 @@ processing with them.  (e.g. Run your shape measurement code on the images from 
 </div>
 <div class="section" id="demo-9">
 <h2>Demo 9<a class="headerlink" href="#demo-9" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/842ea38bfaad9ea1d807559c765ee5ff/demo9.py"><code class="xref download docutils literal notranslate"><span class="pre">demo9.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/e6e9223c4997672de6170b6ff5992a69/demo9.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo9.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/2f0569fbbdb3755f22e7daf724bc01c2/demo9.py"><code class="xref download docutils literal notranslate"><span class="pre">demo9.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/f9fae7d78dbdfb102e856271b2d63832/demo9.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo9.yaml</span></code></a></p>
 <p>This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitational shear
 applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations
 of galaxies around 20 different clusters – 5 each of 4 different masses.  Each cluster
@@ -560,8 +560,8 @@ output image that could be used for testing the accuracy of shape or flux measur
 </div>
 <div class="section" id="demo-10">
 <h2>Demo 10<a class="headerlink" href="#demo-10" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/81d9592ef92e262b3d5c9db271ca8cb6/demo10.py"><code class="xref download docutils literal notranslate"><span class="pre">demo10.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/3ec1b9a3098dc11ac4d36e5a93486c97/demo10.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo10.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/05809f19b8a91a5097ec1244b7651c04/demo10.py"><code class="xref download docutils literal notranslate"><span class="pre">demo10.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/22a0ffef3f9bb8e3cd91df8f2f420116/demo10.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo10.yaml</span></code></a></p>
 <p>This script uses both a variable PSF and variable shear, taken from a power spectrum, along
 the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed on a grid
 (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
@@ -604,8 +604,8 @@ correct applied shear for each object (among other information).</p>
 </div>
 <div class="section" id="demo-11">
 <h2>Demo 11<a class="headerlink" href="#demo-11" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/972889e9ebed5739ebf522a6e8d249f9/demo11.py"><code class="xref download docutils literal notranslate"><span class="pre">demo11.py</span></code></a>
-<a class="reference download internal" download="" href="_downloads/ee4efa8d0c4fc8f5921708a6325ca98f/demo11.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo11.yaml</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/0ad28d2052930f0b925c67ba36c8e192/demo11.py"><code class="xref download docutils literal notranslate"><span class="pre">demo11.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/7fd32fa5ddbc0bcbadc61c8406a22935/demo11.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo11.yaml</span></code></a></p>
 <p>This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear and magnification according to some cosmological model for
 which we have a tabulated shear power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
@@ -657,7 +657,7 @@ The flux and size distribution are thus realistic for an I &lt; 23.5 magnitude l
 </div>
 <div class="section" id="demo-12">
 <h2>Demo 12<a class="headerlink" href="#demo-12" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/35ab7d7f71e2413bafa1db10410fd876/demo12.py"><code class="xref download docutils literal notranslate"><span class="pre">demo12.py</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/3577f1fcb98c9d3f7c1fcc49c0cee67c/demo12.py"><code class="xref download docutils literal notranslate"><span class="pre">demo12.py</span></code></a></p>
 <p>This demo introduces the chromatic objects module galsim.chromatic, which handles wavelength-
 dependent profiles.  Three uses of this module are demonstrated:</p>
 <ol class="arabic simple">
@@ -688,7 +688,7 @@ has not been implemented yet.</p>
 </div>
 <div class="section" id="demo-13">
 <h2>Demo 13<a class="headerlink" href="#demo-13" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/cdc292b5d0e1ae32c02bd3f6322f2696/demo13.py"><code class="xref download docutils literal notranslate"><span class="pre">demo13.py</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/23a7fc820a00c8441d37d758545cd4d6/demo13.py"><code class="xref download docutils literal notranslate"><span class="pre">demo13.py</span></code></a></p>
 <p>This script introduces non-idealities arising from NIR detectors, in particular those that will be
 observed and accounted for in the WFIRST survey. Three such non-ideal effects are demonstrated, in
 the order in which they are introduced in the detectors:</p>
@@ -733,12 +733,12 @@ the files for the other branches (Issue #699).</p>
 <p><strong>Significant features in these files</strong>:</p>
 <ul class="simple">
 <li><p>template option to load another config file and then modify a few aspects of it. (e.g.
-<a class="reference download internal" download="" href="_downloads/2d01c182e2852ba547ea63b207cc63d1/rgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">rgc.yaml</span></code></a>)</p></li>
+<a class="reference download internal" download="" href="_downloads/a7a31721ef3667ffa54033b58f2d9de0/rgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">rgc.yaml</span></code></a>)</p></li>
 <li><p>template option to load only a particular field from another config file. (e.g.
-<a class="reference download internal" download="" href="_downloads/b06d696f13310734c255a97eff088d67/cgc_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc_psf.yaml</span></code></a>)</p></li>
+<a class="reference download internal" download="" href="_downloads/3d94c558e887c78d847b4cf11813b989/cgc_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc_psf.yaml</span></code></a>)</p></li>
 <li><p>stamp.reject</p></li>
-<li><p>custom value type (e.g. Great3Reject in <a class="reference download internal" download="" href="_downloads/f2b30d40a89c1c39718c2a64f0894b58/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a>)</p></li>
-<li><p>custom extra output type (e.g. noise_free in <a class="reference download internal" download="" href="_downloads/f2b30d40a89c1c39718c2a64f0894b58/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a>)</p></li>
+<li><p>custom value type (e.g. Great3Reject in <a class="reference download internal" download="" href="_downloads/3e7227e22c28523dea1e62a3876fb445/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a>)</p></li>
+<li><p>custom extra output type (e.g. noise_free in <a class="reference download internal" download="" href="_downloads/3e7227e22c28523dea1e62a3876fb445/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a>)</p></li>
 <li><p>top-level module field</p></li>
 <li><p>use of ‘$’ and ‘&#64;’ shorthand in Eval items.</p></li>
 </ul>
@@ -748,19 +748,19 @@ the files for the other branches (Issue #699).</p>
 <p>In the directory <code class="docutils literal notranslate"><span class="pre">examples/des</span></code>,
 there are YAML config files that showcase some of the classes
 defined in the <code class="docutils literal notranslate"><span class="pre">galsim.des</span></code> module.  These are mostly gratuitous demos designed to showcase
-various features, although <a class="reference download internal" download="" href="_downloads/af323aafc94b32920083be6fa7e12788/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>
+various features, although <a class="reference download internal" download="" href="_downloads/5c62bd8d06771348eb931565b76fcceb/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>
 is very close to a real simulation we actually used in DES for testing shear measurements.</p>
 <p><strong>Significant features in these files</strong>:</p>
 <ul class="simple">
 <li><p>top-level module field</p></li>
 <li><p>special object types from galsim.des module (e.g. DES_Shapelet and DES_PSFEx in
-<a class="reference download internal" download="" href="_downloads/46c5dd7b07579c6dff7a9d685ec2532e/draw_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">draw_psf.yaml</span></code></a>)</p></li>
-<li><p>special output type from galsim.des module (e.g. MEDS in <a class="reference download internal" download="" href="_downloads/af323aafc94b32920083be6fa7e12788/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>)</p></li>
-<li><p>custom value type (e.g. HSM_Shape_Measure in meds.yaml, LogNormal in <a class="reference download internal" download="" href="_downloads/c8d126e301f128ca2b7061ad207cb667/blend.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blend.yaml</span></code></a>)</p></li>
-<li><p>custom WCS type (e.g. DES_Local in <a class="reference download internal" download="" href="_downloads/af323aafc94b32920083be6fa7e12788/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>)</p></li>
-<li><p>custom input type (e.g. des_wcs in <a class="reference download internal" download="" href="_downloads/af323aafc94b32920083be6fa7e12788/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>)</p></li>
-<li><p>custom stamp types (e.g. Blend in blend.yaml and BlendSet in <a class="reference download internal" download="" href="_downloads/c89d2f3d39fb6d561511338ec27c7757/blendset.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blendset.yaml</span></code></a>)</p></li>
-<li><p>custom extra output type (e.g. deblend in <a class="reference download internal" download="" href="_downloads/c8d126e301f128ca2b7061ad207cb667/blend.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blend.yaml</span></code></a>)</p></li>
+<a class="reference download internal" download="" href="_downloads/d5ef2e30b6c3574e6f3623a21cde6c18/draw_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">draw_psf.yaml</span></code></a>)</p></li>
+<li><p>special output type from galsim.des module (e.g. MEDS in <a class="reference download internal" download="" href="_downloads/5c62bd8d06771348eb931565b76fcceb/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>)</p></li>
+<li><p>custom value type (e.g. HSM_Shape_Measure in meds.yaml, LogNormal in <a class="reference download internal" download="" href="_downloads/4367f7e4ac3bd200fa759755037d2ee1/blend.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blend.yaml</span></code></a>)</p></li>
+<li><p>custom WCS type (e.g. DES_Local in <a class="reference download internal" download="" href="_downloads/5c62bd8d06771348eb931565b76fcceb/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>)</p></li>
+<li><p>custom input type (e.g. des_wcs in <a class="reference download internal" download="" href="_downloads/5c62bd8d06771348eb931565b76fcceb/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>)</p></li>
+<li><p>custom stamp types (e.g. Blend in blend.yaml and BlendSet in <a class="reference download internal" download="" href="_downloads/c0b7069951180c086bea3959116cfe35/blendset.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blendset.yaml</span></code></a>)</p></li>
+<li><p>custom extra output type (e.g. deblend in <a class="reference download internal" download="" href="_downloads/4367f7e4ac3bd200fa759755037d2ee1/blend.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blend.yaml</span></code></a>)</p></li>
 </ul>
 </div>
 </div>

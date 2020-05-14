@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Interfacing with FITS Files &mdash; GalSim 2.2.3 documentation</title>
+  <title>Interfacing with FITS Files &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -208,9 +208,9 @@ different ways while maintaining a intuitive front-end user interface.</p>
 </div>
 <div class="section" id="reading-fits-files">
 <h2>Reading FITS Files<a class="headerlink" href="#reading-fits-files" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.read">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">read_header=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">read_header</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> from a FITS file or HDUList.</p>
 <p>The normal usage for this function is to read a fits file and return the image contained
 therein, automatically decompressing it if necessary.  However, you may also pass it
@@ -267,9 +267,9 @@ want.)]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.readMulti">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readMulti</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">read_headers=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readMulti" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readMulti</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">read_headers</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readMulti" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances from a FITS file or HDUList.</p>
 <p>The normal usage for this function is to read a fits file and return a list of all the images
 contained therein, automatically decompressing them if necessary.  However, you may also pass
@@ -319,9 +319,9 @@ already include it. [default: None]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.readCube">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readCube</code><span class="sig-paren">(</span><em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">compression='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readCube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readCube" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readCube</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readCube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readCube" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a Python list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances from a FITS data cube.</p>
 <p>Not all FITS pixel types are supported – only <code class="docutils literal notranslate"><span class="pre">short</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">short</span></code>,
 <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
@@ -373,9 +373,9 @@ want.)]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.readFile">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readFile</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">compression='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read in a Pyfits hdu_list from a FITS file, taking care of the GalSim compression options.</p>
 <p>If you want to do something different with an hdu or hdu_list than one of our other read
 functions, you can use this function.  It handles the compression options in the standard
@@ -433,18 +433,18 @@ want.)]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.closeHDUList">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">closeHDUList</code><span class="sig-paren">(</span><em class="sig-param">hdu_list</em>, <em class="sig-param">fin</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#closeHDUList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.closeHDUList" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">closeHDUList</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdu_list</span></em>, <em class="sig-param"><span class="n">fin</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#closeHDUList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.closeHDUList" title="Permalink to this definition">¶</a></dt>
 <dd><p>If necessary, close the file handle that was opened to read in the <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code></p>
 </dd></dl>
 
 </div>
 <div class="section" id="writing-fits-files">
 <h2>Writing FITS Files<a class="headerlink" href="#writing-fits-files" title="Permalink to this headline">¶</a></h2>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.write">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">clobber=True</em>, <em class="sig-param">compression='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clobber</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a single image to a FITS file.</p>
 <p>Write the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance <code class="docutils literal notranslate"><span class="pre">image</span></code> to a FITS file, with details depending on the arguments.
 This function can be called directly as <code class="docutils literal notranslate"><span class="pre">galsim.fits.write(image,</span> <span class="pre">...)</span></code>, with the image as the
@@ -495,9 +495,9 @@ that case, the user is responsible for calling either
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.writeMulti">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">writeMulti</code><span class="sig-paren">(</span><em class="sig-param">image_list</em>, <em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">clobber=True</em>, <em class="sig-param">compression='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.writeMulti" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">writeMulti</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_list</span></em>, <em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clobber</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.writeMulti" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a Python list of images to a multi-extension FITS file.</p>
 <p>The details of how the images are written to file depends on the arguments.</p>
 <dl class="field-list simple">
@@ -543,9 +543,9 @@ that case, the user is responsible for calling either
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.writeCube">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">writeCube</code><span class="sig-paren">(</span><em class="sig-param">image_list</em>, <em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">clobber=True</em>, <em class="sig-param">compression='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeCube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.writeCube" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">writeCube</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_list</span></em>, <em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clobber</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeCube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.writeCube" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a Python list of images to a FITS file as a data cube.</p>
 <p>The details of how the images are written to file depends on the arguments.  Unlike for
 writeMulti, when writing a data cube it is necessary that each <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> in <code class="docutils literal notranslate"><span class="pre">image_list</span></code> has
@@ -601,9 +601,9 @@ or <code class="docutils literal notranslate"><span class="pre">galsim.fits.writ
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.fits.writeFile">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">writeFile</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">hdu_list</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">clobber=True</em>, <em class="sig-param">compression='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.writeFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">writeFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">hdu_list</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clobber</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.writeFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a Pyfits hdu_list to a FITS file, taking care of the GalSim compression options.</p>
 <p>If you have used the write(), writeMulti() or writeCube() functions with the <code class="docutils literal notranslate"><span class="pre">hdu_list</span></code>
 option rather than writing directly to a file, you may subsequently use the command
@@ -646,9 +646,9 @@ it must be applied when writing each hdu.
 </div>
 <div class="section" id="fits-headers">
 <h2>FITS Headers<a class="headerlink" href="#fits-headers" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.fits.FitsHeader">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">FitsHeader</code><span class="sig-paren">(</span><em class="sig-param">header=None</em>, <em class="sig-param">file_name=None</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">hdu_list=None</em>, <em class="sig-param">hdu=None</em>, <em class="sig-param">compression='auto'</em>, <em class="sig-param">text_file=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">FitsHeader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">header</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">text_file</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class storing key/value pairs from a FITS Header</p>
 <p>This class works a lot like the regular read() function, but rather than returning
 the image part of the FITS file, it gives you access to the header information.</p>
@@ -746,9 +746,9 @@ to parse the file this way.  [default: False]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.append">
-<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value=''</em>, <em class="sig-param">comment=None</em>, <em class="sig-param">useblanks=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.append" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">value</span><span class="o">=</span><span class="default_value">''</span></em>, <em class="sig-param"><span class="n">comment</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">useblanks</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.append" title="Permalink to this definition">¶</a></dt>
 <dd><p>Append an item to the end of the header.</p>
 <p>This breaks convention a bit by treating the header more like a list than a dict,
 but sometimes that is necessary to get the header structured the way you want it.</p>
@@ -765,15 +765,15 @@ overwritten with the new entry? [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.clear">
 <code class="sig-name descname">clear</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.clear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear all values in the header.  Works like dict.clear.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.comment">
-<code class="sig-name descname">comment</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.comment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.comment" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">comment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.comment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.comment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the comment field for the given key.</p>
 <dl class="simple">
 <dt>Parameter:</dt><dd><p>key:    The header key for which to get the comment field.</p>
@@ -786,9 +786,9 @@ overwritten with the new entry? [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.extend">
-<code class="sig-name descname">extend</code><span class="sig-paren">(</span><em class="sig-param">other</em>, <em class="sig-param">replace=False</em>, <em class="sig-param">useblanks=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.extend" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">extend</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em>, <em class="sig-param"><span class="n">replace</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">useblanks</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.extend" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extend this <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a> with items from another <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a>.</p>
 <p>Equivalent to appending all the other’s items to the end of this one with the
 exception that it ignores items that are already in self.
@@ -806,9 +806,9 @@ overwritten with the new entry? [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.get" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">default</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value of a given key.  Works like dict.get.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -823,7 +823,7 @@ overwritten with the new entry? [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.items">
 <code class="sig-name descname">items</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.items" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all header items.  Works like dict.items.</p>
@@ -834,7 +834,7 @@ overwritten with the new entry? [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.keys">
 <code class="sig-name descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all header keys.  Works like dict.keys</p>
@@ -845,9 +845,9 @@ overwritten with the new entry? [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.pop">
-<code class="sig-name descname">pop</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.pop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">pop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">key</span></em>, <em class="sig-param"><span class="n">default</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.pop"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.pop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pop off a value from the header.  Works like dict.pop.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -862,9 +862,9 @@ overwritten with the new entry? [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.update">
-<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">dict2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.update" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dict2</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the header with a dict-like object.  Works like dict.update.</p>
 <p>If there are any items in <code class="docutils literal notranslate"><span class="pre">dict2</span></code> that are duplicates of items already in the header,
 the current items will ber overwritten.</p>
@@ -875,7 +875,7 @@ the current items will ber overwritten.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.values">
 <code class="sig-name descname">values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.values" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all header values.  Works like dict.values.</p>

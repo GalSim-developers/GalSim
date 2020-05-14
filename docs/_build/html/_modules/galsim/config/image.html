@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.config.image &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.config.image &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -187,18 +187,18 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">UpdateNProc</span><span class="p">,</span> <span class="n">MultiProcess</span><span class="p">,</span> <span class="n">SetupConfigRNG</span>
-<span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">SetupInput</span><span class="p">,</span> <span class="n">SetupInputsForImage</span>
-<span class="kn">from</span> <span class="nn">.extra</span> <span class="k">import</span> <span class="n">SetupExtraOutputsForImage</span><span class="p">,</span> <span class="n">ProcessExtraOutputsForImage</span>
-<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span>
-<span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">BuildWCS</span>
-<span class="kn">from</span> <span class="nn">.stamp</span> <span class="k">import</span> <span class="n">BuildStamp</span><span class="p">,</span> <span class="n">MakeStampTasks</span>
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
-<span class="kn">from</span> <span class="nn">..position</span> <span class="k">import</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">..bounds</span> <span class="k">import</span> <span class="n">BoundsI</span>
-<span class="kn">from</span> <span class="nn">..celestial</span> <span class="k">import</span> <span class="n">CelestialCoord</span>
-<span class="kn">from</span> <span class="nn">..image</span> <span class="k">import</span> <span class="n">ImageF</span>
-<span class="kn">from</span> <span class="nn">..noise</span> <span class="k">import</span> <span class="n">VariableGaussianNoise</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">UpdateNProc</span><span class="p">,</span> <span class="n">MultiProcess</span><span class="p">,</span> <span class="n">SetupConfigRNG</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">SetupInput</span><span class="p">,</span> <span class="n">SetupInputsForImage</span>
+<span class="kn">from</span> <span class="nn">.extra</span> <span class="kn">import</span> <span class="n">SetupExtraOutputsForImage</span><span class="p">,</span> <span class="n">ProcessExtraOutputsForImage</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetAllParams</span>
+<span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">BuildWCS</span>
+<span class="kn">from</span> <span class="nn">.stamp</span> <span class="kn">import</span> <span class="n">BuildStamp</span><span class="p">,</span> <span class="n">MakeStampTasks</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
+<span class="kn">from</span> <span class="nn">..celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
+<span class="kn">from</span> <span class="nn">..image</span> <span class="kn">import</span> <span class="n">ImageF</span>
+<span class="kn">from</span> <span class="nn">..noise</span> <span class="kn">import</span> <span class="n">VariableGaussianNoise</span>
 
 <span class="c1"># This file handles the building of an image by parsing config[&#39;image&#39;].</span>
 <span class="c1"># This file includes the basic functionality, but it calls out to helper functions</span>
@@ -382,7 +382,7 @@
 
 
 <span class="c1"># Ignore these when parsing the parameters for specific Image types:</span>
-<span class="kn">from</span> <span class="nn">.stamp</span> <span class="k">import</span> <span class="n">stamp_image_keys</span>
+<span class="kn">from</span> <span class="nn">.stamp</span> <span class="kn">import</span> <span class="n">stamp_image_keys</span>
 <span class="n">image_ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;random_seed&#39;</span><span class="p">,</span> <span class="s1">&#39;noise&#39;</span><span class="p">,</span> <span class="s1">&#39;pixel_scale&#39;</span><span class="p">,</span> <span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="s1">&#39;sky_level&#39;</span><span class="p">,</span> <span class="s1">&#39;sky_level_pixel&#39;</span><span class="p">,</span>
                  <span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="s1">&#39;index_convention&#39;</span><span class="p">,</span> <span class="s1">&#39;nproc&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">stamp_image_keys</span>
 

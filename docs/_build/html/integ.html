@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Integration &mdash; GalSim 2.2.3 documentation</title>
+  <title>Integration &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -186,9 +186,9 @@
             
   <div class="section" id="integration">
 <h1>Integration<a class="headerlink" href="#integration" title="Permalink to this headline">¶</a></h1>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.integ.int1d">
-<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">int1d</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">min</em>, <em class="sig-param">max</em>, <em class="sig-param">rel_err=1e-06</em>, <em class="sig-param">abs_err=1e-12</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#int1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.int1d" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">int1d</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="n">min</span></em>, <em class="sig-param"><span class="n">max</span></em>, <em class="sig-param"><span class="n">rel_err</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">abs_err</span><span class="o">=</span><span class="default_value">1e-12</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#int1d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.int1d" title="Permalink to this definition">¶</a></dt>
 <dd><p>Integrate a 1-dimensional function from min to max.</p>
 <p>Example usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
@@ -218,9 +218,9 @@ infinity).</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.integ.midpt">
-<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">midpt</code><span class="sig-paren">(</span><em class="sig-param">fvals</em>, <em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#midpt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.midpt" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">midpt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fvals</span></em>, <em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#midpt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.midpt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Midpoint rule for integration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -235,9 +235,9 @@ infinity).</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.integ.trapz">
-<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">trapz</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">min</em>, <em class="sig-param">max</em>, <em class="sig-param">points=10000</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#trapz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.trapz" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">trapz</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="n">min</span></em>, <em class="sig-param"><span class="n">max</span></em>, <em class="sig-param"><span class="n">points</span><span class="o">=</span><span class="default_value">10000</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#trapz"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.trapz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple wrapper around ‘numpy.trapz’ to take function and limits as inputs.</p>
 <p>Example usage:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">):</span> <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
@@ -262,9 +262,9 @@ the points to sample the integrand at. [default: 1000].</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.integ.midptRule">
-<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">midptRule</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">xs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#midptRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.midptRule" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">midptRule</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em>, <em class="sig-param"><span class="n">xs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#midptRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.midptRule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Midpoint rule for integration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -279,9 +279,9 @@ the points to sample the integrand at. [default: 1000].</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.integ.trapzRule">
-<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">trapzRule</code><span class="sig-paren">(</span><em class="sig-param">f</em>, <em class="sig-param">xs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#trapzRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.trapzRule" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">trapzRule</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">f</span></em>, <em class="sig-param"><span class="n">xs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#trapzRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.trapzRule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Trapezoidal rule for integration.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -296,14 +296,14 @@ the points to sample the integrand at. [default: 1000].</p></li>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.integ.ImageIntegrator">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">ImageIntegrator</code><a class="reference internal" href="_modules/galsim/integ.html#ImageIntegrator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ImageIntegrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for integrators used by <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> to integrate the drawn images
 over wavelengthh using a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> as a weight function.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.integ.ImageIntegrator.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">evaluateAtWavelength</em>, <em class="sig-param">bandpass</em>, <em class="sig-param">image</em>, <em class="sig-param">drawImageKwargs</em>, <em class="sig-param">doK=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ImageIntegrator.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ImageIntegrator.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">evaluateAtWavelength</span></em>, <em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">drawImageKwargs</span></em>, <em class="sig-param"><span class="n">doK</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ImageIntegrator.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ImageIntegrator.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -325,9 +325,9 @@ results of <a class="reference internal" href="chromaticobject.html#galsim.Chrom
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.integ.SampleIntegrator">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">SampleIntegrator</code><span class="sig-paren">(</span><em class="sig-param">rule</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#SampleIntegrator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.SampleIntegrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">SampleIntegrator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rule</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#SampleIntegrator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.SampleIntegrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.integ.ImageIntegrator" title="galsim.integ.ImageIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.integ.ImageIntegrator</span></code></a></p>
 <p>Create a chromatic surface brightness profile integrator, which will integrate over
 wavelength using a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> as a weight function.</p>
@@ -347,9 +347,9 @@ brightness samples.  Options include:</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.integ.ContinuousIntegrator">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">ContinuousIntegrator</code><span class="sig-paren">(</span><em class="sig-param">rule</em>, <em class="sig-param">N=250</em>, <em class="sig-param">use_endpoints=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ContinuousIntegrator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ContinuousIntegrator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.integ.</code><code class="sig-name descname">ContinuousIntegrator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rule</span></em>, <em class="sig-param"><span class="n">N</span><span class="o">=</span><span class="default_value">250</span></em>, <em class="sig-param"><span class="n">use_endpoints</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/integ.html#ContinuousIntegrator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.integ.ContinuousIntegrator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.integ.ImageIntegrator" title="galsim.integ.ImageIntegrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.integ.ImageIntegrator</span></code></a></p>
 <p>Create a chromatic surface brightness profile integrator, which will integrate over
 wavelength using a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> as a weight function.</p>

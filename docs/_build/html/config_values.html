@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Config Values &mdash; GalSim 2.2.3 documentation</title>
+  <title>Config Values &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -1228,9 +1228,9 @@ give a list of all valid value types that are allowed for this function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;CustomValue&#39;</span><span class="p">,</span> <span class="n">GenerateCustomValue</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span>
 </pre></div>
 </div>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.RegisterValueType">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterValueType</code><span class="sig-paren">(</span><em class="sig-param">type_name</em>, <em class="sig-param">gen_func</em>, <em class="sig-param">valid_types</em>, <em class="sig-param">input_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/value.html#RegisterValueType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterValueType" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterValueType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type_name</span></em>, <em class="sig-param"><span class="n">gen_func</span></em>, <em class="sig-param"><span class="n">valid_types</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/value.html#RegisterValueType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterValueType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register a value type for use by the config apparatus.</p>
 <p>A few notes about the signature of the generating function:</p>
 <ol class="arabic simple">
@@ -1303,10 +1303,10 @@ of valid value types.</p>
 </div>
 <p>For examples of custom values, see:</p>
 <ul class="simple">
-<li><p><a class="reference download internal" download="" href="_downloads/931cb562771f28c07fdad7006f49ee06/log_normal.py"><code class="xref download docutils literal notranslate"><span class="pre">log_normal.py</span></code></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/ce74d1ff5edc2b38ae0bb99ef27859d7/hsm_shape.py"><code class="xref download docutils literal notranslate"><span class="pre">hsm_shape.py</span></code></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/6261f10b411a4e9e78a0f196430b622a/excluded_random.py"><code class="xref download docutils literal notranslate"><span class="pre">excluded_random.py</span></code></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/1387302e07bab43247219d4d803f6421/great3_reject.py"><code class="xref download docutils literal notranslate"><span class="pre">great3_reject</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/1737a601c25c75e9f9b0d094623726b3/log_normal.py"><code class="xref download docutils literal notranslate"><span class="pre">log_normal.py</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/f14611d6dade51ef820f931656f171cf/hsm_shape.py"><code class="xref download docutils literal notranslate"><span class="pre">hsm_shape.py</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/63439d5c29c2bf8116006cbfd597cf1e/excluded_random.py"><code class="xref download docutils literal notranslate"><span class="pre">excluded_random.py</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/f7da6f537e4ea271cac073d7468fe0ad/great3_reject.py"><code class="xref download docutils literal notranslate"><span class="pre">great3_reject</span></code></a></p></li>
 </ul>
 </div>
 </div>

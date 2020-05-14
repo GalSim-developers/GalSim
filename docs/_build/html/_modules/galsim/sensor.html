@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.sensor &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.sensor &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -187,13 +187,13 @@
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span>
-<span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">UniformDeviate</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">meta_data</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
+<span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meta_data</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
 
 <div class="viewcode-block" id="Sensor"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor">[docs]</a><span class="k">class</span> <span class="nc">Sensor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -201,7 +201,7 @@
 <span class="sd">    sensor model that just converts each photon into an electron and drops it in the appropriate</span>
 <span class="sd">    pixel.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
 
 <div class="viewcode-block" id="Sensor.accumulate"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor.accumulate">[docs]</a>    <span class="k">def</span> <span class="nf">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -231,18 +231,18 @@
             <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;Calling accumulate on image with undefined bounds&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">photons</span><span class="o">.</span><span class="n">addTo</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Sensor()&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Sensor</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>  <span class="c1"># Checks that neither is a subclass</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="SiliconSensor"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor">[docs]</a><span class="k">class</span> <span class="nc">SiliconSensor</span><span class="p">(</span><span class="n">Sensor</span><span class="p">):</span>
@@ -316,7 +316,7 @@
 <span class="sd">        transpose:          Transpose the meaning of (x,y) so the brighter-fatter effect is</span>
 <span class="sd">                            stronger along the x direction. [default: False]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;lsst_itl_8&#39;</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffusion_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">qdist</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;lsst_itl_8&#39;</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffusion_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">qdist</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                  <span class="n">nrecalc</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">treering_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">treering_center</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
                  <span class="n">transpose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -382,7 +382,7 @@
                                             <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">treering_center</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span>
                                             <span class="bp">self</span><span class="o">.</span><span class="n">abs_length_table</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.SiliconSensor(</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strength</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, strength=</span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">strength</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, diffusion_factor=</span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span>
@@ -390,14 +390,14 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.SiliconSensor(name=</span><span class="si">%r</span><span class="s1">, strength=</span><span class="si">%f</span><span class="s1">, rng=</span><span class="si">%r</span><span class="s1">, diffusion_factor=</span><span class="si">%f</span><span class="s1">, &#39;</span>
                 <span class="s1">&#39;qdist=</span><span class="si">%d</span><span class="s1">, nrecalc=</span><span class="si">%f</span><span class="s1">, treering_func=</span><span class="si">%r</span><span class="s1">, treering_center=</span><span class="si">%r</span><span class="s1">, transpose=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">strength</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">diffusion_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qdist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nrecalc</span><span class="p">,</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">treering_center</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SiliconSensor</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">config</span> <span class="ow">and</span>
@@ -475,7 +475,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            an `Image` with the pixel areas</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
+        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
         <span class="n">area_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">area_image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">fill_with_pixel_areas</span><span class="p">(</span><span class="n">area_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Config Input Field &mdash; GalSim 2.2.3 documentation</title>
+  <title>Config Input Field &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -333,15 +333,15 @@ to load whatever information you want loaded:</p>
     <span class="sd">&quot;&quot;&quot;A class that knows how to load some information from a file or maybe build some</span>
 <span class="sd">    structure in advance that will be used repeatedly in the simulation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">...</span><span class="p">):</span>
         <span class="k">pass</span>
 </pre></div>
 </div>
 <p>Next you need to write a Loader class that is a subclass of <a class="reference internal" href="#galsim.config.InputLoader" title="galsim.config.InputLoader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.InputLoader</span></code></a>,
 which the config code will use to build your input object with the right initialization kwargs.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.InputLoader">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">InputLoader</code><span class="sig-paren">(</span><em class="sig-param">init_func</em>, <em class="sig-param">has_nobj=False</em>, <em class="sig-param">file_scope=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.InputLoader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">InputLoader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">init_func</span></em>, <em class="sig-param"><span class="n">has_nobj</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file_scope</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.InputLoader" title="Permalink to this definition">¶</a></dt>
 <dd><p>Define how to load a particular input type.</p>
 <p>The base class is often sufficient for simple types, but you may derive from it and
 override some of the functions to deal with special handling requirements.</p>
@@ -368,9 +368,9 @@ dict input object. Thus, dict is our canonical example of an input type for
 which this parameter should be True.</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.InputLoader.getKwargs">
-<code class="sig-name descname">getKwargs</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.getKwargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.InputLoader.getKwargs" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getKwargs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.getKwargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.InputLoader.getKwargs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse the config dict and return the kwargs needed to build the input object.</p>
 <p>The default implementation looks for special class attributes called:</p>
 <dl class="simple">
@@ -402,9 +402,9 @@ it will need to be rebuilt for each output file (False).</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.InputLoader.setupImage">
-<code class="sig-name descname">setupImage</code><span class="sig-paren">(</span><em class="sig-param">input_obj</em>, <em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.setupImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.InputLoader.setupImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setupImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_obj</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#InputLoader.setupImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.InputLoader.setupImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do any necessary setup at the start of each image.</p>
 <p>In the base class, this function does not do anything.  But see PowerSpectrumLoader
 for an example that does require some setup at the start of each image.</p>
@@ -439,9 +439,9 @@ Loader object:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;CustomInput&#39;</span><span class="p">,</span> <span class="n">InputLoader</span><span class="p">(</span><span class="n">MyInputData</span><span class="p">))</span>
 </pre></div>
 </div>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.RegisterInputType">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterInputType</code><span class="sig-paren">(</span><em class="sig-param">input_type</em>, <em class="sig-param">loader</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#RegisterInputType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterInputType" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterInputType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_type</span></em>, <em class="sig-param"><span class="n">loader</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#RegisterInputType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterInputType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register an input type for use by the config apparatus.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -475,65 +475,65 @@ of valid input types.</p>
         <span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
-<p>For examples of custom inputs, see <a class="reference download internal" download="" href="_downloads/ed4311a2b932f48de7e876053d2e20dc/des_wcs.py"><code class="xref download docutils literal notranslate"><span class="pre">des_wcs.py</span></code></a>,
-which is used by <a class="reference download internal" download="" href="_downloads/af323aafc94b32920083be6fa7e12788/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>.</p>
-<p>Also <a class="reference internal" href="des.html#the-des-module"><span class="std std-ref">The DES Module</span></a> uses custom inputs for the <a class="reference internal" href="des.html#galsim.des.DES_PSFEx" title="galsim.des.DES_PSFEx"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DES_PSFEx</span></code></a> and <a class="reference internal" href="des.html#galsim.des.DES_Shapelet" title="galsim.des.DES_Shapelet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DES_Shapelet</span></code></a> object types, which are used by <a class="reference download internal" download="" href="_downloads/46c5dd7b07579c6dff7a9d685ec2532e/draw_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">draw_psf.yaml</span></code></a>.</p>
+<p>For examples of custom inputs, see <a class="reference download internal" download="" href="_downloads/5a3fd734fc69032ea0359196db84be9c/des_wcs.py"><code class="xref download docutils literal notranslate"><span class="pre">des_wcs.py</span></code></a>,
+which is used by <a class="reference download internal" download="" href="_downloads/5c62bd8d06771348eb931565b76fcceb/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>.</p>
+<p>Also <a class="reference internal" href="des.html#the-des-module"><span class="std std-ref">The DES Module</span></a> uses custom inputs for the <a class="reference internal" href="des.html#galsim.des.DES_PSFEx" title="galsim.des.DES_PSFEx"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DES_PSFEx</span></code></a> and <a class="reference internal" href="des.html#galsim.des.DES_Shapelet" title="galsim.des.DES_Shapelet"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DES_Shapelet</span></code></a> object types, which are used by <a class="reference download internal" download="" href="_downloads/d5ef2e30b6c3574e6f3623a21cde6c18/draw_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">draw_psf.yaml</span></code></a>.</p>
 <p>It may also be helpful to look at the GalSim implementation of our various included input types
 (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.input_cosmos.COSMOSLoader">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.config.input_cosmos.</code><code class="sig-name descname">COSMOSLoader</code><span class="sig-paren">(</span><em class="sig-param">init_func</em>, <em class="sig-param">has_nobj=False</em>, <em class="sig-param">file_scope=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_cosmos.html#COSMOSLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_cosmos.COSMOSLoader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.input_cosmos.</code><code class="sig-name descname">COSMOSLoader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">init_func</span></em>, <em class="sig-param"><span class="n">has_nobj</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file_scope</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_cosmos.html#COSMOSLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_cosmos.COSMOSLoader" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.input_cosmos._BuildCOSMOSGalaxy">
-<code class="sig-prename descclassname">galsim.config.input_cosmos.</code><code class="sig-name descname">_BuildCOSMOSGalaxy</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">ignore</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_cosmos.html#_BuildCOSMOSGalaxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_cosmos._BuildCOSMOSGalaxy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.input_cosmos.</code><code class="sig-name descname">_BuildCOSMOSGalaxy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_cosmos.html#_BuildCOSMOSGalaxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_cosmos._BuildCOSMOSGalaxy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a COSMOS galaxy using the cosmos_catalog input item.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.input_nfw.NFWLoader">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.config.input_nfw.</code><code class="sig-name descname">NFWLoader</code><span class="sig-paren">(</span><em class="sig-param">init_func</em>, <em class="sig-param">has_nobj=False</em>, <em class="sig-param">file_scope=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#NFWLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_nfw.NFWLoader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.input_nfw.</code><code class="sig-name descname">NFWLoader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">init_func</span></em>, <em class="sig-param"><span class="n">has_nobj</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file_scope</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#NFWLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_nfw.NFWLoader" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.input_nfw._GenerateFromNFWHaloShear">
-<code class="sig-prename descclassname">galsim.config.input_nfw.</code><code class="sig-name descname">_GenerateFromNFWHaloShear</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">value_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#_GenerateFromNFWHaloShear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_nfw._GenerateFromNFWHaloShear" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.input_nfw.</code><code class="sig-name descname">_GenerateFromNFWHaloShear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">value_type</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#_GenerateFromNFWHaloShear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_nfw._GenerateFromNFWHaloShear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a shear calculated from an NFWHalo object.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.input_nfw._GenerateFromNFWHaloMagnification">
-<code class="sig-prename descclassname">galsim.config.input_nfw.</code><code class="sig-name descname">_GenerateFromNFWHaloMagnification</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">value_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#_GenerateFromNFWHaloMagnification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_nfw._GenerateFromNFWHaloMagnification" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.input_nfw.</code><code class="sig-name descname">_GenerateFromNFWHaloMagnification</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">value_type</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_nfw.html#_GenerateFromNFWHaloMagnification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_nfw._GenerateFromNFWHaloMagnification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a magnification calculated from an NFWHalo object.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.input_powerspectrum.PowerSpectrumLoader">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.config.input_powerspectrum.</code><code class="sig-name descname">PowerSpectrumLoader</code><span class="sig-paren">(</span><em class="sig-param">init_func</em>, <em class="sig-param">has_nobj=False</em>, <em class="sig-param">file_scope=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#PowerSpectrumLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_powerspectrum.PowerSpectrumLoader" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.input_powerspectrum.</code><code class="sig-name descname">PowerSpectrumLoader</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">init_func</span></em>, <em class="sig-param"><span class="n">has_nobj</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">file_scope</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#PowerSpectrumLoader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_powerspectrum.PowerSpectrumLoader" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.input_powerspectrum._GenerateFromPowerSpectrumShear">
-<code class="sig-prename descclassname">galsim.config.input_powerspectrum.</code><code class="sig-name descname">_GenerateFromPowerSpectrumShear</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">value_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#_GenerateFromPowerSpectrumShear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumShear" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.input_powerspectrum.</code><code class="sig-name descname">_GenerateFromPowerSpectrumShear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">value_type</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#_GenerateFromPowerSpectrumShear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumShear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a shear calculated from a PowerSpectrum object.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.input_powerspectrum._GenerateFromPowerSpectrumMagnification">
-<code class="sig-prename descclassname">galsim.config.input_powerspectrum.</code><code class="sig-name descname">_GenerateFromPowerSpectrumMagnification</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">value_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#_GenerateFromPowerSpectrumMagnification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumMagnification" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.input_powerspectrum.</code><code class="sig-name descname">_GenerateFromPowerSpectrumMagnification</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">value_type</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_powerspectrum.html#_GenerateFromPowerSpectrumMagnification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_powerspectrum._GenerateFromPowerSpectrumMagnification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a magnification calculated from a PowerSpectrum object.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.input_real._BuildRealGalaxy">
-<code class="sig-prename descclassname">galsim.config.input_real.</code><code class="sig-name descname">_BuildRealGalaxy</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">ignore</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em>, <em class="sig-param">param_name='RealGalaxy'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_real.html#_BuildRealGalaxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_real._BuildRealGalaxy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.input_real.</code><code class="sig-name descname">_BuildRealGalaxy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em>, <em class="sig-param"><span class="n">param_name</span><span class="o">=</span><span class="default_value">'RealGalaxy'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_real.html#_BuildRealGalaxy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_real._BuildRealGalaxy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a RealGalaxy from the real_catalog input item.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.input_real._BuildRealGalaxyOriginal">
-<code class="sig-prename descclassname">galsim.config.input_real.</code><code class="sig-name descname">_BuildRealGalaxyOriginal</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">ignore</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_real.html#_BuildRealGalaxyOriginal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_real._BuildRealGalaxyOriginal" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.input_real.</code><code class="sig-name descname">_BuildRealGalaxyOriginal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input_real.html#_BuildRealGalaxyOriginal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.input_real._BuildRealGalaxyOriginal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the original image from a RealGalaxy using the real_catalog input item.</p>
 </dd></dl>
 

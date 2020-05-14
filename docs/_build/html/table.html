@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Lookup Tables &mdash; GalSim 2.2.3 documentation</title>
+  <title>Lookup Tables &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -186,9 +186,9 @@
             
   <div class="section" id="lookup-tables">
 <h1>Lookup Tables<a class="headerlink" href="#lookup-tables" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.LookupTable">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">LookupTable</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">f</em>, <em class="sig-param">interpolant='spline'</em>, <em class="sig-param">x_log=False</em>, <em class="sig-param">f_log=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">LookupTable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">f</span></em>, <em class="sig-param"><span class="n">interpolant</span><span class="o">=</span><span class="default_value">'spline'</span></em>, <em class="sig-param"><span class="n">x_log</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">f_log</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable" title="Permalink to this definition">¶</a></dt>
 <dd><p>LookupTable represents a lookup table to store function values that may be slow to calculate,
 for which interpolating from a lookup table is sufficiently accurate.</p>
 <p>A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of
@@ -262,9 +262,9 @@ interpolation is done. [default: False]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.LookupTable.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolate the <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> to get <code class="docutils literal notranslate"><span class="pre">f(x)</span></code> at some <code class="docutils literal notranslate"><span class="pre">x</span></code> value(s).</p>
 <p>When the <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> object is called with a single argument, it returns the value at that
 argument.  An exception will be thrown automatically if the <code class="docutils literal notranslate"><span class="pre">x</span></code> value is outside the
@@ -285,9 +285,9 @@ tuple, list, or arbitrarily shaped 1- or 2-dimensional NumPy array.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.LookupTable.from_file">
-<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">interpolant='spline'</em>, <em class="sig-param">x_log=False</em>, <em class="sig-param">f_log=False</em>, <em class="sig-param">amplitude=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.from_file" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">interpolant</span><span class="o">=</span><span class="default_value">'spline'</span></em>, <em class="sig-param"><span class="n">x_log</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">f_log</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">amplitude</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.from_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> from a file of x, f values.</p>
 <p>This reads in a file, which should contain two columns with the x and f values.</p>
 <dl class="field-list simple">
@@ -306,9 +306,9 @@ rather than their raw values. [default: False]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.LookupTable.from_func">
-<em class="property">classmethod </em><code class="sig-name descname">from_func</code><span class="sig-paren">(</span><em class="sig-param">func</em>, <em class="sig-param">x_min</em>, <em class="sig-param">x_max</em>, <em class="sig-param">npoints=2000</em>, <em class="sig-param">interpolant='spline'</em>, <em class="sig-param">x_log=False</em>, <em class="sig-param">f_log=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.from_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.from_func" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">from_func</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="n">x_min</span></em>, <em class="sig-param"><span class="n">x_max</span></em>, <em class="sig-param"><span class="n">npoints</span><span class="o">=</span><span class="default_value">2000</span></em>, <em class="sig-param"><span class="n">interpolant</span><span class="o">=</span><span class="default_value">'spline'</span></em>, <em class="sig-param"><span class="n">x_log</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">f_log</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable.from_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable.from_func" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> from a callable function</p>
 <p>This constructs a <a class="reference internal" href="#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> over the given range from x_min and x_max, calculating the
 corresponding f values from the given function (technically any callable object).</p>
@@ -331,13 +331,13 @@ rather than their raw values. [default: False]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.LookupTable.x_max">
 <em class="property">property </em><code class="sig-name descname">x_max</code><a class="headerlink" href="#galsim.LookupTable.x_max" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum x value in the lookup table.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.LookupTable.x_min">
 <em class="property">property </em><code class="sig-name descname">x_min</code><a class="headerlink" href="#galsim.LookupTable.x_min" title="Permalink to this definition">¶</a></dt>
 <dd><p>The minimum x value in the lookup table.</p>
@@ -345,9 +345,9 @@ rather than their raw values. [default: False]</p></li>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.LookupTable2D">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">LookupTable2D</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">f</em>, <em class="sig-param">dfdx=None</em>, <em class="sig-param">dfdy=None</em>, <em class="sig-param">d2fdxdy=None</em>, <em class="sig-param">interpolant='linear'</em>, <em class="sig-param">edge_mode='raise'</em>, <em class="sig-param">constant=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">LookupTable2D</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">f</span></em>, <em class="sig-param"><span class="n">dfdx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dfdy</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">d2fdxdy</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">interpolant</span><span class="o">=</span><span class="default_value">'linear'</span></em>, <em class="sig-param"><span class="n">edge_mode</span><span class="o">=</span><span class="default_value">'raise'</span></em>, <em class="sig-param"><span class="n">constant</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>LookupTable2D represents a 2-dimensional lookup table to store function values that may be slow
 to calculate, for which interpolating from a lookup table is sufficiently accurate.  A
 LookupTable2D is also useful for evaluating periodic 2-d functions given samples from a single
@@ -475,9 +475,9 @@ See above for details.  [default: ‘raise’]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.LookupTable2D.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">grid</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Interpolate at an arbitrary point or points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -495,9 +495,9 @@ array will be congruent to x and y.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.LookupTable2D.gradient">
-<code class="sig-name descname">gradient</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">grid=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.gradient" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">gradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">grid</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#LookupTable2D.gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.LookupTable2D.gradient" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the gradient of the function at an arbitrary point or points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -520,9 +520,9 @@ values) or numpy arrays.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.table._LookupTable2D">
-<code class="sig-prename descclassname">galsim.table.</code><code class="sig-name descname">_LookupTable2D</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em>, <em class="sig-param">f</em>, <em class="sig-param">interpolant</em>, <em class="sig-param">edge_mode</em>, <em class="sig-param">constant</em>, <em class="sig-param">dfdx=None</em>, <em class="sig-param">dfdy=None</em>, <em class="sig-param">d2fdxdy=None</em>, <em class="sig-param">x0=None</em>, <em class="sig-param">y0=None</em>, <em class="sig-param">xperiod=None</em>, <em class="sig-param">yperiod=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#_LookupTable2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.table._LookupTable2D" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.table.</code><code class="sig-name descname">_LookupTable2D</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">f</span></em>, <em class="sig-param"><span class="n">interpolant</span></em>, <em class="sig-param"><span class="n">edge_mode</span></em>, <em class="sig-param"><span class="n">constant</span></em>, <em class="sig-param"><span class="n">dfdx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dfdy</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">d2fdxdy</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">x0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">y0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">xperiod</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">yperiod</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/table.html#_LookupTable2D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.table._LookupTable2D" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a <a class="reference internal" href="#galsim.LookupTable2D" title="galsim.LookupTable2D"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable2D</span></code></a> but without using any of the sanity checks or array manipulation used
 in the normal initializer.</p>
 </dd></dl>

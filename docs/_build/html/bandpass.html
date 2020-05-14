@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Bandpass Filters &mdash; GalSim 2.2.3 documentation</title>
+  <title>Bandpass Filters &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -179,9 +179,9 @@
             
   <div class="section" id="bandpass-filters">
 <h1>Bandpass Filters<a class="headerlink" href="#bandpass-filters" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Bandpass">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Bandpass</code><span class="sig-paren">(</span><em class="sig-param">throughput</em>, <em class="sig-param">wave_type</em>, <em class="sig-param">blue_limit=None</em>, <em class="sig-param">red_limit=None</em>, <em class="sig-param">zeropoint=None</em>, <em class="sig-param">_wave_list=None</em>, <em class="sig-param">_tp=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Bandpass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">throughput</span></em>, <em class="sig-param"><span class="n">wave_type</span></em>, <em class="sig-param"><span class="n">blue_limit</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">red_limit</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">zeropoint</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_wave_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_tp</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simple bandpass object, which models the transmission fraction of incident light as a
 function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and
 refracting optics, filters, CCD quantum efficiency), or some intermediate piece thereof.
@@ -250,9 +250,9 @@ set this using a particular spectrum (AB, Vega, etc.) [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Bandpass.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">wave</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return dimensionless throughput of bandpass at given wavelength in nanometers.</p>
 <p>Note that outside of the wavelength range defined by the <code class="docutils literal notranslate"><span class="pre">blue_limit</span></code> and <code class="docutils literal notranslate"><span class="pre">red_limit</span></code>
 attributes, the throughput is assumed to be zero.</p>
@@ -266,9 +266,9 @@ attributes, the throughput is assumed to be zero.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Bandpass.calculateEffectiveWavelength">
-<code class="sig-name descname">calculateEffectiveWavelength</code><span class="sig-paren">(</span><em class="sig-param">precise=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.calculateEffectiveWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.calculateEffectiveWavelength" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateEffectiveWavelength</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">precise</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.calculateEffectiveWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.calculateEffectiveWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate, store, and return the effective wavelength for this bandpass.</p>
 <p>We define the effective wavelength as the throughput-weighted average wavelength, which is
 SED-independent.  Units are nanometers.</p>
@@ -280,16 +280,16 @@ a <a class="reference internal" href="table.html#galsim.LookupTable" title="gals
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Bandpass.effective_wavelength">
 <em class="property">property </em><code class="sig-name descname">effective_wavelength</code><a class="headerlink" href="#galsim.Bandpass.effective_wavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>The effective wavelength of the <a class="reference internal" href="#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a>.</p>
 <p>An alias for <code class="docutils literal notranslate"><span class="pre">self.calculateEffectiveWavelength()</span></code>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Bandpass.thin">
-<code class="sig-name descname">thin</code><span class="sig-paren">(</span><em class="sig-param">rel_err=0.0001</em>, <em class="sig-param">trim_zeros=True</em>, <em class="sig-param">preserve_range=True</em>, <em class="sig-param">fast_search=True</em>, <em class="sig-param">preserve_zp=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.thin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.thin" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">thin</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rel_err</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">trim_zeros</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">preserve_range</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">fast_search</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">preserve_zp</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.thin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.thin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Thin out the internal wavelengths of a <a class="reference internal" href="#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> that uses a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a>.</p>
 <p>If the bandpass was initialized with a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> or from a file (which internally
 creates a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a>), this function removes tabulated values while keeping the integral
@@ -340,9 +340,9 @@ will have a zeropoint of None. [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Bandpass.truncate">
-<code class="sig-name descname">truncate</code><span class="sig-paren">(</span><em class="sig-param">blue_limit=None</em>, <em class="sig-param">red_limit=None</em>, <em class="sig-param">relative_throughput=None</em>, <em class="sig-param">preserve_zp='auto'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.truncate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.truncate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">truncate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">blue_limit</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">red_limit</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">relative_throughput</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">preserve_zp</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.truncate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.truncate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a bandpass with its wavelength range truncated.</p>
 <p>This function truncate the range of the bandpass either explicitly (with <code class="docutils literal notranslate"><span class="pre">blue_limit</span></code> or
 <code class="docutils literal notranslate"><span class="pre">red_limit</span></code> or both) or automatically, just trimming off leading and trailing wavelength
@@ -389,9 +389,9 @@ will have a zeropoint of None when truncating using
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Bandpass.withZeropoint">
-<code class="sig-name descname">withZeropoint</code><span class="sig-paren">(</span><em class="sig-param">zeropoint</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.withZeropoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.withZeropoint" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withZeropoint</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">zeropoint</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bandpass.html#Bandpass.withZeropoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bandpass.withZeropoint" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign a zeropoint to this <a class="reference internal" href="#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a>.</p>
 <p>A bandpass zeropoint is a float used to convert flux (in photons/s/cm^2) to magnitudes:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mag</span> <span class="o">=</span> <span class="o">-</span><span class="mf">2.5</span><span class="o">*</span><span class="n">log10</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span> <span class="o">+</span> <span class="n">zeropoint</span>

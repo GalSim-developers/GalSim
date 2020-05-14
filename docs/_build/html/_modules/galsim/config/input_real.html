@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.config.input_real &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.config.input_real &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -184,13 +184,13 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">GetInputObj</span><span class="p">,</span> <span class="n">RegisterInputType</span>
-<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">GetRNG</span>
-<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span>
-<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">RegisterObjectType</span>
-<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span>
-<span class="kn">from</span> <span class="nn">..real</span> <span class="k">import</span> <span class="n">RealGalaxyCatalog</span><span class="p">,</span> <span class="n">RealGalaxy</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">GetInputObj</span><span class="p">,</span> <span class="n">RegisterInputType</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">GetRNG</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">RegisterObjectType</span>
+<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..real</span> <span class="kn">import</span> <span class="n">RealGalaxyCatalog</span><span class="p">,</span> <span class="n">RealGalaxy</span>
 
 <span class="c1"># This file adds input type real_catalog and gsobject types RealGalaxy and RealGalaxyOriginal.</span>
 

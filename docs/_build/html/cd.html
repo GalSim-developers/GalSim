@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Charge Deflection Model &mdash; GalSim 2.2.3 documentation</title>
+  <title>Charge Deflection Model &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -196,14 +196,14 @@ the so-called “Brighter-Fatter Effect”, you can use this.</p>
 model.  It does not use the Antilogus model at all, but rather tries to simulate the
 underlying physics of the effect.</p>
 </div>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.cdmodel.BaseCDModel">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.cdmodel.</code><code class="sig-name descname">BaseCDModel</code><span class="sig-paren">(</span><em class="sig-param">a_l</em>, <em class="sig-param">a_r</em>, <em class="sig-param">a_b</em>, <em class="sig-param">a_t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.cdmodel.</code><code class="sig-name descname">BaseCDModel</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a_l</span></em>, <em class="sig-param"><span class="n">a_r</span></em>, <em class="sig-param"><span class="n">a_b</span></em>, <em class="sig-param"><span class="n">a_t</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for the most generic, i.e. no with symmetries or distance scaling relationships
 assumed, pixel boundary charge deflection model (as per Antilogus et al 2014).</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.cdmodel.BaseCDModel.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">a_l</em>, <em class="sig-param">a_r</em>, <em class="sig-param">a_b</em>, <em class="sig-param">a_t</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a_l</span></em>, <em class="sig-param"><span class="n">a_r</span></em>, <em class="sig-param"><span class="n">a_b</span></em>, <em class="sig-param"><span class="n">a_t</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a generic CDModel (charge deflection model).</p>
 <p>Usually this class will not be instantiated directly, but there is nothing to prevent you
 from doing so.  Each of the input a_l, a_r, a_b &amp; a_t matrices must have the same shape and
@@ -236,9 +236,9 @@ applyForward or applyBackward.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.cdmodel.BaseCDModel.applyBackward">
-<code class="sig-name descname">applyBackward</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">gain_ratio=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.applyBackward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.applyBackward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">applyBackward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">gain_ratio</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.applyBackward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.applyBackward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the charge deflection model in the backward direction (accurate to linear order).</p>
 <p>Returns an image with the backward charge deflection transformation applied.  The input
 image is not modified, but its WCS is included in the returned image.</p>
@@ -251,9 +251,9 @@ flat and science images have the same gain value</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.cdmodel.BaseCDModel.applyForward">
-<code class="sig-name descname">applyForward</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">gain_ratio=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.applyForward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.applyForward" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">applyForward</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">gain_ratio</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#BaseCDModel.applyForward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.BaseCDModel.applyForward" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the charge deflection model in the forward direction.</p>
 <p>Returns an image with the forward charge deflection transformation applied.  The input image
 is not modified, but its WCS is included in the returned image.</p>
@@ -268,15 +268,15 @@ flat and science images have the same gain value</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.cdmodel.PowerLawCD">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.cdmodel.</code><code class="sig-name descname">PowerLawCD</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">r0</em>, <em class="sig-param">t0</em>, <em class="sig-param">rx</em>, <em class="sig-param">tx</em>, <em class="sig-param">r</em>, <em class="sig-param">t</em>, <em class="sig-param">alpha</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#PowerLawCD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.PowerLawCD" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.cdmodel.</code><code class="sig-name descname">PowerLawCD</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">r0</span></em>, <em class="sig-param"><span class="n">t0</span></em>, <em class="sig-param"><span class="n">rx</span></em>, <em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">r</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">alpha</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#PowerLawCD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.PowerLawCD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#galsim.cdmodel.BaseCDModel" title="galsim.cdmodel.BaseCDModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.cdmodel.BaseCDModel</span></code></a></p>
 <p>Class for parametrizing charge deflection coefficient strengths as a power law in distance
 from affected pixel border.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.cdmodel.PowerLawCD.__init__">
-<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">r0</em>, <em class="sig-param">t0</em>, <em class="sig-param">rx</em>, <em class="sig-param">tx</em>, <em class="sig-param">r</em>, <em class="sig-param">t</em>, <em class="sig-param">alpha</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#PowerLawCD.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.PowerLawCD.__init__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__init__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">r0</span></em>, <em class="sig-param"><span class="n">t0</span></em>, <em class="sig-param"><span class="n">rx</span></em>, <em class="sig-param"><span class="n">tx</span></em>, <em class="sig-param"><span class="n">r</span></em>, <em class="sig-param"><span class="n">t</span></em>, <em class="sig-param"><span class="n">alpha</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/cdmodel.html#PowerLawCD.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.cdmodel.PowerLawCD.__init__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize a power-law charge deflection model.</p>
 <p>The deflections from charges in the six pixels directly neighbouring a pixel border are
 modelled independently by the parameters <code class="docutils literal notranslate"><span class="pre">r0</span></code>, <code class="docutils literal notranslate"><span class="pre">t0</span></code> (directly adjacent to borders

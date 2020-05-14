@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.gsobject &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.gsobject &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -187,12 +187,12 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">Position</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">parse_pos_args</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">Position</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">parse_pos_args</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 
 <div class="viewcode-block" id="GSObject"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject">[docs]</a><span class="k">class</span> <span class="nc">GSObject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -359,7 +359,7 @@
                       <span class="s1">&#39;range_division_for_extrema&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                       <span class="s1">&#39;small_fraction_of_flux&#39;</span> <span class="p">:</span> <span class="nb">float</span>
                     <span class="p">}</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The GSObject base class should not be instantiated directly.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Note: subclasses are expected to define the following attributes or properties:</span>
@@ -579,7 +579,7 @@
     <span class="k">def</span> <span class="nf">deinterpolated</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">SED</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.sed</span> <span class="k">import</span> <span class="n">SED</span>
+        <span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
         <span class="k">return</span> <span class="n">SED</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">)</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">spectral</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
@@ -595,25 +595,25 @@
     <span class="c1"># Make op+ of two GSObjects work to return an Add object</span>
     <span class="c1"># Note: we don&#39;t define __iadd__ and similar.  Let python handle this automatically</span>
     <span class="c1"># to make obj += obj2 be equivalent to obj = obj + obj2.</span>
-<div class="viewcode-block" id="GSObject.__add__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__add__">[docs]</a>    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__add__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add two GSObjects.</span>
 
 <span class="sd">        Equivalent to Add(self, other)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.sum</span> <span class="k">import</span> <span class="n">Add</span>
+        <span class="kn">from</span> <span class="nn">.sum</span> <span class="kn">import</span> <span class="n">Add</span>
         <span class="k">return</span> <span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">])</span></div>
 
     <span class="c1"># op- is unusual, but allowed.  It subtracts off one profile from another.</span>
-<div class="viewcode-block" id="GSObject.__sub__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__sub__">[docs]</a>    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__sub__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__sub__">[docs]</a>    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Subtract two GSObjects.</span>
 
 <span class="sd">        Equivalent to Add(self, -1 * other)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.sum</span> <span class="k">import</span> <span class="n">Add</span>
+        <span class="kn">from</span> <span class="nn">.sum</span> <span class="kn">import</span> <span class="n">Add</span>
         <span class="k">return</span> <span class="n">Add</span><span class="p">([</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.</span> <span class="o">*</span> <span class="n">other</span><span class="p">)])</span></div>
 
     <span class="c1"># Make op* work to adjust the flux of an object</span>
-<div class="viewcode-block" id="GSObject.__mul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__mul__">[docs]</a>    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__mul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Scale the flux of the object by the given factor.</span>
 
 <span class="sd">        obj * flux_ratio is equivalent to obj.withScaledFlux(flux_ratio)</span>
@@ -626,7 +626,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.__rmul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__rmul__">[docs]</a>    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.__rmul__"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.__rmul__">[docs]</a>    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equivalent to obj * other.  See `__mul__` for details.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
@@ -637,7 +637,7 @@
 
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
-    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="o">-</span><span class="mf">1.</span> <span class="o">*</span> <span class="bp">self</span>
 
     <span class="c1"># Some calculations that can be done for all GSObjects.</span>
@@ -896,7 +896,7 @@
         <span class="c1"># attribute that depends on the details of gsparams.  If there are stored calculations</span>
         <span class="c1"># aside from these, you should also clear them as well, or update them.</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
@@ -951,8 +951,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the object with the new flux.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.sed</span> <span class="k">import</span> <span class="n">SED</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="c1"># Prohibit non-SED callable flux_ratio here as most likely an error.</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="n">SED</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;callable flux_ratio must be an SED.&#39;</span><span class="p">)</span>
@@ -984,7 +984,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the expanded object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">[</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="GSObject.dilate"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.dilate">[docs]</a>    <span class="k">def</span> <span class="nf">dilate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
@@ -1002,7 +1002,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the dilated object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="c1"># equivalent to self.expand(scale) * (1./scale**2)</span>
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">[</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="p">],</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">scale</span><span class="o">**-</span><span class="mi">2</span><span class="p">)</span></div>
 
@@ -1046,8 +1046,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the sheared object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
-        <span class="kn">from</span> <span class="nn">.shear</span> <span class="k">import</span> <span class="n">Shear</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Error, gave both unnamed and named arguments to GSObject.shear!&quot;</span><span class="p">)</span>
@@ -1077,7 +1077,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the sheared object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
         <span class="n">new_obj</span> <span class="o">=</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">new_obj</span></div>
 
@@ -1113,8 +1113,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the rotated object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">Angle</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">Angle</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input theta should be an Angle&quot;</span><span class="p">)</span>
         <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
@@ -1148,7 +1148,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the transformed object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">[</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="GSObject.shift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.shift">[docs]</a>    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1190,7 +1190,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the shifted object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="n">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="s1">&#39;dx&#39;</span><span class="p">,</span> <span class="s1">&#39;dy&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span></div>
 
@@ -1209,14 +1209,14 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the shifted object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
         <span class="n">new_obj</span> <span class="o">=</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_obj</span></div>
 
     <span class="c1"># Make sure the image is defined with the right size and wcs for drawImage()</span>
     <span class="k">def</span> <span class="nf">_setup_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">odd</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
-        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">_BoundsI</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
+        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">_BoundsI</span>
 
         <span class="c1"># If image is given, check validity of nx,ny,bounds:</span>
         <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1320,7 +1320,7 @@
             <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_get_new_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">BoundsI</span>
+        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
         <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span>
         <span class="k">elif</span> <span class="n">nx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ny</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1356,7 +1356,7 @@
         <span class="k">return</span> <span class="n">offset</span>
 
     <span class="k">def</span> <span class="nf">_determine_wcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">default_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">BaseWCS</span><span class="p">,</span> <span class="n">PixelScale</span>
+        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">BaseWCS</span><span class="p">,</span> <span class="n">PixelScale</span>
         <span class="c1"># Determine the correct wcs given the input scale, wcs and image.</span>
         <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">scale</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1729,11 +1729,11 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the drawn `Image`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageD</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">Convolution</span><span class="p">,</span> <span class="n">Deconvolve</span>
-        <span class="kn">from</span> <span class="nn">.box</span> <span class="k">import</span> <span class="n">Pixel</span>
-        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
-        <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="k">import</span> <span class="n">PhotonArray</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageD</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">Convolution</span><span class="p">,</span> <span class="n">Deconvolve</span>
+        <span class="kn">from</span> <span class="nn">.box</span> <span class="kn">import</span> <span class="n">Pixel</span>
+        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
+        <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span>
 
         <span class="c1"># Check that image is sane</span>
         <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
@@ -1943,7 +1943,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The total flux drawn inside the image bounds.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">ImageD</span><span class="p">,</span> <span class="n">ImageF</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">ImageD</span><span class="p">,</span> <span class="n">ImageF</span>
         <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">isPixelScale</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;drawReal requires an image with a PixelScale wcs&quot;</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
 
@@ -2014,8 +2014,8 @@
 <span class="sd">            (kimage, wrap_size), where wrap_size is either the size of kimage or smaller if</span>
 <span class="sd">            the result should be wrapped before doing the inverse fft.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">_BoundsI</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">ImageCD</span><span class="p">,</span> <span class="n">ImageCF</span>
+        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">_BoundsI</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">ImageCD</span><span class="p">,</span> <span class="n">ImageCF</span>
         <span class="c1"># Start with what this profile thinks a good size would be given the image&#39;s pixel scale.</span>
         <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getGoodImageSize</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
 
@@ -2067,8 +2067,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The total flux drawn inside the image bounds.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">_BoundsI</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
+        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">_BoundsI</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
         <span class="c1"># Wrap the full image to the size we want for the FT.</span>
         <span class="c1"># Even if N == Nk, this is useful to make this portion properly Hermitian in the</span>
         <span class="c1"># N/2 column and N/2 row.</span>
@@ -2132,7 +2132,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            n_photons, g</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">PoissonDeviate</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">PoissonDeviate</span>
         <span class="c1"># For profiles that are positive definite, then N = flux. Easy.</span>
         <span class="c1">#</span>
         <span class="c1"># However, some profiles shoot some of their photons with negative flux. This means that</span>
@@ -2306,8 +2306,8 @@
 <span class="sd">            - added_flux is the total flux of photons that landed inside the image bounds, and</span>
 <span class="sd">            - photons is the `PhotonArray` that was applied to the image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.sensor</span> <span class="k">import</span> <span class="n">Sensor</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">ImageD</span>
+        <span class="kn">from</span> <span class="nn">.sensor</span> <span class="kn">import</span> <span class="n">Sensor</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">ImageD</span>
         <span class="c1"># Make sure the type of n_photons is correct and has a valid value:</span>
         <span class="k">if</span> <span class="n">n_photons</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Invalid n_photons &lt; 0.&quot;</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -2396,8 +2396,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            A `PhotonArray`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
-        <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="k">import</span> <span class="n">PhotonArray</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
+        <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span>
 
         <span class="n">photons</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="p">(</span><span class="n">n_photons</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">n_photons</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -2463,8 +2463,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            an `Image` instance (created if necessary)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
+        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
         <span class="c1"># Make sure provided image is complex</span>
         <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
@@ -2552,7 +2552,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement drawKImage&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
     <span class="c1"># Derived classes should define the __eq__ function</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

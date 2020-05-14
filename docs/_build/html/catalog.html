@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Catalogs and Input Dictionaries &mdash; GalSim 2.2.3 documentation</title>
+  <title>Catalogs and Input Dictionaries &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -186,9 +186,9 @@
             
   <div class="section" id="catalogs-and-input-dictionaries">
 <h1>Catalogs and Input Dictionaries<a class="headerlink" href="#catalogs-and-input-dictionaries" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Catalog">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Catalog</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">file_type=None</em>, <em class="sig-param">comments='#'</em>, <em class="sig-param">hdu=1</em>, <em class="sig-param">_nobjects_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Catalog</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">file_type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">comments</span><span class="o">=</span><span class="default_value">'#'</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">_nobjects_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class storing the data from an input catalog.</p>
 <p>Each row corresponds to a different object to be built, and each column stores some item of
 information about that object (e.g. flux or half_light_radius).</p>
@@ -217,9 +217,9 @@ ASCII catalog.  [default: ‘#’]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Catalog.get">
-<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">index</em>, <em class="sig-param">col</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.get" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">col</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the data for the given <code class="docutils literal notranslate"><span class="pre">index</span></code> and <code class="docutils literal notranslate"><span class="pre">col</span></code> in its native type.</p>
 <p>For ASCII catalogs, <code class="docutils literal notranslate"><span class="pre">col</span></code> is the column number.
 For FITS catalogs, <code class="docutils literal notranslate"><span class="pre">col</span></code> is a string giving the name of the column in the FITS table.</p>
@@ -227,35 +227,35 @@ For FITS catalogs, <code class="docutils literal notranslate"><span class="pre">
 whatever type is specified for each field in the binary table.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Catalog.getFloat">
-<code class="sig-name descname">getFloat</code><span class="sig-paren">(</span><em class="sig-param">index</em>, <em class="sig-param">col</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.getFloat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.getFloat" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getFloat</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">col</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.getFloat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.getFloat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the data for the given <code class="docutils literal notranslate"><span class="pre">index</span></code> and <code class="docutils literal notranslate"><span class="pre">col</span></code> as a float if possible</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Catalog.getInt">
-<code class="sig-name descname">getInt</code><span class="sig-paren">(</span><em class="sig-param">index</em>, <em class="sig-param">col</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.getInt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.getInt" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getInt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">index</span></em>, <em class="sig-param"><span class="n">col</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.getInt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.getInt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the data for the given <code class="docutils literal notranslate"><span class="pre">index</span></code> and <code class="docutils literal notranslate"><span class="pre">col</span></code> as an int if possible</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Catalog.readAscii">
-<code class="sig-name descname">readAscii</code><span class="sig-paren">(</span><em class="sig-param">comments</em>, <em class="sig-param">_nobjects_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.readAscii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.readAscii" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">readAscii</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">comments</span></em>, <em class="sig-param"><span class="n">_nobjects_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.readAscii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.readAscii" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read in an input catalog from an ASCII file.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Catalog.readFits">
-<code class="sig-name descname">readFits</code><span class="sig-paren">(</span><em class="sig-param">hdu</em>, <em class="sig-param">_nobjects_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.readFits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.readFits" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">readFits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">hdu</span></em>, <em class="sig-param"><span class="n">_nobjects_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Catalog.readFits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Catalog.readFits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read in an input catalog from a FITS file.</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.OutputCatalog">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">OutputCatalog</code><span class="sig-paren">(</span><em class="sig-param">names</em>, <em class="sig-param">types=None</em>, <em class="sig-param">_rows=()</em>, <em class="sig-param">_sort_keys=()</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">OutputCatalog</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">names</span></em>, <em class="sig-param"><span class="n">types</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_rows</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">_sort_keys</span><span class="o">=</span><span class="default_value">()</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for building up a catalog for output, typically storing truth information
 about a simulation.</p>
 <p>Each row corresponds to a different object, and each column stores some item of
@@ -284,9 +284,9 @@ columns are float]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.addRow">
-<code class="sig-name descname">addRow</code><span class="sig-paren">(</span><em class="sig-param">row</em>, <em class="sig-param">sort_key=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.addRow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.addRow" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addRow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">row</span></em>, <em class="sig-param"><span class="n">sort_key</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.addRow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.addRow" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a row of data to the catalog.</p>
 <p>Warning: no type checking is done at this point.  If the values in the row do not
 match the column types, you may get an error when writing, or you may lose precision,
@@ -302,57 +302,57 @@ which will be used at the end to re-sort the rows.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.getNCols">
 <code class="sig-name descname">getNCols</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.getNCols"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.getNCols" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to sef.ncols.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.getNObjects">
 <code class="sig-name descname">getNObjects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.getNObjects"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.getNObjects" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to sef.nobjects.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.getNames">
 <code class="sig-name descname">getNames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.getNames"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.getNames" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to sef.names.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.getTypes">
 <code class="sig-name descname">getTypes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.getTypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.getTypes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to sef.types.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.makeData">
 <code class="sig-name descname">makeData</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.makeData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.makeData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a numpy array of the data as it should be written to an output file.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.ncols">
 <em class="property">property </em><code class="sig-name descname">ncols</code><a class="headerlink" href="#galsim.OutputCatalog.ncols" title="Permalink to this definition">¶</a></dt>
 <dd><p>The number of columns in the <a class="reference internal" href="#galsim.OutputCatalog" title="galsim.OutputCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OutputCatalog</span></code></a>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.nobjects">
 <em class="property">property </em><code class="sig-name descname">nobjects</code><a class="headerlink" href="#galsim.OutputCatalog.nobjects" title="Permalink to this definition">¶</a></dt>
 <dd><p>The number of objects in the <a class="reference internal" href="#galsim.OutputCatalog" title="galsim.OutputCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OutputCatalog</span></code></a>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.setTypes">
-<code class="sig-name descname">setTypes</code><span class="sig-paren">(</span><em class="sig-param">types</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.setTypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.setTypes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setTypes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">types</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.setTypes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.setTypes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to sef.types = types.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.write">
-<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">file_type=None</em>, <em class="sig-param">prec=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.write" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">write</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">file_type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prec</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.write"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.write" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the catalog to a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -368,9 +368,9 @@ extension]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.writeAscii">
-<code class="sig-name descname">writeAscii</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">prec=8</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.writeAscii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.writeAscii" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeAscii</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">prec</span><span class="o">=</span><span class="default_value">8</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.writeAscii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.writeAscii" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write catalog to an ASCII file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -382,9 +382,9 @@ extension]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.writeFits">
-<code class="sig-name descname">writeFits</code><span class="sig-paren">(</span><em class="sig-param">file_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.writeFits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.writeFits" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">writeFits</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.writeFits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.writeFits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write catalog to a FITS file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -393,7 +393,7 @@ extension]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.OutputCatalog.writeFitsHdu">
 <code class="sig-name descname">writeFitsHdu</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#OutputCatalog.writeFitsHdu"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OutputCatalog.writeFitsHdu" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write catalog to a FITS hdu.</p>
@@ -406,9 +406,9 @@ extension]</p></li>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Dict">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Dict</code><span class="sig-paren">(</span><em class="sig-param">file_name</em>, <em class="sig-param">dir=None</em>, <em class="sig-param">file_type=None</em>, <em class="sig-param">key_split='.'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Dict" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">file_type</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">key_split</span><span class="o">=</span><span class="default_value">'.'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/catalog.html#Dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class that reads a python dict from a file.</p>
 <p>After construction, it behaves like a regular python dict, with one exception.
 In order to facilitate getting values in a hierarchy of fields, we allow the ‘.’

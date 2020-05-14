@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The Shear class &mdash; GalSim 2.2.3 documentation</title>
+  <title>The Shear class &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -179,9 +179,9 @@
             
   <div class="section" id="the-shear-class">
 <h1>The Shear class<a class="headerlink" href="#the-shear-class" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Shear">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Shear</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shear.html#Shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Shear</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shear.html#Shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shear" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class to represent shears in a variety of ways.</p>
 <p>The Shear object can be initialized in a variety of ways to represent shape distortions.
 A shear is an operation that transforms a circle into an ellipse with minor-to-major axis ratio
@@ -271,73 +271,73 @@ to either:</p>
 <li><p>use the <a class="reference internal" href="gsobject.html#galsim.GSObject.lens" title="galsim.GSObject.lens"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.lens</span></code></a> method that simultaneously magnifies and shears.</p></li>
 </ol>
 </div>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.beta">
 <em class="property">property </em><code class="sig-name descname">beta</code><a class="headerlink" href="#galsim.Shear.beta" title="Permalink to this definition">¶</a></dt>
 <dd><p>The position angle as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.e">
 <em class="property">property </em><code class="sig-name descname">e</code><a class="headerlink" href="#galsim.Shear.e" title="Permalink to this definition">¶</a></dt>
 <dd><p>The magnitude of the shear in the “distortion” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.e1">
 <em class="property">property </em><code class="sig-name descname">e1</code><a class="headerlink" href="#galsim.Shear.e1" title="Permalink to this definition">¶</a></dt>
 <dd><p>The first component of the shear in the “distortion” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.e2">
 <em class="property">property </em><code class="sig-name descname">e2</code><a class="headerlink" href="#galsim.Shear.e2" title="Permalink to this definition">¶</a></dt>
 <dd><p>The second component of the shear in the “distortion” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.esq">
 <em class="property">property </em><code class="sig-name descname">esq</code><a class="headerlink" href="#galsim.Shear.esq" title="Permalink to this definition">¶</a></dt>
 <dd><p>The square of the magnitude of the shear in the “distortion” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.eta">
 <em class="property">property </em><code class="sig-name descname">eta</code><a class="headerlink" href="#galsim.Shear.eta" title="Permalink to this definition">¶</a></dt>
 <dd><p>The magnitude of the shear in the “conformal shear” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.eta1">
 <em class="property">property </em><code class="sig-name descname">eta1</code><a class="headerlink" href="#galsim.Shear.eta1" title="Permalink to this definition">¶</a></dt>
 <dd><p>The first component of the shear in the “conformal shear” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.eta2">
 <em class="property">property </em><code class="sig-name descname">eta2</code><a class="headerlink" href="#galsim.Shear.eta2" title="Permalink to this definition">¶</a></dt>
 <dd><p>The second component of the shear in the “conformal shear” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.g">
 <em class="property">property </em><code class="sig-name descname">g</code><a class="headerlink" href="#galsim.Shear.g" title="Permalink to this definition">¶</a></dt>
 <dd><p>The magnitude of the shear in the “reduced shear” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.g1">
 <em class="property">property </em><code class="sig-name descname">g1</code><a class="headerlink" href="#galsim.Shear.g1" title="Permalink to this definition">¶</a></dt>
 <dd><p>The first component of the shear in the “reduced shear” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.g2">
 <em class="property">property </em><code class="sig-name descname">g2</code><a class="headerlink" href="#galsim.Shear.g2" title="Permalink to this definition">¶</a></dt>
 <dd><p>The second component of the shear in the “reduced shear” definition.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.getMatrix">
 <code class="sig-name descname">getMatrix</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shear.html#Shear.getMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shear.getMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the matrix that tells how this shear acts on a position vector:</p>
@@ -354,15 +354,15 @@ according to:</p>
                                  g_2 &amp; 1-g_1 \end{array} \right)\end{split}\]</div>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.q">
 <em class="property">property </em><code class="sig-name descname">q</code><a class="headerlink" href="#galsim.Shear.q" title="Permalink to this definition">¶</a></dt>
 <dd><p>The minor-to-major axis ratio</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.rotationWith">
-<code class="sig-name descname">rotationWith</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shear.html#Shear.rotationWith"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shear.rotationWith" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rotationWith</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shear.html#Shear.rotationWith"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shear.rotationWith" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the rotation angle associated with the addition of two shears.</p>
 <p>The effect of two shears is not just a single net shear.  There is also a rotation
 associated with it.  This is easiest to understand in terms of the matrix representations:</p>
@@ -376,7 +376,7 @@ where <span class="math notranslate nohighlight">\(R\)</span> is a rotation matr
 <code class="docutils literal notranslate"><span class="pre">shear1.rotationWith(shear2)</span></code>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shear.shear">
 <em class="property">property </em><code class="sig-name descname">shear</code><a class="headerlink" href="#galsim.Shear.shear" title="Permalink to this definition">¶</a></dt>
 <dd><p>The reduced shear as a complex number g1 + 1j * g2.</p>
@@ -384,9 +384,9 @@ where <span class="math notranslate nohighlight">\(R\)</span> is a rotation matr
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim._Shear">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_Shear</code><span class="sig-paren">(</span><em class="sig-param">shear</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shear.html#_Shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._Shear" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_Shear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shear</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shear.html#_Shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._Shear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">galsim.Shear(shear)</span></code>, but without the overhead of the normal sanity checks
 and other options for how to specify the shear.</p>
 <dl class="field-list simple">

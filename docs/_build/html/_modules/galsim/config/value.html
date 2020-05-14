@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.config.value &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.config.value &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -184,19 +184,19 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">print_function</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 
-<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="kn">import</span> <span class="n">basestring</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
-<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">PropagateIndexKeyRNGNum</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">ParseExtendedKey</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">PropagateIndexKeyRNGNum</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">ParseExtendedKey</span>
 
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
-<span class="kn">from</span> <span class="nn">..gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
-<span class="kn">from</span> <span class="nn">..angle</span> <span class="k">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span>
-<span class="kn">from</span> <span class="nn">..position</span> <span class="k">import</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">..celestial</span> <span class="k">import</span> <span class="n">CelestialCoord</span>
-<span class="kn">from</span> <span class="nn">..shear</span> <span class="k">import</span> <span class="n">Shear</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">..angle</span> <span class="kn">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
+<span class="kn">from</span> <span class="nn">..shear</span> <span class="kn">import</span> <span class="n">Shear</span>
 
 <span class="c1"># This file handles the parsing of values given in the config dict.  It includes the basic</span>
 <span class="c1"># parsing functionality along with generators for most of the simple value types.</span>
@@ -230,7 +230,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        the tuple (value, safe).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">BuildGSObject</span>
+    <span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">BuildGSObject</span>
 
     <span class="c1"># Special: if the &quot;value_type&quot; is GSObject, then switch over to that builder instead.</span>
     <span class="k">if</span> <span class="n">value_type</span> <span class="ow">is</span> <span class="n">GSObject</span><span class="p">:</span>
@@ -403,7 +403,7 @@
 <span class="sd">        value_type: The value_type expected.  [default: None, which means it won&#39;t check</span>
 <span class="sd">                    that the value is the right type.]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">GetInputObj</span>
+    <span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">GetInputObj</span>
 
     <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -954,7 +954,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">valid_value_types</span><span class="p">[</span><span class="n">type_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">gen_func</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">valid_types</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">input_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">RegisterInputConnectedType</span>
+        <span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">RegisterInputConnectedType</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">input_type</span><span class="p">:</span>
                 <span class="n">RegisterInputConnectedType</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span>

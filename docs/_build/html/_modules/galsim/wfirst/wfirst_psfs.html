@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.wfirst.wfirst_psfs &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.wfirst.wfirst_psfs &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -184,7 +184,7 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="kn">import</span> <span class="n">basestring</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
@@ -326,9 +326,9 @@
 <span class="sd">        inputs).</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">PositionD</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">GalSimValueError</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">longwave_bands</span><span class="p">,</span> <span class="n">shortwave_bands</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">PositionD</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimValueError</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">longwave_bands</span><span class="p">,</span> <span class="n">shortwave_bands</span>
 
     <span class="c1"># Deal with inputs:</span>
 
@@ -377,11 +377,11 @@
     <span class="sd">&quot;&quot;&quot;Routine for making a single PSF.  This gets called by `getPSF` after it parses all the</span>
 <span class="sd">       options that were passed in.  Users will not directly interact with this routine.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">fits</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">OpticalPSF</span><span class="p">,</span> <span class="n">ChromaticOpticalPSF</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">pupil_plane_file_longwave</span><span class="p">,</span> <span class="n">pupil_plane_file_shortwave</span><span class="p">,</span> <span class="n">pupil_plane_scale</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">diameter</span><span class="p">,</span> <span class="n">obscuration</span>
-    <span class="kn">from</span> <span class="nn">.wfirst_bandpass</span> <span class="k">import</span> <span class="n">getBandpasses</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">fits</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">OpticalPSF</span><span class="p">,</span> <span class="n">ChromaticOpticalPSF</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pupil_plane_file_longwave</span><span class="p">,</span> <span class="n">pupil_plane_file_shortwave</span><span class="p">,</span> <span class="n">pupil_plane_scale</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">diameter</span><span class="p">,</span> <span class="n">obscuration</span>
+    <span class="kn">from</span> <span class="nn">.wfirst_bandpass</span> <span class="kn">import</span> <span class="n">getBandpasses</span>
 
     <span class="c1"># Deal with some accuracy settings.</span>
     <span class="k">if</span> <span class="n">high_accuracy</span><span class="p">:</span>
@@ -476,8 +476,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        NumPy arrays containing the aberrations, and x and y field positions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">meta_data</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">n_pix</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">n_pix</span>
 
     <span class="c1"># Construct filename.</span>
     <span class="n">sca_str</span> <span class="o">=</span> <span class="s1">&#39;_</span><span class="si">%02d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">SCA</span>

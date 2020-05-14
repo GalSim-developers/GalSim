@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.gsparams &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.gsparams &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -184,8 +184,8 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">convert_cpp_errors</span>
 
 <div class="viewcode-block" id="GSParams"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams">[docs]</a><span class="k">class</span> <span class="nc">GSParams</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;GSParams stores a set of numbers that govern how a `GSObject` makes various speed/accuracy</span>
@@ -281,7 +281,7 @@
 
 <span class="sd">    After construction, all of the above parameters are available as read-only attributes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum_fft_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">maximum_fft_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum_fft_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">maximum_fft_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">,</span>
                  <span class="n">folding_threshold</span><span class="o">=</span><span class="mf">5.e-3</span><span class="p">,</span> <span class="n">stepk_minimum_hlr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-3</span><span class="p">,</span>
                  <span class="n">kvalue_accuracy</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">xvalue_accuracy</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">table_spacing</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">realspace_relerr</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">realspace_abserr</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span>
@@ -303,13 +303,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_shoot_accuracy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">shoot_accuracy</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">allowed_flux_variation</span> <span class="o">!=</span> <span class="mf">0.81</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;allowed_flux_variation&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;This parameter is no longer used.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">range_division_for_extrema</span> <span class="o">!=</span> <span class="mi">32</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;range_division_for_extrema&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;This parameter is no longer used.&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">small_fraction_of_flux</span> <span class="o">!=</span> <span class="mf">1.e-4</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;small_fraction_of_flux&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;This parameter is no longer used.&quot;</span><span class="p">)</span>
 
 
@@ -398,17 +398,17 @@
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">state</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.GSParams(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span> \
                 <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">GSParams</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 <span class="c1"># We use the default a lot, so make it a class attribute.</span>

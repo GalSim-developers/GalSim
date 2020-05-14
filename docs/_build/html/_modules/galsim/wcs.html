@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.wcs &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.wcs &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -186,13 +186,13 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">Position</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">.celestial</span> <span class="k">import</span> <span class="n">CelestialCoord</span>
-<span class="kn">from</span> <span class="nn">.shear</span> <span class="k">import</span> <span class="n">Shear</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimValueError</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">doc_inherit</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">Position</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
+<span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">doc_inherit</span>
 
 <div class="viewcode-block" id="BaseWCS"><a class="viewcode-back" href="../../wcs.html#galsim.BaseWCS">[docs]</a><span class="k">class</span> <span class="nc">BaseWCS</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The base class for all other kinds of WCS transformations.</span>
@@ -812,7 +812,7 @@
 <span class="sd">            header:     A FitsHeader (or dict-like) object to write the data to.</span>
 <span class="sd">            bounds:     The bounds of the image.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">fits</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fits</span>
         <span class="c1"># First write the XMIN, YMIN values</span>
         <span class="n">header</span><span class="p">[</span><span class="s2">&quot;GS_XMIN&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span><span class="p">,</span> <span class="s2">&quot;GalSim image minimum x coordinate&quot;</span><span class="p">)</span>
         <span class="n">header</span><span class="p">[</span><span class="s2">&quot;GS_YMIN&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span><span class="p">,</span> <span class="s2">&quot;GalSim image minimum y coordinate&quot;</span><span class="p">)</span>
@@ -916,8 +916,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        a tuple (wcs, origin) of the wcs from the header and the image origin.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">fits</span>
-    <span class="kn">from</span> <span class="nn">.fitswcs</span> <span class="k">import</span> <span class="n">FitsWCS</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fits</span>
+    <span class="kn">from</span> <span class="nn">.fitswcs</span> <span class="kn">import</span> <span class="n">FitsWCS</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">fits</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">):</span>
         <span class="n">header</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
     <span class="n">xmin</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GS_XMIN&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -925,7 +925,7 @@
     <span class="n">origin</span> <span class="o">=</span> <span class="n">PositionI</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">)</span>
     <span class="n">wcs_name</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GS_WCS&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">wcs_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">exec_</span>
+        <span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">exec_</span>
         <span class="n">gdict</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">exec_</span><span class="p">(</span><span class="s1">&#39;import galsim&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
         <span class="n">wcs_type</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s1">&#39;galsim.&#39;</span> <span class="o">+</span> <span class="n">wcs_name</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
@@ -1008,7 +1008,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            ra, dec</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">AngleUnit</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">AngleUnit</span>
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xyTouv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">)</span></div>
 
@@ -1171,7 +1171,7 @@
         <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="n">area</span> <span class="o">*</span> <span class="n">sky_level</span>
 
     <span class="c1"># Each class should define the __eq__ function.  Then __ne__ is obvious.</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="UniformWCS"><a class="viewcode-back" href="../../wcs.html#galsim.UniformWCS">[docs]</a><span class="k">class</span> <span class="nc">UniformWCS</span><span class="p">(</span><span class="n">EuclideanWCS</span><span class="p">):</span>
@@ -1211,7 +1211,7 @@
         <span class="n">image</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">sky_level</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixelArea</span><span class="p">())</span>
 
     <span class="c1"># Just check if the locals match and if the origins match.</span>
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_local_wcs</span> <span class="ow">and</span>
@@ -1306,7 +1306,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            ra, dec</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">AngleUnit</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">AngleUnit</span>
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">if</span> <span class="n">units</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;units is required for CelestialWCS types&quot;</span><span class="p">)</span>
@@ -1333,7 +1333,7 @@
 <span class="sd">            units:      The units to use for the input ra, dec values.</span>
 <span class="sd">            color:      For color-dependent WCS&#39;s, the color term to use. [default: None]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">AngleUnit</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">AngleUnit</span>
         <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_color</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">units</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
@@ -1364,7 +1364,7 @@
     <span class="c1"># version for EuclideanWCS, but convert from dra, ddec to du, dv locallat at the given</span>
     <span class="c1"># position.</span>
     <span class="k">def</span> <span class="nf">_local</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span>
 
         <span class="k">if</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;origin must be a PositionD or PositionI argument&quot;</span><span class="p">)</span>
@@ -1396,7 +1396,7 @@
     <span class="c1"># This is similar to the version for EuclideanWCS, but uses dra, ddec.</span>
     <span class="c1"># Again, it is much faster if the _radec function works with numpy arrays.</span>
     <span class="k">def</span> <span class="nf">_makeSkyImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">sky_level</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span>
         <span class="n">nx</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">xmax</span><span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">xmin</span><span class="o">+</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span>  <span class="c1"># +2 more than in image to get row/col off each edge.</span>
         <span class="n">ny</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">ymax</span><span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">ymin</span><span class="o">+</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">2</span>
@@ -1431,7 +1431,7 @@
 
     <span class="c1"># Simple.  Just call _radec.</span>
     <span class="k">def</span> <span class="nf">_posToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">color</span><span class="p">,</span> <span class="n">project_center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">image_pos</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">image_pos</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y0</span>
         <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">color</span><span class="p">)</span>
@@ -1443,7 +1443,7 @@
             <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">u</span><span class="o">/</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">v</span><span class="o">/</span><span class="n">arcsec</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_xyToradec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x0</span>  <span class="c1"># Not -=, since don&#39;t want to modify the input arrays in place.</span>
         <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">y0</span>
         <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_radec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">color</span><span class="p">)</span>
@@ -1459,7 +1459,7 @@
         <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span>
 
     <span class="k">def</span> <span class="nf">_radecToxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">units</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span>
         <span class="n">ra</span> <span class="o">=</span> <span class="n">ra</span> <span class="o">*</span> <span class="p">(</span><span class="n">units</span> <span class="o">/</span> <span class="n">radians</span><span class="p">)</span>
         <span class="n">dec</span> <span class="o">=</span> <span class="n">dec</span> <span class="o">*</span> <span class="p">(</span><span class="n">units</span> <span class="o">/</span> <span class="n">radians</span><span class="p">)</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xy</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span><span class="n">dec</span><span class="p">,</span><span class="n">color</span><span class="p">)</span>
@@ -1468,7 +1468,7 @@
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
 
     <span class="c1"># Each class should define the __eq__ function.  Then __ne__ is obvious.</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 
 
@@ -1526,7 +1526,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
 
@@ -1554,12 +1554,12 @@
         <span class="k">return</span> <span class="n">v</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
 
     <span class="k">def</span> <span class="nf">_profileToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_profile</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
         <span class="k">return</span> <span class="n">_Transform</span><span class="p">(</span><span class="n">image_profile</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">),</span>
                           <span class="n">flux_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="o">**-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_profileToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world_profile</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
         <span class="k">return</span> <span class="n">_Transform</span><span class="p">(</span><span class="n">world_profile</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">),</span>
                           <span class="n">flux_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
 
@@ -1594,13 +1594,13 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">PixelScale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.PixelScale(</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.PixelScale(</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="ShearWCS"><a class="viewcode-back" href="../../wcs.html#galsim.ShearWCS">[docs]</a><span class="k">class</span> <span class="nc">ShearWCS</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
@@ -1634,7 +1634,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_shear</span> <span class="o">=</span> <span class="n">shear</span>
@@ -1726,14 +1726,14 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ShearWCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shear</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ShearWCS</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">shear</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shear</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.ShearWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.ShearWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="JacobianWCS"><a class="viewcode-back" href="../../wcs.html#galsim.JacobianWCS">[docs]</a><span class="k">class</span> <span class="nc">JacobianWCS</span><span class="p">(</span><span class="n">LocalWCS</span><span class="p">):</span>
@@ -1771,7 +1771,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dudx</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dudy</span><span class="p">)</span>
@@ -1827,12 +1827,12 @@
             <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Transformation is singular&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_profileToWorld</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_profile</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
         <span class="k">return</span> <span class="n">_Transform</span><span class="p">(</span><span class="n">image_profile</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdy</span><span class="p">),</span>
                           <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_ratio</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_pixelArea</span><span class="p">(),</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_profileToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world_profile</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">_Transform</span><span class="p">(</span><span class="n">world_profile</span><span class="p">,</span>
                               <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dvdy</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_det</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_det</span><span class="p">,</span>
@@ -1885,7 +1885,7 @@
 <span class="sd">        float, shear is a `Shear`, theta is an `Angle`, and flip is a bool.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">math</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span>
         <span class="c1"># First we need to see whether or not the transformation includes a flip.  The evidence</span>
         <span class="c1"># for a flip is that the determinant is negative.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
@@ -1977,7 +1977,7 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">JacobianWCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dvdy</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">JacobianWCS</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">dudx</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dudx</span> <span class="ow">and</span>
@@ -1985,9 +1985,9 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dvdx</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">dvdy</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.JacobianWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.JacobianWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <span class="c1">#########################################################################################</span>
@@ -2042,7 +2042,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">scale</span>
@@ -2094,9 +2094,9 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">OffsetWCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.OffsetWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="s2">&quot;galsim.OffsetWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="OffsetShearWCS"><a class="viewcode-back" href="../../wcs.html#galsim.OffsetShearWCS">[docs]</a><span class="k">class</span> <span class="nc">OffsetShearWCS</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
@@ -2130,7 +2130,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span>
         <span class="c1"># The shear stuff is not too complicated, but enough so that it is worth</span>
@@ -2190,10 +2190,10 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">OffsetShearWCS</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.OffsetShearWCS(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="AffineTransform"><a class="viewcode-back" href="../../wcs.html#galsim.AffineTransform">[docs]</a><span class="k">class</span> <span class="nc">AffineTransform</span><span class="p">(</span><span class="n">UniformWCS</span><span class="p">):</span>
@@ -2232,7 +2232,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span>
         <span class="c1"># As with OffsetShearWCS, we store a JacobianWCS, rather than reimplement everything.</span>
@@ -2321,10 +2321,10 @@
         <span class="k">return</span> <span class="n">AffineTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span><span class="p">,</span>
                                <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.AffineTransform(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, origin=</span><span class="si">%r</span><span class="s2">, world_origin=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dvdy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
 
 
 <span class="c1">#########################################################################################</span>
@@ -2392,7 +2392,7 @@
             <span class="c1"># to include them as well.  Help for this part came from:</span>
             <span class="c1"># http://stackoverflow.com/questions/573569/</span>
             <span class="k">if</span> <span class="n">closure</span><span class="p">:</span>
-                <span class="kn">from</span> <span class="nn">types</span> <span class="k">import</span> <span class="n">ModuleType</span>
+                <span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">ModuleType</span>
                 <span class="n">closure_list</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">closure</span><span class="p">:</span>
                     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">cell_contents</span><span class="p">,</span> <span class="n">ModuleType</span><span class="p">):</span>
@@ -2538,7 +2538,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ufunc</span><span class="p">,</span> <span class="n">vfunc</span><span class="p">,</span> <span class="n">xfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ufunc</span><span class="p">,</span> <span class="n">vfunc</span><span class="p">,</span> <span class="n">xfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">yfunc</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">world_origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">uses_color</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">,</span> <span class="n">world_origin</span><span class="p">)</span>
@@ -2556,7 +2556,7 @@
     <span class="k">def</span> <span class="nf">_initialize_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">galsim</span>
         <span class="k">global</span> <span class="n">galsim</span>  <span class="c1"># Because if a user&#39;s function used galsim, it&#39;s probably at global scope.</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_ufunc</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">math_eval</span><span class="p">(</span><span class="s1">&#39;lambda x,y,c : &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span><span class="p">)</span>
@@ -2743,7 +2743,7 @@
         <span class="k">return</span> <span class="n">UVFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_vfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_xfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_yfunc</span><span class="p">,</span>
                           <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">UVFunction</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_ufunc</span> <span class="ow">and</span>
@@ -2754,12 +2754,12 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">world_origin</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.UVFunction(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_vfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_xfunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_yfunc</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">world_origin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -2817,7 +2817,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra_func</span><span class="p">,</span> <span class="n">dec_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra_func</span><span class="p">,</span> <span class="n">dec_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_origin</span><span class="p">(</span><span class="n">origin</span><span class="p">)</span>
 
@@ -2831,7 +2831,7 @@
     <span class="k">def</span> <span class="nf">_initialize_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">galsim</span>
         <span class="k">global</span> <span class="n">galsim</span>  <span class="c1"># Because if a user&#39;s function used galsim, it&#39;s probably at global scope.</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_radec_func</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">math_eval</span><span class="p">(</span><span class="s1">&#39;lambda x,y : &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span><span class="p">)</span>
@@ -2900,18 +2900,18 @@
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">RaDecFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RaDecFunction</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_ra_func</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_dec_func</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">origin</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">origin</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.RaDecFunction(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>

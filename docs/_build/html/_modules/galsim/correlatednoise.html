@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.correlatednoise &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.correlatednoise &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -185,16 +185,16 @@
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">iteritems</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">iteritems</span>
 
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
-<span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
-<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
-<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimUndefinedBoundsError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimUndefinedBoundsError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <span class="k">def</span> <span class="nf">whitenNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">noise</span><span class="p">):</span>
     <span class="c1"># This will be inserted into the Image class as a method.  So self = image.</span>
@@ -261,7 +261,7 @@
 <span class="sd">        wcs:        The wcs for the image to define the phyical relationship between the pixels.</span>
 <span class="sd">                    [default: PixelScale(1.0)]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)):</span>
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">BaseDeviate</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="s2">&quot;Supplied rng argument not a galsim.BaseDeviate or derived class instance.&quot;</span><span class="p">)</span>
@@ -306,21 +306,21 @@
 
     <span class="c1"># Make &quot;+&quot; work in the intuitive sense (variances being additive, correlation functions add as</span>
     <span class="c1"># you would expect)</span>
-    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">wcs</span>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">wcs</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">wcs</span><span class="o">.</span><span class="n">compatible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">wcs</span><span class="p">):</span>
             <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Adding two CorrelatedNoise objects with incompatible WCS. &quot;</span>
                         <span class="s2">&quot;The result will have the WCS of the first object.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">wcs</span>
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">wcs</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">wcs</span><span class="o">.</span><span class="n">compatible</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">wcs</span><span class="p">):</span>
             <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Subtracting two CorrelatedNoise objects with incompatible WCS. &quot;</span>
                         <span class="s2">&quot;The result will have the WCS of the first object.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">__div__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">variance_ratio</span><span class="p">)</span>
@@ -338,17 +338,17 @@
             <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
         <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.BaseCorrelatedNoise(</span><span class="si">%r</span><span class="s2">,</span><span class="si">%r</span><span class="s2">,</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.BaseCorrelatedNoise(</span><span class="si">%s</span><span class="s2">,</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
     <span class="c1"># Quick and dirty.  Just check reprs are equal.</span>
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_clear_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Check if the profile has changed and clear caches if appropriate.</span>
@@ -718,7 +718,7 @@
 
 <span class="sd">        This is the variance of values in an image filled with noise according to this model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span>
+        <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
         <span class="c1"># Test whether we can simply return the zero-lag correlation function value, which gives the</span>
         <span class="c1"># variance of an image of noise generated according to this model</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">is_analytic_x</span><span class="p">:</span>
@@ -818,7 +818,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the new `BaseCorrelatedNoise` of the convolved profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">AutoCorrelate</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">AutoCorrelate</span>
         <span class="n">conv</span> <span class="o">=</span> <span class="n">Convolve</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="n">AutoCorrelate</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span><span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)],</span>
                         <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">conv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
@@ -1045,8 +1045,8 @@
         <span class="c1"># possible to generate noise with power equal to the difference between the two power</span>
         <span class="c1"># spectra.</span>
 
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span>
         <span class="c1"># Initialize a temporary copy of the original PS array, expanded to full size rather than</span>
         <span class="c1"># the compact halfcomplex format that the PS is supplied in, which we will turn into an</span>
         <span class="c1"># InterpolatedImage</span>
@@ -1118,7 +1118,7 @@
 
     <span class="c1"># Returns a NumPy array (contiguous) of the requested shape, filled with the noise field.</span>
 
-    <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">GaussianDeviate</span>
+    <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">GaussianDeviate</span>
     <span class="c1"># Quickest to create Gaussian rng each time needed, so do that here...</span>
     <span class="c1"># Note sigma scaling: 1/sqrt(2) needed so &lt;|gaussvec|**2&gt; = product(shape)</span>
     <span class="c1"># shape needed because of the asymmetry in the 1/N^2 division in the NumPy FFT/iFFT</span>
@@ -1336,11 +1336,11 @@
 <span class="sd">    scale the overall correlation function by a scalar operand.  The random number generators are</span>
 <span class="sd">    not affected by these scaling operations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">correct_periodicity</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">subtract_mean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">BaseWCS</span>
-        <span class="kn">from</span> <span class="nn">.interpolant</span> <span class="k">import</span> <span class="n">Linear</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">BaseWCS</span>
+        <span class="kn">from</span> <span class="nn">.interpolant</span> <span class="kn">import</span> <span class="n">Linear</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
 
         <span class="c1"># Check that the input image is in fact a galsim.ImageSIFD class instance</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
@@ -1444,7 +1444,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.CorrelatedNoise(</span><span class="si">%s</span><span class="s2">, wcs=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
 
@@ -1577,10 +1577,10 @@
 
 <span class="sd">    The FITS file ``out.fits`` should then contain an image of randomly-generated, COSMOS-like noise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">meta_data</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">fits</span>
-    <span class="kn">from</span> <span class="nn">.interpolant</span> <span class="k">import</span> <span class="n">Linear</span>
-    <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meta_data</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fits</span>
+    <span class="kn">from</span> <span class="nn">.interpolant</span> <span class="kn">import</span> <span class="n">Linear</span>
+    <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
     <span class="c1"># First try to read in the image of the COSMOS correlation function stored in the repository</span>
     <span class="kn">import</span> <span class="nn">os</span>
     <span class="k">if</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1643,10 +1643,10 @@
 <span class="sd">                        or ``wcs`` may be provided. [default: None]</span>
 <span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">BaseWCS</span><span class="p">,</span> <span class="n">PixelScale</span>
-        <span class="kn">from</span> <span class="nn">.box</span> <span class="k">import</span> <span class="n">Pixel</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">AutoConvolve</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">BaseWCS</span><span class="p">,</span> <span class="n">PixelScale</span>
+        <span class="kn">from</span> <span class="nn">.box</span> <span class="kn">import</span> <span class="n">Pixel</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">AutoConvolve</span>
         <span class="k">if</span> <span class="n">variance</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Specified variance must be zero or positive.&quot;</span><span class="p">,</span>
                                    <span class="n">variance</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
@@ -1683,11 +1683,11 @@
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">UncorrelatedNoise</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.UncorrelatedNoise(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, wcs=</span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.UncorrelatedNoise(variance=</span><span class="si">%r</span><span class="s2">, wcs=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span></div>
 
 
@@ -1710,11 +1710,11 @@
 <span class="sd">                    described by the corresponding `GSObject` values.</span>
 <span class="sd">        SEDs:      `SED` instances of associated `ChromaticSum` components.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">SEDs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Sigma</span><span class="p">,</span> <span class="n">SEDs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">=</span> <span class="n">Sigma</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span> <span class="o">=</span> <span class="n">SEDs</span>
 
-    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">variance_ratio</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
@@ -1743,9 +1743,9 @@
 <span class="sd">            CorrelatedNoise object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span>
-        <span class="kn">from</span> <span class="nn">.box</span> <span class="k">import</span> <span class="n">Pixel</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedKImage</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span>
+        <span class="kn">from</span> <span class="nn">.box</span> <span class="kn">import</span> <span class="n">Pixel</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedKImage</span>
         <span class="n">NSED</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">)</span>
         <span class="n">maxk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">PSF</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">)</span><span class="o">.</span><span class="n">maxk</span><span class="p">,</span>
                        <span class="n">PSF</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">bandpass</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span><span class="o">.</span><span class="n">maxk</span><span class="p">])</span>
@@ -1769,21 +1769,21 @@
         <span class="n">iki</span> <span class="o">*=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">pixelArea</span><span class="p">()</span><span class="o">**</span><span class="mi">2</span>  <span class="c1"># determined this empirically</span>
         <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">iki</span><span class="p">,</span> <span class="n">wcs</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">CovarianceSpectrum</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">SEDs</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">Sigma</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.CovarianceSpectrum&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">),</span>
                      <span class="nb">frozenset</span><span class="p">(</span><span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">))))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.CovarianceSpectrum(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">sigma_str</span> <span class="o">=</span> <span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">),</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="p">)))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sigma</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
         <span class="n">seds_str</span> <span class="o">=</span> <span class="s1">&#39;[&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.CovarianceSpectrum(</span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">sigma_str</span><span class="p">,</span> <span class="n">seds_str</span><span class="p">)</span></div>

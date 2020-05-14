@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Transformed Profiles &mdash; GalSim 2.2.3 documentation</title>
+  <title>Transformed Profiles &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -195,9 +195,9 @@ rotating, and translating, and even more complicated things like forming the
 inverse in Fourier space to effect a deconvolution.</p>
 <div class="section" id="affine-transformations">
 <h2>Affine Transformations<a class="headerlink" href="#affine-transformations" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Transformation">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Transformation</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">jac=(1.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">1.0)</em>, <em class="sig-param">offset=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">flux_ratio=1.0</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Transformation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">jac</span><span class="o">=</span><span class="default_value">1.0, 0.0, 0.0, 1.0</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">galsim.PositionD(x=0.0, y=0.0)</span></em>, <em class="sig-param"><span class="n">flux_ratio</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">propagate_gsparams</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class for modeling an affine transformation of a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instance.</p>
 <p>Typically, you do not need to construct a Transformation object explicitly.  This is the type
@@ -242,33 +242,33 @@ would not want to do this. [default: True]</p></li>
 <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> from obj.  Also, note that parameters related to the Fourier-space calculations must
 be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
 threshold parameters will simply be ignored).</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Transformation.flux_ratio">
 <em class="property">property </em><code class="sig-name descname">flux_ratio</code><a class="headerlink" href="#galsim.Transformation.flux_ratio" title="Permalink to this definition">¶</a></dt>
 <dd><p>The flux ratio of the transformation.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Transformation.jac">
 <em class="property">property </em><code class="sig-name descname">jac</code><a class="headerlink" href="#galsim.Transformation.jac" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Jacobian of the transforamtion.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Transformation.offset">
 <em class="property">property </em><code class="sig-name descname">offset</code><a class="headerlink" href="#galsim.Transformation.offset" title="Permalink to this definition">¶</a></dt>
 <dd><p>The offset of the transformation.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Transformation.original">
 <em class="property">property </em><code class="sig-name descname">original</code><a class="headerlink" href="#galsim.Transformation.original" title="Permalink to this definition">¶</a></dt>
 <dd><p>The original object being transformed.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Transformation.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transformation.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transformation.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -279,9 +279,9 @@ of the wrapped component object.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.Transform">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Transform</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">jac=(1.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">1.0)</em>, <em class="sig-param">offset=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">flux_ratio=1.0</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transform" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">jac</span><span class="o">=</span><span class="default_value">1.0, 0.0, 0.0, 1.0</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">galsim.PositionD(x=0.0, y=0.0)</span></em>, <em class="sig-param"><span class="n">flux_ratio</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">propagate_gsparams</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#Transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function for transforming either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
 <p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.Transformation" title="galsim.Transformation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Transformation</span></code></a> object or a
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticTransformation" title="galsim.ChromaticTransformation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticTransformation</span></code></a> object is required to represent the resulting transformed object.</p>
@@ -310,9 +310,9 @@ would not want to do this. [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim._Transform">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_Transform</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">jac=(1.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">0.0</em>, <em class="sig-param">1.0)</em>, <em class="sig-param">offset=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">flux_ratio=1.0</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#_Transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._Transform" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_Transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">jac</span><span class="o">=</span><span class="default_value">1.0, 0.0, 0.0, 1.0</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">galsim.PositionD(x=0.0, y=0.0)</span></em>, <em class="sig-param"><span class="n">flux_ratio</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/transform.html#_Transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._Transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Approximately equivalent to Transform, but without some of the sanity checks (such as
 checking for chromatic options).</p>
 <p>For a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>, you must use the regular <a class="reference internal" href="#galsim.Transform" title="galsim.Transform"><code class="xref any py py-func docutils literal notranslate"><span class="pre">Transform</span></code></a>.</p>
@@ -321,9 +321,9 @@ checking for chromatic options).</p>
 </div>
 <div class="section" id="de-convolution-of-a-gsobject">
 <h2>De-convolution of a GSObject<a class="headerlink" href="#de-convolution-of-a-gsobject" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Deconvolution">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Deconvolution</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Deconvolution</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">propagate_gsparams</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class for deconvolving a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
 <p>The Deconvolution class represents a deconvolution kernel.  Note that the Deconvolution class,
@@ -348,15 +348,15 @@ would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Deconvolution.orig_obj">
 <em class="property">property </em><code class="sig-name descname">orig_obj</code><a class="headerlink" href="#galsim.Deconvolution.orig_obj" title="Permalink to this definition">¶</a></dt>
 <dd><p>The original object that is being deconvolved.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Deconvolution.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -367,9 +367,9 @@ of the wrapped component object.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.Deconvolve">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Deconvolve</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolve" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Deconvolve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">propagate_gsparams</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/convolve.html#Deconvolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Deconvolve" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function for deconvolving by either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
 <p>This function will inspect its input argument to decide if a <a class="reference internal" href="#galsim.Deconvolution" title="galsim.Deconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Deconvolution</span></code></a> object or a
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticDeconvolution" title="galsim.ChromaticDeconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticDeconvolution</span></code></a> object is required to represent the deconvolution by a surface
@@ -393,9 +393,9 @@ would not want to do this. [default: True]</p></li>
 </div>
 <div class="section" id="fourier-space-square-root">
 <h2>Fourier-space Square Root<a class="headerlink" href="#fourier-space-square-root" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.FourierSqrtProfile">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">FourierSqrtProfile</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">FourierSqrtProfile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">propagate_gsparams</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class for computing the Fourier-space sqrt of a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
 <p>The FourierSqrtProfile class represents the Fourier-space square root of another profile.
@@ -420,15 +420,15 @@ would not want to do this. [default: True]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.FourierSqrtProfile.orig_obj">
 <em class="property">property </em><code class="sig-name descname">orig_obj</code><a class="headerlink" href="#galsim.FourierSqrtProfile.orig_obj" title="Permalink to this definition">¶</a></dt>
 <dd><p>The original object being Fourier sqrt-ed.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.FourierSqrtProfile.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrtProfile.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrtProfile.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -439,9 +439,9 @@ of the wrapped component object.</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.FourierSqrt">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">FourierSqrt</code><span class="sig-paren">(</span><em class="sig-param">obj</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">propagate_gsparams=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrt" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">FourierSqrt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">propagate_gsparams</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fouriersqrt.html#FourierSqrt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FourierSqrt" title="Permalink to this definition">¶</a></dt>
 <dd><p>A function for computing the Fourier-space square root of either a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
 <p>The FourierSqrt function is principally used for doing an optimal coaddition algorithm

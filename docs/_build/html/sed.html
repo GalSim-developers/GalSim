@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Spectral Energy Distributions &mdash; GalSim 2.2.3 documentation</title>
+  <title>Spectral Energy Distributions &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -179,9 +179,9 @@
             
   <div class="section" id="spectral-energy-distributions">
 <h1>Spectral Energy Distributions<a class="headerlink" href="#spectral-energy-distributions" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.SED">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SED</code><span class="sig-paren">(</span><em class="sig-param">spec</em>, <em class="sig-param">wave_type</em>, <em class="sig-param">flux_type</em>, <em class="sig-param">redshift=0.0</em>, <em class="sig-param">fast=True</em>, <em class="sig-param">_blue_limit=0.0</em>, <em class="sig-param">_red_limit=inf</em>, <em class="sig-param">_wave_list=None</em>, <em class="sig-param">_spectral=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SED</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spec</span></em>, <em class="sig-param"><span class="n">wave_type</span></em>, <em class="sig-param"><span class="n">flux_type</span></em>, <em class="sig-param"><span class="n">redshift</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">fast</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">_blue_limit</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">_red_limit</span><span class="o">=</span><span class="default_value">inf</span></em>, <em class="sig-param"><span class="n">_wave_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_spectral</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED" title="Permalink to this definition">¶</a></dt>
 <dd><p>Object to represent the spectral energy distributions of stars and galaxies.</p>
 <p>SEDs are callable, usually returning the flux density in photons/nm/cm^2/s as a function of
 wavelength, though SEDs are also used by GalSim to track dimensionless wavelength-dependent
@@ -189,7 +189,7 @@ normalizations, and may thus also return dimensionless values.  By default, the 
 used by __call__ is nanometers, but it’s possible to use other units via the astropy.units
 module (at least, if the SED keyword argument <code class="docutils literal notranslate"><span class="pre">fast=False</span></code>, see below).  For instance,:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sed</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">SED</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span> <span class="k">as</span> <span class="n">u</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">sed</span><span class="p">(</span><span class="mi">500</span><span class="p">)</span> <span class="o">==</span> <span class="n">sed</span><span class="p">(</span><span class="mi">5000</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">AA</span><span class="p">)</span>  <span class="c1"># 500 nm == 5000 Angstroms</span>
 </pre></div>
 </div>
@@ -262,9 +262,9 @@ for this parameter.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param">wave</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">wave</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return photon flux density or dimensionless normalization at wavelength <code class="docutils literal notranslate"><span class="pre">wave</span></code>.</p>
 <p>Note that outside of the wavelength range defined by the <code class="docutils literal notranslate"><span class="pre">blue_limit</span></code> and <code class="docutils literal notranslate"><span class="pre">red_limit</span></code>
 attributes, the SED is considered undefined, and this method will raise an exception if a
@@ -281,9 +281,9 @@ dimensionless normalization if self.dimensionless.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.__mul__">
-<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__mul__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.__mul__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multiply the SED by something.</p>
 <p>There are several possibilities:</p>
 <ol class="arabic simple">
@@ -295,27 +295,27 @@ dimensionless normalization if self.dimensionless.</p>
 </ol>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED._mul_sed">
-<code class="sig-name descname">_mul_sed</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_sed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_sed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_mul_sed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_sed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_sed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to self * other when other is an SED, but no sanity checks.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED._mul_bandpass">
-<code class="sig-name descname">_mul_bandpass</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_bandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_bandpass" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_mul_bandpass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_bandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_bandpass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to self * other when other is a Bandpass</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED._mul_scalar">
-<code class="sig-name descname">_mul_scalar</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_scalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_scalar" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_mul_scalar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED._mul_scalar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED._mul_scalar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to self * other when other is a scalar</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.atRedshift">
-<code class="sig-name descname">atRedshift</code><span class="sig-paren">(</span><em class="sig-param">redshift</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.atRedshift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.atRedshift" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">atRedshift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">redshift</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.atRedshift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.atRedshift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a new <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> with redshifted wavelengths.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -327,9 +327,9 @@ dimensionless normalization if self.dimensionless.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.calculateDCRMomentShifts">
-<code class="sig-name descname">calculateDCRMomentShifts</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.calculateDCRMomentShifts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.calculateDCRMomentShifts" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateDCRMomentShifts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.calculateDCRMomentShifts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.calculateDCRMomentShifts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates shifts in first and second moments of PSF due to differential chromatic
 refraction (DCR).</p>
 <p>I.e., equations (1) and (2) from Plazas and Bernstein (2012):</p>
@@ -365,9 +365,9 @@ measured from North through East.  [default: 0]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.calculateFlux">
-<code class="sig-name descname">calculateFlux</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.calculateFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.calculateFlux" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateFlux</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.calculateFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.calculateFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the flux (photons/cm^2/s) of the <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> through the <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> bandpass.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -382,9 +382,9 @@ over this entire range.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.calculateMagnitude">
-<code class="sig-name descname">calculateMagnitude</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.calculateMagnitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.calculateMagnitude" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateMagnitude</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.calculateMagnitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.calculateMagnitude" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> magnitude through a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> <code class="docutils literal notranslate"><span class="pre">bandpass</span></code>.</p>
 <p>Note that this requires <code class="docutils literal notranslate"><span class="pre">bandpass</span></code> to have been assigned a zeropoint using
 <a class="reference internal" href="bandpass.html#galsim.Bandpass.withZeropoint" title="galsim.Bandpass.withZeropoint"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Bandpass.withZeropoint</span></code></a>.</p>
@@ -401,9 +401,9 @@ to be evaluable over this entire range.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.calculateSeeingMomentRatio">
-<code class="sig-name descname">calculateSeeingMomentRatio</code><span class="sig-paren">(</span><em class="sig-param">bandpass</em>, <em class="sig-param">alpha=-0.2</em>, <em class="sig-param">base_wavelength=500</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.calculateSeeingMomentRatio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.calculateSeeingMomentRatio" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateSeeingMomentRatio</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">- 0.2</span></em>, <em class="sig-param"><span class="n">base_wavelength</span><span class="o">=</span><span class="default_value">500</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.calculateSeeingMomentRatio"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.calculateSeeingMomentRatio" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates the relative size of a PSF compared to the monochromatic PSF size at
 wavelength <code class="docutils literal notranslate"><span class="pre">base_wavelength</span></code>.</p>
 <dl class="field-list simple">
@@ -422,27 +422,27 @@ PSF size.  [default: 500]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.check_dimensionless">
 <code class="sig-name descname">check_dimensionless</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.check_dimensionless"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.check_dimensionless" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return boolean indicating if SED is dimensionless.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.check_spectral">
 <code class="sig-name descname">check_spectral</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.check_spectral"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.check_spectral" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return boolean indicating if SED has units compatible with a spectral density.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.dimensionless">
 <em class="property">property </em><code class="sig-name descname">dimensionless</code><a class="headerlink" href="#galsim.SED.dimensionless" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether the object is dimensionless (rather than spectral).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.sampleWavelength">
-<code class="sig-name descname">sampleWavelength</code><span class="sig-paren">(</span><em class="sig-param">nphotons</em>, <em class="sig-param">bandpass</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">npoints=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.sampleWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.sampleWavelength" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">sampleWavelength</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nphotons</span></em>, <em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">npoints</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.sampleWavelength"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.sampleWavelength" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample a number of random wavelength values from the <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, possibly as observed through
 a <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> bandpass.</p>
 <dl class="field-list simple">
@@ -461,9 +461,9 @@ tables. [default: None, which uses the <a class="reference internal" href="devia
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.thin">
-<code class="sig-name descname">thin</code><span class="sig-paren">(</span><em class="sig-param">rel_err=0.0001</em>, <em class="sig-param">trim_zeros=True</em>, <em class="sig-param">preserve_range=True</em>, <em class="sig-param">fast_search=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.thin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.thin" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">thin</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rel_err</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">trim_zeros</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">preserve_range</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">fast_search</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.thin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.thin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove some tabulated values while keeping the integral over the set of tabulated values
 still accurate to <code class="docutils literal notranslate"><span class="pre">rel_err</span></code>.</p>
 <p>This is only relevant if the <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> was initialized with a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> or from a file
@@ -497,9 +497,9 @@ while still meeting the relative error requirement.
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.withFlux">
-<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">target_flux</em>, <em class="sig-param">bandpass</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.withFlux" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">target_flux</span></em>, <em class="sig-param"><span class="n">bandpass</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.withFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a new <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> with flux through the <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> <code class="docutils literal notranslate"><span class="pre">bandpass</span></code> set to <code class="docutils literal notranslate"><span class="pre">target_flux</span></code>.</p>
 <p>See <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> docstring for information about how <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> normalization affects
 <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> normalization.</p>
@@ -516,9 +516,9 @@ while still meeting the relative error requirement.
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.withFluxDensity">
-<code class="sig-name descname">withFluxDensity</code><span class="sig-paren">(</span><em class="sig-param">target_flux_density</em>, <em class="sig-param">wavelength</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.withFluxDensity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.withFluxDensity" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withFluxDensity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">target_flux_density</span></em>, <em class="sig-param"><span class="n">wavelength</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.withFluxDensity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.withFluxDensity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a new <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> with flux density set to <code class="docutils literal notranslate"><span class="pre">target_flux_density</span></code> at wavelength
 <code class="docutils literal notranslate"><span class="pre">wavelength</span></code>.</p>
 <p>See <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> docstring for information about how <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> normalization affects
@@ -536,9 +536,9 @@ while still meeting the relative error requirement.
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SED.withMagnitude">
-<code class="sig-name descname">withMagnitude</code><span class="sig-paren">(</span><em class="sig-param">target_magnitude</em>, <em class="sig-param">bandpass</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.withMagnitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.withMagnitude" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withMagnitude</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">target_magnitude</span></em>, <em class="sig-param"><span class="n">bandpass</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sed.html#SED.withMagnitude"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SED.withMagnitude" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a new <a class="reference internal" href="#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> with magnitude through the <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> <code class="docutils literal notranslate"><span class="pre">bandpass</span></code> set to
 <code class="docutils literal notranslate"><span class="pre">target_magnitude</span></code>.</p>
 <p>Note that this requires <code class="docutils literal notranslate"><span class="pre">bandpass</span></code> to have been assigned a zeropoint using

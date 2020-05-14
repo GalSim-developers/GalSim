@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Errors and Warnings &mdash; GalSim 2.2.3 documentation</title>
+  <title>Errors and Warnings &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -229,15 +229,15 @@ Your code will generally continue to work until the next major upgrade, but you 
 encouraged to update your code to the new syntax.</p>
 </dd>
 </dl>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimError">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimError</code><a class="reference internal" href="_modules/galsim/errors.html#GalSimError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimError" title="Permalink to this definition">¶</a></dt>
 <dd><p>The base class for GalSim-specific run-time errors.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimValueError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimValueError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">value</em>, <em class="sig-param">allowed_values=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimValueError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimValueError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimValueError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">allowed_values</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimValueError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimValueError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
 <p>A GalSim-specific exception class indicating that some user-input value is invalid.</p>
 <dl class="field-list simple">
@@ -250,9 +250,9 @@ encouraged to update your code to the new syntax.</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimKeyError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimKeyError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimKeyError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimKeyError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimKeyError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">key</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimKeyError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimKeyError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">KeyError</span></code></p>
 <p>A GalSim-specific exception class indicating an attempt to access a dict-like object
 with an invalid key.</p>
@@ -263,9 +263,9 @@ with an invalid key.</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimIndexError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimIndexError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">index</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimIndexError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimIndexError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimIndexError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">index</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimIndexError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimIndexError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">IndexError</span></code></p>
 <p>A GalSim-specific exception class indicating an attempt to access a list-like object
 with an invalid index.</p>
@@ -276,9 +276,9 @@ with an invalid index.</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimRangeError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimRangeError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">value</em>, <em class="sig-param">min</em>, <em class="sig-param">max=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimRangeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimRangeError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimRangeError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">min</span></em>, <em class="sig-param"><span class="n">max</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimRangeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimRangeError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
 <p>A GalSim-specific exception class indicating that some user-input value is
 outside of the allowed range of values.</p>
@@ -293,9 +293,9 @@ outside of the allowed range of values.</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimBoundsError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimBoundsError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">pos</em>, <em class="sig-param">bounds</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimBoundsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimBoundsError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimBoundsError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">bounds</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimBoundsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimBoundsError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
 <p>A GalSim-specific exception class indicating that some user-input position is
 outside of the allowed bounds.</p>
@@ -309,7 +309,7 @@ outside of the allowed bounds.</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimUndefinedBoundsError">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimUndefinedBoundsError</code><a class="reference internal" href="_modules/galsim/errors.html#GalSimUndefinedBoundsError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimUndefinedBoundsError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code></p>
@@ -317,9 +317,9 @@ outside of the allowed bounds.</p>
 a <a class="reference internal" href="bounds.html#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> instance that has not yet been defined.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimImmutableError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimImmutableError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimImmutableError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimImmutableError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimImmutableError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimImmutableError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimImmutableError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code></p>
 <p>A GalSim-specific exception class indicating an attempt to modify an immutable image.</p>
 <dl class="field-list simple">
@@ -329,9 +329,9 @@ a <a class="reference internal" href="bounds.html#galsim.Bounds" title="galsim.B
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimIncompatibleValuesError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimIncompatibleValuesError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">values={}</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimIncompatibleValuesError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimIncompatibleValuesError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimIncompatibleValuesError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">values</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimIncompatibleValuesError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimIncompatibleValuesError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></p>
 <p>A GalSim-specific exception class indicating that 2 or more user-input values are
 incompatible as given.</p>
@@ -342,9 +342,9 @@ incompatible as given.</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimSEDError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimSEDError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">sed</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimSEDError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimSEDError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimSEDError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">sed</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimSEDError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimSEDError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></p>
 <p>A GalSim-specific exception class indicating an attempt to do something invalid for the
 kind of <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> that is present.  Typically involving a dimensionless <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> where a spectral
@@ -356,16 +356,16 @@ kind of <a class="reference internal" href="sed.html#galsim.SED" title="galsim.S
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimHSMError">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimHSMError</code><a class="reference internal" href="_modules/galsim/errors.html#GalSimHSMError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimHSMError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code></p>
 <p>A GalSim-specific exception class indicating some kind of failure of the HSM algorithms</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimFFTSizeError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimFFTSizeError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">size</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimFFTSizeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimFFTSizeError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimFFTSizeError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">size</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimFFTSizeError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimFFTSizeError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code></p>
 <p>A GalSim-specific exception class indicating that a requested FFT exceeds the relevant
 maximum_fft_size.</p>
@@ -379,7 +379,7 @@ maximum_fft_size.</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimConfigError">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimConfigError</code><a class="reference internal" href="_modules/galsim/errors.html#GalSimConfigError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimConfigError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></p>
@@ -387,9 +387,9 @@ maximum_fft_size.</p>
 configuration file.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimConfigValueError">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimConfigValueError</code><span class="sig-paren">(</span><em class="sig-param">message</em>, <em class="sig-param">value</em>, <em class="sig-param">allowed_values=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimConfigValueError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimConfigValueError" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimConfigValueError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">message</span></em>, <em class="sig-param"><span class="n">value</span></em>, <em class="sig-param"><span class="n">allowed_values</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/errors.html#GalSimConfigValueError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimConfigValueError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimValueError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimConfigError</span></code></p>
 <p>A GalSim-specific exception class indicating that a config entry has an invalid value.</p>
 <dl class="field-list simple">
@@ -402,7 +402,7 @@ configuration file.</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimNotImplementedError">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimNotImplementedError</code><a class="reference internal" href="_modules/galsim/errors.html#GalSimNotImplementedError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimNotImplementedError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimError</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">NotImplementedError</span></code></p>
@@ -415,14 +415,14 @@ currently implemented.</p>
 <p>Even better, feel free to offer to contribute code to implement the feature.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimWarning">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimWarning</code><a class="reference internal" href="_modules/galsim/errors.html#GalSimWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimWarning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">UserWarning</span></code></p>
 <p>The base class for GalSim-emitted warnings.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GalSimDeprecationWarning">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GalSimDeprecationWarning</code><a class="reference internal" href="_modules/galsim/errors.html#GalSimDeprecationWarning"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GalSimDeprecationWarning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.errors.GalSimWarning</span></code></p>

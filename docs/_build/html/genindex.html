@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; GalSim 2.2.3 documentation</title>
+  <title>Index &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -22,11 +22,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -223,6 +223,10 @@
 </li>
         <li><a href="image_class.html#galsim.Image.__call__">(galsim.Image method)</a>
 </li>
+        <li><a href="integ.html#galsim.integ.ImageIntegrator.__call__">(galsim.integ.ImageIntegrator method)</a>
+</li>
+        <li><a href="powerspectrum.html#galsim.lensing_ps.PowerSpectrumRealizer.__call__">(galsim.lensing_ps.PowerSpectrumRealizer method)</a>
+</li>
         <li><a href="table.html#galsim.LookupTable.__call__">(galsim.LookupTable method)</a>
 </li>
         <li><a href="table.html#galsim.LookupTable2D.__call__">(galsim.LookupTable2D method)</a>
@@ -234,10 +238,6 @@
         <li><a href="deviate.html#galsim.UniformDeviate.__call__">(galsim.UniformDeviate method)</a>
 </li>
         <li><a href="deviate.html#galsim.WeibullDeviate.__call__">(galsim.WeibullDeviate method)</a>
-</li>
-        <li><a href="integ.html#galsim.integ.ImageIntegrator.__call__">(galsim.integ.ImageIntegrator method)</a>
-</li>
-        <li><a href="powerspectrum.html#galsim.lensing_ps.PowerSpectrumRealizer.__call__">(galsim.lensing_ps.PowerSpectrumRealizer method)</a>
 </li>
         <li><a href="zernike.html#galsim.zernike.Zernike.__call__">(galsim.zernike.Zernike method)</a>
 </li>
@@ -431,11 +431,11 @@
       <li><a href="config_image.html#galsim.config.ImageBuilder.addNoise">addNoise() (galsim.config.ImageBuilder method)</a>
 
       <ul>
-        <li><a href="image_class.html#galsim.Image.addNoise">(galsim.Image method)</a>
-</li>
         <li><a href="config_image.html#galsim.config.NoiseBuilder.addNoise">(galsim.config.NoiseBuilder method)</a>
 </li>
         <li><a href="config_stamp.html#galsim.config.StampBuilder.addNoise">(galsim.config.StampBuilder method)</a>
+</li>
+        <li><a href="image_class.html#galsim.Image.addNoise">(galsim.Image method)</a>
 </li>
       </ul></li>
       <li><a href="config_process.html#galsim.config.AddNoise">AddNoise() (in module galsim.config)</a>
@@ -1373,9 +1373,9 @@
       <li><a href="des.html#galsim.des.DES_PSFEx.getPSF">getPSF() (galsim.des.DES_PSFEx method)</a>
 
       <ul>
-        <li><a href="real_gal.html#galsim.RealGalaxyCatalog.getPSF">(galsim.RealGalaxyCatalog method)</a>
-</li>
         <li><a href="des.html#galsim.des.DES_Shapelet.getPSF">(galsim.des.DES_Shapelet method)</a>
+</li>
+        <li><a href="real_gal.html#galsim.RealGalaxyCatalog.getPSF">(galsim.RealGalaxyCatalog method)</a>
 </li>
         <li><a href="wfirst.html#galsim.wfirst.getPSF">(in module galsim.wfirst)</a>
 </li>
@@ -2015,9 +2015,9 @@
 </li>
         <li><a href="wcs.html#galsim.UVFunction.origin">(galsim.UVFunction property)</a>
 </li>
-        <li><a href="wcs.html#galsim.WcsToolsWCS.origin">(galsim.WcsToolsWCS property)</a>
-</li>
         <li><a href="wcs.html#galsim.wcs.LocalWCS.origin">(galsim.wcs.LocalWCS property)</a>
+</li>
+        <li><a href="wcs.html#galsim.WcsToolsWCS.origin">(galsim.WcsToolsWCS property)</a>
 </li>
       </ul></li>
       <li><a href="chromaticobject.html#galsim.ChromaticTransformation.original">original() (galsim.ChromaticTransformation property)</a>
@@ -2753,15 +2753,15 @@
 </li>
         <li><a href="chromaticobject.html#galsim.ChromaticObject.withFlux">(galsim.ChromaticObject method)</a>
 </li>
-        <li><a href="gal.html#galsim.DeVaucouleurs.withFlux">(galsim.DeVaucouleurs method)</a>
-</li>
         <li><a href="simple.html#galsim.DeltaFunction.withFlux">(galsim.DeltaFunction method)</a>
+</li>
+        <li><a href="gal.html#galsim.DeVaucouleurs.withFlux">(galsim.DeVaucouleurs method)</a>
 </li>
         <li><a href="gal.html#galsim.Exponential.withFlux">(galsim.Exponential method)</a>
 </li>
-        <li><a href="gsobject.html#galsim.GSObject.withFlux">(galsim.GSObject method)</a>
-</li>
         <li><a href="simple.html#galsim.Gaussian.withFlux">(galsim.Gaussian method)</a>
+</li>
+        <li><a href="gsobject.html#galsim.GSObject.withFlux">(galsim.GSObject method)</a>
 </li>
         <li><a href="gal.html#galsim.InclinedExponential.withFlux">(galsim.InclinedExponential method)</a>
 </li>
@@ -2779,9 +2779,9 @@
 </li>
         <li><a href="gal.html#galsim.RandomKnots.withFlux">(galsim.RandomKnots method)</a>
 </li>
-        <li><a href="sed.html#galsim.SED.withFlux">(galsim.SED method)</a>
-</li>
         <li><a href="phase_psf.html#galsim.SecondKick.withFlux">(galsim.SecondKick method)</a>
+</li>
+        <li><a href="sed.html#galsim.SED.withFlux">(galsim.SED method)</a>
 </li>
         <li><a href="gal.html#galsim.Sersic.withFlux">(galsim.Sersic method)</a>
 </li>

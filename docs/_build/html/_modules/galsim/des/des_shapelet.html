@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.des.des_shapelet &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.des.des_shapelet &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -186,13 +186,13 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimBoundsError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
-<span class="kn">from</span> <span class="nn">..position</span> <span class="k">import</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">..bounds</span> <span class="k">import</span> <span class="n">BoundsD</span>
-<span class="kn">from</span> <span class="nn">..shapelet</span> <span class="k">import</span> <span class="n">Shapelet</span>
-<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">RegisterInputType</span><span class="p">,</span> <span class="n">RegisterObjectType</span>
-<span class="kn">from</span> <span class="nn">..config</span> <span class="k">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">GetInputObj</span><span class="p">,</span> <span class="n">SkipThisObject</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimBoundsError</span><span class="p">,</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..bounds</span> <span class="kn">import</span> <span class="n">BoundsD</span>
+<span class="kn">from</span> <span class="nn">..shapelet</span> <span class="kn">import</span> <span class="n">Shapelet</span>
+<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">RegisterInputType</span><span class="p">,</span> <span class="n">RegisterObjectType</span>
+<span class="kn">from</span> <span class="nn">..config</span> <span class="kn">import</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">GetInputObj</span><span class="p">,</span> <span class="n">SkipThisObject</span>
 
 <div class="viewcode-block" id="DES_Shapelet"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet">[docs]</a><span class="k">class</span> <span class="nc">DES_Shapelet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class that handles DES files describing interpolated polar shapelet decompositions.</span>
@@ -238,7 +238,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
             <span class="kn">import</span> <span class="nn">os</span>
             <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
@@ -248,7 +248,7 @@
 <div class="viewcode-block" id="DES_Shapelet.read_fits"><a class="viewcode-back" href="../../../des.html#galsim.des.DES_Shapelet.read_fits">[docs]</a>    <span class="k">def</span> <span class="nf">read_fits</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Read in a DES_Shapelet stored in FITS file.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">.._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
             <span class="n">cat</span> <span class="o">=</span> <span class="n">fits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         <span class="c1"># These fields each only contain one element, hence the [0]&#39;s.</span>

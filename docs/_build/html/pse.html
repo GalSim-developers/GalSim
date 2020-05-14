@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Power Spectrum Estimation &mdash; GalSim 2.2.3 documentation</title>
+  <title>Power Spectrum Estimation &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -183,9 +183,9 @@
 developers.  This development and testing of this module took place in a separate (private)
 repository before the code was moved into the GalSim repository, but there are some demonstrations
 of the performance of this code in devel/modules/lensing_engine.pdf.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.pse.PowerSpectrumEstimator">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.pse.</code><code class="sig-name descname">PowerSpectrumEstimator</code><span class="sig-paren">(</span><em class="sig-param">N=100</em>, <em class="sig-param">sky_size_deg=10.0</em>, <em class="sig-param">nbin=15</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/pse.html#PowerSpectrumEstimator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.pse.PowerSpectrumEstimator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.pse.</code><code class="sig-name descname">PowerSpectrumEstimator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">sky_size_deg</span><span class="o">=</span><span class="default_value">10.0</span></em>, <em class="sig-param"><span class="n">nbin</span><span class="o">=</span><span class="default_value">15</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/pse.html#PowerSpectrumEstimator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.pse.PowerSpectrumEstimator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for estimating the shear power spectrum from gridded shears.</p>
 <p>This class stores all the data used in power spectrum estimation that is fixed with the geometry
 of the problem - the binning and spin weighting factors.</p>
@@ -245,9 +245,9 @@ Users must account for the contribution of noise in <code class="docutils litera
 <a class="reference external" href="http://dx.doi.org/10.1214/11-AOAS484">http://dx.doi.org/10.1214/11-AOAS484</a>), equations 17-21.</p></li>
 </ol>
 <p>galsim.pse.PowerSpectrumEstimator.__init__</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.pse.PowerSpectrumEstimator.estimate">
-<code class="sig-name descname">estimate</code><span class="sig-paren">(</span><em class="sig-param">g1</em>, <em class="sig-param">g2</em>, <em class="sig-param">weight_EE=False</em>, <em class="sig-param">weight_BB=False</em>, <em class="sig-param">theory_func=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/pse.html#PowerSpectrumEstimator.estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.pse.PowerSpectrumEstimator.estimate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">estimate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">g1</span></em>, <em class="sig-param"><span class="n">g2</span></em>, <em class="sig-param"><span class="n">weight_EE</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">weight_BB</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">theory_func</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/pse.html#PowerSpectrumEstimator.estimate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.pse.PowerSpectrumEstimator.estimate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the EE, BB, and EB power spectra of two 2D arrays <code class="docutils literal notranslate"><span class="pre">g1</span></code> and <code class="docutils literal notranslate"><span class="pre">g2</span></code>.</p>
 <p>For example usage, see the docstring for the <a class="reference internal" href="#galsim.pse.PowerSpectrumEstimator" title="galsim.pse.PowerSpectrumEstimator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PowerSpectrumEstimator</span></code></a> class.</p>
 <dl class="field-list simple">

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.wfirst.wfirst_bandpass &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.wfirst.wfirst_bandpass &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -252,9 +252,9 @@
 
 <span class="sd">    @returns A dictionary containing bandpasses for all WFIRST imaging filters.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">meta_data</span>
-    <span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">galsim_warn</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">Bandpass</span><span class="p">,</span> <span class="n">LookupTable</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
+    <span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">galsim_warn</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">Bandpass</span><span class="p">,</span> <span class="n">LookupTable</span>
 
     <span class="c1"># Begin by reading in the file containing the info.</span>
     <span class="n">datafile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s2">&quot;afta_throughput.txt&quot;</span><span class="p">)</span>

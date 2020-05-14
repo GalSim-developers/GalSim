@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.config.output_multifits &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.config.output_multifits &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -187,11 +187,11 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 
-<span class="kn">from</span> <span class="nn">.output</span> <span class="k">import</span> <span class="n">OutputBuilder</span><span class="p">,</span> <span class="n">RegisterOutputType</span>
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">BuildImages</span>
-<span class="kn">from</span> <span class="nn">.input</span> <span class="k">import</span> <span class="n">ProcessInputNObjects</span>
-<span class="kn">from</span> <span class="nn">.value</span> <span class="k">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">CheckAllParams</span>
-<span class="kn">from</span> <span class="nn">..errors</span> <span class="k">import</span> <span class="n">GalSimConfigError</span>
+<span class="kn">from</span> <span class="nn">.output</span> <span class="kn">import</span> <span class="n">OutputBuilder</span><span class="p">,</span> <span class="n">RegisterOutputType</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">BuildImages</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">ProcessInputNObjects</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">CheckAllParams</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span>
 
 <div class="viewcode-block" id="MultiFitsBuilder"><a class="viewcode-back" href="../../../config_output.html#galsim.config.output_multifits.MultiFitsBuilder">[docs]</a><span class="k">class</span> <span class="nc">MultiFitsBuilder</span><span class="p">(</span><span class="n">OutputBuilder</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Builder class for constructing and writing MultiFits output types.</span>

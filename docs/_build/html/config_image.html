@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Config Image Field &mdash; GalSim 2.2.3 documentation</title>
+  <title>Config Image Field &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -276,15 +276,15 @@ to build the image.</p>
 <p>The class should be a subclass of <a class="reference internal" href="#galsim.config.ImageBuilder" title="galsim.config.ImageBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.ImageBuilder</span></code></a>, which is the class used for
 the default ‘Single’ type.  There are a number of class methods, and you only need to override
 the ones for which you want different behavior than that of the ‘Single’ type.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.ImageBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ImageBuilder</code><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for building full images.</p>
 <p>The base class defines the call signatures of the methods that any derived class should follow.
 It also includes the implementation of the default image type: Single.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.ImageBuilder.addNoise">
-<code class="sig-name descname">addNoise</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">image_num</em>, <em class="sig-param">obj_num</em>, <em class="sig-param">current_var</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.addNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.addNoise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">obj_num</span></em>, <em class="sig-param"><span class="n">current_var</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.addNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.addNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add the final noise to the image.</p>
 <p>In the base class, this is a no op, since it directs the BuildStamp function to build
 the noise at that level.  But some image types need to do extra work at the end to
@@ -304,9 +304,9 @@ add the noise properly.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.ImageBuilder.buildImage">
-<code class="sig-name descname">buildImage</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">image_num</em>, <em class="sig-param">obj_num</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.buildImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.buildImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">buildImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">obj_num</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.buildImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.buildImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build an Image based on the parameters in the config dict.</p>
 <p>For Single, this is just an image consisting of a single postage stamp.</p>
 <dl class="field-list simple">
@@ -325,9 +325,9 @@ add the noise properly.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.ImageBuilder.getNObj">
-<code class="sig-name descname">getNObj</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">image_num</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.getNObj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.getNObj" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNObj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.getNObj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.getNObj" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects that will be built for this image.</p>
 <p>For Single, this is just 1, but other image types would figure this out from the
 configuration parameters.</p>
@@ -345,9 +345,9 @@ configuration parameters.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.ImageBuilder.makeTasks">
-<code class="sig-name descname">makeTasks</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">jobs</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.makeTasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.makeTasks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">makeTasks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">jobs</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.makeTasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.makeTasks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turn a list of jobs into a list of tasks.</p>
 <p>Each task is performed separately in multi-processing runs, so this provides a mechanism
 to have multiple jobs depend on each other without being messed up by multi-processing.
@@ -380,9 +380,9 @@ dict of parameters that includes ‘image_num’ and ‘obj_num’.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.ImageBuilder.setup">
-<code class="sig-name descname">setup</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">image_num</em>, <em class="sig-param">obj_num</em>, <em class="sig-param">ignore</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.setup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">obj_num</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do the initialization and setup for building the image.</p>
 <p>This figures out the size that the image will be, but doesn’t actually build it yet.</p>
 <dl class="field-list simple">
@@ -413,9 +413,9 @@ be the value of the <code class="docutils literal notranslate"><span class="pre"
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterImageType</span><span class="p">(</span><span class="s1">&#39;CustomImage&#39;</span><span class="p">,</span> <span class="n">CustomImageLoader</span><span class="p">())</span>
 </pre></div>
 </div>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.RegisterImageType">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterImageType</code><span class="sig-paren">(</span><em class="sig-param">image_type</em>, <em class="sig-param">builder</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#RegisterImageType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterImageType" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterImageType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_type</span></em>, <em class="sig-param"><span class="n">builder</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#RegisterImageType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterImageType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register an image type for use by the config apparatus.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -452,13 +452,13 @@ of valid image types.</p>
 </div>
 <p>We don’t currently have any examples of custom images, but it may be helpful to look at the GalSim
 implementation of the included image types (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.image_scattered.ScatteredImageBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.image_scattered.</code><code class="sig-name descname">ScatteredImageBuilder</code><a class="reference internal" href="_modules/galsim/config/image_scattered.html#ScatteredImageBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.image_scattered.ScatteredImageBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.image.ImageBuilder</span></code></p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.image_tiled.TiledImageBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.image_tiled.</code><code class="sig-name descname">TiledImageBuilder</code><a class="reference internal" href="_modules/galsim/config/image_tiled.html#TiledImageBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.image_tiled.TiledImageBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.image.ImageBuilder</span></code></p>
@@ -517,15 +517,15 @@ object types that have some intrinsic noise already, such as ‘RealGalaxy’:</
 with an importable module where you define a custom Builder class and register it with GalSim.
 The class should be a subclass of <a class="reference internal" href="#galsim.config.NoiseBuilder" title="galsim.config.NoiseBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.NoiseBuilder</span></code></a>.  This is really an abstract
 base class.  At least the first two of these methods need to be overridden:</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.NoiseBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">NoiseBuilder</code><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for building noise objects and applying the noise to images.</p>
 <p>The base class doesn’t do anything, but it defines the call signatures of the methods
 that derived classes should use for the different specific noise types.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.NoiseBuilder.addNoise">
-<code class="sig-name descname">addNoise</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">im</em>, <em class="sig-param">rng</em>, <em class="sig-param">current_var</em>, <em class="sig-param">draw_method</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.addNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.addNoise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">im</span></em>, <em class="sig-param"><span class="n">rng</span></em>, <em class="sig-param"><span class="n">current_var</span></em>, <em class="sig-param"><span class="n">draw_method</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.addNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.addNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the noise parameters from the config dict and add the appropriate noise to the
 given image.</p>
 <dl class="field-list simple">
@@ -543,9 +543,9 @@ given image.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.NoiseBuilder.addNoiseVariance">
-<code class="sig-name descname">addNoiseVariance</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">im</em>, <em class="sig-param">include_obj_var</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.addNoiseVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.addNoiseVariance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addNoiseVariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">im</span></em>, <em class="sig-param"><span class="n">include_obj_var</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.addNoiseVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.addNoiseVariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the noise parameters from the config dict and add the appropriate noise variance
 to the given image.</p>
 <p>This is used for constructing the weight map iamge.  It doesn’t add a random value to
@@ -570,9 +570,9 @@ Poisson and CCDNoise.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.NoiseBuilder.getNoiseVariance">
-<code class="sig-name descname">getNoiseVariance</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.getNoiseVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.getNoiseVariance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNoiseVariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.getNoiseVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.getNoiseVariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the noise parameters from the config dict and return the variance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -593,9 +593,9 @@ Poisson and CCDNoise.</p></li>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterNoiseType</span><span class="p">(</span><span class="s1">&#39;CustomNoise&#39;</span><span class="p">,</span> <span class="n">CustomNoiseBuilder</span><span class="p">())</span>
 </pre></div>
 </div>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.RegisterNoiseType">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterNoiseType</code><span class="sig-paren">(</span><em class="sig-param">noise_type</em>, <em class="sig-param">builder</em>, <em class="sig-param">input_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#RegisterNoiseType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterNoiseType" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterNoiseType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">noise_type</span></em>, <em class="sig-param"><span class="n">builder</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#RegisterNoiseType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterNoiseType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register a noise type for use by the config apparatus.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -624,25 +624,25 @@ input type here.  (If it uses more than one, this may be a list.)
 </pre></div>
 </div>
 <p>We don’t currently have any examples of custom noise types, but it may be helpful to look at the GalSim implementation of the various included noise types (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links:</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.GaussianNoiseBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GaussianNoiseBuilder</code><a class="reference internal" href="_modules/galsim/config/noise.html#GaussianNoiseBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GaussianNoiseBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.noise.NoiseBuilder</span></code></p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.PoissonNoiseBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">PoissonNoiseBuilder</code><a class="reference internal" href="_modules/galsim/config/noise.html#PoissonNoiseBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.PoissonNoiseBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.noise.NoiseBuilder</span></code></p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.CCDNoiseBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">CCDNoiseBuilder</code><a class="reference internal" href="_modules/galsim/config/noise.html#CCDNoiseBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.CCDNoiseBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.noise.NoiseBuilder</span></code></p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.COSMOSNoiseBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">COSMOSNoiseBuilder</code><a class="reference internal" href="_modules/galsim/config/noise.html#COSMOSNoiseBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.COSMOSNoiseBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.noise.NoiseBuilder</span></code></p>
@@ -731,14 +731,14 @@ both:</p>
 <p>In addition to the above, you may also define your own custom WCS type in the usual way
 with an importable module where you define a custom Builder class and register it with GalSim.
 The class should be a subclass of <a class="reference internal" href="#galsim.config.WCSBuilder" title="galsim.config.WCSBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.WCSBuilder</span></code></a>.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.WCSBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">WCSBuilder</code><a class="reference internal" href="_modules/galsim/config/wcs.html#WCSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.WCSBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for building WCS objects.</p>
 <p>The base class defines the call signatures of the methods that any derived class should follow.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.WCSBuilder.buildWCS">
-<code class="sig-name descname">buildWCS</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#WCSBuilder.buildWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.WCSBuilder.buildWCS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">buildWCS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#WCSBuilder.buildWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.WCSBuilder.buildWCS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the WCS based on the specifications in the config dict.</p>
 <p>Note: Sub-classes must override this function with a real implementation.</p>
 <dl class="field-list simple">
@@ -761,9 +761,9 @@ The class should be a subclass of <a class="reference internal" href="#galsim.co
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterWCSType</span><span class="p">(</span><span class="s1">&#39;CustomWCS&#39;</span><span class="p">,</span> <span class="n">CustomWCSBuilder</span><span class="p">())</span>
 </pre></div>
 </div>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.RegisterWCSType">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterWCSType</code><span class="sig-paren">(</span><em class="sig-param">wcs_type</em>, <em class="sig-param">builder</em>, <em class="sig-param">input_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#RegisterWCSType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterWCSType" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterWCSType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">wcs_type</span></em>, <em class="sig-param"><span class="n">builder</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#RegisterWCSType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterWCSType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register a wcs type for use by the config apparatus.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -796,13 +796,13 @@ the <code class="docutils literal notranslate"><span class="pre">input_type</spa
         <span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
-<p>For examples of custom wcs types, see <a class="reference download internal" download="" href="_downloads/ed4311a2b932f48de7e876053d2e20dc/des_wcs.py"><code class="xref download docutils literal notranslate"><span class="pre">des_wcs.py</span></code></a>, which implements <code class="docutils literal notranslate"><span class="pre">DES_SlowLocal</span></code> and <code class="docutils literal notranslate"><span class="pre">DES_Local</span></code>.
-The latter is faster because it uses in input field, ‘des_wcs’, which saves on I/O time by only loading the files once.  DES_Local is used by <a class="reference download internal" download="" href="_downloads/af323aafc94b32920083be6fa7e12788/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>.</p>
+<p>For examples of custom wcs types, see <a class="reference download internal" download="" href="_downloads/5a3fd734fc69032ea0359196db84be9c/des_wcs.py"><code class="xref download docutils literal notranslate"><span class="pre">des_wcs.py</span></code></a>, which implements <code class="docutils literal notranslate"><span class="pre">DES_SlowLocal</span></code> and <code class="docutils literal notranslate"><span class="pre">DES_Local</span></code>.
+The latter is faster because it uses in input field, ‘des_wcs’, which saves on I/O time by only loading the files once.  DES_Local is used by <a class="reference download internal" download="" href="_downloads/5c62bd8d06771348eb931565b76fcceb/meds.yaml"><code class="xref download docutils literal notranslate"><span class="pre">meds.yaml</span></code></a>.</p>
 <p>It may also be helpful to look at the GalSim implementation of the various included wcs types (click on
 the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.SimpleWCSBuilder">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SimpleWCSBuilder</code><span class="sig-paren">(</span><em class="sig-param">init_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#SimpleWCSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SimpleWCSBuilder" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SimpleWCSBuilder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">init_func</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#SimpleWCSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SimpleWCSBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.wcs.WCSBuilder</span></code></p>
 <p>A class for building simple WCS objects.</p>
 <p>The initializer takes an init_func, which is the class or function to call to build the WCS.
@@ -810,15 +810,15 @@ For the kwargs, it calls getKwargs, which does the normal parsing of the req_par
 related class attributes.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.OriginWCSBuilder">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">OriginWCSBuilder</code><span class="sig-paren">(</span><em class="sig-param">init_func</em>, <em class="sig-param">origin_init_func</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#OriginWCSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.OriginWCSBuilder" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">OriginWCSBuilder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">init_func</span></em>, <em class="sig-param"><span class="n">origin_init_func</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/wcs.html#OriginWCSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.OriginWCSBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.wcs.SimpleWCSBuilder</span></code></p>
 <p>A specialization for WCS classes that use a different type depending on whether there
 is an origin or world_origin parameter in the config dict.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.TanWCSBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">TanWCSBuilder</code><a class="reference internal" href="_modules/galsim/config/wcs.html#TanWCSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.TanWCSBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.wcs.WCSBuilder</span></code></p>
@@ -828,7 +828,7 @@ dudx, dudy, etc.  We also need to construct a CelestialCoord object for the worl
 which we make from ra, dec paramters.</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.ListWCSBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ListWCSBuilder</code><a class="reference internal" href="_modules/galsim/config/wcs.html#ListWCSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ListWCSBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.wcs.WCSBuilder</span></code></p>

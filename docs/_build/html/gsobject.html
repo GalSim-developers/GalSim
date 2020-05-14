@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The GSObject base class &mdash; GalSim 2.2.3 documentation</title>
+  <title>The GSObject base class &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -191,7 +191,7 @@ surface brightness profiles like transforming it, drawing it, etc.</p>
 some classes only define the profile in Fourier space, so methods which need to access
 the profile in real space may not be implemented.  In such cases, a NotImplementedError
 will be raised.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GSObject">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GSObject</code><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for all GalSim classes that represent some kind of surface brightness profile.</p>
@@ -331,23 +331,23 @@ components that go into the <a class="reference internal" href="composite.html#g
 for example, the <code class="docutils literal notranslate"><span class="pre">gal</span></code> and/or <code class="docutils literal notranslate"><span class="pre">psf</span></code> should be created with <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> that have a
 non-default value of <code class="docutils literal notranslate"><span class="pre">folding_threshold</span></code>.  This statement applies to the threshold and
 accuracy parameters.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.__add__">
-<code class="sig-name descname">__add__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__add__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__add__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__add__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__add__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__add__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add two GSObjects.</p>
 <p>Equivalent to Add(self, other)</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.__sub__">
-<code class="sig-name descname">__sub__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__sub__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__sub__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__sub__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__sub__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__sub__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subtract two GSObjects.</p>
 <p>Equivalent to Add(self, -1 * other)</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.__mul__">
-<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__mul__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__mul__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Scale the flux of the object by the given factor.</p>
 <p>obj * flux_ratio is equivalent to obj.withScaledFlux(flux_ratio)</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -356,21 +356,21 @@ surface brightness at every location scaled by the given amount.</p>
 acts like a wavelength-dependent <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.__rmul__">
-<code class="sig-name descname">__rmul__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__rmul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__rmul__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__rmul__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__rmul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__rmul__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to obj * other.  See <a class="reference internal" href="#galsim.GSObject.__mul__" title="galsim.GSObject.__mul__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">__mul__</span></code></a> for details.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.__div__">
-<code class="sig-name descname">__div__</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__div__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__div__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__div__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">other</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.__div__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.__div__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to obj * (1/other).  See <a class="reference internal" href="#galsim.GSObject.__mul__" title="galsim.GSObject.__mul__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">__mul__</span></code></a> for details.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject._xValue">
-<code class="sig-name descname">_xValue</code><span class="sig-paren">(</span><em class="sig-param">pos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._xValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._xValue" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_xValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._xValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._xValue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.GSObject.xValue" title="galsim.GSObject.xValue"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">xValue</span></code></a>, but <code class="docutils literal notranslate"><span class="pre">pos</span></code> must be a <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -382,15 +382,15 @@ acts like a wavelength-dependent <code class="docutils literal notranslate"><spa
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject._kValue">
-<code class="sig-name descname">_kValue</code><span class="sig-paren">(</span><em class="sig-param">kpos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._kValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._kValue" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_kValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kpos</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._kValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._kValue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.GSObject.kValue" title="galsim.GSObject.kValue"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">kValue</span></code></a>, but <code class="docutils literal notranslate"><span class="pre">kpos</span></code> must be a <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject._shear">
-<code class="sig-name descname">_shear</code><span class="sig-paren">(</span><em class="sig-param">shear</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shear" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_shear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shear</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.GSObject.shear" title="galsim.GSObject.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shear</span></code></a>, but without the overhead of sanity checks or other
 ways to input the <code class="docutils literal notranslate"><span class="pre">shear</span></code> value.</p>
 <p>This is only valid for <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.  For a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>, you must use the regular
@@ -406,9 +406,9 @@ ways to input the <code class="docutils literal notranslate"><span class="pre">s
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject._shift">
-<code class="sig-name descname">_shift</code><span class="sig-paren">(</span><em class="sig-param">offset</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shift" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_shift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">offset</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.GSObject.shift" title="galsim.GSObject.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">shift</span></code></a>, but without the overhead of sanity checks or option
 to give the shift as (dx,dy).</p>
 <p>This is only valid for <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.  For a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>, you must use the regular
@@ -424,18 +424,18 @@ to give the shift as (dx,dy).</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject._drawReal">
-<code class="sig-name descname">_drawReal</code><span class="sig-paren">(</span><em class="sig-param">image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._drawReal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._drawReal" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_drawReal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._drawReal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._drawReal" title="Permalink to this definition">¶</a></dt>
 <dd><p>A version of <a class="reference internal" href="#galsim.GSObject.drawReal" title="galsim.GSObject.drawReal"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawReal</span></code></a> without the sanity checks or some options.</p>
 <p>This is nearly equivalent to the regular <code class="docutils literal notranslate"><span class="pre">drawReal(image,</span> <span class="pre">add_to_image=False)</span></code>, but
 the image’s dtype must be either float32 or float64, and it must have a c_contiguous array
 (<code class="docutils literal notranslate"><span class="pre">image.iscontiguous</span></code> must be True).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject._calculate_nphotons">
-<code class="sig-name descname">_calculate_nphotons</code><span class="sig-paren">(</span><em class="sig-param">n_photons</em>, <em class="sig-param">poisson_flux</em>, <em class="sig-param">max_extra_noise</em>, <em class="sig-param">rng</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._calculate_nphotons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._calculate_nphotons" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_calculate_nphotons</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_photons</span></em>, <em class="sig-param"><span class="n">poisson_flux</span></em>, <em class="sig-param"><span class="n">max_extra_noise</span></em>, <em class="sig-param"><span class="n">rng</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._calculate_nphotons"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._calculate_nphotons" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate how many photons to shoot and what flux_ratio (called g) each one should
 have in order to produce an image with the right S/N and total flux.</p>
 <p>This routine is normally called by <a class="reference internal" href="#galsim.GSObject.drawPhot" title="galsim.GSObject.drawPhot"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawPhot</span></code></a>.</p>
@@ -446,9 +446,9 @@ have in order to produce an image with the right S/N and total flux.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject._shoot">
-<code class="sig-name descname">_shoot</code><span class="sig-paren">(</span><em class="sig-param">photons</em>, <em class="sig-param">rng</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shoot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shoot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_shoot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photons</span></em>, <em class="sig-param"><span class="n">rng</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shoot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shoot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shoot photons into the given <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>.</p>
 <p>This is the backend implementation of <a class="reference internal" href="#galsim.GSObject.shoot" title="galsim.GSObject.shoot"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">shoot</span></code></a> once the <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> has been constructed.</p>
 <dl class="field-list simple">
@@ -461,9 +461,9 @@ have in order to produce an image with the right S/N and total flux.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject._drawKImage">
-<code class="sig-name descname">_drawKImage</code><span class="sig-paren">(</span><em class="sig-param">image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._drawKImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_drawKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._drawKImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>A version of <a class="reference internal" href="#galsim.GSObject.drawKImage" title="galsim.GSObject.drawKImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawKImage</span></code></a> without the sanity checks or some options.</p>
 <p>Equivalent to <code class="docutils literal notranslate"><span class="pre">drawKImage(image,</span> <span class="pre">add_to_image=False,</span> <span class="pre">recenter=False,</span> <span class="pre">add_to_image=False)</span></code>,
 but without the option to create the image automatically.</p>
@@ -478,9 +478,9 @@ have a c_contiguous array (image.iscontiguous must be True).</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.calculateFWHM">
-<code class="sig-name descname">calculateFWHM</code><span class="sig-paren">(</span><em class="sig-param">size=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">centroid=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.calculateFWHM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.calculateFWHM" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateFWHM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">centroid</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.calculateFWHM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.calculateFWHM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the full-width half-maximum (FWHM) of the object.</p>
 <p>If the profile has a fwhm attribute, it will just return that, but in the general case,
 we draw the profile and estimate the FWHM directly.</p>
@@ -507,9 +507,9 @@ self.nyquist_scale]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.calculateHLR">
-<code class="sig-name descname">calculateHLR</code><span class="sig-paren">(</span><em class="sig-param">size=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">centroid=None</em>, <em class="sig-param">flux_frac=0.5</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.calculateHLR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.calculateHLR" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateHLR</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">centroid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flux_frac</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.calculateHLR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.calculateHLR" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the half-light radius of the object.</p>
 <p>If the profile has a half_light_radius attribute, it will just return that, but in the
 general case, we draw the profile and estimate the half-light radius directly.</p>
@@ -548,9 +548,9 @@ which will let <a class="reference internal" href="#galsim.GSObject.drawImage" t
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.calculateMomentRadius">
-<code class="sig-name descname">calculateMomentRadius</code><span class="sig-paren">(</span><em class="sig-param">size=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">centroid=None</em>, <em class="sig-param">rtype='det'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.calculateMomentRadius"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.calculateMomentRadius" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculateMomentRadius</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">centroid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rtype</span><span class="o">=</span><span class="default_value">'det'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.calculateMomentRadius"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.calculateMomentRadius" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns an estimate of the radius based on unweighted second moments.</p>
 <p>The second moments are defined as:</p>
 <p>Q_ij = int( I(x,y) i j dx dy ) / int( I(x,y) dx dy )
@@ -599,15 +599,15 @@ self.nyquist_scale]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.centroid">
 <em class="property">property </em><code class="sig-name descname">centroid</code><a class="headerlink" href="#galsim.GSObject.centroid" title="Permalink to this definition">¶</a></dt>
 <dd><p>The (x, y) centroid of an object as a <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.dilate">
-<code class="sig-name descname">dilate</code><span class="sig-paren">(</span><em class="sig-param">scale</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.dilate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.dilate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">dilate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">scale</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.dilate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.dilate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Dilate the linear size of the profile by the given <code class="docutils literal notranslate"><span class="pre">scale</span></code> factor, while preserving
 flux.</p>
 <p>e.g. <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> &lt;– <code class="docutils literal notranslate"><span class="pre">half_light_radius</span> <span class="pre">*</span> <span class="pre">scale</span></code></p>
@@ -623,9 +623,9 @@ changes the flux.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.drawFFT">
-<code class="sig-name descname">drawFFT</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">add_to_image=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawFFT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawFFT" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawFFT</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawFFT"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawFFT" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw this profile into an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> by computing the k-space image and performing an FFT.</p>
 <p>This is usually called from the <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> function, rather than called directly by the
 user.  In particular, the input image must be already set up with defined bounds.  The
@@ -654,9 +654,9 @@ anything in the image before drawing. [default: False]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.drawFFT_finish">
-<code class="sig-name descname">drawFFT_finish</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">kimage</em>, <em class="sig-param">wrap_size</em>, <em class="sig-param">add_to_image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawFFT_finish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawFFT_finish" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawFFT_finish</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">kimage</span></em>, <em class="sig-param"><span class="n">wrap_size</span></em>, <em class="sig-param"><span class="n">add_to_image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawFFT_finish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawFFT_finish" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a helper routine for drawFFT that finishes the calculation, based on the
 drawn k-space image.</p>
 <p>It applies the Fourier transform to <code class="docutils literal notranslate"><span class="pre">kimage</span></code> and adds the result to <code class="docutils literal notranslate"><span class="pre">image</span></code>.</p>
@@ -677,9 +677,9 @@ anything in the image before drawing.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.drawFFT_makeKImage">
-<code class="sig-name descname">drawFFT_makeKImage</code><span class="sig-paren">(</span><em class="sig-param">image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawFFT_makeKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawFFT_makeKImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawFFT_makeKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawFFT_makeKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawFFT_makeKImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a helper routine for drawFFT that just makes the (blank) k-space image
 onto which the profile will be drawn.  This can be useful if you want to break
 up the calculation into parts for extra efficiency.  E.g. save the k-space image of
@@ -696,9 +696,9 @@ the result should be wrapped before doing the inverse fft.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.drawImage">
-<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param">image=None</em>, <em class="sig-param">nx=None</em>, <em class="sig-param">ny=None</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">dtype=None</em>, <em class="sig-param">method='auto'</em>, <em class="sig-param">area=1.0</em>, <em class="sig-param">exptime=1.0</em>, <em class="sig-param">gain=1.0</em>, <em class="sig-param">add_to_image=False</em>, <em class="sig-param">center=None</em>, <em class="sig-param">use_true_center=True</em>, <em class="sig-param">offset=None</em>, <em class="sig-param">n_photons=0.0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">max_extra_noise=0.0</em>, <em class="sig-param">poisson_flux=None</em>, <em class="sig-param">sensor=None</em>, <em class="sig-param">surface_ops=()</em>, <em class="sig-param">n_subsample=3</em>, <em class="sig-param">maxN=None</em>, <em class="sig-param">save_photons=False</em>, <em class="sig-param">setup_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ny</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bounds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">exptime</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gain</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">center</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_true_center</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_photons</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_extra_noise</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">poisson_flux</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sensor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_ops</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">n_subsample</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">maxN</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_photons</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">setup_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draws an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the object.</p>
 <p>The drawImage() method is used to draw an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the current object using one of several
 possible rendering methods (see below).  It can create a new <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> or can draw onto an
@@ -1021,9 +1021,9 @@ may be cases where the user will want the same functionality.
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.drawKImage">
-<code class="sig-name descname">drawKImage</code><span class="sig-paren">(</span><em class="sig-param">image=None</em>, <em class="sig-param">nx=None</em>, <em class="sig-param">ny=None</em>, <em class="sig-param">bounds=None</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">add_to_image=False</em>, <em class="sig-param">recenter=True</em>, <em class="sig-param">setup_only=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawKImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ny</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bounds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">recenter</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">setup_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawKImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draws the k-space (complex) <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the object, with bounds optionally set by input
 <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance.</p>
 <p>Normalization is always such that image(0,0) = flux.  Unlike the real-space <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>
@@ -1067,9 +1067,9 @@ trust the provided bounds (False).  [default: True]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.drawPhot">
-<code class="sig-name descname">drawPhot</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">gain=1.0</em>, <em class="sig-param">add_to_image=False</em>, <em class="sig-param">n_photons=0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">max_extra_noise=0.0</em>, <em class="sig-param">poisson_flux=None</em>, <em class="sig-param">sensor=None</em>, <em class="sig-param">surface_ops=()</em>, <em class="sig-param">maxN=None</em>, <em class="sig-param">orig_center=galsim.PositionI(x=0</em>, <em class="sig-param">y=0)</em>, <em class="sig-param">local_wcs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawPhot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawPhot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawPhot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">gain</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_photons</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_extra_noise</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">poisson_flux</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sensor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_ops</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">maxN</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">orig_center</span><span class="o">=</span><span class="default_value">galsim.PositionI(x=0, y=0)</span></em>, <em class="sig-param"><span class="n">local_wcs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawPhot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawPhot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw this profile into an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> by shooting photons.</p>
 <p>This is usually called from the <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> function, rather than called directly by the
 user.  In particular, the input image must be already set up with defined bounds.  The
@@ -1145,9 +1145,9 @@ at a time.  (Memory requirements are proportional to this number.)
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.drawReal">
-<code class="sig-name descname">drawReal</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">add_to_image=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawReal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawReal" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawReal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawReal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawReal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw this profile into an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> by direct evaluation at the location of each pixel.</p>
 <p>This is usually called from the <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> function, rather than called directly by the
 user.  In particular, the input image must be already set up with defined bounds.  The
@@ -1176,9 +1176,9 @@ anything in the image before drawing. [default: False]</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.expand">
-<code class="sig-name descname">expand</code><span class="sig-paren">(</span><em class="sig-param">scale</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.expand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.expand" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">expand</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">scale</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.expand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.expand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Expand the linear size of the profile by the given <code class="docutils literal notranslate"><span class="pre">scale</span></code> factor, while preserving
 surface brightness.</p>
 <p>e.g. <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> &lt;– <code class="docutils literal notranslate"><span class="pre">half_light_radius</span> <span class="pre">*</span> <span class="pre">scale</span></code></p>
@@ -1199,15 +1199,15 @@ brightness.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.flux">
 <em class="property">property </em><code class="sig-name descname">flux</code><a class="headerlink" href="#galsim.GSObject.flux" title="Permalink to this definition">¶</a></dt>
 <dd><p>The flux of the profile.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.getGoodImageSize">
-<code class="sig-name descname">getGoodImageSize</code><span class="sig-paren">(</span><em class="sig-param">pixel_scale</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.getGoodImageSize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.getGoodImageSize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getGoodImageSize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pixel_scale</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.getGoodImageSize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.getGoodImageSize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a good size to use for drawing this profile.</p>
 <p>The size will be large enough to cover most of the flux of the object.  Specifically,
 at least (1-gsparams.folding_threshold) (i.e. 99.5% by default) of the flux should fall
@@ -1224,42 +1224,42 @@ Of course, if you prefer an odd-sized image, you can add 1 to the result.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.gsparams">
 <em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.GSObject.gsparams" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> object that sets various parameters relevant for speed/accuracy trade-offs.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.has_hard_edges">
 <em class="property">property </em><code class="sig-name descname">has_hard_edges</code><a class="headerlink" href="#galsim.GSObject.has_hard_edges" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether there are any hard edges in the profile, which would require very small k
 spacing when working in the Fourier domain.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.is_analytic_k">
 <em class="property">property </em><code class="sig-name descname">is_analytic_k</code><a class="headerlink" href="#galsim.GSObject.is_analytic_k" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether the k-space values can be determined immediately at any position without
 requiring a Discrete Fourier Transform.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.is_analytic_x">
 <em class="property">property </em><code class="sig-name descname">is_analytic_x</code><a class="headerlink" href="#galsim.GSObject.is_analytic_x" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether the real-space values can be determined immediately at any position without
 requiring a Discrete Fourier Transform.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.is_axisymmetric">
 <em class="property">property </em><code class="sig-name descname">is_axisymmetric</code><a class="headerlink" href="#galsim.GSObject.is_axisymmetric" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether the profile is axially symmetric; affects efficiency of evaluation.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.kValue">
-<code class="sig-name descname">kValue</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.kValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.kValue" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">kValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.kValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.kValue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the value of the object at a chosen 2D position in k space.</p>
 <p>This function returns the amplitude of the fourier transform of the surface brightness
 profile at a given position in k space.  The position argument may be provided as a
@@ -1277,9 +1277,9 @@ be an issue (unlike for <a class="reference internal" href="#galsim.GSObject.xVa
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.lens">
-<code class="sig-name descname">lens</code><span class="sig-paren">(</span><em class="sig-param">g1</em>, <em class="sig-param">g2</em>, <em class="sig-param">mu</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.lens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.lens" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">lens</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">g1</span></em>, <em class="sig-param"><span class="n">g2</span></em>, <em class="sig-param"><span class="n">mu</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.lens"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.lens" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with both a lensing shear and magnification
 applied to it.</p>
 <p>This <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> method applies a lensing (reduced) shear and magnification.  The shear must
@@ -1304,9 +1304,9 @@ brightness.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.magnify">
-<code class="sig-name descname">magnify</code><span class="sig-paren">(</span><em class="sig-param">mu</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.magnify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.magnify" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">magnify</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mu</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.magnify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.magnify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with a lensing magnification applied to it,
 scaling the area and flux by <code class="docutils literal notranslate"><span class="pre">mu</span></code> at fixed surface brightness.</p>
 <p>This process applies a lensing magnification mu, which scales the linear dimensions of the
@@ -1326,7 +1326,7 @@ brightness.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.max_sb">
 <em class="property">property </em><code class="sig-name descname">max_sb</code><a class="headerlink" href="#galsim.GSObject.max_sb" title="Permalink to this definition">¶</a></dt>
 <dd><p>An estimate of the maximum surface brightness of the object.</p>
@@ -1342,13 +1342,13 @@ surface brightness.  Technically, it is an estimate of the maximum deviation fro
 rather than the maximum value.  For most profiles, these are the same thing.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.maxk">
 <em class="property">property </em><code class="sig-name descname">maxk</code><a class="headerlink" href="#galsim.GSObject.maxk" title="Permalink to this definition">¶</a></dt>
 <dd><p>The value of k beyond which aliasing can be neglected.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.negative_flux">
 <em class="property">property </em><code class="sig-name descname">negative_flux</code><a class="headerlink" href="#galsim.GSObject.negative_flux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the expectation value of flux in negative photons.</p>
@@ -1361,7 +1361,7 @@ thing as <code class="docutils literal notranslate"><span class="pre">obj.flux</
 cases involving lookup tables, etc.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.noise">
 <em class="property">property </em><code class="sig-name descname">noise</code><a class="headerlink" href="#galsim.GSObject.noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>An estimate of the noise already in the profile.</p>
@@ -1375,13 +1375,13 @@ would generate noise consistent with that already in the profile.</p>
 </div>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.nyquist_scale">
 <em class="property">property </em><code class="sig-name descname">nyquist_scale</code><a class="headerlink" href="#galsim.GSObject.nyquist_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>The pixel spacing that does not alias maxk.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.positive_flux">
 <em class="property">property </em><code class="sig-name descname">positive_flux</code><a class="headerlink" href="#galsim.GSObject.positive_flux" title="Permalink to this definition">¶</a></dt>
 <dd><p>The expectation value of flux in positive photons.</p>
@@ -1394,9 +1394,9 @@ thing as <code class="docutils literal notranslate"><span class="pre">obj.flux</
 cases involving lookup tables, etc.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.rotate">
-<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.rotate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">theta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.rotate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rotate this object by an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> <code class="docutils literal notranslate"><span class="pre">theta</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1408,9 +1408,9 @@ cases involving lookup tables, etc.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.shear">
-<code class="sig-name descname">shear</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shear" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">shear</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with an area-preserving shear applied to it.</p>
 <p>The arguments may be either a <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> instance or arguments to be used to initialize one.</p>
 <p>For more details about the allowed keyword arguments, see the <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> docstring.</p>
@@ -1428,9 +1428,9 @@ parameters do construct a shear directly.  eg. <code class="docutils literal not
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.shift">
-<code class="sig-name descname">shift</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shift" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">shift</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object shifted by some amount in real space.</p>
 <p>After this call, the caller’s type will be a <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.
 This means that if the caller was a derived type that had extra methods or properties
@@ -1471,9 +1471,9 @@ the two components separately if that is more convenient.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.shoot">
-<code class="sig-name descname">shoot</code><span class="sig-paren">(</span><em class="sig-param">n_photons</em>, <em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shoot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shoot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">shoot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_photons</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.shoot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.shoot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shoot photons into a <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1491,15 +1491,15 @@ will be automatically created, using the time as a seed.
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.stepk">
 <em class="property">property </em><code class="sig-name descname">stepk</code><a class="headerlink" href="#galsim.GSObject.stepk" title="Permalink to this definition">¶</a></dt>
 <dd><p>The sampling in k space necessary to avoid folding of image in x space.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.transform">
-<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param">dudx</em>, <em class="sig-param">dudy</em>, <em class="sig-param">dvdx</em>, <em class="sig-param">dvdy</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.transform" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">transform</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dudx</span></em>, <em class="sig-param"><span class="n">dudy</span></em>, <em class="sig-param"><span class="n">dvdx</span></em>, <em class="sig-param"><span class="n">dvdy</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.transform" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with an arbitrary Jacobian matrix transformation
 applied to it.</p>
 <p>This applies a Jacobian matrix to the coordinate system in which this object
@@ -1531,9 +1531,9 @@ not flux.  If you want to preserve flux, you should also do:</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.withFlux">
-<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param">flux</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.withFlux" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withFlux</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">flux</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.withFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.withFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with a different flux.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
 <p>It creates a new object that has the same profile as the original, but with the
@@ -1550,15 +1550,15 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.withScaledFlux">
-<code class="sig-name descname">withScaledFlux</code><span class="sig-paren">(</span><em class="sig-param">flux_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.withScaledFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.withScaledFlux" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withScaledFlux</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">flux_ratio</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.withScaledFlux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.withScaledFlux" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the flux scaled by the given <code class="docutils literal notranslate"><span class="pre">flux_ratio</span></code>.</p>
 <p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withFlux(flux_ratio</span> <span class="pre">*</span> <span class="pre">obj.flux)</span></code>.  Indeed, withFlux()
 is implemented in terms of this one.</p>
@@ -1591,9 +1591,9 @@ one.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSObject.xValue">
-<code class="sig-name descname">xValue</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.xValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.xValue" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">xValue</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.xValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.xValue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the value of the object at a chosen 2D position in real space.</p>
 <p>This function returns the surface brightness of the object at a particular position
 in real space.  The position argument may be provided as a <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> or <a class="reference internal" href="pos.html#galsim.PositionI" title="galsim.PositionI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionI</span></code></a>

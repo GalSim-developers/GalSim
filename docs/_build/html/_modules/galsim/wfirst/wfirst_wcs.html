@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.wfirst.wfirst_wcs &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.wfirst.wfirst_wcs &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -194,8 +194,8 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">coord</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">n_sca</span>
-<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">meta_data</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_sca</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
 
 <span class="c1"># Basic WFIRST reference info, with lengths in mm.</span>
 <span class="n">pixel_size_mm</span> <span class="o">=</span> <span class="mf">0.01</span>
@@ -289,7 +289,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        A dict of WCS objects for each SCA.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">GSFitsWCS</span><span class="p">,</span> <span class="n">FitsHeader</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GSFitsWCS</span><span class="p">,</span> <span class="n">FitsHeader</span>
 
     <span class="c1"># First just parse the input quantities.</span>
     <span class="n">date</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">,</span> <span class="n">pa_obsy</span> <span class="o">=</span> <span class="n">_parse_WCS_inputs</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">)</span>
@@ -467,8 +467,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        A CelestialCoord object indicating the center of the focal plane array.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">PositionD</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">n_pix</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">PositionD</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">SCA</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Must pass in an int corresponding to the SCA&quot;</span><span class="p">)</span>
@@ -525,7 +525,7 @@
 <span class="sd">        on any SCA.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">BoundsI</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">BoundsI</span>
 
     <span class="c1"># Sanity check args.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -564,7 +564,7 @@
 <span class="sd">        a tuple of NumPy arrays for the minimum x pixel value, maximum x pixel value, minimum y</span>
 <span class="sd">        pixel value, and maximum y pixel value for each SCA.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">n_pix</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span>
 
     <span class="c1"># First, set up the default (no border).</span>
     <span class="c1"># The minimum and maximum pixel values are (1, n_pix).</span>
@@ -634,7 +634,7 @@
 <span class="sd">    Utility routine to do populate some of the basic fields for the WCS headers for WFIRST that</span>
 <span class="sd">    don&#39;t require any interesting calculation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">n_pix</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span>
 
     <span class="n">header</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span>
         <span class="p">(</span><span class="s1">&#39;EQUINOX&#39;</span><span class="p">,</span> <span class="mf">2000.0</span><span class="p">,</span> <span class="s2">&quot;equinox of celestial coordinate system&quot;</span><span class="p">),</span>
@@ -744,7 +744,7 @@
     <span class="k">return</span> <span class="n">crval</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
 
 <span class="k">def</span> <span class="nf">_parse_SCAs</span><span class="p">(</span><span class="n">SCAs</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">GalSimRangeError</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span>
 
     <span class="c1"># This is a helper routine to parse the input SCAs (single number or iterable) and put it into a</span>
     <span class="c1"># convenient format.  It is used in wfirst_wcs.py.</span>
@@ -771,7 +771,7 @@
 <span class="sd">    This routine parses the various input options to getWCS() and returns what the routine needs to</span>
 <span class="sd">    do its job.  The reason to pull this out is so other helper routines can use it.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">GalSimError</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimError</span>
 
     <span class="c1"># Parse input position</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">):</span>

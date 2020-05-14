@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.zernike &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.zernike &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -186,8 +186,8 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">LRU_Cache</span><span class="p">,</span> <span class="n">binomial</span><span class="p">,</span> <span class="n">horner2d</span><span class="p">,</span> <span class="n">nCr</span><span class="p">,</span> <span class="n">lazy_property</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">LRU_Cache</span><span class="p">,</span> <span class="n">binomial</span><span class="p">,</span> <span class="n">horner2d</span><span class="p">,</span> <span class="n">nCr</span><span class="p">,</span> <span class="n">lazy_property</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span>
 
 <span class="c1"># Some utilities for working with Zernike polynomials</span>
 
@@ -617,14 +617,14 @@
 <span class="sd">        R_outer:    Outer radius.  [default: 1.0]</span>
 <span class="sd">        R_inner:    Inner radius.  [default: 0.0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">R_outer</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">R_inner</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Zernike.__add__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__add__">[docs]</a>    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__add__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__add__">[docs]</a>    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add two Zernikes.</span>
 
 <span class="sd">        Requires that each operand&#39;s ``R_outer`` and ``R_inner`` attributes are the same.</span>
@@ -641,25 +641,25 @@
         <span class="n">newCoef</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">coef</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">coef</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Zernike.__sub__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__sub__">[docs]</a>    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__sub__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__sub__">[docs]</a>    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Subtract two Zernikes.</span>
 
 <span class="sd">        Requires that each operand&#39;s ``R_outer`` and ``R_inner`` attributes are the same.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="o">-</span><span class="n">rhs</span></div>
 
-<div class="viewcode-block" id="Zernike.__neg__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__neg__">[docs]</a>    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__neg__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__neg__">[docs]</a>    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Negate a Zernike.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="o">-</span><span class="mi">1</span></div>
 
-<div class="viewcode-block" id="Zernike.__mul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__mul__">[docs]</a>    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__mul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Multiply two Zernikes, or multiply a Zernike by a scalar.</span>
 
 <span class="sd">        If both operands are Zernikes, then the ``R_outer`` and ``R_inner`` attributes of each must</span>
 <span class="sd">        be the same.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Real</span>
+        <span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Real</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Real</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">rhs</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Zernike</span><span class="p">):</span>
@@ -714,7 +714,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply Zernike by type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">rhs</span><span class="p">)))</span></div>
 
-<div class="viewcode-block" id="Zernike.__rmul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__rmul__">[docs]</a>    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__rmul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__rmul__">[docs]</a>    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equivalent to obj * rhs.  See `__mul__` for details.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="n">rhs</span></div>
 
@@ -778,7 +778,7 @@
         <span class="n">newCoef</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Zernike.__call__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<div class="viewcode-block" id="Zernike.__call__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Evaluate this Zernike polynomial series at Cartesian coordinates x and y.</span>
 <span class="sd">        Synonym for `evalCartesian`.</span>
 
@@ -847,17 +847,17 @@
         <span class="n">M</span> <span class="o">=</span> <span class="n">zernikeRotMatrix</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">theta</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Zernike</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">R_outer</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">R_inner</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Zernike&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;galsim.zernike.Zernike(&quot;</span>
         <span class="n">out</span> <span class="o">+=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>

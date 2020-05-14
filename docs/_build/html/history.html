@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Revision History &mdash; GalSim 2.2.3 documentation</title>
+  <title>Revision History &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -117,6 +117,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-2-0-to-v2-2-1">Changes from v2.2.0 to v2.2.1</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#changes-from-v2-2-1-to-v2-2-2">Changes from v2.2.1 to v2.2.2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#change-from-v2-2-2-to-v2-2-3">Change from v2.2.2 to v2.2.3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#change-from-v2-2-3-to-v2-2-4">Change from v2.2.3 to v2.2.4</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#older-versions">Older Versions</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#v2-1">v2.1</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#v2-0">v2.0</a></li>
@@ -314,7 +315,14 @@ can be used to include the shared data in the pickle file. (#1057)</p></li>
 <div class="section" id="change-from-v2-2-2-to-v2-2-3">
 <h2>Change from v2.2.2 to v2.2.3<a class="headerlink" href="#change-from-v2-2-2-to-v2-2-3" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p>Fix a bug in RandomKnots when multiplied by an SED. (#1064)</p></li>
+<li><p>Fixed a bug in RandomKnots when multiplied by an SED. (#1064)</p></li>
+</ul>
+</div>
+<div class="section" id="change-from-v2-2-3-to-v2-2-4">
+<h2>Change from v2.2.3 to v2.2.4<a class="headerlink" href="#change-from-v2-2-3-to-v2-2-4" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Fixed a bug in photon shooting which could cause seg faults when drawing an
+InterpolatedImage with many values near 1.e-16. (#1079)</p></li>
 </ul>
 </div>
 <div class="section" id="older-versions">

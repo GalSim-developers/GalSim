@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Noise Generators &mdash; GalSim 2.2.3 documentation</title>
+  <title>Noise Generators &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -191,9 +191,9 @@ read noise.</p></li>
 </ul>
 <p>These are all subclasses of the base class <a class="reference internal" href="#galsim.BaseNoise" title="galsim.BaseNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseNoise</span></code></a>, which mostly just defines the common
 API for all of these classes.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.BaseNoise">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">BaseNoise</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">BaseNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for all noise classes.</p>
 <p>This class should not be constructed directly.  Rather, you should instantiate one of the
 subclasses:</p>
@@ -209,9 +209,9 @@ a way to check if an object is a valid noise object with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">galsim</span><span class="o">.</span><span class="n">BaseNoise</span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.BaseNoise.__mul__">
-<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param">variance_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.__mul__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variance_ratio</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.__mul__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multiply the variance of the noise by <code class="docutils literal notranslate"><span class="pre">variance_ratio</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -224,15 +224,15 @@ function profile.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.BaseNoise.__div__">
-<code class="sig-name descname">__div__</code><span class="sig-paren">(</span><em class="sig-param">variance_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.__div__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.__div__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">__div__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variance_ratio</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.__div__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.__div__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to self * (1/variance_ratio)</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.BaseNoise.applyTo">
-<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.applyTo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.applyTo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add noise to an input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
 <p>e.g.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">noise</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
@@ -247,21 +247,21 @@ to the current noise model.</p>
 <p>which may be more convenient or clearer.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.BaseNoise.getVariance">
 <code class="sig-name descname">getVariance</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.getVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.getVariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get variance in current noise model.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.BaseNoise.rng">
 <em class="property">property </em><code class="sig-name descname">rng</code><a class="headerlink" href="#galsim.BaseNoise.rng" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> of this noise object.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.BaseNoise.withScaledVariance">
-<code class="sig-name descname">withScaledVariance</code><span class="sig-paren">(</span><em class="sig-param">variance_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.withScaledVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.withScaledVariance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withScaledVariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variance_ratio</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.withScaledVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.withScaledVariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a new noise object with the variance scaled up by the specified factor.</p>
 <p>This is equivalent to noise * variance_ratio.</p>
 <dl class="field-list simple">
@@ -275,9 +275,9 @@ function profile.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.BaseNoise.withVariance">
-<code class="sig-name descname">withVariance</code><span class="sig-paren">(</span><em class="sig-param">variance</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.withVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.withVariance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withVariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variance</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#BaseNoise.withVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseNoise.withVariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a new noise object (of the same type as the current one) with the specified
 variance.</p>
 <dl class="field-list simple">
@@ -292,9 +292,9 @@ variance.</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GaussianNoise">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GaussianNoise</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em>, <em class="sig-param">sigma=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#GaussianNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianNoise" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GaussianNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#GaussianNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.noise.BaseNoise</span></code></p>
 <p>Class implementing simple Gaussian noise.</p>
 <p>This is a simple noise model where each pixel in the image gets Gaussian noise with a
@@ -319,9 +319,9 @@ given <code class="docutils literal notranslate"><span class="pre">sigma</span><
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GaussianNoise.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#GaussianNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianNoise.copy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#GaussianNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianNoise.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the Gaussian noise model.</p>
 <p>By default, the copy will share the <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> random number generator with the parent
 instance.  However, you can provide a new rng to use in the copy if you want with:</p>
@@ -330,7 +330,7 @@ instance.  However, you can provide a new rng to use in the copy if you want wit
 </div>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GaussianNoise.sigma">
 <em class="property">property </em><code class="sig-name descname">sigma</code><a class="headerlink" href="#galsim.GaussianNoise.sigma" title="Permalink to this definition">¶</a></dt>
 <dd><p>The input sigma value.</p>
@@ -338,9 +338,9 @@ instance.  However, you can provide a new rng to use in the copy if you want wit
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.PoissonNoise">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PoissonNoise</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em>, <em class="sig-param">sky_level=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#PoissonNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonNoise" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PoissonNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sky_level</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#PoissonNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.noise.BaseNoise</span></code></p>
 <p>Class implementing Poisson noise according to the flux (and sky level) present in the image.</p>
 <p>The PoissonNoise class encapsulates a simple version of the noise model of a normal CCD image
@@ -371,9 +371,9 @@ but which is taken to have already been subtracted off. [default: 0.]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.PoissonNoise.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#PoissonNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonNoise.copy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#PoissonNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonNoise.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the Poisson noise model.</p>
 <p>By default, the copy will share the <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> random number generator with the parent
 instance.  However, you can provide a new rng to use in the copy if you want with:</p>
@@ -382,7 +382,7 @@ instance.  However, you can provide a new rng to use in the copy if you want wit
 </div>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.PoissonNoise.sky_level">
 <em class="property">property </em><code class="sig-name descname">sky_level</code><a class="headerlink" href="#galsim.PoissonNoise.sky_level" title="Permalink to this definition">¶</a></dt>
 <dd><p>The input sky_level.</p>
@@ -390,9 +390,9 @@ instance.  However, you can provide a new rng to use in the copy if you want wit
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.CCDNoise">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">CCDNoise</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em>, <em class="sig-param">sky_level=0.0</em>, <em class="sig-param">gain=1.0</em>, <em class="sig-param">read_noise=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#CCDNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CCDNoise" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">CCDNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sky_level</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">gain</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">read_noise</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#CCDNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CCDNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.noise.BaseNoise</span></code></p>
 <p>Class implementing a basic CCD noise model.</p>
 <p>The CCDNoise class encapsulates the noise model of a normal CCD image.  The noise has two
@@ -444,9 +444,9 @@ Setting <code class="docutils literal notranslate"><span class="pre">read_noise=
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.CCDNoise.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#CCDNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CCDNoise.copy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#CCDNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CCDNoise.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the CCD noise model.</p>
 <p>By default, the copy will share the <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> random number generator with the parent
 instance.  However, you can provide a new rng to use in the copy if you want with:</p>
@@ -455,19 +455,19 @@ instance.  However, you can provide a new rng to use in the copy if you want wit
 </div>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.CCDNoise.gain">
 <em class="property">property </em><code class="sig-name descname">gain</code><a class="headerlink" href="#galsim.CCDNoise.gain" title="Permalink to this definition">¶</a></dt>
 <dd><p>The input gain.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.CCDNoise.read_noise">
 <em class="property">property </em><code class="sig-name descname">read_noise</code><a class="headerlink" href="#galsim.CCDNoise.read_noise" title="Permalink to this definition">¶</a></dt>
 <dd><p>The input read_noise.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.CCDNoise.sky_level">
 <em class="property">property </em><code class="sig-name descname">sky_level</code><a class="headerlink" href="#galsim.CCDNoise.sky_level" title="Permalink to this definition">¶</a></dt>
 <dd><p>The input sky_level.</p>
@@ -475,9 +475,9 @@ instance.  However, you can provide a new rng to use in the copy if you want wit
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.VariableGaussianNoise">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">VariableGaussianNoise</code><span class="sig-paren">(</span><em class="sig-param">rng</em>, <em class="sig-param">var_image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#VariableGaussianNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VariableGaussianNoise" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">VariableGaussianNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span></em>, <em class="sig-param"><span class="n">var_image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#VariableGaussianNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VariableGaussianNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.noise.BaseNoise</span></code></p>
 <p>Class implementing Gaussian noise that has a different variance in each pixel.</p>
 <p>The following will add variable Gaussian noise to every element of an image:</p>
@@ -500,9 +500,9 @@ same shape as the image for which you eventually call addNoise().</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.VariableGaussianNoise.applyTo">
-<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#VariableGaussianNoise.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VariableGaussianNoise.applyTo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#VariableGaussianNoise.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VariableGaussianNoise.applyTo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add noise to an input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
 <p>e.g.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">noise</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
@@ -517,9 +517,9 @@ to the current noise model.</p>
 <p>which may be more convenient or clearer.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.VariableGaussianNoise.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#VariableGaussianNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VariableGaussianNoise.copy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#VariableGaussianNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VariableGaussianNoise.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the variable Gaussian noise model.</p>
 <p>By default, the copy will share the <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> random number generator with the parent
 instance.  However, you can provide a new rng to use in the copy if you want with:</p>
@@ -528,7 +528,7 @@ instance.  However, you can provide a new rng to use in the copy if you want wit
 </div>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.VariableGaussianNoise.var_image">
 <em class="property">property </em><code class="sig-name descname">var_image</code><a class="headerlink" href="#galsim.VariableGaussianNoise.var_image" title="Permalink to this definition">¶</a></dt>
 <dd><p>The input var_image.</p>
@@ -536,9 +536,9 @@ instance.  However, you can provide a new rng to use in the copy if you want wit
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.DeviateNoise">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">DeviateNoise</code><span class="sig-paren">(</span><em class="sig-param">dev</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#DeviateNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeviateNoise" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">DeviateNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dev</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#DeviateNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeviateNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.noise.BaseNoise</span></code></p>
 <p>Class implementing noise with an arbitrary <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object.</p>
 <p>The DeviateNoise class provides a way to treat an arbitrary deviate as the noise model for
@@ -556,9 +556,9 @@ each pixel in an image.</p>
 <dd class="field-even"><p><strong>rng</strong> – The internal random number generator (read-only)</p>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.DeviateNoise.copy">
-<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#DeviateNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeviateNoise.copy" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/noise.html#DeviateNoise.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DeviateNoise.copy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a copy of the <a class="reference internal" href="#galsim.DeviateNoise" title="galsim.DeviateNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DeviateNoise</span></code></a> instance.</p>
 <p>By default, the copy will share the <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> random number generator with the parent
 instance.  However, you can provide a new rng to use in the copy if you want with:</p>

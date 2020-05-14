@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.chromatic &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.chromatic &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -186,16 +186,16 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
-<span class="kn">from</span> <span class="nn">.sed</span> <span class="k">import</span> <span class="n">SED</span>
-<span class="kn">from</span> <span class="nn">.bandpass</span> <span class="k">import</span> <span class="n">Bandpass</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
-<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">integ</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimSEDError</span><span class="p">,</span> <span class="n">GalSimValueError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
+<span class="kn">from</span> <span class="nn">.bandpass</span> <span class="kn">import</span> <span class="n">Bandpass</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">integ</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimSEDError</span><span class="p">,</span> <span class="n">GalSimValueError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="ChromaticObject"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject">[docs]</a><span class="k">class</span> <span class="nc">ChromaticObject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class for defining wavelength-dependent objects.</span>
@@ -310,7 +310,7 @@
     <span class="c1"># - .spectral indicates obj.SED.spectral</span>
     <span class="c1"># - .dimensionless indicates obj.SED.dimensionless</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="n">obj</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">SED</span> <span class="o">=</span> <span class="n">SED</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="s1">&#39;nm&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">)</span>
@@ -337,7 +337,7 @@
 <span class="sd">        those component objects will also have their gsparams updated to the new value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
@@ -388,20 +388,20 @@
 
         <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Could not locate fiducial wavelength where SED * Bandpass is nonzero.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticObject</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="nb">hasattr</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s1">&#39;_obj&#39;</span><span class="p">)</span> <span class="ow">and</span>  <span class="c1"># not all ChromaticObjects have an _obj attribute.</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_obj</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticObject&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticObject&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticObject(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticObject(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticObject.interpolate"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.interpolate">[docs]</a>    <span class="k">def</span> <span class="nf">interpolate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">waves</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -579,7 +579,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the drawn `Image`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span>
+        <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
         <span class="c1"># Store the last bandpass used and any extra kwargs.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_bp</span> <span class="o">=</span> <span class="n">bandpass</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
@@ -657,7 +657,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            a complex `Image` instance (created if necessary)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span>
+        <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimSEDError</span><span class="p">(</span><span class="s2">&quot;Can only drawK ChromaticObjects with spectral SEDs.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="p">)</span>
@@ -722,7 +722,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span></div>
 
     <span class="c1"># Make op* and op*= work to adjust the flux of the object</span>
-<div class="viewcode-block" id="ChromaticObject.__mul__"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.__mul__">[docs]</a>    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">):</span>
+<div class="viewcode-block" id="ChromaticObject.__mul__"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.__mul__">[docs]</a>    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Scale the flux of the object by the given flux ratio, which may be an `SED`, a float, or</span>
 <span class="sd">        a univariate callable function (of wavelength in nanometers) that returns a float.</span>
 
@@ -767,7 +767,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            a new object with scaled flux.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_ratio</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ChromaticObject.withFlux"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticObject.withFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_flux</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">):</span>
@@ -815,7 +815,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the new normalized `SED`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span>
+        <span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span>
         <span class="n">_photons</span> <span class="o">=</span> <span class="n">units</span><span class="o">.</span><span class="n">astrophys</span><span class="o">.</span><span class="n">photon</span><span class="o">/</span><span class="p">(</span><span class="n">units</span><span class="o">.</span><span class="n">s</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">cm</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">units</span><span class="o">.</span><span class="n">nm</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
@@ -913,14 +913,14 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">calculateMagnitude</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span></div>
 
     <span class="c1"># Add together ChromaticObjects and/or GSObjects</span>
-    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ChromaticSum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
 
     <span class="c1"># Subtract ChromaticObjects and/or GSObjects</span>
-    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">ChromaticSum</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">-</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="o">-</span><span class="mf">1.</span> <span class="o">*</span> <span class="bp">self</span>
 
     <span class="c1"># Following functions work to apply affine transformations to a ChromaticObject.</span>
@@ -948,7 +948,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the expanded object</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
             <span class="k">def</span> <span class="nf">buildScaleJac</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
                 <span class="n">s</span> <span class="o">=</span> <span class="n">scale</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
@@ -1030,8 +1030,8 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the sheared object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
-        <span class="kn">from</span> <span class="nn">.shear</span> <span class="k">import</span> <span class="n">Shear</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">kwargs</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Gave both unnamed and named arguments!&quot;</span><span class="p">)</span>
@@ -1078,7 +1078,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the lensed object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.shear</span> <span class="k">import</span> <span class="n">Shear</span>
+        <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="n">g1</span><span class="p">,</span><span class="n">g2</span><span class="p">)):</span>
             <span class="n">_g1</span> <span class="o">=</span> <span class="n">g1</span>
             <span class="n">_g2</span> <span class="o">=</span> <span class="n">g2</span>
@@ -1102,7 +1102,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the rotated object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
             <span class="k">def</span> <span class="nf">buildRMatrix</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
                 <span class="n">sth</span><span class="p">,</span> <span class="n">cth</span> <span class="o">=</span> <span class="n">theta</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
@@ -1135,7 +1135,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the transformed object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">dd</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">dd</span> <span class="ow">in</span> <span class="p">(</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">)):</span>
             <span class="n">_dudx</span> <span class="o">=</span> <span class="n">dudx</span>
             <span class="n">_dudy</span> <span class="o">=</span> <span class="n">dudy</span>
@@ -1169,7 +1169,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the shifted object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="c1"># This follows along the galsim.utilities.pos_args function, but has some</span>
         <span class="c1"># extra bits to account for the possibility of dx,dy being functions.</span>
         <span class="c1"># First unpack args/kwargs</span>
@@ -1253,7 +1253,7 @@
 <span class="sd">                        object should be correct, at the possible expense of other features.</span>
 <span class="sd">                        [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">waves</span><span class="p">,</span> <span class="n">oversample_fac</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">use_exact_SED</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">waves</span><span class="p">,</span> <span class="n">oversample_fac</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">use_exact_SED</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">waves</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">waves</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">oversample</span> <span class="o">=</span> <span class="n">oversample_fac</span>
@@ -1303,13 +1303,13 @@
 <div class="viewcode-block" id="InterpolatedChromaticObject.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.InterpolatedChromaticObject.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">deinterpolated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deinterpolated</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_build_objs</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">InterpolatedChromaticObject</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">deinterpolated</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">deinterpolated</span> <span class="ow">and</span>
@@ -1317,11 +1317,11 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">oversample</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">oversample</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">use_exact_SED</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">use_exact_SED</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.InterpolatedChromaticObject&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">deinterpolated</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="p">),</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">oversample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_exact_SED</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.InterpolatedChromaticObject(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deinterpolated</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">oversample</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, oversample_fac=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">oversample</span>
@@ -1330,7 +1330,7 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.InterpolatedChromaticObject(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deinterpolated</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">waves</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_imageAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
@@ -1377,13 +1377,13 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the monochromatic object at the given wavelength, as a `GSObject`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
         <span class="n">im</span><span class="p">,</span> <span class="n">stepk</span><span class="p">,</span> <span class="n">maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_imageAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="o">=</span><span class="n">stepk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="n">maxk</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_get_interp_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="s1">&#39;trapezoidal&#39;</span><span class="p">,</span>
                           <span class="n">_flux_ratio</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
         <span class="k">if</span> <span class="n">integrator</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;trapezoidal&#39;</span><span class="p">,</span> <span class="s1">&#39;midpoint&#39;</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">integrator</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Integrator should be a string indicating trapezoidal&quot;</span>
@@ -1561,9 +1561,9 @@
 <span class="sd">        temperature:        Temperature in Kelvins.  [default: 293.15 K]</span>
 <span class="sd">        H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_obj</span><span class="p">,</span> <span class="n">base_wavelength</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">_Angle</span><span class="p">,</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">arcsec</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">dcr</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_obj</span><span class="p">,</span> <span class="n">base_wavelength</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">_Angle</span><span class="p">,</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">arcsec</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dcr</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">separable</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">interpolated</span> <span class="o">=</span> <span class="kc">False</span>
@@ -1601,12 +1601,12 @@
 <div class="viewcode-block" id="ChromaticAtmosphere.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAtmosphere.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">base_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticAtmosphere</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">base_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">base_obj</span> <span class="ow">and</span>
@@ -1617,12 +1617,12 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale_unit</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">kw</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kw</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticAtmosphere&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_wavelength</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallactic_angle</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span>
                      <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.ChromaticAtmosphere(</span><span class="si">%r</span><span class="s1">, base_wavelength=</span><span class="si">%r</span><span class="s1">, alpha=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">base_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_wavelength</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, zenith_angle=</span><span class="si">%r</span><span class="s1">, parallactic_angle=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallactic_angle</span><span class="p">)</span>
@@ -1632,7 +1632,7 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticAtmosphere(</span><span class="si">%s</span><span class="s1">, base_wavelength=</span><span class="si">%s</span><span class="s1">, alpha=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">base_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_wavelength</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
 
@@ -1643,8 +1643,8 @@
 <span class="sd">        Building this is quite fast, so we do it on the fly in `evaluateAtWavelength` and</span>
 <span class="sd">        `ChromaticObject.drawImage`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">dcr</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dcr</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span>
         <span class="k">def</span> <span class="nf">shift_fn</span><span class="p">(</span><span class="n">w</span><span class="p">):</span>
             <span class="n">shift_magnitude</span> <span class="o">=</span> <span class="n">dcr</span><span class="o">.</span><span class="n">get_refraction</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
             <span class="n">shift_magnitude</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_refraction</span>
@@ -1702,7 +1702,7 @@
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">):</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
@@ -1785,7 +1785,7 @@
 <div class="viewcode-block" id="ChromaticTransformation.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticTransformation.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
@@ -1802,7 +1802,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticTransformation</span><span class="p">)</span> <span class="ow">and</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">original</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">original</span> <span class="ow">and</span>
@@ -1827,7 +1827,7 @@
                     <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># This one&#39;s a bit complicated, so we&#39;ll go ahead and cache the hash.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticTransformation&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span>
@@ -1841,7 +1841,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">^=</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">selfattr</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
             <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1854,8 +1854,8 @@
                 <span class="s1">&#39;gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transformation</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transformation</span>
         <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;.transform(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span>
@@ -1890,7 +1890,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the monochromatic object at the given wavelength.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transformation</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transformation</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
         <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getTransformations</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Transformation</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_ratio</span><span class="p">,</span>
@@ -1924,7 +1924,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the drawn `Image`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
         <span class="c1"># Store the last bandpass used.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_bp</span> <span class="o">=</span> <span class="n">bandpass</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
@@ -1951,8 +1951,8 @@
     <span class="k">def</span> <span class="nf">noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An estimate of the noise already in the profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.transform</span> <span class="k">import</span> <span class="n">_Transform</span>
-        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">BaseCorrelatedNoise</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
+        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="kn">import</span> <span class="n">BaseCorrelatedNoise</span>
         <span class="c1"># Condition for being able to propagate noise:</span>
         <span class="c1"># 1) All transformations are achromatic.</span>
         <span class="c1"># 2) This ChromaticTransformation wraps a ChromaticConvolution with a valid noise property.</span>
@@ -1998,7 +1998,7 @@
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Check kwargs first:</span>
         <span class="n">gsparams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;gsparams&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;propagate_gsparams&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
@@ -2052,7 +2052,7 @@
 
         <span class="c1"># Each input summand will either end up in SED_dict if it&#39;s separable, or in self._obj_list</span>
         <span class="c1"># if it&#39;s inseparable.  Use an OrderedDict to ensure deterministic results.</span>
-        <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">OrderedDict</span>
+        <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
         <span class="n">SED_dict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
@@ -2102,29 +2102,29 @@
 <div class="viewcode-block" id="ChromaticSum.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticSum.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_obj_list</span> <span class="o">=</span> <span class="p">[</span> <span class="n">obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticSum</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">obj_list</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticSum&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticSum(</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">str_list</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticSum([</span><span class="si">%s</span><span class="s1">])&#39;</span><span class="o">%</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_list</span><span class="p">)</span>
 
@@ -2137,7 +2137,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the monochromatic object at the given wavelength.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.sum</span> <span class="k">import</span> <span class="n">Add</span>
+        <span class="kn">from</span> <span class="nn">.sum</span> <span class="kn">import</span> <span class="n">Add</span>
         <span class="k">return</span> <span class="n">Add</span><span class="p">([</span><span class="n">obj</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">],</span>
                    <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div>
 
@@ -2227,7 +2227,7 @@
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># First check for number of arguments != 0</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># No arguments. Could initialize with an empty list but draw then segfaults. Raise an</span>
@@ -2325,7 +2325,7 @@
 <div class="viewcode-block" id="ChromaticConvolution.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticConvolution.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
@@ -2334,7 +2334,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_get_effective_prof</span><span class="p">(</span><span class="n">insep_obj</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">iimult</span><span class="p">,</span> <span class="n">integrator</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
         <span class="c1"># Find scale at which to draw effective profile</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">prof0</span> <span class="o">=</span> <span class="n">insep_obj</span><span class="o">.</span><span class="n">_fiducial_profile</span><span class="p">(</span><span class="n">bandpass</span><span class="p">)</span>
         <span class="n">iiscale</span> <span class="o">=</span> <span class="n">prof0</span><span class="o">.</span><span class="n">nyquist_scale</span>
@@ -2366,22 +2366,22 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ChromaticConvolution</span><span class="o">.</span><span class="n">_effective_prof_cache</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">maxsize</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticConvolution</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">obj_list</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticConvolution&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticConvolution(</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">str_list</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">]</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticConvolution([</span><span class="si">%s</span><span class="s1">])&#39;</span><span class="o">%</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">str_list</span><span class="p">)</span>
 
@@ -2394,7 +2394,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the monochromatic object at the given wavelength.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span>
         <span class="k">return</span> <span class="n">Convolve</span><span class="p">([</span><span class="n">obj</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">],</span>
                         <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div>
 
@@ -2431,7 +2431,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the drawn `Image`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span>
         <span class="c1"># Store the last bandpass used.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_last_bp</span> <span class="o">=</span> <span class="n">bandpass</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
@@ -2558,7 +2558,7 @@
     <span class="k">def</span> <span class="nf">noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An estimate of the noise already in the profile.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span>
         <span class="c1"># Condition for being able to propagate noise:</span>
         <span class="c1"># Exactly one of the convolutants has a .covspec attribute.</span>
         <span class="n">covspecs</span> <span class="o">=</span> <span class="p">[</span> <span class="n">obj</span><span class="o">.</span><span class="n">covspec</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;covspec&#39;</span><span class="p">)</span> <span class="p">]</span>
@@ -2597,7 +2597,7 @@
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimSEDError</span><span class="p">(</span><span class="s2">&quot;Cannot deconvolve by spectral ChromaticObject.&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">SED</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
@@ -2625,29 +2625,29 @@
 <div class="viewcode-block" id="ChromaticDeconvolution.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticDeconvolution.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticDeconvolution</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_obj</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticDeconvolution&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticDeconvolution(</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticDeconvolution(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticDeconvolution.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticDeconvolution.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
@@ -2659,7 +2659,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the monochromatic object at the given wavelength.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Deconvolve</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Deconvolve</span>
         <span class="k">return</span> <span class="n">Deconvolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                           <span class="n">propagate_gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div></div>
 
@@ -2684,7 +2684,7 @@
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimSEDError</span><span class="p">(</span><span class="s2">&quot;Cannot autoconvolve spectral ChromaticObject.&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">SED</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
@@ -2713,14 +2713,14 @@
 <div class="viewcode-block" id="ChromaticAutoConvolution.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAutoConvolution.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticAutoConvolution</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_obj</span> <span class="ow">and</span>
@@ -2728,16 +2728,16 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticAutoConvolution&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.ChromaticAutoConvolution(</span><span class="si">%r</span><span class="s1">, real_space=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, &#39;</span>
                 <span class="s1">&#39;propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticAutoConvolution(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticAutoConvolution.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAutoConvolution.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
@@ -2749,7 +2749,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the monochromatic object at the given wavelength.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">AutoConvolve</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">AutoConvolve</span>
         <span class="k">return</span> <span class="n">AutoConvolve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div></div>
 
@@ -2777,7 +2777,7 @@
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">real_space</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimSEDError</span><span class="p">(</span><span class="s2">&quot;Cannot autocorrelate spectral ChromaticObject.&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">SED</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
@@ -2807,14 +2807,14 @@
 <div class="viewcode-block" id="ChromaticAutoCorrelation.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAutoCorrelation.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticAutoCorrelation</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_obj</span> <span class="ow">and</span>
@@ -2822,16 +2822,16 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticAutoCorrelation&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.ChromaticAutoCorrelation(</span><span class="si">%r</span><span class="s1">, real_space=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, &#39;</span>
                 <span class="s1">&#39;propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticAutoCorrelation(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticAutoCorrelation.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAutoCorrelation.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
@@ -2843,7 +2843,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the monochromatic object at the given wavelength.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">AutoCorrelate</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">AutoCorrelate</span>
         <span class="k">return</span> <span class="n">AutoCorrelate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_real_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                              <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div></div>
 
@@ -2873,7 +2873,7 @@
 <span class="sd">                            is normally a good idea, but there may be use cases where one</span>
 <span class="sd">                            would not want to do this. [default: True]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">math</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="o">.</span><span class="n">SED</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimSEDError</span><span class="p">(</span><span class="s2">&quot;Cannot take Fourier sqrt of spectral ChromaticObject.&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">SED</span><span class="p">)</span>
@@ -2902,29 +2902,29 @@
 <div class="viewcode-block" id="ChromaticFourierSqrtProfile.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticFourierSqrtProfile.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticFourierSqrtProfile</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_obj</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticFourierSqrtProfile&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticFourierSqrtProfile(</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticFourierSqrtProfile(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span>
 
 <div class="viewcode-block" id="ChromaticFourierSqrtProfile.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticFourierSqrtProfile.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
@@ -2936,7 +2936,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the monochromatic object at the given wavelength.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.fouriersqrt</span> <span class="k">import</span> <span class="n">FourierSqrt</span>
+        <span class="kn">from</span> <span class="nn">.fouriersqrt</span> <span class="kn">import</span> <span class="n">FourierSqrt</span>
         <span class="k">return</span> <span class="n">FourierSqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obj</span><span class="o">.</span><span class="n">evaluateAtWavelength</span><span class="p">(</span><span class="n">wave</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                            <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span></div></div>
 
@@ -2990,9 +2990,9 @@
 <span class="sd">                        related to struts, obscuration, oversampling, etc.  See OpticalPSF</span>
 <span class="sd">                        docstring for a complete list of options.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">scale_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">radians</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">radians</span>
         <span class="c1"># First, take the basic info.</span>
         <span class="k">if</span> <span class="n">scale_unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">scale_unit</span> <span class="o">=</span> <span class="n">arcsec</span>
@@ -3046,12 +3046,12 @@
 <div class="viewcode-block" id="ChromaticOpticalPSF.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticOpticalPSF.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticOpticalPSF</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">lam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">lam</span> <span class="ow">and</span>
@@ -3061,13 +3061,13 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kwargs</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticOpticalPSF&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span>
                      <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                      <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">arcsec</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">arcsec</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.ChromaticOpticalPSF(lam=</span><span class="si">%r</span><span class="s1">, lam_over_diam=</span><span class="si">%r</span><span class="s1">, aberrations=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span> <span class="o">!=</span> <span class="n">arcsec</span><span class="p">:</span>
@@ -3078,7 +3078,7 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticOpticalPSF(lam=</span><span class="si">%s</span><span class="s1">, lam_over_diam=</span><span class="si">%s</span><span class="s1">, aberrations=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
 
@@ -3089,7 +3089,7 @@
 <span class="sd">        Parameters:</span>
 <span class="sd">             wave:  Wavelength in nanometers.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.phase_psf</span> <span class="k">import</span> <span class="n">OpticalPSF</span>
+        <span class="kn">from</span> <span class="nn">.phase_psf</span> <span class="kn">import</span> <span class="n">OpticalPSF</span>
         <span class="c1"># We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial</span>
         <span class="c1"># wavelength.  Likewise, the aberrations were in units of wavelength for the fiducial</span>
         <span class="c1"># wavelength, so we have to convert to units of waves for *this* wavelength.</span>
@@ -3127,9 +3127,9 @@
 <span class="sd">                        gsparams.  See `galsim.Airy` docstring for a complete description of these</span>
 <span class="sd">                        options.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">radians</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">radians</span>
         <span class="c1"># First, take the basic info.</span>
         <span class="c1"># We have to require either diam OR lam_over_diam:</span>
         <span class="k">if</span> <span class="n">scale_unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -3168,12 +3168,12 @@
 <div class="viewcode-block" id="ChromaticAiry.withGSParams"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAiry.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">=</span><span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticAiry</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">lam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">lam</span> <span class="ow">and</span>
@@ -3182,12 +3182,12 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kwargs</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticAiry&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">arcsec</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">arcsec</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.ChromaticAiry(lam=</span><span class="si">%r</span><span class="s1">, lam_over_diam=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span> <span class="o">!=</span> <span class="n">arcsec</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, scale_unit=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span>
@@ -3197,7 +3197,7 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.ChromaticAiry(lam=</span><span class="si">%s</span><span class="s1">, lam_over_diam=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ChromaticAiry.evaluateAtWavelength"><a class="viewcode-back" href="../../chromaticobject.html#galsim.ChromaticAiry.evaluateAtWavelength">[docs]</a>    <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
@@ -3207,7 +3207,7 @@
 <span class="sd">        Parameters:</span>
 <span class="sd">             wave:  Wavelength in nanometers.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.airy</span> <span class="k">import</span> <span class="n">Airy</span>
+        <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
         <span class="c1"># We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial</span>
         <span class="c1"># wavelength.</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">Airy</span><span class="p">(</span>
