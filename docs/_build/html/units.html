@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Units &mdash; GalSim 2.2.3 documentation</title>
+  <title>Units &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -272,18 +272,18 @@ We use the <code class="docutils literal notranslate"><span class="pre">LSSTDESC
 still import the relevant classes into the <code class="docutils literal notranslate"><span class="pre">galsim</span></code> namespace, so for example
 <code class="docutils literal notranslate"><span class="pre">gasim.Angle</span></code> is a valid alias for <code class="docutils literal notranslate"><span class="pre">coord.Angle</span></code>.  You may therefor use either namespace
 for your use of these classes.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Angle">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Angle</code><span class="sig-paren">(</span><em class="sig-param">theta</em>, <em class="sig-param">unit=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Angle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">theta</span></em>, <em class="sig-param"><span class="n">unit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class representing an Angle.  Angles are a value with an AngleUnit.</p>
 <p><strong>Initialization:</strong></p>
 <blockquote>
 <div><p>You typically create an Angle by multiplying a number by a coord.AngleUnit, for example:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pixel</span> <span class="o">=</span> <span class="mf">0.27</span> <span class="o">*</span> <span class="n">arcsec</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pixel</span> <span class="o">=</span> <span class="mf">0.27</span> <span class="o">*</span> <span class="n">arcsec</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ra</span> <span class="o">=</span> <span class="mf">13.4</span> <span class="o">*</span> <span class="n">hours</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dec</span> <span class="o">=</span> <span class="o">-</span><span class="mi">32</span> <span class="o">*</span> <span class="n">degrees</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">pi</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">pi</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">pi</span><span class="o">/</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">radians</span>
 </pre></div>
 </div>
@@ -291,7 +291,7 @@ for your use of these classes.</p>
 <p>You can also initialize explicitly, taking a value and a unit:</p>
 <blockquote>
 <div><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">coord.Angle.__init__()</span></code></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>  <span class="c1"># gradians</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">100</span><span class="p">)</span>  <span class="c1"># gradians</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">phi</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="n">unit</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -333,7 +333,7 @@ to do this quickly:</p>
 </div></blockquote>
 <p>For example:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">degrees</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="mi">90</span> <span class="o">*</span> <span class="n">degrees</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">theta</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
 <span class="go">1.5707963267948966</span>
 </pre></div>
@@ -341,7 +341,7 @@ to do this quickly:</p>
 </div></blockquote>
 <p>It is equivalent to the more verbose:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">theta</span> <span class="o">/</span> <span class="n">radians</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">theta</span> <span class="o">/</span> <span class="n">radians</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 <span class="go">1.5707963267948966</span>
 </pre></div>
@@ -359,12 +359,12 @@ In the list below,</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">unit1</span></code> and <code class="docutils literal notranslate"><span class="pre">unit2</span></code> are arbitrary <a class="reference internal" href="#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AngleUnit</span></code></a> instances</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">theta1</span></code> and <code class="docutils literal notranslate"><span class="pre">theta2</span></code> are arbitrary <a class="reference internal" href="#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instances</p></li>
 </ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">37.8</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="mf">37.8</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">unit1</span> <span class="o">=</span> <span class="n">arcmin</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">unit2</span> <span class="o">=</span> <span class="n">degrees</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta1</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">unit1</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta1</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">unit1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">theta2</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">unit2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">x2</span> <span class="o">=</span> <span class="n">theta1</span> <span class="o">/</span> <span class="n">unit2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">theta1</span> <span class="o">+</span> <span class="n">theta2</span>
@@ -395,7 +395,7 @@ cos separately:</p>
 <div class="line"><code class="xref py py-meth docutils literal notranslate"><span class="pre">coord.Angle.tan()</span></code></div>
 <div class="line"><code class="xref py py-meth docutils literal notranslate"><span class="pre">coord.Angle.sincos()</span></code></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sint</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span>  <span class="c1"># equivalent to sint = math.sin(theta.rad)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sint</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">sin</span><span class="p">()</span>  <span class="c1"># equivalent to sint = math.sin(theta.rad)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">cos</span><span class="p">()</span>  <span class="c1"># equivalent to cost = math.cos(theta.rad)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tant</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">tan</span><span class="p">()</span>  <span class="c1"># equivalent to tant = math.tan(theta.rad)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">sint</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
@@ -404,7 +404,7 @@ cos separately:</p>
 </div></blockquote>
 <p>These functions mean that numpy trig functions will work on Angles or arrays of Angles:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cost</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">tant</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
 </pre></div>
@@ -417,7 +417,7 @@ cos separately:</p>
 If you want your angles to be wrapped to [-pi,pi) radians, you can do this by calling</p>
 <blockquote>
 <div><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">coord.Angle.wrap()</span></code></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
 </pre></div>
 </div>
 </div></blockquote>
@@ -426,28 +426,28 @@ calculating the difference between them.</p>
 <p>There is also an option to wrap into a different 2 pi range if so desired by specifying
 the center of the range.</p>
 </div></blockquote>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.cos">
 <code class="sig-name descname">cos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.cos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.cos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the cos of an Angle.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.deg">
 <em class="property">property </em><code class="sig-name descname">deg</code><a class="headerlink" href="#galsim.Angle.deg" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the Angle in degrees.</p>
 <p>Equivalent to angle / coord.degrees</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.dms">
-<code class="sig-name descname">dms</code><span class="sig-paren">(</span><em class="sig-param">sep=':'</em>, <em class="sig-param">prec=None</em>, <em class="sig-param">pad=True</em>, <em class="sig-param">plus_sign=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.dms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.dms" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">dms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sep</span><span class="o">=</span><span class="default_value">':'</span></em>, <em class="sig-param"><span class="n">prec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pad</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">plus_sign</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.dms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.dms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a DMS representation of the angle as a string: +-dd:mm:ss.decimal
 An optional <code class="docutils literal notranslate"><span class="pre">sep</span></code> parameter can change the : to something else (e.g. a space or
 nothing at all).</p>
 <p>Note: the reverse process is effected by <a class="reference internal" href="#galsim.Angle.from_dms" title="galsim.Angle.from_dms"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Angle.from_dms()</span></code></a>:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">degrees</span> <span class="o">+</span> <span class="mi">21</span> <span class="o">*</span> <span class="n">arcmin</span> <span class="o">+</span> <span class="mf">25.2</span> <span class="o">*</span> <span class="n">arcsec</span><span class="p">)</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">degrees</span> <span class="o">+</span> <span class="mi">21</span> <span class="o">*</span> <span class="n">arcmin</span> <span class="o">+</span> <span class="mf">25.2</span> <span class="o">*</span> <span class="n">arcsec</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dms</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">dms</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dms</span><span class="p">)</span>
 <span class="go">-05:21:25.2</span>
@@ -477,9 +477,9 @@ tuple of strings such as (‘degrees ‘, ‘minutes ‘, ‘seconds’).
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.from_dms">
-<em class="property">static </em><code class="sig-name descname">from_dms</code><span class="sig-paren">(</span><em class="sig-param">str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.from_dms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.from_dms" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">from_dms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.from_dms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.from_dms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a string of the form dd:mm:ss.decimal into an Angle.</p>
 <p>There may be an initial + or - (or neither), then two digits for the degrees, two for the
 minutes, and two for the seconds.  Then there may be a decimal point followed by more
@@ -487,7 +487,7 @@ digits.  There may be a colon separating dd, mm, and ss, or whitespace, or nothi
 In fact, the code will ignore any non-digits between the degrees, minutes, and seconds.</p>
 <p>Note: the reverse process is effected by Angle.dms():</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">degrees</span> <span class="o">+</span> <span class="mi">21</span> <span class="o">*</span> <span class="n">arcmin</span> <span class="o">+</span> <span class="mf">25.2</span> <span class="o">*</span> <span class="n">arcsec</span><span class="p">)</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">5</span> <span class="o">*</span> <span class="n">degrees</span> <span class="o">+</span> <span class="mi">21</span> <span class="o">*</span> <span class="n">arcmin</span> <span class="o">+</span> <span class="mf">25.2</span> <span class="o">*</span> <span class="n">arcsec</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">dms</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">dms</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dms</span><span class="p">)</span>
 <span class="go">-05:21:25.2</span>
@@ -507,9 +507,9 @@ In fact, the code will ignore any non-digits between the degrees, minutes, and s
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.from_hms">
-<em class="property">static </em><code class="sig-name descname">from_hms</code><span class="sig-paren">(</span><em class="sig-param">str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.from_hms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.from_hms" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">from_hms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">str</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.from_hms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.from_hms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a string of the form hh:mm:ss.decimal into an Angle.</p>
 <p>There may be an initial + or - (or neither), then two digits for the hours, two for the
 minutes, and two for the seconds.  Then there may be a decimal point followed by more
@@ -517,7 +517,7 @@ digits.  There may be a colon separating hh, mm, and ss, or whitespace, or nothi
 In fact, the code will ignore any non-digits between the hours, minutes, and seconds.</p>
 <p>Note: the reverse process is effected by Angle.hms():</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.357</span> <span class="o">*</span> <span class="n">hours</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.357</span> <span class="o">*</span> <span class="n">hours</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">hms</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">hms</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">hms</span><span class="p">)</span>
 <span class="go">-05:21:25.2</span>
@@ -537,15 +537,15 @@ In fact, the code will ignore any non-digits between the hours, minutes, and sec
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.hms">
-<code class="sig-name descname">hms</code><span class="sig-paren">(</span><em class="sig-param">sep=':'</em>, <em class="sig-param">prec=None</em>, <em class="sig-param">pad=True</em>, <em class="sig-param">plus_sign=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.hms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.hms" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">hms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sep</span><span class="o">=</span><span class="default_value">':'</span></em>, <em class="sig-param"><span class="n">prec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pad</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">plus_sign</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.hms"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.hms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return an HMS representation of the angle as a string: +-hh:mm:ss.decimal.</p>
 <p>An optional <code class="docutils literal notranslate"><span class="pre">sep</span></code> parameter can change the : to something else (e.g. a space or
 nothing at all).</p>
 <p>Note: the reverse process is effected by <a class="reference internal" href="#galsim.Angle.from_hms" title="galsim.Angle.from_hms"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Angle.from_hms()</span></code></a>:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.357</span> <span class="o">*</span> <span class="n">hours</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle</span> <span class="o">=</span> <span class="o">-</span><span class="mf">5.357</span> <span class="o">*</span> <span class="n">hours</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">hms</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">hms</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">hms</span><span class="p">)</span>
 <span class="go">-05:21:25.2</span>
@@ -575,40 +575,40 @@ tuple of strings such as (‘hours ‘, ‘minutes ‘, ‘seconds’).
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.rad">
 <em class="property">property </em><code class="sig-name descname">rad</code><a class="headerlink" href="#galsim.Angle.rad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the Angle in radians.</p>
 <p>Equivalent to angle / coord.radians</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.sin">
 <code class="sig-name descname">sin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.sin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.sin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the sin of an Angle.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.sincos">
 <code class="sig-name descname">sincos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.sincos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.sincos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return both the sin and cos of an Angle as a numpy array [sint, cost].</p>
 <p>(On some systems, this may be slightly faster than doing each separately.)</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.tan">
 <code class="sig-name descname">tan</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.tan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.tan" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the tan of an Angle.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Angle.wrap">
-<code class="sig-name descname">wrap</code><span class="sig-paren">(</span><em class="sig-param">center=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.wrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.wrap" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">wrap</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">center</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#Angle.wrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Angle.wrap" title="Permalink to this definition">¶</a></dt>
 <dd><p>Wrap Angle to lie in the range [-pi, pi) radians (or other range  of 2pi radians)</p>
 <p>Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi, pi) radians, you can do this as follows:</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span><span class="mi">700</span> <span class="o">*</span> <span class="n">degrees</span><span class="p">)</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span><span class="mi">700</span> <span class="o">*</span> <span class="n">degrees</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">theta</span><span class="o">.</span><span class="n">deg</span><span class="p">)</span>
 <span class="go">-19.99999999999998</span>
@@ -621,7 +621,7 @@ calculating the difference between them.</p>
 to be the desired center of the the range.  e.g. for return values to fall in [0, 2pi),
 you could call</p>
 <blockquote>
-<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="mf">180.</span> <span class="o">*</span> <span class="n">degrees</span><span class="p">)</span>
+<div><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">theta</span> <span class="o">=</span> <span class="n">theta</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="mf">180.</span> <span class="o">*</span> <span class="n">degrees</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">theta</span> <span class="o">/</span> <span class="n">degrees</span><span class="p">)</span>
 <span class="go">340.0</span>
 </pre></div>
@@ -639,9 +639,9 @@ you could call</p>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim._Angle">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_Angle</code><span class="sig-paren">(</span><em class="sig-param">theta</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#_Angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._Angle" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_Angle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">theta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angle.html#_Angle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._Angle" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">Angle(theta,</span> <span class="pre">coord.radians)</span></code>, but without the normal overhead (which isn’t
 much to be honest, but this is nonetheless slightly quicker).</p>
 <dl class="field-list simple">
@@ -651,9 +651,9 @@ much to be honest, but this is nonetheless slightly quicker).</p>
 </dl>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.AngleUnit">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">AngleUnit</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">AngleUnit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for defining angular units used by Angle objects.</p>
 <p><strong>Initialization:</strong></p>
 <blockquote>
@@ -661,7 +661,7 @@ much to be honest, but this is nonetheless slightly quicker).</p>
 of the desired angular unit in radians.  For example:</p>
 <blockquote>
 <div><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">coord.AngleUnit.__init__()</span></code></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gradian</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">400.</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">gradian</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">400.</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">gradian</span><span class="p">)</span>
 <span class="go">coord.AngleUnit(0.015707963267948967)</span>
 </pre></div>
@@ -702,9 +702,9 @@ of the desired angular unit in radians.  For example:</p>
 </dl>
 </div></blockquote>
 </div></blockquote>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.AngleUnit.from_name">
-<em class="property">static </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param">unit</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.from_name" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unit</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/coord/angleunit.html#AngleUnit.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.AngleUnit.from_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert a string into the corresponding AngleUnit.</p>
 <p>Only the start of the string is checked, so for instance ‘radian’ or ‘radians’ is
 equivalent to ‘rad’.</p>
@@ -739,7 +739,7 @@ equivalent to ‘rad’.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.AngleUnit.value">
 <em class="property">property </em><code class="sig-name descname">value</code><a class="headerlink" href="#galsim.AngleUnit.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>A read-only attribute giving the measure of the AngleUnit in radians.</p>

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.wfirst.wfirst_detectors &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.wfirst.wfirst_detectors &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
@@ -193,7 +193,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">exptime</span><span class="p">,</span> <span class="n">persistence_coefficients</span><span class="p">,</span> <span class="n">nonlinearity_beta</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exptime</span><span class="p">,</span> <span class="n">persistence_coefficients</span><span class="p">,</span> <span class="n">nonlinearity_beta</span>
 
 <span class="k">def</span> <span class="nf">NLfunc</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">nonlinearity_beta</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
@@ -215,7 +215,7 @@
     <span class="n">img</span><span class="o">.</span><span class="n">applyNonlinearity</span><span class="p">(</span><span class="n">NLfunc</span><span class="o">=</span><span class="n">NLfunc</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="addReciprocityFailure"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.addReciprocityFailure">[docs]</a><span class="k">def</span> <span class="nf">addReciprocityFailure</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">reciprocity_alpha</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">reciprocity_alpha</span>
     <span class="n">img</span><span class="o">.</span><span class="n">addReciprocityFailure</span><span class="p">(</span><span class="n">exp_time</span><span class="o">=</span><span class="n">exptime</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">reciprocity_alpha</span><span class="p">,</span> <span class="n">base_flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span></div>
 
 <span class="c1"># Note: Formatted doc strings don&#39;t work if put in the normal place.  Unless the function is</span>
@@ -257,11 +257,11 @@
 <span class="sd">                            original pixel values are retained at the edges. If</span>
 <span class="sd">                            edge_treatment is not &#39;crop&#39;, then this is ignored.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">ipc_kernel</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">ipc_kernel</span>
     <span class="n">img</span><span class="o">.</span><span class="n">applyIPC</span><span class="p">(</span><span class="n">ipc_kernel</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="n">edge_treatment</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="applyPersistence"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.applyPersistence">[docs]</a><span class="k">def</span> <span class="nf">applyPersistence</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fermi&#39;</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">GalSimValueError</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimValueError</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">,</span><span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;In wfirst.applyPersistence, prev_exposures must be a list of Image instances&quot;</span><span class="p">)</span>
@@ -330,7 +330,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        The persistence signal of the input exposure x.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">persistence_fermi_parameters</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">persistence_fermi_parameters</span>
 
     <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
@@ -349,8 +349,8 @@
 
 <span class="c1"># Again, need to put the doc outside the function to get formatting to work.</span>
 <div class="viewcode-block" id="allDetectorEffects"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.allDetectorEffects">[docs]</a><span class="k">def</span> <span class="nf">allDetectorEffects</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="o">=</span><span class="p">(),</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">exptime</span><span class="p">,</span> <span class="n">dark_current</span><span class="p">,</span> <span class="n">read_noise</span><span class="p">,</span> <span class="n">gain</span>
-    <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">PoissonNoise</span><span class="p">,</span> <span class="n">DeviateNoise</span><span class="p">,</span> <span class="n">GaussianNoise</span><span class="p">,</span> <span class="n">PoissonDeviate</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exptime</span><span class="p">,</span> <span class="n">dark_current</span><span class="p">,</span> <span class="n">read_noise</span><span class="p">,</span> <span class="n">gain</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">PoissonNoise</span><span class="p">,</span> <span class="n">DeviateNoise</span><span class="p">,</span> <span class="n">GaussianNoise</span><span class="p">,</span> <span class="n">PoissonDeviate</span>
 
     <span class="c1"># Make sure we don&#39;t have any negative values.</span>
     <span class="n">img</span><span class="o">.</span><span class="n">replaceNegative</span><span class="p">(</span><span class="mf">0.</span><span class="p">)</span>

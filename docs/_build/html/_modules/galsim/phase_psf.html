@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.phase_psf &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.phase_psf &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -185,22 +185,22 @@
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">chain</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="k">import</span> <span class="nb">range</span>
-<span class="kn">from</span> <span class="nn">heapq</span> <span class="k">import</span> <span class="n">heappush</span><span class="p">,</span> <span class="n">heappop</span>
+<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="kn">import</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
+<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">range</span>
+<span class="kn">from</span> <span class="nn">heapq</span> <span class="kn">import</span> <span class="n">heappush</span><span class="p">,</span> <span class="n">heappop</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
-<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">AngleUnit</span>
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">_Image</span>
-<span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">_BoundsI</span>
-<span class="kn">from</span> <span class="nn">.wcs</span> <span class="k">import</span> <span class="n">PixelScale</span>
-<span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">OrderedWeakRef</span><span class="p">,</span> <span class="n">rotate_xy</span><span class="p">,</span> <span class="n">lazy_property</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">AngleUnit</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">_Image</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">_BoundsI</span>
+<span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
+<span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">OrderedWeakRef</span><span class="p">,</span> <span class="n">rotate_xy</span><span class="p">,</span> <span class="n">lazy_property</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="Aperture"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture">[docs]</a><span class="k">class</span> <span class="nc">Aperture</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class representing a telescope aperture embedded in a larger pupil plane array -- for use</span>
@@ -329,7 +329,7 @@
 <span class="sd">                            adjusting the pupil size.  [default: None]</span>
 <span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">circular_pupil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">circular_pupil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                  <span class="n">nstruts</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">strut_thick</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">strut_angle</span><span class="o">=</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span>
                  <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">screen_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">pupil_plane_im</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_angle</span><span class="o">=</span><span class="mf">0.0</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span>
@@ -423,7 +423,7 @@
     <span class="k">def</span> <span class="nf">good_pupil_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An estimate of a good pupil-plane image scale.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.airy</span> <span class="k">import</span> <span class="n">Airy</span>
+        <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
         <span class="c1"># For the pupil plane sampling interval, details like the obscuration and GSParams *are*</span>
         <span class="c1"># important as they affect the amount of aliasing encountered.  (An Airy profile has an</span>
         <span class="c1"># infinite extent in real space, so it *always* aliases at some level, more so with an</span>
@@ -528,7 +528,7 @@
 <span class="sd">        4.  Check that the pupil plane sampling interval is at least as small as requested.</span>
 <span class="sd">        5.  Optionally rotate pupil plane.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">fits</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fits</span>
         <span class="c1"># Handle multiple types of input: NumPy array, galsim.Image, or string for filename with</span>
         <span class="c1"># image.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
@@ -622,7 +622,7 @@
         <span class="sd">&quot;&quot;&quot;Create a version of the current aperture with the given gsparams</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
@@ -642,7 +642,7 @@
                 <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, strut_angle=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_strut_angle</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.Aperture(diam=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Pupil was created geometrically, so use that here.</span>
@@ -664,7 +664,7 @@
                 <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, strut_angle=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_strut_angle</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.Aperture(diam=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pupil_plane_im</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Pupil was created geometrically, so use that here.</span>
@@ -685,7 +685,7 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Aperture</span><span class="p">)</span> <span class="ow">and</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">diam</span> <span class="ow">and</span>
@@ -706,7 +706,7 @@
                     <span class="bp">self</span><span class="o">.</span><span class="n">_oversampling</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_oversampling</span> <span class="ow">and</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_pad_factor</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Cache since self.illuminated may be large.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Aperture&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pupil_plane_scale</span><span class="p">))</span>
@@ -876,8 +876,8 @@
 <span class="sd">    Parameters:</span>
 <span class="sd">        layers:     Sequence of phase screens.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.phase_screens</span> <span class="k">import</span> <span class="n">AtmosphericScreen</span><span class="p">,</span> <span class="n">OpticalScreen</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">layers</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.phase_screens</span> <span class="kn">import</span> <span class="n">AtmosphericScreen</span><span class="p">,</span> <span class="n">OpticalScreen</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="c1"># First check if layers[0] is a PhaseScreenList, so we avoid nesting.</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">PhaseScreenList</span><span class="p">):</span>
@@ -893,10 +893,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pending</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Pending PSFs to calculate upon first drawImage.</span>
 
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
@@ -912,11 +912,11 @@
             <span class="c1"># index is an int, so items is just one screen.</span>
             <span class="k">return</span> <span class="n">items</span>
 
-    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">layer</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">layer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
 
@@ -928,17 +928,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_attrs</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.PhaseScreenList([</span><span class="si">%s</span><span class="s2">])&quot;</span> <span class="o">%</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.PhaseScreenList(</span><span class="si">%r</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">PhaseScreenList</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layers</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_layers</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">other</span>
 
     <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Mutable means not hashable.</span>
 
@@ -1374,7 +1374,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">arcsec</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">arcsec</span><span class="p">),</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">ii_pad_factor</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">geometric_shooting</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">aper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">second_kick</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kcrit</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
@@ -1498,8 +1498,8 @@
     <span class="k">def</span> <span class="nf">second_kick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Make a SecondKick object based on contents of screen_list and aper.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.airy</span> <span class="k">import</span> <span class="n">Airy</span>
-        <span class="kn">from</span> <span class="nn">.second_kick</span> <span class="k">import</span> <span class="n">SecondKick</span>
+        <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
+        <span class="kn">from</span> <span class="nn">.second_kick</span> <span class="kn">import</span> <span class="n">SecondKick</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_second_kick</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">r0_500</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="o">.</span><span class="n">r0_500_effective</span>
             <span class="k">if</span> <span class="n">r0_500</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># No AtmosphericScreens in list</span>
@@ -1544,17 +1544,17 @@
         <span class="n">ret</span><span class="o">.</span><span class="n">_img</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.PhaseScreenPSF(</span><span class="si">%s</span><span class="s2">, lam=</span><span class="si">%s</span><span class="s2">, exptime=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span>
                 <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">outstr</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;galsim.PhaseScreenPSF(</span><span class="si">%r</span><span class="s2">, lam=</span><span class="si">%r</span><span class="s2">, exptime=</span><span class="si">%r</span><span class="s2">, flux=</span><span class="si">%r</span><span class="s2">, aper=</span><span class="si">%r</span><span class="s2">, theta=</span><span class="si">%r</span><span class="s2">, &quot;</span>
                   <span class="s2">&quot;interpolant=</span><span class="si">%r</span><span class="s2">, scale_unit=</span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outstr</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span>
                          <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="c1"># Even if two PSFs were generated with different sets of parameters, they will act</span>
         <span class="c1"># identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
@@ -1572,7 +1572,7 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.PhaseScreenPSF&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
@@ -1583,7 +1583,7 @@
 
     <span class="k">def</span> <span class="nf">_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute the current instantaneous PSF and add it to the developing integrated PSF.&quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">fft</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fft</span>
         <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">u_illuminated</span>
         <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">v_illuminated</span>
         <span class="c1"># This is where I need to make sure the screens are instantiated for FFT.</span>
@@ -1672,8 +1672,8 @@
 
     <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="k">import</span> <span class="n">PhotonArray</span>
-        <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">UniformDeviate</span>
+        <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geometric_shooting</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
@@ -1714,13 +1714,13 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">img</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
         <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;img&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s2">&quot;This functionality has been removed.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_img</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+        <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
         <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;finalized&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;This functionality has been removed.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span>
 
@@ -1949,7 +1949,7 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">astig1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">astig2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">coma1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">coma2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">trefoil1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">trefoil2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">spher</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">annular_zernike</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">aper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">circular_pupil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1959,7 +1959,7 @@
                  <span class="n">pupil_angle</span><span class="o">=</span><span class="mf">0.</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">_force_stepk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">geometric_shooting</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.phase_screens</span> <span class="k">import</span> <span class="n">OpticalScreen</span>
+        <span class="kn">from</span> <span class="nn">.phase_screens</span> <span class="kn">import</span> <span class="n">OpticalScreen</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">scale_unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">)</span>
         <span class="c1"># Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for</span>
@@ -2042,7 +2042,7 @@
         <span class="n">psf</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>  <span class="c1"># No need to delay an OpticalPSF.</span>
         <span class="k">return</span> <span class="n">psf</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalPSF(lam=</span><span class="si">%s</span><span class="s2">, diam=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">lam_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">):</span>
@@ -2057,7 +2057,7 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalPSF(lam=</span><span class="si">%r</span><span class="s2">, diam=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, aper=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span>
@@ -2077,7 +2077,7 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">OpticalPSF</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_lam</span> <span class="ow">and</span>
@@ -2091,7 +2091,7 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.OpticalPSF&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>

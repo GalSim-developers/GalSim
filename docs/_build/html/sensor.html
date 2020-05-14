@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Sensor Models &mdash; GalSim 2.2.3 documentation</title>
+  <title>Sensor Models &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -185,15 +185,15 @@ photon into an electron in whatever pixel is below the location where the photon
 However, it also serves as a base class for other classes that implement more sophisticated
 treatments of the photon to electron conversion and the drift from the conversion layer to the
 bottom of the detector.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Sensor">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Sensor</code><a class="reference internal" href="_modules/galsim/sensor.html#Sensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>The base class for other sensor models, and also an implementation of the simplest possible
 sensor model that just converts each photon into an electron and drops it in the appropriate
 pixel.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Sensor.accumulate">
-<code class="sig-name descname">accumulate</code><span class="sig-paren">(</span><em class="sig-param">photons</em>, <em class="sig-param">image</em>, <em class="sig-param">orig_center=None</em>, <em class="sig-param">resume=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#Sensor.accumulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor.accumulate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">accumulate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photons</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">orig_center</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">resume</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#Sensor.accumulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Sensor.accumulate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Accumulate the photons incident at the surface of the sensor into the appropriate
 pixels in the image.</p>
 <p>Each photon has a position, which corresponds to the (x,y) position at the top of the
@@ -221,9 +221,9 @@ gain for some derived classes. [default: False]</p></li>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.SiliconSensor">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SiliconSensor</code><span class="sig-paren">(</span><em class="sig-param">name='lsst_itl_8'</em>, <em class="sig-param">strength=1.0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">diffusion_factor=1.0</em>, <em class="sig-param">qdist=3</em>, <em class="sig-param">nrecalc=10000</em>, <em class="sig-param">treering_func=None</em>, <em class="sig-param">treering_center=galsim.PositionD(x=0.0</em>, <em class="sig-param">y=0.0)</em>, <em class="sig-param">transpose=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SiliconSensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'lsst_itl_8'</span></em>, <em class="sig-param"><span class="n">strength</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">diffusion_factor</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">qdist</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">nrecalc</span><span class="o">=</span><span class="default_value">10000</span></em>, <em class="sig-param"><span class="n">treering_func</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">treering_center</span><span class="o">=</span><span class="default_value">galsim.PositionD(x=0.0, y=0.0)</span></em>, <em class="sig-param"><span class="n">transpose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.sensor.Sensor</span></code></p>
 <p>A model of a silicon-based CCD sensor that converts photons to electrons at a wavelength-
 dependent depth (probabilistically) and drifts them down to the wells, properly taking
@@ -293,9 +293,9 @@ stronger along the x direction. [default: False]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SiliconSensor.accumulate">
-<code class="sig-name descname">accumulate</code><span class="sig-paren">(</span><em class="sig-param">photons</em>, <em class="sig-param">image</em>, <em class="sig-param">orig_center=galsim.PositionI(x=0</em>, <em class="sig-param">y=0)</em>, <em class="sig-param">resume=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.accumulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.accumulate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">accumulate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photons</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">orig_center</span><span class="o">=</span><span class="default_value">galsim.PositionI(x=0, y=0)</span></em>, <em class="sig-param"><span class="n">resume</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.accumulate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.accumulate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Accumulate the photons incident at the surface of the sensor into the appropriate
 pixels in the image.</p>
 <dl class="field-list simple">
@@ -318,9 +318,9 @@ be more efficient, especially when the number of pixels is large.
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SiliconSensor.calculate_pixel_areas">
-<code class="sig-name descname">calculate_pixel_areas</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">orig_center=galsim.PositionI(x=0</em>, <em class="sig-param">y=0)</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.calculate_pixel_areas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.calculate_pixel_areas" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">calculate_pixel_areas</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">orig_center</span><span class="o">=</span><span class="default_value">galsim.PositionI(x=0, y=0)</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.calculate_pixel_areas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.calculate_pixel_areas" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an image with the corresponding pixel areas according to the <a class="reference internal" href="#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a>
 model.</p>
 <p>The input image gives the flux values used to set the current levels of the brighter-fatter
@@ -344,9 +344,9 @@ any conversion from pixels to sky units using the image wcs (if any).</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SiliconSensor.simple_treerings">
-<em class="property">classmethod </em><code class="sig-name descname">simple_treerings</code><span class="sig-paren">(</span><em class="sig-param">amplitude=0.5</em>, <em class="sig-param">period=100.0</em>, <em class="sig-param">r_max=8000.0</em>, <em class="sig-param">dr=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.simple_treerings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.simple_treerings" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">simple_treerings</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">amplitude</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">period</span><span class="o">=</span><span class="default_value">100.0</span></em>, <em class="sig-param"><span class="n">r_max</span><span class="o">=</span><span class="default_value">8000.0</span></em>, <em class="sig-param"><span class="n">dr</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/sensor.html#SiliconSensor.simple_treerings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SiliconSensor.simple_treerings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a simple sinusoidal tree ring pattern that can be used as the <code class="docutils literal notranslate"><span class="pre">treering_func</span></code>
 parameter of <a class="reference internal" href="#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a>.</p>
 <p>The functional form is <span class="math notranslate nohighlight">\(f(r) = A \cos(2 \pi r/P)\)</span> where <span class="math notranslate nohighlight">\(A\)</span> is the

@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.real &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.real &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -187,19 +187,19 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
-<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.chromatic</span> <span class="k">import</span> <span class="n">ChromaticSum</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">convert_interpolant</span>
-<span class="kn">from</span> <span class="nn">.interpolant</span> <span class="k">import</span> <span class="n">Quintic</span>
-<span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span><span class="p">,</span> <span class="n">_InterpolatedKImage</span>
-<span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">Deconvolve</span>
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">ImageCD</span>
-<span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">CovarianceSpectrum</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimIndexError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.chromatic</span> <span class="kn">import</span> <span class="n">ChromaticSum</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">convert_interpolant</span>
+<span class="kn">from</span> <span class="nn">.interpolant</span> <span class="kn">import</span> <span class="n">Quintic</span>
+<span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span><span class="p">,</span> <span class="n">_InterpolatedKImage</span>
+<span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">Deconvolve</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">ImageCD</span>
+<span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="kn">import</span> <span class="n">CovarianceSpectrum</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIndexError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
 
 
 <span class="n">HST_area</span> <span class="o">=</span> <span class="mf">45238.93416</span>  <span class="c1"># Area of HST primary mirror in cm^2 from Synphot User&#39;s Guide.</span>
@@ -347,14 +347,14 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_galaxy_catalog</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_galaxy_catalog</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux_rescale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">pad_factor</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">area_norm</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">UniformDeviate</span>
-        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">UncorrelatedNoise</span><span class="p">,</span> <span class="n">BaseCorrelatedNoise</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
-        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="k">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">Deconvolve</span>
-        <span class="kn">from</span> <span class="nn">.config</span> <span class="k">import</span> <span class="n">LoggerWrapper</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">UniformDeviate</span>
+        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="kn">import</span> <span class="n">UncorrelatedNoise</span><span class="p">,</span> <span class="n">BaseCorrelatedNoise</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.convolve</span> <span class="kn">import</span> <span class="n">Convolve</span><span class="p">,</span> <span class="n">Deconvolve</span>
+        <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span>
 
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">()</span>
@@ -485,7 +485,7 @@
 <div class="viewcode-block" id="RealGalaxy.withGSParams"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">original_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_gal</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
@@ -510,7 +510,7 @@
         <span class="n">psf_image</span> <span class="o">=</span> <span class="n">PSF</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s1">&#39;no_pixel&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">RealGalaxy</span><span class="p">((</span><span class="n">image</span><span class="p">,</span> <span class="n">psf_image</span><span class="p">,</span> <span class="n">noise_image</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">var</span><span class="p">))</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RealGalaxy</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">catalog</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">catalog</span> <span class="ow">and</span>
@@ -524,12 +524,12 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_area_norm</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_area_norm</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.RealGalaxy&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">catalog</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_noise_pad_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_input_flux</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_flux_rescale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_area_norm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.RealGalaxy(</span><span class="si">%r</span><span class="s1">, index=</span><span class="si">%r</span><span class="s1">, &#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalog</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;x_interpolant=</span><span class="si">%r</span><span class="s1">, &#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span>
@@ -549,7 +549,7 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># I think this is more intuitive without the RealGalaxyCatalog parameter listed.</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.RealGalaxy(index=</span><span class="si">%s</span><span class="s1">, flux=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span>
 
@@ -702,10 +702,10 @@
     <span class="c1"># _nobject_only is an intentionally undocumented kwarg that should be used only by</span>
     <span class="c1"># the config structure.  It indicates that all we care about is the nobjects parameter.</span>
     <span class="c1"># So skip any other calculations that might normally be necessary on construction.</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_nobjects_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
-        <span class="kn">from</span> <span class="nn">.config</span> <span class="k">import</span> <span class="n">LoggerWrapper</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span>
 
         <span class="k">if</span> <span class="n">sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
@@ -768,7 +768,7 @@
 
         <span class="c1"># The pyfits commands aren&#39;t thread safe.  So we need to make sure the methods that</span>
         <span class="c1"># use pyfits are not run concurrently from multiple threads.</span>
-        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Lock</span>
+        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Lock</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when accessing gal files</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">psf_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when accessing psf files</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">loaded_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when opening new files from disk</span>
@@ -782,7 +782,7 @@
         <span class="c1"># i.e. (dataset, ID within dataset)</span>
         <span class="c1"># also note: will be adding bits of information, like noise properties and galaxy fit params</span>
 
-    <span class="k">def</span> <span class="nf">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Make sure to clean up pyfits open files if people forget to call close()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
@@ -796,7 +796,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="k">def</span> <span class="nf">getNObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
     <span class="k">def</span> <span class="nf">getFileName</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getIndexForID"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getIndexForID">[docs]</a>    <span class="k">def</span> <span class="nf">getIndexForID</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">):</span>
@@ -817,7 +817,7 @@
 <span class="sd">        There are memory implications to this, so we don&#39;t do this by default.  However, it can be</span>
 <span class="sd">        a big speedup if memory isn&#39;t an issue.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog: start preload&#39;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span> <span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">)):</span>
             <span class="c1"># numpy sometimes add a space at the end of the string that is not present in</span>
@@ -838,7 +838,7 @@
                     <span class="n">hdu</span><span class="o">.</span><span class="n">data</span></div>
 
     <span class="k">def</span> <span class="nf">_getFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="k">if</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog: File </span><span class="si">%s</span><span class="s1"> is already open&#39;</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
             <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span>
@@ -858,7 +858,7 @@
 <div class="viewcode-block" id="RealGalaxyCatalog.getBandpass"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getBandpass">[docs]</a>    <span class="k">def</span> <span class="nf">getBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns a `Bandpass` object for the catalog.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.bandpass</span> <span class="k">import</span> <span class="n">Bandpass</span>
+        <span class="kn">from</span> <span class="nn">.bandpass</span> <span class="kn">import</span> <span class="n">Bandpass</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">bp</span> <span class="o">=</span> <span class="n">real_galaxy_bandpasses</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">band</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
@@ -870,7 +870,7 @@
 <div class="viewcode-block" id="RealGalaxyCatalog.getGalImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getGalImage">[docs]</a>    <span class="k">def</span> <span class="nf">getGalImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the galaxy at index ``i`` as an `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Start getGalImage&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">GalSimIndexError</span><span class="p">(</span><span class="s1">&#39;index out of range (0..</span><span class="si">%d</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="n">i</span><span class="p">)</span>
@@ -886,7 +886,7 @@
 <div class="viewcode-block" id="RealGalaxyCatalog.getPSFImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSFImage">[docs]</a>    <span class="k">def</span> <span class="nf">getPSFImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as an `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Start getPSFImage&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">GalSimIndexError</span><span class="p">(</span><span class="s1">&#39;index out of range (0..</span><span class="si">%d</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="n">i</span><span class="p">)</span>
@@ -899,7 +899,7 @@
 <div class="viewcode-block" id="RealGalaxyCatalog.getPSF"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSF">[docs]</a>    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as a `GSObject`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
         <span class="n">psf_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getPSFImage</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">InterpolatedImage</span><span class="p">(</span><span class="n">psf_image</span><span class="p">,</span>
                                  <span class="n">x_interpolant</span><span class="o">=</span><span class="n">x_interpolant</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="n">k_interpolant</span><span class="p">,</span>
@@ -910,7 +910,7 @@
 <span class="sd">           Specifically, the noise image (or None), the pixel_scale, and the noise variance,</span>
 <span class="sd">           as a tuple (im, scale, var).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
+        <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Start getNoise&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">im</span> <span class="o">=</span> <span class="kc">None</span>
@@ -927,7 +927,7 @@
                     <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Got saved noise im&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+                    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
                     <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
                         <span class="n">array</span> <span class="o">=</span> <span class="n">fits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
                     <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span>
@@ -941,8 +941,8 @@
 <div class="viewcode-block" id="RealGalaxyCatalog.getNoise"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getNoise">[docs]</a>    <span class="k">def</span> <span class="nf">getNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the noise correlation function at index ``i`` as a `BaseCorrelatedNoise` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">UncorrelatedNoise</span><span class="p">,</span> <span class="n">BaseCorrelatedNoise</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="kn">import</span> <span class="n">UncorrelatedNoise</span><span class="p">,</span> <span class="n">BaseCorrelatedNoise</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
         <span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNoiseProperties</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">im</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">cf</span> <span class="o">=</span> <span class="n">UncorrelatedNoise</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
@@ -954,17 +954,17 @@
             <span class="n">cf</span> <span class="o">=</span> <span class="n">cf</span><span class="o">.</span><span class="n">withVariance</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cf</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.RealGalaxyCatalog(</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RealGalaxyCatalog</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">file_name</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">image_dir</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">image_dir</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -977,7 +977,7 @@
         <span class="k">return</span> <span class="n">d</span>
 
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="k">import</span> <span class="n">Lock</span>
+        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Lock</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">psf_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>
@@ -986,7 +986,7 @@
         <span class="k">pass</span></div>
 
 <span class="k">def</span> <span class="nf">_parse_files_dirs</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">image_dir</span><span class="p">,</span> <span class="n">sample</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">meta_data</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meta_data</span>
     <span class="k">if</span> <span class="n">sample</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">use_sample</span> <span class="o">=</span> <span class="s1">&#39;25.2&#39;</span>
@@ -1161,13 +1161,13 @@
 <span class="sd">                                them.  [default: None]</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_galaxy_catalogs</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_galaxy_catalogs</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">UniformDeviate</span>
-        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">BoundsI</span>
-        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="k">import</span> <span class="n">InterpolatedImage</span>
-        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="k">import</span> <span class="n">BaseCorrelatedNoise</span>
-        <span class="kn">from</span> <span class="nn">.config</span> <span class="k">import</span> <span class="n">LoggerWrapper</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">UniformDeviate</span>
+        <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
+        <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
+        <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="kn">import</span> <span class="n">BaseCorrelatedNoise</span>
+        <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span>
 
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">()</span>
@@ -1284,7 +1284,7 @@
 <span class="sd">                                them.  [default: None]</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">PSFs</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
             <span class="n">PSFs</span> <span class="o">=</span> <span class="p">[</span><span class="n">PSFs</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">images</span><span class="p">)</span>
         <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
@@ -1441,8 +1441,8 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_poly_SEDs</span><span class="p">(</span><span class="n">bands</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.sed</span> <span class="k">import</span> <span class="n">SED</span>
-        <span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span>
+        <span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
+        <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
         <span class="c1"># Use polynomial SEDs by default; up to the number of bands provided.</span>
         <span class="n">waves</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">bp</span> <span class="ow">in</span> <span class="n">bands</span><span class="p">:</span>
@@ -1454,7 +1454,7 @@
                     <span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bands</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
         <span class="k">return</span> <span class="n">SEDs</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">ChromaticRealGalaxy</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">catalog_files</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">catalog_files</span> <span class="ow">and</span>
@@ -1463,16 +1463,16 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_area_norm</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_area_norm</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.ChromaticRealGalaxy&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalog_files</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
                      <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_area_norm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.ChromaticRealGalaxy(</span><span class="si">%r</span><span class="s2">, index=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalog_files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.ChromaticRealGalaxy(</span><span class="si">%r</span><span class="s2">, SEDs=</span><span class="si">%r</span><span class="s2">, index=</span><span class="si">%r</span><span class="s2">, k_interpolant=</span><span class="si">%r</span><span class="s2">, &quot;</span>
                 <span class="s2">&quot;area_norm=</span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalog_files</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SEDs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
                                               <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_area_norm</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span></div>

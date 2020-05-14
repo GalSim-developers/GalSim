@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Interpolants &mdash; GalSim 2.2.3 documentation</title>
+  <title>Interpolants &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -188,15 +188,15 @@
 <h1>Interpolants<a class="headerlink" href="#interpolants" title="Permalink to this headline">¶</a></h1>
 <p>These classes are principally used by <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>.  They define how the surface
 brightness between pixel centers is defined from the values at the centers.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Interpolant">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Interpolant</code><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class that defines how interpolation should be done.</p>
 <p>An Interpolant is needed for an <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> to define how interpolation should be done
 an locations in between the integer pixel centers.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Interpolant.from_name">
-<em class="property">static </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.from_name" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">from_name</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.from_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.from_name" title="Permalink to this definition">¶</a></dt>
 <dd><p>A factory function to create an <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> of the correct type according to
 the (string) name of the <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a>.</p>
 <p>This is mostly used to simplify how config files specify the <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> to use.</p>
@@ -226,15 +226,15 @@ the default <code class="docutils literal notranslate"><span class="pre">conserv
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Interpolant.gsparams">
 <em class="property">property </em><code class="sig-name descname">gsparams</code><a class="headerlink" href="#galsim.Interpolant.gsparams" title="Permalink to this definition">¶</a></dt>
 <dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> of the <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a></p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Interpolant.kval">
-<code class="sig-name descname">kval</code><span class="sig-paren">(</span><em class="sig-param">k</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.kval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.kval" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">kval</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">k</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.kval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.kval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the value of the interpolant kernel in Fourier space at one or more k values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -254,27 +254,27 @@ amplitude of the Interpolant kernel in Fourier space.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Interpolant.negative_flux">
 <em class="property">property </em><code class="sig-name descname">negative_flux</code><a class="headerlink" href="#galsim.Interpolant.negative_flux" title="Permalink to this definition">¶</a></dt>
 <dd><p>The negative-flux fraction of the interpolation kernel.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Interpolant.positive_flux">
 <em class="property">property </em><code class="sig-name descname">positive_flux</code><a class="headerlink" href="#galsim.Interpolant.positive_flux" title="Permalink to this definition">¶</a></dt>
 <dd><p>The positive-flux fraction of the interpolation kernel.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Interpolant.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current interpolant with the given gsparams</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Interpolant.xval">
-<code class="sig-name descname">xval</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.xval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.xval" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">xval</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.xval"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Interpolant.xval" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the value of the interpolant kernel at one or more x values</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -296,9 +296,9 @@ amplitude of the Interpolant kernel.</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Delta">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Delta</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Delta" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Delta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Delta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
 <p>Delta-function interpolation.</p>
 <p>The interpolant for when you do not want to interpolate between samples.  It is not really
@@ -313,19 +313,19 @@ photon-shooting, where it is trivially implemented as no displacements.</p>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Delta.ixrange">
 <em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Delta.ixrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Delta.krange">
 <em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Delta.krange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Delta.xrange">
 <em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Delta.xrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
@@ -333,9 +333,9 @@ photon-shooting, where it is trivially implemented as no displacements.</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Nearest">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Nearest</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Nearest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Nearest" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Nearest</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Nearest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Nearest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
 <p>Nearest-neighbor interpolation (boxcar).</p>
 <p>The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for
@@ -351,19 +351,19 @@ necessarily the best choice in terms of accuracy).</p>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Nearest.ixrange">
 <em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Nearest.ixrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Nearest.krange">
 <em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Nearest.krange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Nearest.xrange">
 <em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Nearest.xrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
@@ -371,9 +371,9 @@ necessarily the best choice in terms of accuracy).</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Linear">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Linear</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Linear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Linear" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Linear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Linear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Linear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
 <p>Linear interpolation</p>
 <p>The linear interpolant is a poor choice for FFT-based operations on interpolated images, as
@@ -388,19 +388,19 @@ quite efficient (but not necessarily the best choice in terms of accuracy).</p>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Linear.ixrange">
 <em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Linear.ixrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Linear.krange">
 <em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Linear.krange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Linear.xrange">
 <em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Linear.xrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
@@ -408,9 +408,9 @@ quite efficient (but not necessarily the best choice in terms of accuracy).</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Cubic">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Cubic</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Cubic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cubic" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Cubic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Cubic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cubic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
 <p>Cubic interpolation</p>
 <p>The cubic interpolant is exact to 3rd order Taylor expansion (from R. G. Keys, IEEE Trans.
@@ -424,19 +424,19 @@ interpolant for interpolated images.  (See Bernstein &amp; Gruen, <a class="refe
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Cubic.ixrange">
 <em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Cubic.ixrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Cubic.krange">
 <em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Cubic.krange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Cubic.xrange">
 <em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Cubic.xrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
@@ -444,9 +444,9 @@ interpolant for interpolated images.  (See Bernstein &amp; Gruen, <a class="refe
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Quintic">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Quintic</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Quintic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Quintic" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Quintic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Quintic"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Quintic" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
 <p>Fifth order interpolation</p>
 <p>The quintic interpolant is exact to 5th order in the Taylor expansion and was found by
@@ -460,19 +460,19 @@ interpolant.</p>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Quintic.ixrange">
 <em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Quintic.ixrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Quintic.krange">
 <em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Quintic.krange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Quintic.xrange">
 <em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Quintic.xrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
@@ -480,9 +480,9 @@ interpolant.</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.SincInterpolant">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SincInterpolant</code><span class="sig-paren">(</span><em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#SincInterpolant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SincInterpolant" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">SincInterpolant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#SincInterpolant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.SincInterpolant" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
 <p>Sinc interpolation (inverse of nearest-neighbor).</p>
 <p>The Sinc interpolant (K(x) = sin(pi x)/(pi x)) is mathematically perfect for band-limited
@@ -499,19 +499,19 @@ sinc accuracy vs. speed is the <a class="reference internal" href="#galsim.Lancz
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SincInterpolant.ixrange">
 <em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.SincInterpolant.ixrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SincInterpolant.krange">
 <em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.SincInterpolant.krange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.SincInterpolant.xrange">
 <em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.SincInterpolant.xrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
@@ -519,9 +519,9 @@ sinc accuracy vs. speed is the <a class="reference internal" href="#galsim.Lancz
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Lanczos">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Lanczos</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">conserve_dc=True</em>, <em class="sig-param">tol=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Lanczos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Lanczos" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Lanczos</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em>, <em class="sig-param"><span class="n">conserve_dc</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">tol</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Lanczos"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Lanczos" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
 <p>The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n)</p>
 <p>The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff
@@ -542,31 +542,31 @@ to a constant input. [default: True, see above]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Lanczos.conserve_dc">
 <em class="property">property </em><code class="sig-name descname">conserve_dc</code><a class="headerlink" href="#galsim.Lanczos.conserve_dc" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether this interpolant is modified to improve flux conservation.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Lanczos.ixrange">
 <em class="property">property </em><code class="sig-name descname">ixrange</code><a class="headerlink" href="#galsim.Lanczos.ixrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Lanczos.krange">
 <em class="property">property </em><code class="sig-name descname">krange</code><a class="headerlink" href="#galsim.Lanczos.krange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Lanczos.n">
 <em class="property">property </em><code class="sig-name descname">n</code><a class="headerlink" href="#galsim.Lanczos.n" title="Permalink to this definition">¶</a></dt>
 <dd><p>The order of the Lanczos function.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Lanczos.xrange">
 <em class="property">property </em><code class="sig-name descname">xrange</code><a class="headerlink" href="#galsim.Lanczos.xrange" title="Permalink to this definition">¶</a></dt>
 <dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>

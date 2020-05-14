@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Bessel Functions &mdash; GalSim 2.2.3 documentation</title>
+  <title>Bessel Functions &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -190,57 +190,57 @@
 the scipy bessel functions.  However, in C++ we wanted to avoid dependencies that would
 have given us these Bessel functions, so we implemented our own.  The Python interface
 is mostly to enable unit tests that these C++ function are correct.</p>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.j0">
-<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">j0</code><span class="sig-paren">(</span><em class="sig-param">arg0: float</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.j0" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">j0</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.j0" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.j1">
-<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">j1</code><span class="sig-paren">(</span><em class="sig-param">arg0: float</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.j1" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">j1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.j1" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.jv">
-<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">jv</code><span class="sig-paren">(</span><em class="sig-param">arg0: float</em>, <em class="sig-param">arg1: float</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.jv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">jv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">arg1</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.jv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.jn">
 <code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">jn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#galsim.bessel.jn" title="Permalink to this definition">¶</a></dt>
 <dd><p>jv(arg0: float, arg1: float) -&gt; float</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.kv">
-<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">kv</code><span class="sig-paren">(</span><em class="sig-param">arg0: float</em>, <em class="sig-param">arg1: float</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.kv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">kv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">arg1</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.kv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.kn">
 <code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">kn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#galsim.bessel.kn" title="Permalink to this definition">¶</a></dt>
 <dd><p>kv(arg0: float, arg1: float) -&gt; float</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.yv">
-<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">yv</code><span class="sig-paren">(</span><em class="sig-param">arg0: float</em>, <em class="sig-param">arg1: float</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.yv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">yv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">arg1</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.yv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.yn">
 <code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">yn</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#galsim.bessel.yn" title="Permalink to this definition">¶</a></dt>
 <dd><p>yv(arg0: float, arg1: float) -&gt; float</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.iv">
-<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">iv</code><span class="sig-paren">(</span><em class="sig-param">arg0: float</em>, <em class="sig-param">arg1: float</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.iv" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">iv</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">arg1</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.iv" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.bessel.j0_root">
-<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">j0_root</code><span class="sig-paren">(</span><em class="sig-param">arg0: int</em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.j0_root" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.bessel.</code><code class="sig-name descname">j0_root</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg0</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#galsim.bessel.j0_root" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </div>

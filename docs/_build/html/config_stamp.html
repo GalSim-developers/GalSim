@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Config Stamp Field &mdash; GalSim 2.2.3 documentation</title>
+  <title>Config Stamp Field &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -250,7 +250,7 @@ to customize any aspect of the stamp-building process.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">min_snr</span></code> = <em>float_value</em> (optional) If the measured signal-to-noise ratio (using the optimal matched filter definition of S/N, measured using the signal on the stamp before noise is applied) is less than this, then reject it and start over.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_snr</span></code> = <em>float_value</em> (optional) If the measured signal-to-noise ratio is higher than this, then reject it and start over.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> = <em>bool_value</em> (optional) If this evaluates to true, then reject the current stamp and start over.  Typically, this would be a custom function that would perform some measurement on the pre-noise image.
-See <a class="reference download internal" download="" href="_downloads/f2b30d40a89c1c39718c2a64f0894b58/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a> for an examples of such a custom function.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
+See <a class="reference download internal" download="" href="_downloads/3e7227e22c28523dea1e62a3876fb445/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a> for an examples of such a custom function.  This counts as a “failure” for the purpose of the <code class="docutils literal notranslate"><span class="pre">retry_failures</span></code> count.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -279,15 +279,15 @@ to build the stamp.</p>
 <p>The class should be a subclass of <a class="reference internal" href="#galsim.config.StampBuilder" title="galsim.config.StampBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.StampBuilder</span></code></a>, which is the class used for
 the default ‘Basic’ type.  There are a number of class methods, and you only need to override
 the ones for which you want different behavior than that of the ‘Basic’ type.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.StampBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">StampBuilder</code><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for building stamp images of individual objects.</p>
 <p>The base class defines the call signatures of the methods that any derived class should follow.
 It also includes the implementation of the default stamp type: Basic.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.addNoise">
-<code class="sig-name descname">addNoise</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">image</em>, <em class="sig-param">current_var</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.addNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.addNoise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">addNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">current_var</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.addNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.addNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add the sky level and the noise to the stamp.</p>
 <dl class="simple">
 <dt>Note: This only gets called if the image type requests that the noise be added to each</dt><dd><p>stamp individually, rather than to the full image and the end.</p>
@@ -309,9 +309,9 @@ It also includes the implementation of the default stamp type: Basic.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.applySNRScale">
-<code class="sig-name descname">applySNRScale</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">prof</em>, <em class="sig-param">scale_factor</em>, <em class="sig-param">method</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.applySNRScale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.applySNRScale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">applySNRScale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">prof</span></em>, <em class="sig-param"><span class="n">scale_factor</span></em>, <em class="sig-param"><span class="n">method</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.applySNRScale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.applySNRScale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the scale_factor from getSNRScale to the image and profile.</p>
 <p>The default implementaion just multiplies each of them, but if prof is not a regular
 GSObject, then you might need to do something different.</p>
@@ -331,9 +331,9 @@ GSObject, then you might need to do something different.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.buildPSF">
-<code class="sig-name descname">buildPSF</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.buildPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.buildPSF" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">buildPSF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.buildPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.buildPSF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the PSF object.</p>
 <p>For the Basic stamp type, this builds a PSF from the base[‘psf’] dict, if present,
 else returns None.</p>
@@ -353,9 +353,9 @@ list by the galaxy object.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.buildProfile">
-<code class="sig-name descname">buildProfile</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">psf</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.buildProfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.buildProfile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">buildProfile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">psf</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.buildProfile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.buildProfile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build the surface brightness profile (a GSObject) to be drawn.</p>
 <p>For the Basic stamp type, this builds a galaxy from the base[‘gal’] dict and convolves
 it with the psf (if given).  If either the psf or the galaxy is None, then the other one
@@ -377,9 +377,9 @@ list by the galaxy object.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.draw">
-<code class="sig-name descname">draw</code><span class="sig-paren">(</span><em class="sig-param">prof</em>, <em class="sig-param">image</em>, <em class="sig-param">method</em>, <em class="sig-param">offset</em>, <em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.draw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.draw" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">draw</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prof</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">method</span></em>, <em class="sig-param"><span class="n">offset</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.draw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.draw" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw the profile on the postage stamp image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -399,9 +399,9 @@ list by the galaxy object.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.getDrawMethod">
-<code class="sig-name descname">getDrawMethod</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getDrawMethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.getDrawMethod" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getDrawMethod</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getDrawMethod"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.getDrawMethod" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the draw method to use.</p>
 <p>&#64;param config       The configuration dict for the stamp field.
 &#64;param base         The base configuration dict.
@@ -409,9 +409,9 @@ list by the galaxy object.</p></li>
 <p>&#64;returns method</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.getOffset">
-<code class="sig-name descname">getOffset</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getOffset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.getOffset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getOffset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getOffset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.getOffset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the offset to use.</p>
 <p>The base class version adds the stamp_offset, which comes from calculations related to
 world_pos and image_pos, to the field stamp.offset if any.</p>
@@ -421,9 +421,9 @@ world_pos and image_pos, to the field stamp.offset if any.</p>
 <p>&#64;returns offset</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.getSNRScale">
-<code class="sig-name descname">getSNRScale</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getSNRScale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.getSNRScale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSNRScale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getSNRScale"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.getSNRScale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the factor by which to rescale the image based on a desired S/N level.</p>
 <dl class="simple">
 <dt>Note: The default implementation does this for the gal or psf field, so if a custom</dt><dd><p>stamp builder uses some other way to get the profiles, this method should
@@ -445,9 +445,9 @@ probably be overridden.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.getSkip">
-<code class="sig-name descname">getSkip</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getSkip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.getSkip" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getSkip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.getSkip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.getSkip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initial check of whether to skip this object based on the stamp.skip field.</p>
 <p>&#64;param config       The configuration dict for the stamp field.
 &#64;param base         The base configuration dict.
@@ -455,9 +455,9 @@ probably be overridden.</p>
 <p>&#64;returns skip</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.locateStamp">
-<code class="sig-name descname">locateStamp</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">xsize</em>, <em class="sig-param">ysize</em>, <em class="sig-param">image_pos</em>, <em class="sig-param">world_pos</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.locateStamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.locateStamp" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">locateStamp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">xsize</span></em>, <em class="sig-param"><span class="n">ysize</span></em>, <em class="sig-param"><span class="n">image_pos</span></em>, <em class="sig-param"><span class="n">world_pos</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.locateStamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.locateStamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine where and how large the stamp should be.</p>
 <p>The base class version does the followin:</p>
 <ul class="simple">
@@ -482,9 +482,9 @@ Save this as base[‘stamp_offset’]</p></li>
 &#64;param logger       A logger object to log progress.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.makeStamp">
-<code class="sig-name descname">makeStamp</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">xsize</em>, <em class="sig-param">ysize</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.makeStamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.makeStamp" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">makeStamp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">xsize</span></em>, <em class="sig-param"><span class="n">ysize</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.makeStamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.makeStamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make the initial empty postage stamp image, if possible.</p>
 <p>If we don’t know xsize, ysize, return None, in which case the stamp will be created
 automatically by the drawImage command based on the natural size of the profile.</p>
@@ -504,9 +504,9 @@ automatically by the drawImage command based on the natural size of the profile.
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.makeTasks">
-<code class="sig-name descname">makeTasks</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">jobs</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.makeTasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.makeTasks" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">makeTasks</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">jobs</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.makeTasks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.makeTasks" title="Permalink to this definition">¶</a></dt>
 <dd><p>Turn a list of jobs into a list of tasks.</p>
 <p>For the Basic stamp type, there is just one job per task, so the tasks list is just:</p>
 <blockquote>
@@ -528,9 +528,9 @@ dict of parameters that includes ‘obj_num’.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.quickSkip">
-<code class="sig-name descname">quickSkip</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.quickSkip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.quickSkip" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">quickSkip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.quickSkip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.quickSkip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check whether this object should be skipped before doing any work.</p>
 <p>The base class looks for stamp.quick_skip and returns True if it is preset and
 evaluates to True.</p>
@@ -539,9 +539,9 @@ evaluates to True.</p>
 <p>&#64;returns skip</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.reject">
-<code class="sig-name descname">reject</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">prof</em>, <em class="sig-param">psf</em>, <em class="sig-param">image</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.reject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.reject" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reject</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">prof</span></em>, <em class="sig-param"><span class="n">psf</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.reject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.reject" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check to see if this object should be rejected.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -560,9 +560,9 @@ evaluates to True.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.reset">
-<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.reset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset some aspects of the config dict so the object can be rebuilt after rejecting the
 current object.</p>
 <dl class="field-list simple">
@@ -575,9 +575,9 @@ current object.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.setup">
-<code class="sig-name descname">setup</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">xsize</em>, <em class="sig-param">ysize</em>, <em class="sig-param">ignore</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.setup" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">xsize</span></em>, <em class="sig-param"><span class="n">ysize</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.setup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.setup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Do the initialization and setup for building a postage stamp.</p>
 <p>In the base class, we check for and parse the appropriate size and position values in
 config (aka base[‘stamp’] or base[‘image’].</p>
@@ -602,26 +602,26 @@ ignore here. i.e. it won’t be an error if these parameters are present.</p></l
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.setupRNG">
-<code class="sig-name descname">setupRNG</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.setupRNG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.setupRNG" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">setupRNG</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.setupRNG"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.setupRNG" title="Permalink to this definition">¶</a></dt>
 <dd><p>Setup the RNG for this object.</p>
 <p>&#64;param config       The configuration dict for the stamp field.
 &#64;param base         The base configuration dict.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.updateOrigin">
-<code class="sig-name descname">updateOrigin</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">image</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.updateOrigin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.updateOrigin" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateOrigin</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.updateOrigin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.updateOrigin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the image origin to be centered at the right place</p>
 <p>&#64;param config       The configuration dict for the stamp field.
 &#64;param base         The base configuration dict.
 &#64;param image        The postage stamp image.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.updateSkip">
-<code class="sig-name descname">updateSkip</code><span class="sig-paren">(</span><em class="sig-param">prof</em>, <em class="sig-param">image</em>, <em class="sig-param">method</em>, <em class="sig-param">offset</em>, <em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.updateSkip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.updateSkip" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">updateSkip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prof</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">method</span></em>, <em class="sig-param"><span class="n">offset</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.updateSkip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.updateSkip" title="Permalink to this definition">¶</a></dt>
 <dd><p>Before drawing the profile, see whether this object can be trivially skipped.</p>
 <p>The base method checks if the object is completely off the main image, so the
 intersection bounds will be undefined.  In this case, don’t bother drawing the
@@ -644,9 +644,9 @@ postage stamp for this object.</p>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.config.StampBuilder.whiten">
-<code class="sig-name descname">whiten</code><span class="sig-paren">(</span><em class="sig-param">prof</em>, <em class="sig-param">image</em>, <em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.whiten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.whiten" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">whiten</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">prof</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/stamp.html#StampBuilder.whiten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.StampBuilder.whiten" title="Permalink to this definition">¶</a></dt>
 <dd><p>If appropriate, whiten the resulting image according to the requested noise profile
 and the amount of noise originally present in the profile.</p>
 <dl class="field-list simple">
@@ -699,13 +699,13 @@ of valid stamp types.</p>
 </div>
 <p>For examples of custom stamps, see</p>
 <ul class="simple">
-<li><p><a class="reference download internal" download="" href="_downloads/c8d126e301f128ca2b7061ad207cb667/blend.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blend.yaml</span></code></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/c89d2f3d39fb6d561511338ec27c7757/blendset.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blendset.yaml</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/4367f7e4ac3bd200fa759755037d2ee1/blend.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blend.yaml</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/c0b7069951180c086bea3959116cfe35/blendset.yaml"><code class="xref download docutils literal notranslate"><span class="pre">blendset.yaml</span></code></a></p></li>
 </ul>
-<p>which use custom stamp types <code class="docutils literal notranslate"><span class="pre">Blend</span></code> and <code class="docutils literal notranslate"><span class="pre">BlendSet</span></code> defined in <a class="reference download internal" download="" href="_downloads/8914d4e6ad794a54b9481831181ea910/blend.py"><code class="xref download docutils literal notranslate"><span class="pre">blend.py</span></code></a>.</p>
+<p>which use custom stamp types <code class="docutils literal notranslate"><span class="pre">Blend</span></code> and <code class="docutils literal notranslate"><span class="pre">BlendSet</span></code> defined in <a class="reference download internal" download="" href="_downloads/681921cf9f726dd176544c4e473af914/blend.py"><code class="xref download docutils literal notranslate"><span class="pre">blend.py</span></code></a>.</p>
 <p>It may also be helpful to look at the GalSim implementation of the include <code class="docutils literal notranslate"><span class="pre">Ring</span></code> type:
 (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> link):</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.config.stamp_ring.RingBuilder">
 <em class="property">class </em><code class="sig-prename descclassname">galsim.config.stamp_ring.</code><code class="sig-name descname">RingBuilder</code><a class="reference internal" href="_modules/galsim/config/stamp_ring.html#RingBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.stamp_ring.RingBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.stamp.StampBuilder</span></code></p>

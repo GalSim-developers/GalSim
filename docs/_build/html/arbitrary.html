@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Aribtrary Profiles &mdash; GalSim 2.2.3 documentation</title>
+  <title>Aribtrary Profiles &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -197,9 +197,9 @@ Fourier space, or use shapelets, which are a different complete basis set, inste
 using pixels.</p>
 <div class="section" id="interpolated-images">
 <h2>Interpolated Images<a class="headerlink" href="#interpolated-images" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.InterpolatedImage">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">InterpolatedImage</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">x_interpolant=None</em>, <em class="sig-param">k_interpolant=None</em>, <em class="sig-param">normalization='flux'</em>, <em class="sig-param">scale=None</em>, <em class="sig-param">wcs=None</em>, <em class="sig-param">flux=None</em>, <em class="sig-param">pad_factor=4.0</em>, <em class="sig-param">noise_pad_size=0</em>, <em class="sig-param">noise_pad=0.0</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">pad_image=None</em>, <em class="sig-param">calculate_stepk=True</em>, <em class="sig-param">calculate_maxk=True</em>, <em class="sig-param">use_cache=True</em>, <em class="sig-param">use_true_center=True</em>, <em class="sig-param">offset=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">_force_stepk=0.0</em>, <em class="sig-param">_force_maxk=0.0</em>, <em class="sig-param">hdu=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">InterpolatedImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">x_interpolant</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">k_interpolant</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">normalization</span><span class="o">=</span><span class="default_value">'flux'</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flux</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pad_factor</span><span class="o">=</span><span class="default_value">4.0</span></em>, <em class="sig-param"><span class="n">noise_pad_size</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">noise_pad</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pad_image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">calculate_stepk</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">calculate_maxk</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">use_cache</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">use_true_center</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_force_stepk</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">_force_maxk</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class describing non-parametric profiles specified using an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, which can be
 interpolated for the purpose of carrying out transformations.</p>
@@ -406,25 +406,25 @@ select a particular HDU in the file. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.InterpolatedImage.image">
 <em class="property">property </em><code class="sig-name descname">image</code><a class="headerlink" href="#galsim.InterpolatedImage.image" title="Permalink to this definition">¶</a></dt>
 <dd><p>The underlying <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> being interpolated.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.InterpolatedImage.k_interpolant">
 <em class="property">property </em><code class="sig-name descname">k_interpolant</code><a class="headerlink" href="#galsim.InterpolatedImage.k_interpolant" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Fourier-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.InterpolatedImage.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedImage.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedImage.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.InterpolatedImage.x_interpolant">
 <em class="property">property </em><code class="sig-name descname">x_interpolant</code><a class="headerlink" href="#galsim.InterpolatedImage.x_interpolant" title="Permalink to this definition">¶</a></dt>
 <dd><p>The real-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
@@ -432,9 +432,9 @@ select a particular HDU in the file. [default: None]</p></li>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim._InterpolatedImage">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_InterpolatedImage</code><span class="sig-paren">(</span><em class="sig-param">image</em>, <em class="sig-param">x_interpolant=galsim.Quintic(gsparams=galsim.GSParams(128</em>, <em class="sig-param">8192</em>, <em class="sig-param">0.005</em>, <em class="sig-param">5.0</em>, <em class="sig-param">0.001</em>, <em class="sig-param">1e-05</em>, <em class="sig-param">1e-05</em>, <em class="sig-param">1</em>, <em class="sig-param">0.0001</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-08</em>, <em class="sig-param">1e-05))</em>, <em class="sig-param">k_interpolant=galsim.Quintic(gsparams=galsim.GSParams(128</em>, <em class="sig-param">8192</em>, <em class="sig-param">0.005</em>, <em class="sig-param">5.0</em>, <em class="sig-param">0.001</em>, <em class="sig-param">1e-05</em>, <em class="sig-param">1e-05</em>, <em class="sig-param">1</em>, <em class="sig-param">0.0001</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-06</em>, <em class="sig-param">1e-08</em>, <em class="sig-param">1e-05))</em>, <em class="sig-param">use_true_center=True</em>, <em class="sig-param">offset=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">force_stepk=0.0</em>, <em class="sig-param">force_maxk=0.0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#_InterpolatedImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._InterpolatedImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_InterpolatedImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">x_interpolant</span><span class="o">=</span><span class="default_value">galsim.Quintic(gsparams=galsim.GSParams(128, 8192, 0.005, 5.0, 0.001, 1e-05, 1e-05, 1, 0.0001, 1e-06, 1e-06, 1e-08, 1e-05))</span></em>, <em class="sig-param"><span class="n">k_interpolant</span><span class="o">=</span><span class="default_value">galsim.Quintic(gsparams=galsim.GSParams(128, 8192, 0.005, 5.0, 0.001, 1e-05, 1e-05, 1, 0.0001, 1e-06, 1e-06, 1e-08, 1e-05))</span></em>, <em class="sig-param"><span class="n">use_true_center</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">force_stepk</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">force_maxk</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#_InterpolatedImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._InterpolatedImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Approximately equivalent to <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>, but with fewer options and no sanity checks.</p>
 <p>Some notable reductions in functionality relative to <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>:</p>
 <ol class="arabic simple">
@@ -470,9 +470,9 @@ of the profile. [default: True]</p></li>
 </div>
 <div class="section" id="interpolated-fourier-space-images">
 <h2>Interpolated Fourier-space Images<a class="headerlink" href="#interpolated-fourier-space-images" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.InterpolatedKImage">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">InterpolatedKImage</code><span class="sig-paren">(</span><em class="sig-param">kimage=None</em>, <em class="sig-param">k_interpolant=None</em>, <em class="sig-param">stepk=None</em>, <em class="sig-param">gsparams=None</em>, <em class="sig-param">real_kimage=None</em>, <em class="sig-param">imag_kimage=None</em>, <em class="sig-param">real_hdu=None</em>, <em class="sig-param">imag_hdu=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">InterpolatedKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kimage</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">k_interpolant</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">stepk</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">real_kimage</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">imag_kimage</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">real_hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">imag_hdu</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class describing non-parametric profiles specified by samples of their complex Fourier
 transform.</p>
@@ -538,29 +538,29 @@ select a particular HDU in the file. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.InterpolatedKImage.k_interpolant">
 <em class="property">property </em><code class="sig-name descname">k_interpolant</code><a class="headerlink" href="#galsim.InterpolatedKImage.k_interpolant" title="Permalink to this definition">¶</a></dt>
 <dd><p>The Fourier-space <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> for this profile.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.InterpolatedKImage.kimage">
 <em class="property">property </em><code class="sig-name descname">kimage</code><a class="headerlink" href="#galsim.InterpolatedKImage.kimage" title="Permalink to this definition">¶</a></dt>
 <dd><p>The underlying <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> being interpolated.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.InterpolatedKImage.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#InterpolatedKImage.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedKImage.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim._InterpolatedKImage">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_InterpolatedKImage</code><span class="sig-paren">(</span><em class="sig-param">kimage</em>, <em class="sig-param">k_interpolant</em>, <em class="sig-param">gsparams</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#_InterpolatedKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._InterpolatedKImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_InterpolatedKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">kimage</span></em>, <em class="sig-param"><span class="n">k_interpolant</span></em>, <em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolatedimage.html#_InterpolatedKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._InterpolatedKImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Approximately equivalent to <a class="reference internal" href="#galsim.InterpolatedKImage" title="galsim.InterpolatedKImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedKImage</span></code></a>, but with fewer options and no sanity
 checks.</p>
 <dl class="field-list simple">
@@ -578,9 +578,9 @@ used.</p></li>
 </div>
 <div class="section" id="shapelet-decomposition">
 <h2>Shapelet Decomposition<a class="headerlink" href="#shapelet-decomposition" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.Shapelet">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Shapelet</code><span class="sig-paren">(</span><em class="sig-param">sigma</em>, <em class="sig-param">order</em>, <em class="sig-param">bvec=None</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Shapelet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sigma</span></em>, <em class="sig-param"><span class="n">order</span></em>, <em class="sig-param"><span class="n">bvec</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class describing polar shapelet surface brightness profiles.</p>
 <p>This class describes an arbitrary profile in terms of a shapelet decomposition.  A shapelet
@@ -636,15 +636,15 @@ all zeros]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shapelet.bvec">
 <em class="property">property </em><code class="sig-name descname">bvec</code><a class="headerlink" href="#galsim.Shapelet.bvec" title="Permalink to this definition">¶</a></dt>
 <dd><p>The vector of shapelet coefficients</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shapelet.fit">
-<em class="property">classmethod </em><code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">sigma</em>, <em class="sig-param">order</em>, <em class="sig-param">image</em>, <em class="sig-param">center=None</em>, <em class="sig-param">normalization='flux'</em>, <em class="sig-param">gsparams=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.fit" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sigma</span></em>, <em class="sig-param"><span class="n">order</span></em>, <em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">center</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">normalization</span><span class="o">=</span><span class="default_value">'flux'</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Fit for a shapelet decomposition of a given image.</p>
 <p>The optional <code class="docutils literal notranslate"><span class="pre">normalization</span></code> parameter mirrors the parameter of the <a class="reference internal" href="#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>
 class.  The following sequence should produce drawn images that are approximate matches to
@@ -680,9 +680,9 @@ N=p+q included in the decomposition.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shapelet.getNM">
-<code class="sig-name descname">getNM</code><span class="sig-paren">(</span><em class="sig-param">N</em>, <em class="sig-param">m</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getNM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.getNM" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">N</span></em>, <em class="sig-param"><span class="n">m</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getNM"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.getNM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the coefficient according to N,m rather than p,q where N=p+q and m=p-q.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -697,9 +697,9 @@ N=p+q included in the decomposition.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shapelet.getPQ">
-<code class="sig-name descname">getPQ</code><span class="sig-paren">(</span><em class="sig-param">p</em>, <em class="sig-param">q</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getPQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.getPQ" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getPQ</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">q</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.getPQ"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.getPQ" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the (p,q) coefficient.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -714,21 +714,21 @@ N=p+q included in the decomposition.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shapelet.order">
 <em class="property">property </em><code class="sig-name descname">order</code><a class="headerlink" href="#galsim.Shapelet.order" title="Permalink to this definition">¶</a></dt>
 <dd><p>The shapelet order.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shapelet.sigma">
 <em class="property">property </em><code class="sig-name descname">sigma</code><a class="headerlink" href="#galsim.Shapelet.sigma" title="Permalink to this definition">¶</a></dt>
 <dd><p>The scale size, sigma.</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.Shapelet.size">
-<em class="property">classmethod </em><code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param">order</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.size" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">size</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">order</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/shapelet.html#Shapelet.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Shapelet.size" title="Permalink to this definition">¶</a></dt>
 <dd><p>The size of the shapelet vector.</p>
 </dd></dl>
 

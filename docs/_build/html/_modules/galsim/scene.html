@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.scene &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.scene &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -188,9 +188,9 @@
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">from</span> <span class="nn">.real</span> <span class="k">import</span> <span class="n">RealGalaxy</span><span class="p">,</span> <span class="n">RealGalaxyCatalog</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.real</span> <span class="kn">import</span> <span class="n">RealGalaxy</span><span class="p">,</span> <span class="n">RealGalaxyCatalog</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <span class="c1"># Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that</span>
 <span class="c1"># GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,</span>
@@ -323,7 +323,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">use_real</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exclusion_level</span><span class="o">=</span><span class="s1">&#39;marginal&#39;</span><span class="p">,</span> <span class="n">min_hlr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_hlr</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">min_flux</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">max_flux</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">_nobjects_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -331,8 +331,8 @@
                 <span class="s2">&quot;Cannot specify both the sample and file_name.&quot;</span><span class="p">,</span>
                 <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
-        <span class="kn">from</span> <span class="nn">.real</span> <span class="k">import</span> <span class="n">_parse_files_dirs</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">.real</span> <span class="kn">import</span> <span class="n">_parse_files_dirs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">use_real</span> <span class="o">=</span> <span class="n">use_real</span>
 
         <span class="c1"># We&#39;ll set these up if and when we need them.</span>
@@ -388,7 +388,7 @@
 
 
     <span class="k">def</span> <span class="nf">_apply_exclusion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exclusion_level</span><span class="p">,</span> <span class="n">min_hlr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_hlr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">min_flux</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_flux</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">exclusion_level</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;marginal&#39;</span><span class="p">,</span> <span class="s1">&#39;bad_stamp&#39;</span><span class="p">):</span>
             <span class="c1"># First, read in what we need to impose selection criteria, if the appropriate</span>
@@ -506,7 +506,7 @@
     <span class="k">def</span> <span class="nf">getUseSample</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_sample</span>
     <span class="k">def</span> <span class="nf">getOrigIndex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">orig_index</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
     <span class="k">def</span> <span class="nf">getNTot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="p">:</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param_cat</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span>
 
 <div class="viewcode-block" id="COSMOSCatalog.makeGalaxy"><a class="viewcode-back" href="../../real_gal.html#galsim.COSMOSCatalog.makeGalaxy">[docs]</a>    <span class="k">def</span> <span class="nf">makeGalaxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gal_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chromatic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                    <span class="n">deep</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sersic_prec</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_random</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -592,7 +592,7 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_makeGalaxy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gal_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">chromatic</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                     <span class="n">deep</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sersic_prec</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_random</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">canMakeReal</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">gal_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">gal_type</span> <span class="o">=</span> <span class="s1">&#39;parametric&#39;</span>
@@ -700,8 +700,8 @@
 <span class="sd">            A single index if n_random==1 or a NumPy array containing the randomly-selected</span>
 <span class="sd">            indices if n_random&gt;1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">BaseDeviate</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
         <span class="c1"># Set up the random number generator.</span>
         <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">()</span>
@@ -731,7 +731,7 @@
                 <span class="k">return</span> <span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
     <span class="k">def</span> <span class="nf">getBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.bandpass</span> <span class="k">import</span> <span class="n">Bandpass</span>
+        <span class="kn">from</span> <span class="nn">.bandpass</span> <span class="kn">import</span> <span class="n">Bandpass</span>
         <span class="c1"># Defer making the Bandpass and reading in SEDs until we actually are going to use them.</span>
         <span class="c1"># It&#39;s not a huge calculation, but the thin() call especially isn&#39;t trivial.</span>
 
@@ -750,7 +750,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bandpass</span>
 
     <span class="k">def</span> <span class="nf">getSED</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.sed</span> <span class="k">import</span> <span class="n">SED</span>
+        <span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Read in some SEDs.  We are using some fairly truncated and thinned ones, because</span>
             <span class="c1"># in any case the SED assignment here is somewhat arbitrary and should not be taken</span>
@@ -771,9 +771,9 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_buildParametric</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">sersic_prec</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">chromatic</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">radians</span>
-        <span class="kn">from</span> <span class="nn">.exponential</span> <span class="k">import</span> <span class="n">Exponential</span>
-        <span class="kn">from</span> <span class="nn">.sersic</span> <span class="k">import</span> <span class="n">DeVaucouleurs</span><span class="p">,</span> <span class="n">Sersic</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span>
+        <span class="kn">from</span> <span class="nn">.exponential</span> <span class="kn">import</span> <span class="n">Exponential</span>
+        <span class="kn">from</span> <span class="nn">.sersic</span> <span class="kn">import</span> <span class="n">DeVaucouleurs</span><span class="p">,</span> <span class="n">Sersic</span>
         <span class="c1"># Get fit parameters.  For &#39;sersicfit&#39;, the result is an array of 8 numbers for each</span>
         <span class="c1"># galaxy:</span>
         <span class="c1">#     SERSICFIT[0]: intensity of light profile at the half-light radius.</span>
@@ -907,7 +907,7 @@
         <span class="sd">&quot;&quot;&quot;Is it permissible to call makeGalaxy with gal_type=&#39;real&#39;?&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_real</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">COSMOSCatalog</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">use_real</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">use_real</span> <span class="ow">and</span>

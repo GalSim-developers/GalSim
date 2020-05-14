@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.fits &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.fits &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -184,13 +184,13 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">future.utils</span> <span class="k">import</span> <span class="n">iteritems</span><span class="p">,</span> <span class="n">iterkeys</span><span class="p">,</span> <span class="n">itervalues</span>
-<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">iteritems</span><span class="p">,</span> <span class="n">iterkeys</span><span class="p">,</span> <span class="n">itervalues</span>
+<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="kn">import</span> <span class="n">basestring</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 
 <span class="c1">##############################################################################################</span>
@@ -232,8 +232,8 @@
     <span class="k">def</span> <span class="nf">gunzip_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
         <span class="c1"># cf. http://bugs.python.org/issue7471</span>
         <span class="kn">import</span> <span class="nn">subprocess</span>
-        <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">BytesIO</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="c1"># We use gunzip -c rather than zcat, since the latter is sometimes called gzcat</span>
         <span class="c1"># (with zcat being a symlink to uncompress instead).</span>
         <span class="c1"># Also, I&#39;d rather all these use `with subprocess.Popen(...) as p:`, but that&#39;s not</span>
@@ -263,7 +263,7 @@
     <span class="c1"># Omit them from the coverage test.</span>
     <span class="k">def</span> <span class="nf">gzip_in_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
         <span class="kn">import</span> <span class="nn">gzip</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="n">fin</span> <span class="o">=</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
         <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="s1">&#39;readonly&#39;</span><span class="p">)</span>
         <span class="c1"># pyfits doesn&#39;t actually read the file yet, so we can&#39;t close fin here.</span>
@@ -273,8 +273,8 @@
 
     <span class="k">def</span> <span class="nf">bunzip2_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">subprocess</span>
-        <span class="kn">from</span> <span class="nn">io</span> <span class="k">import</span> <span class="n">BytesIO</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="s2">&quot;bunzip2&quot;</span><span class="p">,</span> <span class="s2">&quot;-c&quot;</span><span class="p">,</span> <span class="n">file</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
                                  <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">close_fds</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -298,12 +298,12 @@
 
     <span class="k">def</span> <span class="nf">bz2_in_mem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
         <span class="kn">import</span> <span class="nn">bz2</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="n">fin</span> <span class="o">=</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
         <span class="n">hdu_list</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">fin</span><span class="p">,</span> <span class="s1">&#39;readonly&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">fin</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># We used to have multiple options for gzip and bzip2.  However, with recent versions of</span>
         <span class="c1"># astropy for the fits I/O, the in memory version should always work.  So we first</span>
         <span class="c1"># try the command line method, which is usually faster.  Then if that fails, we let</span>
@@ -315,8 +315,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">gz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gz_methods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bz2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2_methods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
             <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file</span><span class="p">)</span>
 
@@ -418,7 +418,7 @@
         <span class="k">with</span> <span class="n">bz2</span><span class="o">.</span><span class="n">BZ2File</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fout</span><span class="p">:</span>
             <span class="n">fout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Again, we used to have a number of methods here for gzip and bzip2, but now only two.</span>
         <span class="c1"># We first try using a command-line call to either gzip or bzip2.  But if that doesn&#39;t</span>
         <span class="c1"># work, we use either the gzip or bz2 module in memory, which is usually not quite as</span>
@@ -430,7 +430,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">gz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gz_methods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bz2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bz2_methods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">clobber</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">hdu_list</span><span class="p">,</span> <span class="n">clobber</span><span class="p">,</span> <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">dir</span><span class="p">:</span>
             <span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file</span><span class="p">)</span>
 
@@ -472,7 +472,7 @@
 <span class="n">_write_file</span> <span class="o">=</span> <span class="n">_WriteFile</span><span class="p">()</span>
 
 <span class="k">def</span> <span class="nf">_add_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
     <span class="k">if</span> <span class="n">pyfits_compress</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">hdu_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pyfits</span><span class="o">.</span><span class="n">PrimaryHDU</span><span class="p">())</span>  <span class="c1"># Need a blank PrimaryHDU</span>
@@ -489,7 +489,7 @@
 <span class="k">def</span> <span class="nf">_check_hdu</span><span class="p">(</span><span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">,</span> <span class="n">header_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Check that an input ``hdu`` is valid</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
     <span class="c1"># Check for fixable verify errors</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">hdu</span><span class="o">.</span><span class="n">header</span>
@@ -508,7 +508,7 @@
 
 
 <span class="k">def</span> <span class="nf">_get_hdu</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">hdu</span><span class="p">,</span> <span class="n">pyfits_compress</span><span class="p">,</span> <span class="n">header_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hdu_list</span><span class="p">,</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">HDUList</span><span class="p">):</span>
         <span class="c1"># Note: Nothing special needs to be done when reading a compressed hdu.</span>
         <span class="c1"># However, such compressed hdu&#39;s may not be the PrimaryHDU, so if we think we are</span>
@@ -594,7 +594,7 @@
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
 
     <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">iscomplex</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Cannot write complex Images to a fits file. &quot;</span>
@@ -664,7 +664,7 @@
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
 
     <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">iscomplex</span> <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">image_list</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">Image</span><span class="p">)):</span>
         <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Cannot write complex Images to a fits file. &quot;</span>
@@ -749,8 +749,8 @@
 
 <span class="sd">                        [default: &#39;auto&#39;]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
-    <span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">BoundsI</span>
+    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+    <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image_list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="n">is_all_numpy</span> <span class="o">=</span> <span class="kc">True</span>
@@ -927,7 +927,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        the image as an `Image` instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">wcs</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">wcs</span>
     <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1015,7 +1015,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        a Python list of `Image` instances.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
 
     <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
 
@@ -1099,7 +1099,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        a Python list of `Image` instances.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">wcs</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">wcs</span>
     <span class="n">file_compress</span><span class="p">,</span> <span class="n">pyfits_compress</span> <span class="o">=</span> <span class="n">_parse_compression</span><span class="p">(</span><span class="n">compression</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">file_name</span> <span class="ow">and</span> <span class="n">hdu_list</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1300,9 +1300,9 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">text_file</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="k">import</span> <span class="n">pyfits</span>
+        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
 
         <span class="k">if</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">file_name</span><span class="p">:</span>
            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
@@ -1377,23 +1377,23 @@
 
     <span class="c1"># The rest of the functions are typical non-mutating functions for a dict, for which we</span>
     <span class="c1"># generally just pass the request along to self.header.</span>
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span>
 
-    <span class="k">def</span> <span class="nf">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__delitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="fm">__iter__</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="n">key</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span> <span class="o">=</span> <span class="n">value</span>
 
@@ -1517,26 +1517,26 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="ow">not</span> <span class="n">replace</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="n">replace</span><span class="p">,</span> <span class="n">useblanks</span><span class="o">=</span><span class="n">useblanks</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(header=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(header=&lt;Header object at </span><span class="si">%s</span><span class="s2">&gt;)&quot;</span><span class="o">%</span><span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;galsim.FitsHeader(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_tag</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">FitsHeader</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">header</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())))</span></div>
 
 <span class="c1"># inject write as method of Image class</span>

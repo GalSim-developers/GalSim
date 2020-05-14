@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.table &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.table &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -186,13 +186,13 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numbers</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">convert_interpolant</span><span class="p">,</span> <span class="n">find_out_of_bounds_position</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">BoundsD</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimBoundsError</span><span class="p">,</span> <span class="n">GalSimValueError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
-<span class="kn">from</span> <span class="nn">.interpolant</span> <span class="k">import</span> <span class="n">Interpolant</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">convert_interpolant</span><span class="p">,</span> <span class="n">find_out_of_bounds_position</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsD</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimBoundsError</span><span class="p">,</span> <span class="n">GalSimValueError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.interpolant</span> <span class="kn">import</span> <span class="n">Interpolant</span>
 
 <div class="viewcode-block" id="LookupTable"><a class="viewcode-back" href="../../table.html#galsim.LookupTable">[docs]</a><span class="k">class</span> <span class="nc">LookupTable</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -268,7 +268,7 @@
 <span class="sd">                        that all inputs / outputs will still be f, it&#39;s just a question of how the</span>
 <span class="sd">                        interpolation is done. [default: False]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;spline&#39;</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;spline&#39;</span><span class="p">,</span> <span class="n">x_log</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">f_log</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">x_log</span> <span class="o">=</span> <span class="n">x_log</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">f_log</span> <span class="o">=</span> <span class="n">f_log</span>
 
@@ -347,9 +347,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_max</span>
 
-    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LookupTable.__call__"><a class="viewcode-back" href="../../table.html#galsim.LookupTable.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<div class="viewcode-block" id="LookupTable.__call__"><a class="viewcode-back" href="../../table.html#galsim.LookupTable.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Interpolate the `LookupTable` to get ``f(x)`` at some ``x`` value(s).</span>
 
 <span class="sd">        When the `LookupTable` object is called with a single argument, it returns the value at that</span>
@@ -419,7 +419,7 @@
     <span class="k">def</span> <span class="nf">isLogF</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_log</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LookupTable</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">other</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="ow">and</span>
@@ -427,9 +427,9 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">x_log</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">x_log</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">f_log</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">f_log</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">interpolant</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Cache this in case self.x, self.f are long.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.LookupTable&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_log</span><span class="p">,</span>
@@ -437,11 +437,11 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
 
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.LookupTable(x=array(</span><span class="si">%r</span><span class="s1">), f=array(</span><span class="si">%r</span><span class="s1">), interpolant=</span><span class="si">%r</span><span class="s1">, x_log=</span><span class="si">%r</span><span class="s1">, f_log=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_log</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_log</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.LookupTable(x=[</span><span class="si">%s</span><span class="s1">,...,</span><span class="si">%s</span><span class="s1">], f=[</span><span class="si">%s</span><span class="s1">,...,</span><span class="si">%s</span><span class="s1">]&#39;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span> <span class="o">!=</span> <span class="s1">&#39;spline&#39;</span><span class="p">:</span>
@@ -477,10 +477,10 @@
             <span class="kn">import</span> <span class="nn">pandas</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="c1"># version &gt;= 0.20</span>
-                <span class="kn">from</span> <span class="nn">pandas.io.common</span> <span class="k">import</span> <span class="n">CParserError</span>
+                <span class="kn">from</span> <span class="nn">pandas.io.common</span> <span class="kn">import</span> <span class="n">CParserError</span>
             <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
                 <span class="c1"># version &lt; 0.20</span>
-                <span class="kn">from</span> <span class="nn">pandas.parser</span> <span class="k">import</span> <span class="n">CParserError</span>
+                <span class="kn">from</span> <span class="nn">pandas.parser</span> <span class="kn">import</span> <span class="n">CParserError</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="n">delim_whitespace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">ImportError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="n">CParserError</span><span class="p">):</span> <span class="c1"># pragma: no cover</span>
@@ -655,7 +655,7 @@
 <span class="sd">        constant:       A constant to return when extrapolating beyond the input range and</span>
 <span class="sd">                        ``edge_mode=&#39;constant&#39;``.  [default: 0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">dfdx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dfdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">d2fdxdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">dfdx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dfdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">d2fdxdy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">interpolant</span><span class="o">=</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="n">edge_mode</span><span class="o">=</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span> <span class="n">constant</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">edge_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;raise&#39;</span><span class="p">,</span> <span class="s1">&#39;warn&#39;</span><span class="p">,</span> <span class="s1">&#39;wrap&#39;</span><span class="p">,</span> <span class="s1">&#39;constant&#39;</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Unknown edge_mode.&quot;</span><span class="p">,</span> <span class="n">edge_mode</span><span class="p">,</span>
@@ -880,7 +880,7 @@
         <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wrap_args</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_call_inbounds</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LookupTable2D.__call__"><a class="viewcode-back" href="../../table.html#galsim.LookupTable2D.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="LookupTable2D.__call__"><a class="viewcode-back" href="../../table.html#galsim.LookupTable2D.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">grid</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Interpolate at an arbitrary point or points.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1017,20 +1017,20 @@
                 <span class="n">dfdy</span> <span class="o">=</span> <span class="n">dfdy</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">dfdx</span><span class="p">,</span> <span class="n">dfdy</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.LookupTable2D(x=[</span><span class="si">%s</span><span class="s2">,...,</span><span class="si">%s</span><span class="s2">], y=[</span><span class="si">%s</span><span class="s2">,...,</span><span class="si">%s</span><span class="s2">], &quot;</span>
                 <span class="s2">&quot;f=[[</span><span class="si">%s</span><span class="s2">,...,</span><span class="si">%s</span><span class="s2">],...,[</span><span class="si">%s</span><span class="s2">,...,</span><span class="si">%s</span><span class="s2">]], interpolant=</span><span class="si">%r</span><span class="s2">, edge_mode=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_mode</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s2">&quot;galsim.LookupTable2D(x=array(</span><span class="si">%r</span><span class="s2">), y=array(</span><span class="si">%r</span><span class="s2">), &quot;</span>
                 <span class="s2">&quot;f=array(</span><span class="si">%r</span><span class="s2">), interpolant=</span><span class="si">%r</span><span class="s2">, edge_mode=</span><span class="si">%r</span><span class="s2">, constant=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_mode</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">constant</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span><span class="p">:</span> <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LookupTable2D</span><span class="p">)</span> <span class="ow">and</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">other</span><span class="o">.</span><span class="n">x</span><span class="p">)</span> <span class="ow">and</span>
@@ -1047,10 +1047,10 @@
                         <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">d2fdxdy</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">d2fdxdy</span><span class="p">))</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.LookupTable2D&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
                                <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">edge_mode</span><span class="p">,</span>

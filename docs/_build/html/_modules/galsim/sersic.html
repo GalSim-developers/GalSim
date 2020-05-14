@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.sersic &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.sersic &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -187,12 +187,12 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="k">import</span> <span class="n">GSObject</span>
-<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
 
 <div class="viewcode-block" id="Sersic"><a class="viewcode-back" href="../../gal.html#galsim.Sersic">[docs]</a><span class="k">class</span> <span class="nc">Sersic</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A class describing a Sersic profile.</span>
@@ -367,7 +367,7 @@
 
     <span class="c1"># The conversion from hlr to scale radius is complicated for Sersic, especially since we</span>
     <span class="c1"># allow it to be truncated.  So we do these calculations in the C++-layer constructor.</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">flux_untruncated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
@@ -459,7 +459,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculateHLRFactor</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hlr</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Sersic</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">n</span> <span class="ow">and</span>
@@ -468,15 +468,15 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.SBSersic&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Sersic(n=</span><span class="si">%r</span><span class="s1">, scale_radius=</span><span class="si">%r</span><span class="s1">, trunc=</span><span class="si">%r</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Note: for the repr, we use the scale_radius, since that should just flow as is through</span>
         <span class="c1"># the constructor, so it should be exact.  But most people use half_light_radius</span>
         <span class="c1"># for Sersics, so use that in the looser str() function.</span>
@@ -573,18 +573,18 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">{</span> <span class="s2">&quot;scale_radius&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s2">&quot;half_light_radius&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span> <span class="p">]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">trunc</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">flux_untruncated</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">DeVaucouleurs</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="n">half_light_radius</span><span class="p">,</span>
                                             <span class="n">scale_radius</span><span class="o">=</span><span class="n">scale_radius</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span>
                                             <span class="n">trunc</span><span class="o">=</span><span class="n">trunc</span><span class="p">,</span> <span class="n">flux_untruncated</span><span class="o">=</span><span class="n">flux_untruncated</span><span class="p">,</span>
                                             <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.DeVaucouleurs(scale_radius=</span><span class="si">%r</span><span class="s1">, trunc=</span><span class="si">%r</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scale_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.DeVaucouleurs(half_light_radius=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">half_light_radius</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trunc</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, trunc=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">trunc</span>

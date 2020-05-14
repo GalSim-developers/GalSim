@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.lensing_ps &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.lensing_ps &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -186,17 +186,17 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.angle</span> <span class="k">import</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">AngleUnit</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
-<span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">BoundsD</span><span class="p">,</span> <span class="n">BoundsI</span>
-<span class="kn">from</span> <span class="nn">.interpolant</span> <span class="k">import</span> <span class="n">Quintic</span><span class="p">,</span> <span class="n">Lanczos</span>
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageD</span>
-<span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">GaussianDeviate</span>
-<span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span><span class="p">,</span> <span class="n">LookupTable2D</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">integ</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">AngleUnit</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsD</span><span class="p">,</span> <span class="n">BoundsI</span>
+<span class="kn">from</span> <span class="nn">.interpolant</span> <span class="kn">import</span> <span class="n">Quintic</span><span class="p">,</span> <span class="n">Lanczos</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageD</span>
+<span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">GaussianDeviate</span>
+<span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span><span class="p">,</span> <span class="n">LookupTable2D</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">integ</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <div class="viewcode-block" id="theoryToObserved"><a class="viewcode-back" href="../../powerspectrum.html#galsim.theoryToObserved">[docs]</a><span class="k">def</span> <span class="nf">theoryToObserved</span><span class="p">(</span><span class="n">gamma1</span><span class="p">,</span> <span class="n">gamma2</span><span class="p">,</span> <span class="n">kappa</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Helper function to convert theoretical lensing quantities to observed ones.</span>
@@ -338,7 +338,7 @@
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delta2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">e_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">b_power_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delta2</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="n">arcsec</span><span class="p">):</span>
         <span class="c1"># Check that at least one power function is not None</span>
         <span class="k">if</span> <span class="n">e_power_function</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">b_power_function</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
@@ -371,7 +371,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">units</span> <span class="o">/</span> <span class="n">arcsec</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.PowerSpectrum(e_power_function=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, b_power_function=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span>
@@ -382,23 +382,23 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.PowerSpectrum(e_power_function=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, b_power_function=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PowerSpectrum</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">e_power_function</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">e_power_function</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">b_power_function</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">b_power_function</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">delta2</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">delta2</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_get_scale_fac</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">units</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">units</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -1296,20 +1296,20 @@
 <span class="sd">        p_B:            Equivalent to ``b_power_function`` in the documentation for the</span>
 <span class="sd">                        `PowerSpectrum` class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">,</span> <span class="n">p_E</span><span class="p">,</span> <span class="n">p_B</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">,</span> <span class="n">p_E</span><span class="p">,</span> <span class="n">p_B</span><span class="p">):</span>
         <span class="c1"># Set up the k grids in x and y, and the instance variables</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_size</span><span class="p">(</span><span class="n">ngrid</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_power</span><span class="p">(</span><span class="n">p_E</span><span class="p">,</span> <span class="n">p_B</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.lensing_ps.PowerSpectrumRealizer(ngrid=</span><span class="si">%r</span><span class="s2">, pixel_size=</span><span class="si">%r</span><span class="s2">, p_E=</span><span class="si">%r</span><span class="s2">, p_B=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_E</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_B</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.lensing_ps.PowerSpectrumRealizer(ngrid=</span><span class="si">%r</span><span class="s2">, pixel_size=</span><span class="si">%r</span><span class="s2">, p_E=</span><span class="si">%s</span><span class="s2">, p_B=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_E</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p_B</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">set_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ngrid</span><span class="p">,</span> <span class="n">pixel_size</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nx</span> <span class="o">=</span> <span class="n">ngrid</span>
@@ -1344,7 +1344,7 @@
         <span class="k">if</span> <span class="n">p_B</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="bp">self</span><span class="o">.</span><span class="n">amplitude_B</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude_B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_generate_power_array</span><span class="p">(</span><span class="n">p_B</span><span class="p">))</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_size</span>
 
-<div class="viewcode-block" id="PowerSpectrumRealizer.__call__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrumRealizer.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gd</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="PowerSpectrumRealizer.__call__"><a class="viewcode-back" href="../../powerspectrum.html#galsim.PowerSpectrumRealizer.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gd</span><span class="p">,</span> <span class="n">variance</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate a realization of the current power spectrum.</span>
 
 <span class="sd">        Parameters:</span>
@@ -1451,7 +1451,7 @@
             <span class="n">P_k</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="o">//</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">P_k</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="o">//</span><span class="mi">2</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_generate_power_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">power_function</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span>
+        <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
         <span class="c1"># Internal function to generate the result of a power function evaluated on a grid,</span>
         <span class="c1"># taking into account the symmetries.</span>
         <span class="n">power_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">ny</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nx</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
@@ -1558,21 +1558,21 @@
 <span class="k">class</span> <span class="nc">xip_integrand</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Utility class to assist in calculating the xi_+ shear correlation function from power</span>
 <span class="sd">    spectra.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pk</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pk</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pk</span> <span class="o">=</span> <span class="n">pk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">r</span>
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.bessel</span> <span class="k">import</span> <span class="n">j0</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.bessel</span> <span class="kn">import</span> <span class="n">j0</span>
         <span class="k">return</span> <span class="n">k</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">j0</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
 
 <span class="k">class</span> <span class="nc">xim_integrand</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Utility class to assist in calculating the xi_- shear correlation function from power</span>
 <span class="sd">    spectra.&quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pk</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pk</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pk</span> <span class="o">=</span> <span class="n">pk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">r</span>
-    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.bessel</span> <span class="k">import</span> <span class="n">jn</span>
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.bessel</span> <span class="kn">import</span> <span class="n">jn</span>
         <span class="k">return</span> <span class="n">k</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">*</span> <span class="n">jn</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">r</span><span class="o">*</span><span class="n">k</span><span class="p">)</span>
 </pre></div>
 

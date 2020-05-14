@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.bandpass &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.bandpass &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -184,17 +184,17 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="kn">import</span> <span class="n">basestring</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">astropy</span> <span class="k">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">astropy</span> <span class="kn">import</span> <span class="n">units</span>
 
-<span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span>
-<span class="kn">from</span> <span class="nn">.sed</span> <span class="k">import</span> <span class="n">SED</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">integ</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">meta_data</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">WeakMethod</span><span class="p">,</span> <span class="n">combine_wave_list</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
+<span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">integ</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meta_data</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">WeakMethod</span><span class="p">,</span> <span class="n">combine_wave_list</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 
 <div class="viewcode-block" id="Bandpass"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass">[docs]</a><span class="k">class</span> <span class="nc">Bandpass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Simple bandpass object, which models the transmission fraction of incident light as a</span>
@@ -271,7 +271,7 @@
 <span class="sd">                        value.  See the method `withZeropoint` for other options for how to</span>
 <span class="sd">                        set this using a particular spectrum (AB, Vega, etc.) [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">throughput</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">throughput</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="n">blue_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">red_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">zeropoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_tp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="c1"># Note that `_wave_list` acts as a private construction variable that overrides the way that</span>
         <span class="c1"># `wave_list` is normally constructed (see `Bandpass.__mul__` below)</span>
@@ -402,7 +402,7 @@
                         <span class="s2">&quot;String throughput must either be a valid filename or something that &quot;</span>
                         <span class="s2">&quot;can eval to a function of wave.</span><span class="se">\n</span><span class="s2"> Caught error: </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
-                <span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Real</span>
+                <span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Real</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">test_value</span><span class="p">,</span> <span class="n">Real</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span>
                         <span class="s2">&quot;The given throughput function did not return a valid &quot;</span>
@@ -411,7 +411,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_tp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span>
 
-    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="c1"># Watch out for 4 types of `other`:</span>
         <span class="c1"># 1.  SED: delegate to SED.__mul__(bandpass)</span>
         <span class="c1"># 2.  Bandpass: return a Bandpass, but carefully propagate blue/red limit and wave_list.</span>
@@ -447,7 +447,7 @@
 
         <span class="k">return</span> <span class="n">Bandpass</span><span class="p">(</span><span class="n">tp</span><span class="p">,</span> <span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">_wave_list</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="n">other</span>
 
     <span class="c1"># Doesn&#39;t check for divide by zero, so be careful.</span>
@@ -488,7 +488,7 @@
 
     <span class="fm">__truediv__</span> <span class="o">=</span> <span class="n">__div__</span>
 
-<div class="viewcode-block" id="Bandpass.__call__"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+<div class="viewcode-block" id="Bandpass.__call__"><a class="viewcode-back" href="../../bandpass.html#galsim.Bandpass.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return dimensionless throughput of bandpass at given wavelength in nanometers.</span>
 
 <span class="sd">        Note that outside of the wavelength range defined by the ``blue_limit`` and ``red_limit``</span>
@@ -767,7 +767,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Bandpass</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_tp</span> <span class="ow">and</span>
@@ -776,22 +776,22 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">wave_factor</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">zeropoint</span> <span class="ow">and</span>
                  <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Cache this in case self._orig_tp or self.wave_list is long.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_hash&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Bandpass&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span>
                                <span class="bp">self</span><span class="o">.</span><span class="n">wave_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.Bandpass(</span><span class="si">%r</span><span class="s1">, wave_type=</span><span class="si">%r</span><span class="s1">, blue_limit=</span><span class="si">%r</span><span class="s1">, red_limit=</span><span class="si">%r</span><span class="s1">, zeropoint=</span><span class="si">%r</span><span class="s1">, &#39;</span>
                                  <span class="s1">&#39;_wave_list=array(</span><span class="si">%r</span><span class="s1">))&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">wave_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zeropoint</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">wave_list</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">orig_tp</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orig_tp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">80</span><span class="p">:</span>
             <span class="n">orig_tp</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_tp</span><span class="p">)</span>

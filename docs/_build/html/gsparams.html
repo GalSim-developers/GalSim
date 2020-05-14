@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>The GSParams class &mdash; GalSim 2.2.3 documentation</title>
+  <title>The GSParams class &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -189,9 +189,9 @@
 <code class="docutils literal notranslate"><span class="pre">gsparams</span></code> argument, which can be used to specify various numbers that govern the tradeoff
 between accuracy and speed for the calculations made in drawing a GSObject.  The numbers are
 encapsulated in a class called <a class="reference internal" href="#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.GSParams">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GSParams</code><span class="sig-paren">(</span><em class="sig-param">minimum_fft_size=128</em>, <em class="sig-param">maximum_fft_size=8192</em>, <em class="sig-param">folding_threshold=0.005</em>, <em class="sig-param">stepk_minimum_hlr=5</em>, <em class="sig-param">maxk_threshold=0.001</em>, <em class="sig-param">kvalue_accuracy=1e-05</em>, <em class="sig-param">xvalue_accuracy=1e-05</em>, <em class="sig-param">table_spacing=1</em>, <em class="sig-param">realspace_relerr=0.0001</em>, <em class="sig-param">realspace_abserr=1e-06</em>, <em class="sig-param">integration_relerr=1e-06</em>, <em class="sig-param">integration_abserr=1e-08</em>, <em class="sig-param">shoot_accuracy=1e-05</em>, <em class="sig-param">allowed_flux_variation=0.81</em>, <em class="sig-param">range_division_for_extrema=32</em>, <em class="sig-param">small_fraction_of_flux=0.0001</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">minimum_fft_size</span><span class="o">=</span><span class="default_value">128</span></em>, <em class="sig-param"><span class="n">maximum_fft_size</span><span class="o">=</span><span class="default_value">8192</span></em>, <em class="sig-param"><span class="n">folding_threshold</span><span class="o">=</span><span class="default_value">0.005</span></em>, <em class="sig-param"><span class="n">stepk_minimum_hlr</span><span class="o">=</span><span class="default_value">5</span></em>, <em class="sig-param"><span class="n">maxk_threshold</span><span class="o">=</span><span class="default_value">0.001</span></em>, <em class="sig-param"><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">xvalue_accuracy</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">table_spacing</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">realspace_relerr</span><span class="o">=</span><span class="default_value">0.0001</span></em>, <em class="sig-param"><span class="n">realspace_abserr</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">integration_relerr</span><span class="o">=</span><span class="default_value">1e-06</span></em>, <em class="sig-param"><span class="n">integration_abserr</span><span class="o">=</span><span class="default_value">1e-08</span></em>, <em class="sig-param"><span class="n">shoot_accuracy</span><span class="o">=</span><span class="default_value">1e-05</span></em>, <em class="sig-param"><span class="n">allowed_flux_variation</span><span class="o">=</span><span class="default_value">0.81</span></em>, <em class="sig-param"><span class="n">range_division_for_extrema</span><span class="o">=</span><span class="default_value">32</span></em>, <em class="sig-param"><span class="n">small_fraction_of_flux</span><span class="o">=</span><span class="default_value">0.0001</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>GSParams stores a set of numbers that govern how a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> makes various speed/accuracy
 tradeoff decisions.</p>
 <p>All <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> classes can take an optional parameter named <code class="docutils literal notranslate"><span class="pre">gsparams</span></code>, which would be an
@@ -285,17 +285,17 @@ most this much. [default: 1.e-5]</p></li>
 </dd>
 </dl>
 <p>After construction, all of the above parameters are available as read-only attributes.</p>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSParams.check">
-<em class="property">static </em><code class="sig-name descname">check</code><span class="sig-paren">(</span><em class="sig-param">gsparams</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.check" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">check</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">default</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.check"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.check" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks that gsparams is either a valid GSParams instance or None.</p>
 <p>In the former case, it returns gsparams, in the latter it returns default
 (GSParams.default if no other default specified).</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.GSParams.combine">
-<em class="property">static </em><code class="sig-name descname">combine</code><span class="sig-paren">(</span><em class="sig-param">gsp_list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.combine" title="Permalink to this definition">¶</a></dt>
+<em class="property">static </em><code class="sig-name descname">combine</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsp_list</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsparams.html#GSParams.combine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSParams.combine" title="Permalink to this definition">¶</a></dt>
 <dd><p>Combine a list of <a class="reference internal" href="#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> instances using the most restrictive parameter from each.</p>
 <p>Uses the minimum value for most parameters. For the following parameters, it uses the
 maximum numerical value: minimum_fft_size, maximum_fft_size, stepk_minimum_hlr.</p>

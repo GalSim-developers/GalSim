@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>coord.angle &mdash; GalSim 2.2.3 documentation</title>
+  <title>coord.angle &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -189,7 +189,7 @@
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.angleunit</span> <span class="k">import</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">arcmin</span><span class="p">,</span> <span class="n">arcsec</span>
+<span class="kn">from</span> <span class="nn">.angleunit</span> <span class="kn">import</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">arcmin</span><span class="p">,</span> <span class="n">arcsec</span>
 
 <div class="viewcode-block" id="Angle"><a class="viewcode-back" href="../../units.html#galsim.Angle">[docs]</a><span class="k">class</span> <span class="nc">Angle</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class representing an Angle.  Angles are a value with an AngleUnit.</span>
@@ -317,7 +317,7 @@
 <span class="sd">        There is also an option to wrap into a different 2 pi range if so desired by specifying</span>
 <span class="sd">        the center of the range.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param theta:   The numerical value of the angle.</span>
 <span class="sd">        :param unit:    The units theta is measured in.</span>
@@ -351,20 +351,20 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span> <span class="o">/</span> <span class="n">degrees</span>
 
-    <span class="k">def</span> <span class="nf">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot add </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> to an Angle&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot subtract </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> from an Angle&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span> <span class="o">-</span> <span class="n">other</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">other</span> <span class="o">!=</span> <span class="nb">float</span><span class="p">(</span><span class="n">other</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply Angle by </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">_Angle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span> <span class="o">*</span> <span class="n">other</span><span class="p">)</span>
@@ -442,39 +442,39 @@
         <span class="n">coord</span><span class="o">.</span><span class="n">_lib</span><span class="o">.</span><span class="n">coord_sincos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">_ffi</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="s1">&#39;double*&#39;</span><span class="p">,</span> <span class="n">sc</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">sc</span></div>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; radians&#39;</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;coord.Angle(</span><span class="si">%r</span><span class="s1">, coord.radians)&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">rad</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">Angle</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">rad</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">rad</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__le__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot compare </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> to an Angle&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rad</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">_rad</span>
 
-    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot compare </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> to an Angle&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rad</span> <span class="o">&lt;</span> <span class="n">other</span><span class="o">.</span><span class="n">_rad</span>
 
-    <span class="k">def</span> <span class="nf">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ge__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot compare </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> to an Angle&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rad</span> <span class="o">&gt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">_rad</span>
 
-    <span class="k">def</span> <span class="nf">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__gt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot compare </span><span class="si">%s</span><span class="s2"> of type </span><span class="si">%s</span><span class="s2"> to an Angle&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rad</span> <span class="o">&gt;</span> <span class="n">other</span><span class="o">.</span><span class="n">_rad</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s1">&#39;coord.Angle&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rad</span><span class="p">))</span>
 
     <span class="nd">@staticmethod</span>

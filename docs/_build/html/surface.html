@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Surface Operators &mdash; GalSim 2.2.3 documentation</title>
+  <title>Surface Operators &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -178,9 +178,9 @@
             
   <div class="section" id="surface-operators">
 <h1>Surface Operators<a class="headerlink" href="#surface-operators" title="Permalink to this headline">¶</a></h1>
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.WavelengthSampler">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">WavelengthSampler</code><span class="sig-paren">(</span><em class="sig-param">sed</em>, <em class="sig-param">bandpass</em>, <em class="sig-param">rng=None</em>, <em class="sig-param">npoints=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WavelengthSampler" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">WavelengthSampler</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sed</span></em>, <em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">npoints</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WavelengthSampler" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
 array of a <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a>.</p>
 <dl class="field-list simple">
@@ -197,17 +197,17 @@ tables. [default: None, which uses the <a class="reference internal" href="devia
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.WavelengthSampler.applyTo">
-<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">photon_array</em>, <em class="sig-param">local_wcs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WavelengthSampler.applyTo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon_array</span></em>, <em class="sig-param"><span class="n">local_wcs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#WavelengthSampler.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WavelengthSampler.applyTo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign wavelengths to the photons sampled from the SED * Bandpass.</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.FRatioAngles">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">FRatioAngles</code><span class="sig-paren">(</span><em class="sig-param">fratio</em>, <em class="sig-param">obscuration=0.0</em>, <em class="sig-param">rng=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FRatioAngles" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">FRatioAngles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">fratio</span></em>, <em class="sig-param"><span class="n">obscuration</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FRatioAngles" title="Permalink to this definition">¶</a></dt>
 <dd><p>A surface-layer operator that assigns photon directions based on the f/ratio and
 obscuration.</p>
 <p>Assigns arrival directions at the focal plane for photons, drawing from a uniform
@@ -225,17 +225,17 @@ will be automatically constructed for you. [default: None]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.FRatioAngles.applyTo">
-<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">photon_array</em>, <em class="sig-param">local_wcs=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FRatioAngles.applyTo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon_array</span></em>, <em class="sig-param"><span class="n">local_wcs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#FRatioAngles.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.FRatioAngles.applyTo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign directions to the photons in photon_array.</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="galsim.PhotonDCR">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PhotonDCR</code><span class="sig-paren">(</span><em class="sig-param">base_wavelength</em>, <em class="sig-param">scale_unit=coord.arcsec</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhotonDCR" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PhotonDCR</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">base_wavelength</span></em>, <em class="sig-param"><span class="n">scale_unit</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhotonDCR" title="Permalink to this definition">¶</a></dt>
 <dd><p>A surface-layer operator that applies the effect of differential chromatic refraction (DCR)
 and optionally the chromatic dilation due to atmospheric seeing.</p>
 <p>Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence
@@ -293,9 +293,9 @@ from North through East.  [default: 0]</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="method">
+<dl class="py method">
 <dt id="galsim.PhotonDCR.applyTo">
-<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param">photon_array</em>, <em class="sig-param">local_wcs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhotonDCR.applyTo" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon_array</span></em>, <em class="sig-param"><span class="n">local_wcs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonDCR.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhotonDCR.applyTo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Apply the DCR effect to the photons</p>
 </dd></dl>
 

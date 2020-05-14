@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Config Objects &mdash; GalSim 2.2.3 documentation</title>
+  <title>Config Objects &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-        <script type="text/javascript" src="_static/jquery.js"></script>
-        <script type="text/javascript" src="_static/underscore.js"></script>
-        <script type="text/javascript" src="_static/doctools.js"></script>
-        <script type="text/javascript" src="_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -545,7 +545,7 @@ to build a GalSim <a class="reference internal" href="gsobject.html#galsim.GSObj
     <span class="c1"># Probably something complicated that you want this function to do.</span>
     <span class="n">gsobject</span> <span class="o">=</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
 
-    <span class="n">safe</span> <span class="o">=</span> <span class="bp">False</span>  <span class="c1"># typically, but set to True if this object is safe to reuse.</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># typically, but set to True if this object is safe to reuse.</span>
     <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
 </pre></div>
 </div>
@@ -558,9 +558,9 @@ be the value of the <code class="docutils literal notranslate"><span class="pre"
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;CustomObject&#39;</span><span class="p">,</span> <span class="n">BuildCustomObject</span><span class="p">)</span>
 </pre></div>
 </div>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.RegisterObjectType">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterObjectType</code><span class="sig-paren">(</span><em class="sig-param">type_name</em>, <em class="sig-param">build_func</em>, <em class="sig-param">input_type=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#RegisterObjectType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterObjectType" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterObjectType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type_name</span></em>, <em class="sig-param"><span class="n">build_func</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#RegisterObjectType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterObjectType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register an object type for use by the config apparatus.</p>
 <p>A few notes about the signature of the build functions:</p>
 <ol class="arabic simple">
@@ -633,32 +633,32 @@ of valid object types.</p>
     <span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
-<p>For examples of custom objects, see <a class="reference download internal" download="" href="_downloads/ef4d4b2a9f3e43d906482181df88f248/des_psfex.py"><code class="xref download docutils literal notranslate"><span class="pre">des_psfex.py</span></code></a>
-and <a class="reference download internal" download="" href="_downloads/0fd71245fa1a5910535140e136ac1b61/des_shapelet.py"><code class="xref download docutils literal notranslate"><span class="pre">des_shapelet.py</span></code></a>
-in the galsim.des module, which define custom object types DES_PSFEx and DES_Shapelet.  These objects are used by <a class="reference download internal" download="" href="_downloads/46c5dd7b07579c6dff7a9d685ec2532e/draw_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">draw_psf.yaml</span></code></a>
+<p>For examples of custom objects, see <a class="reference download internal" download="" href="_downloads/d2574d3e5aa6aa81be9c4a27f2b0427e/des_psfex.py"><code class="xref download docutils literal notranslate"><span class="pre">des_psfex.py</span></code></a>
+and <a class="reference download internal" download="" href="_downloads/0ff6de0efbe668635267328159d0805b/des_shapelet.py"><code class="xref download docutils literal notranslate"><span class="pre">des_shapelet.py</span></code></a>
+in the galsim.des module, which define custom object types DES_PSFEx and DES_Shapelet.  These objects are used by <a class="reference download internal" download="" href="_downloads/d5ef2e30b6c3574e6f3623a21cde6c18/draw_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">draw_psf.yaml</span></code></a>
 in the <code class="docutils literal notranslate"><span class="pre">GalSim/examples/des</span></code> directory.
 It may also be helpful to look at the GalSim implementation of some of the included object builders (click on the <code class="docutils literal notranslate"><span class="pre">[source]</span></code> links):</p>
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.gsobject._BuildAdd">
-<code class="sig-prename descclassname">galsim.config.gsobject.</code><code class="sig-name descname">_BuildAdd</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">ignore</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildAdd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.gsobject._BuildAdd" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.gsobject.</code><code class="sig-name descname">_BuildAdd</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildAdd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.gsobject._BuildAdd" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a Sum object.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.gsobject._BuildConvolve">
-<code class="sig-prename descclassname">galsim.config.gsobject.</code><code class="sig-name descname">_BuildConvolve</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">ignore</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildConvolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.gsobject._BuildConvolve" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.gsobject.</code><code class="sig-name descname">_BuildConvolve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildConvolve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.gsobject._BuildConvolve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a Convolution object.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.gsobject._BuildList">
-<code class="sig-prename descclassname">galsim.config.gsobject.</code><code class="sig-name descname">_BuildList</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">ignore</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.gsobject._BuildList" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.gsobject.</code><code class="sig-name descname">_BuildList</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.gsobject._BuildList" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a GSObject selected from a List.</p>
 </dd></dl>
 
-<dl class="function">
+<dl class="py function">
 <dt id="galsim.config.gsobject._BuildOpticalPSF">
-<code class="sig-prename descclassname">galsim.config.gsobject.</code><code class="sig-name descname">_BuildOpticalPSF</code><span class="sig-paren">(</span><em class="sig-param">config</em>, <em class="sig-param">base</em>, <em class="sig-param">ignore</em>, <em class="sig-param">gsparams</em>, <em class="sig-param">logger</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildOpticalPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.gsobject._BuildOpticalPSF" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.gsobject.</code><code class="sig-name descname">_BuildOpticalPSF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">gsparams</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/gsobject.html#_BuildOpticalPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.gsobject._BuildOpticalPSF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build an OpticalPSF.</p>
 </dd></dl>
 

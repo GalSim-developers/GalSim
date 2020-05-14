@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.hsm &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.hsm &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -186,13 +186,13 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="k">import</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">.bounds</span> <span class="k">import</span> <span class="n">BoundsI</span>
-<span class="kn">from</span> <span class="nn">.shear</span> <span class="k">import</span> <span class="n">Shear</span>
-<span class="kn">from</span> <span class="nn">.image</span> <span class="k">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageI</span><span class="p">,</span> <span class="n">ImageF</span><span class="p">,</span> <span class="n">ImageD</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimHSMError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
+<span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
+<span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageI</span><span class="p">,</span> <span class="n">ImageF</span><span class="p">,</span> <span class="n">ImageD</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimHSMError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">convert_cpp_errors</span>
 
 
 <div class="viewcode-block" id="ShapeData"><a class="viewcode-back" href="../../hsm.html#galsim.hsm.ShapeData">[docs]</a><span class="k">class</span> <span class="nc">ShapeData</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -263,7 +263,7 @@
 <span class="sd">    routines that measure object moments (`FindAdaptiveMom`) and carry out PSF correction</span>
 <span class="sd">    (`EstimateShear`).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_bounds</span><span class="o">=</span><span class="n">BoundsI</span><span class="p">(),</span> <span class="n">moments_status</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image_bounds</span><span class="o">=</span><span class="n">BoundsI</span><span class="p">(),</span> <span class="n">moments_status</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">observed_shape</span><span class="o">=</span><span class="n">Shear</span><span class="p">(),</span> <span class="n">moments_sigma</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">moments_amp</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">moments_centroid</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(),</span> <span class="n">moments_rho4</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">moments_n_iter</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                  <span class="n">correction_status</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">corrected_e1</span><span class="o">=-</span><span class="mf">10.</span><span class="p">,</span> <span class="n">corrected_e2</span><span class="o">=-</span><span class="mf">10.</span><span class="p">,</span>
@@ -342,7 +342,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">error_message</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.hsm.ShapeData(&#39;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;image_bounds=</span><span class="si">%r</span><span class="s1">, &#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">image_bounds</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_status</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;moments_status=</span><span class="si">%r</span><span class="s1">, &#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">moments_status</span>
@@ -370,11 +370,11 @@
         <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
         <span class="k">return</span> <span class="n">s</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span><span class="n">ShapeData</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.hsm.ShapeData&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span> <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.hsm.ShapeData&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
 
     <span class="k">def</span> <span class="nf">_getinitargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_bounds</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">moments_status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">observed_shape</span><span class="p">,</span>
@@ -493,7 +493,7 @@
 
 <span class="sd">    After construction, all of the above are available as read-only attributes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsig_rg</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">nsig_rg2</span><span class="o">=</span><span class="mf">3.6</span><span class="p">,</span> <span class="n">max_moment_nsig2</span><span class="o">=</span><span class="mf">25.0</span><span class="p">,</span> <span class="n">regauss_too_small</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nsig_rg</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">nsig_rg2</span><span class="o">=</span><span class="mf">3.6</span><span class="p">,</span> <span class="n">max_moment_nsig2</span><span class="o">=</span><span class="mf">25.0</span><span class="p">,</span> <span class="n">regauss_too_small</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                  <span class="n">adapt_order</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">convergence_threshold</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span> <span class="n">max_mom2_iter</span><span class="o">=</span><span class="mi">400</span><span class="p">,</span>
                  <span class="n">num_iter_default</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">bound_correct_wt</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">max_amoment</span><span class="o">=</span><span class="mf">8000.</span><span class="p">,</span> <span class="n">max_ashift</span><span class="o">=</span><span class="mf">15.</span><span class="p">,</span>
                  <span class="n">ksb_moments_max</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">ksb_sig_weight</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">ksb_sig_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">failed_moments</span><span class="o">=-</span><span class="mf">1000.</span><span class="p">):</span>
@@ -571,15 +571,15 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">hsmparams</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.hsm.HSMParams(&#39;</span> <span class="o">+</span> <span class="mi">14</span><span class="o">*</span><span class="s1">&#39;</span><span class="si">%r</span><span class="s1">,&#39;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">HSMParams</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s1">&#39;galsim.hsm.HSMParams&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

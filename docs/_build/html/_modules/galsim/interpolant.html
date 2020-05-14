@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.interpolant &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.interpolant &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -186,12 +186,12 @@
 
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="k">import</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="kn">import</span> <span class="n">basestring</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="k">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">lazy_property</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
 
 <div class="viewcode-block" id="Interpolant"><a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant">[docs]</a><span class="k">class</span> <span class="nc">Interpolant</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A base class that defines how interpolation should be done.</span>
@@ -199,7 +199,7 @@
 <span class="sd">    An Interpolant is needed for an `InterpolatedImage` to define how interpolation should be done</span>
 <span class="sd">    an locations in between the integer pixel centers.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
             <span class="s2">&quot;The Interpolant base class should not be instantiated directly. &quot;</span>
             <span class="s2">&quot;Use one of the subclasses instead, or use the `from_name` factory function.&quot;</span><span class="p">)</span>
@@ -231,7 +231,7 @@
 <span class="sd">            gsparams:   An optional `GSParams` argument. [default: None]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;gsparams=GSParams(kvalue_accuracy=tol)&#39;</span><span class="p">)</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
@@ -283,7 +283,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">tol</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+        <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
         <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;interpolant.tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;interpolant.gsparams.kvalue_accuracy&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">kvalue_accuracy</span>
 
@@ -291,7 +291,7 @@
         <span class="sd">&quot;&quot;&quot;Create a version of the current interpolant with the given gsparams</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="k">import</span> <span class="n">copy</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
@@ -304,13 +304,13 @@
     <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Interpolant.xval"><a class="viewcode-back" href="../../interpolant.html#galsim.Interpolant.xval">[docs]</a>    <span class="k">def</span> <span class="nf">xval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
@@ -371,9 +371,9 @@
 <span class="sd">        tol:        [deprecated]</span>
 <span class="sd">        gsparams:   An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;gsparams=GSParams(kvalue_accuracy=tol)&#39;</span><span class="p">)</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
@@ -383,10 +383,10 @@
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Delta</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Delta(gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Delta()&quot;</span>
 
     <span class="nd">@property</span>
@@ -421,9 +421,9 @@
 <span class="sd">        tol:        [deprecated]</span>
 <span class="sd">        gsparams:   An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;gsparams=GSParams(kvalue_accuracy=tol)&#39;</span><span class="p">)</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
@@ -433,10 +433,10 @@
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Nearest</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Nearest(gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Nearest()&quot;</span>
 
     <span class="nd">@property</span>
@@ -472,9 +472,9 @@
 <span class="sd">        tol:        [deprecated]</span>
 <span class="sd">        gsparams:   An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;gsparams=GSParams(kvalue_accuracy=tol)&#39;</span><span class="p">)</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
@@ -484,10 +484,10 @@
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SincInterpolant</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.SincInterpolant(gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.SincInterpolant()&quot;</span>
 
     <span class="nd">@property</span>
@@ -522,9 +522,9 @@
 <span class="sd">        tol:        [deprecated]</span>
 <span class="sd">        gsparams:   An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;gsparams=GSParams(kvalue_accuracy=tol)&#39;</span><span class="p">)</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
@@ -534,10 +534,10 @@
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Linear(gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Linear()&quot;</span>
 
     <span class="nd">@property</span>
@@ -571,9 +571,9 @@
 <span class="sd">        tol:        [deprecated]</span>
 <span class="sd">        gsparams:   An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;gsparams=GSParams(kvalue_accuracy=tol)&#39;</span><span class="p">)</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
@@ -583,10 +583,10 @@
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Cubic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Cubic(gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Cubic()&quot;</span>
 
     <span class="nd">@property</span>
@@ -620,9 +620,9 @@
 <span class="sd">        tol:        [deprecated]</span>
 <span class="sd">        gsparams:   An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;gsparams=GSParams(kvalue_accuracy=tol)&#39;</span><span class="p">)</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
@@ -632,10 +632,10 @@
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Quintic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Quintic(gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Quintic()&quot;</span>
 
     <span class="nd">@property</span>
@@ -677,9 +677,9 @@
 <span class="sd">        tol:            [deprecated]</span>
 <span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">conserve_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">conserve_dc</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">tol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="k">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">galsim.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
             <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;tol&#39;</span><span class="p">,</span> <span class="mf">2.2</span><span class="p">,</span> <span class="s1">&#39;gsparams=GSParams(kvalue_accuracy=tol)&#39;</span><span class="p">)</span>
             <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="o">=</span><span class="n">tol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
@@ -691,10 +691,10 @@
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Lanczos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conserve_dc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Lanczos(</span><span class="si">%r</span><span class="s2">, </span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conserve_dc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.Lanczos(</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_n</span><span class="p">)</span>
 
     <span class="nd">@property</span>

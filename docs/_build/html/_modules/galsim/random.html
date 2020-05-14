@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>galsim.random &mdash; GalSim 2.2.3 documentation</title>
+  <title>galsim.random &mdash; GalSim 2.2.4 documentation</title>
   
 
   
@@ -21,11 +21,11 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
-        <script type="text/javascript" src="../../_static/jquery.js"></script>
-        <script type="text/javascript" src="../../_static/underscore.js"></script>
-        <script type="text/javascript" src="../../_static/doctools.js"></script>
-        <script type="text/javascript" src="../../_static/language_data.js"></script>
-        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
@@ -187,10 +187,10 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">weakref</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_galsim</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="k">import</span> <span class="n">convert_cpp_errors</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="k">import</span> <span class="n">isinteger</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">isinteger</span>
 
 <div class="viewcode-block" id="BaseDeviate"><a class="viewcode-back" href="../../deviate.html#galsim.BaseDeviate">[docs]</a><span class="k">class</span> <span class="nc">BaseDeviate</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base class for all the various random deviates.</span>
@@ -234,7 +234,7 @@
 <span class="sd">        &gt;&gt;&gt; ud2()</span>
 <span class="sd">        0.58736140513792634</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">BaseDeviateImpl</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span> <span class="o">=</span> <span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -371,14 +371,14 @@
             <span class="c1"># array_1d is not a view into the original array.  Need to copy back.</span>
             <span class="n">np</span><span class="o">.</span><span class="n">copyto</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_1d</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">casting</span><span class="o">=</span><span class="s1">&#39;unsafe&#39;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_rng_type</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_rng_args</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">serialize</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">serialize</span><span class="p">()))</span>
 
-    <span class="k">def</span> <span class="nf">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
     <span class="fm">__hash__</span> <span class="o">=</span> <span class="kc">None</span>
@@ -390,10 +390,10 @@
         <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">serialize</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="o">+</span><span class="s2">&quot; ... &quot;</span><span class="o">+</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:])</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.BaseDeviate(</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.BaseDeviate(</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="UniformDeviate"><a class="viewcode-back" href="../../deviate.html#galsim.UniformDeviate">[docs]</a><span class="k">class</span> <span class="nc">UniformDeviate</span><span class="p">(</span><span class="n">BaseDeviate</span><span class="p">):</span>
@@ -414,21 +414,21 @@
 <span class="sd">                    [default: None]</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">UniformDeviateImpl</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span> <span class="o">=</span> <span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
 
-<div class="viewcode-block" id="UniformDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.UniformDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UniformDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.UniformDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draw a new random number from the distribution.</span>
 
 <span class="sd">        Returns a uniform deviate between 0 and 1.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">generate1</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.UniformDeviate(seed=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">())</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.UniformDeviate()&#39;</span></div>
 
 
@@ -453,7 +453,7 @@
 <span class="sd">        mean:       Mean of Gaussian distribution. [default: 0.]</span>
 <span class="sd">        sigma:      Sigma of Gaussian distribution. [default: 1.; Must be &gt; 0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">sigma</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;GaussianDeviate sigma must be &gt; 0.&quot;</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">GaussianDeviateImpl</span>
@@ -472,7 +472,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-<div class="viewcode-block" id="GaussianDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.GaussianDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GaussianDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.GaussianDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draw a new random number from the distribution.</span>
 
 <span class="sd">        Returns a Gaussian deviate with the given mean and sigma.</span>
@@ -490,10 +490,10 @@
             <span class="c1"># array_1d is not a view into the original array.  Need to copy back.</span>
             <span class="n">np</span><span class="o">.</span><span class="n">copyto</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_1d</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">casting</span><span class="o">=</span><span class="s1">&#39;unsafe&#39;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.GaussianDeviate(seed=</span><span class="si">%r</span><span class="s1">, mean=</span><span class="si">%r</span><span class="s1">, sigma=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.GaussianDeviate(mean=</span><span class="si">%r</span><span class="s1">, sigma=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span></div>
 
 
@@ -520,7 +520,7 @@
 <span class="sd">        N:          The number of &#39;coin flips&#39; per trial. [default: 1; Must be &gt; 0]</span>
 <span class="sd">        p:          The probability of success per coin flip. [default: 0.5; Must be &gt; 0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">BinomialDeviateImpl</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span> <span class="o">=</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">N</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -537,16 +537,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-<div class="viewcode-block" id="BinomialDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.BinomialDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="BinomialDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.BinomialDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draw a new random number from the distribution.</span>
 
 <span class="sd">        Returns a Binomial deviate with the given n and p.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">generate1</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.BinomialDeviate(seed=</span><span class="si">%r</span><span class="s1">, N=</span><span class="si">%r</span><span class="s1">, p=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.BinomialDeviate(N=</span><span class="si">%r</span><span class="s1">, p=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">p</span><span class="p">)</span></div>
 
 
@@ -572,7 +572,7 @@
 <span class="sd">                    [default: None]</span>
 <span class="sd">        mean:       Mean of the distribution. [default: 1; Must be &gt; 0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mean</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;PoissonDeviate is only defined for mean &gt;= 0.&quot;</span><span class="p">,</span> <span class="n">mean</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PoissonDeviateImpl</span>
@@ -585,7 +585,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-<div class="viewcode-block" id="PoissonDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.PoissonDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="PoissonDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.PoissonDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draw a new random number from the distribution.</span>
 
 <span class="sd">        Returns a Poisson deviate with the given mean.</span>
@@ -605,9 +605,9 @@
             <span class="c1"># array_1d is not a view into the original array.  Need to copy back.</span>
             <span class="n">np</span><span class="o">.</span><span class="n">copyto</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">array_1d</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">casting</span><span class="o">=</span><span class="s1">&#39;unsafe&#39;</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.PoissonDeviate(seed=</span><span class="si">%r</span><span class="s1">, mean=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.PoissonDeviate(mean=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span></div>
 
 
@@ -637,7 +637,7 @@
 <span class="sd">        a:          Shape parameter of the distribution. [default: 1; Must be &gt; 0]</span>
 <span class="sd">        b:          Scale parameter of the distribution. [default: 1; Must be &gt; 0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">WeibullDeviateImpl</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -654,16 +654,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-<div class="viewcode-block" id="WeibullDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.WeibullDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="WeibullDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.WeibullDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draw a new random number from the distribution.</span>
 
 <span class="sd">        Returns a Weibull-distributed deviate with the given shape parameters a and b.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">generate1</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.WeibullDeviate(seed=</span><span class="si">%r</span><span class="s1">, a=</span><span class="si">%r</span><span class="s1">, b=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.WeibullDeviate(a=</span><span class="si">%r</span><span class="s1">, b=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="p">)</span></div>
 
 
@@ -689,7 +689,7 @@
 <span class="sd">        k:          Shape parameter of the distribution. [default: 1; Must be &gt; 0]</span>
 <span class="sd">        theta:      Scale parameter of the distribution. [default: 1; Must be &gt; 0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">GammaDeviateImpl</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">theta</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -706,17 +706,17 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-<div class="viewcode-block" id="GammaDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.GammaDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="GammaDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.GammaDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draw a new random number from the distribution.</span>
 
 <span class="sd">        Returns a Gamma-distributed deviate with the given k and theta.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">generate1</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.GammaDeviate(seed=</span><span class="si">%r</span><span class="s1">, k=</span><span class="si">%r</span><span class="s1">, theta=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.GammaDeviate(k=</span><span class="si">%r</span><span class="s1">, theta=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span></div>
 
 
@@ -743,7 +743,7 @@
 <span class="sd">        n:          Number of degrees of freedom for the output distribution. [default: 1;</span>
 <span class="sd">                    Must be &gt; 0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Chi2DeviateImpl</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">),)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
@@ -754,16 +754,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng_args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-<div class="viewcode-block" id="Chi2Deviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.Chi2Deviate.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Chi2Deviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.Chi2Deviate.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draw a new random number from the distribution.</span>
 
 <span class="sd">        Returns a Chi2-distributed deviate with the given number of degrees of freedom.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">generate1</span><span class="p">()</span></div>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Chi2Deviate(seed=</span><span class="si">%r</span><span class="s1">, n=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Chi2Deviate(n=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span></div>
 
 
@@ -842,11 +842,11 @@
 <span class="sd">                        tables. [default: 256, unless the function is a non-log `LookupTable`, in</span>
 <span class="sd">                        which case it uses the table&#39;s x values]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">x_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">.table</span> <span class="k">import</span> <span class="n">LookupTable</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">utilities</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">integ</span>
+        <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">integ</span>
 
         <span class="c1"># Set up the PRNG</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rng_type</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">UniformDeviateImpl</span>
@@ -971,7 +971,7 @@
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s1">&#39;Invalid cumulative probability for DistDeviate&#39;</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_cdf</span><span class="p">(</span><span class="n">p</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DistDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.DistDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DistDeviate.__call__"><a class="viewcode-back" href="../../deviate.html#galsim.DistDeviate.__call__">[docs]</a>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draw a new random number from the distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverse_cdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rng</span><span class="o">.</span><span class="n">generate1</span><span class="p">())</span></div>
@@ -994,15 +994,15 @@
     <span class="k">def</span> <span class="nf">_function</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span>  <span class="bp">self</span><span class="o">.</span><span class="n">__function</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__function</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__function</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.DistDeviate(seed=</span><span class="si">%r</span><span class="s1">, function=</span><span class="si">%r</span><span class="s1">, x_min=</span><span class="si">%r</span><span class="s1">, x_max=</span><span class="si">%r</span><span class="s1">, interpolant=</span><span class="si">%r</span><span class="s1">, &#39;</span>
                 <span class="s1">&#39;npoints=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_seed_repr</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_function</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xmax</span><span class="p">,</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.DistDeviate(function=&quot;</span><span class="si">%s</span><span class="s1">&quot;, x_min=</span><span class="si">%s</span><span class="s1">, x_max=</span><span class="si">%s</span><span class="s1">, interpolant=</span><span class="si">%s</span><span class="s1">, npoints=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_function</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DistDeviate</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">serialize</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">serialize</span><span class="p">()</span> <span class="ow">and</span>
@@ -1029,7 +1029,7 @@
 <span class="sd">        rng:    The random number generator to use. (This will be converted to a `UniformDeviate`.)</span>
 <span class="sd">        args:   Any number of lists to be permuted.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.random</span> <span class="k">import</span> <span class="n">UniformDeviate</span>
+    <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span>
     <span class="n">ud</span> <span class="o">=</span> <span class="n">UniformDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;permute called with no lists to permute&quot;</span><span class="p">)</span>
