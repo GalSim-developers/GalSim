@@ -17,7 +17,6 @@
 #
 import functools
 from contextlib import contextmanager
-from builtins import range, object
 import weakref
 import os
 import numpy as np
