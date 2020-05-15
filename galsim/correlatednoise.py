@@ -17,7 +17,6 @@
 #
 
 import numpy as np
-from future.utils import iteritems
 
 from .image import Image
 from .random import BaseDeviate
@@ -1551,13 +1550,13 @@ class CovarianceSpectrum(object):
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         Sigma = {}
-        for k, v in iteritems(self.Sigma):
+        for k, v in self.Sigma.items():
             Sigma[k] = v.transform(dudx, dudy, dvdx, dvdy)
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def withScaledVariance(self, variance_ratio):
         Sigma = {}
-        for k, v in iteritems(self.Sigma):
+        for k, v in self.Sigma.items():
             Sigma[k] = v * variance_ratio
         return CovarianceSpectrum(Sigma, self.SEDs)
 
@@ -1610,7 +1609,7 @@ class CovarianceSpectrum(object):
 
     def __hash__(self):
         return hash(("galsim.CovarianceSpectrum", tuple(self.SEDs),
-                     frozenset(iteritems(self.Sigma))))
+                     frozenset(self.Sigma.items())))
 
     def __repr__(self):
         return "galsim.CovarianceSpectrum(%r, %r)" % (self.Sigma, self.SEDs)
