@@ -26,6 +26,9 @@ from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, GalSimRangeError
 from .errors import galsim_warn
 
+# Python 2/3 compatible definition of basestring without past.builtins
+basestring = ("".__class__, u"".__class__, b"".__class__)
+
 
 def isinteger(value):
     """Check if a value is an integer type (including np.int64, long, etc.)

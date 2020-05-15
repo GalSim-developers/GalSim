@@ -16,9 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-# Python 2/3 compatible definition of basestring without past.builtins
-basestring = ("".__class__, u"".__class__, b"".__class__)
-
 import sys
 from itertools import chain
 from builtins import range
@@ -32,7 +29,7 @@ from .image import Image, _Image
 from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
-from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property
+from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property, basestring
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 from .errors import GalSimFFTSizeError, galsim_warn
 
