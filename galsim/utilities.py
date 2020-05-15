@@ -17,7 +17,6 @@
 #
 import functools
 from contextlib import contextmanager
-from future.utils import iteritems
 from builtins import range, object
 import weakref
 import os
@@ -250,7 +249,7 @@ class AttributeDict(object): # pragma: no cover
         self.__dict__.update(other.__dict__)
 
     def _write(self, output, prefix=""):
-        for k, v in iteritems(self.__dict__):
+        for k, v in self.__dict__.items():
             if isinstance(v, AttributeDict):
                 v._write(output, prefix="{0}{1}.".format(prefix, k))
             else:
@@ -1247,7 +1246,7 @@ def dol_to_lod(dol, N=None, scalar_string=True):
     # Loop through broadcast range
     for i in range(N):
         out = {}
-        for k, v in iteritems(dol):
+        for k, v in dol.items():
             if scalar_string and isinstance(v, str):
                 out[k] = v
                 continue
@@ -1407,7 +1406,7 @@ def functionize(f):
                 new_kwargs = dict([(k, v)
                                    if not hasattr(v, '__call__')
                                    else (k, v(*inner_args, **inner_kwargs))
-                                   for k, v in iteritems(kwargs)])
+                                   for k, v in kwargs.items()])
                 return f(*new_args, **new_kwargs)
             return fff
     return ff

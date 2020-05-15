@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-from future.utils import iteritems, iterkeys, itervalues
 from builtins import zip
 import os
 import numpy as np
@@ -319,13 +318,13 @@ class Dict(object):
         return self.dict.items()
 
     def iterkeys(self):
-        return iterkeys(self.dict)
+        return self.keys()
 
     def itervalues(self):
-        return itervalues(self.dict)
+        return self.values()
 
     def iteritems(self):
-        return iteritems(self.dict)
+        return self.items()
 
     def __repr__(self):
         s = "galsim.Dict(file_name=%r, file_type=%r"%(self.file_name, self.file_type)

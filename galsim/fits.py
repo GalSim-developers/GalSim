@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-from future.utils import iteritems, iterkeys, itervalues
 # Python 2/3 compatible definition of basestring without past.builtins
 basestring = ("".__class__, u"".__class__, b"".__class__)
 
@@ -1281,13 +1280,19 @@ class FitsHeader(object):
         return self.header.items()
 
     def iteritems(self):
-        return iteritems(self.header)
+        """Synonym for self.items()
+        """
+        return self.items()
 
     def iterkeys(self):
-        return iterkeys(self.header)
+        """Synonym for self.keys()
+        """
+        return self.keys()
 
     def itervalues(self):
-        return itervalues(self.header)
+        """Synonym for self.values()
+        """
+        return self.values()
 
     def keys(self):
         """Get all header keys.  Works like dict.keys
