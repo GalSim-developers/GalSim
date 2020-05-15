@@ -18,7 +18,6 @@
 
 import math
 import numpy as np
-from past.builtins import basestring
 
 from . import _galsim
 from .gsparams import GSParams

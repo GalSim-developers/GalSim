@@ -16,7 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 
-from past.builtins import basestring
+# Python 2/3 compatible definition of basestring without past.builtins
+basestring = ("".__class__, u"".__class__, b"".__class__)
+
 import numpy as np
 from astropy import units
 
