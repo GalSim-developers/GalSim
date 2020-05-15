@@ -1422,17 +1422,14 @@ def math_eval(str, other_modules=()):
     Returns:
         Whatever the string evaluates to.
     """
-    # Python 2 and 3 have a different syntax for exec with globals() dict.
-    # The exec_ function lets us use the Python 3 syntax even in Python 2.
-    from future.utils import exec_
     gdict = globals().copy()
-    exec_('import galsim', gdict)
-    exec_('import numpy', gdict)
-    exec_('import numpy as np', gdict)
-    exec_('import math', gdict)
-    exec_('import coord', gdict)
+    exec('import galsim', gdict)
+    exec('import numpy', gdict)
+    exec('import numpy as np', gdict)
+    exec('import math', gdict)
+    exec('import coord', gdict)
     for m in other_modules:  # pragma: no cover  (We don't use this.)
-        exec_('import ' + m, gdict)
+        exec('import ' + m, gdict)
     return eval(str, gdict)
 
 def binomial(a, b, n):

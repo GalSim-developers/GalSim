@@ -84,17 +84,16 @@ def _GenerateFromEval(config, base, value_type):
         # If the function is not already compiled, then this is the first time through, so do
         # a full parsing of all the possibilities.
 
-        from future.utils import exec_
         # These will be the variables to use for evaluating the eval statement.
         # Start with the current locals and globals, and add extra items to them.
         if 'eval_gdict' not in base:
             gdict = globals().copy()
             # We allow the following modules to be used in the eval string:
-            exec_('import galsim', gdict)
-            exec_('import math', gdict)
-            exec_('import numpy', gdict)
-            exec_('import numpy as np', gdict)
-            exec_('import os', gdict)
+            exec('import galsim', gdict)
+            exec('import math', gdict)
+            exec('import numpy', gdict)
+            exec('import numpy as np', gdict)
+            exec('import os', gdict)
             base['eval_gdict'] = gdict
         else:
             gdict = base['eval_gdict']

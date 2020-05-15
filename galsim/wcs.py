@@ -757,9 +757,8 @@ def readFromFitsHeader(header):
     origin = PositionI(xmin, ymin)
     wcs_name = header.get("GS_WCS", None)
     if wcs_name is not None:
-        from future.utils import exec_
         gdict = globals().copy()
-        exec_('import galsim', gdict)
+        exec('import galsim', gdict)
         wcs_type = eval('galsim.' + wcs_name, gdict)
         wcs = wcs_type._readHeader(header)
     else:
