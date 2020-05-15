@@ -27,6 +27,7 @@ from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import galsim_warn
 
 # Python 2/3 compatible definition of basestring without past.builtins
+# (Based on this SO answer: https://stackoverflow.com/a/33699705/1332281)
 basestring = ("".__class__, u"".__class__, b"".__class__)
 
 
