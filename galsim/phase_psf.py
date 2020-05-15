@@ -18,7 +18,6 @@
 
 import sys
 from itertools import chain
-from builtins import range
 from heapq import heappush, heappop
 import numpy as np
 

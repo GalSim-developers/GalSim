@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-from builtins import zip
 import os
 import numpy as np
 

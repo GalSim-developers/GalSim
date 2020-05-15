@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-from builtins import range, zip
 import sys
 import numpy as np
 import multiprocessing
