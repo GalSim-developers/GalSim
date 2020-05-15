@@ -966,7 +966,7 @@ ext=Extension("galsim._galsim",
               undef_macros = undef_macros)
 
 build_dep = ['setuptools>=38', 'pybind11>=2.2']
-run_dep = ['numpy', 'future', 'astropy', 'LSSTDESC.Coord']
+run_dep = ['numpy', 'astropy', 'LSSTDESC.Coord']
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'nose',
             'scipy', 'pyyaml', 'starlink-pyast', 'matplotlib']
 # Note: Even though we don't use nosetests, nose is required for some tests to work.

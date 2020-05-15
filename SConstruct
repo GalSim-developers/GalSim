@@ -1782,19 +1782,6 @@ def CheckPyFITS(config):
 
     return 1
 
-def CheckFuture(config):
-    config.Message('Checking for future... ')
-
-    result, output = TryScript(config,"import future",python)
-    if not result:
-        ErrorExit("Unable to import future using the python executable:\n" + python)
-    config.Result(1)
-
-    result, future_ver = TryScript(config,"import future; print(future.__version__)",python)
-    print('Future version is',future_ver)
-
-    return 1
-
 def CheckCoord(config):
     config.Message('Checking for coord... ')
 
@@ -2113,7 +2100,6 @@ def DoPyChecks(config):
         config.CheckEigen()
     config.CheckNumPy()
     config.CheckPyFITS()
-    config.CheckFuture()
     config.CheckCoord()
     if config.env['USE_BOOST']:
         config.CheckBoostPython()
@@ -2204,7 +2190,6 @@ def DoConfig(env):
             'CheckEigen' : CheckEigen ,
             'CheckNumPy' : CheckNumPy ,
             'CheckPyFITS' : CheckPyFITS ,
-            'CheckFuture' : CheckFuture ,
             'CheckCoord' : CheckCoord ,
             'CheckPyBind11' : CheckPyBind11 ,
             'CheckBoostPython' : CheckBoostPython ,
