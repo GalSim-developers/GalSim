@@ -20,7 +20,6 @@
 # obviously one of the standard python errors.
 
 import warnings
-from builtins import super
 from contextlib import contextmanager
 
 # Note to developers about which exception to throw.
@@ -158,7 +157,7 @@ class GalSimValueError(GalSimError, ValueError):
         message += " Value {0!s}".format(value)
         if allowed_values:
             message += " not in {0!s}".format(allowed_values)
-        super().__init__(message)
+        super(GalSimValueError, self).__init__(message)
 
     def __repr__(self):
         return 'galsim.GalSimValueError(%r,%r,%r)'%(self.message, self.value, self.allowed_values)
@@ -176,7 +175,7 @@ class GalSimKeyError(GalSimError, KeyError):
     def __init__(self, message, key):
         self.message = message
         self.key = key
-        super().__init__(message, key)  # Need to pass key or pickle fails.
+        super(GalSimKeyError, self).__init__(message, key)  # Need to pass key or pickle fails.
 
     def __str__(self):
         return self.message + " Key {0!s}".format(self.key)
@@ -195,7 +194,7 @@ class GalSimIndexError(GalSimError, IndexError):
     def __init__(self, message, index):
         self.message = message
         self.index = index
-        super().__init__(message, index)
+        super(GalSimIndexError, self).__init__(message, index)
 
     def __str__(self):
         return self.message + " Index {0!s}".format(self.index)
@@ -220,7 +219,7 @@ class GalSimRangeError(GalSimError, ValueError):
         self.max = max
 
         message += " Value {0!s} not in range [{1!s}, {2!s}]".format(value, min, max)
-        super().__init__(message)
+        super(GalSimRangeError, self).__init__(message)
 
     def __repr__(self):
         return 'galsim.GalSimRangeError(%r,%r,%r,%r)'%(self.message, self.value, self.min, self.max)
@@ -242,7 +241,7 @@ class GalSimBoundsError(GalSimError, ValueError):
         self.bounds = bounds
 
         message += " {0!s} not in {1!s}".format(pos, bounds)
-        super().__init__(message)
+        super(GalSimBoundsError, self).__init__(message)
 
     def __repr__(self):
         return 'galsim.GalSimBoundsError(%r,%r,%r)'%(self.message, self.pos, self.bounds)
@@ -269,7 +268,7 @@ class GalSimImmutableError(GalSimError):
         self.image = image
 
         message += " Image: {0!s}".format(image)
-        super().__init__(message)
+        super(GalSimImmutableError, self).__init__(message)
 
     def __repr__(self):
         return 'galsim.GalSimImmutableError(%r,%r)'%(self.message, self.image)
@@ -289,7 +288,7 @@ class GalSimIncompatibleValuesError(GalSimError, ValueError, TypeError):
         self.values = dict(values, **kwargs)
 
         message += " Values {0!s}".format(self.values)
-        super().__init__(message)
+        super(GalSimIncompatibleValuesError, self).__init__(message)
 
     # Note: the repr of values can rearrange the items, but the dicts should compare equal.
     def __eq__(self, other):
@@ -316,7 +315,7 @@ class GalSimSEDError(GalSimError, TypeError):
         self.sed = sed
 
         message += " SED: {0!s}".format(sed)
-        super().__init__(message)
+        super(GalSimSEDError, self).__init__(message)
 
     def __repr__(self):
         return 'galsim.GalSimSEDError(%r,%r)'%(self.message, self.sed)
@@ -346,7 +345,7 @@ class GalSimFFTSizeError(GalSimError):
         message += "\nThe required FFT size would be {0} x {0}, which requires ".format(size)
         message += "{0:.2f} GB of memory.\n".format(self.mem)
         message += "If you can handle the large FFT, you may update gsparams.maximum_fft_size."
-        super().__init__(message)
+        super(GalSimFFTSizeError, self).__init__(message)
 
     def __repr__(self):
         return 'galsim.GalSimFFTSizeError(%r,%r)'%(self.message, self.size)
