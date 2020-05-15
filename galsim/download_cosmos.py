@@ -20,12 +20,18 @@ A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
 from __future__ import print_function
-from builtins import input
 import os, sys, tarfile, subprocess, shutil, json
 try:
     from urllib2 import urlopen
 except:
     from urllib.request import urlopen
+
+try:
+    # Python 2 version
+    input = raw_input
+except NameError:
+    # Python 3 calls the same functionality input
+    pass
 
 from .utilities import ensure_dir
 
