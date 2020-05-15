@@ -16,9 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-# Python 2/3 compatible definition of basestring without past.builtins
-basestring = ("".__class__, u"".__class__, b"".__class__)
-
 import numpy as np
 import math
 
@@ -28,7 +25,7 @@ from .image import Image
 from .bounds import _BoundsI
 from .position import PositionD
 from .interpolant import Quintic, Interpolant, SincInterpolant
-from .utilities import convert_interpolant, lazy_property, doc_inherit
+from .utilities import convert_interpolant, lazy_property, doc_inherit, basestring
 from .random import BaseDeviate
 from . import _galsim
 from . import fits

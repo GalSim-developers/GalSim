@@ -16,14 +16,12 @@
 #    and/or other materials provided with the distribution.
 #
 
-# Python 2/3 compatible definition of basestring without past.builtins
-basestring = ("".__class__, u"".__class__, b"".__class__)
-
 import os
 import numpy as np
 
 from .image import Image
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn
+from .utilities import basestring
 
 
 ##############################################################################################

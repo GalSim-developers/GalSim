@@ -16,9 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-# Python 2/3 compatible definition of basestring without past.builtins
-basestring = ("".__class__, u"".__class__, b"".__class__)
-
 import numpy as np
 from astropy import units
 
@@ -27,7 +24,7 @@ from .sed import SED
 from . import utilities
 from . import integ
 from . import meta_data
-from .utilities import WeakMethod, combine_wave_list
+from .utilities import WeakMethod, combine_wave_list, basestring
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 
 class Bandpass(object):

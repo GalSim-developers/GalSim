@@ -16,13 +16,11 @@
 #    and/or other materials provided with the distribution.
 #
 
-# Python 2/3 compatible definition of basestring without past.builtins
-basestring = ("".__class__, u"".__class__, b"".__class__)
-
 from .extra import ExtraOutputBuilder, RegisterExtraOutput
 from .value import ParseValue, GetCurrentValue
 from ..errors import GalSimConfigError
 from ..catalog import OutputCatalog
+from ..utilities import basestring
 
 # The truth extra output type builds an OutputCatalog with truth information about each of the
 # objects being built by the configuration processing.  It stores the appropriate row information

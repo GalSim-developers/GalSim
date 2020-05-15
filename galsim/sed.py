@@ -16,9 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-# Python 2/3 compatible definition of basestring without past.builtins
-basestring = ("".__class__, u"".__class__, b"".__class__)
-
 import numpy as np
 from astropy import units
 from astropy import constants
@@ -29,7 +26,7 @@ from .table import LookupTable
 from . import utilities
 from . import integ
 from . import dcr
-from .utilities import WeakMethod, lazy_property, combine_wave_list
+from .utilities import WeakMethod, lazy_property, combine_wave_list, basestring
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimSEDError
 from .errors import GalSimIncompatibleValuesError
 
