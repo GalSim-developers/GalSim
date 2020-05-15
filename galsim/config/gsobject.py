@@ -175,9 +175,8 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if type_name in valid_gsobject_types:
         build_func = valid_gsobject_types[type_name]
     elif type_name in galsim_dict:
-        from future.utils import exec_
         gdict = globals().copy()
-        exec_('import galsim', gdict)
+        exec('import galsim', gdict)
         build_func = eval("galsim."+type_name, gdict)
     else:
         raise GalSimConfigValueError("Unrecognised gsobject type", type_name)
