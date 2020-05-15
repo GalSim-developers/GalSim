@@ -16,8 +16,10 @@
 #    and/or other materials provided with the distribution.
 #
 
+# Python 2/3 compatible definition of basestring without past.builtins
+basestring = ("".__class__, u"".__class__, b"".__class__)
+
 import sys
-from past.builtins import basestring
 from itertools import chain
 from builtins import range
 from heapq import heappush, heappop

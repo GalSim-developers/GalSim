@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-from past.builtins import basestring
 import numpy as np
 import os
 
