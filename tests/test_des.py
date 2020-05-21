@@ -333,6 +333,10 @@ def test_meds_config():
     config = galsim.config.CleanConfig(config)
     config['image']['offset'] = { 'type' : 'XY' , 'x' : offset_x, 'y' : offset_y }
     config['output']['badpix'] = {}
+    # These three are just added for coverage really.
+    config['output']['weight'] = {}
+    config['output']['psf'] = {}
+    config['output']['meds_get_offset'] = {}
     galsim.config.BuildFile(galsim.config.CopyConfig(config), logger=logger)
 
     # Scattered image is invalid with MEDS output
