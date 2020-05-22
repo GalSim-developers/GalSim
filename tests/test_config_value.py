@@ -55,9 +55,9 @@ def test_float_value():
         'cat1' : { 'type' : 'Catalog' , 'col' : 0 },
         'cat2' : { 'type' : 'Catalog' , 'col' : 1 },
         'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'float1' },
-        'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'float2' },
+        'cat4' : { 'type' : 'Catalog_float' , 'num' : 1, 'col' : 'float2' },
         'ran1' : { 'type' : 'Random', 'min' : 0.5, 'max' : 3 },
-        'ran2' : { 'type' : 'Random', 'min' : -5, 'max' : 0 },
+        'ran2' : { 'type' : 'Random_float', 'min' : -5, 'max' : 0 },
         'gauss1' : { 'type' : 'RandomGaussian', 'sigma' : 1 },
         'gauss1b' : { 'type' : 'RandomGaussian', 'sigma' : 1 },
         'gauss2' : { 'type' : 'RandomGaussian', 'sigma' : 3, 'mean' : 4 },
@@ -88,15 +88,15 @@ def test_float_value():
         'seq2' : { 'type' : 'Sequence', 'step' : 0.1 },
         'seq3' : { 'type' : 'Sequence', 'first' : 1.5, 'step' : 0.5 },
         'seq4' : { 'type' : 'Sequence', 'first' : 10, 'step' : -2 },
-        'seq5' : { 'type' : 'Sequence', 'first' : 1, 'last' : 2.1, 'repeat' : 2 },
+        'seq5' : { 'type' : 'Sequence_float', 'first' : 1, 'last' : 2.1, 'repeat' : 2 },
         'list1' : { 'type' : 'List', 'items' : [ 73, 8.9, 3.14 ] },
-        'list2' : { 'type' : 'List',
+        'list2' : { 'type' : 'List_float',
                     'items' : [ 0.6, 1.8, 2.1, 3.7, 4.3, 5.5, 6.1, 7.0, 8.6, 9.3, 10.8, 11.2 ],
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
         'dict1' : { 'type' : 'Dict', 'key' : 'f' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'f' },
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' },
-        'dict4' : { 'type' : 'Dict', 'num' : 2, 'key' : 'noise.models.1.gain' },
+        'dict4' : { 'type' : 'Dict_float', 'num' : 2, 'key' : 'noise.models.1.gain' },
         'sum1' : { 'type' : 'Sum', 'items' : [ 72, '2.33', { 'type' : 'Dict', 'key' : 'f' } ] },
         'nfw' : { 'type' : 'NFWHaloMagnification' },
         'ps' : { 'type' : 'PowerSpectrumMagnification' },
@@ -512,7 +512,7 @@ def test_int_value():
         'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'int1' },
         'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'int2' },
         'ran1' : { 'type' : 'Random', 'min' : 0, 'max' : 3 },
-        'ran2' : { 'type' : 'Random', 'min' : -5, 'max' : 10 },
+        'ran2' : { 'type' : 'Random_int', 'min' : -5, 'max' : 10 },
         'dev1' : { 'type' : 'RandomPoisson', 'mean' : 137 },
         'dev2' : { 'type' : 'RandomBinomial', 'N' : 17 },
         'dev3' : { 'type' : 'RandomBinomial', 'N' : 17, 'p' : 0.2 },
@@ -520,23 +520,23 @@ def test_int_value():
         'seq2' : { 'type' : 'Sequence', 'step' : 3 },
         'seq3' : { 'type' : 'Sequence', 'first' : 1, 'step' : 5 },
         'seq4' : { 'type' : 'Sequence', 'first' : 10, 'step' : -2 },
-        'seq5' : { 'type' : 'Sequence', 'first' : 1, 'last' : 2, 'repeat' : 2 },
+        'seq5' : { 'type' : 'Sequence_int', 'first' : 1, 'last' : 2, 'repeat' : 2 },
         'seq_file' : { 'type' : 'Sequence', 'index_key' : 'file_num' },
         'seq_image' : { 'type' : 'Sequence', 'index_key' : 'image_num' },
         'seq_obj' : { 'type' : 'Sequence', 'index_key' : 'obj_num' },
         'seq_obj2' : { 'type' : 'Sequence', 'index_key' : 'obj_num_in_file' },
         'list1' : { 'type' : 'List', 'items' : [ 73, 8, 3 ] },
-        'list2' : { 'type' : 'List',
+        'list2' : { 'type' : 'List_int',
                     'items' : np.array([ 6, 8, 1, 7, 3, 5, 1, 0, 6, 3, 8, 2 ]),
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
         'list3' : [ 1, 2, 3, 4 ],
         'list4' : [],
         'dict1' : { 'type' : 'Dict', 'key' : 'i' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'i' },
-        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'i' },
+        'dict3' : { 'type' : 'Dict_int', 'num' : 2, 'key' : 'i' },
         'sum1' : { 'type' : 'Sum', 'items' : [ 72.3, '2', { 'type' : 'Dict', 'key' : 'i' } ] },
         'cur1' : { 'type' : 'Current', 'key' : 'val1' },
-        'cur2' : { 'type' : 'Current', 'key' : 'list2.index.step' },
+        'cur2' : { 'type' : 'Current_int', 'key' : 'list2.index.step' },
         'bad1' : 'left',
         'bad2' : int,
         'bad3' : { 'type' : 'Current', 'key' : 'list2.index.type' },
@@ -746,19 +746,19 @@ def test_bool_value():
         'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'bool1' },
         'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'bool2' },
         'ran1' : { 'type' : 'Random' },
-        'ran2' : { 'type' : 'Random', 'p' : 0.8 },
+        'ran2' : { 'type' : 'Random_bool', 'p' : 0.8 },
         'dev1' : { 'type' : 'RandomBinomial', 'N' : 1 },
         'dev2' : { 'type' : 'RandomBinomial', 'N' : 1, 'p' : 0.5 },
         'dev3' : { 'type' : 'RandomBinomial', 'p' : 0.2 },
         'seq1' : { 'type' : 'Sequence' },
-        'seq2' : { 'type' : 'Sequence', 'first' : True, 'repeat' : 2 },
+        'seq2' : { 'type' : 'Sequence_bool', 'first' : True, 'repeat' : 2 },
         'list1' : { 'type' : 'List', 'items' : [ 'yes', 'no', 'no' ] },
-        'list2' : { 'type' : 'List',
+        'list2' : { 'type' : 'List_bool',
                     'items' : [ 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0 ],
                     'index' : { 'type' : 'Sequence', 'first' : 10, 'step' : -3 } },
         'dict1' : { 'type' : 'Dict', 'key' : 'b' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'b' },
-        'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'b' },
+        'dict3' : { 'type' : 'Dict_bool', 'num' : 2, 'key' : 'b' },
         'bad1' : 'left',
         'bad2' : 'nope',
         'bad3' : { 'type' : 'RandomBinomial', 'N' : 2 },
@@ -898,6 +898,7 @@ def test_str_value():
         'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'str1' },
         'cat4' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'str2' },
         'list1' : { 'type' : 'List', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ] },
+        'list2' : { 'type' : 'List_str', 'items' : [ 'Beautiful', 'plumage!', 'Ay?' ] },
         'file1' : { 'type' : 'NumberedFile', 'root' : 'file', 'num' : 5,
                     'ext' : '.fits.fz', 'digits' : 3 },
         'file2' : { 'type' : 'NumberedFile', 'root' : 'file', 'num' : 5 },
@@ -960,12 +961,15 @@ def test_str_value():
 
     # Test values taken from a List
     list1 = []
+    list2 = []
     config['index_key'] = 'image_num'
     for k in range(5):
         config['image_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, str)[0])
+        list2.append(galsim.config.ParseValue(config,'list2',config, str)[0])
 
     np.testing.assert_array_equal(list1, ['Beautiful', 'plumage!', 'Ay?', 'Beautiful', 'plumage!'])
+    np.testing.assert_array_equal(list2, list1)
 
     # Test values built using NumberedFile
     file1 = galsim.config.ParseValue(config,'file1',config, str)[0]
@@ -1032,9 +1036,14 @@ def test_angle_value():
         'cat4' : { 'type' : 'Degrees' ,
                    'theta' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'angle2' } },
         'ran1' : { 'type' : 'Random' },
+        'ran2' : { 'type' : 'Random_Angle' },
         'seq1' : { 'type' : 'Rad', 'theta' : { 'type' : 'Sequence' } },
         'seq2' : { 'type' : 'Deg', 'theta' : { 'type' : 'Sequence', 'first' : 45, 'step' : 80 } },
         'list1' : { 'type' : 'List',
+                    'items' : [ 73 * galsim.arcmin,
+                                8.9 * galsim.arcmin,
+                                3.14 * galsim.arcmin ] },
+        'list2' : { 'type' : 'List_Angle',
                     'items' : [ 73 * galsim.arcmin,
                                 8.9 * galsim.arcmin,
                                 3.14 * galsim.arcmin ] },
@@ -1107,8 +1116,11 @@ def test_angle_value():
     for k in range(6):
         config['obj_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.Angle)[0]
+        ran2 = galsim.config.ParseValue(config,'ran2',config, galsim.Angle)[0]
         theta = rng() * 2 * math.pi
         np.testing.assert_almost_equal(ran1.rad, theta)
+        theta = rng() * 2 * math.pi
+        np.testing.assert_almost_equal(ran2.rad, theta)
 
     # Test values generated from a Sequence
     seq1 = []
@@ -1124,12 +1136,15 @@ def test_angle_value():
 
     # Test values taken from a List
     list1 = []
+    list2 = []
     config['index_key'] = 'obj_num'
     for k in range(5):
         config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, galsim.Angle)[0]/galsim.arcmin)
+        list2.append(galsim.config.ParseValue(config,'list2',config, galsim.Angle)[0]/galsim.arcmin)
 
     np.testing.assert_array_almost_equal(list1, [ 73, 8.9, 3.14, 73, 8.9 ])
+    np.testing.assert_equal(list2, list1)
 
     sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.Angle)[0]
     np.testing.assert_almost_equal(sum1 / galsim.degrees, 72 + 2.33)
@@ -1159,6 +1174,10 @@ def test_shear_value():
         's6' : { 'type' : 'EtaBeta', 'eta' : 0.5, 'beta' : 0.1 * galsim.radians },
         's7' : { 'type' : 'QBeta', 'q' : 0.5, 'beta' : 0.1 * galsim.radians },
         'list1' : { 'type' : 'List',
+                    'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
+                                galsim.Shear(g1 = -0.5, g2 = 0.2),
+                                galsim.Shear(g1 = 0.1, g2 = 0.0) ] },
+        'list2' : { 'type' : 'List_Shear',
                     'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
                                 galsim.Shear(g1 = -0.5, g2 = 0.2),
                                 galsim.Shear(g1 = 0.1, g2 = 0.0) ] },
@@ -1225,10 +1244,12 @@ def test_shear_value():
 
     # Test values taken from a List
     list1 = []
+    list2 = []
     config['index_key'] = 'obj_num'
     for k in range(5):
         config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, galsim.Shear)[0])
+        list2.append(galsim.config.ParseValue(config,'list2',config, galsim.Shear)[0])
 
     np.testing.assert_almost_equal(list1[0].g1, 0.2)
     np.testing.assert_almost_equal(list1[0].g2, -0.3)
@@ -1240,6 +1261,7 @@ def test_shear_value():
     np.testing.assert_almost_equal(list1[3].g2, -0.3)
     np.testing.assert_almost_equal(list1[4].g1, -0.5)
     np.testing.assert_almost_equal(list1[4].g2, 0.2)
+    np.testing.assert_equal(list2, list1)
 
     sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.Shear)[0]
     s = galsim.Shear(g1=0.2, g2=-0.3)
@@ -1353,11 +1375,18 @@ def test_pos_value():
                     'items' : [ galsim.PositionD(0.2, -0.3),
                                 galsim.PositionD(-0.5, 0.2),
                                 galsim.PositionD(0.1, 0.0) ] },
+        'list2' : { 'type' : 'List_PositionD',
+                    'items' : [ galsim.PositionD(0.2, -0.3),
+                                galsim.PositionD(-0.5, 0.2),
+                                galsim.PositionD(0.1, 0.0) ] },
         'sum1' : { 'type' : 'Sum',
                    'items' : [ galsim.PositionD(0.2, -0.3),
                                galsim.PositionD(-0.5, 0.2),
                                galsim.PositionD(0.1, 0.0) ] },
         'radec' : { 'type' : 'RADec', 'ra' : 13.4 * galsim.hours, 'dec' : -0.3 * galsim.degrees },
+        'list_radec' : { 'type' : 'List_CelestialCoord',
+                         'items' : [ { 'type': 'RADec', 'ra': '13.4 hours', 'dec': '-0.3 deg' } ],
+                       },
         'cur1' : { 'type' : 'Current', 'key' : 'input.val1' },
         'cur2' : '@input.val2',
         'bad1' : '0.1, 0.2, 0.3',
@@ -1436,10 +1465,12 @@ def test_pos_value():
 
     # Test values taken from a List
     list1 = []
+    list2 = []
     config['index_key'] = 'obj_num'
     for k in range(5):
         config['obj_num'] = k
         list1.append(galsim.config.ParseValue(config,'list1',config, galsim.PositionD)[0])
+        list2.append(galsim.config.ParseValue(config,'list2',config, galsim.PositionD)[0])
 
     np.testing.assert_almost_equal(list1[0].x, 0.2)
     np.testing.assert_almost_equal(list1[0].y, -0.3)
@@ -1451,6 +1482,7 @@ def test_pos_value():
     np.testing.assert_almost_equal(list1[3].y, -0.3)
     np.testing.assert_almost_equal(list1[4].x, -0.5)
     np.testing.assert_almost_equal(list1[4].y, 0.2)
+    np.testing.assert_equal(list2, list1)
 
     sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.PositionD)[0]
     np.testing.assert_almost_equal(sum1.x, 0.2 - 0.5 + 0.1)
@@ -1459,6 +1491,9 @@ def test_pos_value():
     radec = galsim.config.ParseValue(config,'radec',config, galsim.CelestialCoord)[0]
     np.testing.assert_almost_equal(radec.ra / galsim.hours, 13.4)
     np.testing.assert_almost_equal(radec.dec / galsim.degrees, -0.3)
+    radec2 = galsim.config.ParseValue(config,'list_radec',config, galsim.CelestialCoord)[0]
+    np.testing.assert_almost_equal(radec2.ra / galsim.hours, 13.4)
+    np.testing.assert_almost_equal(radec2.dec / galsim.degrees, -0.3)
 
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'bad1',config, galsim.PositionD)
@@ -1477,6 +1512,9 @@ def test_pos_value():
         del clean_config[key]
     # And one extra thing that gets set as a default, but CleanConfig doesn't remove
     del clean_config['list1']['index']
+    del clean_config['list2']['index']
+    del clean_config['list_radec']  # this has a str->Angle conversion that isn't
+    del orig_config['list_radec']   # worth trying to undo.  Just delete both.
     # Finally, these value got changed, so they won't match the original
     # unless we manually set them back to the original strings.
     clean_config['val2'] = '0.1, 0.2'
