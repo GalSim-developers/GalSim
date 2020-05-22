@@ -919,7 +919,12 @@ def test_extra_truth():
                 },
                 {
                     'type': 'Gaussian',
-                    'sigma': { 'type': 'Random_float', 'min': 1, 'max': 2, 'rng_index_key': 'image_num' },
+                    'sigma': {
+                                'type': 'Random_float',
+                                'min': 1,
+                                'max': 2,
+                                'rng_index_key': 'image_num',
+                             },
                     'ellip': {'type': 'EBeta', 'e': 0.2, 'beta': {'type': 'Random'} },
                 },
             ],
