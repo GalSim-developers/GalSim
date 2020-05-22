@@ -117,10 +117,12 @@ def ParseValue(config, key, base, value_type):
             generate_func, valid_types = valid_value_types[type_name]
 
             if value_type not in valid_types:
-                raise GalSimConfigValueError(
-                    "Invalid value_type specified for parameter %s with type=%s."%(key, type_name),
-                    value_type, valid_types)
-
+                if value_type is None and len(valid_types) == 1:
+                    value_type = valid_types[0]
+                else:
+                    raise GalSimConfigValueError(
+                        "Invalid value_type specified for parameter %s with type=%s."%(key, type_name),
+                        value_type, valid_types)
             param['_gen_fn'] = generate_func
 
         #print('generate_func = ',generate_func)
