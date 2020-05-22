@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import numpy as np
 from .extra import ExtraOutputBuilder, RegisterExtraOutput
 from .value import ParseValue, GetCurrentValue
 from ..errors import GalSimConfigError
@@ -80,16 +81,26 @@ class TruthBuilder(ExtraOutputBuilder):
                 # JSON files.
                 value = GetCurrentValue(str(key), base)
             row.append(value)
-            types.append(type(value))
+            types.append(self._type(value))
         if 'types' not in self.scratch:
             self.scratch['types'] = types
-        elif self.scratch['types'] != types: # pragma: no cover
+        elif self.scratch['types'] != types:
             logger.error("Type mismatch found when building truth catalog at object %d",
                          base['obj_num'])
-            logger.error("Types for current object = %s",repr(types))
-            logger.error("Expecting types = %s",repr(self.scratch['types']))
+            for name, t1, t2 in zip(cols, types, self.scratch['types']):
+                if t1 != t2:
+                    logger.error("%s has type %s, but previously had type %s"%(
+                        name,t1.__name__,t2.__name__))
             raise GalSimConfigError("Type mismatch found when building truth catalog.")
         self.scratch[obj_num] = row
+
+    def _type(self, v):
+        if isinstance(v, np.floating):
+            return float
+        elif isinstance(v, np.integer):
+            return int
+        else:
+            return type(v)
 
     # The function to call at the end of building each file to finalize the truth catalog
     def finalize(self, config, base, main_data, logger):

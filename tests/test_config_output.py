@@ -940,12 +940,15 @@ def test_extra_truth():
                     'sigma' : '@gal.dilate',
                     'g' : {
                         'type': 'Eval',
-                        'str': '0. if @gal.index==0 else float((@gal.items.1.ellip).g)',
+                        'str': '0. if @gal.index==0 else (@gal.items.1.ellip).g',
                     },
-                    'beta' : '$0. if @gal.index==0 else float((@gal.items.1.ellip).beta.rad)',
+                    'beta' : '$0. if @gal.index==0 else (@gal.items.1.ellip).beta.rad',
                     'hlr' : '$@output.truth.columns.sigma * np.sqrt(2.*math.log(2))',
                     #'fwhm' : '$(@gal).original.fwhm if @gal.index == 1 else (@gal).fwhm',
                     'pos' : 'image_pos',
+                    # slightly gratuitous here.  Use int16 to force a check that np.integer works.
+                    'obj_type_i' : '$np.int16(@gal.index)',
+                    'obj_type_s' : '$"gal" if @gal.index else "star"',
                 }
             }
         }
@@ -960,31 +963,50 @@ def test_extra_truth():
     flux = np.empty(nobjects)
     g = np.empty(nobjects)
     beta = np.empty(nobjects)
+    obj_type_i = np.empty(nobjects, dtype=int)
+    obj_type_s = [None] * nobjects
     for k in range(nobjects):
         gal_ud = galsim.UniformDeviate(1234 + k + 1)
         sigma[k] = image_ud() + 1.
         if k%3 == 0:
             g[k] = 0.
             beta[k] = 0.
+            obj_type_i[k] = 0
+            obj_type_s[k] = 'star'
         else:
             shear = galsim.Shear(e=0.2, beta=gal_ud() * 2*np.pi * galsim.radians)
             g[k] = shear.g
             beta[k] = shear.beta.rad
+            obj_type_i[k] = 1
+            obj_type_s[k] = 'gal'
         flux[k] = k * (gal_ud() * 3 + 1)
 
     file_name = 'output/test_truth.fits'
     cat = galsim.Catalog(file_name, hdu=1)
     obj_num = np.array(range(nobjects))
     np.testing.assert_almost_equal(cat.data['object_id'], obj_num)
+    np.testing.assert_equal(cat.data['index'], obj_type_i)
     np.testing.assert_almost_equal(cat.data['flux'], flux)
     np.testing.assert_almost_equal(cat.data['sigma'], sigma)
     np.testing.assert_almost_equal(cat.data['g'], g)
     np.testing.assert_almost_equal(cat.data['beta'], beta)
+    np.testing.assert_equal(cat.data['obj_type_i'], obj_type_i)
+    np.testing.assert_equal(cat.data['obj_type_s'], obj_type_s)
     np.testing.assert_almost_equal(cat.data['hlr'], sigma * galsim.Gaussian._hlr_factor)
     #np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
     np.testing.assert_almost_equal(cat.data['pos.x'], obj_num * 32 + 16.5)
     np.testing.assert_almost_equal(cat.data['pos.y'], 16.5)
 
+    # If types are not consistent for all objects, raise an error.
+    # Here it's a float for stars and Angle for galaxies.
+    config['output']['truth']['columns']['beta'] = (
+        '$0. if @gal.index==0 else (@gal.items.1.ellip).beta')
+    with CaptureLog(level=1) as cl:
+        with assert_raises(galsim.GalSimConfigError):
+            galsim.config.Process(config, logger=cl.logger)
+    assert "beta has type Angle, but previously had type float" in cl.output
+    config['output']['truth']['columns']['beta'] = (
+        '$0. if @gal.index==0 else (@gal.items.1.ellip).beta.rad')
 
 @timer
 def test_retry_io():
