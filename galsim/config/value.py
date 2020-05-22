@@ -120,9 +120,14 @@ def ParseValue(config, key, base, value_type):
                 if value_type is None and len(valid_types) == 1:
                     value_type = valid_types[0]
                 else:
-                    raise GalSimConfigValueError(
-                        "Invalid value_type specified for parameter %s with type=%s."%(key, type_name),
-                        value_type, valid_types)
+                    err_str = "Invalid value_type specified for parameter %s with type=%s.\n"%(
+                            key, type_name)
+                    if value_type is None:
+                        err_str += (
+                            "Consider using an explicit value-typed type name like %s_%s "%(
+                                type_name, valid_types[0].__name__) +
+                            "to help GalSim know which value_type to expect.\n")
+                    raise GalSimConfigValueError(err_str, value_type, valid_types)
             param['_gen_fn'] = generate_func
 
         #print('generate_func = ',generate_func)
@@ -794,6 +799,10 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
                 RegisterInputConnectedType(key, type_name)
         else:
             RegisterInputConnectedType(input_type, type_name)
+    if len(valid_types) > 1:
+        for t in valid_types:
+            if t is not None:
+                RegisterValueType(type_name + '_' + t.__name__, gen_func, [t])
 
 
 RegisterValueType('List', _GenerateFromList,
