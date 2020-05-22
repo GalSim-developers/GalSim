@@ -918,11 +918,10 @@ def test_extra_truth():
                 },
                 {
                     'type': 'Gaussian',
-                    'sigma' : 1,
+                    'sigma': { 'type': 'Random_float', 'min': 1, 'max': 2, 'rng_index_key': 'image_num' },
                     'ellip': {'type': 'EBeta', 'e': 0.2, 'beta': {'type': 'Random'} },
                 },
             ],
-            'dilate': { 'type': 'Random', 'min': 1, 'max': 2, 'rng_index_key': 'image_num' },
             'flux': { 'type': 'Random', 'min': '$obj_num', 'max': '$obj_num * 4' },
             # 1/3 of objects are stars.
             'index': '$0 if obj_num % 3 == 0 else 1',
@@ -937,7 +936,7 @@ def test_extra_truth():
                     'index' : 'gal.index',
                     'flux' : '@gal.flux', # The @ is not required, but allowed.
                     # Check several different ways to do calculations
-                    'sigma' : '@gal.dilate',
+                    'sigma' : '$@gal.items.0.sigma if @gal.index==0 else @gal.items.1.sigma',
                     'g' : {
                         'type': 'Eval',
                         'str': '0. if @gal.index==0 else (@gal.items.1.ellip).g',
@@ -967,13 +966,18 @@ def test_extra_truth():
     obj_type_s = [None] * nobjects
     for k in range(nobjects):
         gal_ud = galsim.UniformDeviate(1234 + k + 1)
-        sigma[k] = image_ud() + 1.
         if k%3 == 0:
+            if k == 0:
+                # The gal sigma gets calculated if there's not already a current, even though it
+                # is ignored.  This only happens for k==0.
+                image_ud()
+            sigma[k] = 1.e-6
             g[k] = 0.
             beta[k] = 0.
             obj_type_i[k] = 0
             obj_type_s[k] = 'star'
         else:
+            sigma[k] = image_ud() + 1
             shear = galsim.Shear(e=0.2, beta=gal_ud() * 2*np.pi * galsim.radians)
             g[k] = shear.g
             beta[k] = shear.beta.rad
@@ -1007,6 +1011,19 @@ def test_extra_truth():
     assert "beta has type Angle, but previously had type float" in cl.output
     config['output']['truth']['columns']['beta'] = (
         '$0. if @gal.index==0 else (@gal.items.1.ellip).beta.rad')
+
+    # If we don't use Random_float, the truth catalog can't figure out the type of gal.sigma
+    # when it's used as @gal.items.1.sigma before being calculated.
+    # This gives and error, but also a suggestion for how it might be remedied.
+    config['gal']['items'][1]['sigma'] = {
+        'type': 'Random', 'min': 1, 'max': 2, 'rng_index_key': 'image_num' }
+    try:
+        galsim.config.Process(config)
+        # This is effectively doing assert_raises, but we want to check the error string.
+        assert False
+    except galsim.GalSimConfigError as e:
+        print(e)
+        assert 'Consider using an explicit value-typed type name like Random_float' in str(e)
 
 @timer
 def test_retry_io():
