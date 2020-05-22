@@ -902,10 +902,30 @@ def test_extra_truth():
             'stamp_ysize' : 32,
             'random_seed' : 1234,
         },
+        'psf' : {
+            'type': 'Gaussian',
+            'sigma': 0.5,
+        },
         'gal' : {
-            'type' : 'Gaussian',
-            'sigma' : { 'type': 'Random', 'min': 1, 'max': 2, 'rng_index_key' : 'image_num' },
-            'flux' : { 'type': 'Random', 'min': '$obj_num', 'max': '$obj_num * 4' },
+            'type' : 'List',
+            'items' : [
+                {
+                    'type': 'Gaussian',
+                    'sigma': 1.e-6,
+                    # Notably, this has no ellip field.
+                    # The workaround below for setting an effective ellip value in the truth
+                    # catalog to deal with this used to not work.
+                },
+                {
+                    'type': 'Gaussian',
+                    'sigma' : 1,
+                    'ellip': {'type': 'EBeta', 'e': 0.2, 'beta': {'type': 'Random'} },
+                },
+            ],
+            'dilate': { 'type': 'Random', 'min': 1, 'max': 2, 'rng_index_key': 'image_num' },
+            'flux': { 'type': 'Random', 'min': '$obj_num', 'max': '$obj_num * 4' },
+            # 1/3 of objects are stars.
+            'index': '$0 if obj_num % 3 == 0 else 1',
         },
         'output' : {
             'type' : 'Fits',
@@ -914,12 +934,18 @@ def test_extra_truth():
                 'hdu' : 1,
                 'columns' : {
                     'object_id' : 'obj_num',
-                    'flux' : 'gal.flux',
+                    'index' : 'gal.index',
+                    'flux' : '@gal.flux', # The @ is not required, but allowed.
                     # Check several different ways to do calculations
-                    'sigma' : '@gal.sigma',  # The @ is not required, but allowed.
-                    'hlr' : '$(@gal.sigma) * np.sqrt(2.*math.log(2))',
-                    'fwhm' : '$(@gal).fwhm',
-                    'pos' : 'image_pos'
+                    'sigma' : '@gal.dilate',
+                    'g' : {
+                        'type': 'Eval',
+                        'str': '0. if @gal.index==0 else float((@gal.items.1.ellip).g)',
+                    },
+                    'beta' : '$0. if @gal.index==0 else float((@gal.items.1.ellip).beta.rad)',
+                    'hlr' : '$@output.truth.columns.sigma * np.sqrt(2.*math.log(2))',
+                    #'fwhm' : '$(@gal).original.fwhm if @gal.index == 1 else (@gal).fwhm',
+                    'pos' : 'image_pos',
                 }
             }
         }
@@ -930,15 +956,21 @@ def test_extra_truth():
     sigma_list = []
     flux_list = []
     image_ud = galsim.UniformDeviate(1234)
+    sigma = np.empty(nobjects)
+    flux = np.empty(nobjects)
+    g = np.empty(nobjects)
+    beta = np.empty(nobjects)
     for k in range(nobjects):
         gal_ud = galsim.UniformDeviate(1234 + k + 1)
-        sigma = image_ud() + 1.
-        flux = k * (gal_ud() * 3 + 1)
-        gal = galsim.Gaussian(sigma=sigma, flux=flux)
-        sigma_list.append(sigma)
-        flux_list.append(flux)
-    sigma = np.array(sigma_list)
-    flux = np.array(flux_list)
+        sigma[k] = image_ud() + 1.
+        if k%3 == 0:
+            g[k] = 0.
+            beta[k] = 0.
+        else:
+            shear = galsim.Shear(e=0.2, beta=gal_ud() * 2*np.pi * galsim.radians)
+            g[k] = shear.g
+            beta[k] = shear.beta.rad
+        flux[k] = k * (gal_ud() * 3 + 1)
 
     file_name = 'output/test_truth.fits'
     cat = galsim.Catalog(file_name, hdu=1)
@@ -946,8 +978,10 @@ def test_extra_truth():
     np.testing.assert_almost_equal(cat.data['object_id'], obj_num)
     np.testing.assert_almost_equal(cat.data['flux'], flux)
     np.testing.assert_almost_equal(cat.data['sigma'], sigma)
+    np.testing.assert_almost_equal(cat.data['g'], g)
+    np.testing.assert_almost_equal(cat.data['beta'], beta)
     np.testing.assert_almost_equal(cat.data['hlr'], sigma * galsim.Gaussian._hlr_factor)
-    np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
+    #np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
     np.testing.assert_almost_equal(cat.data['pos.x'], obj_num * 32 + 16.5)
     np.testing.assert_almost_equal(cat.data['pos.y'], 16.5)
 
