@@ -44,7 +44,8 @@ class TruthBuilder(ExtraOutputBuilder):
         super(TruthBuilder,self).initialize(data,scratch,config,base,logger)
 
         # Warn if the config dict isn't an OrderedDict.
-        if logger and not hasattr(config, '__reversed__') and not hasattr(self,'warned'): # pragma: no cover
+        cols = config['columns']
+        if logger and not hasattr(cols, '__reversed__') and not config.get('_warned',False):
             # If config doesn't have a __reversed__ attribute, then it's not an OrderedDict.
             # Probably it's just a regular dict.  So warn the user that the columns are in
             # arbitrary order.
@@ -52,7 +53,7 @@ class TruthBuilder(ExtraOutputBuilder):
             #  seemed relevant.)
             logger.warning('The config dict is not an OrderedDict.  The columns in the output '
                            'truth catalog will be in arbitrary order.')
-            self.warned = True
+            config['_warned'] = True
 
     # The function to call at the end of building each stamp
     def processStamp(self, obj_num, config, base, logger):

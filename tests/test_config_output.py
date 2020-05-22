@@ -27,6 +27,7 @@ import yaml
 import json
 import re
 import glob
+from collections import OrderedDict
 
 import galsim
 from galsim_test_helpers import *
@@ -931,7 +932,7 @@ def test_extra_truth():
             'file_name' : 'output/test_truth.fits',
             'truth' : {
                 'hdu' : 1,
-                'columns' : {
+                'columns' : OrderedDict({
                     'object_id' : 'obj_num',
                     'index' : 'gal.index',
                     'flux' : '@gal.flux', # The @ is not required, but allowed.
@@ -1000,6 +1001,23 @@ def test_extra_truth():
     np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
     np.testing.assert_almost_equal(cat.data['pos.x'], obj_num * 32 + 16.5)
     np.testing.assert_almost_equal(cat.data['pos.y'], 16.5)
+
+    # Check that a warning is properly logged when columns are not an ordered dict.
+    # These need to be done with BuildFile, not Process, so original isn't copied.
+    # 1. When it is an OrderedDict, no warning.
+    config1 = galsim.config.CopyConfig(config)
+    with CaptureLog(1) as cl:
+        galsim.config.BuildFile(config1, logger=cl.logger)
+    assert 'The config dict is not an OrderedDict' not in cl.output
+    # 2. When it is not an OrderedDict, warning.
+    config1['output']['truth']['columns'] = dict(config1['output']['truth']['columns'])
+    with CaptureLog(1) as cl:
+        galsim.config.BuildFile(config1, logger=cl.logger)
+    assert 'The config dict is not an OrderedDict' in cl.output
+    # 3. But only once.
+    with CaptureLog(1) as cl:
+        galsim.config.BuildFile(config1, logger=cl.logger)
+    assert 'The config dict is not an OrderedDict' not in cl.output
 
     # If types are not consistent for all objects, raise an error.
     # Here it's a float for stars and Angle for galaxies.
