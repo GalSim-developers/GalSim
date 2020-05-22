@@ -2,8 +2,10 @@ Changes from v2.2 to v2.3
 =========================
 
 
-Deprecated Features
--------------------
+Dependency Changes
+------------------
+
+- Removed future as a dependency. (#1082)
 
 
 API Changes
