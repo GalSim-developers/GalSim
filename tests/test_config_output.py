@@ -954,7 +954,9 @@ def test_extra_truth():
                     # slightly gratuitous here.  Use int16 to force a check that np.integer works.
                     'obj_type_i' : '$np.int16(@gal.index)',
                     'obj_type_s' : '$"gal" if @gal.index else "star"',
-                }
+                    # Can also just be a constant value.
+                    'run_num' : 17,
+                })
             }
         }
     }
@@ -1006,6 +1008,7 @@ def test_extra_truth():
     np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
     np.testing.assert_almost_equal(cat.data['pos.x'], obj_num * 32 + 16.5)
     np.testing.assert_almost_equal(cat.data['pos.y'], 16.5)
+    np.testing.assert_almost_equal(cat.data['run_num'], 17)
 
     # Check that a warning is properly logged when columns are not an ordered dict.
     # These need to be done with BuildFile, not Process, so original isn't copied.
