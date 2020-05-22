@@ -108,8 +108,11 @@ def _GenerateFromEval(config, base, value_type):
             # Find @items using regex.  They can include alphanumeric chars plus '.'.
             keys = re.findall(r'@[\w\.]*', string)
             #print('@keys = ',keys)
-            # Remove duplicates
-            keys = np.unique(keys).tolist()
+            # Remove duplicates, then sort in reverse order.
+            # This makes e.g. @gal.index get processed before @gal, so replacing @gal
+            # doesn't mess up the later @gal.index replacement.
+            keys = sorted(np.unique(keys).tolist())
+            keys.reverse()
             #print('unique @keys = ',keys)
             for key0 in keys:
                 key = key0[1:] # Remove the @ sign.

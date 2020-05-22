@@ -943,7 +943,7 @@ def test_extra_truth():
                     },
                     'beta' : '$0. if @gal.index==0 else (@gal.items.1.ellip).beta.rad',
                     'hlr' : '$@output.truth.columns.sigma * np.sqrt(2.*math.log(2))',
-                    #'fwhm' : '$(@gal).original.fwhm if @gal.index == 1 else (@gal).fwhm',
+                    'fwhm' : '$(@gal).original.fwhm if @gal.index == 1 else (@gal).fwhm',
                     'pos' : 'image_pos',
                     # slightly gratuitous here.  Use int16 to force a check that np.integer works.
                     'obj_type_i' : '$np.int16(@gal.index)',
@@ -997,7 +997,7 @@ def test_extra_truth():
     np.testing.assert_equal(cat.data['obj_type_i'], obj_type_i)
     np.testing.assert_equal(cat.data['obj_type_s'], obj_type_s)
     np.testing.assert_almost_equal(cat.data['hlr'], sigma * galsim.Gaussian._hlr_factor)
-    #np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
+    np.testing.assert_almost_equal(cat.data['fwhm'], sigma * galsim.Gaussian._fwhm_factor)
     np.testing.assert_almost_equal(cat.data['pos.x'], obj_num * 32 + 16.5)
     np.testing.assert_almost_equal(cat.data['pos.y'], 16.5)
 
