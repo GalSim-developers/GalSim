@@ -937,26 +937,26 @@ def test_extra_truth():
             'file_name' : 'output/test_truth.fits',
             'truth' : {
                 'hdu' : 1,
-                'columns' : OrderedDict({
-                    'object_id' : 'obj_num',
-                    'index' : 'gal.index',
-                    'flux' : '@gal.flux', # The @ is not required, but allowed.
+                'columns' : OrderedDict([
+                    ('object_id' , 'obj_num'),
+                    ('index' , 'gal.index'),
+                    ('flux' , '@gal.flux'), # The @ is not required, but allowed.
                     # Check several different ways to do calculations
-                    'sigma' : '$@gal.items.0.sigma if @gal.index==0 else @gal.items.1.sigma',
-                    'g' : {
+                    ('sigma' , '$@gal.items.0.sigma if @gal.index==0 else @gal.items.1.sigma'),
+                    ('g' , {
                         'type': 'Eval',
                         'str': '0. if @gal.index==0 else (@gal.items.1.ellip).g',
-                    },
-                    'beta' : '$0. if @gal.index==0 else (@gal.items.1.ellip).beta.rad',
-                    'hlr' : '$@output.truth.columns.sigma * np.sqrt(2.*math.log(2))',
-                    'fwhm' : '$(@gal).original.fwhm if @gal.index == 1 else (@gal).fwhm',
-                    'pos' : 'image_pos',
+                    }),
+                    ('beta' , '$0. if @gal.index==0 else (@gal.items.1.ellip).beta.rad'),
+                    ('hlr' , '$@output.truth.columns.sigma * np.sqrt(2.*math.log(2))'),
+                    ('fwhm' , '$(@gal).original.fwhm if @gal.index == 1 else (@gal).fwhm'),
+                    ('pos' , 'image_pos'),
                     # slightly gratuitous here.  Use int16 to force a check that np.integer works.
-                    'obj_type_i' : '$np.int16(@gal.index)',
-                    'obj_type_s' : '$"gal" if @gal.index else "star"',
+                    ('obj_type_i' , '$np.int16(@gal.index)'),
+                    ('obj_type_s' , '$"gal" if @gal.index else "star"'),
                     # Can also just be a constant value.
-                    'run_num' : 17,
-                })
+                    ('run_num' , 17),
+                ])
             }
         }
     }
