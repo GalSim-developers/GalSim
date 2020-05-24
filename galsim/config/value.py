@@ -120,13 +120,21 @@ def ParseValue(config, key, base, value_type):
                 if value_type is None and len(valid_types) == 1:
                     value_type = valid_types[0]
                 else:
-                    err_str = "Invalid value_type specified for parameter %s with type=%s.\n"%(
-                            key, type_name)
                     if value_type is None:
-                        err_str += (
+                        err_str = (
+                            "Could not determine the appropriate value_type to use for " +
+                            "parameter %s with type=%s.\n"%(key, type_name) +
+                            "Probably it's being used in a Current context before being " +
+                            "evaluated.\n" +
                             "Consider using an explicit value-typed type name like %s_%s "%(
                                 type_name, valid_types[0].__name__) +
                             "to help GalSim know which value_type to expect.\n")
+                    else:
+                        err_str = (
+                            "Invalid value_type specified for parameter %s with type=%s.\n"%(
+                                key, type_name) +
+                            "In this context, GalSim was expecting something that can be "+
+                            "evaluated as a %s.\n"%(value_type))
                     raise GalSimConfigValueError(err_str, value_type, valid_types)
             param['_gen_fn'] = generate_func
 
