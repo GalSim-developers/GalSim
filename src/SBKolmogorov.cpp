@@ -26,16 +26,22 @@
 
 // Uncomment this to do the calculation that solves for the conversion between lam_over_r0
 // and fwhm and hlr.
-// (Solved values are put into Kolmogorov class in galsim/base.py = 0.975865, 0.554811)
+// (Solved values are put into Kolmogorov class in galsim/base.py = 0.9758634299, 0.5548101137)
 //#define SOLVE_FWHM_HLR
 
 #ifdef SOLVE_FWHM_HLR
+#include <iomanip>
 #include "Solve.h"
 #endif
 
 // This is used in two places below, so store it up here.
 // See KolmogorovInfo constructor for the explanation of this number.
-#define XVAL_ZERO 0.55090124543985636638457099311149824 / (2.*M_PI)
+// It is equal to 3/5 Gamma(6/5) / 2pi
+#define XVAL_ZERO 0.0876786563672346
+
+// Another magic number.  This one turns out to be
+// 2Pi (24 Gamma(6/5) / 5)^(-1/2)
+#define K0_FACTOR 2.992939911888651
 
 namespace galsim {
 
@@ -67,7 +73,7 @@ namespace galsim {
     LRUCache<GSParamsPtr, KolmogorovInfo> SBKolmogorov::SBKolmogorovImpl::cache(
         sbp::max_kolmogorov_cache);
 
-    // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
+    // The "magic" number we call K0_FACTOR omes from the standard form of the Kolmogorov spectrum
     // from Racine, 1996 PASP, 108, 699 (who in turn is quoting Fried, 1966, JOSA, 56, 1372):
     // T(k) = exp(-1/2 D(k))
     // D(k) = 6.8839 (lambda/r0 k/2Pi)^(5/3)
@@ -76,11 +82,17 @@ namespace galsim {
     // which implies 1/2 6.8839 (lambda/r0 / 2Pi)^5/3 = (1/k0)^5/3
     // k0 * lambda/r0 = 2Pi * (6.8839 / 2)^-3/5 = 2.992934
     //
+    // Update turns out that 6.8839/2 is actually (24 Gamma(6/5) / 5)^(5/6)
+    // Which in turn makes the constant factor above
+    // 2Pi (24 Gamma(6/5) / 5)^(5/6)^-(3/5)
+    // = 2Pi (24 Gamma(6/5) / 5)^(-1/2)
+    // = 2.992939911888651
+    // (Not that we need this many digits, but hey, why not?)
     SBKolmogorov::SBKolmogorovImpl::SBKolmogorovImpl(
         double lam_over_r0, double flux, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _lam_over_r0(lam_over_r0),
-        _k0(2.992934 / lam_over_r0),
+        _k0(K0_FACTOR / lam_over_r0),
         _k0sq(_k0*_k0),
         _inv_k0(1./_k0),
         _inv_k0sq(1./_k0sq),
@@ -352,7 +364,6 @@ namespace galsim {
         // Start with f(0), which is analytic:
         // According to Wolfram Alpha:
         // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)
-        //    = 0.55090124543985636638457099311149824;
         // The value we want is this / 2pi, which we define as XVAL_ZERO above.
         double val = XVAL_ZERO;
         _radial.addEntry(0.,val);
@@ -415,25 +426,25 @@ namespace galsim {
         xdbg<<"Root is "<<rd<<std::endl;
         // This is in units of 1/k0.  k0 = 2.992934 / lam_over_r0
         // It's also the half-width hal-max, so * 2 to get fwhm.
-        xdbg<<"fwhm = "<<rd * 2. / 2.992934<<" * lam_over_r0\n";
+        dbg<<"fwhm = "<<std::setprecision(10)<<rd * 2. / K0_FACTOR<<" * lam_over_r0\n";
 
         // Confirm that flux function gets unit flux when integrated to infinity:
-        KolmEnclosedFlux enc_flux;
+        KolmEnclosedFlux enc_flux(*gsparams);
         for(double rmax = 0.; rmax < 20.; rmax += 1.) {
-            dbg<<"Flux enclosed by r="<<rmax<<" = "<<enc_flux(rmax)<<std::endl;
+            xdbg<<"Flux enclosed by r="<<rmax<<" = "<<enc_flux(rmax)<<std::endl;
         }
 
         // Next find the conversion between lam_over_r0 and hlr:
-        KolmTargetFlux hlr_func(0.5);
+        KolmTargetFlux hlr_func(0.5, *gsparams);
         r1 = 1.6;
         r2 = 1.7;
         Solve<KolmTargetFlux> hlr_solver(hlr_func,r1,r2);
         hlr_solver.setMethod(Brent);
         rd = hlr_solver.root();
         xdbg<<"Root is "<<rd<<std::endl;
-        dbg<<"Flux enclosed by r="<<rd<<" = "<<enc_flux(rd)<<std::endl;
+        xdbg<<"Flux enclosed by r="<<rd<<" = "<<enc_flux(rd)<<std::endl;
         // This is in units of 1/k0.  k0 = 2.992934 / lam_over_r0
-        xdbg<<"hlr = "<<rd / 2.992934<<" * lam_over_r0\n";
+        dbg<<"hlr = "<<std::setprecision(10)<<rd / K0_FACTOR<<" * lam_over_r0\n";
 #endif
     }
 

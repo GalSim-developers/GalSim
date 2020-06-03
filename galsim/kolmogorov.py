@@ -128,10 +128,10 @@ class Kolmogorov(GSObject):
     _takes_rng = False
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
-    # In SBKolmogorov.cpp we refine this factor to 0.975865
-    _fwhm_factor = 0.975865
+    # In SBKolmogorov.cpp we refine this factor to 0.9758634299
+    _fwhm_factor = 0.9758634299
     # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
-    _hlr_factor = 0.554811
+    _hlr_factor = 0.5548101137
 
     # This constant comes from the standard form of the Kolmogorov spectrum from
     # from Racine, 1996 PASP, 108, 699 (who in turn is quoting Fried, 1966, JOSA, 56, 1372):
@@ -141,7 +141,13 @@ class Kolmogorov(GSObject):
     # We convert this into T(k) = exp(-(k/k0)^5/3) for efficiency,
     # which implies 1/2 6.8839 (lambda/r0 / 2Pi)^5/3 = (1/k0)^5/3
     # k0 * lambda/r0 = 2Pi * (6.8839 / 2)^-3/5 = 2.992934
-    _k0_factor = 2.992934
+    # Update turns out that 6.8839/2 is actually (24 Gamma(6/5) / 5)^(5/6)
+    # Which in turn makes the constant factor above
+    # 2Pi (24 Gamma(6/5) / 5)^(5/6)^-(3/5)
+    # = 2Pi (24 Gamma(6/5) / 5)^(-1/2)
+    # = 2.992939911888651
+    # (Not that we need this many digits, but hey, why not?)
+    _k0_factor = 2.992939911888651
 
     # The value in real space at (x,y) = (0,0) is analytic:
     # int( flux (k/2pi) exp(-(k/k0)**(5/3)), k=0..inf)
