@@ -141,7 +141,8 @@ class Kolmogorov(GSObject):
     # We convert this into T(k) = exp(-(k/k0)^5/3) for efficiency,
     # which implies 1/2 6.8839 (lambda/r0 / 2Pi)^5/3 = (1/k0)^5/3
     # k0 * lambda/r0 = 2Pi * (6.8839 / 2)^-3/5 = 2.992934
-    # Update turns out that 6.8839/2 is actually (24 Gamma(6/5) / 5)^(5/6)
+    #
+    # Update: It turns out that 6.8839/2 is actually (24 Gamma(6/5) / 5)^(5/6)
     # Which in turn makes the constant factor above
     # 2Pi (24 Gamma(6/5) / 5)^(5/6)^-(3/5)
     # = 2Pi (24 Gamma(6/5) / 5)^(-1/2)
