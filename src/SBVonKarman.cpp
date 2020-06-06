@@ -170,6 +170,8 @@ namespace galsim {
         // gamma(5/6) / 2^(1/6)
         static const double magic3 = 1.005634917998590172;
         // 8 sqrt(2) (3/5 gamma(6/5))^(5/6)
+        // Note: This is the mysterious 6.8839 from Racine (1996).
+        //       K0_FACTOR in SBKolmogorov.cpp is 2Pi (magic4/2)^(-3/5)
         static const double magic4 = 6.883877182293811615;
         // 24 (sqrt(2) gamma(5/6)(3/5 gamma(6/5))^(5/6) gamma(11/6)) / pi^(2/3)
         static const double magic5 = 10.222659484499054723;
