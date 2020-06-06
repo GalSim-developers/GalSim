@@ -188,7 +188,7 @@ def test_vk_eq_kolm():
     kolm = galsim.Kolmogorov(lam=lam, r0=r0, flux=flux)
     vk = galsim.VonKarman(lam=lam, r0=r0, L0=L0, flux=flux)
 
-    np.testing.assert_allclose(kolm.xValue(0,0), vk.xValue(0,0), rtol=1e-3, atol=0)
+    np.testing.assert_allclose(kolm.xValue(0,0), vk.xValue(0,0), rtol=5e-4, atol=0)
 
     kolm_img = kolm.drawImage(nx=24, ny=24, scale=0.2)
     vk_img = vk.drawImage(nx=24, ny=24, scale=0.2)
