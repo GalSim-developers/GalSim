@@ -47,15 +47,23 @@ def test_cosmos_basic():
 
     # Check other exclusion levels:
     cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
-                               dir=datapath, exclusion_level='bad_stamp')
+                                dir=datapath, exclusion_level='bad_stamp')
     assert len(cat3) == 97
     cat4 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
-                               dir=datapath, exclusion_level='bad_fits')
+                                dir=datapath, exclusion_level='bad_fits')
     assert len(cat4) == 100  # no bad fits in the example file as it happens.
     cat5 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
-                               dir=datapath, exclusion_level='marginal')
+                                dir=datapath, exclusion_level='marginal')
     assert len(cat5) == 96   # this is actually the default, so == cat
     assert cat == cat5
+    cat6 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
+                                dir=datapath, exclusion_level='marginal',
+                                max_hlr=2, max_flux=2000)
+    assert len(cat6) == 93
+    cat7 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
+                                dir=datapath, exclusion_level='marginal',
+                                min_hlr=0.2, min_flux=10)
+    assert len(cat7) == 91
 
     # Check the 25.2 exclusions.  We don't have a 25.2 catalog available in Travis runs, so
     # mock up the example catalog as though it were 25.2

@@ -50,6 +50,7 @@ def test_airy():
     np.testing.assert_array_equal(
             airy.obscuration, 0.1,
             err_msg="Airy obscuration returned wrong value")
+    do_pickle(airy)
 
     # Check with default_params
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=default_params)
