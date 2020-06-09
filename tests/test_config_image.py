@@ -849,6 +849,7 @@ def test_scattered():
         'type' : 'Scattered',
         'size' : size,
         'pixel_scale' : scale,
+        'index_convention' : 0,
         'stamp_xsize' : { 'type': 'Sequence', 'first' : stamp_size },
         'stamp_ysize' : { 'type': 'Sequence', 'first' : stamp_size },
         'image_pos' : { 'type' : 'List',
@@ -863,6 +864,7 @@ def test_scattered():
 
     image2 = galsim.ImageF(size,size, scale=scale)
     image2.setZero()
+    image2.setOrigin(0,0)
     gal = galsim.Gaussian(sigma=sigma, flux=flux)
 
     for (i,x,y) in [ (0,x1,y1), (1,x2,y2), (2,x3,y3) ]:

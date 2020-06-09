@@ -116,6 +116,12 @@ def test_sersic():
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sersic)
 
+    # n=4 is also called DeVaucouleurs
+    sersic = galsim.Sersic(n=4, flux=1.7, half_light_radius=2.3, trunc=5.9)
+    devauc = galsim.DeVaucouleurs(flux=1.7, half_light_radius=2.3, trunc=5.9)
+    assert devauc == sersic
+    check_basic(devauc, "DeVaucouleurs")
+
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
     # For half-light radius specified truncated Sersic, with flux_untruncated flag set
