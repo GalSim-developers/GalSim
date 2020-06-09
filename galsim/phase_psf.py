@@ -809,6 +809,7 @@ class PhaseScreenList(object):
             pool:       A multiprocessing.Pool object to use to instantiate screens in parallel.
             **kwargs:   Keyword arguments to forward to screen.instantiate().
         """
+        _bar = _bar if _bar else dict()  # with dict() _bar.update() is a trivial no op.
         if pool is not None:
             results = []
             for layer in self:
@@ -816,8 +817,7 @@ class PhaseScreenList(object):
                     results.append(pool.apply_async(layer.instantiate, kwds=kwargs))
                 except AttributeError:  # OpticalScreen has no instantiate method
                     pass
-                if _bar:  # pragma: no cover
-                    _bar.update()
+                _bar.update()
             for r in results:
                 r.wait()
         else:
@@ -826,8 +826,7 @@ class PhaseScreenList(object):
                     layer.instantiate(**kwargs)
                 except AttributeError:
                     pass
-                if _bar:
-                    _bar.update()
+                _bar.update()
 
     def _delayCalculation(self, psf):
         """Add psf to delayed calculation list."""
@@ -1249,7 +1248,7 @@ class PhaseScreenPSF(GSObject):
 
         self._ii_pad_factor = ii_pad_factor
 
-        self._bar = _bar
+        self._bar = _bar if _bar else dict()  # with dict() _bar.update() is a trivial no op.
         self._flux = float(flux)
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
@@ -1426,8 +1425,7 @@ class PhaseScreenPSF(GSObject):
         if self._img is None:
             self._img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
         self._img += np.abs(ftexpwf)**2
-        if self._bar:  # pragma: no cover
-            self._bar.update()
+        self._bar.update()
 
     def _finalize(self):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
