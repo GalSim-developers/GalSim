@@ -2,12 +2,15 @@ branches:
     only:
         - master
         - /^releases\/.*/
+        - coverage
 
 language: python
 python:
     - 2.7
     - 3.5
     - 3.6
+    - 3.7
+    - 3.8
 
 compiler:
     - g++
@@ -19,6 +22,11 @@ matrix:
         - python: 3.7
           dist: xenial
           name: "Python: 3.7"
+
+        # And 3.8 the same way
+        - python: 3.8
+          dist: xenial
+          name: "Python: 3.8"
 
         # Note: All the rest are technically allowed to fail.  This is mostly so the
         # Travis runs can finish faster, since they often only do 4 at a time.
@@ -74,7 +82,7 @@ matrix:
             - PATH=/Users/travis/Library/Python/3.7/bin:$PATH
           name: OSX (Python 3.7)
 
-        # Check 3.8-dev, but less concerned if this fails.
+        # Check 3.9-dev, but less concerned if this fails.
         - python: 3.8-dev
           dist: xenial
           name: "Python: 3.8-dev"
@@ -87,7 +95,7 @@ matrix:
     allow_failures:
         - name: Linux clang (Python 3.6)
         - os: osx
-        - python: 3.8-dev
+        - python: 3.9-dev
         - python: pypy3
     fast_finish: true
 
