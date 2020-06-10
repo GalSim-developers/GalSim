@@ -222,7 +222,7 @@ namespace galsim {
             ~Element()
             {
                 if (_left) {
-                    assert(_right);
+                    xassert(_right);
                     delete _left;
                     delete _right;
                 }
