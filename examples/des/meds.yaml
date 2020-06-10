@@ -49,7 +49,7 @@ modules:
     - galsim.des
 
     # A custom package in this directory for measuring shapes with HSM
-    - hsm_shape
+    - hsm_shape_measure
 
     # Read the WCS from a (in this case random) location within a real DES focal place observation.
     - des_wcs
