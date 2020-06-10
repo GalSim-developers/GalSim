@@ -1044,7 +1044,8 @@ def test_cosmos_redshift():
         zphot = record['zphot']
         return zphot
 
-    galsim.config.RegisterValueType('COSMOS_ZPhot', COSMOS_ZPhot, [float])
+    # Gratuitously use a list for the input_type to test that that works.
+    galsim.config.RegisterValueType('COSMOS_ZPhot', COSMOS_ZPhot, [float], ['cosmos_catalog'])
 
     real_gal_dir = os.path.join('..','examples','data')
     real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
