@@ -680,20 +680,10 @@ class StampBuilder(object):
         if xsize: base['stamp_xsize'] = xsize
         if ysize: base['stamp_ysize'] = ysize
 
+        # If we have either image_pos or world_pos, calculate the other.
         if image_pos is not None and world_pos is None:
-            # Calculate and save the position relative to the image center
-            if wcs.isCelestial():
-                # Wherever we use the world position, we expect a Euclidean position, not a
-                # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
-                # image center.
-                world_center = base.get('world_center', wcs.toWorld(base['image_center']))
-                world_pos = wcs.toWorld(image_pos, project_center=world_center,
-                                                projection='gnomonic')
-            else:
-                world_pos = wcs.toWorld(image_pos)
-
+            world_pos = wcs.toWorld(image_pos)
         elif world_pos is not None and image_pos is None:
-            # Calculate and save the position relative to the image center
             image_pos = wcs.toImage(world_pos)
 
         # Wherever we use the world position, we expect a Euclidean position, not a

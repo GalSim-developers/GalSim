@@ -21,6 +21,7 @@ import numpy as np
 
 from .util import LoggerWrapper, GetIndex, GetRNG
 from .value import ParseValue, GetCurrentValue, GetAllParams
+from .input import RegisterInputConnectedType
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..image import Image
 from ..random import PoissonDeviate
@@ -592,13 +593,7 @@ def RegisterNoiseType(noise_type, builder, input_type=None):
                         [default: None]
     """
     valid_noise_types[noise_type] = builder
-    if input_type is not None:  # pragma: no cover
-        from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):
-            for key in input_type:
-                RegisterInputConnectedType(key, noise_type)
-        else:
-            RegisterInputConnectedType(input_type, noise_type)
+    RegisterInputConnectedType(input_type, noise_type)
 
 
 RegisterNoiseType('Gaussian', GaussianNoiseBuilder())

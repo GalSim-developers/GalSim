@@ -45,10 +45,12 @@ def test_float_value():
                     'nfw_halo' : { 'mass' : halo_mass, 'conc' : halo_conc, 'redshift' : halo_z },
                     'power_spectrum' : { 'e_power_function' : 'np.exp(-k**0.2)',
                                          'grid_spacing' : 10, 'interpolant' : 'linear' },
+                    'fits_header' : { 'dir' : 'fits_files', 'file_name' : 'tpv.fits' },
                   },
 
         'val1' : 9.9,
         'val2' : int(400),
+        'val3' : None,
         'str1' : '8.73',
         'str2' : '2.33e-9',
         'str3' : '6.e-9',
@@ -97,6 +99,8 @@ def test_float_value():
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'f' },
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 'f' },
         'dict4' : { 'type' : 'Dict_float', 'num' : 2, 'key' : 'noise.models.1.gain' },
+        'fits1' : { 'type' : 'FitsHeader', 'key' : 'AIRMASS' },
+        'fits2' : { 'type' : 'FitsHeader', 'key' : 'MJD-OBS' },
         'sum1' : { 'type' : 'Sum', 'items' : [ 72, '2.33', { 'type' : 'Dict', 'key' : 'f' } ] },
         'nfw' : { 'type' : 'NFWHaloMagnification' },
         'ps' : { 'type' : 'PowerSpectrumMagnification' },
@@ -132,6 +136,10 @@ def test_float_value():
 
     val2 = galsim.config.ParseValue(config,'val2',config, float)[0]
     np.testing.assert_almost_equal(val2, 400)
+
+    # Even though None is not a float, it is valid to set any parameter to None
+    val3 = galsim.config.ParseValue(config,'val3',config, float)[0]
+    np.testing.assert_equal(val3, None)
 
     # You can also give None as the value type, which just returns whatever is in the dict.
     val1b  = galsim.config.ParseValue(config,'val1',config, None)[0]
@@ -186,6 +194,10 @@ def test_float_value():
         gauss1 = galsim.config.ParseValue(config,'gauss1',config, float)[0]
         gd = galsim.GaussianDeviate(rng,mean=0,sigma=1)
         np.testing.assert_almost_equal(gauss1, gd())
+
+        # Repeating with the same sigma will use the same gd object
+        gauss1b = galsim.config.ParseValue(config,'gauss1b',config, float)[0]
+        np.testing.assert_almost_equal(gauss1b, gd())
 
         gauss2 = galsim.config.ParseValue(config,'gauss2',config, float)[0]
         gd = galsim.GaussianDeviate(rng,mean=4,sigma=3)
@@ -331,6 +343,9 @@ def test_float_value():
     dict.append(galsim.config.ParseValue(config,'dict3',config, float)[0])
     dict.append(galsim.config.ParseValue(config,'dict4',config, float)[0])
     np.testing.assert_array_almost_equal(dict, [ 23.17, -17.23, 0.1, 1.9 ])
+
+    assert galsim.config.ParseValue(config,'fits1',config, float)[0] == 1.185
+    assert galsim.config.ParseValue(config,'fits2',config, float)[0] == 54384.18627436
 
     sum1 = galsim.config.ParseValue(config,'sum1',config, float)[0]
     np.testing.assert_almost_equal(sum1, 72 + 2.33 + 23.17)
@@ -500,11 +515,14 @@ def test_int_value():
                     'dict' : [
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ],
+                    'fits_header' : { 'dir' : 'fits_files', 'file_name' : 'tpv.fits' },
+                  },
 
         'val1' : 9,
         'val2' : float(8.7),  # Reading as int will drop the fraction.
         'val3' : -400.8,      # Not floor - negatives will round up.
+        'val4' : None,
         'str1' : '8',
         'str2' : '-2',
         'cat1' : { 'type' : 'Catalog' , 'col' : 2 },
@@ -534,6 +552,8 @@ def test_int_value():
         'dict1' : { 'type' : 'Dict', 'key' : 'i' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'i' },
         'dict3' : { 'type' : 'Dict_int', 'num' : 2, 'key' : 'i' },
+        'fits1' : { 'type' : 'FitsHeader', 'key' : 'CCDNUM' },
+        'fits2' : { 'type' : 'FitsHeader', 'key' : 'FILPOS' },
         'sum1' : { 'type' : 'Sum', 'items' : [ 72.3, '2', { 'type' : 'Dict', 'key' : 'i' } ] },
         'cur1' : { 'type' : 'Current', 'key' : 'val1' },
         'cur2' : { 'type' : 'Current_int', 'key' : 'list2.index.step' },
@@ -555,6 +575,9 @@ def test_int_value():
 
     val3 = galsim.config.ParseValue(config,'val3',config, int)[0]
     np.testing.assert_equal(val3, -400)
+
+    val4 = galsim.config.ParseValue(config,'val4',config, int)[0]
+    np.testing.assert_equal(val4, None)
 
     # Test conversions from strings
     str1 = galsim.config.ParseValue(config,'str1',config, int)[0]
@@ -694,6 +717,9 @@ def test_int_value():
     dict.append(galsim.config.ParseValue(config,'dict3',config, int)[0])
     np.testing.assert_array_equal(dict, [ 17, -23, 1 ])
 
+    assert galsim.config.ParseValue(config,'fits1',config, int)[0] == 1
+    assert galsim.config.ParseValue(config,'fits2',config, int)[0] == 6
+
     sum1 = galsim.config.ParseValue(config,'sum1', config, int)[0]
     np.testing.assert_almost_equal(sum1, 72 + 2 + 17)
 
@@ -732,11 +758,14 @@ def test_bool_value():
                     'dict' : [
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ],
+                    'fits_header' : { 'dir' : 'fits_files', 'file_name' : 'tpv.fits' },
+                  },
 
         'val1' : True,
         'val2' : 1,
         'val3' : 0.0,
+        'val4' : None,
         'str1' : 'true',
         'str2' : '0',
         'str3' : 'yes',
@@ -759,6 +788,8 @@ def test_bool_value():
         'dict1' : { 'type' : 'Dict', 'key' : 'b' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 'b' },
         'dict3' : { 'type' : 'Dict_bool', 'num' : 2, 'key' : 'b' },
+        'fits1' : { 'type' : 'FitsHeader', 'key' : 'PHOTFLAG' },
+        'fits2' : { 'type' : 'FitsHeader', 'key' : 'SCAMPFLG' },
         'bad1' : 'left',
         'bad2' : 'nope',
         'bad3' : { 'type' : 'RandomBinomial', 'N' : 2 },
@@ -775,6 +806,9 @@ def test_bool_value():
 
     val3 = galsim.config.ParseValue(config,'val3',config, bool)[0]
     np.testing.assert_equal(val3, False)
+
+    val4 = galsim.config.ParseValue(config,'val4',config, bool)[0]
+    np.testing.assert_equal(val4, None)
 
     # Test conversions from strings
     str1 = galsim.config.ParseValue(config,'str1',config, bool)[0]
@@ -866,6 +900,9 @@ def test_bool_value():
     dict.append(galsim.config.ParseValue(config,'dict3',config, bool)[0])
     np.testing.assert_array_equal(dict, [ True, False, False ])
 
+    assert galsim.config.ParseValue(config,'fits1',config, bool)[0] == False
+    assert galsim.config.ParseValue(config,'fits2',config, bool)[0] == False
+
     # Test bad values
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'bad1',config, bool)
@@ -886,11 +923,14 @@ def test_str_value():
                     'dict' : [
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
-                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
+                        { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ],
+                    'fits_header' : { 'dir' : 'fits_files', 'file_name' : 'tpv.fits' },
+                  },
 
         'val1' : -93,
         'val2' : True,
         'val3' : 123.8,
+        'val4' : None,
         'str1' : "Norwegian",
         'str2' : u"Blue",
         'cat1' : { 'type' : 'Catalog' , 'col' : 6 },
@@ -914,6 +954,8 @@ def test_str_value():
         'dict1' : { 'type' : 'Dict', 'key' : 's' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 's' },
         'dict3' : { 'type' : 'Dict', 'num' : 2, 'key' : 's' },
+        'fits1' : { 'type' : 'FitsHeader', 'key' : 'FILTER' },
+        'fits2' : { 'type' : 'FitsHeader', 'key' : 'DETECTOR' },
         'bad1' : { 'type' : 'FormattedStr', 'format' : 'realgal%02q.fits', 'items' : [4,5,6] },
         'bad2' : { 'type' : 'FormattedStr', 'format' : 'realgal%02', 'items' : [4,5,6] },
         'bad3' : { 'type' : 'FormattedStr', 'format' : 'realgal%02d_%d.fits', 'items' : [4,5,6] },
@@ -932,6 +974,9 @@ def test_str_value():
 
     val3 = galsim.config.ParseValue(config,'val3',config, str)[0]
     np.testing.assert_equal(val3, '123.8')
+
+    val4 = galsim.config.ParseValue(config,'val4',config, str)[0]
+    np.testing.assert_equal(val4, None)
 
     # Test conversions from strings
     str1 = galsim.config.ParseValue(config,'str1',config, str)[0]
@@ -997,6 +1042,9 @@ def test_str_value():
     dict.append(galsim.config.ParseValue(config,'dict3',config, str)[0])
     np.testing.assert_array_equal(dict, [ 'Life', 'of', 'Brian' ])
 
+    assert galsim.config.ParseValue(config,'fits1',config, str)[0] == 'I'
+    assert galsim.config.ParseValue(config,'fits2',config, str)[0] == 'Mosaic2'
+
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'bad1',config, str)
     with assert_raises(galsim.GalSimConfigError):
@@ -1019,6 +1067,7 @@ def test_angle_value():
 
         'val1' : 1.9 * galsim.radians,
         'val2' : -41 * galsim.degrees,
+        'val3' : None,
         'str1' : '0.73 radians',
         'str2' : '240 degrees',
         'str3' : '1.2 rad',
@@ -1060,6 +1109,9 @@ def test_angle_value():
 
     val2 = galsim.config.ParseValue(config,'val2',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(val2.rad, -41 * math.pi/180)
+
+    val3 = galsim.config.ParseValue(config,'val3',config, galsim.Angle)[0]
+    np.testing.assert_equal(val3, None)
 
     val1b = galsim.config.ParseValue(config,'val1',config, None)[0]
     val2b = galsim.config.ParseValue(config,'val2',config, None)[0]
@@ -1166,6 +1218,7 @@ def test_shear_value():
     config = {
         'val1' : galsim.Shear(g1=0.2, g2=0.3),
         'val2' : galsim.Shear(e1=0.1),
+        'val3' : None,
         's1' : { 'type' : 'E1E2', 'e1' : 0.5, 'e2' : -0.1 },
         's2' : { 'type' : 'EBeta', 'e' : 0.5, 'beta' : 0.1 * galsim.radians },
         's3' : { 'type' : 'G1G2', 'g1' : 0.5, 'g2' : -0.1 },
@@ -1206,6 +1259,9 @@ def test_shear_value():
     val2 = galsim.config.ParseValue(config,'val2',config, galsim.Shear)[0]
     np.testing.assert_almost_equal(val2.e1, 0.1)
     np.testing.assert_almost_equal(val2.e2, 0.)
+
+    val3 = galsim.config.ParseValue(config,'val3',config, galsim.Shear)[0]
+    np.testing.assert_equal(val3, None)
 
     # Test various direct types
     s1 = galsim.config.ParseValue(config,'s1',config, galsim.Shear)[0]
@@ -1366,11 +1422,13 @@ def test_pos_value():
     config = {
         'val1' : galsim.PositionD(0.1,0.2),
         'val2' : '0.1, 0.2',
+        'val3' : None,
         'xy1' : { 'type' : 'XY', 'x' : 1.3, 'y' : 2.4 },
         'ran1' : { 'type' : 'RandomCircle', 'radius' : 3 },
         'ran2' : { 'type' : 'RandomCircle', 'radius' : 1, 'center' : galsim.PositionD(3,7) },
         'ran3' : { 'type' : 'RandomCircle', 'radius' : 3.1, 'center' : galsim.PositionD(0.2,-0.9),
                    'inner_radius' : 1.3 },
+        'ran4' : { 'type' : 'RTheta', 'r' : 1.3, 'theta' : { 'type': 'Random' } },
         'list1' : { 'type' : 'List',
                     'items' : [ galsim.PositionD(0.2, -0.3),
                                 galsim.PositionD(-0.5, 0.2),
@@ -1417,6 +1475,9 @@ def test_pos_value():
     np.testing.assert_almost_equal(val1.x, 0.1)
     np.testing.assert_almost_equal(val1.y, 0.2)
 
+    val3 = galsim.config.ParseValue(config,'val3',config, galsim.PositionD)[0]
+    np.testing.assert_equal(val3, None)
+
     xy1 = galsim.config.ParseValue(config,'xy1',config, galsim.PositionD)[0]
     np.testing.assert_almost_equal(xy1.x, 1.3)
     np.testing.assert_almost_equal(xy1.y, 2.4)
@@ -1462,6 +1523,12 @@ def test_pos_value():
             if rsq >= 1.3**2 and rsq <= 3.1**2: break
         np.testing.assert_almost_equal(ran3.x, x+0.2)
         np.testing.assert_almost_equal(ran3.y, y-0.9)
+
+        ran4 = galsim.config.ParseValue(config,'ran4',config, galsim.PositionD)[0]
+        r = 1.3
+        theta = rng() * 2. * math.pi
+        np.testing.assert_almost_equal(ran4.x, r * math.cos(theta))
+        np.testing.assert_almost_equal(ran4.y, r * math.sin(theta))
 
     # Test values taken from a List
     list1 = []
@@ -1593,6 +1660,13 @@ def test_eval():
 
     galsim.config.ProcessInput(config)
     true_val = np.exp(-0.5 * 1.8**2)  # All of these should equal this value.
+    for i in range(1,22):
+        test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
+        print('i = ',i, 'val = ',test_val,true_val)
+        np.testing.assert_almost_equal(test_val, true_val)
+
+    # Doing it again uses saved _value and _fn
+    galsim.config.RemoveCurrent(config)
     for i in range(1,22):
         test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
         print('i = ',i, 'val = ',test_val,true_val)

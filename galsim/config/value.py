@@ -174,7 +174,7 @@ def ParseValue(config, key, base, value_type):
                 return ParseValue(config, key, base, value_type)
 
         # See if it's already the right kind of object, in which case we can just return it.
-        if value_type is None or isinstance(param, value_type):
+        if value_type is None or param is None or isinstance(param, value_type):
             #print(key,' = ',param)
             return param, True
 
@@ -195,10 +195,6 @@ def ParseValue(config, key, base, value_type):
         elif value_type is PositionD:
             # For PositionD, we allow a string of x,y
             val = _GetPositionValue(param)
-        elif value_type is None or param is None:
-            # If no value_type is given, just return whatever we have in the dict and hope
-            # for the best.
-            val = param
         else:
             # If none of the above worked, just try a normal value_type initialization.
             # This makes sure strings are converted to float (or other type) if necessary.
@@ -799,14 +795,9 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
                         input type here.  (If it uses more than one, this may be a list.)
                         [default: None]
     """
+    from .input import RegisterInputConnectedType
     valid_value_types[type_name] = (gen_func, tuple(valid_types))
-    if input_type is not None:
-        from .input import RegisterInputConnectedType
-        if isinstance(input_type, list): # pragma: no cover
-            for key in input_type:
-                RegisterInputConnectedType(key, type_name)
-        else:
-            RegisterInputConnectedType(input_type, type_name)
+    RegisterInputConnectedType(input_type, type_name)
     if len(valid_types) > 1:
         for t in valid_types:
             if t is not None:

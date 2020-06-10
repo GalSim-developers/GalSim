@@ -20,6 +20,7 @@ import inspect
 
 from .util import LoggerWrapper, GetIndex, GetRNG
 from .value import ParseValue, GetCurrentValue, GetAllParams, CheckAllParams, SetDefaultIndex
+from .input import RegisterInputConnectedType
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..position import PositionD
 from ..sum import Add
@@ -508,9 +509,7 @@ def RegisterObjectType(type_name, build_func, input_type=None):
                         [default: None]
     """
     valid_gsobject_types[type_name] = build_func
-    if input_type is not None:
-        from .input import RegisterInputConnectedType
-        RegisterInputConnectedType(input_type, type_name)
+    RegisterInputConnectedType(input_type, type_name)
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)

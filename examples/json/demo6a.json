@@ -32,9 +32,7 @@
 },
 
 "image" : {
-    "pixel_scale" : 0.16,
-
-    "random_seed" : 1512413
+    "pixel_scale" : 0.16
 },
 
 "output" : {

@@ -109,26 +109,24 @@ def test_fits():
 
     # nproc < 0 should automatically determine nproc from ncpu
     config = galsim.config.CopyConfig(config1)
-    config['output']['nproc'] = -1
     with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
+        galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : -1})
     assert 'ncpu = ' in cl.output
 
     # nproc > njobs should drop back to nproc = njobs
     config = galsim.config.CopyConfig(config1)
-    config['output']['nproc'] = 10
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
+        galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : 10})
     assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
 
     # Check that profile outputs something appropriate for multithreading.
     # (The single-thread profiling is handled by the galsim executable, which we don't
     # bother testing here.)
     config = galsim.config.CopyConfig(config1)
-    config['profile'] = True
-    config['output']['nproc'] = -1
     with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
+        galsim.config.Process(config, logger=cl.logger,
+                              new_params={'profile':True, 'output.nproc': -1})
     #print(cl.output)
     # Unfortunately, the LoggerProxy doesn't really work right with the string logger used
     # by CaptureLog.  I tried for a while to figure out how to get it to capture the proxied
@@ -895,6 +893,8 @@ def test_extra_truth():
     """
     nobjects = 6
     config = {
+        # Custom type in this dir.  Lets us use HSM_Shape
+        'modules' : ['hsm_shape'],
         'image' : {
             'type' : 'Tiled',
             'nx_tiles' : nobjects,
@@ -902,6 +902,8 @@ def test_extra_truth():
             'stamp_xsize' : 32,
             'stamp_ysize' : 32,
             'random_seed' : 1234,
+            'pixel_scale' : 0.2,
+            'nproc' : 2,
         },
         'psf' : {
             'type': 'Gaussian',
@@ -923,12 +925,11 @@ def test_extra_truth():
                                 'type': 'Random_float',
                                 'min': 1,
                                 'max': 2,
-                                'rng_index_key': 'image_num',
                              },
                     'ellip': {'type': 'EBeta', 'e': 0.2, 'beta': {'type': 'Random'} },
                 },
             ],
-            'flux': { 'type': 'Random', 'min': '$obj_num', 'max': '$obj_num * 4' },
+            'flux': { 'type': 'Random', 'min': '$obj_num+1', 'max': '$(obj_num+1) * 4' },
             # 1/3 of objects are stars.
             'index': '$0 if obj_num % 3 == 0 else 1',
         },
@@ -956,42 +957,47 @@ def test_extra_truth():
                     ('obj_type_s' , '$"gal" if @gal.index else "star"'),
                     # Can also just be a constant value.
                     ('run_num' , 17),
+                    ('shape' , { 'type' : 'HSM_Shape' }),
                 ])
             }
         }
     }
 
+    galsim.config.ImportModules(config)
     galsim.config.Process(config)
 
-    sigma_list = []
-    flux_list = []
-    image_ud = galsim.UniformDeviate(1234)
     sigma = np.empty(nobjects)
     flux = np.empty(nobjects)
     g = np.empty(nobjects)
     beta = np.empty(nobjects)
+    meas_g1 = np.empty(nobjects)
+    meas_g2 = np.empty(nobjects)
     obj_type_i = np.empty(nobjects, dtype=int)
     obj_type_s = [None] * nobjects
     for k in range(nobjects):
-        gal_ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(1234 + k + 1)
         if k%3 == 0:
-            if k == 0:
-                # The gal sigma gets calculated if there's not already a current, even though it
-                # is ignored.  This only happens for k==0.
-                image_ud()
             sigma[k] = 1.e-6
             g[k] = 0.
             beta[k] = 0.
             obj_type_i[k] = 0
             obj_type_s[k] = 'star'
+            gal = galsim.Gaussian(sigma=sigma[k])
         else:
-            sigma[k] = image_ud() + 1
-            shear = galsim.Shear(e=0.2, beta=gal_ud() * 2*np.pi * galsim.radians)
+            sigma[k] = ud() + 1
+            shear = galsim.Shear(e=0.2, beta=ud() * 2*np.pi * galsim.radians)
             g[k] = shear.g
             beta[k] = shear.beta.rad
             obj_type_i[k] = 1
             obj_type_s[k] = 'gal'
-        flux[k] = k * (gal_ud() * 3 + 1)
+            gal = galsim.Gaussian(sigma=sigma[k]).shear(shear)
+        flux[k] = (k+1) * (ud() * 3 + 1)
+        gal = gal.withFlux(flux[k])
+        psf = galsim.Gaussian(sigma=0.5)
+        obj = galsim.Convolve(psf,gal)
+        meas_shape = obj.drawImage(nx=32,ny=32,scale=0.2).FindAdaptiveMom().observed_shape
+        meas_g1[k] = meas_shape.g1
+        meas_g2[k] = meas_shape.g2
 
     file_name = 'output/test_truth.fits'
     cat = galsim.Catalog(file_name, hdu=1)
@@ -1009,6 +1015,8 @@ def test_extra_truth():
     np.testing.assert_almost_equal(cat.data['pos.x'], obj_num * 32 + 16.5)
     np.testing.assert_almost_equal(cat.data['pos.y'], 16.5)
     np.testing.assert_almost_equal(cat.data['run_num'], 17)
+    np.testing.assert_almost_equal(cat.data['shape.g1'], meas_g1)
+    np.testing.assert_almost_equal(cat.data['shape.g2'], meas_g2)
 
     # Check that a warning is properly logged when columns are not an ordered dict.
     # These need to be done with BuildFile, not Process, so original isn't copied.
@@ -1031,6 +1039,7 @@ def test_extra_truth():
     # Here it's a float for stars and Angle for galaxies.
     config['output']['truth']['columns']['beta'] = (
         '$0. if @gal.index==0 else (@gal.items.1.ellip).beta')
+    del config['image']['nproc']
     with CaptureLog(level=1) as cl:
         with assert_raises(galsim.GalSimConfigError):
             galsim.config.Process(config, logger=cl.logger)
@@ -1186,7 +1195,7 @@ def test_config():
                     {'type' : 'Moffat', 'beta' : 3.5, 'fwhm' : 0.9 },
                     {'type' : 'Airy', 'obscuration' : 0.3, 'lam' : 900, 'diam' : 4. } ] },
         'image' : { 'type' : 'Single', 'random_seed' : 1234, },
-        'output' : { 'type' : 'Fits', 'file_name' : "test.fits" },
+        'output' : { 'type' : 'Fits', 'file_name' : "test.fits", 'dir' : 'None' },
         'input' : { 'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.p' } },
         'eval_variables' : { 'fpixel_scale' : 0.3 }
     }
@@ -1195,6 +1204,8 @@ def test_config():
     yaml_file_name = "output/test_config.yaml"
     with open(yaml_file_name, 'w') as fout:
         yaml.dump(config, fout, default_flow_style=True)
+    # String None will be coverted to a real None.  Convert here in the comparison dict
+    config['output']['dir'] = None
 
     config1 = galsim.config.ReadConfig(yaml_file_name)[0]
     assert config == dict(config1)
@@ -1204,7 +1215,7 @@ def test_config():
     assert config == dict(config2)
 
     # Test json
-    json_file_name = "output/test_config.yaml"
+    json_file_name = "output/test_config.json"
     with open(json_file_name, 'w') as fout:
         json.dump(config, fout)
 
@@ -1270,6 +1281,39 @@ def test_config():
     assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.items.lam', 700)
     assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.items.4', 700)
     assert_raises(ValueError, galsim.config.SetInConfig, config, 'psf.itms.1.lam', 700)
+
+    # Check the yaml multiple document option.
+    # Easiest to just read demo6 with both Yaml and Json.
+    yaml_config_file = os.path.join('..','examples','demo6.yaml')
+    json_config_file_1 = os.path.join('..','examples','json','demo6a.json')
+    json_config_file_2 = os.path.join('..','examples','json','demo6b.json')
+
+    configs = galsim.config.ReadConfig(yaml_config_file)
+    config1 = galsim.config.ReadConfig(json_config_file_1)
+    config2 = galsim.config.ReadConfig(json_config_file_2)
+    assert len(configs) == 2
+    assert len(config1) == 1
+    assert len(config2) == 1
+
+    # A few adjustments are required before checking that they are equal.
+    # json files use '#' for comments
+    del config1[0]['#']
+    del config2[0]['#']
+    # remove the output dirs
+    del configs[0]['output']['dir']
+    del configs[1]['output']['dir']
+    del config1[0]['output']['dir']
+    del config2[0]['output']['dir']
+    # They have different parsing for 1e5, 1e6 to either string or float
+    configs[1]['gal']['flux'] = eval(configs[1]['gal']['flux'])
+    configs[1]['image']['sky_level'] = eval(configs[1]['image']['sky_level'])
+    # Now serialize with json to force the same ordering, etc.
+    s_yaml = json.dumps(configs[0], sort_keys=True)
+    s_json = json.dumps(config1[0], sort_keys=True)
+    assert s_yaml == s_json
+    s_yaml = json.dumps(configs[1], sort_keys=True)
+    s_json = json.dumps(config2[0], sort_keys=True)
+    assert s_yaml == s_json
 
 @timer
 def test_no_output():

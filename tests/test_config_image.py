@@ -642,7 +642,7 @@ def test_ring():
         gsobject_compare(gal1a, gal1b)
 
     # Make sure it all runs using the normal syntax
-    stamp = galsim.config.BuildStamp(config)
+    stamps = galsim.config.BuildStamps(6, config)
 
     # num <= 0 is invalid
     config['stamp']['num'] = 0
@@ -685,19 +685,27 @@ def test_ring():
             'num' : 10,
         },
         'gal' : {
-            'type' : 'Exponential', 'half_light_radius' : 2,
+            'type' : 'Exponential',
+            'half_light_radius' : 2,
             'ellip' : galsim.Shear(e2=0.3)
+        },
+        # This time use a psf too to check where that gets applied.
+        'psf' : {
+            'type' : 'Gaussian',
+            'fwhm' : 0.7,
         },
     }
 
     disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+    psf = galsim.Gaussian(fwhm=0.7)
 
     galsim.config.SetupConfigImageNum(config, 0, 0)
     for k in range(25):
         galsim.config.SetupConfigObjNum(config, k)
         ring_builder.setup(config['stamp'], config, None, None, ignore, None)
-        gal2a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
+        gal2a = ring_builder.buildProfile(config['stamp'], config, psf, {}, None)
         gal2b = disk.rotate(theta = k * 18 * galsim.degrees)
+        gal2b = galsim.Convolve(gal2b,psf)
         gsobject_compare(gal2a, gal2b)
 
     config = {
@@ -773,6 +781,19 @@ def test_ring():
     gal4c = disk + bulge
     with assert_raises(AssertionError):
         gsobject_compare(gal4a, gal4c, conv=galsim.Gaussian(sigma=1))
+
+    # Check using BuildStamps with multiple processes gives the same answer as single proc.
+    # This is somewhat non-trivial because each ring set needs to be done on a single proc.
+    config['stamp']['num'] = 4
+    config['gal']['flux'] = { 'type' : 'Random', 'min' : 10, 'max' : 100 }
+    config['gal']['items'][0]['ellip'] = { 'type' : 'ETheta', 'e' : 0.3, 'theta' : { 'type' : 'Random' }}
+    config['gal']['items'][1]['ellip'] = { 'type' : 'ETheta', 'e' : 0.1, 'theta' : { 'type' : 'Random' }}
+
+    stamps1, _ = galsim.config.BuildStamps(20, config)
+    config['image'] = { 'nproc' : 3 }
+    stamps2, _ = galsim.config.BuildStamps(20, config)
+    for s1,s2 in zip(stamps1, stamps2):
+        np.testing.assert_array_equal(s1.array, s2.array)
 
 
 @timer
@@ -1337,6 +1358,11 @@ def test_tiled():
     im4b = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im4b.array, im4a.array)
 
+    # Also when built with multiprocessing.
+    config['image']['nproc'] = 3
+    im4c = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im4c.array, im4a.array)
+
     # If grid sizes aren't square, it also works properly, but with more complicated ngrid calc.
     config = galsim.config.CleanConfig(config)
     del config['image']['stamp_size']
@@ -1471,6 +1497,14 @@ def test_njobs():
     np.testing.assert_equal(one01.array, two01.array,
                             err_msg="01 image was different for one job vs two jobs")
 
+    # For coverage purposes, check that if we try to ProcessInput without safe_only=True,
+    # then the exception is raised.
+    config = galsim.config.CopyConfig(config1)
+    config['rng'] = object()
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ProcessInput(config, logger=logger, safe_only=False)
+
+
 def test_wcs():
     """Test various wcs options"""
     config = {
@@ -1479,7 +1513,7 @@ def test_wcs():
     }
     config['image'] = {
         'pixel_scale' : 0.34,
-        'scale2' : { 'type' : 'PixelScale', 'scale' : 0.43 },
+        'scale2' : { 'scale' : 0.43 },  # Default type is PixelScale
         'scale3' : {
             'type' : 'PixelScale',
             'scale' : 0.43,
@@ -1503,7 +1537,7 @@ def test_wcs():
         },
         'shear2' : {
             'type' : 'Shear',
-            'scale' : 0.43,
+            # Default scale is the image.pixel_scale
             'shear' : { 'type' : 'G1G2', 'g1' : 0.2, 'g2' : 0.3 },
             'origin' : { 'type' : 'XY', 'x' : 32, 'y' : 24 },
             'world_origin' : { 'type' : 'XY', 'x' : 15, 'y' : 90 }
@@ -1622,7 +1656,7 @@ def test_wcs():
         'scale8' : galsim.PixelScale(0.56),
         'scale9' : galsim.PixelScale(0.56),
         'shear1' : galsim.ShearWCS(scale=0.43, shear=galsim.Shear(g1=0.2, g2=0.3)),
-        'shear2' : galsim.OffsetShearWCS(scale=0.43, shear=galsim.Shear(g1=0.2, g2=0.3),
+        'shear2' : galsim.OffsetShearWCS(scale=0.34, shear=galsim.Shear(g1=0.2, g2=0.3),
                                          origin=galsim.PositionD(32,24),
                                          world_origin=galsim.PositionD(15,90)),
         'jac1' : galsim.JacobianWCS(0.2, 0.02, -0.04, 0.21),
@@ -2086,6 +2120,11 @@ def test_variable_cat_size():
             }
         }
     }
+
+    # This input isn't safe, so it can't load when doing the safe_only load.
+    with CaptureLog() as cl:
+        galsim.config.ProcessInput(config, safe_only=True, logger=cl.logger)
+    assert "Skip catalog 0, since not safe" in cl.output
 
     logger = logging.getLogger('test_single')
     logger.addHandler(logging.StreamHandler(sys.stdout))

@@ -103,11 +103,9 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
             # Special: output.psf.shift = 'galaxy' means use the galaxy shift.
             if config['shift'] == 'galaxy':
                 # This shift value might be in either stamp or gal.
-                if 'shift' in base['stamp']:
-                    shift = GetCurrentValue('shift', base['stamp'], PositionD, base)
-                else:
-                    # This will raise an appropriate error if there is no gal.shift or stamp.shift.
-                    shift = GetCurrentValue('shift', base['gal'], PositionD, base)
+                b = base['stamp'] if 'shift' in base['stamp'] else base['gal']
+                # This will raise an appropriate error if there is no gal.shift or stamp.shift.
+                shift = GetCurrentValue('shift', b, PositionD, base)
             else:
                 shift = ParseValue(config, 'shift', base, PositionD)[0]
             logger.debug('obj %d: psf shift: %s',base.get('obj_num',0),str(shift))
