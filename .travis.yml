@@ -146,7 +146,7 @@ install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force $__USER -v nose; fi
 
     # Finally, a few things for the code coverage
-    - $PIP install -U $__USER nose codecov coveralls coverage
+    - $PIP install -U $__USER nose codecov coverage
 
     - $PIP list
 
@@ -166,8 +166,7 @@ script:
     - nosetests run_examples.py
 
 after_success:
-    # Send results to coveralls and codecov
-    - coveralls
+    # Send results to codecov
     - codecov
 
 before_cache:
