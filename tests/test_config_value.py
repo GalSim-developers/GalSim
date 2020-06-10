@@ -1655,7 +1655,6 @@ def test_eval():
         'input' : { 'catalog' : { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                     'dict' : { 'dir' : 'config_input', 'file_name' : 'dict.yaml' },
                   },
-
      }
 
     galsim.config.ProcessInput(config)
