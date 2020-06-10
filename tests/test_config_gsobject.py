@@ -124,6 +124,9 @@ def test_gaussian():
     with assert_raises(galsim.GalSimConfigError):
         gal = galsim.config.BuildGSObject(config, 'bad8')
 
+    # Next time it gets called, it doesn't raise despite half_light_radius now being there.
+    galsim.config.RemoveCurrent(config)
+    gal = galsim.config.BuildGSObject(config, 'bad6')
 
 @timer
 def test_moffat():
@@ -971,6 +974,27 @@ def test_cosmosgalaxy():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildGSObject(config, 'gal4')
 
+    # Check some subtleties about using COSMOSGalaxy in a multiprocessing context
+    config = {
+        'input' : { 'cosmos_catalog' : { 'dir' : real_gal_dir , 'file_name' : real_gal_cat, } },
+        'gal' : { 'type' : 'COSMOSGalaxy', 'scale_flux' : 3.14 },
+        'psf' : { 'type' : 'Moffat', 'fwhm' : 0.1, 'beta' : 3.5 },
+        'image' : {
+            'type' : 'Tiled',
+            'nx_tiles' : 3,
+            'ny_tiles' : 3,
+            'stamp_size' : 64,
+            'pixel_scale' : 0.04,
+            'random_seed' : 1234,
+        },
+        'output' : { 'file_name' : 'test_cosmosgalaxy.fits', 'dir': 'output' }
+    }
+    im1 = galsim.config.BuildImage(config)
+    config['image']['nproc'] = 3
+    del config['_input_objs']
+    im2 = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im1.array, im2.array)
+
     # One more test: make sure that if we specified from the start not to use real galaxies, that
     # failure to specify gal_type is treated properly (should default to parametric).
     real_gal_cat = 'real_galaxy_catalog_23.5_example_fits.fits'
@@ -1548,13 +1572,14 @@ def test_list():
     gal4b = gal4b.shear(g1 = 0.03, g2 = -0.05).shift(dx = 0.7, dy = -1.2)
     gsobject_compare(gal4a, gal4b)
 
-    # Check that the list items correctly inherit their gsparams from the top level
+    # Check that the list items correctly inherit their gsparams and flux from the top level
     config = {
         'gal' : {
             'type' : 'List' ,
+            'flux' : 100,
             'items' : [
-                { 'type' : 'Exponential' , 'scale_radius' : 3.4, 'flux' : 100 },
-                { 'type' : 'Exponential' , 'scale_radius' : 3, 'flux' : 10 }
+                { 'type' : 'Exponential' , 'scale_radius' : 3.4 },
+                { 'type' : 'Exponential' , 'scale_radius' : 3 }
             ],
             'gsparams' : { 'maxk_threshold' : 1.e-2,
                            'folding_threshold' : 1.e-2,
@@ -1707,6 +1732,98 @@ def test_usertype():
 
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gsobject_compare(gal3a, gal3b, conv=psf)
+
+@timer
+def test_modules():
+    """Test using modules in the config dict to get extra types
+    """
+    # This is basically a duplicate of test_psf_config in test_des.py,
+    # except we dont import galsim.des in this file, so this wouldn't work without
+    # the modules directive.
+    data_dir = 'des_data'
+    psfex_file = "DECam_00154912_12_psfcat.psf"
+    fitpsf_file = "DECam_00154912_12_fitpsf.fits"
+    wcs_file = "DECam_00154912_12_header.fits"
+
+    image_pos = galsim.PositionD(123.45, 543.21)
+
+    config = {
+        'modules' : ['galsim.des'],
+        'input' : {
+            'des_shapelet' : { 'dir' : data_dir, 'file_name' : fitpsf_file },
+            'des_psfex' : [
+                { 'dir' : data_dir, 'file_name' : psfex_file },
+                { 'dir' : data_dir, 'file_name' : psfex_file, 'image_file_name' : wcs_file },
+            ]
+        },
+
+        'psf1' : { 'type' : 'DES_Shapelet' },
+        'psf2' : { 'type' : 'DES_PSFEx', 'num' : 0 },
+        'psf3' : { 'type' : 'DES_PSFEx', 'num' : 1 },
+        'psf4' : { 'type' : 'DES_Shapelet', 'image_pos' : galsim.PositionD(567,789), 'flux' : 179,
+                   'gsparams' : { 'folding_threshold' : 1.e-4 } },
+        'psf5' : { 'type' : 'DES_PSFEx', 'image_pos' : galsim.PositionD(789,567), 'flux' : 388,
+                   'gsparams' : { 'folding_threshold' : 1.e-4 } },
+
+        # This would normally be set by the config processing.  Set it manually here.
+        'image_pos' : image_pos,
+    }
+
+    galsim.config.ImportModules(config)
+    galsim.config.ProcessInput(config)
+
+    # Can also use des as a shorthand for galsim.des
+    config['modules'] = ['des']
+    galsim.config.ImportModules(config)
+    del config['_input_objs']
+    galsim.config.ProcessInput(config)
+
+    psf1a = galsim.config.BuildGSObject(config, 'psf1')[0]
+    fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=data_dir)
+    psf1b = fitpsf.getPSF(image_pos)
+    gsobject_compare(psf1a, psf1b)
+
+    psf2a = galsim.config.BuildGSObject(config, 'psf2')[0]
+    psfex0 = galsim.des.DES_PSFEx(psfex_file, dir=data_dir)
+    psf2b = psfex0.getPSF(image_pos)
+    gsobject_compare(psf2a, psf2b)
+
+    psf3a = galsim.config.BuildGSObject(config, 'psf3')[0]
+    psfex1 = galsim.des.DES_PSFEx(psfex_file, wcs_file, dir=data_dir)
+    psf3b = psfex1.getPSF(image_pos)
+    gsobject_compare(psf3a, psf3b)
+
+    gsparams = galsim.GSParams(folding_threshold=1.e-4)
+    psf4a = galsim.config.BuildGSObject(config, 'psf4')[0]
+    psf4b = fitpsf.getPSF(galsim.PositionD(567,789),gsparams=gsparams).withFlux(179)
+    gsobject_compare(psf4a, psf4b)
+
+    # Insert a wcs for thes last one.
+    config['wcs'] = galsim.FitsWCS(os.path.join(data_dir,wcs_file))
+    config = galsim.config.CleanConfig(config)
+    galsim.config.ProcessInput(config)
+    psfex2 = galsim.des.DES_PSFEx(psfex_file, dir=data_dir, wcs=config['wcs'])
+    psf5a = galsim.config.BuildGSObject(config, 'psf5')[0]
+    psf5b = psfex2.getPSF(galsim.PositionD(789,567),gsparams=gsparams).withFlux(388)
+    gsobject_compare(psf5a, psf5b)
+
+    # The first item in sys.path is the current directory.
+    # However, when running galsim as an executable, it's the python/bin directory,
+    # So anything in the current directory isn't found.
+    # Mock this up by removing the current first item from sys.path.
+    save_sys_path = sys.path
+    sys.path = sys.path[1:]
+    config['modules'] = ['hsm_shape']
+    galsim.config.ImportModules(config)
+    assert 'hsm_shape' in sys.modules
+
+    # Check that invalid modules raises an appropriate error
+    config['modules'] = ['invalid']
+    with assert_raises(ImportError):
+        galsim.config.ImportModules(config)
+
+    # Put it back how we found it.
+    sys.path = save_sys_path
 
 
 if __name__ == "__main__":

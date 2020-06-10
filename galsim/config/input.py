@@ -166,7 +166,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                             input_objs[i] = None
                             input_objs_safe[i] = None
                             continue
-                        else:  # pragma: no cover
+                        else:
                             raise
 
                     if safe_only and not safe:
@@ -434,9 +434,13 @@ def RegisterInputConnectedType(input_type, type_name):
         input_type:     The name of the type in config['input']
         type_name:      The name of the type that uses this input object.
     """
-    if input_type not in connected_types:
-        connected_types[input_type] = set()
-    connected_types[input_type].add(type_name)
+    if isinstance(input_type, list):
+        for key in input_type:
+            RegisterInputConnectedType(key, type_name)
+    elif input_type is not None:
+        if input_type not in connected_types:
+            connected_types[input_type] = set()
+        connected_types[input_type].add(type_name)
 
 # We define in this file two simple input types: catalog and dict, which read in a Catalog
 # or Dict from a file and then can use that to generate values.

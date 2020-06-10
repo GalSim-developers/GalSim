@@ -601,6 +601,7 @@ def test_whiten():
             'type' : 'Single',
             'random_seed' : 1234,
             'pixel_scale' : 0.05,
+            'noise' : { 'type' : 'Gaussian', 'variance' : 50, },
         },
         'stamp' : {
             'type' : 'Basic',

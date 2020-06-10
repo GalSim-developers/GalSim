@@ -112,16 +112,16 @@ def ImportModules(config):
         for module in config['modules']:
             try:
                 # Do this first to let user modules take precedence
-                exec('import '+module)
+                __import__(module)
             except ImportError:
                 try:
-                    exec('import galsim.'+module)
+                    __import__('galsim.' + module)
                 except ImportError:
                     # But do it again if everything fails to give a better error message.
                     # Also make sure '.' in the path to load local modules.
                     if '.' not in sys.path:
                         sys.path.append('.')
-                    exec('import '+module)
+                    __import__(module)
 
 
 def ProcessTemplate(config, base, logger=None):

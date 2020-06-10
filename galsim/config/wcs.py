@@ -20,6 +20,7 @@ import logging
 
 from .util import LoggerWrapper, GetIndex, GetRNG
 from .value import ParseValue, GetAllParams, CheckAllParams, SetDefaultIndex
+from .input import RegisterInputConnectedType
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..wcs import BaseWCS, PixelScale, OffsetWCS, JacobianWCS, AffineTransform
 from ..wcs import ShearWCS, OffsetShearWCS, UVFunction, RaDecFunction
@@ -296,13 +297,7 @@ def RegisterWCSType(wcs_type, builder, input_type=None):
                         [default: None]
     """
     valid_wcs_types[wcs_type] = builder
-    if input_type is not None:
-        from .input import RegisterInputConnectedType
-        if isinstance(input_type, list):  # pragma: no cover
-            for key in input_type:
-                RegisterInputConnectedType(key, wcs_type)
-        else:
-            RegisterInputConnectedType(input_type, wcs_type)
+    RegisterInputConnectedType(input_type, wcs_type)
 
 
 RegisterWCSType('PixelScale', OriginWCSBuilder(PixelScale, OffsetWCS))

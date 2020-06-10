@@ -93,6 +93,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
     if 'index' not in kwargs:
         kwargs['index'], n_rng_calls = cosmos_cat.selectRandomIndex(1, rng=rng, _n_rng_calls=True)
+        safe = False
 
         # Make sure this process gives consistent results regardless of the number of processes
         # being used.
