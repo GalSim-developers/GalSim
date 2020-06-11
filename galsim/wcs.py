@@ -546,18 +546,19 @@ class BaseWCS(object):
                 world_pos = self.toWorld(image_pos, color=color)
             return jac.withOrigin(image_pos, world_pos, color=color)
 
-    def withOrigin(self, origin, world_origin=None, color=None):
-        """Recenter the current WCS function at a new origin location, returning the new WCS.
+    def shiftOrigin(self, origin, world_origin=None, color=None):
+        """Shift the origin of the current WCS function, returning the new WCS.
 
-        This function creates a new WCS instance (always a non-local WCS) that treats
-        the origin position the same way the current WCS treats (x,y) = (0,0).
+        This function creates a new WCS instance (always a non-local WCS) that shifts the
+        origin by the given amount.  In other words, it treats the image position ``origin``
+        the same way the current WCS treats (x,y) = (0,0).
 
         If the current WCS is a local WCS, this essentially declares where on the image
         you want the origin of the world coordinate system to be.  i.e. where is (u,v) = (0,0).
         So, for example, to set a WCS that has a constant pixel size with the world coordinates
         centered at the center of an image, you could write::
 
-            >>> wcs = galsim.PixelScale(scale).withOrigin(im.center)
+            >>> wcs = galsim.PixelScale(scale).shiftOrigin(im.center)
 
         This is equivalent to the following::
 
@@ -568,7 +569,7 @@ class BaseWCS(object):
         example should work regardless of what kind of WCS this is::
 
             >>> world_pos1 = wcs.toWorld(PositionD(0,0))
-            >>> wcs2 = wcs.withOrigin(new_origin)
+            >>> wcs2 = wcs.shiftOrigin(new_origin)
             >>> world_pos2 = wcs2.toWorld(new_origin)
             >>> # world_pos1 should be equal to world_pos2
 
@@ -576,24 +577,30 @@ class BaseWCS(object):
         also provide a ``world_origin`` argument which defines what (u,v) position you want to
         correspond to the new origin.  Continuing the previous example::
 
-            >>> wcs3 = wcs.withOrigin(new_origin, new_world_origin)
+            >>> wcs3 = wcs.shiftOrigin(new_origin, new_world_origin)
             >>> world_pos3 = wcs3.toWorld(new_origin)
             >>> # world_pos3 should be equal to new_world_origin
 
         Parameters:
-            origin:         The image coordinate position to use as the origin.
-            world_origin:   The world coordinate position to use as the origin.  Only valid if
+            origin:         The image coordinate position to use for what is currently treated
+                            as (0,0).
+            world_origin:   The world coordinate position to use at the origin.  Only valid if
                             wcs.isCelestial() == False. [default: None]
             color:          For color-dependent WCS's, the color term to use in the connection
                             between the current origin and world_origin. [default: None]
 
         Returns:
-            the new recentered WCS
+            the new shifted WCS
         """
         if color is None: color = self._color
         if not isinstance(origin, Position):
             raise TypeError("origin must be a PositionD or PositionI argument")
-        return self._withOrigin(origin, world_origin, color)
+        return self._shiftOrigin(origin, world_origin, color)
+
+    def withOrigin(self, origin, world_origin=None, color=None):
+        from .deprecated import depr
+        depr('withOrigin', 2.3, 'shiftOrigin')
+        return self.shiftOrigin(origin, world_origin, color)
 
     def fixColor(self, color):
         """Fix the color to a particular value.
@@ -655,7 +662,7 @@ class BaseWCS(object):
             # in if necessary.
             delta = PositionI(1-bounds.xmin, 1-bounds.ymin)
             bounds = bounds.shift(delta)
-            wcs = self.withOrigin(delta)
+            wcs = self.shiftOrigin(delta)
         else:
             wcs = self
 
@@ -770,7 +777,7 @@ def readFromFitsHeader(header):
         # ds9 always assumes the image has an origin at (1,1), so convert back to actual
         # xmin, ymin if necessary.
         delta = PositionI(xmin-1, ymin-1)
-        wcs = wcs.withOrigin(delta)
+        wcs = wcs.shiftOrigin(delta)
 
     return wcs, origin
 
@@ -894,8 +901,8 @@ class EuclideanWCS(BaseWCS):
 
     # Each subclass has a function _newOrigin, which just calls the constructor with new
     # values for origin and world_origin.  This function figures out what those values
-    # should be to match the desired behavior of withOrigin.
-    def _withOrigin(self, origin, world_origin, color):
+    # should be to match the desired behavior of shiftOrigin.
+    def _shiftOrigin(self, origin, world_origin, color):
         # Current u,v are:
         #     u = ufunc(x-x0, y-y0) + u0
         #     v = vfunc(x-x0, y-y0) + v0
@@ -1055,6 +1062,52 @@ class LocalWCS(UniformWCS):
     """A LocalWCS is a `UniformWCS` in which (0,0) in image coordinates is at the same place
     as (0,0) in world coordinates
     """
+    def withOrigin(self, origin, world_origin=None, color=None):
+        """Recenter the current WCS function at a new origin location, returning the new WCS.
+
+        This function creates a new WCS instance (a non-local WCS) with the same local
+        behavior as the current WCS, but with the given origin.  In other words, you are
+        declaring where on the image you want the new origin of the world coordinate
+        system to be.  i.e. where is (u,v) = (0,0).
+
+        So, for example, to set a WCS that has a constant pixel size with the world coordinates
+        centered at the center of an image, you could write::
+
+            >>> wcs = galsim.PixelScale(scale).withOrigin(im.center)
+
+        This is equivalent to the following::
+
+            >>> wcs = galsim.OffsetWCS(scale, origin=im.center)
+
+        You may also provide a ``world_origin`` argument which defines what (u,v) position you
+        want to correspond to the new origin.
+
+            >>> wcs2 = galsim.PixelScale(scale).withOrigin(new_origin, new_world_origin)
+            >>> world_pos2 = wcs2.toWorld(new_origin)
+            >>> assert world_pos2 == new_world_origin
+
+        .. note::
+
+            This is equivalent to `shiftOrigin`, but for for local WCS's, the shift is also
+            the new location of the origin, so `withOrigin` is a convenient alternate name
+            for this action.  Indeed the `shiftOrigin` function used to be named `withOrigin`,
+            but that name was confusing for non-local WCS's, as the action in that case is really
+            shifting the origin, not setting the new value.
+
+        Parameters:
+            origin:         The image coordinate position to use as the origin.
+            world_origin:   The world coordinate position to use as the origin. [default: None]
+            color:          For color-dependent WCS's, the color term to use in the connection
+                            between the current origin and world_origin. [default: None]
+
+        Returns:
+            the new recentered WCS
+        """
+        if not isinstance(origin, Position):
+            raise TypeError("origin must be a PositionD or PositionI argument")
+        if not isinstance(world_origin, (Position, type(None))):
+                raise TypeError("world_origin must be a PositionD or PositionI argument")
+        return self._newOrigin(origin, world_origin)
 
     @doc_inherit
     def isLocal(self):
@@ -1175,7 +1228,7 @@ class CelestialWCS(BaseWCS):
         return self._radecToxy(ra, dec, units, color)
 
     # This is a bit simpler than the EuclideanWCS version, since there is no world_origin.
-    def _withOrigin(self, origin, world_origin, color):
+    def _shiftOrigin(self, origin, world_origin, color):
         # We want the new wcs to have wcs.toWorld(x2,y2) match the current wcs.toWorld(0,0).
         # So,
         #
@@ -2763,4 +2816,4 @@ def compatible(wcs1, wcs2):
     if wcs1.isUniform() and wcs2.isUniform():
         return wcs1.jacobian() == wcs2.jacobian()
     else:
-        return wcs1 == wcs2.withOrigin(wcs1.origin, wcs1.world_origin)
+        return wcs1 == wcs2.shiftOrigin(wcs1.origin, wcs1.world_origin)

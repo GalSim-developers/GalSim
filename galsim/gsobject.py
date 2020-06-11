@@ -1665,7 +1665,7 @@ class GSObject(object):
         # Convert the profile in world coordinates to the profile in image coordinates:
         prof = local_wcs.profileToImage(self, flux_ratio=flux_scale, offset=offset)
         if offset != PositionD(0,0):
-            local_wcs = local_wcs.withOrigin(offset)
+            local_wcs = local_wcs.shiftOrigin(offset)
 
         # If necessary, convolve by the pixel
         if method in ('auto', 'fft', 'real_space'):

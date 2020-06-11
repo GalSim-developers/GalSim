@@ -833,7 +833,7 @@ class Image(object):
             # Set the origin so that corresponding image positions correspond to the same world_pos
             x0 = (self.wcs.origin.x - self.xmin + 0.5) / nx + 0.5
             y0 = (self.wcs.origin.y - self.ymin + 0.5) / ny + 0.5
-            target_wcs = target_wcs.withOrigin(PositionD(x0,y0), self.wcs.world_origin)
+            target_wcs = target_wcs.shiftOrigin(PositionD(x0,y0), self.wcs.world_origin)
 
         target_bounds = BoundsI(1, nbins_x, 1, nbins_y)
 
@@ -887,7 +887,7 @@ class Image(object):
             # Set the origin so that corresponding image positions correspond to the same world_pos
             x0 = (self.wcs.origin.x - self.xmin + 0.5) * nx + 0.5
             y0 = (self.wcs.origin.y - self.ymin + 0.5) * ny + 0.5
-            target_wcs = target_wcs.withOrigin(PositionD(x0,y0), self.wcs.world_origin)
+            target_wcs = target_wcs.shiftOrigin(PositionD(x0,y0), self.wcs.world_origin)
 
         target_bounds = BoundsI(1, npix_x, 1, npix_y)
 
@@ -1101,7 +1101,7 @@ class Image(object):
         if delta.x != 0 or delta.y != 0:
             self._bounds = self._bounds.shift(delta)
             if self.wcs is not None:
-                self.wcs = self.wcs.withOrigin(delta)
+                self.wcs = self.wcs.shiftOrigin(delta)
 
     def setCenter(self, *args, **kwargs):
         """Set the center of the image to the given (integral) (xcen, ycen)
