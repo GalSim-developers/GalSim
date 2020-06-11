@@ -5,12 +5,6 @@ branches:
         - coverage
 
 language: python
-python:
-    - 2.7
-    - 3.5
-    - 3.6
-    - 3.7
-    - 3.8
 
 compiler:
     - g++
@@ -18,6 +12,31 @@ compiler:
 matrix:
     # cf. https://blog.travis-ci.com/2019-08-07-extensive-python-testing-on-travis-ci
     include:
+        # Basic python on linux
+        - python: 2.7
+          dist: xenial
+          name: "Python: 2.7"
+
+        - python: 3.5
+          dist: xenial
+          name: "Python: 3.5"
+
+        - python: 3.6
+          dist: xenial
+          name: "Python: 3.6"
+
+        - python: 3.7
+          dist: xenial
+          name: "Python: 3.7"
+          env:
+            - __U=-U  # Only update packages on python 3.7+
+
+        - python: 3.8
+          dist: xenial
+          name: "Python: 3.8"
+          env:
+            - __U=-U
+
         # Note: All the rest are technically allowed to fail.  This is mostly so the
         # Travis runs can finish faster, since they often only do 4 at a time.
         # But we should periodically check them and try to make sure they all work.
@@ -38,7 +57,7 @@ matrix:
           language: shell  # language: python is an error on macos
           env:
             - TRAVIS_PYTHON_VERSION=2.7
-            # Note: Use --user to supersede existing versions rather than sudo pip -U ...
+            # Note: Use --user to supersede existing versions rather than sudo pip ...
             #       since existing versions of some packages (e.g. numpy) live in /System/
             #       directory where delete operations are forbidden.
             - __USER=--user
@@ -70,17 +89,22 @@ matrix:
             # wants to write into /usr/local/man.  So use --user to avoid that.
             - __USER=--user
             - PATH=/Users/travis/Library/Python/3.7/bin:$PATH
+            - __U=-U
           name: OSX (Python 3.7)
 
         # Check 3.9-dev, but less concerned if this fails.
         - python: 3.9-dev
           dist: xenial
           name: "Python: 3.9-dev"
+          env:
+            - __U=-U
 
         # For grins, add pypy.
         # So far this is limited by astropy not working on pypy yet.
         - python: pypy3
           name: PyPy
+          env:
+            - __U=-U
 
     allow_failures:
         - name: Linux clang (Python 3.6)
@@ -133,17 +157,17 @@ cache:
 
 install:
     # Upate pip executable.  (Needs sudo on some systems.)
-    - sudo -H $PIP install -U pip
+    - sudo -H $PIP install $__U pip
 
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
-    # incompatibilities as soon as possible.
-    - $PIP install -U $__USER numpy      # Do these two first to clarify potential conflicts.
-    - $PIP install -U $__USER setuptools
-    - $PIP install -U $__USER -r requirements.txt
+    # incompatibilities as soon as possible.  (Only on python 3.7 now.)
+    - $PIP install $__U $__USER numpy      # Do these two first to clarify potential conflicts.
+    - $PIP install $__U $__USER setuptools
+    - $PIP install $__U $__USER -r requirements.txt
 
     # Also some things just required for tests
-    - $PIP install -U $__USER -r test_requirements.txt
+    - $PIP install $__U $__USER -r test_requirements.txt
     # astroplan isn't available on 2.7
     - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then $PIP install $__USER astroplan; fi
 
@@ -156,7 +180,7 @@ install:
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force $__USER -v nose; fi
 
     # Finally, a few things for the code coverage
-    - $PIP install -U $__USER nose codecov coverage
+    - $PIP install $__U $__USER nose codecov coverage
 
     - $PIP list
 
