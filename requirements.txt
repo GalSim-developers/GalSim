@@ -9,6 +9,7 @@ numpy>=1.13
 astropy>=2.0
 pybind11>=2.2
 pip>=18.0
+LSSTDESC.Coord>=1.2
 
 # Note: 1.77 was supposed to make this work, but it doesn't include a couple cpp files, so
 # it gives an error on installation.  Once the eigency people merge PR #27 and release another
@@ -18,8 +19,7 @@ rmjarvis.eigency>=1.77.1
 
 # Not technically required, but useful.
 pyyaml>=3.12  # This one is required to run tests.
-pandas>=0.20
+pandas>=1.0
 
 # This is not in conda.  Let pip install these.
-LSSTDESC.Coord>=1.1.2
-starlink-pyast>=3.9.0,<=3.12  # Also not required, but useful.  Note: 3.13.1 is broken.
+starlink-pyast>=3.14

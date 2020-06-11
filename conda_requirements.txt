@@ -8,6 +8,7 @@ pip>=9.0
 gcc>=4.8
 fftw>=3.3
 eigen>=3.3
+LSSTDESC.Coord>=1.2
 
 # Not technically required, but useful.
 pyyaml>=3.12

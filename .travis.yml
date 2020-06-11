@@ -171,10 +171,6 @@ install:
     # astroplan isn't available on 2.7
     - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then $PIP install $__USER astroplan; fi
 
-    # Note: matplotlib is only required because starlink has an `import matplotlib` in their
-    # code, despite that not being a dependency.
-    - $PIP install $__USER matplotlib
-
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then sudo -H $PIP install --force $__USER -v nose; fi
