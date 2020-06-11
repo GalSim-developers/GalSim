@@ -96,10 +96,17 @@ before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     # Install the non-python dependencies: fftw, libav, eigen
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew doctor; brew update; brew install fftw libav eigen wget; brew cask install gfortran; brew upgrade wget; fi
+    # Shouldn't usually need this, but occasionally might.
+    #- if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw libav eigen wget; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cask install gfortran; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew upgrade wget; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw libav eigen wget gcc; fi
     # Sometimes installed brews become unlinked.  Not sure why.  This relinks them.
     # cf. https://apple.stackexchange.com/questions/123900/is-there-a-quick-way-to-relink-my-homebrew-kegs
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew list -1 | while read line; do brew unlink $line; brew link $line; done; brew link --overwrite gcc; fi
+    # Shouldn't be required most of the time, and it isn't terribly fast, but if we have trouble
+    # with unlinked things again, this can help figure out which ones need to be relinked.
+    #- if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew list -1 | while read line; do brew unlink $line; brew link $line; done; brew link --overwrite gcc; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
