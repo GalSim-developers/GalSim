@@ -25,6 +25,7 @@ import sys
 import os
 import logging
 import pprint
+import argparse
 
 from .errors import GalSimError, GalSimValueError, GalSimRangeError
 
@@ -40,119 +41,56 @@ def parse_args():
     description += "for documentation about using this program."
     epilog = "Works with both YAML and JSON markup formats."
 
-    try:
-        import argparse
+    # Build the parser and add arguments
+    parser = argparse.ArgumentParser(prog='galsim', description=description, add_help=True,
+                                     epilog=epilog)
+    parser.add_argument('config_file', type=str, nargs='?', help='the configuration file')
+    parser.add_argument(
+        'variables', type=str, nargs='*',
+        help='additional variables or modifications to variables in the config file. '
+             'e.g. galsim foo.yaml output.nproc=-1 gal.rotate="{type : Random}"')
+    parser.add_argument(
+        '-v', '--verbosity', type=int, action='store', default=1, choices=(0, 1, 2, 3),
+        help='integer verbosity level: min=0, max=3 [default=1]')
+    parser.add_argument(
+        '-l', '--log_file', type=str, action='store', default=None,
+        help='filename for storing logging output [default is to stream to stdout]')
+    parser.add_argument(
+        '-f', '--file_type', type=str, action='store', choices=('yaml','json'),
+        default=None,
+        help='type of config_file: yaml or json are currently supported. '
+             '[default is to automatically determine the type from the extension]')
+    parser.add_argument(
+        '-m', '--module', type=str, action='append', default=None,
+        help='python module to import before parsing config file')
+    parser.add_argument(
+        '-p', '--profile', action='store_const', default=False, const=True,
+        help='output profiling information at the end of the run')
+    parser.add_argument(
+        '-n', '--njobs', type=int, action='store', default=1,
+        help='set the total number of jobs that this run is a part of. ' +
+        'Used in conjunction with -j (--job)')
+    parser.add_argument(
+        '-j', '--job', type=int, action='store', default=1,
+        help='set the job number for this particular run. Must be in [1,njobs]. '
+             'Used in conjunction with -n (--njobs)')
+    parser.add_argument(
+        '-x', '--except_abort', action='store_const', default=False, const=True,
+        help='abort the whole job whenever any file raises an exception rather than '
+             'continuing on')
+    parser.add_argument(
+        '--version', action='store_const', default=False, const=True,
+        help='show the version of GalSim')
+    args = parser.parse_args()
 
-        # Build the parser and add arguments
-        parser = argparse.ArgumentParser(prog='galsim', description=description, add_help=True,
-                                         epilog=epilog)
-        parser.add_argument('config_file', type=str, nargs='?', help='the configuration file')
-        parser.add_argument(
-            'variables', type=str, nargs='*',
-            help='additional variables or modifications to variables in the config file. '
-                 'e.g. galsim foo.yaml output.nproc=-1 gal.rotate="{type : Random}"')
-        parser.add_argument(
-            '-v', '--verbosity', type=int, action='store', default=1, choices=(0, 1, 2, 3),
-            help='integer verbosity level: min=0, max=3 [default=1]')
-        parser.add_argument(
-            '-l', '--log_file', type=str, action='store', default=None,
-            help='filename for storing logging output [default is to stream to stdout]')
-        parser.add_argument(
-            '-f', '--file_type', type=str, action='store', choices=('yaml','json'),
-            default=None,
-            help='type of config_file: yaml or json are currently supported. '
-                 '[default is to automatically determine the type from the extension]')
-        parser.add_argument(
-            '-m', '--module', type=str, action='append', default=None,
-            help='python module to import before parsing config file')
-        parser.add_argument(
-            '-p', '--profile', action='store_const', default=False, const=True,
-            help='output profiling information at the end of the run')
-        parser.add_argument(
-            '-n', '--njobs', type=int, action='store', default=1,
-            help='set the total number of jobs that this run is a part of. ' +
-            'Used in conjunction with -j (--job)')
-        parser.add_argument(
-            '-j', '--job', type=int, action='store', default=1,
-            help='set the job number for this particular run. Must be in [1,njobs]. '
-                 'Used in conjunction with -n (--njobs)')
-        parser.add_argument(
-            '-x', '--except_abort', action='store_const', default=False, const=True,
-            help='abort the whole job whenever any file raises an exception rather than '
-                 'continuing on')
-        parser.add_argument(
-            '--version', action='store_const', default=False, const=True,
-            help='show the version of GalSim')
-        args = parser.parse_args()
-
-        if args.config_file == None:
-            if args.version:
-                print(version_str)
-            else:
-                parser.print_help()
-            sys.exit()
-        elif args.version:
+    if args.config_file == None:
+        if args.version:
             print(version_str)
-
-    except ImportError:
-        # Use optparse instead
-        import optparse
-
-        # Usage string not automatically generated for optparse, so generate it
-        usage = """usage: galsim [-h] [-v {0,1,2,3}] [-l LOG_FILE] [-f {yaml,json}] [-m MODULE]
-              [--version] config_file [variables ...]"""
-        # Build the parser
-        parser = optparse.OptionParser(usage=usage, epilog=epilog, description=description)
-        # optparse only allows string choices, so take verbosity as a string and make it int later
-        parser.add_option(
-            '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
-            default='1', help='integer verbosity level: min=0, max=3 [default=1]')
-        parser.add_option(
-            '-l', '--log_file', type=str, action='store', default=None,
-            help='filename for storing logging output [default is to stream to stdout]')
-        parser.add_option(
-            '-f', '--file_type', type="choice", action='store', choices=('yaml','json'),
-            default=None,
-            help=('type of config_file: yaml or json are currently supported. '
-                  '[default is to automatically determine the type from the extension]'))
-        parser.add_option(
-            '-m', '--module', type=str, action='append', default=None,
-            help='python module to import before parsing config file')
-        parser.add_option(
-            '-p', '--profile', action='store_const', default=False, const=True,
-            help='output profiling information at the end of the run')
-        parser.add_option(
-            '-n', '--njobs', type=int, action='store', default=1,
-            help='set the total number of jobs that this run is a part of. ' +
-            'Used in conjunction with -j (--job)')
-        parser.add_option(
-            '-j', '--job', type=int, action='store', default=1,
-            help='set the job number for this particular run. Must be in [1,njobs]. '
-                 'Used in conjunction with -n (--njobs)')
-        parser.add_option(
-            '-x', '--except_abort', action='store_const', default=False, const=True,
-            help='abort the whole job whenever any file raises an exception rather than '
-                 'just reporting the exception and continuing on')
-        parser.add_option(
-            '--version', action='store_const', default=False, const=True,
-            help='show the version of GalSim')
-        (args, posargs) = parser.parse_args()
-
-        # Remembering to convert to an integer type
-        args.verbosity = int(args.verbosity)
-
-        # Store the positional arguments in the args object as well:
-        if len(posargs) == 0:
-            if args.version:
-                print(version_str)
-            else:
-                parser.print_help()
-            sys.exit()
         else:
-            args.config_file = posargs[0]
-            args.variables = posargs[1:]
-            if args.version:
-                print(version_str)
+            parser.print_help()
+        sys.exit()
+    elif args.version:
+        print(version_str)
 
     # Return the args
     return args

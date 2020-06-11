@@ -21,6 +21,7 @@ A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 
 from __future__ import print_function
 import os, sys, tarfile, subprocess, shutil, json
+import argparse
 try:
     from urllib2 import urlopen
 except:
@@ -52,77 +53,33 @@ def parse_args():
     description += "for more details about the files being downloaded."
     epilog = "Note: The unpacked files total almost 6 GB in size!\n"
 
-    try:
-        import argparse
-
-        # Build the parser and add arguments
-        parser = argparse.ArgumentParser(description=description, epilog=epilog, add_help=True)
-        parser.add_argument(
-            '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
-            help='Integer verbosity level: min=0, max=3 [default=2]')
-        parser.add_argument(
-            '-f', '--force', action='store_const', default=False, const=True,
-            help='Force overwriting the current file if one exists')
-        parser.add_argument(
-            '-q', '--quiet', action='store_const', default=False, const=True,
-            help="Don't ask about re-downloading an existing file. (implied by verbosity=0)")
-        parser.add_argument(
-            '-u', '--unpack', action='store_const', default=False, const=True,
-            help='Re-unpack the tar file if not downloading')
-        parser.add_argument(
-            '--save', action='store_const', default=False, const=True,
-            help="Save the tarball after unpacking.")
-        parser.add_argument(
-            '-d', '--dir', action='store', default=None,
-            help="Install into an alternate directory and link from the share/galsim directory")
-        parser.add_argument(
-            '-s', '--sample', action='store', default='25.2', choices=('23.5', '25.2'),
-            help="Flux limit for sample to download; either 23.5 or 25.2")
-        parser.add_argument(
-            '--nolink', action='store_const', default=False, const=True,
-            help="Don't link to the alternate directory from share/galsim")
-        args = parser.parse_args()
-
-    except ImportError:
-        # Use optparse instead
-        import optparse
-
-        # Usage string not automatically generated for optparse, so generate it
-        usage = "usage: %s [-h] [-v {0,1,2,3}] [-f] [-q] [-u] [-s] [-d] [--nolink]"%script_name
-        # Build the parser
-        parser = optparse.OptionParser(usage=usage, description=description, epilog=epilog)
-        # optparse only allows string choices, so take verbosity as a string and make it int later
-        parser.add_option(
-            '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
-            default='2', help='Integer verbosity level: min=0, max=3 [default=2]')
-        parser.add_option(
-            '-f', '--force', action='store_const', default=False, const=True,
-            help='Force overwriting the current file if one exists')
-        parser.add_option(
-            '-q', '--quiet', action='store_const', default=False, const=True,
-            help="Don't ask about re-downloading an existing file. (implied by verbosity=0)")
-        parser.add_option(
-            '-u', '--unpack', action='store_const', default=False, const=True,
-            help='Re-unpack the tar file if not downloading')
-        parser.add_option(
-            '--save', action='store_const', default=False, const=True,
-            help="Save the tarball after unpacking.")
-        parser.add_option(
-            '-d', '--dir', action='store', default=None,
-            help="Install into an alternate directory and link from the share/galsim directory")
-        parser.add_option(
-            '-s', '--sample', type="choice", action='store', choices=('23.5', '25.2'),
-            default='25.2', help="Flux limit for sample to download; either 23.5 or 25.2")
-        parser.add_option(
-            '--nolink', action='store_const', default=False, const=True,
-            help="Don't link to the alternate directory from share/galsim")
-        (args, posargs) = parser.parse_args()
-
-        # Remembering to convert to an integer type
-        args.verbosity = int(args.verbosity)
-
-    if args.verbosity == 0:
-        args.quiet = True
+    # Build the parser and add arguments
+    parser = argparse.ArgumentParser(description=description, epilog=epilog, add_help=True)
+    parser.add_argument(
+        '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
+        help='Integer verbosity level: min=0, max=3 [default=2]')
+    parser.add_argument(
+        '-f', '--force', action='store_const', default=False, const=True,
+        help='Force overwriting the current file if one exists')
+    parser.add_argument(
+        '-q', '--quiet', action='store_const', default=False, const=True,
+        help="Don't ask about re-downloading an existing file. (implied by verbosity=0)")
+    parser.add_argument(
+        '-u', '--unpack', action='store_const', default=False, const=True,
+        help='Re-unpack the tar file if not downloading')
+    parser.add_argument(
+        '--save', action='store_const', default=False, const=True,
+        help="Save the tarball after unpacking.")
+    parser.add_argument(
+        '-d', '--dir', action='store', default=None,
+        help="Install into an alternate directory and link from the share/galsim directory")
+    parser.add_argument(
+        '-s', '--sample', action='store', default='25.2', choices=('23.5', '25.2'),
+        help="Flux limit for sample to download; either 23.5 or 25.2")
+    parser.add_argument(
+        '--nolink', action='store_const', default=False, const=True,
+        help="Don't link to the alternate directory from share/galsim")
+    args = parser.parse_args()
 
     # Return the args
     return args
