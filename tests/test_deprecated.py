@@ -257,6 +257,82 @@ def test_randwalk_config():
         assert (pts.shape == ptsc.shape),\
                 "expected %s shape for points, got %s" % (pts.shape,ptsc.shape)
 
+def test_withOrigin():
+    from test_wcs import Cubic
+
+    # First EuclideantWCS types:
+
+    wcs_list = [ galsim.OffsetWCS(0.3, galsim.PositionD(1,1), galsim.PositionD(10,23)),
+                 galsim.OffsetShearWCS(0.23, galsim.Shear(g1=0.1,g2=0.3), galsim.PositionD(12,43)),
+                 galsim.AffineTransform(0.01,0.26,-0.26,0.02, galsim.PositionD(12,43)),
+                 galsim.UVFunction(ufunc = lambda x,y: 0.2*x, vfunc = lambda x,y: 0.2*y),
+                 galsim.UVFunction(ufunc = lambda x,y: 0.2*x, vfunc = lambda x,y: 0.2*y,
+                                   xfunc = lambda u,v: u / scale, yfunc = lambda u,v: v / scale),
+                 galsim.UVFunction(ufunc='0.2*x + 0.03*y', vfunc='0.01*x + 0.2*y'),
+               ]
+
+    color = 0.3
+    for wcs in wcs_list:
+        # Original version of the shiftOrigin tests in do_nonlocal_wcs using deprecated name.
+        new_origin = galsim.PositionI(123,321)
+        wcs3 = check_dep(wcs.withOrigin, new_origin)
+        assert wcs != wcs3, name+' is not != wcs.withOrigin(pos)'
+        wcs4 = wcs.local(wcs.origin, color=color)
+        assert wcs != wcs4, name+' is not != wcs.local()'
+        assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
+        world_origin = wcs.toWorld(wcs.origin, color=color)
+        if wcs.isUniform():
+            if wcs.world_origin == galsim.PositionD(0,0):
+                wcs2 = wcs.local(wcs.origin, color=color).withOrigin(wcs.origin)
+                assert wcs == wcs2, name+' is not equal after wcs.local().withOrigin(origin)'
+            wcs2 = wcs.local(wcs.origin, color=color).withOrigin(wcs.origin, wcs.world_origin)
+            assert wcs == wcs2, name+' not equal after wcs.local().withOrigin(origin,world_origin)'
+        world_pos1 = wcs.toWorld(galsim.PositionD(0,0), color=color)
+        wcs3 = check_dep(wcs.withOrigin, new_origin)
+        world_pos2 = wcs3.toWorld(new_origin, color=color)
+        np.testing.assert_almost_equal(
+                world_pos2.x, world_pos1.x, 7,
+                'withOrigin(new_origin) returned wrong world position')
+        np.testing.assert_almost_equal(
+                world_pos2.y, world_pos1.y, 7,
+                'withOrigin(new_origin) returned wrong world position')
+        new_world_origin = galsim.PositionD(5352.7, 9234.3)
+        wcs5 = check_dep(wcs.withOrigin, new_origin, new_world_origin, color=color)
+        world_pos3 = wcs5.toWorld(new_origin, color=color)
+        np.testing.assert_almost_equal(
+                world_pos3.x, new_world_origin.x, 7,
+                'withOrigin(new_origin, new_world_origin) returned wrong position')
+        np.testing.assert_almost_equal(
+                world_pos3.y, new_world_origin.y, 7,
+                'withOrigin(new_origin, new_world_origin) returned wrong position')
+
+    # Now some CelestialWCS types
+    cubic_u = Cubic(2.9e-5, 2000., 'u')
+    cubic_v = Cubic(-3.7e-5, 2000., 'v')
+    center = galsim.CelestialCoord(23 * galsim.degrees, -13 * galsim.degrees)
+    radec = lambda x,y: center.deproject_rad(cubic_u(x,y)*0.2, cubic_v(x,y)*0.2,
+                                             projection='lambert')
+    wcs_list = [ galsim.RaDecFunction(radec),
+                 galsim.AstropyWCS('1904-66_TAN.fits', dir='fits_files'),
+                 galsim.GSFitsWCS('tpv.fits', dir='fits_files'),
+                 galsim.FitsWCS('sipsample.fits', dir='fits_files'),
+               ]
+
+    for wcs in wcs_list:
+        # Original version of the shiftOrigin tests in do_celestial_wcs using deprecated name.
+        new_origin = galsim.PositionI(123,321)
+        wcs3 = wcs.shiftOrigin(new_origin)
+        assert wcs != wcs3, name+' is not != wcs.shiftOrigin(pos)'
+        wcs4 = wcs.local(wcs.origin)
+        assert wcs != wcs4, name+' is not != wcs.local()'
+        assert wcs4 != wcs, name+' is not != wcs.local() (reverse)'
+        world_pos1 = wcs.toWorld(galsim.PositionD(0,0))
+        wcs3 = wcs.shiftOrigin(new_origin)
+        world_pos2 = wcs3.toWorld(new_origin)
+        np.testing.assert_almost_equal(
+                world_pos2.distanceTo(world_pos1) / galsim.arcsec, 0, 7,
+                'shiftOrigin(new_origin) returned wrong world position')
+
 
 if __name__ == "__main__":
     test_gsparams()
@@ -266,3 +342,4 @@ if __name__ == "__main__":
     test_randwalk_defaults()
     test_randwalk_repr()
     test_randwalk_config()
+    test_withOrigin()
