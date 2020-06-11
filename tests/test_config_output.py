@@ -1018,22 +1018,24 @@ def test_extra_truth():
     np.testing.assert_almost_equal(cat.data['shape.g1'], meas_g1)
     np.testing.assert_almost_equal(cat.data['shape.g2'], meas_g2)
 
-    # Check that a warning is properly logged when columns are not an ordered dict.
-    # These need to be done with BuildFile, not Process, so original isn't copied.
-    # 1. When it is an OrderedDict, no warning.
-    config1 = galsim.config.CopyConfig(config)
-    with CaptureLog(1) as cl:
-        galsim.config.BuildFile(config1, logger=cl.logger)
-    assert 'The config dict is not an OrderedDict' not in cl.output
-    # 2. When it is not an OrderedDict, warning.
-    config1['output']['truth']['columns'] = dict(config1['output']['truth']['columns'])
-    with CaptureLog(1) as cl:
-        galsim.config.BuildFile(config1, logger=cl.logger)
-    assert 'The config dict is not an OrderedDict' in cl.output
-    # 3. But only once.
-    with CaptureLog(1) as cl:
-        galsim.config.BuildFile(config1, logger=cl.logger)
-    assert 'The config dict is not an OrderedDict' not in cl.output
+    # Note: Starting in python 3.8, dict is equivalent to OrderedDict
+    if sys.version_info < (3,8):
+        # Check that a warning is properly logged when columns are not an ordered dict.
+        # These need to be done with BuildFile, not Process, so original isn't copied.
+        # 1. When it is an OrderedDict, no warning.
+        config1 = galsim.config.CopyConfig(config)
+        with CaptureLog(1) as cl:
+            galsim.config.BuildFile(config1, logger=cl.logger)
+        assert 'The config dict is not an OrderedDict' not in cl.output
+        # 2. When it is not an OrderedDict, warning.
+        config1['output']['truth']['columns'] = dict(config1['output']['truth']['columns'])
+        with CaptureLog(1) as cl:
+            galsim.config.BuildFile(config1, logger=cl.logger)
+        assert 'The config dict is not an OrderedDict' in cl.output
+        # 3. But only once.
+        with CaptureLog(1) as cl:
+            galsim.config.BuildFile(config1, logger=cl.logger)
+        assert 'The config dict is not an OrderedDict' not in cl.output
 
     # If types are not consistent for all objects, raise an error.
     # Here it's a float for stars and Angle for galaxies.
