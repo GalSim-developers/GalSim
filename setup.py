@@ -1059,8 +1059,8 @@ dist = setup(name="GalSim",
                 'test': my_test,
                 },
     entry_points = {'console_scripts' : [
-            'galsim = galsim.__main__:main',
-            'galsim_download_cosmos = galsim.download_cosmos:main'
+            'galsim = galsim.__main__:run_main',
+            'galsim_download_cosmos = galsim.download_cosmos:run_main'
             ]},
     zip_safe=False,
     )

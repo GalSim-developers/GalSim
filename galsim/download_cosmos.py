@@ -22,6 +22,7 @@ A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 from __future__ import print_function
 import os, sys, tarfile, subprocess, shutil, json
 import argparse
+import logging
 try:
     from urllib2 import urlopen
 except:
@@ -34,14 +35,15 @@ except NameError:
     # Python 3 calls the same functionality input
     pass
 
+from ._version import __version__ as version
+from .meta_data import share_dir
 from .utilities import ensure_dir
 
 script_name = 'galsim_download_cosmos'
 
-def parse_args():
+def parse_args(command_args):
     """Handle the command line arguments using either argparse (if available) or optparse.
     """
-
     # Another potential option we might want to add is to download the smaller training sample
     # rather than the full 4 GB file.  Right now, this just downloads the larger catalog.
 
@@ -79,7 +81,7 @@ def parse_args():
     parser.add_argument(
         '--nolink', action='store_const', default=False, const=True,
         help="Don't link to the alternate directory from share/galsim")
-    args = parser.parse_args()
+    args = parser.parse_args(command_args)
 
     # Return the args
     return args
@@ -322,14 +324,8 @@ def link_target(unpack_dir, link_dir, args, logger):
     os.symlink(unpack_dir, link_dir)
     logger.info("Made link to %s from %s", unpack_dir, link_dir)
 
-def main():
-    from ._version import __version__ as version
-    from .meta_data import share_dir
-
-    args = parse_args()
-
+def make_logger(args):
     # Parse the integer verbosity level from the command line args into a logging_level string
-    import logging
     logging_levels = { 0: logging.CRITICAL,
                        1: logging.WARNING,
                        2: logging.INFO,
@@ -339,7 +335,11 @@ def main():
     # Setup logging to go to sys.stdout or (if requested) to an output file
     logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+    return logger
 
+def download_cosmos(args, logger):
+    """The main script given the ArgParsed args and a logger
+    """
     # Give diagnostic about GalSim version
     logger.debug("GalSim version: %s",version)
     logger.debug("This download script is: %s",__file__)
@@ -413,3 +413,15 @@ def main():
         # Get the directory where this would normally have been unpacked.
         link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gz')]
         link_target(unpack_dir, link_dir, args, logger)
+
+def main(command_args):
+    """The whole process given command-line parameters in their native (non-ArgParse) form.
+    """
+    args = parse_args(command_args)
+    logger = make_logger(args)
+    download_cosmos(args, logger)
+
+def run_main():
+    """Kick off the process grabbing the command-line parameters from sys.argv
+    """
+    main(sys.argv[1:])

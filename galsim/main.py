@@ -27,13 +27,13 @@ import logging
 import pprint
 import argparse
 
+from ._version import __version__ as version
+from .config import ReadConfig, Process
 from .errors import GalSimError, GalSimValueError, GalSimRangeError
 
-def parse_args():
+def parse_args(command_args):
     """Handle the command line arguments using either argparse (if available) or optparse.
     """
-    from ._version import __version__ as version
-
     # Short description strings common to both parsing mechanisms
     version_str = "GalSim Version %s"%version
     description = "galsim: configuration file parser for %s.  "%version_str
@@ -81,7 +81,7 @@ def parse_args():
     parser.add_argument(
         '--version', action='store_const', default=False, const=True,
         help='show the version of GalSim')
-    args = parser.parse_args()
+    args = parser.parse_args(command_args)
 
     if args.config_file == None:
         if args.version:
@@ -92,10 +92,19 @@ def parse_args():
     elif args.version:
         print(version_str)
 
+    if args.njobs < 1:
+        raise GalSimValueError("Invalid number of jobs", args.njobs)
+    if args.job < 1:
+        raise GalSimRangeError("Invalid job number.  Must be >= 1", args.job, 1, args.njobs)
+    if args.job > args.njobs:
+        raise GalSimRangeError("Invalid job number.  Must be <= njobs",args.job, 1, args.njobs)
+
     # Return the args
     return args
 
-def ParseVariables(variables, logger):
+def parse_variables(variables, logger):
+    """Parse any command-line variables, returning them as a dict
+    """
     new_params = {}
     for v in variables:
         logger.debug('Parsing additional variable: %s',v)
@@ -119,26 +128,18 @@ def ParseVariables(variables, logger):
 
     return new_params
 
-
-def AddModules(config, modules):
+def add_modules(config, modules):
+    """If modules are given on the command line, add them to the config dict as a modules field.
+    """
     if modules:
         if 'modules' not in config:
             config['modules'] = modules
         else:
             config['modules'].extend(modules)
 
-def main():
-    from .config import ReadConfig, Process
-
-    args = parse_args()
-
-    if args.njobs < 1:
-        raise GalSimValueError("Invalid number of jobs", args.njobs)
-    if args.job < 1:
-        raise GalSimRangeError("Invalid job number.  Must be >= 1", args.job, 1, args.njobs)
-    if args.job > args.njobs:
-        raise GalSimRangeError("Invalid job number.  Must be <= njobs",args.job, 1, args.njobs)
-
+def make_logger(args):
+    """Make a logger object according to the command-line specifications.
+    """
     # Parse the integer verbosity level from the command line args into a logging_level string
     logging_levels = { 0: logging.CRITICAL,
                        1: logging.WARNING,
@@ -146,22 +147,22 @@ def main():
                        3: logging.DEBUG }
     logging_level = logging_levels[args.verbosity]
 
-    # If requested, load the profiler
-    if args.profile:
-        import cProfile, pstats, io
-        pr = cProfile.Profile()
-        pr.enable()
-
     # Setup logging to go to sys.stdout or (if requested) to an output file
     if args.log_file is None:
         logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
     else:
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim')
+    return logger
 
-    logger.warning('Using config file %s', args.config_file)
-    all_config = ReadConfig(args.config_file, args.file_type, logger)
-    logger.debug('Successfully read in config file.')
+def process_config(all_config, args, logger):
+    """Process the config dict according to the command-line specifications.
+    """
+    # If requested, load the profiler
+    if args.profile:
+        import cProfile, pstats, io
+        pr = cProfile.Profile()
+        pr.enable()
 
     # Process each config document
     for config in all_config:
@@ -170,10 +171,10 @@ def main():
             config['root'] = os.path.splitext(args.config_file)[0]
 
         # Parse the command-line variables:
-        new_params = ParseVariables(args.variables, logger)
+        new_params = parse_variables(args.variables, logger)
 
         # Add modules to the config['modules'] list
-        AddModules(config, args.module)
+        add_modules(config, args.module)
 
         # Profiling doesn't work well with multiple processes.  We'll need to separately
         # enable profiling withing the workers and output when the process ends.  Set
@@ -201,3 +202,16 @@ def main():
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
         ps.print_stats()
         logger.error(s.getvalue())
+
+def main(command_args):
+    """The whole process given command-line parameters in their native (non-ArgParse) form.
+    """
+    args = parse_args(command_args)
+    logger = make_logger(args)
+    all_config = ReadConfig(args.config_file, args.file_type, logger)
+    process_config(all_config, args, logger)
+
+def run_main():
+    """Kick off the process grabbing the command-line parameters from sys.argv
+    """
+    main(sys.argv[1:])

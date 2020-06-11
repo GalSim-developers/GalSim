@@ -73,6 +73,7 @@ def ReadConfig(config_file, file_type=None, logger=None):
         list of config dicts
     """
     logger = LoggerWrapper(logger)
+    logger.warning('Reading config file %s', config_file)
     # Determine the file type from the extension if necessary:
     if file_type is None:
         import os
@@ -94,6 +95,7 @@ def ReadConfig(config_file, file_type=None, logger=None):
         config = ReadJson(config_file)
 
     ConvertNones(config)
+    logger.debug('Successfully read in config file.')
 
     return config
 
