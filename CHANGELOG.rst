@@ -5,6 +5,12 @@ Changes from v2.2 to v2.3
 Deprecated Features
 -------------------
 
+- Changed the WCS method name withOrigin to shiftOrigin for non-local WCS
+  types.  The functionality hasn't changed, but the name withOrigin is
+  only really appropriate for LocalWCS types.  When the WCS already has a
+  non-zero origin, then the action takes in really to shift the origin, not
+  set a new value. (#1073)
+
 
 API Changes
 -----------
