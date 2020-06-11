@@ -4,9 +4,6 @@ branch = True
 include = *galsim/*
 
 omit =
-    # These are mostly still tested, but we don't really care if the tests are complete.
-    *deprecated/*
-
     # This is a utility for tracking down OSErrors.  Don't include in coverage.
     *fds_test.py
 
