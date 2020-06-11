@@ -16,11 +16,11 @@
 #    and/or other materials provided with the distribution.
 #
 
-from .main import main
+from .main import run_main
 
 if __name__ == '__main__':
-    # The galsim executable will import this and then run main().
-    # So in that case, we don't want to also run main() here, since then it would run twice.
+    # The galsim executable will import this and then call run_main().
+    # So in that case, we don't want to also run_main() here, since then it would run twice.
     # However, `python -m galsim config.yaml` will run this as a program, so then we do want
     # to call main.  Hence this `__name__ == '__main__'` block.
-    main()
+    run_main()
