@@ -576,7 +576,7 @@ class OutputCatalog(object):
     def __repr__(self):
         def make_type_str(t):
             s = repr(t)
-            if s[1:5] == 'type': return s[7:-2]  # pragma: no cover  (old repr style)
+            if s[1:5] == 'type': return s[7:-2]  # (old repr style)
             elif s[1:6] == 'class': return s[8:-2]
             else: return s
         type_str = "( " + ", ".join([ make_type_str(t) for t in self.types ]) + " )"

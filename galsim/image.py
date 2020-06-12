@@ -747,7 +747,7 @@ class Image(object):
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'x' requires self.bounds.xmin == 0",
                     hermitian=hermitian, bounds=self.bounds)
-            if bounds.xmin != 0:  # pragma: no cover (This is covered, but codecov says it's not.)
+            if bounds.xmin != 0:
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'x' requires bounds.xmin == 0",
                     hermitian=hermitian, bounds=bounds)
@@ -757,7 +757,7 @@ class Image(object):
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'y' requires self.bounds.ymin == 0",
                     hermitian=hermitian, bounds=self.bounds)
-            if bounds.ymin != 0:  # pragma: no cover (This is covered, but codecov says it's not.)
+            if bounds.ymin != 0:
                 raise GalSimIncompatibleValuesError(
                     "hermitian == 'y' requires bounds.ymin == 0",
                     hermitian=hermitian, bounds=bounds)

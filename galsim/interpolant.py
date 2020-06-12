@@ -77,7 +77,7 @@ class Interpolant(object):
                 name = name[:-1]
             try:
                 n = int(name[7:])
-            except:
+            except Exception:
                 raise GalSimValueError("Invalid Lanczos specification. Should look like "
                                        "lanczosN, where N is an integer", name)
             return Lanczos(n, conserve_dc, gsparams=gsparams)

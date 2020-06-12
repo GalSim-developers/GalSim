@@ -1264,7 +1264,7 @@ def dol_to_lod(dol, N=None, scalar_string=True):
                 out[k] = v
             except KeyboardInterrupt:
                 raise
-            except: # pragma: no cover
+            except Exception:
                 raise GalSimIncompatibleValuesError(
                     "Cannot broadcast kwarg {0}={1}".format(k, v), dol=dol)
         yield out
