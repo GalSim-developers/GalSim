@@ -5,13 +5,12 @@ Changes from v2.2 to v2.3
 Dependency Changes
 ------------------
 
-- Removed future as a dependency. (#1082)
-
 - Changed the WCS method name withOrigin to shiftOrigin for non-local WCS
   types.  The functionality hasn't changed, but the name withOrigin is
   only really appropriate for LocalWCS types.  When the WCS already has a
   non-zero origin, then the action takes in really to shift the origin, not
   set a new value. (#1073)
+- Removed future as a dependency. (#1082)
 
 
 API Changes
@@ -22,6 +21,11 @@ API Changes
   the definition of the Kolmogorov profile at the 6th decimal place.  So if
   you carefully tuned an r0 value to 6 decimal places for some purpose, this
   might break that. (#1084)
+- Deprecated withOrigin method for non-local WCS types in favor of the new
+  method shiftOrigin.  This has the same functionality, but the name is
+  more in line with the actual action of the function.  For local WCS types,
+  shiftOrigin is equivalent to withOrigin, which still exists as a valid
+  name for this action. (#1085)
 
 
 Config Updates
@@ -40,8 +44,22 @@ Config Updates
 New Features
 ------------
 
+- Added galsim.utilities.pickle_shared() context, which lets the shared
+  portion of an AtmosphericScreen be included in the pickle.  This allows
+  the pickles to be recovered after writing to disk and reading back in,
+  which otherwise would not work. (#1057)
+- Added force_stepk option to VonKarman. (#1060)
+- Added Refraction and FocusDepth surface ops. (#1068, #1069)
+- Updated LSST sensor files to match new lab measurements and use improved
+  Poisson code calculations. (#1077, #1081)
+- Added makePhot method of GSObject. (#1078)
+
 
 Bug Fixes
 ---------
 
 - Fixed horner and horner2d when inputs are complex. (#1054)
+- Fixed VonKarman integration to be more reliable for various combinations
+  of (r0, L0, lam). (#1058)
+- Fixed minor bug in repr of OpticalPSF class. (#1061)
+- Fixed bug in RandomKnots when multiplied by an SED. (#1064)
