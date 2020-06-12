@@ -101,9 +101,9 @@ lib_file = os.path.join(galsim_dir,'_galsim.so')
 if not os.path.exists(lib_file): # pragma: no cover
     alt_files = glob.glob(os.path.join(os.path.dirname(__file__),'_galsim*.so'))
     if len(alt_files) == 0:
-        raise IOError("No file '_galsim.so' found in %s"%galsim_dir)
+        raise OSError("No file '_galsim.so' found in %s"%galsim_dir)
     if len(alt_files) > 1:
-        raise IOError("Multiple files '_galsim*.so' found in %s: %s"%(galsim_dir,alt_files))
+        raise OSError("Multiple files '_galsim*.so' found in %s: %s"%(galsim_dir,alt_files))
     lib_file = alt_files[0]
 
 # Import things from other files we want to be in the galsim namespace
