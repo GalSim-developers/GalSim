@@ -162,8 +162,8 @@ install:
     # Install the requirements
     # Use -U to make sure we get the latest versions of everything so we notice any
     # incompatibilities as soon as possible.  (Only on python 3.7 now.)
-    - $PIP install $__U $__USER numpy      # Do these two first to clarify potential conflicts.
-    - $PIP install $__U $__USER setuptools
+    - $PIP install -U $__USER numpy      # Do these two first to clarify potential conflicts.
+    - $PIP install -U $__USER setuptools
     - $PIP install $__U $__USER -r requirements.txt
 
     # Also some things just required for tests
