@@ -548,9 +548,7 @@ class ChromaticObject(object):
         Returns:
             the monochromatic object at the given wavelength.
         """
-        if self.__class__ != ChromaticObject:  # pragma: no cover
-            raise NotImplementedError(
-                    "Subclasses of ChromaticObject must override evaluateAtWavelength()")
+        # Subclasses all override this.
         return self._obj.evaluateAtWavelength(wave)
 
     # Make op* and op*= work to adjust the flux of the object

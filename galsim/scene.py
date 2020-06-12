@@ -630,6 +630,7 @@ class COSMOSCatalog(object):
 
         use_bulgefit = record['use_bulgefit']
         if not use_bulgefit and not record['viable_sersic']:  # pragma: no cover
+            # This shouldn't be possible I think...
             raise GalSimError("Cannot make parametric model for this galaxy!")
 
         if use_bulgefit:
@@ -648,6 +649,7 @@ class COSMOSCatalog(object):
             # Make sure the bulge-to-total flux ratio is not nonsense.
             bfrac = bulge_flux/(bulge_flux+disk_flux)
             if bfrac < 0 or bfrac > 1 or np.isnan(bfrac):  # pragma: no cover
+                # This shouldn't be possible I think...
                 raise GalSimError("Cannot make parametric model for this galaxy")
 
             # Then combine the two components of the galaxy.
