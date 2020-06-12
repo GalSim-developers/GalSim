@@ -25,7 +25,7 @@ import argparse
 import logging
 try:
     from urllib2 import urlopen
-except:
+except ImportError:
     from urllib.request import urlopen
 
 try:
@@ -38,6 +38,7 @@ except NameError:
 from ._version import __version__ as version
 from .meta_data import share_dir
 from .utilities import ensure_dir
+from .main import make_logger
 
 script_name = 'galsim_download_cosmos'
 
@@ -82,9 +83,15 @@ def parse_args(command_args):
         '--nolink', action='store_const', default=False, const=True,
         help="Don't link to the alternate directory from share/galsim")
     args = parser.parse_args(command_args)
+    args.log_file = None
 
     # Return the args
     return args
+
+def get_input():  # pragma: no cover
+    # A level of indirection to make it easier to test functions using input.
+    # This one isn't covered, since we always mock it.
+    return input()
 
 # Based on recipe 577058: http://code.activestate.com/recipes/577058/
 def query_yes_no(question, default="yes"):
@@ -110,34 +117,57 @@ def query_yes_no(question, default="yes"):
 
     while 1:
         sys.stdout.write(question + prompt)
-        choice = input().lower()
+        choice = get_input().lower()
         if default is not None and choice == '':
-            return default
+            choice = default
+            break
         elif choice in valid.keys():
-            return valid[choice]
+            break
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")
+    return valid[choice]
 
-def download(url, target, unpack_dir, args, logger):
+def get_names(args, logger):
+    if args.dir is not None:
+        target_dir = args.dir
+        do_link = not args.nolink
+    else:
+        target_dir = share_dir
+        do_link = False
+
+    url = "https://zenodo.org/record/3242143/files/COSMOS_%s_training_sample.tar.gz"%(
+            args.sample)
+    file_name = os.path.basename(url)
+    target = os.path.join(target_dir, file_name)
+    link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gz')]
+    unpack_dir = target[:-len('.tar.gz')]
     logger.warning('Downloading from url:\n  %s',url)
     logger.warning('Target location is:\n  %s',target)
+
+    return url, target, target_dir, link_dir, unpack_dir, do_link
+
+def get_meta(url, args, logger):
     logger.info('')
 
     # See how large the file to be downloaded is.
     u = urlopen(url)
     meta = u.info()
     logger.debug("Meta information about url:\n%s",str(meta))
-    file_size = int(meta.get("Content-Length"))
     file_name = os.path.basename(url)
+    file_size = int(meta.get("Content-Length"))
     logger.info("Size of %s: %d MBytes" , file_name, file_size/1024**2)
 
+    return meta
+
+def check_existing(target, unpack_dir, meta, args, logger):
     # Make sure the directory we want to put this file exists.
     ensure_dir(target)
 
-    # Check if the file already exists and if it is the right size
     do_download = True
+    # If file already exists
     if os.path.isfile(target):
+        file_size = int(meta.get("Content-Length"))
         logger.info("")
         existing_file_size = os.path.getsize(target)
         if args.force:
@@ -212,61 +242,85 @@ def download(url, target, unpack_dir, args, logger):
         elif args.quiet:
             logger.info("Target file has already been downloaded and unpacked.  "
                         "Not re-downloading.")
-            do_download = False
             args.save = True  # Don't delete it!
+            do_download = False
         else:
             q = "Target file has already been downloaded and unpacked.  Re-download?"
             yn = query_yes_no(q, default='no')
             if yn == 'no':
-                do_download = False
                 args.save = True
+                do_download = False
+    return do_download
 
-    # The next bit is based on one of the answers here: (by PabloG)
+def download(do_download, url, target, meta, args, logger):
+    if not do_download: return
+    logger.info("")
+    u = urlopen(url)
+    # This bit is based on one of the answers here: (by PabloG)
     # http://stackoverflow.com/questions/22676/how-do-i-download-a-file-over-http-using-python
     # The progress feature in that answer is important here, since downloading such a large file
     # will take a while.
-    if do_download:
+    file_size = int(meta.get("Content-Length"))
+    try:
+        with open(target, 'wb') as f:
+            file_size_dl = 0
+            block_sz = 32 * 1024
+            next_dot = file_size/100.  # For verbosity==1, the next size for writing a dot.
+            while True:
+                buffer = u.read(block_sz)
+                if not buffer:
+                    break
+
+                file_size_dl += len(buffer)
+                f.write(buffer)
+
+                # Status bar
+                if args.verbosity >= 2:
+                    status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
+                        file_size_dl/1024**2, file_size/1024**2, file_size_dl*100./file_size)
+                    status = status + '\b'*len(status)
+                    sys.stdout.write(status)
+                    sys.stdout.flush()
+                elif args.verbosity >= 1 and file_size_dl > next_dot:
+                    sys.stdout.write('.')
+                    sys.stdout.flush()
+                    next_dot += file_size/100.
+        logger.info("Download complete.")
         logger.info("")
-        try:
-            with open(target, 'wb') as f:
-                file_size_dl = 0
-                block_sz = 32 * 1024
-                next_dot = file_size/100.  # For verbosity==1, the next size for writing a dot.
-                while True:
-                    buffer = u.read(block_sz)
-                    if not buffer:
-                        break
+    except (IOError, OSError) as e:
+        # Try to give a reasonable suggestion for some common IOErrors.
+        logger.error("\n\nOSError: %s",str(e))
+        if 'Permission denied' in str(e):
+            logger.error("Rerun using sudo %s",script_name)
+            logger.error("If this is not possible, you can download to an alternate location:")
+            logger.error("    %s -d dir_name --nolink\n",script_name)
+        elif 'Disk quota' in str(e) or 'No space' in str(e):
+            logger.error("You might need to download this in an alternate location and link:")
+            logger.error("    %s -d dir_name\n",script_name)
+        raise
 
-                    file_size_dl += len(buffer)
-                    f.write(buffer)
+def check_unpack(do_download, unpack_dir, target, args):
+    # Usually we unpack if we downloaded the tarball or if specified by the command line option.
+    do_unpack = do_download or args.unpack
 
-                    # Status bar
-                    if args.verbosity >= 2:
-                        status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
-                            file_size_dl/1024**2, file_size/1024**2, file_size_dl*100./file_size)
-                        status = status + '\b'*len(status)
-                        sys.stdout.write(status)
-                        sys.stdout.flush()
-                    elif args.verbosity >= 1 and file_size_dl > next_dot:
-                        sys.stdout.write('.')
-                        sys.stdout.flush()
-                        next_dot += file_size/100.
-            logger.info("Download complete.")
-        except (IOError, OSError) as e:
-            # Try to give a reasonable suggestion for some common IOErrors.
-            logger.error("\n\nOSError: %s",str(e))
-            if 'Permission denied' in str(e):
-                logger.error("Rerun using sudo %s",script_name)
-                logger.error("If this is not possible, you can download to an alternate location:")
-                logger.error("    %s -d dir_name --nolink\n",script_name)
-            elif 'Disk quota' in str(e) or 'No space' in str(e):
-                logger.error("You might need to download this in an alternate location and link:")
-                logger.error("    %s -d dir_name\n",script_name)
-            raise
+    # If the unpack dir is missing, then need to unpack
+    if not os.path.exists(unpack_dir):
+        do_unpack = True
 
-    return do_download, target, meta
+    # But of course if there is no tarball, we can't unpack it
+    if not os.path.isfile(target):
+        do_unpack = False
 
-def unpack(target, target_dir, unpack_dir, meta, args, logger):
+    # If we have a downloaded tar file, ask if it should be re-unpacked.
+    if not do_unpack and not args.quiet and os.path.isfile(target):
+        q = "Tar file is already unpacked.  Re-unpack?"
+        yn = query_yes_no(q, default='no')
+        if yn == 'yes':
+            do_unpack=True
+    return do_unpack
+
+def unpack(do_unpack, target, target_dir, unpack_dir, meta, args, logger):
+    if not do_unpack: return
     logger.info("Unpacking the tarball...")
     with tarfile.open(target) as tar:
         if args.verbosity >= 3:
@@ -281,19 +335,33 @@ def unpack(target, target_dir, unpack_dir, meta, args, logger):
         json.dump(dict(meta), fp)
 
     logger.info("Extracted contents of tar file.")
+    logger.info("")
 
-def unzip(target, args, logger):
-    logger.info("Unzipping file")
-    subprocess.call(["gunzip", target])
-    logger.info("Done")
+def check_remove(do_unpack, target, args):
+    # Usually, we remove the tarball if we unpacked it and command line doesn't specify to save it.
+    do_remove = do_unpack and not args.save
 
-def link_target(unpack_dir, link_dir, args, logger):
+    # But if we didn't unpack it, and they didn't say to save it, ask if we should remove it.
+    if os.path.isfile(target) and not do_remove and not args.save and not args.quiet:
+        q = "Remove the tarball?"
+        yn = query_yes_no(q, default='no')
+        if yn == 'yes':
+            do_remove = True
+    return do_remove
+
+def remove_tarball(do_remove, target, logger):
+    if do_remove:
+        logger.info("Removing the tarball to save space")
+        os.remove(target)
+
+def make_link(do_link, unpack_dir, link_dir, args, logger):
+    if not do_link: return
     logger.debug("Linking to %s from %s", unpack_dir, link_dir)
-    if os.path.exists(link_dir):
+    if os.path.lexists(link_dir):
         if os.path.islink(link_dir):
             # If it exists and is a link, we just remove it and relink without any fanfare.
             logger.debug("Removing existing link")
-            os.remove(link_dir)
+            os.unlink(link_dir)
         else:
             # If it is not a link, we need to figure out what to do with it.
             if os.path.isdir(link_dir):
@@ -320,22 +388,10 @@ def link_target(unpack_dir, link_dir, args, logger):
                     yn = query_yes_no(q, default='yes')
                     if yn == 'no':
                         return
-                os.path.remove(link_dir)
-    os.symlink(unpack_dir, link_dir)
+                os.remove(link_dir)
+    os.symlink(os.path.abspath(unpack_dir), link_dir)
     logger.info("Made link to %s from %s", unpack_dir, link_dir)
 
-def make_logger(args):
-    # Parse the integer verbosity level from the command line args into a logging_level string
-    logging_levels = { 0: logging.CRITICAL,
-                       1: logging.WARNING,
-                       2: logging.INFO,
-                       3: logging.DEBUG }
-    logging_level = logging_levels[args.verbosity]
-
-    # Setup logging to go to sys.stdout or (if requested) to an output file
-    logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
-    logger = logging.getLogger('galsim')
-    return logger
 
 def download_cosmos(args, logger):
     """The main script given the ArgParsed args and a logger
@@ -347,72 +403,32 @@ def download_cosmos(args, logger):
 
     # Some definitions:
     # share_dir is the base galsim share directory, e.g. /usr/local/share/galsim/
-    # target_dir is where we will put the downloaded file, usually == share_dir.
-    # unpack_dir is the directory that the tarball will unpack into.
     # url is the url from which we will download the tarball.
-    # file_name is the name of the file to download, taken from the url.
     # target is the full path of the downloaded tarball
+    # target_dir is where we will put the downloaded file, usually == share_dir.
+    # link_dir is the directory where this would normally have been unpacked.
+    # unpack_dir is the directory that the tarball will unpack into.
 
-    if args.dir is not None:
-        target_dir = args.dir
-        link = not args.nolink
-    else:
-        target_dir = share_dir
-        link = False
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
 
-    url = "https://zenodo.org/record/3242143/files/COSMOS_%s_training_sample.tar.gz"%(
-            args.sample)
-    file_name = os.path.basename(url)
-    target = os.path.join(target_dir, file_name)
-    unpack_dir = target[:-len('.tar.gz')]
+    meta = get_meta(url, args, logger)
+
+    # Check if the file already exists and if it is the right size
+    do_download = check_existing(target, unpack_dir, meta, args, logger)
 
     # Download the tarball
-    new_download, target, meta = download(url, target, unpack_dir, args, logger)
-
-    # Usually we unpack if we downloaded the tarball or if specified by the command line option.
-    do_unpack = new_download or args.unpack
-
-    # If the unpack dir is missing, then need to unpack
-    if not os.path.exists(unpack_dir):
-        do_unpack = True
-
-    # But of course if there is no tarball, we can't unpack it
-    if not os.path.isfile(target):
-        do_unpack = False
-
-    # If we have a downloaded tar file, ask if it should be re-unpacked.
-    if not do_unpack and not args.quiet and os.path.isfile(target):
-        logger.info("")
-        q = "Tar file is already unpacked.  Re-unpack?"
-        yn = query_yes_no(q, default='no')
-        if yn == 'yes':
-            do_unpack=True
+    download(do_download, url, target, meta, args, logger)
 
     # Unpack the tarball
-    if do_unpack:
-        unpack(target, target_dir, unpack_dir, meta, args, logger)
-
-    # Usually, we remove the tarball if we unpacked it and command line doesn't specify to save it.
-    do_remove = do_unpack and not args.save
-
-    # But if we didn't unpack it, and they didn't say to save it, ask if we should remove it.
-    if os.path.isfile(target) and not do_remove and not args.save and not args.quiet:
-        logger.info("")
-        q = "Remove the tarball?"
-        yn = query_yes_no(q, default='no')
-        if yn == 'yes':
-            do_remove = True
+    do_unpack = check_unpack(do_download, unpack_dir, target, args)
+    unpack(do_unpack, target, target_dir, unpack_dir, meta, args, logger)
 
     # Remove the tarball
-    if do_remove:
-        logger.info("Removing the tarball to save space")
-        os.remove(target)
+    do_remove = check_remove(do_unpack, target, args)
+    remove_tarball(do_remove, target, logger)
 
     # If we are downloading to an alternate directory, we (usually) link to it from share/galsim
-    if link:
-        # Get the directory where this would normally have been unpacked.
-        link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gz')]
-        link_target(unpack_dir, link_dir, args, logger)
+    make_link(do_link, unpack_dir, link_dir, args, logger)
 
 def main(command_args):
     """The whole process given command-line parameters in their native (non-ArgParse) form.
