@@ -277,6 +277,17 @@ def test_check():
     do_download = check_existing(target, unpack_dir, meta, args, logger)
     assert do_download is False
 
+    # Some changes imply it's obsolete
+    meta['Server'] =  "nginx/1.23.1"
+    meta['X-Content-Type-Options'] = "sniff"
+    meta['Last-Modified'] = "Tue, 12 Mar 2019 08:12:12 GMT"
+    meta['Date'] = "Sun, 14 Jun 2020 20:00:00 GMT"
+    meta['X-RateLimit-Remaining'] = "31"
+    meta['Retry-After'] = "120"
+    meta['Set-Cookie'] =  "session=2b720f14bdd71a29031a5cb415b391f8"
+    do_download = check_existing(target, unpack_dir, meta, args, logger)
+    assert do_download is False
+
     # Force download anyway
     args.quiet = False
     args.force = True
@@ -354,6 +365,13 @@ def test_check():
     with mock.patch('galsim.download_cosmos.get_input', return_value='n'):
         do_download = check_existing(target, unpack_dir, meta, args, logger)
     assert do_download is False
+
+    # Tarball and unpack_dir both missing
+    args = galsim.download_cosmos.parse_args(['-d','input'])
+    url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
+    do_download = check_existing(target, unpack_dir, meta, args, logger)
+    assert do_download is True
+
 
 @timer
 def test_download():
