@@ -1,0 +1,6 @@
+gal:
+    type: Gaussian
+    sigma: 2
+output:
+    dir: output
+    file_name: test_main.fits

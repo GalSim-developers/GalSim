@@ -10,7 +10,6 @@ omit =
     # These files are used for the executables, galsim and galsim_download_cosmos.
     # They don't get run via nosetests, so they don't really get covered.
     *__main__.py
-    *main.py
     *download_cosmos.py
 
 # Without this, coverage misses anything that is only run in multiprocessing mode.
