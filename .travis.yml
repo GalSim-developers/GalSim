@@ -178,6 +178,9 @@ install:
     # Finally, a few things for the code coverage
     - $PIP install $__U $__USER nose codecov coverage
 
+    # Also need matplotlib for a couple of things in run_examples
+    - $PIP install $__USER matplotlib
+
     - $PIP list
 
 script:
