@@ -1662,7 +1662,7 @@ def check_image_consistency(im1, im2, integer=False):
     if integer and not im1.isinteger:
         raise GalSimValueError("Image must have integer values.",im1)
     if isinstance(im2, Image):
-        if im1.array.shape != im2.array.shape: # pragma: no cover  (covered, but codecov says it's not.)
+        if im1.array.shape != im2.array.shape:
             raise GalSimIncompatibleValuesError( "Image shapes are inconsistent", im1=im1, im2=im2)
         if integer and not im2.isinteger:
             raise GalSimValueError("Image must have integer values.",im2)

@@ -1041,17 +1041,16 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         else:
             img.wcs = img_wcs
 
-    elif suppress_warnings is False:
+    elif not suppress_warnings:
         galsim_warn("Interleaved image could not be assigned a WCS automatically.")
 
     # Assign a possibly non-trivial origin and warn if individual image have different origins.
     orig = im_list[0].origin
     img.setOrigin(orig)
-    for im in im_list[1:]:
-        if not im.origin==orig:  # pragma: no cover
+    if any(im.origin != orig for im in im_list[1:]):
+        if not suppress_warnings:
             galsim_warn("Images in im_list have multiple values for origin. Assigning the "
                         "origin of the first Image instance in im_list to the interleaved image.")
-            break
 
     return img
 
@@ -1777,7 +1776,6 @@ def ensure_dir(target):
     Parameter:
         target:     The file name for which to ensure that all necessary directories exist.
     """
-
     _ERR_FILE_EXISTS=17
     dir = os.path.dirname(target)
     if dir == '': return
@@ -1793,7 +1791,7 @@ def ensure_dir(target):
             if err.errno != _ERR_FILE_EXISTS:
                 raise err
 
-    elif exists and not os.path.isdir(dir):  # pragma: no cover
+    elif exists and not os.path.isdir(dir):
         raise OSError("tried to make directory '%s' "
                       "but a non-directory file of that "
                       "name already exists" % dir)

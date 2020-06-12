@@ -1738,6 +1738,27 @@ def test_uvfunction():
     do_nonlocal_wcs(wcs, lambda x,y: ufunc(x,y,0.01), lambda x,y: vfunc(x,y,0.01),
                     'UVFunction with math and color-dependence', test_pickle=False, color=0.01)
 
+    # 10. One with invalid functions, which raise errors.  (Just for coverage really.)
+    ufunc = lambda x,y : 0.05 * x * math.sqrt(x**2 - y**2)
+    vfunc = lambda x,y : 0.05 * y * math.sqrt(3*y**2 - x**2)
+    xfunc = lambda u,v : 0.05 * u * math.sqrt(2*u**2 - 7*v**2)
+    yfunc = lambda u,v : 0.05 * v * math.sqrt(8*v**2 - u**2)
+    wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc)
+    assert_raises(ValueError, wcs.toWorld, galsim.PositionD(5, 6))
+    assert_raises(ValueError, wcs.toWorld, galsim.PositionD(8, 2))
+    assert_raises(ValueError, wcs.toImage, galsim.PositionD(3, 3))
+    assert_raises(ValueError, wcs.toImage, galsim.PositionD(6, 0))
+    # Repeat with color
+    ufunc = lambda x,y,c : 0.05 * c * math.sqrt(x**2 - y**2)
+    vfunc = lambda x,y,c : 0.05 * c * math.sqrt(3*y**2 - x**2)
+    xfunc = lambda u,v,c : 0.05 * c * math.sqrt(2*u**2 - 7*v**2)
+    yfunc = lambda u,v,c : 0.05 * c * math.sqrt(8*v**2 - u**2)
+    wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, uses_color=True)
+    assert_raises(ValueError, wcs.toWorld, galsim.PositionD(5, 6), color=0.2)
+    assert_raises(ValueError, wcs.toWorld, galsim.PositionD(8, 2), color=0.2)
+    assert_raises(ValueError, wcs.toImage, galsim.PositionD(3, 3), color=0.2)
+    assert_raises(ValueError, wcs.toImage, galsim.PositionD(6, 0), color=0.2)
+
 @timer
 def test_radecfunction():
     """Test the RaDecFunction class
@@ -1967,6 +1988,11 @@ def test_radecfunction():
     do_wcs_image(wcs2, 'RaDecFunction')
     do_wcs_image(wcs3, 'RaDecFunction')
 
+    # One with invalid functions, which raise errors.  (Just for coverage really.)
+    radec_func = lambda x,y: center.deproject_rad(math.sqrt(x),math.sqrt(y), projection='lambert')
+    wcs = galsim.RaDecFunction(radec_func)
+    assert_raises(ValueError, wcs.toWorld, galsim.PositionD(-5, 6))
+    assert_raises(ValueError, wcs.toWorld, galsim.PositionD(8, -2))
 
 def do_ref(wcs, ref_list, name, approx=False, image=None):
     # Test that the given wcs object correctly converts the reference positions
@@ -2402,7 +2428,22 @@ def test_fitswcs():
     assert_raises(TypeError, galsim.FitsWCS)
     assert_raises(TypeError, galsim.FitsWCS, file_name, header='dummy')
 
+    # If some format can't be handled by one of the installed modules,
+    # then FitsWCS can end up at the AffineTransform.
+    # The easiest way to mock this up is to adjust the fits_wcs_types list.
+    if sys.version_info < (3,): return  # mock only available on python 3
+    from unittest import mock
 
+    with mock.patch('galsim.fitswcs.fits_wcs_types', [galsim.GSFitsWCS,]):
+        file_name, ref_list = references['ZPX']
+        with assert_warns(galsim.GalSimWarning):
+            wcs = galsim.FitsWCS(file_name, dir=dir)
+        print('wcs = ',wcs)
+        assert isinstance(wcs, galsim.AffineTransform)
+
+        # Can suppress the warning if desired
+        wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
+        assert isinstance(wcs, galsim.AffineTransform)
 
 @timer
 def test_scamp():

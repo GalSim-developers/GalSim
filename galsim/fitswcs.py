@@ -1746,7 +1746,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
             raise
         except Exception as err:
             pass
-    else:  # pragma: no cover
+    else:
         # Finally, this one is really the last resort, since it only reads in the linear part of the
         # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.
         if not suppress_warning:

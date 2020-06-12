@@ -2517,7 +2517,7 @@ class UVFunction(EuclideanWCS):
                 # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
                 try:
                     return np.array([self._ufunc(x1,y1,color) for [x1,y1] in zip(x,y)])
-                except Exception:  # pragma: no cover
+                except Exception:
                     raise e  # Raise the original if this fails, since it's probably more relevant.
         else:
             try:
@@ -2525,7 +2525,7 @@ class UVFunction(EuclideanWCS):
             except Exception as e:
                 try:
                     return np.array([self._ufunc(x1,y1) for [x1,y1] in zip(x,y)])
-                except Exception:  # pragma: no cover
+                except Exception:
                     raise e
 
     def _v(self, x, y, color=None):
@@ -2535,7 +2535,7 @@ class UVFunction(EuclideanWCS):
             except Exception as e:
                 try:
                     return np.array([self._vfunc(x1,y1,color) for [x1,y1] in zip(x,y)])
-                except Exception:  # pragma: no cover
+                except Exception:
                     raise e
         else:
             try:
@@ -2543,7 +2543,7 @@ class UVFunction(EuclideanWCS):
             except Exception as e:
                 try:
                     return np.array([self._vfunc(x1,y1) for [x1,y1] in zip(x,y)])
-                except Exception:  # pragma: no cover
+                except Exception:
                     raise e
 
     def _x(self, u, v, color=None):
@@ -2557,7 +2557,7 @@ class UVFunction(EuclideanWCS):
                 except Exception as e:
                     try:
                         return np.array([self._xfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
-                    except Exception:  # pragma: no cover
+                    except Exception:
                         raise e
             else:
                 try:
@@ -2565,7 +2565,7 @@ class UVFunction(EuclideanWCS):
                 except Exception as e:
                     try:
                         return np.array([self._xfunc(u1,v1) for [u1,v1] in zip(u,v)])
-                    except Exception:  # pragma: no cover
+                    except Exception:
                         raise e
 
     def _y(self, u, v, color=None):
@@ -2579,7 +2579,7 @@ class UVFunction(EuclideanWCS):
                 except Exception as e:
                     try:
                         return np.array([self._yfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
-                    except Exception:  # pragma: no cover
+                    except Exception:
                         raise e
             else:
                 try:
@@ -2587,7 +2587,7 @@ class UVFunction(EuclideanWCS):
                 except Exception as e:
                     try:
                         return np.array([self._yfunc(u1,v1) for [u1,v1] in zip(u,v)])
-                    except Exception:  # pragma: no cover
+                    except Exception:
                         raise e
 
     def _newOrigin(self, origin, world_origin):
@@ -2750,7 +2750,7 @@ class RaDecFunction(CelestialWCS):
         except Exception as e:
             try:
                 world = [ self._radec(x1,y1) for (x1,y1) in zip(x,y) ]
-            except Exception:  # pragma: no cover
+            except Exception:
                 raise e  # Raise the original one if this fails, since it's probably more relevant.
             ra = np.array([ w[0] for w in world ])
             dec = np.array([ w[1] for w in world ])

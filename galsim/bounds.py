@@ -371,10 +371,8 @@ class BoundsD(Bounds):
         self.ymin = float(self.ymin)
         self.ymax = float(self.ymax)
 
-    # Note: We don't ever use this.  None of our C++ calls actually take a BoundsD currently,
-    # but this is available if we ever do need it.
     @property
-    def _b(self):  # pragma: no cover
+    def _b(self):
         return _galsim.BoundsD(float(self.xmin), float(self.xmax),
                                float(self.ymin), float(self.ymax))
 

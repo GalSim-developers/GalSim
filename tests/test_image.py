@@ -1374,7 +1374,7 @@ def test_Image_binary_add():
         # other operations) because all operations have the same error-checking code, so it should
         # only be necessary to check once.
         with assert_raises(ValueError):
-            image1 + image1.subImage(galsim.BoundsI(0,4,0,4))
+            image1 + image1.subImage(galsim.BoundsI(1,3,1,3))
 
 @timer
 def test_Image_binary_subtract():

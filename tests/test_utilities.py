@@ -38,6 +38,7 @@ def test_pos():
     assert pi1.y == 23
     assert isinstance(pi1.x, int)
     assert isinstance(pi1.y, int)
+    assert isinstance(pi1._p, galsim._galsim.PositionI)
 
     pi2 = galsim.PositionI((11,23))
     pi3 = galsim.PositionI(x=11.0, y=23.0)
@@ -57,6 +58,7 @@ def test_pos():
     assert pd1.y == 23.
     assert isinstance(pd1.x, float)
     assert isinstance(pd1.y, float)
+    assert isinstance(pd1._p, galsim._galsim.PositionD)
 
     pd2 = galsim.PositionD((11,23))
     pd3 = galsim.PositionD(x=11.0, y=23.0)
@@ -161,6 +163,7 @@ def test_bounds():
     assert isinstance(bi1.xmax, int)
     assert isinstance(bi1.ymin, int)
     assert isinstance(bi1.ymax, int)
+    assert isinstance(bi1._b, galsim._galsim.BoundsI)
 
     bi2 = galsim.BoundsI(galsim.PositionI(11,17), galsim.PositionI(23,50))
     bi3 = galsim.BoundsI(galsim.PositionD(11.,50.), galsim.PositionD(23.,17.))
@@ -197,6 +200,7 @@ def test_bounds():
     assert isinstance(bd1.xmax, float)
     assert isinstance(bd1.ymin, float)
     assert isinstance(bd1.ymax, float)
+    assert isinstance(bd1._b, galsim._galsim.BoundsD)
 
     bd2 = galsim.BoundsD(galsim.PositionI(11,17), galsim.PositionI(23,50))
     bd3 = galsim.BoundsD(galsim.PositionD(11.,50.), galsim.PositionD(23.,17.))
@@ -791,6 +795,12 @@ def test_interleaveImages():
     with assert_warns(galsim.GalSimWarning):
         interleaveImages(im_list, N=n, offsets=offset_list)
     # Unless suppress_warnings is True
+    interleaveImages(im_list, N=n, offsets=offset_list, suppress_warnings=True)
+
+    # Also legal to have different origins
+    im_list[0].setCenter(0,0)
+    with assert_warns(galsim.GalSimWarning):
+        interleaveImages(im_list, N=n, offsets=offset_list)
     interleaveImages(im_list, N=n, offsets=offset_list, suppress_warnings=True)
 
 
