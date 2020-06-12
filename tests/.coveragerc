@@ -7,7 +7,6 @@ omit =
     # This is a utility for tracking down OSErrors.  Don't include in coverage.
     *fds_test.py
 
-
 # Without this, coverage misses anything that is only run in multiprocessing mode.
 concurrency = multiprocessing
 
@@ -25,6 +24,3 @@ exclude_lines =
     # Don't complain about exceptional circumstances not under control of the test suite
     except .*KeyboardInterrupt
     except .*OSError
-
-    # Or checks for alternate versions when some package is not available
-    except ImportError
