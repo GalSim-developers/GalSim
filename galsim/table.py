@@ -307,12 +307,7 @@ class LookupTable(object):
                                       # it from pandas.parser
         try:
             import pandas
-            try:
-                # version >= 0.20
-                from pandas.io.common import CParserError
-            except ImportError:
-                # version < 0.20
-                from pandas.parser import CParserError
+            from pandas.io.common import CParserError
             data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
             data = data.values.transpose()
         except (ImportError, AttributeError, CParserError): # pragma: no cover
