@@ -534,13 +534,7 @@ class OutputCatalog(object):
             else:
                 fmt.append('%%%ds'%(width))
 
-        try:
-            np.savetxt(file_name, data, fmt=fmt, header=header)
-        except (AttributeError, TypeError):  # pragma: no cover
-            # header was added with version 1.7, so do it by hand if not available.
-            with open(file_name, 'w') as fid:
-                fid.write('#' + header + '\n')
-                np.savetxt(fid, data, fmt=fmt)
+        np.savetxt(file_name, data, fmt=fmt, header=header)
 
     def writeFits(self, file_name):
         """Write catalog to a FITS file.
