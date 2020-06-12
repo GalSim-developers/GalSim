@@ -213,9 +213,10 @@ def check_existing(target, unpack_dir, meta, args, logger):
                 # Skip some keys that don't imply obselescence.
                 if k.startswith('X-') or k.startswith('Retry') or k.startswith('Set-Cookie'):
                     continue
-                if k.lower() == 'date' or k.lower() == 'last-modified' or k.lower == 'server':
-                    continue  # These don't necessarily match
-                elif k not in saved_meta_dict:
+                if k == 'Date' or k == 'Last-Modified' or k == 'Server':
+                    continue
+                # Others that are missing or different imply obsolete
+                if k not in saved_meta_dict:
                     logger.debug("key %s is missing in saved meta information",k)
                     obsolete = True
                 elif meta_dict[k] != saved_meta_dict[k]:
