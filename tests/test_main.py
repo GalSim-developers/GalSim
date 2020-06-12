@@ -219,6 +219,12 @@ def test_parse_variables():
     new_params = galsim.main.parse_variables(vars, logger)
     assert new_params['psf'] == "{'type':'Gaussian' : 'sigma':0.4}"
 
+    # Missing = is an error
+    vars = ["output.nfiles","1"]
+    assert_raises(galsim.GalSimError, galsim.main.parse_variables, vars, logger)
+    vars = ["output.nfiles-1"]
+    assert_raises(galsim.GalSimError, galsim.main.parse_variables, vars, logger)
+
     # Should work correctly if yaml isn't available.
     # Although it doesn't always parse quite as nicely. E.g. requires ", not ' for string quotes.
     if sys.version_info < (3,): return  # mock only available on python 3
