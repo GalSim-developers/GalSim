@@ -373,7 +373,6 @@ def test_download():
 
     with mock.patch('galsim.download_cosmos.urlopen', fake_urlopen):
         meta = get_meta(url, args, logger)
-        meta['Content-Length'] = "728"
 
         print('Start download with verbosity = 2')
         download(True, url, target, meta, args, logger)
@@ -648,7 +647,7 @@ def test_full():
 
         remove_handler()
         assert not os.path.islink(link_dir1)
-        galsim.download_cosmos.main(['-d','fake_cosmos','-q','-s','23.5'])
+        galsim.download_cosmos.main(['-d','fake_cosmos','-q','-s','23.5','--save'])
         assert os.path.islink(link_dir1)
 
         remove_handler()
