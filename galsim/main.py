@@ -122,8 +122,9 @@ def parse_variables(variables, logger):
                 # Don't require yaml.  json usually works for these.
                 import json
                 value = json.loads(value)
-        except:
-            logger.debug('Unable to parse %s.  Treating it as a string.'%value)
+        except Exception as e:
+            logger.debug('Caught exception: %s'%e)
+            logger.info('Unable to parse %s.  Treating it as a string.'%value)
         new_params[key] = value
 
     return new_params
@@ -140,19 +141,27 @@ def add_modules(config, modules):
 def make_logger(args):
     """Make a logger object according to the command-line specifications.
     """
+    # Make a logger
+    logger = logging.getLogger('galsim')
+
     # Parse the integer verbosity level from the command line args into a logging_level string
     logging_levels = { 0: logging.CRITICAL,
                        1: logging.WARNING,
                        2: logging.INFO,
                        3: logging.DEBUG }
-    logging_level = logging_levels[args.verbosity]
+    level = logging_levels[args.verbosity]
+    logger.setLevel(level)
 
     # Setup logging to go to sys.stdout or (if requested) to an output file
     if args.log_file is None:
-        logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        handler.setLevel(level)
     else:
-        logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
-    logger = logging.getLogger('galsim')
+        handler = logging.FileHandler(args.log_file, mode='w')
+        handler.setFormatter(logging.Formatter("%(message)s"))
+        handler.setLevel(level)
+    logger.addHandler(handler)
     return logger
 
 def process_config(all_config, args, logger):
