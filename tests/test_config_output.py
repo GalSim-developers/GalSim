@@ -150,6 +150,12 @@ def test_fits():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.GetNObjForFile(config, 0, 0)
 
+    # Invalid output file
+    config = galsim.config.CopyConfig(config1)
+    config['output']['file_name'] = "$'output_fits/test_fits_%d.fits/test_fits.fits'%file_num"
+    with assert_raises(OSError):
+        galsim.config.BuildFile(config)
+
     # If there is no output field, it raises an error when trying to do BuildFile.
     os.remove('output_fits/test_fits_0.fits')
     config = galsim.config.CopyConfig(config1)

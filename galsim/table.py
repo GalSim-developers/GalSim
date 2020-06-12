@@ -310,9 +310,9 @@ class LookupTable(object):
             from pandas.io.common import CParserError
             data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
             data = data.values.transpose()
-        except (ImportError, AttributeError, CParserError): # pragma: no cover
+        except (ImportError, AttributeError, CParserError):
             data = np.loadtxt(file_name).transpose()
-        if data.shape[0] != 2:  # pragma: no cover
+        if data.shape[0] != 2:
             raise GalSimValueError("File provided for LookupTable does not have 2 columns",
                                    file_name)
         x=data[0]

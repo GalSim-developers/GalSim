@@ -150,6 +150,18 @@ def test_init():
     assert_raises(TypeError, galsim.LookupTable, f=tab_ps.f)
     assert_raises(ValueError, galsim.LookupTable, x=tab_ps.x, f=tab_ps.f, interpolant='foo')
 
+    with assert_raises(ValueError):
+        # This file is for a different purpose. It has one column, which is invalid here.
+        galsim.LookupTable.from_file('table_comparison_files/table_test1_spline.txt')
+
+    # The default reader uses pandas, but numpy is used if pandas not available.
+    if sys.version_info < (3,): return  # mock only available on python 3
+    from unittest import mock
+    with mock.patch.dict(sys.modules, {'pandas':None}):
+        tab_ps2 = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
+        # Not precisely equal. But close enough.
+        np.testing.assert_allclose(tab_ps2.x, tab_ps.x, rtol=1.e-12, atol=1.e-12)
+        np.testing.assert_allclose(tab_ps2.f, tab_ps.f, rtol=1.e-12, atol=1.e-12)
 
 @timer
 def test_log():
