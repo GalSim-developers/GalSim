@@ -185,10 +185,8 @@ class PositionI(Position):
         self.x = int(self.x)
         self.y = int(self.y)
 
-    # Note: We don't ever use this.  None of our C++ calls actually take a PositionI currently,
-    # but this is available if we ever do need it.
     @property
-    def _p(self): # pragma: no cover
+    def _p(self):
         return _galsim.PositionI(self.x, self.y)
 
     def _check_scalar(self, other, op):

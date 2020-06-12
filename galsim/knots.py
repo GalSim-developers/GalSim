@@ -130,7 +130,7 @@ class RandomKnots(GSObject):
             try:
                 # not all GSObjects have this attribute
                 self._half_light_radius = profile.half_light_radius
-            except:
+            except Exception:
                 self._half_light_radius = None
 
 
