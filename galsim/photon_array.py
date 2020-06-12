@@ -424,10 +424,7 @@ class PhotonArray(object):
             cols.append(pyfits.Column(name='wavelength', format='D', array=self.wavelength))
 
         cols = pyfits.ColDefs(cols)
-        try:
-            table = pyfits.BinTableHDU.from_columns(cols)
-        except AttributeError:  # pragma: no cover  (Might need this for older pyfits versions)
-            table = pyfits.new_table(cols)
+        table = pyfits.BinTableHDU.from_columns(cols)
         fits.writeFile(file_name, table)
 
     @classmethod
