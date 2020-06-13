@@ -187,9 +187,9 @@ script:
     # Install GalSim
     - $PYTHON setup.py install $__USER2
 
-    # If galsim_download_cosmos.py changed, then run it.
+    # If galsim_download_cosmos.py changed, then run it. (Just on 3.6.)
     - echo $TRAVIS_COMMIT_RANGE
-    - if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
+    - if [[ $TRAVIS_PYTHON_VERSION == 3.6 ]]; then if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi; fi
 
     - cd tests
 
