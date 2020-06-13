@@ -16,10 +16,3 @@ LSSTDESC.Coord>=1.2
 # version with that included, we can switch this back to the regular eigency package.
 # Until then, we can use rmjarvis.eigency, which includes the fix.
 rmjarvis.eigency>=1.77.1
-
-# Not technically required, but useful.
-pyyaml>=3.12  # This one is required to run tests.
-pandas>=0.24
-
-# This is not in conda.  Let pip install these.
-starlink-pyast>=3.14

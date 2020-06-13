@@ -118,18 +118,17 @@ matrix:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     # Install the non-python dependencies: fftw, libav, eigen
-    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libav-tools libeigen3-dev; fi
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libeigen3-dev; fi
     # Shouldn't usually need this, but occasionally might.
     #- if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw libav eigen wget; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw eigen wget; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cask install gfortran; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew upgrade wget; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw libav eigen wget gcc; fi
-    # Sometimes installed brews become unlinked.  Not sure why.  This relinks them.
-    # cf. https://apple.stackexchange.com/questions/123900/is-there-a-quick-way-to-relink-my-homebrew-kegs
-    # Shouldn't be required most of the time, and it isn't terribly fast, but if we have trouble
-    # with unlinked things again, this can help figure out which ones need to be relinked.
-    #- if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew list -1 | while read line; do brew unlink $line; brew link $line; done; brew link --overwrite gcc; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw eigen wget gcc; fi
+
+    # Only need this for the mpeg tests, which we don't do on 2.7
+    - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION > 3.5 ]]; then sudo -H apt-get install -y libav-tools; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.5 ]]; then brew install libav; brew link --overwrite libav; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
@@ -171,8 +170,6 @@ install:
 
     # Also some things just required for tests
     - $PIP install $__U $__USER -r test_requirements.txt
-    # astroplan isn't available on 2.7
-    - if [[ $TRAVIS_PYTHON_VERSION > 3.0 ]]; then $PIP install $__USER astroplan; fi
 
     # On Travix OSX, nose is already installed, but nosetests isn't in the path.
     # So we need to force it to reinstall, which puts nosetests in /usr/local/bin/
@@ -181,8 +178,8 @@ install:
     # Finally, a few things for the code coverage
     - $PIP install $__U $__USER nose codecov coverage
 
-    # Also need matplotlib for a couple of things in run_examples
-    - $PIP install $__USER matplotlib
+    # A few things we only bother with on py >= 3.6
+    - if [[ $TRAVIS_PYTHON_VERSION > 3.5 ]]; then $PIP install $__U $__USER pandas starlink-pyast matplotlib astroplan; fi
 
     - $PIP list
 
