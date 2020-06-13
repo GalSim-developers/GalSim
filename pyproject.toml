@@ -1,4 +1,2 @@
 [build-system]
-# Note: cython and eigency aren't always required, but if they turn out to be
-# necessary and they aren't specified here, then pip 10.x will fail.
-requires = ["setuptools>=38", "wheel", "pybind11>=2.2", "cython", "rmjarvis.eigency>=1.77"]
+requires = ["setuptools>=38", "wheel", "pybind11>=2.2"]

@@ -2074,20 +2074,9 @@ def DoCppChecks(config):
     else:
         ok = config.CheckHeader('Eigen/Core',language='C++')
         if not ok:
-            # Try to get the correct include directory from eigency
-            try:
-                import eigency
-                print('Trying eigency installation: ',eigency.get_includes()[2])
-                config.env.Append(CPPPATH=eigency.get_includes()[2])
-                ok = config.CheckHeader('Eigen/Core',language='C++')
-            except ImportError:
-                pass
-        if not ok:
             ErrorExit(
                 'Eigen/Core not found',
-                'You should either specify the location of Eigen as EIGEN_DIR=... '
-                'or install eigency using: \n'
-                '    pip install git+git://github.com/wouterboomsma/eigency.git')
+                'You should specify the location of Eigen as EIGEN_DIR=... '
 
 
 def DoPyChecks(config):

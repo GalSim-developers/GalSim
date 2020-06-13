@@ -217,20 +217,19 @@ Installing Eigen
 
 GalSim uses Eigen for the C++-layer linear algebra calculations.  It is a
 header-only library, which means that nothing needs to be compiled to use it.
-You can download the header files yourself, but if you do not, then we use
-the pip-installable eigency module, which bundles the header files in their
-installed python directory.  So usually, this dependency should require no
-work on your part.
+You can download the header files yourself, but if you do not, then the
+installation script will download it for you automatically.  So usually,
+this dependency should require no work on your part.
 
-However, it might become useful to install Eigen separately from eigency
-e.g. if you want to upgrade to a newer version of Eigen than the one that is
-bundled with eigency.  (Eigen 3.2.8 is bundled with eigency 1.77.)  Therefore,
-this section describes several options for how to obtain and install Eigen.
+However, if you have a version of Eigen already installed on your system,
+you may want to use that.  If the right directory is in your path for
+include file (C_INCLUDE_PATH), it should find it.  If not, you may specify
+the right directory to use by setting the EIGEN_DIR environment variable.
 
-We require Eigen version >= 3.0.  Most tests have been done with Eigen 3.2.8
-or 3.3.4, but we have also tested on 3.0.4, so probably any 3.x version will
-work.  However, if you have trouble with another version, try upgrading to
-3.2.8 or later.
+We require Eigen version >= 3.0.  The version we download automatically is
+3.3.4, so that version is known to work.  We have also tested with versions
+3.2.8 and 3.0.4, so probably any 3.x version will work.  However, if you have
+trouble with another version, try upgrading to 3.3.4 or later.
 
 Note: Prior to version 2.0, GalSim used TMV for the linear algebra back end.
 This is still an option if you prefer (e.g. it may be faster for some use
@@ -341,31 +340,3 @@ If you use MacPorts, Eigen can be installed with::
 
 This will put it into the /opt/local/include directory on your system. GalSim
 knows to look here, so there is nothing additional you need to do.
-
-
-Using eigency
-^^^^^^^^^^^^^
-
-Eigency is a pip-installable module that bundles the Eigen header files, so it
-can also be used to install these files on your system.  Indeed, as mentioned
-above, we will use eigency automatically if Eigen is not found in one of the
-above locations.  So the above installations will take precendence, but
-eigency should work as a fall-back.
-
-Note: At the time of this writing, installation of eigency depends on having
-cython already installed.  I thought I fixed this with PR #26, but it was
-not quite complete.  There is now an open PR #27, which I believe will
-finish making pip install eigency work, even if you do not have cython
-installed.  But for now, you can do::
-
-    pip install cython
-    pip install eigency
-
-(in that order) to get it to work.  Alternatively, you can use my (MJ) version
-which is the source of PR #27.  This is pip installable as::
-
-    pip install rmjarvis.eigency
-
-
-
-
