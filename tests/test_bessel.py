@@ -45,6 +45,11 @@ def test_j0():
         print('Unable to import scipy.  Skipping scipy tests of j0.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
+    # Note: We used to not require scipy in test_requirements.txt, since scipy installation
+    #       had been very difficult on some systems.  So all of these tests have a section like
+    #       this.  Now it's much easier to install scipy, so we just make it a test requirement,
+    #       and I removed the try/except ImportError bit.  But I left these sections here as
+    #       an additional regression test, since why not?
     vals2 = [   1.0,
                 0.76078097763218844,
                 0.99002497223957631,
@@ -66,16 +71,13 @@ def test_j1():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.j1(x) for x in x_list ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.j1 disagrees with scipy.special.j1")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of j1.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.j1(x) for x in x_list ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.j1 disagrees with scipy.special.j1")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -100,16 +102,13 @@ def test_jn():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.jn(n,x) for n,x in zip(n_list,x_list) ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.jn disagrees with scipy.special.jn")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of jn.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.jn(n,x) for n,x in zip(n_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.jn disagrees with scipy.special.jn")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -136,16 +135,13 @@ def test_jv():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.jv(v,x) for v,x in zip(v_list,x_list) ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.jv disagrees with scipy.special.jv")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of jv.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.jv(v,x) for v,x in zip(v_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.jv disagrees with scipy.special.jv")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -172,16 +168,13 @@ def test_yn():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.yn(n,x) for n,x in zip(n_list,x_list) ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.yn disagrees with scipy.special.yn")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of yn.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.yn(n,x) for n,x in zip(n_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.yn disagrees with scipy.special.yn")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   -5099.3323786129049,
@@ -208,16 +201,13 @@ def test_yv():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.yv(v,x) for v,x in zip(v_list,x_list) ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.yv disagrees with scipy.special.yv")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of yv.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.yv(v,x) for v,x in zip(v_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.yv disagrees with scipy.special.yv")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   -16804.006307563286,
@@ -245,16 +235,13 @@ def test_in():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.iv(n,x) for n,x in zip(n_list,x_list) ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.iv disagrees with scipy.special.iv")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of iv.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.iv(n,x) for n,x in zip(n_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.iv disagrees with scipy.special.iv")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -282,16 +269,13 @@ def test_iv():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.iv(v,x) for v,x in zip(v_list,x_list) ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.iv disagrees with scipy.special.iv")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of iv.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.iv(v,x) for v,x in zip(v_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.iv disagrees with scipy.special.iv")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -318,16 +302,13 @@ def test_kn():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.kn(n,x) for n,x in zip(n_list,x_list) ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.kn disagrees with scipy.special.kn")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of kn.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.kn(n,x) for n,x in zip(n_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.kn disagrees with scipy.special.kn")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   7.1012628247379448,
@@ -354,16 +335,13 @@ def test_kv():
     print('x = ',x_list)
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = [ scipy.special.kv(v,x) for v,x in zip(v_list,x_list) ]
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.kv disagrees with scipy.special.kv")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of kv.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = [ scipy.special.kv(v,x) for v,x in zip(v_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.kv disagrees with scipy.special.kv")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   11.898213399340918,
@@ -389,16 +367,13 @@ def test_j0_root():
     vals1 = [ galsim.bessel.j0_root(s) for s in range(1,51) ]
     print('vals1 = ',vals1)
 
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import scipy.special
-        vals2 = scipy.special.jn_zeros(0,50)
-        print('vals2 = ',vals2)
-        np.testing.assert_allclose(
-            vals1, vals2, rtol=1.e-10, err_msg="bessel.j0_root disagrees with scipy.special.jn_zeros")
-    except ImportError:
-        print('Unable to import scipy.  Skipping scipy tests of j0_root.')
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import scipy.special
+    vals2 = scipy.special.jn_zeros(0,50)
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.j0_root disagrees with scipy.special.jn_zeros")
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   2.404825557695773, 5.520078110286311, 8.653727912911013,

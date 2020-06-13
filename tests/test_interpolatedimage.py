@@ -135,6 +135,7 @@ def test_roundtrip():
 
 @timer
 def test_interpolant():
+    from scipy.special import sici
     # Test aspects of using the interpolants directly.
 
     # Test function for pickle tests
@@ -351,11 +352,7 @@ def test_interpolant():
         assert np.isclose(np.sum(lndc.xval(x)), 7.0, rtol=1.e-4)
 
         # The math for kval (at least when conserve_dc=False) is complicated, but tractable.
-        # It uses the Si function, so only test this bit if scipy is available
-        try:
-            from scipy.special import sici
-        except ImportError:
-            continue
+        # It ends up using the Si function, which is in scipy as scipy.special.sici
         vp = n * (x/np.pi + 1)
         vm = n * (x/np.pi - 1)
         true_kval = ( (vm-1) * sici(np.pi*(vm-1))[0]
@@ -1588,8 +1585,7 @@ def test_ne():
 
     assert obj3 != obj4
 
-    # And now do the same types of tests as in test_base.py and test_chromatic.py to make sure that
-    # slightly different objects compare and hash appropriately.
+    # Test that slightly different objects compare and hash appropriately.
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
     gals = [galsim.InterpolatedImage(ref_image),
             galsim.InterpolatedImage(ref_image, calculate_maxk=False),

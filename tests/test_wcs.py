@@ -2039,15 +2039,10 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
 def test_astropywcs():
     """Test the AstropyWCS class
     """
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import astropy.wcs
-            import scipy  # AstropyWCS constructor will do this, so check now.
-    except ImportError as e:
-        print('Unable to import astropy.wcs or scipy.  Skipping AstropyWCS tests.')
-        print('Caught ',e)
-        return
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import astropy.wcs
+        import scipy  # AstropyWCS constructor will do this, so check now.
 
     # These all work, but it is quite slow, so only test one of them for the regular unit tests.
     # Test all of them when running python test_wcs.py.
@@ -2732,15 +2727,10 @@ def test_razero():
     # However, astropy has this "feature" of always wrapping the angles to 0..2pi, so we can
     # use that to test that our makeSkyImage function works properly for wcs functions that
     # do this.
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=RuntimeWarning)
-            import astropy.wcs
-            import scipy  # AstropyWCS constructor will do this, so check now.
-    except ImportError as e:
-        print('Unable to import astropy.wcs or scipy.  Skipping AstropyWCS tests.')
-        print('Caught ',e)
-        return
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=RuntimeWarning)
+        import astropy.wcs
+        import scipy  # AstropyWCS constructor will do this, so check now.
 
     dir = 'fits_files'
     # This file is based in sipsample.fits, but with the CRVAL1 changed to 0.002322805429

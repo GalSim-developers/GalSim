@@ -26,7 +26,7 @@ from galsim_test_helpers import *
 
 
 # Below are a set of tests to make sure that we have achieved consistency in defining shears and
-# ellipses using different conventions.  The underlying idea is that in test_base.py we already
+# ellipses using different conventions.  The underlying idea is that in other files we already
 # have plenty of tests to ensure that a given Shear can be properly applied and gives the
 # expected result.  So here, we just work at the level of Shears that we've defined,
 # and make sure that they have the properties we expect given the values that were used to
