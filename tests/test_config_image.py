@@ -541,6 +541,11 @@ def test_reject():
         galsim.config.BuildFiles(nimages, config, logger=cl.logger)
     assert "No files were written.  All were either skipped or had errors." in cl.output
 
+    # Slighty different path if results is empty list, rather than all failures.
+    with CaptureLog() as cl:
+        galsim.config.BuildFiles(0, config, logger=cl.logger)
+    assert "No files were written.  All were either skipped or had errors." in cl.output
+
     # Finally, with a fake logger, this covers the LoggerWrapper functionality.
     logger = galsim.config.LoggerWrapper(None)
     galsim.config.BuildFiles(nimages, config, logger=logger)
