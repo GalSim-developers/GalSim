@@ -142,7 +142,7 @@ before_install:
     - ln -s $HOME/des_data examples/des/
 
     # Try to fix old pip on osx 2.7: https://github.com/pypa/pip/issues/5253
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.0 ]]; then sudo python -m pip install -U pip == 8.0.1; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.0 ]]; then sudo python -m pip install -U pip; fi
 
     # On OSX, need to use pip3, not pip and python3, not python
     - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.0 ]]; then export PIP=pip3; export PYTHON=python3; else export PIP=pip; export PYTHON=python; fi
