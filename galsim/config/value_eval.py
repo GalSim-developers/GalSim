@@ -76,7 +76,7 @@ def _GenerateFromEval(config, base, value_type):
     #print('Start Eval')
     #print('config = ',galsim.config.CleanConfig(config))
     if '_value' in config:
-        return config['_value']
+        return config['_value'], True
     elif '_fn' in config:
         #print('Using saved function')
         fn = config['_fn']
@@ -158,7 +158,7 @@ def _GenerateFromEval(config, base, value_type):
             if len(params) == 0:
                 value = eval(string, gdict)
                 config['_value'] = value
-                return value
+                return value, True
             else:
                 fn_str = 'lambda %s: %s'%(','.join(params), string)
                 #print('fn_str = ',fn_str)

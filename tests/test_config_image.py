@@ -115,6 +115,9 @@ def test_single():
     config['stamp'] = { 'max_extra_noise' : 20. }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
+    config['stamp'] = { 'n_photons' : -1, 'draw_method' : 'phot' }
+    with assert_raises(galsim.GalSimRangeError):
+        galsim.config.BuildImage(config)
     del config['stamp']
     config['image'] = 'Invalid'
     with assert_raises(galsim.GalSimConfigError):

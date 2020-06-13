@@ -158,13 +158,13 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
                            except_abort = except_abort)
     t2 = time.time()
 
-    if not results:  # pragma: no cover
+    if not results:
         nfiles_written = 0
     else:
         fnames, times = zip(*results)
         nfiles_written = sum([ t!=0 for t in times])
 
-    if nfiles_written == 0:  # pragma: no cover
+    if nfiles_written == 0:
         logger.error('No files were written.  All were either skipped or had errors.')
     else:
         if nfiles_written > 1 and nproc != 1:
