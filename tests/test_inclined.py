@@ -322,6 +322,7 @@ def test_sersic():
 def test_edge_on():
     """ Test that an edge-on profile looks similar to an almost-edge-on profile, and doesn't crash.
     """
+    from scipy.special import gamma
 
     scale_radius = 3.0
     sersic_n = 2.0
@@ -358,10 +359,6 @@ def test_edge_on():
         np.testing.assert_array_almost_equal(images[1], images[2], decimal=2)
 
         # Also the edge-on version should get the max_sb value exactly right
-        try:
-            from scipy.special import gamma
-        except ImportError:
-            continue
         np.testing.assert_allclose(prof.max_sb, comp_prof.max_sb * 10. * n / gamma(n))
         prof.drawImage(image, method='sb', use_true_center=False)
         print('max pixel: ', image.array.max(), ' cf.', prof.max_sb)

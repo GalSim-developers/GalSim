@@ -375,17 +375,7 @@ def test_table_GSInterp():
 def test_table2d():
     """Check LookupTable2D functionality.
     """
-    has_scipy = False
-    try:
-        import scipy
-        from distutils.version import LooseVersion
-        if LooseVersion(scipy.__version__) < LooseVersion('0.11'):
-            raise ImportError
-    except ImportError:
-        print("SciPy tests require SciPy version 0.11 or greater")
-    else:
-        from scipy.interpolate import interp2d
-        has_scipy = True
+    from scipy.interpolate import interp2d
 
     def f(x_, y_):
         return np.sin(x_) * np.cos(y_) + x_
@@ -415,9 +405,8 @@ def test_table2d():
                                                          for y0 in newy]
                                                         for x0 in newx]))
 
-    if has_scipy:
-        scitab2d = interp2d(x, y, np.transpose(z))
-        np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
+    scitab2d = interp2d(x, y, np.transpose(z))
+    np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
 
     # Try using linear GSInterp
     tab2d2 = galsim.LookupTable2D(x, y, z, interpolant=galsim.Linear())
@@ -445,9 +434,8 @@ def test_table2d():
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for y0 in newy]
                                                         for x0 in newx]))
-    if has_scipy:
-        scitab2d = interp2d(x, y, np.transpose(z))
-        np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
+    scitab2d = interp2d(x, y, np.transpose(z))
+    np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
 
     # Using a galsim.Interpolant should raise an exception if x/y are not equal spaced.
     with assert_raises(galsim.GalSimIncompatibleValuesError):

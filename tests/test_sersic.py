@@ -175,7 +175,7 @@ def test_sersic_radii():
     if __name__ != "__main__":
         # If doing a pytest run, we don't actually need to do all 4 sersic n values.
         # Two should be enough to notice if there is a problem, and the full list will be tested
-        # when running python test_base.py to try to diagnose the problem.
+        # when running python test_sersic.py to try to diagnose the problem.
         test_sersic_n = [1.5, -4]
         test_scale = [1.8, 0.002]
     else:
@@ -355,7 +355,7 @@ def test_sersic_flux_scaling():
     if __name__ != "__main__":
         # If doing a pytest run, we don't actually need to do all 4 sersic n values.
         # Two should be enough to notice if there is a problem, and the full list will be tested
-        # when running python test_base.py to try to diagnose the problem.
+        # when running python test_sersic.py to try to diagnose the problem.
         test_sersic_n = [1.5, -4]
     else:
         test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
