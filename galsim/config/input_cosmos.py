@@ -41,26 +41,25 @@ class COSMOSLoader(InputLoader):
                 log_level = logging.WARNING
             else:
                 log_level = logging.INFO
-            if 'input' in base:
-                if 'cosmos_catalog' in base['input']:
-                    cc = base['input']['cosmos_catalog']
-                    if isinstance(cc,list): cc = cc[0]
-                    out_str = ''
-                    if 'sample' in cc:
-                        out_str += '\n  sample = %s'%cc['sample']
-                    if 'dir' in cc:
-                        out_str += '\n  dir = %s'%cc['dir']
-                    if 'file_name' in cc:
-                        out_str += '\n  file_name = %s'%cc['file_name']
-                    if out_str != '':
-                        logger.log(log_level, 'Using user-specified COSMOSCatalog: %s',out_str)
+            # It should be required that base['input']['cosmos_catalog'] exists, but
+            # just in case someone calls this in a weird way, use get() with defaults.
+            cc = base.get('input',{}).get('cosmos_catalog',{})
+            if isinstance(cc,list): cc = cc[0]
+            out_str = ''
+            if 'sample' in cc:
+                out_str += '\n  sample = %s'%cc['sample']
+            if 'dir' in cc:
+                out_str += '\n  dir = %s'%cc['dir']
+            if 'file_name' in cc:
+                out_str += '\n  file_name = %s'%cc['file_name']
+            if out_str != '':
+                logger.log(log_level, 'Using user-specified COSMOSCatalog: %s',out_str)
             logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
                         base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
-            if 'gal' in base and 'gal_type' in base['gal']:
-                if base['gal']['gal_type']=='parametric':
-                    logger.log(log_level,"Using parametric galaxies.")
-                else:
-                    logger.log(log_level,"Using real galaxies.")
+            if base.get('gal',{}).get('gal_type',None) == 'parametric':
+                logger.log(log_level,"Using parametric galaxies.")
+            else:
+                logger.log(log_level,"Using real galaxies.")
 
 RegisterInputType('cosmos_catalog', COSMOSLoader(COSMOSCatalog))
 
