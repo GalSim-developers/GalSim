@@ -303,14 +303,14 @@ class LookupTable(object):
         """
         # We don't require pandas as a dependency, but if it's available, this is much faster.
         # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
-        CParserError = AttributeError # In case we don't get to the line below where we import
-                                      # it from pandas.parser
+        ParserError = AttributeError # In case we don't get to the line below where we import
+                                     # it from pandas.
         try:
             import pandas
-            from pandas.io.common import CParserError
+            from pandas.io.common import ParserError
             data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
             data = data.values.transpose()
-        except (ImportError, AttributeError, CParserError):
+        except (ImportError, AttributeError, ParserError):
             data = np.loadtxt(file_name).transpose()
         if data.shape[0] != 2:
             raise GalSimValueError("File provided for LookupTable does not have 2 columns",
