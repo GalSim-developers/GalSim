@@ -143,12 +143,15 @@ def ParseValue(config, key, base, value_type):
         #print('returned val, safe = ',val_safe)
         if isinstance(val_safe, tuple):
             val, safe = val_safe
-        else:  # pragma: no cover
+        else:
             # If a user-defined type forgot to return safe, just assume safe = False
             # It's an easy mistake to make and the TypeError that gets emitted isn't
             # terribly informative about what the error is.
             val = val_safe
             safe = False
+            #print('generate_func = ',generate_func)
+            #print('param = ',param)
+            #print('val_safe = ',val_safe)
 
         # Make sure we really got the right type back.  (Just in case...)
         if value_type is not None and not isinstance(val,value_type) and val is not None:

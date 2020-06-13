@@ -995,7 +995,7 @@ def test_cosmosgalaxy():
     im2 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im1.array, im2.array)
 
-    # One more test: make sure that if we specified from the start not to use real galaxies, that
+    # Make sure that if we specified from the start not to use real galaxies, that
     # failure to specify gal_type is treated properly (should default to parametric).
     real_gal_cat = 'real_galaxy_catalog_23.5_example_fits.fits'
     config = {
@@ -1009,7 +1009,7 @@ def test_cosmosgalaxy():
 
         # Use defaults for gal_type (parametric, since we used the actual catalog and not the
         # parametric one) and select a random galaxy using internal routines.
-        'gal1' : { 'type' : 'COSMOSGalaxy' },
+        'gal' : { 'type' : 'COSMOSGalaxy' },
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -1022,9 +1022,31 @@ def test_cosmosgalaxy():
     config['obj_num'] = 0
     # It is going to complain that it doesn't have weight factors.  We want to ignore this.
     with assert_warns(galsim.GalSimWarning):
-        gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
+        gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
         gal1b = cosmos_cat.makeGalaxy(rng=rng)
     gsobject_compare(gal1a, gal1b, conv=conv)
+
+    # Check some information passed to the logger about the kind of catalog being built.
+    galsim.config.SetupConfigImageNum(config, 0, 0)
+    with CaptureLog() as cl:
+        galsim.config.SetupInputsForImage(config, logger=cl.logger)
+    assert "Using user-specified COSMOSCatalog" in cl.output
+    config['input']['cosmos_catalog']['sample'] = 25.2
+    with CaptureLog() as cl:
+        galsim.config.SetupInputsForImage(config, logger=cl.logger)
+    assert "sample = 25.2" in cl.output
+    config['input']['cosmos_catalog'] = {}
+    with CaptureLog() as cl:
+        galsim.config.SetupInputsForImage(config, logger=cl.logger)
+    assert "Using user-specified" not in cl.output
+    config['gal']['gal_type'] = 'parametric'
+    with CaptureLog() as cl:
+        galsim.config.SetupInputsForImage(config, logger=cl.logger)
+    assert "Using parametric galaxies" in cl.output
+    config['gal']['gal_type'] = 'real'
+    with CaptureLog() as cl:
+        galsim.config.SetupInputsForImage(config, logger=cl.logger)
+    assert "Using real galaxies" in cl.output
 
 
 @timer
@@ -1042,6 +1064,8 @@ def test_cosmos_redshift():
         index = galsim.config.GetCurrentValue('gal.index', base, value_type=int)
         record = cosmos_cat.getParametricRecord(index)
         zphot = record['zphot']
+        # Note: this intentionally omits safe, which is a mistake that is likely to be
+        # common for use-defined generators.  We handle it by assuming safe=False.
         return zphot
 
     # Gratuitously use a list for the input_type to test that that works.

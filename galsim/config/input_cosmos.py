@@ -33,7 +33,7 @@ from ..scene import COSMOSCatalog
 # the number of objects in the catalog that passed the initial cuts and other basic catalog info.
 class COSMOSLoader(InputLoader):
     def setupImage(self, cosmos_cat, config, base, logger):
-        if logger: # pragma: no cover
+        if logger:
             # Only report as a warning the first time.  After that, use info.
             first = not base.get('_COSMOSLoader_reported_as_warning',False)
             base['_COSMOSLoader_reported_as_warning'] = True

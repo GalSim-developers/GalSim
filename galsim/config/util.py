@@ -319,7 +319,7 @@ def UpdateNProc(nproc, ntot, config, logger=None):
             logger.debug("ncpu = %d.",nproc)
         except KeyboardInterrupt:
             raise
-        except Exception as e:  # pragma: no cover
+        except Exception as e:
             logger.warning("nproc <= 0, but unable to determine number of cpus.")
             logger.warning("Caught error: %s",e)
             logger.warning("Using single process")
@@ -768,7 +768,11 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                         done_func(logger, proc, k, res, t)
                     results[k] = res
 
-        except Exception as e:  # pragma: no cover
+        except BaseException as e:  # pragma: no cover
+            # I'm actually not sure how to make this happen.  We do a good job of catching
+            # all the normal kinds of exceptions that might occur and dealing with them cleanly.
+            # However, if something happens that we didn't anticipate, this should make an
+            # attempt to clean up the task queue and worker before raising the error further.
             logger.error("Caught a fatal exception during multiprocessing:\n%r",e)
             logger.error("%s",traceback.format_exc())
             # Clear any unclaimed jobs that are still in the queue
