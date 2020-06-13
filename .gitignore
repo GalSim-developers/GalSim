@@ -28,3 +28,4 @@ dist
 .pytest_cache
 .clang_complete
 pytest_session.txt
+downloaded_eigen

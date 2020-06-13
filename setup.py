@@ -295,13 +295,8 @@ def find_eigen_dir(output=False):
         if path in os.environ:
             for dir in os.environ[path].split(':'):
                 try_dirs.append(dir)
-    # eigency is a python package that bundles the Eigen header files, so if that's there,
-    # can use that.
-    try:
-        import eigency
-        try_dirs.append(eigency.get_includes()[2])
-    except ImportError:
-        pass
+    if os.path.isdir('downloaded_eigen'):
+        try_dirs.extend(glob.glob(os.path.join('downloaded_eigen','*')))
 
     if output: print("Looking for Eigen:")
     for dir in try_dirs:
@@ -317,10 +312,55 @@ def find_eigen_dir(output=False):
                 print("\n  ", dir, "  (yes)")
             return dir
         if output: print("  (no)")
+
     if output:
-        print("Could not find Eigen.  Make sure it is installed either in a standard ")
-        print("location such as /usr/local/include, or the installation directory is either in ")
-        print("your C_INCLUDE_PATH or EIGEN_DIR environment variable.")
+        print("Could not find Eigen in any of the standard locations.")
+        print("Will now try to download it from the internet.  This requires an internet")
+        print("connect, so will fail if you are currently offline.")
+        print("If Eigen is installed in a non-standard location, and you want to use that")
+        print("instead, you should make sure the right directory is either in")
+        print("your C_INCLUDE_PATH or an EIGEN_DIR environment variable.")
+
+    try:
+        try:
+            from urllib2 import urlopen
+        except ImportError:
+            from urllib.request import urlopen
+        import tarfile
+        import shutil
+        dir = 'downloaded_eigen'
+        if os.path.isdir(dir):
+            # If this exists, it was tried above and failed.  Something must be wrong with it.
+            shutil.rmtree(dir)
+        os.mkdir(dir)
+        url = 'https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2'
+        if output:
+            print("Downloading eigen from ",url)
+        u = urlopen('https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2')
+        fname = 'eigen.tar.bz2'
+        block_sz = 32 * 1024
+        with open(fname, 'wb') as f:
+            buffer = u.read(block_sz)
+            while buffer:
+                f.write(buffer)
+                buffer = u.read(block_sz)
+        if output:
+            print("Done. Unpacking tarball")
+        with tarfile.open(fname) as tar:
+            tar.extractall(dir)
+        os.remove(fname)
+        # This actually extracts into a subdirectory with a name eigen-eigen-5a0156e40feb/
+        # I'm not sure if that name is reliable, so use glob to get it.
+        dir = glob.glob(os.path.join(dir,'*'))[0]
+        if os.path.isfile(os.path.join(dir, 'Eigen/Core')):
+            return dir
+        elif output:
+            print("Downloaded eigen, but it didn't have the expected Eigen/Core file.")
+    except Exception as e:
+        if output:
+            print("Error encountered while downloading Eigen from the internet")
+            print(e)
+
     raise OSError("Could not find Eigen")
 
 
@@ -980,14 +1020,8 @@ test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'nose',
 # Note: Even though we don't use nosetests, nose is required for some tests to work.
 #       cf. https://gist.github.com/dannygoldstein/e18866ebb9c39a2739f7b9f16440e2f5
 
-# If Eigen doesn't exist in the normal places, add eigency ad a build dependency.
-try:
-    find_eigen_dir()
-except OSError:
-    print('Adding eigency to build_dep')
-    # Once 1.78 is out I *think* we can remove the cython dependency here.
-    build_dep += ['cython', 'rmjarvis.eigency>=1.77']
-
+# If Eigen doesn't exist in the normal places, download it.
+find_eigen_dir(output=True)
 
 with open('README.rst') as file:
     long_description = file.read()
