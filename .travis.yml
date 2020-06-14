@@ -124,7 +124,7 @@ before_install:
     # Shouldn't usually need this, but occasionally might.
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw wget; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then brew install eigen; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then brew install eigen; brew link --overwrite eigen; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cask install gfortran; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew upgrade wget; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw gcc wget; fi
