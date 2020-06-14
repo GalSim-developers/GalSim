@@ -321,8 +321,8 @@ def find_eigen_dir(output=False):
 
     if output:
         print("Could not find Eigen in any of the standard locations.")
-        print("Will now try to download it from the internet.  This requires an internet")
-        print("connect, so will fail if you are currently offline.")
+        print("Will now try to download it from bitbucket.org. This requires an internet")
+        print("connection, so it will fail if you are currently offline.")
         print("If Eigen is installed in a non-standard location, and you want to use that")
         print("instead, you should make sure the right directory is either in your")
         print("C_INCLUDE_PATH or specified in an EIGEN_DIR environment variable.")
@@ -336,7 +336,7 @@ def find_eigen_dir(output=False):
         url = 'https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2'
         if output:
             print("Downloading eigen from ",url)
-        u = urlopen('https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2')
+        u = urlopen(url)
         fname = 'eigen.tar.bz2'
         block_sz = 32 * 1024
         with open(fname, 'wb') as f:
@@ -345,7 +345,7 @@ def find_eigen_dir(output=False):
                 f.write(buffer)
                 buffer = u.read(block_sz)
         if output:
-            print("Done. Unpacking tarball")
+            print("Downloaded %s.  Unpacking tarball."%fname)
         with tarfile.open(fname) as tar:
             tar.extractall(dir)
         os.remove(fname)
