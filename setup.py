@@ -318,8 +318,8 @@ def find_eigen_dir(output=False):
         print("Will now try to download it from the internet.  This requires an internet")
         print("connect, so will fail if you are currently offline.")
         print("If Eigen is installed in a non-standard location, and you want to use that")
-        print("instead, you should make sure the right directory is either in")
-        print("your C_INCLUDE_PATH or an EIGEN_DIR environment variable.")
+        print("instead, you should make sure the right directory is either in your")
+        print("C_INCLUDE_PATH or specified in an EIGEN_DIR environment variable.")
 
     try:
         try:
