@@ -118,13 +118,16 @@ matrix:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     # Install the non-python dependencies: fftw, libav, eigen
-    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libeigen3-dev; fi
+    - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev; fi
+    # Don't install eigen on 3.7 so we test the ability of setup.py to install it for us.
+    - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then sudo -H apt-get install -y libeigen3-dev; fi
     # Shouldn't usually need this, but occasionally might.
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw eigen; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw wget; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then brew install eigen; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cask install gfortran; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew upgrade wget; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw eigen gcc; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw gcc wget; fi
 
     # Only need this for the mpeg tests, which we don't do on 2.7
     - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION > 3.5 ]]; then sudo -H apt-get install -y libav-tools; fi
