@@ -24,6 +24,12 @@ import types
 import subprocess
 import re
 import tempfile
+try:
+    from urllib2 import urlopen
+except ImportError:
+    from urllib.request import urlopen
+import tarfile
+import shutil
 
 try:
     from setuptools import setup, Extension, find_packages
@@ -322,12 +328,6 @@ def find_eigen_dir(output=False):
         print("C_INCLUDE_PATH or specified in an EIGEN_DIR environment variable.")
 
     try:
-        try:
-            from urllib2 import urlopen
-        except ImportError:
-            from urllib.request import urlopen
-        import tarfile
-        import shutil
         dir = 'downloaded_eigen'
         if os.path.isdir(dir):
             # If this exists, it was tried above and failed.  Something must be wrong with it.
