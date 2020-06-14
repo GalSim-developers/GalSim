@@ -223,7 +223,7 @@ this dependency should require no work on your part.
 
 However, if you have a version of Eigen already installed on your system,
 you may want to use that.  If the right directory is in your path for
-include file (C_INCLUDE_PATH), it should find it.  If not, you may specify
+include files (C_INCLUDE_PATH), it should find it.  If not, you may specify
 the right directory to use by setting the EIGEN_DIR environment variable.
 
 We require Eigen version >= 3.0.  The version we download automatically is
