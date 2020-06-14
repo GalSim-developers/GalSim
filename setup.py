@@ -303,6 +303,13 @@ def find_eigen_dir(output=False):
                 try_dirs.append(dir)
     if os.path.isdir('downloaded_eigen'):
         try_dirs.extend(glob.glob(os.path.join('downloaded_eigen','*')))
+    # eigency is a python package that bundles the Eigen header files, so if that's there,
+    # can use that.
+    try:
+        import eigency
+        try_dirs.append(eigency.get_includes()[2])
+    except ImportError:
+        pass
 
     if output: print("Looking for Eigen:")
     for dir in try_dirs:
