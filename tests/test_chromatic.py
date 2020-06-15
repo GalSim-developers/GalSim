@@ -2484,6 +2484,59 @@ def test_ne():
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0)]
     all_obj_diff(gals)
 
+@timer
+def test_atredshift():
+    """Test the equivalence of obj.atRedshift and the equivalent with SED.atRedshift
+    """
+    # First simple separable galaxy
+    gal = galsim.Sersic(n=3, half_light_radius=1.5)
+    gal = gal.shear(g1=0.3, g2=0.2)
+    gal1 = gal * bulge_SED
+    gal2 = gal * bulge_SED.atRedshift(1.7)
+
+    psf = galsim.Moffat(beta=2.5, half_light_radius=0.3)
+    psf = galsim.ChromaticAtmosphere(psf, base_wavelength=500.0, zenith_angle=17*galsim.degrees)
+
+    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
+    final2 = galsim.Convolve(gal2, psf)
+
+    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image1.array, image2.array)
+    do_pickle(final1)
+
+    # ChromaticSum
+    gal1 = gal * bulge_SED + gal.dilate(1.3) * disk_SED
+    gal2 = gal * bulge_SED.atRedshift(1.7) + gal.dilate(1.3) * disk_SED.atRedshift(1.7)
+    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
+    final2 = galsim.Convolve(gal2, psf)
+    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image1.array, image2.array)
+
+    # Probably none of the other Chromatic classes make sense to call atRedshift, so let
+    # them use the base class implementation if they do so.
+    # Just check ChromaticConvolution as one that doesn't have its own implementation.
+    # (This is probably the least implausible use of atRedshift for one of these other classes.)
+    smear = galsim.ChromaticObject(galsim.Gaussian(sigma=0.4))
+    smear1 = smear.expand(lambda wave: (wave/700)**0.3)
+    gal1 = galsim.Convolve(gal * bulge_SED, smear1)
+    # Smear is at redshift 1.7, so scale wave by factor of (1+1.7)
+    smear2 = smear.expand(lambda wave: (wave/700/2.7)**0.3)
+    gal2 = galsim.Convolve(gal * bulge_SED.atRedshift(1.7), smear2)
+    final1 = galsim.Convolve(gal1.atRedshift(1.7), psf)
+    final2 = galsim.Convolve(gal2, psf)
+    image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image1.array, image2.array, atol=1.e-6)
+
+    # Finally, if we call atRedshift on a regular GSObject, it doesn't do much.
+    gal3 = gal.atRedshift(1.7)
+    assert gal == gal3
+    # But it does add an attribute, which doesn't obviate equality.
+    assert gal3.redshift == 1.7
+    assert gal.redshift == 0.
+
 
 if __name__ == "__main__":
     test_draw_add_commutativity()
@@ -2514,3 +2567,4 @@ if __name__ == "__main__":
     test_convolution_of_spectral()
     test_chromatic_invariant()
     test_ne()
+    test_atRedshift()

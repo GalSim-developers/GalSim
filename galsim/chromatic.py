@@ -162,6 +162,12 @@ class ChromaticObject(object):
         """
         return self._obj.gsparams
 
+    @property
+    def redshift(self):
+        """The redshift of the object.
+        """
+        return self.SED.redshift
+
     def withGSParams(self, gsparams):
         """Create a version of the current object with the given gsparams
 
@@ -661,6 +667,17 @@ class ChromaticObject(object):
                     _photons, units.spectral_density(wavelength_nm)).value
         factor = target_flux_density / current_flux_density
         return self * factor
+
+    def atRedshift(self, redshift):
+        """Create a version of the current object with a different redshift.
+
+        This will both adjust the SED to have the given redshift and set a ``redshift`` attribute
+        with the given value.
+
+        Returns:
+            the object with the new redshift
+        """
+        return ChromaticTransformation(self, redshift=redshift)
 
     def calculateCentroid(self, bandpass):
         """Determine the centroid of the wavelength-integrated surface brightness profile.
@@ -1526,14 +1543,15 @@ class ChromaticTransformation(ChromaticObject):
                             (dx,dy) by which to shift the profile.  May also be a function of
                             wavelength returning a numpy array.  [default: (0,0)]
         flux_ratio:         A factor by which to multiply the flux of the object. [default: 1]
+        redshift:           A redshift to apply to the wavelength when evaluating. [default: None]
         gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for
                             details. [default: None]
         propagate_gsparams: Whether to propagate gsparams to each of the components.  This
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
     """
-    def __init__(self, obj, jac=np.identity(2), offset=(0.,0.), flux_ratio=1., gsparams=None,
-                 propagate_gsparams=True):
+    def __init__(self, obj, jac=np.identity(2), offset=(0.,0.), flux_ratio=1., redshift=None,
+                 gsparams=None, propagate_gsparams=True):
         if isinstance(offset, PositionD) or isinstance(offset, PositionI):
             offset = (offset.x, offset.y)
         if not hasattr(jac,'__call__'):
@@ -1550,6 +1568,8 @@ class ChromaticTransformation(ChromaticObject):
             flux_ratio = SED(flux_ratio, 'nm', '1')
 
         self.SED = obj.SED * flux_ratio
+        if redshift is not None:
+            self.SED = self.SED.atRedshift(redshift)
 
         # Need to account for non-unit determinant jacobian in normalization.
         if hasattr(jac, '__call__'):
@@ -1601,6 +1621,7 @@ class ChromaticTransformation(ChromaticObject):
                     jac = self._jac,
                     offset = self._offset,
                     flux_ratio = self._flux_ratio,
+                    redshift = self.redshift,
                     gsparams = self._gsparams,
                     propagate_gsparams = self._propagate_gsparams)
         else:
@@ -1681,8 +1702,9 @@ class ChromaticTransformation(ChromaticObject):
         else:
             offset = PositionD(*(self._offset.tolist()))
         return ('galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, '
-                'gsparams=%r, propagate_gsparams=%r)')%(
-            self.original, jac, offset, self._flux_ratio, self._gsparams, self._propagate_gsparams)
+                'redshift=%r, gsparams=%r, propagate_gsparams=%r)')%(
+            self.original, jac, offset, self._flux_ratio, self.redshift,
+            self._gsparams, self._propagate_gsparams)
 
     def __str__(self):
         from .transform import Transformation
@@ -1693,9 +1715,11 @@ class ChromaticTransformation(ChromaticObject):
             s += Transformation._str_from_jac(self._jac)
         if hasattr(self._offset, '__call__'):
             s += '.shift(%s)'%self._offset
-        elif np.array_equal(self._offset,(0,0)):
+        elif not np.array_equal(self._offset,(0,0)):
             s += '.shift(%s,%s)'%(self._offset[0],self._offset[1])
         s += '.withScaledFlux(%s)'%self._flux_ratio
+        if self.redshift != self.original.redshift:
+            s += '.atRedshift(%s)'%(self.redshift)
         return s
 
     def _getTransformations(self, wave):
@@ -1721,6 +1745,10 @@ class ChromaticTransformation(ChromaticObject):
             the monochromatic object at the given wavelength.
         """
         from .transform import Transformation
+        if hasattr(self._flux_ratio, 'redshift'):
+            wave *= (1.+self._flux_ratio.redshift) / (1.+self.redshift)
+        else:
+            wave *= (1.+self.original.redshift) / (1.+self.redshift)
         ret = self.original.evaluateAtWavelength(wave)
         jac, offset, flux_ratio = self._getTransformations(wave)
         return Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
@@ -1937,6 +1965,13 @@ class ChromaticSum(ChromaticObject):
         ret._gsparams = GSParams.check(gsparams)
         if self._propagate_gsparams:
             ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
+        return ret
+
+    @doc_inherit
+    def atRedshift(self, redshift):
+        from copy import copy
+        ret = copy(self)
+        ret._obj_list = [ obj.atRedshift(redshift) for obj in self.obj_list ]
         return ret
 
     def __eq__(self, other):

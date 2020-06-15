@@ -89,8 +89,8 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
             return ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
 
         else:
-            return ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams,
-                                           propagate_gsparams)
+            return ChromaticTransformation(obj, jac, offset, flux_ratio, gsparams=gsparams,
+                                           propagate_gsparams=propagate_gsparams)
     else:
         return Transformation(obj, jac, offset, flux_ratio, gsparams, propagate_gsparams)
 

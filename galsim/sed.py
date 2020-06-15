@@ -466,12 +466,9 @@ class SED(object):
 
     def _mul_sed(self, other):
         """Equivalent to self * other when other is an SED, but no sanity checks."""
-        if self.spectral:
-            redshift = self.redshift
-        elif other.spectral:
-            redshift = other.redshift
-        else:
-            redshift = 0.0
+        # There should only be one SED with a non-trivial redshift, so adding them
+        # should always give us the right net redshift to use.
+        redshift = self.redshift + other.redshift
 
         fast = self.fast and other.fast
 
@@ -755,6 +752,8 @@ class SED(object):
         Returns:
             the redshifted `SED`.
         """
+        if redshift == self.redshift:
+            return self
         if redshift <= -1:
             raise GalSimRangeError("Invalid redshift", redshift, -1.)
         zfactor = (1.0 + redshift) / (1.0 + self.redshift)
