@@ -419,6 +419,8 @@ class GSObject(object):
     def dimensionless(self): return True
     @property
     def wave_list(self): return np.array([], dtype=float)
+    @property
+    def redshift(self): return getattr(self, '_redshift', 0.)
 
     # Also need this method to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
@@ -1044,6 +1046,21 @@ class GSObject(object):
         from .transform import _Transform
         new_obj = _Transform(self, offset=offset)
         return new_obj
+
+    def atRedshift(self, redshift):
+        """Create a version of the current object with a different redshift.
+
+        For regular GSObjects, this method doesn't do anything aside from setting a ``redshift``
+        attribute with the given value.  But this allows duck typing with ChromaticObjects
+        where this function will adjust the SED appropriately.
+
+        Returns:
+            the object with the new redshift
+        """
+        from copy import copy
+        ret = copy(self)
+        ret._redshift = redshift
+        return ret
 
     # Make sure the image is defined with the right size and wcs for drawImage()
     def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, center, odd=False):
