@@ -120,7 +120,7 @@ before_install:
     # Install the non-python dependencies: fftw, libav, eigen
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libeigen3-dev; fi
     # Shouldn't usually need this, but occasionally might.
-    #- if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw eigen; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cask install gfortran; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew upgrade wget; fi
