@@ -1,0 +1,216 @@
+# Copyright (c) 2012-2019 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #12
+#
+# The twelfth YAML configuration file in our tutorial about using Galsim config files.
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script introduces wavelength-dependent profiles. Three kinds of chromatic profiles are
+# demonstrated here:
+# 
+# 1) A chromatic object representing a DeVaucouleurs galaxy with an early-type SED at redshift 0.8.
+#    This galaxy is drawn using the six LSST filters, which demonstrate that the galaxy is a
+#    g-band dropout.
+# 
+# 2) A two-component bulge + disk galaxy, in which the bulge and disk have different SEDs.
+# 
+# 3) A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
+#    refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
+#    convolved with a simple Exponential galaxy.
+# 
+# In all three cases, six images are created, which correspond to each of the LSST filters:
+# u, g, r, i, z, and y.
+# 
+# New features introduced in this demo:
+# 
+# - sed : file_name, wave_type, flux_type
+# - bandpass : filename, wave_type
+# - gal : redshift
+# - psf_type : ChromaticAtmosphere (base_profile, base_wavelength, latitude, HA)
+
+
+
+eval_variables:
+    # It will be convenient to have the single-character filter name to use in Eval items.
+    sfilter:
+        type: List
+        items: [ u, g, r, i, z, y ]
+        index_key: file_num
+
+# Define some other information about the images
+image:
+    type: Single
+
+    size: 64
+
+    noise:
+        type: Gaussian
+        sigma: 0.02
+
+    pixel_scale: 0.2  # arcsec (LSST)
+
+    random_seed: 1234567
+
+    bandpass:
+        file_name:
+            type: FormattedStr
+            format: "LSST_%s.dat"
+            items:
+                - $filter
+        wave_type: nm   # Wavelength in these files is in nm.
+        thin: 1.e-4
+
+output:
+
+    nfiles: 6
+    dir: output_yaml
+    file_name:
+        type: FormattedStr
+        format: "demo12a_%s.fits"
+        items:
+            - $filter
+
+--- 
+
+# 1) A chromatic object representing a DeVaucouleurs galaxy with an early-type SED at redshift 0.8.
+#    This galaxy is drawn using the six LSST filters, which demonstrate that the galaxy is a
+#    g-band dropout.
+
+gal:
+    type: DeVaucouleurs
+    half_light_radius: 0.5
+
+    sed:
+        file_name: CWW_E_ext.sed
+        wave_type: Ang
+        flux_type: flambda
+        norm_flux_density: 1.0
+        norm_wavelength: 500
+
+    redshift: 0.8
+
+    shear:
+        type: G1G2
+        g1: 0.5
+        g2: 0.3
+
+    dilate: 1.05
+
+    shift:
+        type: XY
+        x: 0
+        y: 0.1
+
+psf:
+    type: Moffat
+    fwhm: 0.6
+    beta: 2.5
+
+---
+
+# 2) A two-component bulge + disk galaxy, in which the bulge and disk have different SEDs.
+
+gal:
+    type: Sum
+    items:
+        -
+            type: DeVaucouleurs
+            half_light_radius: 0.5
+            sed: 
+                file_name: CWW_E_ext.sed
+                wave_type: Ang
+                flux_type: flambda
+                norm_flux_density: 1.0
+                norm_wavelength: 500
+            shear:
+                type: G1G2
+                g1: 0.12
+                g2: 0.07
+            scale_flux: 0.8
+        -
+            type: Exponential
+            half_light_radius: 2.0
+            sed:
+                file_name: CWW_Im_ext.sed
+                wave_type: Ang
+                flux_type: flambda
+                norm_flux_density: 1.0
+                norm_wavelength: 500
+            shear:
+                type: G1G2
+                g1: 0.4
+                g2: 0.2
+            scale_flux: 4
+
+    redshift: 0.8
+    scale_flux: 1.1
+
+psf:
+    type: Moffat
+    fwhm: 0.6
+    beta: 2.5
+
+output:
+    file_name:
+        format: "demo12b_%s.fits"
+
+
+---
+
+# 3) A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
+#    refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
+#    convolved with a simple Sersic galaxy.
+
+psf:
+    type: ChromaticAtmosphere
+    base_profile:
+        type: Moffat
+        fwhm: 0.5
+        beta: 2.5
+    base_wavelength: 500
+    latitude: 19.8207 deg
+    HA: -1.0 hour
+
+gal:
+    type: Exponential
+    half_light_radius: 0.5
+
+    sed:
+        file_name: CWW_Im_ext.sed
+        wave_type: Ang
+        flux_type: flambda
+        norm_flux: 50
+        norm_bandpass:
+            file_name: LSST_g.dat
+            wave_type: nm
+            thin: 1.e-4
+    shear:
+        type: G1G2
+        g1: 0.5
+        g2: 0.3
+
+stamp:
+    sky_pos:
+        type: RADec
+        ra: 14:03:13 hours
+        dec: 54:20:57 degrees
+
+output:
+    file_name:
+        format: "demo12c_%s.fits"
