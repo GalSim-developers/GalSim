@@ -30,6 +30,7 @@ from ..shear import Shear
 from ..angle import Angle
 from ..gsobject import GSObject
 from ..gsparams import GSParams
+from ..utilities import basestring
 
 # This file handles the building of GSObjects in the config['psf'] and config['gal'] fields.
 # This file includes many of the simple object types.  Additional types are defined in
@@ -132,9 +133,14 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         'current', 'index_key', 'repeat'
     ]
     # There are a few more that are specific to which key we have.
-    if key == 'gal':
+    # Note: some custom stamp builders may have fields besides just gal and psf.
+    # Using 'gal' in key rather than key == 'gal', we make it easier for them, since the
+    # keys can be e.g. blue_gal, red_gal, or halo_gal, field_gal, etc.  Anything with gal
+    # somewhere in the name will be treated as a gal.  Likewise ground_psf, space_psf or
+    # similar will all be treated as psf.
+    if isinstance(key, basestring) and 'gal' in key:
         ignore += [ 'resolution', 'signal_to_noise', 'redshift', 're_from_res' ]
-    elif key == 'psf':
+    elif isinstance(key, basestring) and 'psf' in key:
         ignore += [ 'saved_re' ]
     else:
         # As long as key isn't psf, allow resolution.
@@ -143,7 +149,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         ignore += [ 'resolution' , 're_from_res' ]
 
     # Allow signal_to_noise for PSFs only if there is not also a galaxy.
-    if 'gal' not in base and key == 'psf':
+    if 'gal' not in base and isinstance(key, basestring) and 'psf' in key:
         ignore += [ 'signal_to_noise']
 
     # If we are specifying the size according to a resolution, then we
@@ -164,10 +170,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
                     'Cannot specify both gal.resolution and gal.half_light_radius')
             param['re_from_res'] = True
         param['half_light_radius'] = gal_re
-
-    # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
-    if key == 'psf' and 'flux' not in param and 'signal_to_noise' not in param:
-        param['flux'] = 1
 
     if 'gsparams' in param:
         gsparams = UpdateGSParams(gsparams, param['gsparams'], base)
