@@ -694,9 +694,14 @@ class StampBuilder(object):
         elif world_pos is not None and image_pos is None:
             image_pos = wcs.toImage(world_pos)
 
+        if 'sky_pos' in config:
+            base['sky_pos'] = ParseValue(config, 'sky_pos', base, CelestialCoord)[0]
+        elif isinstance(world_pos, CelestialCoord):
+            base['sky_pos'] = world_pos
+
         # Wherever we use the world position, we expect a Euclidean position, not a
         # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
-        # image center.
+        # image center. (sky_pos is available as a CelestialCoord when we need that.)
         if isinstance(world_pos, CelestialCoord):
             # Then project this position relative to the image center.
             world_center = base.get('world_center', wcs.toWorld(base['image_center']))
@@ -731,10 +736,6 @@ class StampBuilder(object):
         base['stamp_offset'] = stamp_offset
         base['image_pos'] = image_pos
         base['world_pos'] = world_pos
-        if 'sky_pos' in config:
-            base['sky_pos'] = ParseValue(config, 'sky_pos', base, CelestialCoord)[0]
-        elif isinstance(world_pos, CelestialCoord):
-            base['sky_pos'] = world_pos
 
         if xsize:
             logger.debug('obj %d: xsize,ysize = %s,%s',base['obj_num'],xsize,ysize)
