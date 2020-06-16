@@ -28,6 +28,7 @@ from ..fitswcs import TanWCS, FitsWCS
 from ..angle import Angle, AngleUnit
 from ..position import PositionD
 from ..celestial import CelestialCoord
+from ..utilities import basestring
 
 # This file handles the construction of wcs types in config['image']['wcs'].
 
@@ -66,14 +67,12 @@ def BuildWCS(config, key, base, logger=None):
     # Check for direct value, else get the wcs type
     if isinstance(param, BaseWCS):
         return param
-    elif param == str(param) and (param[0] == '$' or param[0] == '@'):
+    elif isinstance(param, basestring) and (param[0] == '$' or param[0] == '@'):
         return ParseValue(config, key, base, None)[0]
-    elif not isinstance(param, dict):
-        raise GalSimConfigError("wcs must be either a BaseWCS or a dict")
-    elif 'type' in param:
-        wcs_type = param['type']
+    elif isinstance(param, dict):
+        wcs_type = param.get('type', 'PixelScale')
     else:
-        wcs_type = 'PixelScale'
+        raise GalSimConfigError("wcs must be either a BaseWCS or a dict")
 
     # For these two, just do the usual ParseValue function.
     if wcs_type in ('Eval', 'Current'):
