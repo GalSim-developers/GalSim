@@ -58,6 +58,9 @@ time galsim -v2 demo10.yaml || exit
 time $python demo11.py || exit
 time galsim -v2 demo11.yaml || exit
 
+time $python demo12.py || exit
+time galsim -v2 demo12.yaml || exit
+
 echo 'Checking diffs: (No output means success)'
 
 # demo1:
@@ -114,3 +117,12 @@ $python check_diff.py output/power_spectrum.fits output_yaml/power_spectrum.fits
 # demo11:
 $python check_diff.py output/tabulated_power_spectrum.fits.fz output_yaml/tabulated_power_spectrum.fits.fz
 
+# demo12:
+for part in a b c
+do
+    for band in u g r i z y
+    do
+        file_name=demo12${part}_${band}.fits
+        $python check_diff.py output/$file_name output_yaml/$file_name
+    done
+done
