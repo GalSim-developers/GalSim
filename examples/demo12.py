@@ -21,24 +21,21 @@ Demo #12
 The twelfth script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script currently doesn't have an equivalent demo*.yaml or demo*.json file.  The API for catalog
-level chromatic objects has not been written yet.
+This script introduces wavelength-dependent profiles. Three kinds of chromatic profiles are
+demonstrated here:
 
-This script introduces the chromatic objects module galsim.chromatic, which handles wavelength-
-dependent profiles.  Three uses of this module are demonstrated:
+1) A chromatic object representing a DeVaucouleurs galaxy with an early-type SED at redshift 0.8.
+   The galaxy is drawn using the six LSST filters, which demonstrate that the galaxy is a g-band
+   dropout.
 
-1) A chromatic object representing a De Vaucouleurs galaxy with an early-type SED at redshift 0.8 is
-created.  The galaxy is then drawn using the six LSST filter throughput curves to demonstrate that
-the galaxy is a g-band dropout.
+2) A two-component bulge+disk galaxy, in which the bulge and disk have different SEDs.
 
-2) A two-component bulge+disk galaxy, in which the bulge and disk have different SEDs, is created
-and then drawn using LSST filters.
+3) A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
+   refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
+   convolved with a simple Exponential galaxy.
 
-3) A wavelength-dependent PSF is created to represent atmospheric effects of differential chromatic
-refraction, and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF is used
-to draw a single Sersic galaxy in the LSST filters.
-
-For all cases, suggested parameters for viewing in ds9 are also included.
+In all three cases, six images are created, which correspond to each of the LSST filters:
+u, g, r, i, z, and Y.  We also provide suggested parameters for viewing in ds9.
 
 New features introduced in this demo:
 
@@ -77,7 +74,6 @@ def main(argv):
 
     # initialize (pseudo-)random number generator
     random_seed = 1234567
-    rng = galsim.BaseDeviate(random_seed)
 
     # read in SEDs
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
@@ -143,11 +139,16 @@ def main(argv):
     logger.debug('Created final profile')
 
     # draw profile through LSST filters
-    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
-    for filter_name, filter_ in filters.items():
+    for i, filter_name in enumerate(filters):
+        filter_ = filters[filter_name]
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
+
+        # To match the yaml, we need a new rng for each file
+        rng = galsim.BaseDeviate(random_seed+1+i)
+        gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
         img.addNoise(gaussian_noise)
+
         logger.debug('Created {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12a_{0}.fits'.format(filter_name))
         galsim.fits.write(img, out_filename)
@@ -183,10 +184,13 @@ def main(argv):
     logger.debug('Created bulge+disk galaxy final profile')
 
     # draw profile through LSST filters
-    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
-    for filter_name, filter_ in filters.items():
+    for i, filter_name in enumerate(filters):
+        filter_ = filters[filter_name]
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         bdfinal.drawImage(filter_, image=img)
+
+        rng = galsim.BaseDeviate(random_seed+1+i)
+        gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
         img.addNoise(gaussian_noise)
         logger.debug('Created {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12b_{0}.fits'.format(filter_name))
@@ -257,10 +261,13 @@ def main(argv):
     logger.debug('Created chromatic PSF final profile')
 
     # Draw profile through LSST filters
-    gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
-    for filter_name, filter_ in filters.items():
+    for i, filter_name in enumerate(filters):
+        filter_ = filters[filter_name]
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
+
+        rng = galsim.BaseDeviate(random_seed+1+i)
+        gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
         img.addNoise(gaussian_noise)
         logger.debug('Created {0}-band image'.format(filter_name))
         out_filename = os.path.join(outpath, 'demo12c_{0}.fits'.format(filter_name))
