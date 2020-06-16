@@ -23,22 +23,31 @@
 #
 # This script introduces wavelength-dependent profiles. Three kinds of chromatic profiles are
 # demonstrated here:
-# 
+#
 # 1) A chromatic object representing a DeVaucouleurs galaxy with an early-type SED at redshift 0.8.
 #    This galaxy is drawn using the six LSST filters, which demonstrate that the galaxy is a
 #    g-band dropout.
-# 
+#
 # 2) A two-component bulge + disk galaxy, in which the bulge and disk have different SEDs.
-# 
+#
 # 3) A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
 #    refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
 #    is convolved with a simple Exponential galaxy.
-# 
+#
 # In all three cases, six images are created, which correspond to each of the LSST filters:
 # u, g, r, i, z, and y.
-# 
+#
+# After running this script, you can use the following ds9 commands to view the outputs
+# in various ways:
+#
+# 1) ds9 output_yaml/demo12a_*.fits -match scale -zoom 2 -match frame image
+# 2) ds9 -rgb -blue -scale limits -0.2 0.8 output_yaml/demo12b_r.fits
+#             -green -scale limits -0.25 1.0 output_yaml/demo12b_i.fits
+#             -red -scale limits -0.25 1.0 output_yaml/demo12b_z.fits -zoom 2
+# 3) ds9 output_yaml/demo12c_*.fits -match scale -zoom 2 -match frame image -blink
+#
 # New features introduced in this demo:
-# 
+#
 # - sed : file_name, wave_type, flux_type, norm_flux_density, norm_wavelength,
 #         norm_flux, norm_bandpass
 # - bandpass : filename, wave_type, thin
@@ -86,7 +95,7 @@ output:
         items:
             - $filter
 
---- 
+---
 
 # 1) A chromatic object representing a DeVaucouleurs galaxy with an early-type SED at redshift 0.8.
 #    This galaxy is drawn using the six LSST filters, which demonstrate that the galaxy is a
@@ -132,7 +141,7 @@ gal:
         -
             type: DeVaucouleurs
             half_light_radius: 0.5
-            sed: 
+            sed:
                 file_name: CWW_E_ext.sed
                 wave_type: Ang
                 flux_type: flambda
