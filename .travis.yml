@@ -121,10 +121,10 @@ before_install:
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev libeigen3-dev; fi
     # Shouldn't usually need this, but occasionally might.
     #- if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw eigen wget; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw eigen; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cask install gfortran; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew upgrade wget; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw eigen wget gcc; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw eigen gcc; fi
 
     # Only need this for the mpeg tests, which we don't do on 2.7
     - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION > 3.5 ]]; then sudo -H apt-get install -y libav-tools; fi
