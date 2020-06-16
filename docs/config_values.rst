@@ -796,6 +796,6 @@ Then you can use this as a valid value type:
 For examples of custom values, see:
 
 * :download:`log_normal.py <../examples/des/log_normal.py>`
-* :download:`hsm_shape.py <../examples/des/hsm_shape.py>`
+* :download:`hsm_shape_measure.py <../examples/des/hsm_shape_measure.py>`
 * :download:`excluded_random.py <../examples/des/excluded_random.py>`
 * :download:`great3_reject <../examples/great3/great3_reject.py>`

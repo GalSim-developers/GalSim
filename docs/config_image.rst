@@ -205,8 +205,8 @@ We don't currently have any examples of custom noise types, but it may be helpfu
     :show-inheritance:
 
 
-WCS
----
+WCS Field
+---------
 
 The ``pixel_scale`` attribute mentioned above is the usual way to define the connection between
 pixel coordinates and sky coordinates.  However, one can define a more complicated relationship,
@@ -316,4 +316,48 @@ the ``[source]`` links):
 .. autoclass:: galsim.config.ListWCSBuilder
     :show-inheritance:
 
+Bandpass Field
+--------------
 
+If you want to draw chromatic objects, then you also need to define the `Bandpass` to use
+for the image in a ``image.bandpass`` field.  Currently, there is only one defined
+type to use for the Bandpass, but the code is written in a modular way to allow for
+other types, including custom Bandpass types.
+
+* 'FileBandpass' is the default type here, and you may omit the type name when using it.
+
+    * ``file_name`` = *str_value* (required)  The file to read in.
+    * ``wave_type`` = *str_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `Bandpass`)
+    * ``blue_limit`` = *float_value* (optional)  Hard cut off on the blue side.
+    * ``red_limit`` = *float value* (optional)  Hard cut off on the red side.
+    * ``zeropoint`` = *flaot_value* (optional)  The zero-point to use.
+    * ``thin`` = *float_value* (optional)  If given, call `Bandpass.thin` on the Bandpass after reading in from the file, using this for the ``rel_err``.
+
+You may also define your own custom Bandpass type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of `galsim.config.BandpassBuilder`.
+
+.. autoclass:: galsim.config.BandpassBuilder
+    :members:
+
+Then, as usual, you need to register this type using::
+
+    galsim.config.RegisterBandpassType('CustomBandpass', CustomBandpassBuilder())
+
+.. autofunction:: galsim.config.RegisterBandpassType
+
+and tell the config parser the name of the module to load at the start of processing.
+
+.. code-block:: yaml
+
+    modules:
+        - my_custom_bandpass
+
+Then you can use this as a valid bandpass type:
+
+.. code-block:: yaml
+
+    image:
+        bandpass:
+            type: CustomBandpass
+            ...

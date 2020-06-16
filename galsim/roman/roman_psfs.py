@@ -43,7 +43,7 @@ def getPSF(SCA, bandpass,
 
     This routine carries out linear interpolation of the aberrations within a given SCA, based on
     the Roman (then WFIRST) Cycle 7 specification of the aberrations as a function of focal plane
-    position, more specifically from `Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727.xlsm`
+    position, more specifically from ``Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727.xlsm``
     downloaded from https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.  Phase
     B updates that became available in mid-2019 have not yet been incorporated into this module.
     (Note: the files at that url still use the old WFIRST name.  We have renamed them to use the
