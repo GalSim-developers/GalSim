@@ -1744,6 +1744,87 @@ def test_wcs():
     assert_raises(NotImplementedError, builder.buildWCS, config, config, logger=None)
 
 @timer
+def test_bandpass():
+    """Test various bandpass options"""
+    config = {
+        'bp1' : {
+            'file_name' : 'chromatic_reference_images/simple_bandpass.dat',
+            'wave_type' : 'nm',
+        },
+        'bp2' : {
+            'type' : 'FileBandpass',
+            'file_name' : 'ACS_wfc_F814W.dat',
+            'wave_type' : 'nm',
+            'thin' : [1.e-4, 1.e-5, 1.e-6],
+            'blue_limit': 700,
+            'red_limit': 950,
+        },
+        'bp3' : galsim.Bandpass('LSST_g.dat', 'nm'),
+
+        'current1' : '@bp1',
+        'current2' : {
+            'type' : 'Current',
+            'key' : 'bp3',
+        },
+
+        'eval1' : '$@bp2 * 0.5',
+        'eval2' : {
+            'type' : 'Eval',
+            'str' : '@bp1 * @bp3'
+        },
+
+        'bad1' : 34,
+        'bad2' : { 'type' : 'Invalid' },
+    }
+    config['index_key'] = 'obj_num'
+    config['obj_num'] = 0
+
+    bp1 = galsim.config.BuildBandpass(config, 'bp1', config)[0]
+    assert bp1 == galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat', wave_type='nm')
+
+    bp2 = galsim.config.BuildBandpass(config, 'bp2', config)[0]
+    bp2b = galsim.Bandpass('ACS_wfc_F814W.dat', 'nm', blue_limit=700, red_limit=950)
+    bp2c = bp2b.thin(1.e-4)
+    assert bp2 == bp2c
+
+    bp3 = galsim.config.BuildBandpass(config, 'bp3', config)[0]
+    assert bp3 == galsim.Bandpass('LSST_g.dat', 'nm')
+
+    bp4 = galsim.config.BuildBandpass(config, 'current1', config)[0]
+    assert bp4 == bp1
+
+    bp5 = galsim.config.BuildBandpass(config, 'current2', config)[0]
+    assert bp5 == bp3
+
+    bp6 = galsim.config.BuildBandpass(config, 'eval1', config)[0]
+    assert bp6 == bp2 * 0.5
+
+    bp7 = galsim.config.BuildBandpass(config, 'eval2', config)[0]
+    bp7b = bp1 * bp3
+    # These have lambdas, so == doesn't work.  Check at a range of wavelengths.
+    for wave in range(int(bp1.blue_limit)+1,int(bp1.red_limit)):
+        assert bp7(wave) == bp7b(wave)
+
+    # If we build something again with the same index, it should get the current value
+    bp8 = galsim.config.BuildBandpass(config, 'bp2', config)[0]
+    assert bp8 is bp2
+
+    # But not if the index has changed.
+    config['obj_num'] = 1
+    bp9 = galsim.config.BuildBandpass(config, 'bp2', config)[0]
+    assert bp9 is not bp2
+    assert bp9 == bp2b.thin(1.e-5)
+
+    for bad in ['bad1', 'bad2']:
+        with assert_raises(galsim.GalSimConfigError):
+            galsim.config.BuildBandpass(config, bad, config)
+
+    # Base class usage is invalid
+    builder = galsim.config.bandpass.BandpassBuilder()
+    assert_raises(NotImplementedError, builder.buildBandpass, config, config, logger=None)
+
+
+@timer
 def test_index_key():
     """Test some aspects of setting non-default index_key values
     """

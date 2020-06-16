@@ -1850,6 +1850,105 @@ def test_modules():
     # Put it back how we found it.
     sys.path = save_sys_path
 
+@timer
+def test_sed():
+    """Test various sed options"""
+    config = {
+        'sed1' : {
+            'type' : 'FileSED',
+            'file_name' : 'vega.txt',
+            'wave_type' : 'nm',
+            'flux_type' : 'fnu',
+        },
+        'sed2' : {
+            'file_name' : 'CWW_E_ext.sed',
+            'wave_type' : 'Ang',
+            'flux_type' : 'flambda',
+            'redshift' : 0.8,
+        },
+        'sed3' : galsim.SED('CWW_Sbc_ext.sed', 'Ang', 'flambda'),
+        'sed4' : {
+            'file_name' : 'CWW_Scd_ext.sed',
+            'wave_type' : 'Ang',
+            'flux_type' : 'flambda',
+            'norm_flux_density' : 1.0,
+            'norm_wavelength' : [500, 700, 900],
+        },
+        'sed5' : {
+            'file_name' : 'CWW_Im_ext.sed',
+            'wave_type' : 'Ang',
+            'flux_type' : 'flambda',
+            'norm_flux' : 50.0,
+            'norm_bandpass' : {'file_name' : 'LSST_g.dat', 'wave_type' : 'nm'},
+        },
+
+        'current1' : '@sed1',
+        'current2' : {
+            'type' : 'Current',
+            'key' : 'sed3',
+        },
+
+        'eval1' : '$@sed2 * 0.5',
+        'eval2' : {
+            'type' : 'Eval',
+            'str' : "galsim.SED('1', 'nm', 'fphotons')",
+        },
+
+        'bad1' : 34,
+        'bad2' : { 'type' : 'Invalid' },
+    }
+    config['index_key'] = 'obj_num'
+    config['obj_num'] = 0
+
+    sed1 = galsim.config.BuildSED(config, 'sed1', config)[0]
+    assert sed1 == galsim.SED('vega.txt', 'nm', 'fnu')
+
+    sed2 = galsim.config.BuildSED(config, 'sed2', config)[0]
+    assert sed2 == galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').atRedshift(0.8)
+
+    sed3 = galsim.config.BuildSED(config, 'sed3', config)[0]
+    assert sed3 == galsim.SED('CWW_Sbc_ext.sed', 'Ang', 'flambda')
+
+    sed4 = galsim.config.BuildSED(config, 'sed4', config)[0]
+    sed4b = galsim.SED('CWW_Scd_ext.sed', 'Ang', 'flambda')
+    sed4c = sed4b.withFluxDensity(1.0, wavelength=500)
+    assert sed4 == sed4c
+
+    sed5 = galsim.config.BuildSED(config, 'sed5', config)[0]
+    sed5b = galsim.SED('CWW_Im_ext.sed', 'Ang', 'flambda')
+    sed5c = sed4b.withFlux(50., bandpass=galsim.Bandpass('LSST_g.dat', 'nm'))
+
+    sed6 = galsim.config.BuildSED(config, 'current1', config)[0]
+    assert sed6 == sed1
+
+    sed7 = galsim.config.BuildSED(config, 'current2', config)[0]
+    assert sed7 == sed3
+
+    sed8 = galsim.config.BuildSED(config, 'eval1', config)[0]
+    assert sed8 == sed2 * 0.5
+
+    sed9 = galsim.config.BuildSED(config, 'eval2', config)[0]
+    assert sed9 == galsim.SED('1', 'nm', 'fphotons')
+
+    # If we build something again with the same index, it should get the current value
+    sed10 = galsim.config.BuildSED(config, 'sed4', config)[0]
+    assert sed10 is sed4
+
+    # But not if the index has changed.
+    config['obj_num'] = 1
+    sed11 = galsim.config.BuildSED(config, 'sed4', config)[0]
+    assert sed11 is not sed4
+    assert sed11 == sed4b.withFluxDensity(1.0, wavelength=700)
+
+    for bad in ['bad1', 'bad2']:
+        with assert_raises(galsim.GalSimConfigError):
+            galsim.config.BuildSED(config, bad, config)
+
+    # Base class usage is invalid
+    builder = galsim.config.sed.SEDBuilder()
+    assert_raises(NotImplementedError, builder.buildSED, config, config, logger=None)
+
+
 
 if __name__ == "__main__":
     test_gaussian()
