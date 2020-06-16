@@ -1897,7 +1897,8 @@ def test_index_key():
         psf_shear = galsim.Shear(e=e, beta=beta)
         kolm = kolm.shear(psf_shear)
         airy = galsim.Airy(lam=700, diam=4)
-        psf = galsim.Convolve(kolm, airy).withFlux(1.0)
+        psf = galsim.Convolve(kolm, airy)
+        assert np.isclose(psf.flux, 1.0, rtol=1.e-15)
         print('fwhm, shear = ',fwhm,psf_shear._g)
         ellip_e1 = file_rng() * 0.4 - 0.2
 

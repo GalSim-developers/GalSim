@@ -120,6 +120,10 @@ psf :
     # tell GalSim that the pixel scale is 0.2 arcsec to match the pixel scale we use below.
     scale : *pixel_scale
 
+    # Make sure the PSF has flux=1.  Most PSF types have this by default, but InterpolatedImage
+    # doesn't, so set it here.
+    flux: 1
+
 # Define the galaxy profile
 gal :
 
