@@ -18,6 +18,7 @@
 
 import logging
 import copy
+import sys
 from collections import OrderedDict
 
 from ..utilities import SimpleGenerator
@@ -68,19 +69,24 @@ def ReadYaml(config_file):
     """
     import yaml
 
-    # cf. coldfix's answer here:
-    # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
-    class OrderedLoader(yaml.SafeLoader):
-        pass
-    def construct_mapping(loader, node):
-        loader.flatten_mapping(node)
-        return OrderedDict(loader.construct_pairs(node))
-    OrderedLoader.add_constructor(
-        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-        construct_mapping)
+    if sys.version_info < (3,6):
+        # cf. coldfix's answer here:
+        # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
+        class OrderedLoader(yaml.SafeLoader):
+            pass
+        def construct_mapping(loader, node):
+            loader.flatten_mapping(node)
+            return OrderedDict(loader.construct_pairs(node))
+        OrderedLoader.add_constructor(
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+            construct_mapping)
+        loader = OrderedLoader
+    else:
+        # In python 3.6 and later, regular dicts are ordered, so just use that.
+        loader = yaml.SafeLoader
 
     with open(config_file) as f:
-        all_config = [ c for c in yaml.load_all(f.read(), OrderedLoader) ]
+        all_config = [ c for c in yaml.load_all(f.read(), loader) ]
 
     # If there is only 1 yaml document, then it is of course used for the configuration.
     # If there are multiple yaml documents, then the first one defines a common starting
