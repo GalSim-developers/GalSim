@@ -46,6 +46,7 @@ Config Updates
 New Features
 ------------
 
+- Added atRedshift method for ChromaticObject. (#510)
 - Added galsim.utilities.pickle_shared() context, which lets the shared
   portion of an AtmosphericScreen be included in the pickle.  This allows
   the pickles to be recovered after writing to disk and reading back in,
