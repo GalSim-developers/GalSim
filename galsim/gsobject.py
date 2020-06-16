@@ -1238,7 +1238,7 @@ class GSObject(object):
                   center=None, use_true_center=True, offset=None,
                   n_photons=0., rng=None, max_extra_noise=0.,
                   poisson_flux=None, sensor=None, surface_ops=(), n_subsample=3, maxN=None,
-                  save_photons=False, setup_only=False):
+                  save_photons=False, bandpass=None, setup_only=False):
         """Draws an `Image` of the object.
 
         The drawImage() method is used to draw an `Image` of the current object using one of several
@@ -1570,6 +1570,9 @@ class GSObject(object):
                             [default: None, which means no limit]
             save_photons:   If True, save the `PhotonArray` as ``image.photons``. Only valid if
                             method is 'phot' or sensor is not None.  [default: False]
+            bandpass:       This parameter is ignored, but is allowed to enable duck typing
+                            eqivalence between this method and the ChromaticObject.drawImage
+                            method. [default: None]
             setup_only:     Don't actually draw anything on the image.  Just make sure the image
                             is set up correctly.  This is used internally by GalSim, but there
                             may be cases where the user will want the same functionality.
@@ -2361,7 +2364,7 @@ class GSObject(object):
         raise NotImplementedError("%s does not implement shoot"%self.__class__.__name__)
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
-                   add_to_image=False, recenter=True, setup_only=False):
+                   add_to_image=False, recenter=True, bandpass=None, setup_only=False):
         """Draws the k-space (complex) `Image` of the object, with bounds optionally set by input
         `Image` instance.
 
@@ -2399,6 +2402,13 @@ class GSObject(object):
                             bounds. [default: False]
             recenter:       Whether to recenter the image to put k = 0 at the center (True) or to
                             trust the provided bounds (False).  [default: True]
+            bandpass:       This parameter is ignored, but is allowed to enable duck typing
+                            eqivalence between this method and the ChromaticObject.drawImage
+                            method. [default: None]
+            setup_only:     Don't actually draw anything on the image.  Just make sure the image
+                            is set up correctly.  This is used internally by GalSim, but there
+                            may be cases where the user will want the same functionality.
+                            [default: False]
 
         Returns:
             an `Image` instance (created if necessary)
