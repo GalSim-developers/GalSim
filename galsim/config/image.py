@@ -24,6 +24,7 @@ from .input import SetupInput, SetupInputsForImage
 from .extra import SetupExtraOutputsForImage, ProcessExtraOutputsForImage
 from .value import ParseValue, GetAllParams
 from .wcs import BuildWCS
+from .bandpass import BuildBandpass
 from .stamp import BuildStamp, MakeStampTasks
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..position import PositionI, PositionD
@@ -212,11 +213,22 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     else:
         config['world_center'] = wcs.toWorld(config['image_center'])
 
+def SetupConfigBandpass(config, logger=None):
+    """If thre is a 'bandpass' field in config['image'], load it.
+
+    Parameters:
+        config:     The configuration dict.
+        logger:     If given, a logger object to log progress. [default: None]
+    """
+    image = config['image']
+    if 'bandpass' in image:
+        config['bandpass'] = BuildBandpass(image, 'bandpass', config, logger)[0]
+
 
 # Ignore these when parsing the parameters for specific Image types:
 from .stamp import stamp_image_keys
 image_ignore = [ 'random_seed', 'noise', 'pixel_scale', 'wcs', 'sky_level', 'sky_level_pixel',
-                 'world_center', 'index_convention', 'nproc'] + stamp_image_keys
+                 'world_center', 'index_convention', 'nproc', 'bandpass'] + stamp_image_keys
 
 def BuildImage(config, image_num=0, obj_num=0, logger=None):
     """
@@ -251,6 +263,9 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     logger.debug('image %d: image_size = %d, %d',image_num,xsize,ysize)
     logger.debug('image %d: image_origin = %s',image_num,config['image_origin'])
     logger.debug('image %d: image_center = %s',image_num,config['image_center'])
+
+    # If there is a bandpass field, load it into config['bandpass']
+    SetupConfigBandpass(config, logger)
 
     # Sometimes an input field needs to do something special at the start of an image.
     SetupInputsForImage(config, logger)

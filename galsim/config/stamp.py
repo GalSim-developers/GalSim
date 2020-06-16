@@ -37,6 +37,8 @@ from ..celestial import CelestialCoord
 from ..angle import arcsec
 from ..gsobject import GSObject
 from ..convolve import Convolve
+from ..chromatic import ChromaticObject
+from ..bandpass import Bandpass
 
 # This file handles the building of postage stamps to place onto a larger image.
 # There is only one type of stamp currently, called Basic, which builds a galaxy from
@@ -488,9 +490,14 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         max_extra_noise *= noise_var
         kwargs['max_extra_noise'] = max_extra_noise
 
+    if isinstance(prof, ChromaticObject) and 'bandpass' not in base:
+        raise GalSimConfigError("Drawing chromatic object requires specifying bandpass")
+    kwargs['bandpass'] = base.get('bandpass',None)
+
     if logger.isEnabledFor(logging.DEBUG):
-        # Don't output the full image array.  Use str(image) for that kwarg.
-        alt_kwargs = dict([(k,str(kwargs[k]) if isinstance(kwargs[k],Image) else kwargs[k])
+        # Don't output the full image array.  Use str(image) for that kwarg.  And Bandpass.
+        alt_kwargs = dict([(k, str(kwargs[k]) if isinstance(kwargs[k],(Image,Bandpass))
+                               else kwargs[k])
                            for k in kwargs])
         logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0), alt_kwargs)
         logger.debug('obj %d: prof = %s',base.get('obj_num',0),prof)
@@ -499,6 +506,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     except Exception as e:
         logger.debug('obj %d: prof = %r', base.get('obj_num',0), prof)
         raise
+    logger.debug('obj %d: added_flux = %s',base.get('obj_num',0), image.added_flux)
     return image
 
 def ParseWorldPos(config, param_name, base, logger):

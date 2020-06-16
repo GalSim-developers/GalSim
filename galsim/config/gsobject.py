@@ -21,6 +21,7 @@ import inspect
 from .util import LoggerWrapper, GetIndex, GetRNG
 from .value import ParseValue, GetCurrentValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
+from .sed import BuildSED
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..position import PositionD
 from ..sum import Add
@@ -128,7 +129,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
-        'magnify', 'magnification', 'shear', 'shift',
+        'magnify', 'magnification', 'shear', 'shift', 'sed',
         'gsparams', 'skip',
         'current', 'index_key', 'repeat'
     ]
@@ -189,6 +190,13 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     else:
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
 
+    # Apply any SED and redshift that might be present.
+    gsobject, safe1 = ApplySED(gsobject, param, base, logger)
+    safe = safe and safe1
+
+    gsobject, safe1 = ApplyRedshift(gsobject, param, base, logger)
+    safe = safe and safe1
+
     # If this is a psf, try to save the half_light_radius in case gal uses resolution.
     if key == 'psf':
         try:
@@ -225,6 +233,27 @@ def UpdateGSParams(gsparams, config, base):
     ret.update(kwargs)
     return ret
 
+def ApplySED(gsobject, config, base, logger):
+    """Read and apply an SED to the base gsobject
+
+    Parameters:
+        gsobject:   The base GSObject
+        config:     A dict with the configuration information.
+        base:       The base dict of the configuration.
+        logger:     A logger for logging debug statements.
+    """
+    if 'sed' in config:
+        sed, safe = BuildSED(config, 'sed', base, logger)
+        return gsobject * sed, safe
+    else:
+        return gsobject, True
+
+def ApplyRedshift(gsobject, config, base, logger):
+    if 'redshift' in config:
+        redshift, safe = ParseValue(config, 'redshift', base, float)
+        return gsobject.atRedshift(redshift), safe
+    else:
+        return gsobject, True
 
 #
 # The following are private functions to implement the simpler GSObject types.

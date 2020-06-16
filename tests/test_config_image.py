@@ -2379,6 +2379,60 @@ def test_blend():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildStamp(config, obj_num=8)
 
+@timer
+def test_chromatic():
+    """Test drawing a chromatic object on an image with a bandpass
+    """
+    config = {
+        'image': {
+            'type': 'Single',
+            'size': 64,
+            'pixel_scale': 0.2,
+
+            'bandpass': {
+                'file_name': 'LSST_r.dat',
+                'wave_type': 'nm',
+                'thin': 1.e-4,
+            }
+        },
+        'gal': {
+            'type': 'Exponential',
+            'half_light_radius': 0.5,
+
+            'sed': {
+                'file_name': 'CWW_E_ext.sed',
+                'wave_type': 'Ang',
+                'flux_type': 'flambda',
+                'norm_flux_density': 1.0,
+                'norm_wavelength': 500,
+            },
+
+            'redshift': 0.8,
+        },
+        'psf' : {
+            'type': 'Moffat',
+            'fwhm': 0.5,
+            'beta': 2.5,
+        },
+    }
+    config1 = galsim.config.CopyConfig(config)
+    image = galsim.config.BuildImage(config)
+
+    bandpass = galsim.Bandpass('LSST_r.dat', 'nm').thin(1.e-4)
+    sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
+
+    gal = galsim.Exponential(half_light_radius=0.5) * sed
+    psf = galsim.Moffat(fwhm=0.5, beta=2.5)
+    final = galsim.Convolve(gal, psf)
+    image2 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+
+    np.testing.assert_allclose(image.array, image2.array)
+
+    config = galsim.config.CopyConfig(config1)
+    del config['image']['bandpass']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
 
 if __name__ == "__main__":
     test_single()
@@ -2398,3 +2452,4 @@ if __name__ == "__main__":
     test_template()
     test_variable_cat_size()
     test_blend()
+    test_chromatic()
