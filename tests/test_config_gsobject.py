@@ -1971,3 +1971,4 @@ if __name__ == "__main__":
     test_list()
     test_repeat()
     test_usertype()
+    test_sed()

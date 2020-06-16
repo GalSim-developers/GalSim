@@ -2507,6 +2507,7 @@ if __name__ == "__main__":
     test_tiled()
     test_njobs()
     test_wcs()
+    test_bandpass()
     test_index_key()
     test_multirng()
     test_template()
