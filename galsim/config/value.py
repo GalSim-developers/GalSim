@@ -24,7 +24,7 @@ from .util import PropagateIndexKeyRNGNum, GetIndex, ParseExtendedKey
 
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..gsobject import GSObject
-from ..angle import Angle, AngleUnit, radians, degrees
+from ..angle import Angle, AngleUnit, radians, degrees, hours
 from ..position import PositionD
 from ..celestial import CelestialCoord
 from ..shear import Shear
@@ -429,9 +429,14 @@ def _GetAngleValue(param):
     """
     try :
         value, unit = param.rsplit(None,1)
-        value = float(value)
         unit = AngleUnit.from_name(unit)
-        return Angle(value, unit)
+        if unit is hours and ':' in value:
+            return Angle.from_hms(value)
+        elif unit is degrees and ':' in value:
+            return Angle.from_dms(value)
+        else:
+            value = float(value)
+            return Angle(value, unit)
     except (ValueError, TypeError, AttributeError) as e:
         raise GalSimConfigError("Unable to parse %s as an Angle. Caught %s"%(param,e))
 

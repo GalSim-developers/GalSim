@@ -1071,9 +1071,9 @@ def test_angle_value():
         'str1' : '0.73 radians',
         'str2' : '240 degrees',
         'str3' : '1.2 rad',
-        'str4' : '45 deg',
+        'str4' : '45:12:55.1 deg',
         'str5' : '6 hrs',
-        'str6' : '21 hour',
+        'str6' : '21:31:05.3 hour',
         'str7' : '-240 arcmin',
         'str8' : '1800 arcsec',
         'cat1' : { 'type' : 'Radians' ,
@@ -1129,13 +1129,13 @@ def test_angle_value():
     np.testing.assert_almost_equal(str3.rad, 1.2)
 
     str4 = galsim.config.ParseValue(config,'str4',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str4.rad, math.pi/4)
+    np.testing.assert_almost_equal(str4.rad, galsim.Angle.from_dms('45:12:55.1').rad)
 
     str5 = galsim.config.ParseValue(config,'str5',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(str5.rad, math.pi/2)
 
     str6 = galsim.config.ParseValue(config,'str6',config, galsim.Angle)[0]
-    np.testing.assert_almost_equal(str6.rad, 7*math.pi/4)
+    np.testing.assert_almost_equal(str6.rad, galsim.Angle.from_hms('21:31:05.3').rad)
 
     str7 = galsim.config.ParseValue(config,'str7',config, galsim.Angle)[0]
     np.testing.assert_almost_equal(str7 / galsim.degrees, -4)
