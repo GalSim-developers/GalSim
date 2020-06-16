@@ -499,18 +499,18 @@ Demo 12
 -------
 
 :download:`demo12.py <../examples/demo12.py>`
+:download:`demo12.yaml <../examples/demo12.yaml>`
 
-This demo introduces the chromatic objects module galsim.chromatic, which handles wavelength-
-dependent profiles.  Three uses of this module are demonstrated:
+This demo introduces wavelength-dependent profiles.  Three kinds of chromatic profiles are
+demonstrated:
 
-1. A chromatic object representing a De Vaucouleurs galaxy with an early-type SED at redshift 0.8 is
-   created.  The galaxy is then drawn using the six LSST filter throughput curves to demonstrate
-   that the galaxy is a g-band dropout.
-2. A two-component bulge+disk galaxy, in which the bulge and disk have different SEDs, is created
-   and then drawn using LSST filters.
-3. A wavelength-dependent PSF is created to represent atmospheric effects of differential chromatic
-   refraction, and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF is
-   used to draw a single Sersic galaxy in the LSST filters.
+1. A chromatic object representing a DeVaucouleurs galaxy with an early-type SED at redshift 0.8.
+   This galaxy is drawn using the six LSST filters, which demonstrate that the galaxy is a
+   g-band dropout.
+2. A two-component bulge+disk galaxy, in which the bulge and disk have different SEDs.
+3. A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
+   refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
+   is convolved with a simple Exponential galaxy.
 
 **New features in the Python file**:
 
@@ -526,8 +526,12 @@ dependent profiles.  Three uses of this module are demonstrated:
 
 **New features in the YAML file**:
 
-This demo currently does not have a YAML version.  The config processing of chromatic objects
-has not been implemented yet.
+- sed : file_name, wave_type, flux_type, norm_flux_density, norm_wavelength,
+        norm_flux, norm_bandpass
+- bandpass : filename, wave_type, thin
+- gal : redshift
+- psf_type : ChromaticAtmosphere (base_profile, base_wavelength, latitude, HA)
+
 
 Demo 13
 -------

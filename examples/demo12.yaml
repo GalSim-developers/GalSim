@@ -32,18 +32,18 @@
 # 
 # 3) A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
 #    refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
-#    convolved with a simple Exponential galaxy.
+#    is convolved with a simple Exponential galaxy.
 # 
 # In all three cases, six images are created, which correspond to each of the LSST filters:
 # u, g, r, i, z, and y.
 # 
 # New features introduced in this demo:
 # 
-# - sed : file_name, wave_type, flux_type
-# - bandpass : filename, wave_type
+# - sed : file_name, wave_type, flux_type, norm_flux_density, norm_wavelength,
+#         norm_flux, norm_bandpass
+# - bandpass : filename, wave_type, thin
 # - gal : redshift
 # - psf_type : ChromaticAtmosphere (base_profile, base_wavelength, latitude, HA)
-
 
 
 eval_variables:

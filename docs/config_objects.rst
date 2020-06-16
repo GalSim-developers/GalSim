@@ -76,6 +76,18 @@ PSF Types
     * ``pupil_angle`` = *angle_value* (default = 0 degrees) When specifying a pupil_plane_im, use this parameter to rotate it by some angle defined counter-clockwise with respect to the vertical.
     * ``scale_unit`` = *str_value* (default = 'arcsec') Units to be used for internal calculations when calculating lam/diam.
 
+* 'ChromaticAtmosphere'  A chromatic PSF implementing both differential chromatic diffraction (DCR) and wavelength-dependent seeing.  See `ChromaticAtmosphere` for valid combinations that can be used to set the zenith and parallactic angles needed for DCR.
+    * ``base_profile`` = *object* (required) The base profile to use for the profile shape at a given reference wavelength
+    * ``base_wavelength`` = *float_value* (required) The wavelength at which the PSF has the base profile
+    * ``alpha`` = *float_value* (default = -0.2)  Power law index for wavelength-dependent seeing.
+    * ``zenith_angle`` = *Angle_value* (optional) The zenith angle.
+    * ``parallactic_angle`` = *Angle_value*  (optional) The parallactic angle.
+    * ``zenith_coord`` = *CelestialCoord*  (optional)  The (ra,dec) coordinate of the zenith.
+    * ``HA`` = *Angle_value* (optiona)  Hour angle of the observation.
+    * ``latitude`` = *Angle_value* (optional)  Latitude of the observatory.
+    * ``pressure`` = *float_value* (default = 69.328)  Air pressure in kPa.
+    * ``temperature`` = *float_value* (default = 293.15)  Temperature in K.
+    * ``H2O_pressure`` = *float_value* (default = 1.067)  Water vapor pressure in kPa.
 
 Galaxy Types
 ------------
@@ -221,7 +233,7 @@ The first few, ``flux``, ``dilate``, ``ellip``, and ``rotate``, are typically us
 intrinsic profile of the object. 
 The next two, ``magnify`` and ``shear``, are typically used to define how the profile is
 modified by lensing.
-The last one, ``shift``, is used to shift the position of the galaxy relative to its nominal
+The next one, ``shift``, is used to shift the position of the galaxy relative to its nominal
 position on the sky.
 
 * ``flux`` = *float_value* (default = 1.0)  Set the flux of the object in ADU. Note that the component ``items`` in a 'Sum' can also have fluxes specified, which can be used as fractional fluxes (e.g. 0.6 for the disk and 0.4 for the bulge). Then the outer level profile can set the real flux for the whole thing.
@@ -233,6 +245,7 @@ position on the sky.
 * ``shear`` = *shear_value* (optional)  Shear the profile by a given shear.
 * ``shift`` = *pos_value* (optional)  Shift the centroid of the profile by a given amount relative to the center of the image on which it will be drawn.
 * ``skip`` = *bool_value* (default=False)  Skip this object.
+* ``sed`` = *SED* (optional)  If desired, you may set an SED to use for the object.  See `SED Field` below for details.
 
 There are also a few special attributes that are only allowed for the top-level ``gal`` field,
 not for objects that are part of an aggregate object like 'Sum', 'Convolution' or 'List'
@@ -363,3 +376,53 @@ It may also be helpful to look at the GalSim implementation of some of the inclu
 .. autofunction:: galsim.config.gsobject._BuildList
 
 .. autofunction:: galsim.config.gsobject._BuildOpticalPSF
+
+
+SED Field
+---------
+
+If you want your object to have a non-trivial wavelength dependence, you can include an
+``sed`` parameter to define its `SED`.  Currently, there is only one defined
+type to use for the SED, but the code is written in a modular way to allow for
+other types, including custom SED types.
+
+* 'FileSED' is the default type here, and you may omit the type name when using it.
+
+    * ``file_name`` = *str_value* (required)  The file to read in.
+    * ``wave_type`` = *str_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `SED`)
+    * ``flux_type`` = *str_value* (required)  The type of spectral density or dimensionless normalization used in the file ('flambda', 'fnu', 'fphotons' or '1' -- cf. `SED`)
+    * ``redshift`` = *float_value* (optional)  If given, shift the spectrum to the given redshift.  You can also specify the redshift as an object-level parameter if preferred.
+    * ``norm_flux_density`` = *float_value* (optional)  Set a normalization value of the flux density at a specific wavelength.  If given, ``norm_wavelength`` is required.
+    * ``norm_wavelength`` = *float_value* (optional)  The wavelength to use for the normalization flux density.
+    * ``norm_flux`` = *float_value* (optional)  Set a normalization value of the flux over a specific bandpass.  If given, ``norm_bandpass`` is required.
+    * ``norm_bandpass`` = *Bandpass* (optional)  The bandpass to use for the normalization flux.
+
+You may also define your own custom SED type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of `galsim.config.SEDBuilder`.
+
+.. autoclass:: galsim.config.SEDBuilder
+    :members:
+
+Then, as usual, you need to register this type using::
+
+    galsim.config.RegisterSEDType('CustomSED', CustomSEDBuilder())
+
+.. autofunction:: galsim.config.RegisterSEDType
+
+and tell the config parser the name of the module to load at the start of processing.
+
+.. code-block:: yaml
+
+    modules:
+        - my_custom_sed
+
+Then you can use this as a valid sed type:
+
+.. code-block:: yaml
+
+    gal:
+        ...
+        sed:
+            type: CustomSED
+            ...

@@ -32,7 +32,7 @@ demonstrated here:
 
 3) A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
    refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
-   convolved with a simple Exponential galaxy.
+   is convolved with a simple Exponential galaxy.
 
 In all three cases, six images are created, which correspond to each of the LSST filters:
 u, g, r, i, z, and Y.  We also provide suggested parameters for viewing in ds9.

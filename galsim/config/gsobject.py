@@ -440,7 +440,7 @@ def _BuildChromaticAtmosphere(config, base, ignore, gsparams, logger):
     from .util import CleanConfig
 
     req = {'base_wavelength' : float}
-    opt = {'sale_unit' : str,
+    opt = {
            'alpha' : float,
            'zenith_angle' : Angle,
            'parallactic_angle' : Angle,
