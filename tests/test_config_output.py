@@ -1034,8 +1034,8 @@ def test_extra_truth():
     np.testing.assert_almost_equal(cat.data['shape.g1'], meas_g1)
     np.testing.assert_almost_equal(cat.data['shape.g2'], meas_g2)
 
-    # Note: Starting in python 3.8, dict is equivalent to OrderedDict
-    if sys.version_info < (3,8):
+    # Note: Starting in python 3.6, dict is equivalent to OrderedDict
+    if sys.version_info < (3,6):
         # Check that a warning is properly logged when columns are not an ordered dict.
         # These need to be done with BuildFile, not Process, so original isn't copied.
         # 1. When it is an OrderedDict, no warning.

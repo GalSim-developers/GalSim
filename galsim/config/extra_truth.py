@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+import sys
 import numpy as np
 from .extra import ExtraOutputBuilder, RegisterExtraOutput
 from .value import ParseValue, GetCurrentValue
@@ -45,12 +46,15 @@ class TruthBuilder(ExtraOutputBuilder):
 
         # Warn if the config dict isn't an OrderedDict.
         cols = config['columns']
-        if logger and not hasattr(cols, '__reversed__') and not config.get('_warned',False):
+        if (sys.version_info < (3,6) and logger and not hasattr(cols, '__reversed__')
+                and not config.get('_warned',False)):
             # If config doesn't have a __reversed__ attribute, then it's not an OrderedDict.
             # Probably it's just a regular dict.  So warn the user that the columns are in
             # arbitrary order.
             # (This was the simplest difference I could find between dict and OrderedDict that
             #  seemed relevant.)
+            # And note that starting in 3.6, the regular dict is ordered, so don't bother
+            # with this check.
             logger.warning('The config dict is not an OrderedDict.  The columns in the output '
                            'truth catalog will be in arbitrary order.')
             config['_warned'] = True
