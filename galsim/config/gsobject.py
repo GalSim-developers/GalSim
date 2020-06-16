@@ -460,7 +460,11 @@ def _BuildChromaticAtmosphere(config, base, ignore, gsparams, logger):
     safe = safe and safe1
 
     if 'zenith_angle' not in kwargs:
-        kwargs['obj_coord'] = base['world_pos']
+        sky_pos = base.get('sky_pos', None)
+        if sky_pos is None:
+            raise GalSimConfigError("Using zenith_angle with type=ChromaticAtmosphere requires "
+                                    "that sky_pos be available to use as the object coord.")
+        kwargs['obj_coord'] = sky_pos
         safe = False
 
     psf = ChromaticAtmosphere(base_profile, **kwargs)
