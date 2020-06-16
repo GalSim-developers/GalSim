@@ -221,7 +221,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 
 
 # Ignore these when parsing the parameters for specific stamp types:
-stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
+stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos', 'sky_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
                 'n_photons', 'max_extra_noise', 'poisson_flux',
                 'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr',
@@ -731,6 +731,10 @@ class StampBuilder(object):
         base['stamp_offset'] = stamp_offset
         base['image_pos'] = image_pos
         base['world_pos'] = world_pos
+        if 'sky_pos' in config:
+            base['sky_pos'] = ParseValue(config, 'sky_pos', base, CelestialCoord)[0]
+        elif isinstance(world_pos, CelestialCoord):
+            base['sky_pos'] = world_pos
 
         if xsize:
             logger.debug('obj %d: xsize,ysize = %s,%s',base['obj_num'],xsize,ysize)

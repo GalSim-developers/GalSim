@@ -2451,7 +2451,42 @@ def test_chromatic():
     del config['psf']['base_profile']
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
-    config['psf']['base_profile'] = { 'type': 'Moffat', 'fwhm': 0.5, 'beta': 2.5 }
+
+    config['psf'] =  {
+        'type': 'ChromaticAtmosphere',
+        'base_profile': {
+            'type': 'Moffat',
+            'fwhm': 0.5,
+            'beta': 2.5,
+        },
+        'base_wavelength': 500,
+        'latitude': '19.8207 deg',
+        'HA': '-1.0 hour',
+    }
+    config['stamp'] = {
+        'sky_pos' : {
+            'type' : 'RADec',
+            'ra' : '35 deg',
+            'dec' : '12 deg',
+        },
+    }
+    image = galsim.config.BuildImage(config)
+
+    sky_pos = galsim.CelestialCoord(35 * galsim.degrees, 12 * galsim.degrees)
+    psf3 = galsim.ChromaticAtmosphere(psf1, base_wavelength=500,
+                                      obj_coord = sky_pos,
+                                      latitude = 19.8207 * galsim.degrees,
+                                      HA = -1.0 * galsim.hours)
+    final = galsim.Convolve(gal, psf3)
+    image3 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image.array, image3.array)
+
+    galsim.config.RemoveCurrent(config)
+    del config['stamp']
+    del config['sky_pos']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['sky_pos'] = sky_pos
 
     del config['image']['bandpass']
     del config['bandpass']
