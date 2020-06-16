@@ -32,6 +32,7 @@ API Changes
 Config Updates
 --------------
 
+- Added ability to draw chromatic objects with config files. (#510)
 - Fixed a few issues with parsing truth catalog items and, in general, places
   where a Current item might be used before it was parsed. (#1083)
 - Added value-type-specific type names like Random_float, Random_Angle, etc.
