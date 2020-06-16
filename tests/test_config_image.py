@@ -2415,21 +2415,46 @@ def test_chromatic():
             'beta': 2.5,
         },
     }
-    config1 = galsim.config.CopyConfig(config)
     image = galsim.config.BuildImage(config)
 
     bandpass = galsim.Bandpass('LSST_r.dat', 'nm').thin(1.e-4)
     sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
 
     gal = galsim.Exponential(half_light_radius=0.5) * sed
-    psf = galsim.Moffat(fwhm=0.5, beta=2.5)
-    final = galsim.Convolve(gal, psf)
-    image2 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    psf1 = galsim.Moffat(fwhm=0.5, beta=2.5)
+    final = galsim.Convolve(gal, psf1)
+    image1 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image.array, image1.array)
 
+    galsim.config.RemoveCurrent(config)
+    config['psf'] =  {
+        'type': 'ChromaticAtmosphere',
+        'base_profile': {
+            'type': 'Moffat',
+            'fwhm': 0.5,
+            'beta': 2.5,
+        },
+        'base_wavelength': 500,
+        'zenith_angle' : '13.1 deg',
+        'parallactic_angle' : '98 deg',
+    }
+    image = galsim.config.BuildImage(config)
+
+    psf2 = galsim.ChromaticAtmosphere(psf1, base_wavelength=500,
+                                      zenith_angle = 13.1 * galsim.degrees,
+                                      parallactic_angle = 98 * galsim.degrees)
+    final = galsim.Convolve(gal, psf2)
+    image2 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     np.testing.assert_allclose(image.array, image2.array)
 
-    config = galsim.config.CopyConfig(config1)
+    galsim.config.RemoveCurrent(config)
+    del config['psf']['base_profile']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['psf']['base_profile'] = { 'type': 'Moffat', 'fwhm': 0.5, 'beta': 2.5 }
+
     del config['image']['bandpass']
+    del config['bandpass']
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 

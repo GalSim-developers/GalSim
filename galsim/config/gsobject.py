@@ -432,6 +432,40 @@ def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
 
     return OpticalPSF(**kwargs), safe
 
+def _BuildChromaticAtmosphere(config, base, ignore, gsparams, logger):
+    """Build a ChromaticAtmosphere.
+    """
+    from ..chromatic import ChromaticAtmosphere
+    from ..celestial import CelestialCoord
+    from .util import CleanConfig
+
+    req = {'base_wavelength' : float}
+    opt = {'sale_unit' : str,
+           'alpha' : float,
+           'zenith_angle' : Angle,
+           'parallactic_angle' : Angle,
+           'zenith_coord' : CelestialCoord,
+           'HA' : Angle,
+           'latitude' : Angle,
+           'pressure' : float,
+           'temperature' : float,
+           'H2O_pressure' : float,
+          }
+    ignore = ['base_profile'] + ignore
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
+
+    if 'base_profile' not in config:
+        raise GalSimConfigError("Attribute base_profile is required for type=ChromaticAtmosphere")
+    base_profile, safe1 = BuildGSObject(config, 'base_profile', base, gsparams, logger)
+    safe = safe and safe1
+
+    if 'zenith_angle' not in kwargs:
+        kwargs['obj_coord'] = base['world_pos']
+        safe = False
+
+    psf = ChromaticAtmosphere(base_profile, **kwargs)
+    return psf, safe
+
 
 #
 # Now the functions for performing transformations
@@ -549,4 +583,4 @@ RegisterObjectType('Convolve', _BuildConvolve)
 RegisterObjectType('Convolution', _BuildConvolve)
 RegisterObjectType('List', _BuildList)
 RegisterObjectType('OpticalPSF', _BuildOpticalPSF)
-
+RegisterObjectType('ChromaticAtmosphere', _BuildChromaticAtmosphere)
