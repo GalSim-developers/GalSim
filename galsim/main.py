@@ -24,7 +24,7 @@ from __future__ import print_function
 import sys
 import os
 import logging
-import pprint
+import json
 import argparse
 
 from ._version import __version__ as version
@@ -191,7 +191,7 @@ def process_config(all_config, args, logger):
         if args.profile:
             config['profile'] = True
 
-        logger.debug("Process config dict: \n%s", pprint.pformat(config))
+        logger.debug("Process config dict: \n%s", json.dumps(config, indent=4))
 
         # Process the configuration
         Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params,
