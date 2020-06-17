@@ -554,6 +554,12 @@ Variables that GalSim will provide for you to use:
     * Available if ``image_pos`` or ``world_pos`` is explicitly given in the ``stamp`` field.
     * A `galsim.PositionD` instance
 
+* ``sky_pos`` = the position of the object in sky coordinates (RA, Dec)
+
+    * Available if ``sky_pos`` is explicitly given in the ``stamp`` field.
+    * Available if ``world_pos`` is defined (as per above) and the WCS is a CelestialWCS.
+    * A `galsim.CelestialCoord` instance
+
 * ``image_center`` = the center of the image in pixels.  This is the position on the image that corresponds to ``world_pos = (0,0)``.
 
     * A `galsim.PositionD` instance
