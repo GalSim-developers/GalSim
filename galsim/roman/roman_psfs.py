@@ -46,6 +46,8 @@ def getPSF(SCA, bandpass,
     position, more specifically from `Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727.xlsm`
     downloaded from https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.  Phase
     B updates that became available in mid-2019 have not yet been incorporated into this module.
+    (Note: the files at that url still use the old WFIRST name.  We have renamed them to use the
+    new name of the telescope, Roman, after downloading.)
 
     The default is to do the calculations using the full specification of the Roman pupil plane,
     which is a costly calculation in terms of memory.  For this, we use the provided pupil plane for
