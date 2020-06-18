@@ -26,6 +26,7 @@ API Changes
   more in line with the actual action of the function.  For local WCS types,
   shiftOrigin is equivalent to withOrigin, which still exists as a valid
   name for this action. (#1085)
+- Deprecated galsim.wfirst module.  Now called galsim.roman. (#1088)
 
 
 Config Updates
