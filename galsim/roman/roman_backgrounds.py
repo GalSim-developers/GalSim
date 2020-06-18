@@ -16,10 +16,10 @@
 #    and/or other materials provided with the distribution.
 #
 """
-@file wfirst_backgrounds.py
+@file roman_backgrounds.py
 
-Part of the WFIRST module.  This file includes any routines needed to define the background level,
-for which the main contribution is zodiacal light.
+Part of the Roman Space Telescope module.  This file includes any routines needed to define the
+background level, for which the main contribution is zodiacal light.
 """
 
 import numpy as np
@@ -28,10 +28,10 @@ import os
 
 def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     """
-    Get the expected sky level for a WFIRST observation due to zodiacal light for this bandpass and
-    position.
+    Get the expected sky level for a Roman ST observation due to zodiacal light for this bandpass
+    and position.
 
-    This routine requires Bandpass objects that were loaded by galsim.wfirst.getBandpasses().  That
+    This routine requires Bandpass objects that were loaded by galsim.roman.getBandpasses().  That
     routine will have stored tables containing the sky background as a function of position on the
     sky for that bandpass.  This routine then interpolates between the values in those tables to
     arbitrary positions on the sky.
@@ -43,7 +43,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
     be used with wcs.makeSkyImage() to make an image of the sky that properly includes the actual
     pixel area as a function of position on the detector.
 
-    The source of the tables that are being interpolated is Chris Hirata's publicly-available WFIRST
+    The source of the tables that are being interpolated is Chris Hirata's publicly-available Roman
     exposure time calculator (ETC):
 
         http://www.tapir.caltech.edu/~chirata/web/software/space-etc/
@@ -64,7 +64,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
                     position (as a fair compromise between 0 and 180), and an ecliptic latitude
                     of 30 degrees with respect to the sun position (decently out of the plane
                     of the Earth-sun orbit). [default: None]
-        exptime:    Exposure time in seconds.  If None, use the default WFIRST exposure time.
+        exptime:    Exposure time in seconds.  If None, use the default Roman exposure time.
                     [default: None]
         epoch:      The epoch to be used for estimating the obliquity of the ecliptic when
                     converting ``world_pos`` to ecliptic coordinates.  This keyword is only used
@@ -86,7 +86,7 @@ def getSkyLevel(bandpass, world_pos=None, exptime=None, epoch=2025, date=None):
 
     # Check for cached sky level information for this filter.  If not, raise exception
     if not hasattr(bandpass, '_sky_level'):
-        raise GalSimValueError("Only bandpasses returned from galsim.wfirst.getBandpasses() are "
+        raise GalSimValueError("Only bandpasses returned from galsim.roman.getBandpasses() are "
                                "allowed here!", bandpass)
 
     # Check for proper type for position, and extract the ecliptic coordinates.

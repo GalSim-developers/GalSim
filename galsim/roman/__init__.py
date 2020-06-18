@@ -16,8 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 """
-The galsim.wfirst module, containing information GalSim needs to simulate images for the WFIRST
-project.
+The galsim.roman module, containing information GalSim needs to simulate images for the Roman
+Space Telescope.
 """
 import os
 import numpy as np
@@ -44,14 +44,14 @@ thermal_backgrounds = {'J129': 0.023, # e-/pix/s
 # F184, W149
 longwave_bands = ['F184', 'W149']
 pupil_plane_file_longwave = os.path.join(meta_data.share_dir,
-        "WFIRST_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz")
+        "Roman_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz")
 # Z087, Y106, J129, H158
 shortwave_bands = ['Z087', 'Y106', 'J129', 'H158']
 pupil_plane_file_shortwave = os.path.join(meta_data.share_dir,
-        "WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
+        "Roman_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
 pupil_plane_file = pupil_plane_file_shortwave  # Let the canonical pupil be the shortwave one.
 
-# The pupil plane image has non-zero values with a diameter of 2042 pixels.  The WFIRST mirror
+# The pupil plane image has non-zero values with a diameter of 2042 pixels.  The Roman mirror
 # is 2.37 meters.  So the scale is 2.37 / 2042 = 0.00116 meters/pixel.
 pupil_plane_scale = diameter / 2042.
 
@@ -68,7 +68,7 @@ persistence_coefficients = np.array([0.045707683,0.014959818,0.009115737,0.00656
 
 # parameters in the fermi model = [ A, x0, dx, a, r, half_well]
 # The following parameters are for H4RG-lo, the conservative model for low influence level x.
-# The info and implementation can be found in wfirst_detectors.applyPersistence() and wfirst_detectors.fermi_linear().
+# The info and implementation can be found in roman_detectors.applyPersistence() and roman_detectors.fermi_linear().
 persistence_fermi_parameters = np.array([0.017, 60000., 50000., 0.045, 1., 50000.])
 
 n_sca = 18
@@ -77,10 +77,10 @@ n_pix = 4088
 jitter_rms = 0.014
 charge_diffusion = 0.1
 
-from .wfirst_bandpass import getBandpasses
-from .wfirst_backgrounds import getSkyLevel
-from .wfirst_psfs import getPSF
-from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA, convertCenter
-from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects, NLfunc
+from .roman_bandpass import getBandpasses
+from .roman_backgrounds import getSkyLevel
+from .roman_psfs import getPSF
+from .roman_wcs import getWCS, findSCA, allowedPos, bestPA, convertCenter
+from .roman_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects, NLfunc
 
 

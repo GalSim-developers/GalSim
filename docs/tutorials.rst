@@ -535,8 +535,8 @@ Demo 13
 :download:`demo13.py <../examples/demo13.py>`
 
 This script introduces non-idealities arising from NIR detectors, in particular those that will be
-observed and accounted for in the WFIRST survey. Three such non-ideal effects are demonstrated, in
-the order in which they are introduced in the detectors:
+observed and accounted for in the Roman Space Telescope. Three such non-ideal effects are
+demonstrated, in the order in which they are introduced in the detectors:
 
 1. Reciprocity failure: Flux-dependent sensitivity of the detector.
 2. Non-linearity: Charge-dependent gain in converting from units of electrons to ADU.  Non-linearity
@@ -552,19 +552,19 @@ of noise at appropriate stages.
 
 - image.quantize()
 - obj = galsim.DeltaFunction(flux)
-- galsim.wfirst.addReciprocityFailure(image)
-- galsim.wfirst.applyNonlinearity(image)
-- galsim.wfirst.applyIPC(image)
-- galsim.wfirst.getBandpasses()
-- galsim.wfirst.getPSF()
-- galsim.wfirst.getWCS()
-- galsim.wfirst.allowedPos()
-- galsim.wfirst.getSkyLevel()
+- galsim.roman.addReciprocityFailure(image)
+- galsim.roman.applyNonlinearity(image)
+- galsim.roman.applyIPC(image)
+- galsim.roman.getBandpasses()
+- galsim.roman.getPSF()
+- galsim.roman.getWCS()
+- galsim.roman.allowedPos()
+- galsim.roman.getSkyLevel()
 
 **New features in the YAML file**:
 
 This demo currently does not have a YAML version.  The config processing of chromatic objects and
-of the WFIRST functionality have not been implemented yet.
+of the Roman functionality have not been implemented yet.
 
 Advanced Simulations
 --------------------

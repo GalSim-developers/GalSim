@@ -16,11 +16,12 @@
 #    and/or other materials provided with the distribution.
 #
 """
-@file wfirst_wcs.py
+@file roman_wcs.py
 
-Part of the WFIRST module.  This file includes any routines needed to define and use the WFIRST WCS.
-Current version is consistent with WFIRST wide-field channel optical design version 7.6.8, generated
-during Phase A and presented at the WFIRST System Requirements Review and Mission Definition Review.
+Part of the Roman Space Telescope module.  This file includes any routines needed to define and use
+the Roman WCS.  Current version is consistent with Roman wide-field channel optical design version
+7.6.8, generated during Phase A and presented at the Roman System Requirements Review and Mission
+Definition Review.
 """
 import numpy as np
 import os
@@ -29,14 +30,14 @@ import coord
 from . import n_sca
 from .. import meta_data
 
-# Basic WFIRST reference info, with lengths in mm.
+# Basic Roman reference info, with lengths in mm.
 pixel_size_mm = 0.01
 focal_length = 18727.2
 pix_scale = (pixel_size_mm/focal_length)*coord.radians
 n_sip = 5 # Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension
 
 # Version-related information, for reference back to material provided by Jeff Kruk.
-tel_name = "WFIRST"
+tel_name = "Roman"
 instr_name = "WFC"
 optics_design_ver = "7.6.8"
 prog_version = "0.5"
@@ -79,8 +80,8 @@ sip_filename = os.path.join(meta_data.share_dir, 'sip_7_6_8.txt')
 
 def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     """
-    This routine returns a dict containing a WCS for each of the WFIRST SCAs (Sensor Chip Array, the
-    equivalent of a chip in an optical CCD).  The WFIRST SCAs are labeled 1-18, so these numbers are
+    This routine returns a dict containing a WCS for each of the Roman SCAs (Sensor Chip Array, the
+    equivalent of a chip in an optical CCD).  The Roman SCAs are labeled 1-18, so these numbers are
     used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the
     ``SCAs`` option.  The basic instrument parameters used to create the WCS correspond to those in
     Cycle 6, which includes some significant updates from Cycle 5, including a 90 degree rotation of
@@ -97,7 +98,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
 
     To fully understand all possible inputs and outputs to this routine, users may wish to consult
     the diagram on the GalSim wiki,
-    https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams
+    https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams
 
     Parameters:
         world_pos:      A `galsim.CelestialCoord` indicating the position to observe at the center
@@ -188,7 +189,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
         # celestial coordinates. In other words, phi_p is the angle of the +Y axis in the tangent
         # plane, which is of course pi if we're measuring these phi angles clockwise from the -Y
         # axis.  Note that this quantity is not used in any calculations at all, but for consistency
-        # with the WCS code that comes from the WFIRST project office, we calculate this quantity
+        # with the WCS code that comes from the Roman project office, we calculate this quantity
         # and put it in the FITS header.
         if world_pos.dec / coord.degrees > -90.:
             phi_p = np.pi*coord.radians
@@ -274,7 +275,7 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*c
 
     To fully understand all possible inputs and outputs to this routine, users may wish to consult
     the diagram on the GalSim wiki,
-    https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams
+    https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams
 
     Parameters:
         world_pos:  A galsim.CelestialCoord indicating the position to observe at the center of the
@@ -331,7 +332,7 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*c
 
 def findSCA(wcs_dict, world_pos, include_border=False):
     """
-    This is a subroutine to take a dict of WCS (one per SCA) from galsim.wfirst.getWCS() and query
+    This is a subroutine to take a dict of WCS (one per SCA) from galsim.roman.getWCS() and query
     which SCA a particular real-world coordinate would be located on.  The position (``world_pos``)
     should be specified as a galsim.CelestialCoord.  If the position is not located on any of the
     SCAs, the result will be None.  Note that if ``wcs_dict`` does not include all SCAs in it, then
@@ -347,7 +348,7 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     ``include_border`` switches between these scenarios.
 
     Parameters:
-        wcs_dict:        The dict of WCS's output from galsim.wfirst.getWCS().
+        wcs_dict:        The dict of WCS's output from galsim.roman.getWCS().
         world_pos:       A galsim.CelestialCoord indicating the sky position of interest.
         include_border:  If True, then include the half-border around SCA to cover the gap
                          between each sensor. [default: False]
@@ -361,7 +362,7 @@ def findSCA(wcs_dict, world_pos, include_border=False):
 
     # Sanity check args.
     if not isinstance(wcs_dict, dict):
-        raise TypeError("wcs_dict should be a dict containing WCS output by galsim.wfirst.getWCS.")
+        raise TypeError("wcs_dict should be a dict containing WCS output by galsim.roman.getWCS.")
 
     if not isinstance(world_pos, coord.CelestialCoord):
         raise TypeError("Position on the sky must be given as a galsim.CelestialCoord.")
@@ -386,7 +387,7 @@ def _calculate_minmax_pix(include_border=False):
     """
     This is a helper routine to calculate the minimum and maximum pixel values that should be
     considered within an SCA, possibly including the complexities of including 1/2 of the gap
-    between SCAs.  In that case it depends on the detailed geometry of the WFIRST focal plane.
+    between SCAs.  In that case it depends on the detailed geometry of the Roman focal plane.
 
     Parameters:
         include_border:     A boolean value that determines whether to include 1/2 of the gap
@@ -463,7 +464,7 @@ def _calculate_minmax_pix(include_border=False):
 
 def _populate_required_fields(header):
     """
-    Utility routine to do populate some of the basic fields for the WCS headers for WFIRST that
+    Utility routine to do populate some of the basic fields for the WCS headers for Roman that
     don't require any interesting calculation.
     """
     from . import n_pix
@@ -494,7 +495,7 @@ def _parse_sip_file(file):  # pragma: no cover
     for later calculations.
     """
     if not os.path.exists(file):
-        raise OSError("Cannot find file that should have WFIRST SIP coefficients: %s"%file)
+        raise OSError("Cannot find file that should have Roman SIP coefficients: %s"%file)
 
     # Parse the file, which comes from wfi_wcs_sip_gen_0.1.c provided by Jeff Kruk.
     data = np.loadtxt(file, usecols=[0, 3, 4, 5, 6, 7]).transpose()
@@ -533,8 +534,8 @@ def _det_to_tangplane_positions(x_in, y_in):
     Note that the coefficients given in this routine go in the order {a0, a1, a2, a3}.
 
     """
-    # These numbers come from the "WFIRST Wide-Field Instrument Reference Information" on
-    # https://wfirst.gsfc.nasa.gov/science/WFIRST_Reference_Information.html (cycle 7).
+    # These numbers come from the "Roman Wide-Field Instrument Reference Information" on
+    # https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html (cycle 7).
     img_dist_coeff = np.array([-7.1229e-3, -1.6186e-2, 6.9169e-02, -1.4189e-02])
     # The optical distortion model is defined in terms of separations in *degrees*.
     r_sq = (x_in/coord.degrees)**2 + (y_in/coord.degrees)**2
@@ -579,7 +580,7 @@ def _parse_SCAs(SCAs):
     from .. import GalSimRangeError
 
     # This is a helper routine to parse the input SCAs (single number or iterable) and put it into a
-    # convenient format.  It is used in wfirst_wcs.py.
+    # convenient format.  It is used in roman_wcs.py.
     #
     # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
     all_SCAs = np.arange(1, n_sca + 1, 1)
@@ -617,7 +618,7 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
 
     # Are we allowed to look here?
     if not allowedPos(world_pos, date):
-        raise GalSimError("Error, WFIRST cannot look at this position on this date!")
+        raise GalSimError("Error, Roman cannot look at this position on this date!")
 
     # If position angle was not given, then get the optimal one:
     if PA is None:
@@ -628,7 +629,7 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
         if not isinstance(PA, coord.Angle):
             raise TypeError("Position angle must be a galsim.Angle!")
 
-    # Check which SCAs are to be done using a helper routine in the galsim.wfirst module.
+    # Check which SCAs are to be done using a helper routine in the galsim.roman module.
     SCAs = _parse_SCAs(SCAs)
 
     # Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.
@@ -643,13 +644,13 @@ def _parse_WCS_inputs(world_pos, PA, date, PA_is_FPA, SCAs):
 
 def allowedPos(world_pos, date):
     """
-    This routine can be used to check whether WFIRST would be allowed to look at a particular
+    This routine can be used to check whether Roman would be allowed to look at a particular
     position (``world_pos``) on a given ``date``.   This is determined by the angle of this position
     relative to the Sun.
 
-    In general, WFIRST can point at angles relative to the Sun in the range 90+/-36 degrees.
+    In general, Roman can point at angles relative to the Sun in the range 90+/-36 degrees.
     Obviously, pointing too close to the Sun would result in overly high sky backgrounds.  It is
-    less obvious why WFIRST cannot look at a spot directly opposite from the Sun (180 degrees on the
+    less obvious why Roman cannot look at a spot directly opposite from the Sun (180 degrees on the
     sky).  The reason is that the observatory is aligned such that if the observer is looking at
     some sky position, the solar panels are oriented at 90 degrees from that position.  So it's
     always optimal for the observatory to be pointing at an angle of 90 degrees relative to the

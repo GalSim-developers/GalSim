@@ -200,8 +200,8 @@ Currently, GalSim has the following capabilities:
 * Can include a range of simple detector effects such as nonlinearity,
   brighter-fatter effect, etc.
 
-* Has a module that is particularly meant to simulate images for the WFIRST
-  survey.
+* Has a module that is particularly meant to simulate images for the Roman
+  Space Telescope.
 
 
 Planned future development

@@ -294,120 +294,120 @@ acs_I_unrot_sci_20_cf.fits
     Use ``galsim.getCOSMOSNoise()``
 
 
-Shared WFIRST files
-===================
+Shared Roman ST files
+=====================
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_01.txt
-    Use ``galsim.wfirst.getPSF(1, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_01.txt
+    Use ``galsim.roman.getPSF(1, bandpass)``
 
-    WFIRST PSF information for SCA 1
+    Roman PSF information for SCA 1
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_02.txt
-    Use ``galsim.wfirst.getPSF(2, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_02.txt
+    Use ``galsim.roman.getPSF(2, bandpass)``
 
-    WFIRST PSF information for SCA 2
+    Roman PSF information for SCA 2
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_03.txt
-    Use ``galsim.wfirst.getPSF(3, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_03.txt
+    Use ``galsim.roman.getPSF(3, bandpass)``
 
-    WFIRST PSF information for SCA 3
+    Roman PSF information for SCA 3
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_04.txt
-    Use ``galsim.wfirst.getPSF(4, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_04.txt
+    Use ``galsim.roman.getPSF(4, bandpass)``
 
-    WFIRST PSF information for SCA 4
+    Roman PSF information for SCA 4
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_05.txt
-    Use ``galsim.wfirst.getPSF(5, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_05.txt
+    Use ``galsim.roman.getPSF(5, bandpass)``
 
-    WFIRST PSF information for SCA 5
+    Roman PSF information for SCA 5
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_06.txt
-    Use ``galsim.wfirst.getPSF(6, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_06.txt
+    Use ``galsim.roman.getPSF(6, bandpass)``
 
-    WFIRST PSF information for SCA 6
+    Roman PSF information for SCA 6
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_07.txt
-    Use ``galsim.wfirst.getPSF(7, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_07.txt
+    Use ``galsim.roman.getPSF(7, bandpass)``
 
-    WFIRST PSF information for SCA 7
+    Roman PSF information for SCA 7
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_08.txt
-    Use ``galsim.wfirst.getPSF(8, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_08.txt
+    Use ``galsim.roman.getPSF(8, bandpass)``
 
-    WFIRST PSF information for SCA 8
+    Roman PSF information for SCA 8
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_09.txt
-    Use ``galsim.wfirst.getPSF(9, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_09.txt
+    Use ``galsim.roman.getPSF(9, bandpass)``
 
-    WFIRST PSF information for SCA 9
+    Roman PSF information for SCA 9
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_10.txt
-    Use ``galsim.wfirst.getPSF(10, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_10.txt
+    Use ``galsim.roman.getPSF(10, bandpass)``
 
-    WFIRST PSF information for SCA 10
+    Roman PSF information for SCA 10
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_11.txt
-    Use ``galsim.wfirst.getPSF(11, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_11.txt
+    Use ``galsim.roman.getPSF(11, bandpass)``
 
-    WFIRST PSF information for SCA 11
+    Roman PSF information for SCA 11
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_12.txt
-    Use ``galsim.wfirst.getPSF(12, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_12.txt
+    Use ``galsim.roman.getPSF(12, bandpass)``
 
-    WFIRST PSF information for SCA 12
+    Roman PSF information for SCA 12
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_13.txt
-    Use ``galsim.wfirst.getPSF(13, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_13.txt
+    Use ``galsim.roman.getPSF(13, bandpass)``
 
-    WFIRST PSF information for SCA 13
+    Roman PSF information for SCA 13
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_14.txt
-    Use ``galsim.wfirst.getPSF(14, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_14.txt
+    Use ``galsim.roman.getPSF(14, bandpass)``
 
-    WFIRST PSF information for SCA 14
+    Roman PSF information for SCA 14
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_15.txt
-    Use ``galsim.wfirst.getPSF(15, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_15.txt
+    Use ``galsim.roman.getPSF(15, bandpass)``
 
-    WFIRST PSF information for SCA 15
+    Roman PSF information for SCA 15
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_16.txt
-    Use ``galsim.wfirst.getPSF(16, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_16.txt
+    Use ``galsim.roman.getPSF(16, bandpass)``
 
-    WFIRST PSF information for SCA 16
+    Roman PSF information for SCA 16
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_17.txt
-    Use ``galsim.wfirst.getPSF(17, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_17.txt
+    Use ``galsim.roman.getPSF(17, bandpass)``
 
-    WFIRST PSF information for SCA 17
+    Roman PSF information for SCA 17
 
-WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_18.txt
-    Use ``galsim.wfirst.getPSF(18, bandpass)``
+Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_18.txt
+    Use ``galsim.roman.getPSF(18, bandpass)``
 
-    WFIRST PSF information for SCA 18
+    Roman PSF information for SCA 18
 
-WFIRST_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz
-    Use ``galsim.wfirst.getPSF(sca, bandpass)``
+Roman_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz
+    Use ``galsim.roman.getPSF(sca, bandpass)``
 
-    WFIRST Pupil Mask for the shorter wavelength bandpasses.
+    Roman Pupil Mask for the shorter wavelength bandpasses.
     Relevant for bands Z087, Y106, J129, and H158
 
-WFIRST_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz
-    Use ``galsim.wfirst.getPSF(sca, bandpass)``
+Roman_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz
+    Use ``galsim.roman.getPSF(sca, bandpass)``
 
-    WFIRST Pupil Mask for the longer wavelength bandpasses.
+    Roman Pupil Mask for the longer wavelength bandpasses.
     Relevant for bands F184 and W149
 
 afta_throughput.txt
-    Use ``galsim.wfirst.getBandpasses()``
+    Use ``galsim.roman.getBandpasses()``
 
-    WFIRST throughputs for all the WFIRST bands in a single file.
+    Roman throughputs for all the Roman bands in a single file.
 
 sip_7_6_8.txt
-    Use ``galsim.wfirst.getWCS(world_pos)``
+    Use ``galsim.roman.getWCS(world_pos)``
 
-    WFIRST WCS information for all SCAs.
+    Roman ST WCS information for all SCAs.
 
 Shared COSMOS files
 ===================
