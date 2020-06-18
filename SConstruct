@@ -1,7 +1,7 @@
 from __future__ import print_function
 # vim: set filetype=python et ts=4 sw=4:
 
-# Copyright (c) 2012-2019 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2020 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
