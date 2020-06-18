@@ -19,6 +19,4 @@
 from .deprecated import depr
 from .roman import *
 
-print('before depr')
 depr('galsim.wfirst', 2.3, 'galsim.roman')
-print('after depr')
