@@ -333,6 +333,59 @@ def test_withOrigin():
                 world_pos2.distanceTo(world_pos1) / galsim.arcsec, 0, 7,
                 'shiftOrigin(new_origin) returned wrong world position')
 
+@timer
+def test_wfirst():
+    """Test that the deprecated wfirst module works like the new roman module.
+    """
+    import galsim.roman
+    check_dep(__import__, 'galsim.wfirst')
+
+    assert galsim.wfirst.gain == galsim.roman.gain
+    assert galsim.wfirst.pixel_scale == galsim.roman.pixel_scale
+    assert galsim.wfirst.diameter == galsim.roman.diameter
+    assert galsim.wfirst.obscuration == galsim.roman.obscuration
+    assert galsim.wfirst.collecting_area == galsim.roman.collecting_area
+    assert galsim.wfirst.exptime == galsim.roman.exptime
+    assert galsim.wfirst.dark_current == galsim.roman.dark_current
+    assert galsim.wfirst.nonlinearity_beta == galsim.roman.nonlinearity_beta
+    assert galsim.wfirst.reciprocity_alpha == galsim.roman.reciprocity_alpha
+    assert galsim.wfirst.read_noise == galsim.roman.read_noise
+    assert galsim.wfirst.n_dithers == galsim.roman.n_dithers
+    assert galsim.wfirst.thermal_backgrounds == galsim.roman.thermal_backgrounds
+    assert galsim.wfirst.longwave_bands == galsim.roman.longwave_bands
+    assert galsim.wfirst.shortwave_bands == galsim.roman.shortwave_bands
+    assert galsim.wfirst.pupil_plane_file_longwave == galsim.roman.pupil_plane_file_longwave
+    assert galsim.wfirst.pupil_plane_file_shortwave == galsim.roman.pupil_plane_file_shortwave
+    assert galsim.wfirst.pupil_plane_file == galsim.roman.pupil_plane_file
+    assert galsim.wfirst.pupil_plane_scale == galsim.roman.pupil_plane_scale
+    assert galsim.wfirst.stray_light_fraction == galsim.roman.stray_light_fraction
+    np.testing.assert_array_equal(galsim.wfirst.ipc_kernel, galsim.roman.ipc_kernel)
+    np.testing.assert_array_equal(galsim.wfirst.persistence_coefficients,
+                                  galsim.roman.persistence_coefficients)
+    np.testing.assert_array_equal(galsim.wfirst.persistence_fermi_parameters,
+                                  galsim.roman.persistence_fermi_parameters)
+    assert galsim.wfirst.n_sca == galsim.roman.n_sca
+    assert galsim.wfirst.n_pix_tot == galsim.roman.n_pix_tot
+    assert galsim.wfirst.n_pix == galsim.roman.n_pix
+    assert galsim.wfirst.jitter_rms == galsim.roman.jitter_rms
+    assert galsim.wfirst.charge_diffusion == galsim.roman.charge_diffusion
+
+    assert galsim.wfirst.getBandpasses is galsim.roman.getBandpasses
+    assert galsim.wfirst.getSkyLevel is galsim.roman.getSkyLevel
+    assert galsim.wfirst.getPSF is galsim.roman.getPSF
+    assert galsim.wfirst.getWCS is galsim.roman.getWCS
+    assert galsim.wfirst.findSCA is galsim.roman.findSCA
+    assert galsim.wfirst.allowedPos is galsim.roman.allowedPos
+    assert galsim.wfirst.bestPA is galsim.roman.bestPA
+    assert galsim.wfirst.convertCenter is galsim.roman.convertCenter
+    assert galsim.wfirst.applyNonlinearity is galsim.roman.applyNonlinearity
+    assert galsim.wfirst.addReciprocityFailure is galsim.roman.addReciprocityFailure
+    assert galsim.wfirst.applyIPC is galsim.roman.applyIPC
+    assert galsim.wfirst.applyPersistence is galsim.roman.applyPersistence
+    assert galsim.wfirst.allDetectorEffects is galsim.roman.allDetectorEffects
+    assert galsim.wfirst.NLfunc is galsim.roman.NLfunc
+
+
 
 if __name__ == "__main__":
     test_gsparams()
@@ -343,3 +396,4 @@ if __name__ == "__main__":
     test_randwalk_repr()
     test_randwalk_config()
     test_withOrigin()
+    test_wfirst()

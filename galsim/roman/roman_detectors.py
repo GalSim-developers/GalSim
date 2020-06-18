@@ -16,10 +16,10 @@
 #    and/or other materials provided with the distribution.
 #
 """
-@file wfirst_detectors.py
+@file roman_detectors.py
 
-Part of the WFIRST module.  This file includes helper routines to apply image defects that are
-specific to WFIRST.
+Part of the Roman Space Telescope module.  This file includes helper routines to apply image
+defects that are specific to Roman.
 """
 
 import numpy as np
@@ -32,11 +32,11 @@ def NLfunc(x):
 
 def applyNonlinearity(img):
     """
-    Applies the WFIRST nonlinearity function to the supplied image ``im``.
+    Applies the Roman nonlinearity function to the supplied image ``im``.
 
     For more information about nonlinearity, see the docstring for galsim.Image.applyNonlinearity.
     Unlike that routine, this one does not require any arguments, since it uses the nonlinearity
-    function defined within the WFIRST module.
+    function defined within the Roman module.
 
     After calling this method, the Image instance ``img`` is transformed to include the
     nonlinearity.
@@ -53,7 +53,7 @@ def addReciprocityFailure(img, exptime=exptime):
 # Note: Formatted doc strings don't work if put in the normal place.  Unless the function is
 # actually called, the formatting statement is never executed.  So put it here instead.
 addReciprocityFailure.__doc__ = """
-Accounts for the reciprocity failure for the WFIRST directors and includes it in the original
+Accounts for the reciprocity failure for the Roman directors and includes it in the original
 Image ``img`` directly.
 
 For more information about reciprocity failure, see the docstring for
@@ -65,7 +65,7 @@ Parameters:
     img:            The Image to be transformed.
     exptime:        The exposure time (t) in seconds, which goes into the expression for
                     reciprocity failure given in the docstring.  If None, then the routine
-                    will use the default WFIRST exposure time in galsim.wfirst.exptime.
+                    will use the default Roman exposure time in galsim.roman.exptime.
                     [default: {exptime}]
 """.format(exptime=exptime)
 
@@ -76,7 +76,7 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
 
     For more information about IPC, see the docstring for galsim.Image.applyIPC.  Unlike that
     routine, this one does not need the IPC kernel to be specified, since it uses the IPC kernel
-    defined within the WFIRST module.
+    defined within the Roman module.
 
     Parameters:
         img:                The Image to be transformed.
@@ -96,7 +96,7 @@ def applyPersistence(img, prev_exposures, method='fermi'):
     from .. import GalSimValueError
 
     if not hasattr(prev_exposures,'__iter__'):
-        raise TypeError("In wfirst.applyPersistence, prev_exposures must be a list of Image instances")
+        raise TypeError("In roman.applyPersistence, prev_exposures must be a list of Image instances")
 
     if method == 'linear':
 
@@ -195,7 +195,7 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=exptime):
     # Quantize: have an integer number of photons in every pixel after inclusion of sky noise.
     img.quantize()
 
-    # Reciprocity failure (use WFIRST routine, with the supplied exposure time).
+    # Reciprocity failure (use Roman routine, with the supplied exposure time).
     addReciprocityFailure(img, exptime=exptime)
 
     # Dark current (use exposure time).
@@ -203,16 +203,16 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=exptime):
     dark_noise = DeviateNoise(PoissonDeviate(rng, total_dark_current))
     img.addNoise(dark_noise)
 
-    # Persistence (use WFIRST H4RG-lo fermi model)
+    # Persistence (use Roman H4RG-lo fermi model)
     prev_exposures = list(prev_exposures)
     applyPersistence(img, prev_exposures, method='fermi')
     # Update the 'prev_exposures' queue.
     prev_exposures = [img.copy()] + prev_exposures[:]
 
-    # Nonlinearity (use WFIRST routine).
+    # Nonlinearity (use Roman routine).
     applyNonlinearity(img)
 
-    # IPC (use WFIRST routine).
+    # IPC (use Roman routine).
     applyIPC(img)
 
     # Read noise.
@@ -228,13 +228,13 @@ def allDetectorEffects(img, prev_exposures=(), rng=None, exptime=exptime):
     return prev_exposures
 
 allDetectorEffects.__doc__ = """
-This utility applies all sources of noise and detector effects for WFIRST that are implemented
+This utility applies all sources of noise and detector effects for Roman that are implemented
 in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +
 background), dark current, and read noise.  The detector effects that are included are
 reciprocity failure, quantization, persistence, nonlinearity, and interpixel capacitance. It
 also includes the necessary factors of gain.  In short, the user should be able to pass in an
 Image with all sources of signal (background plus astronomical objects), and the Image will be
-modified to include all subsequent steps in the image generation process for WFIRST that are
+modified to include all subsequent steps in the image generation process for Roman that are
 implemented in GalSim. However, to include the effect of persistence, the user needs to provide
 a list of recent exposures (without the readout effects) and the routine
 returns an updated list of recent exposures.
@@ -245,7 +245,7 @@ Parameters:
                     the recent exposure being the first element. [default: ()]
     rng:            An optional galsim.BaseDeviate to use for the addition of noise.  If
                     None, a new one will be initialized.  [default: None]
-    exptime:        The exposure time, in seconds.  If None, then the WFIRST default
+    exptime:        The exposure time, in seconds.  If None, then the Roman default
                     exposure time will be used.  [default: {exptime}]
 
 Returns:

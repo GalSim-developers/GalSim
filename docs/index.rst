@@ -23,7 +23,7 @@ GalSim: The modular galaxy image simulation toolkit
     config
     hsm
     des
-    wfirst
+    roman
 
     shared
     history

@@ -17,15 +17,6 @@
 #
 
 import numpy as np
-import sys, os
-import math
-import logging
-import time
-import yaml
-import galsim as galsim
-import galsim.wfirst as wfirst
-import galsim.des as des
-#import fitsio as fio
 
 MAX_RAD_FROM_BORESIGHT = 0.009
 

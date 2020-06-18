@@ -266,9 +266,9 @@ def applyPersistence(self,imgs,coeffs):
     Persistence refers to the retention of a small fraction of the signal after resetting the
     imager pixel elements. The persistence signal of a previous exposure is left in the pixel even
     after several detector resets. This effect is most likely due to charge traps in the material.
-    Laboratory tests on the WFIRST CMOS detectors show that if exposures and readouts are taken in
-    a fixed cadence, the persistence signal can be given as a linear combination of prior pixel
-    values that can be added to the current image.
+    Laboratory tests on the Roman Space Telescope CMOS detectors show that if exposures and
+    readouts are taken in a fixed cadence, the persistence signal can be given as a linear
+    combination of prior pixel values that can be added to the current image.
 
     This routine takes in a list of `Image` instances and adds them to `Image` weighted by the
     values passed on to 'coeffs'. The pixel values of the `Image` instances in the list must

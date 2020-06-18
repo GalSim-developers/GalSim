@@ -18,7 +18,7 @@
 
 # imports, etc.
 import galsim
-import galsim.wfirst as wf
+import galsim.roman
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
@@ -51,7 +51,7 @@ for i in range(n_vals):
         fpa_center = galsim.CelestialCoord(
             ra=ra_cen_vals[i]*galsim.degrees,
             dec=dec_cen_vals[i]*galsim.degrees)
-        pa = wf.bestPA(fpa_center, date)
+        pa = galsim.roman.bestPA(fpa_center, date)
     pa_arr[i] = pa / galsim.radians
     ra_vals[i] = ra_cen_vals[i] + delta_dist*(ud()-0.5)*np.cos(dec_cen_vals[i]*np.pi/180.)
     dec_vals[i] = dec_cen_vals[i] + delta_dist*(ud()-0.5)

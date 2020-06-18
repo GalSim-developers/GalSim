@@ -20,36 +20,37 @@ import numpy as np
 import os
 
 """
-@file wfirst_psfs.py
+@file roman_psfs.py
 
-Part of the WFIRST module.  This file includes routines needed to define a realistic PSF for WFIRST.
+Part of the Roman Space Telescope module.  This file includes routines needed to define a realistic
+PSF for Roman.
 """
 
 # Define a default set of bandpasses for which this routine works.
 default_bandpass_list = ['J129', 'F184', 'W149', 'Y106', 'Z087', 'H158']
 # Prefix for files containing information about Zernikes for each SCA for cycle 7.
-zemax_filepref = "WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727"
+zemax_filepref = "Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727"
 zemax_filesuff = '.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCA, bandpass,
            SCA_pos=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
            logger=None, wavelength=None, high_accuracy=False, gsparams=None):
-    """Get a single PSF for WFIRST observations.
+    """Get a single PSF for Roman ST observations.
 
     The user must provide the SCA and bandpass; the latter is used when setting up the pupil
     plane configuration and when interpolating chromatic information, if requested.
 
     This routine carries out linear interpolation of the aberrations within a given SCA, based on
-    the WFIRST Cycle 7 specification of the aberrations as a function of focal plane position, more
-    specifically from a file `WFIRST_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727.xlsm` downloaded
-    from https://wfirst.gsfc.nasa.gov/science/WFIRST_Reference_Information.html.  Phase B updates
-    that became available in mid-2019 have not yet been incorporated into this module.
+    the Roman (then WFIRST) Cycle 7 specification of the aberrations as a function of focal plane
+    position, more specifically from `Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727.xlsm`
+    downloaded from https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.  Phase
+    B updates that became available in mid-2019 have not yet been incorporated into this module.
 
-    The default is to do the calculations using the full specification of the WFIRST pupil plane,
+    The default is to do the calculations using the full specification of the Roman pupil plane,
     which is a costly calculation in terms of memory.  For this, we use the provided pupil plane for
     long- and short-wavelength bands for Cycle 7 (the list of bands associated with each pupil plane
-    is stored in ``galsim.wfirst.longwave_bands`` and ``galsim.wfirst.shortwave_bands``).
+    is stored in ``galsim.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``).
 
     To avoid using the full pupil plane configuration, use the optional keyword
     ``approximate_struts``.  In this case, the pupil plane will have the correct obscuration and
@@ -59,17 +60,17 @@ def getPSF(SCA, bandpass,
     orientation of the struts is fixed, rather than rotating depending on the orientation of the
     focal plane.  Rotation of the PSF can easily be affected by the user via::
 
-       psf = galsim.wfirst.getPSF(...).rotate(angle)
+       psf = galsim.roman.getPSF(...).rotate(angle)
 
     which will rotate the entire PSF (including the diffraction spikes and any other features).
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
-    simple, understood wavelength-dependence.  (The WFIRST project webpage for Cycle 7 does in fact
+    simple, understood wavelength-dependence.  (The Roman project webpage for Cycle 7 does in fact
     provide aberrations as a function of wavelength, but the deviation from the expected chromatic
     dependence is sub-percent so we neglect it here.)  For reference, the script used to parse the
     Zernikes given on the webpage and create the files in the GalSim repository can be found in
-    ``devel/external/parse_wfirst_zernikes_1217.py``.  The resulting chromatic object can be used to
-    draw into any of the WFIRST bandpasses, though the pupil plane configuration will only be
+    ``devel/external/parse_roman_zernikes_1217.py``.  The resulting chromatic object can be used to
+    draw into any of the Roman bandpasses, though the pupil plane configuration will only be
     correct for those bands in the same range (i.e., long- or short-wavelength bands).
 
     For applications that require very high accuracy in the modeling of the PSF, with very limited
@@ -83,13 +84,13 @@ def getPSF(SCA, bandpass,
     provide an optional keyword ``extra_aberrations`` that will be included on top of those that are
     part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
     with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order
-    22 (Noll convention) are simulated.  For WFIRST, the tolerance for additional
+    22 (Noll convention) are simulated.  For Roman, the tolerance for additional
     aberrations was a total of 90 nanometers RMS as of mid-2015, distributed largely among coma,
     astigmatism, trefoil, and spherical aberrations (NOT defocus).  This information might serve as
     a guide for reasonable ``extra_aberrations`` inputs.  The reference for that number is
     an earlier Cycle 5 document:
 
-    http://wfirst.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf
+    http://roman.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf
 
     However, the default (non-extra) aberrations are from Cycle 7 material linked earlier in this
     docstring.
@@ -115,8 +116,8 @@ def getPSF(SCA, bandpass,
                             is also possible to pass a string 'long' or 'short' for this
                             argument; in that case, the correct pupil plane configuration
                             will be used for long- or short-wavelength bands as defined using
-                            ``galsm.wfirst.longwave_bands`` and
-                            ``galsim.wfirst.shortwave_bands``, respectively (but no
+                            ``galsm.roman.longwave_bands`` and
+                            ``galsim.roman.shortwave_bands``, respectively (but no
                             interpolation can be used, since it is defined using the extent
                             of the chosen bandpass).
         SCA_pos:            Single galsim.PositionD indicating the position within the SCA
@@ -134,7 +135,7 @@ def getPSF(SCA, bandpass,
                             later on even if they do not do so when calling `getPSF`.
                             [default: None]
         extra_aberrations:  Array of extra aberrations to include in the PSF model, on top of
-                            those that are part of the WFIRST design.  These should be
+                            those that are part of the Roman design.  These should be
                             provided in units of waves at the fiducial wavelength of 1293 nm,
                             as an array of length 23 with entries 4 through 22 corresponding
                             to defocus through the 22nd Zernike in the Noll convention.
@@ -182,7 +183,7 @@ def getPSF(SCA, bandpass,
         elif bandpass in shortwave_bands or bandpass=='short':
             pupil_plane_type = 'short'
         else:
-            raise GalSimValueError("Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
+            raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
                                    bandpass, default_bandpass_list)
     else:
         # Sanity checking:
@@ -190,11 +191,11 @@ def getPSF(SCA, bandpass,
         # If we do not need to use bandpass info, allow it to be None.
         if n_waves is not None:
             if bandpass not in default_bandpass_list+['short','long']:
-                raise GalSimValueError("Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
+                raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
                                        bandpass, default_bandpass_list)
         else:
             if bandpass not in default_bandpass_list+['short','long'] and bandpass is not None:
-                raise GalSimValueError("Bandpass not a valid WFIRST bandpass or 'short'/'long'.",
+                raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
                                        bandpass, default_bandpass_list)
 
     # If bandpass is 'short'/'long', then make sure that interpolation is not called for, since that
@@ -218,7 +219,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
     from .. import Image, OpticalPSF, ChromaticOpticalPSF
     from . import pupil_plane_file_longwave, pupil_plane_file_shortwave, pupil_plane_scale
     from . import diameter, obscuration
-    from .wfirst_bandpass import getBandpasses
+    from .roman_bandpass import getBandpasses
 
     # Deal with some accuracy settings.
     if high_accuracy:
@@ -304,7 +305,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
 def _read_aberrations(SCA):
     """
     This is a helper routine that reads in aberrations for a particular SCA and wavelength (given as
-    galsim.wfirst.wfirst_psfs.zemax_wavelength) from stored files, and returns them along with the
+    galsim.roman.roman_psfs.zemax_wavelength) from stored files, and returns them along with the
     field positions.
 
     Parameters:

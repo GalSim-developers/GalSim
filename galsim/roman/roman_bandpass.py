@@ -16,18 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 """
-@file wfirst_bandpass.py
+@file roman_bandpass.py
 
-Part of the WFIRST module.  This file includes any routines needed to define the WFIRST bandpasses.
+Part of the Roman Space Telescope module.  This file includes any routines needed to define the
+Roman ST bandpasses.
 """
 
 import numpy as np
 import os
 
 def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
-    """Utility to get a dictionary containing the WFIRST bandpasses used for imaging.
+    """Utility to get a dictionary containing the Roman ST bandpasses used for imaging.
 
-    This routine reads in a file containing a list of wavelengths and throughput for all WFIRST
+    This routine reads in a file containing a list of wavelengths and throughput for all Roman
     bandpasses, and uses the information in the file to create a dictionary.
 
     In principle it should be possible to replace the version of the file with another one, provided
@@ -50,7 +51,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     follows:
 
             # Shift zeropoint based on effective collecting area in cm^2.
-            area_eff = galsim.wfirst.collecting_area
+            area_eff = galsim.roman.collecting_area
             delta_zp = 2.5 * np.log10(area_eff)
 
     ``delta_zp`` will be a positive number that should be added to the GalSim zeropoints to compare
@@ -59,17 +60,17 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     normalization (giving it the quantity ``area_eff`` calculated using the lines of code above).
 
     This routine also loads information about sky backgrounds in each filter, to be used by the
-    galsim.wfirst.getSkyLevel() routine.  The sky background information is saved as an attribute in
+    galsim.roman.getSkyLevel() routine.  The sky background information is saved as an attribute in
     each Bandpass object.
 
     There are some subtle points related to the filter edges, which seem to depend on the field
     angle at some level.  This is more important for the grism than for the imaging, so currently
-    this effect is not included in the WFIRST bandpasses in GalSim.
+    this effect is not included in the Roman bandpasses in GalSim.
 
     Example::
 
-        >>> wfirst_bandpasses = galsim.wfirst.getBandpasses()
-        >>> f184_bp = wfirst_bandpasses['F184']
+        >>> roman_bandpasses = galsim.roman.getBandpasses()
+        >>> f184_bp = roman_bandpasses['F184']
 
     Parameters:
         AB_zeropoint:       Should the routine set an AB zeropoint before returning the bandpass?
@@ -82,7 +83,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
         **kwargs:           Other kwargs are passed to either `Bandpass.thin` or
                             `Bandpass.truncate` as appropriate.
 
-    @returns A dictionary containing bandpasses for all WFIRST imaging filters.
+    @returns A dictionary containing bandpasses for all Roman imaging filters.
     """
     from .. import meta_data
     from ..errors import galsim_warn
@@ -95,7 +96,7 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     wave = 1000.*data['Wave']
 
     # Read in and manipulate the sky background info.
-    sky_file = os.path.join(meta_data.share_dir, "wfirst_sky_backgrounds.txt")
+    sky_file = os.path.join(meta_data.share_dir, "roman_sky_backgrounds.txt")
     sky_data = np.loadtxt(sky_file).transpose()
     ecliptic_lat = sky_data[0, :]
     ecliptic_lon = sky_data[1, :]
