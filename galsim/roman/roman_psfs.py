@@ -160,8 +160,9 @@ def getPSF(SCA, bandpass,
         inputs).
 
     """
-    from .. import PositionD
-    from .. import GalSimValueError, GalSimRangeError
+    from ..position import PositionD
+    from ..errors import GalSimValueError, GalSimRangeError
+    from ..bandpass import Bandpass
     from . import n_pix, longwave_bands, shortwave_bands, n_sca
 
     # Deprecated options
@@ -213,27 +214,21 @@ def getPSF(SCA, bandpass,
     pupil_plane_type = None
     if bandpass in longwave_bands or bandpass=='long':
         pupil_plane_type = 'long'
-    elif bandpass in shortwave_bands or bandpass=='short' or bandpass is None:
+    elif bandpass in shortwave_bands or bandpass=='short':
+        pupil_plane_type = 'short'
+    elif bandpass is None and n_waves is None:
         pupil_plane_type = 'short'
     else:
         raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
                                bandpass, default_bandpass_list)
-    # Sanity checking:
-    # If we need to use bandpass info, require that it be one of the defaults.
-    # If we do not need to use bandpass info, allow it to be None.
-    if n_waves is not None:
-        if bandpass not in default_bandpass_list+['short','long']:
-            raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
-                                    bandpass, default_bandpass_list)
-    else:
-        if bandpass not in default_bandpass_list+['short','long'] and bandpass is not None:
-            raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
-                                    bandpass, default_bandpass_list)
 
     # If bandpass is 'short'/'long', then make sure that interpolation is not called for, since that
     # requires an actual bandpass.
     if bandpass in ['short','long'] and n_waves is not None:
         raise GalSimValueError("Cannot use bandpass='short'/'long' with interpolation.", bandpass)
+
+    if not isinstance(wavelength, (Bandpass, float, type(None))):
+        raise TypeError("wavelength should either be a Bandpass, float, or None.")
 
     # Now call _get_single_PSF().
     psf = _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
