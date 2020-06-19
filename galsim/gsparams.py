@@ -204,19 +204,19 @@ class GSParams(object):
             return gsp_list[0]
         else:
             return GSParams(
-                max([g.minimum_fft_size for g in gsp_list]),
-                max([g.maximum_fft_size for g in gsp_list]),
-                min([g.folding_threshold for g in gsp_list]),
-                max([g.stepk_minimum_hlr for g in gsp_list]),
-                min([g.maxk_threshold for g in gsp_list]),
-                min([g.kvalue_accuracy for g in gsp_list]),
-                min([g.xvalue_accuracy for g in gsp_list]),
-                min([g.table_spacing for g in gsp_list]),
-                min([g.realspace_relerr for g in gsp_list]),
-                min([g.realspace_abserr for g in gsp_list]),
-                min([g.integration_relerr for g in gsp_list]),
-                min([g.integration_abserr for g in gsp_list]),
-                min([g.shoot_accuracy for g in gsp_list]))
+                max([g.minimum_fft_size for g in gsp_list if g is not None]),
+                max([g.maximum_fft_size for g in gsp_list if g is not None]),
+                min([g.folding_threshold for g in gsp_list if g is not None]),
+                max([g.stepk_minimum_hlr for g in gsp_list if g is not None]),
+                min([g.maxk_threshold for g in gsp_list if g is not None]),
+                min([g.kvalue_accuracy for g in gsp_list if g is not None]),
+                min([g.xvalue_accuracy for g in gsp_list if g is not None]),
+                min([g.table_spacing for g in gsp_list if g is not None]),
+                min([g.realspace_relerr for g in gsp_list if g is not None]),
+                min([g.realspace_abserr for g in gsp_list if g is not None]),
+                min([g.integration_relerr for g in gsp_list if g is not None]),
+                min([g.integration_abserr for g in gsp_list if g is not None]),
+                min([g.shoot_accuracy for g in gsp_list if g is not None]))
 
     # Define once the order of args in __init__, since we use it a few times.
     def _getinitargs(self):

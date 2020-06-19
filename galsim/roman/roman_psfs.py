@@ -240,10 +240,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
     if high_accuracy:
         from ..gsparams import GSParams
         # Set folding_threshold 2.5x smaller than default.
-        if gsparams is None:
-            gsparams = GSParams(folding_threshold=2.e-3)
-        else:
-            gsparams = GSParams.combine([gsparams, GSParams(folding_threshold=2.e-3)])
+        gsparams = GSParams.combine([gsparams, GSParams(folding_threshold=2.e-3)])
         bin_factor = 1
     else:
         # Low accuracy includes an extra factor of 2 in the binning, which is only possible
