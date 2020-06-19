@@ -612,13 +612,13 @@ def test_roman_psfs():
     # - achromatic PSFs without loading the pupil plane image.
 
     # Providing a wavelength returns achromatic PSFs
-    psf_5 = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950.)
+    psf_5 = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8)
     assert isinstance(psf_5, galsim.GSObject)
     # Make sure we do the case where we add aberrations
-    psf_5_ab = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950.,
+    psf_5_ab = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8,
                                    extra_aberrations=np.zeros(23)+0.001)
     # Check that we get the same answer if we specify the center of the focal plane.
-    psf_5_tmp = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950.,
+    psf_5_tmp = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8,
                                     SCA_pos=galsim.PositionD(galsim.roman.n_pix/2,
                                                              galsim.roman.n_pix/2))
     assert psf_5==psf_5_tmp
@@ -631,9 +631,9 @@ def test_roman_psfs():
     all_bp = galsim.roman.getBandpasses()
     zbp = all_bp['Z087']
     use_lam = zbp.effective_wavelength
-    psf_chrom = galsim.roman.getPSF(use_sca, None)
-    psf_achrom = galsim.roman.getPSF(use_sca, None, wavelength=use_lam)
-    psf_achrom2 = galsim.roman.getPSF(use_sca, 'Z087', wavelength=use_lam)
+    psf_chrom = galsim.roman.getPSF(use_sca, None, pupil_bin=8)
+    psf_achrom = galsim.roman.getPSF(use_sca, None, wavelength=use_lam, pupil_bin=8)
+    psf_achrom2 = galsim.roman.getPSF(use_sca, 'Z087', wavelength=use_lam, pupil_bin=8)
     # First, we can draw the achromatic PSF.
     im_achrom = psf_achrom.drawImage(scale=galsim.roman.pixel_scale)
     im_achrom2 = im_achrom.copy()
@@ -656,7 +656,7 @@ def test_roman_psfs():
     blue_limit = all_bp['Z087'].blue_limit
     red_limit = all_bp['Z087'].red_limit
     n_waves = 3
-    psf_int = galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', n_waves=n_waves)
+    psf_int = galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', pupil_bin=8, n_waves=n_waves)
     # Check that evaluation at a single wavelength is consistent with previous results.
     im_int = im_achrom.copy()
     obj_int = psf_int.evaluateAtWavelength(use_lam)
@@ -696,16 +696,14 @@ def test_roman_psfs():
     use_sca = 3
     bp_type = 'long'
     bp = galsim.roman.longwave_bands[0]
-    psf1 = galsim.roman.getPSF(use_sca, bp)
-    psf2 = galsim.roman.getPSF(use_sca, 'long')
+    psf1 = galsim.roman.getPSF(use_sca, bp, pupil_bin=8)
+    psf2 = galsim.roman.getPSF(use_sca, 'long', pupil_bin=8)
     assert psf1==psf2
 
     # Test some variation in the accuracy settings.
-    # But only if we're running from the command line.
     kwargs_list = [
         { 'pupil_bin':4 },
         { 'pupil_bin':8 },
-        { 'pupil_bin':4, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) },
     ]
     if __name__ == '__main__':
         # A few more that are too slow to run in regular nosetests
@@ -714,11 +712,11 @@ def test_roman_psfs():
             { 'pupil_bin':2 },
             { 'pupil_bin':1, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) },
             { 'pupil_bin':2, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) },
+            { 'pupil_bin':4, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) },
         ])
     for kwargs in kwargs_list:
-        use_lam = all_bp['Y106'].effective_wavelength
-        psf = galsim.roman.getPSF(use_sca, 'Y106', **kwargs)
-        psf_achrom = galsim.roman.getPSF(use_sca, 'Y106', wavelength=use_lam, **kwargs)
+        psf = galsim.roman.getPSF(use_sca, 'Z087', **kwargs)
+        psf_achrom = galsim.roman.getPSF(use_sca, 'Z087', wavelength=zbp, **kwargs)
         psf_chrom = psf.evaluateAtWavelength(use_lam)
         im_achrom = psf_achrom.drawImage(scale=galsim.roman.pixel_scale)
         im_chrom = psf_chrom.drawImage(image=im_achrom.copy())
