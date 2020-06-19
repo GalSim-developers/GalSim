@@ -262,8 +262,7 @@ def test_roman_wcs():
     # Check whether we're allowed to look at certain positions on certain dates.
     # Let's choose RA=90 degrees, dec=10 degrees.
     # We know that it's best to look about 90 degrees from the Sun.  So on the vernal and autumnal
-    # equinox, this should be a great place to look, but not midway in between.  We'll use
-    # approximate dates for these.
+    # equinox, this should be a great place to look, but not midway in between.
     pos = galsim.CelestialCoord(90.*galsim.degrees, 10.*galsim.degrees)
     import datetime
     assert galsim.roman.allowedPos(pos, datetime.date(2025,3,20))
@@ -632,11 +631,9 @@ def test_roman_psfs():
     all_bp = galsim.roman.getBandpasses()
     zbp = all_bp['Z087']
     use_lam = zbp.effective_wavelength
-    psf_chrom = galsim.roman.getPSF(use_sca, None, approximate_struts=True)
-    psf_achrom = galsim.roman.getPSF(use_sca, None, approximate_struts=True,
-                                     wavelength=use_lam)
-    psf_achrom2 = galsim.roman.getPSF(use_sca, 'Z087', approximate_struts=True,
-                                      wavelength=use_lam)
+    psf_chrom = galsim.roman.getPSF(use_sca, None)
+    psf_achrom = galsim.roman.getPSF(use_sca, None, wavelength=use_lam)
+    psf_achrom2 = galsim.roman.getPSF(use_sca, 'Z087', wavelength=use_lam)
     # First, we can draw the achromatic PSF.
     im_achrom = psf_achrom.drawImage(scale=galsim.roman.pixel_scale)
     im_achrom2 = im_achrom.copy()
@@ -659,8 +656,7 @@ def test_roman_psfs():
     blue_limit = all_bp['Z087'].blue_limit
     red_limit = all_bp['Z087'].red_limit
     n_waves = 3
-    psf_int = galsim.roman.getPSF(SCA=use_sca, bandpass='Z087',
-                                  approximate_struts=True, n_waves=n_waves)
+    psf_int = galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', n_waves=n_waves)
     # Check that evaluation at a single wavelength is consistent with previous results.
     im_int = im_achrom.copy()
     obj_int = psf_int.evaluateAtWavelength(use_lam)
@@ -678,39 +674,22 @@ def test_roman_psfs():
         'wavelength disagree.')
 
     # Check some invalid inputs.
-    # Note, this is a total cheat for getting test coverage of the high_accuracy branches
-    # in getPSF.  The actual test of this functionality comes below, but it is only run for
-    # __name__==__main__ runs (i.e. run_all_tests).
     with assert_raises(TypeError):
-        galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', n_waves=2,
-                            approximate_struts=True, high_accuracy=True,
-                            wavelength='Z087')
+        galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', n_waves=2, wavelength='Z087')
     with assert_raises(TypeError):
-        galsim.roman.getPSF(SCA=use_sca, bandpass=None, n_waves=2,
-                            approximate_struts=True, high_accuracy=True,
-                            wavelength_limits=red_limit)
+        galsim.roman.getPSF(SCA=use_sca, bandpass=None, n_waves=2, wavelength_limits=red_limit)
     with assert_raises(TypeError):
-        galsim.roman.getPSF(SCA=use_sca, bandpass='Z087',
-                            approximate_struts=False, high_accuracy=True,
-                            wavelength='Z087')
+        galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', wavelength='Z087')
     with assert_raises(ValueError):
-        galsim.roman.getPSF(SCA=use_sca, bandpass='Z099', n_waves=2,
-                            approximate_struts=True, high_accuracy=False,
-                            wavelength='Z099')
+        galsim.roman.getPSF(SCA=use_sca, bandpass='Z099', n_waves=2, wavelength='Z099')
     with assert_raises(ValueError):
-        galsim.roman.getPSF(SCA=use_sca, bandpass='Z099', n_waves=2,
-                            approximate_struts=False, high_accuracy=False,
-                            wavelength='Z099')
+        galsim.roman.getPSF(SCA=use_sca, bandpass='Z099', n_waves=2, wavelength='Z099')
     with assert_raises(TypeError):
-        galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', n_waves=2,
-                            approximate_struts=False, high_accuracy=False,
-                            wavelength='Z087')
+        galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', n_waves=2, wavelength='Z087')
     with assert_raises(TypeError):
-        galsim.roman.getPSF(SCA=use_sca, bandpass='F184', n_waves=2,
-                            approximate_struts=False, high_accuracy=True,
-                            wavelength='F184')
+        galsim.roman.getPSF(SCA=use_sca, bandpass='F184', n_waves=2, wavelength='F184')
     with assert_raises(galsim.GalSimValueError):
-        galsim.roman.getPSF(SCA=use_sca, bandpass=3, approximate_struts=True)
+        galsim.roman.getPSF(SCA=use_sca, bandpass=3)
 
     # Make sure we can instantiate a PSF with bandpass='short'/'long' and get an equivalent object
     # when we're not using interpolation.
@@ -721,31 +700,36 @@ def test_roman_psfs():
     psf2 = galsim.roman.getPSF(use_sca, 'long')
     assert psf1==psf2
 
-    # Test the construction of PSFs with high_accuracy and/or not approximate_struts
+    # Test some variation in the accuracy settings.
     # But only if we're running from the command line.
+    kwargs_list = [
+        { 'pupil_bin':4 },
+        { 'pupil_bin':8 },
+        { 'pupil_bin':4, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) },
+    ]
     if __name__ == '__main__':
-        for kwargs in [
-            { 'approximate_struts':True, 'high_accuracy':False },  # This is a repeat of the above
-            { 'approximate_struts':True, 'high_accuracy':True },   # These three are all new.
-            { 'approximate_struts':False, 'high_accuracy':False },
-            # This last test works, but it takes ~10 min to run.  So even in the slow tests,
-            # this is a bit too extreme.
-            #{ 'approximate_struts':False, 'high_accuracy':True, }
-            ]:
-
-            psf = galsim.roman.getPSF(use_sca, 'Y106', **kwargs)
-            psf_achrom = galsim.roman.getPSF(use_sca, 'Y106', wavelength=use_lam, **kwargs)
-            psf_chrom = psf.evaluateAtWavelength(use_lam)
-            im_achrom = psf_achrom.drawImage(scale=galsim.roman.pixel_scale)
-            im_chrom = psf_chrom.drawImage(image=im_achrom.copy())
-            #im_achrom.write('im_achrom.fits')
-            #im_chrom.write('im_chrom.fits')
-            print("chrom, achrom fluxes = ", im_chrom.array.sum(), im_achrom.array.sum())
-            im_chrom *= im_achrom.array.sum()/im_chrom.array.sum()
-            print("max diff = ",np.max(np.abs(im_chrom.array - im_achrom.array)))
-            np.testing.assert_array_almost_equal(
-                im_chrom.array, im_achrom.array, decimal=8,
-                err_msg='getPSF with %s has discrepency for chrom/achrom'%kwargs)
+        # A few more that are too slow to run in regular nosetests
+        kwargs_list.extend([
+            { 'pupil_bin':1 },
+            { 'pupil_bin':2 },
+            { 'pupil_bin':1, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) },
+            { 'pupil_bin':2, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) },
+        ])
+    for kwargs in kwargs_list:
+        use_lam = all_bp['Y106'].effective_wavelength
+        psf = galsim.roman.getPSF(use_sca, 'Y106', **kwargs)
+        psf_achrom = galsim.roman.getPSF(use_sca, 'Y106', wavelength=use_lam, **kwargs)
+        psf_chrom = psf.evaluateAtWavelength(use_lam)
+        im_achrom = psf_achrom.drawImage(scale=galsim.roman.pixel_scale)
+        im_chrom = psf_chrom.drawImage(image=im_achrom.copy())
+        #im_achrom.write('im_achrom.fits')
+        #im_chrom.write('im_chrom.fits')
+        print("chrom, achrom fluxes = ", im_chrom.array.sum(), im_achrom.array.sum())
+        im_chrom *= im_achrom.array.sum()/im_chrom.array.sum()
+        print("max diff = ",np.max(np.abs(im_chrom.array - im_achrom.array)))
+        np.testing.assert_array_almost_equal(
+            im_chrom.array, im_achrom.array, decimal=8,
+            err_msg='getPSF with %s has discrepency for chrom/achrom'%kwargs)
 
     # Check for exceptions if we:
     # (1) Include optional aberrations in an unacceptable form.

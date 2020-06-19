@@ -30,7 +30,14 @@ API Changes
 - Changed the default ii_pad_factor for PhaseScreenPSF and OpticalPSF to 1.5.
   The old default of 4.0 (matching the InterpolatedImage default) is not
   necessary for objects that will not be significantly sheared, which
-  PSF objects typically aren't.
+  PSF objects typically aren't.  For almost all use cases, this will be
+  simply a performance improvement, but if you need the higher ii_pad_factor
+  for some reason, you will now need to manually specify it.
+- Deprecated the high_accuracy and approximate_struts parameters for the
+  roman.getPSF function.  You should now use pupil_bin and gsparams to
+  effect similar adjustments to the default (which is now much better than
+  before in terms of both speed and accuracy).
+
 
 
 Config Updates
