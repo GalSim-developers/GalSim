@@ -238,15 +238,23 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
 
     # Deal with some accuracy settings.
     if high_accuracy:
-        pad_factor = 2
-        oversampling = 3
+        from ..gsparams import GSParams
+        # Set folding_threshold 2.5x smaller than default.
+        if gsparams is None:
+            gsparams = GSParams(folding_threshold=2.e-3)
+        else:
+            gsparams = GSParams.combine([gsparams, GSParams(folding_threshold=2.e-3)])
+        bin_factor = 1
     else:
-        pad_factor = 1.5
-        oversampling = 1.5
+        # Low accuracy includes an extra factor of 2 in the binning, which is only possible
+        # when not decreasing the folding threshold (else warning about pupil image not
+        # sampled well enough).
+        bin_factor = 2
 
-    #print('get_single_PSF: ',high_accuracy,approximate_struts)
     if approximate_struts:
-        pupil_plane_im = pupil_plane_im.bin(4,4)
+        bin_factor *= 4  # approximate struts now means bin by 8x8 or only 4x4 for high-acc.
+
+    pupil_plane_im = pupil_plane_im.bin(bin_factor,bin_factor)
 
     # Start reading in the aberrations for that SCA
     if logger: logger.debug('Beginning to get the PSF aberrations for SCA %d.'%SCA)
@@ -261,14 +269,13 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
     # numbers (corresponding to a place-holder, piston, tip, and tilt) to zero.
     use_aberrations[0:4] = 0.
 
-    # Now set up the PSF, including the option to simplify the pupil plane.
+    # Now set up the PSF, including the option to interpolate over waves
     if wavelength is None:
         PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
                                   diam=diameter, aberrations=use_aberrations,
                                   obscuration=obscuration,
                                   pupil_plane_im=pupil_plane_im,
-                                  ii_pad_factor=pad_factor,
-                                  oversampling=oversampling, gsparams=gsparams)
+                                  gsparams=gsparams)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
             bp_dict = getBandpasses()
@@ -283,8 +290,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
                          aberrations=tmp_aberrations,
                          obscuration=obscuration,
                          pupil_plane_im=pupil_plane_im,
-                         ii_pad_factor=pad_factor,
-                         oversampling=oversampling, gsparams=gsparams)
+                         gsparams=gsparams)
 
     return PSF
 
