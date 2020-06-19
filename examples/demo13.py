@@ -137,7 +137,6 @@ def main(argv):
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF.')
     t1 = time.time()
-    logger.setLevel(logging.DEBUG)
     # Need to make a separate PSF for each filter.  We are, however, ignoring the
     # position-dependence of the PSF within each SCA, just using the PSF at the center of the SCA
     # (default kwargs).
@@ -145,8 +144,7 @@ def main(argv):
     for filter_name, filter_ in filters.items():
         logger.info('PSF pre-computation for SCA %d, filter %s.'%(use_SCA, filter_name))
         PSFs[filter_name] = roman.getPSF(use_SCA, filter_name,
-                                          approximate_struts=True, n_waves=10, logger=logger)
-    logger.setLevel(logging.INFO)
+                                         approximate_struts=True, n_waves=10)
     t2 = time.time()
     logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
 

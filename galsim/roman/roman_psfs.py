@@ -35,8 +35,8 @@ zemax_wavelength = 1293. #nm
 
 def getPSF(SCA, bandpass,
            SCA_pos=None, pupil_bin=4, n_waves=None, extra_aberrations=None,
-           logger=None, wavelength=None, gsparams=None,
-           high_accuracy=None, approximate_struts=None):
+           wavelength=None, gsparams=None,
+           logger=None, high_accuracy=None, approximate_struts=None):
     """Get a single PSF for Roman ST observations.
 
     The user must provide the SCA and bandpass; the latter is used when setting up the pupil
@@ -142,8 +142,6 @@ def getPSF(SCA, bandpass,
                             as an array of length 23 with entries 4 through 22 corresponding
                             to defocus through the 22nd Zernike in the Noll convention.
                             [default: None]
-        logger:             A logger object for output of progress statements if the user
-                            wants them.  [default: None]
         wavelength:         An option to get an achromatic PSF for a single wavelength, for
                             users who do not care about chromaticity of the PSF.  If None,
                             then the fully chromatic PSF is returned.  Alternatively the user
@@ -232,7 +230,7 @@ def getPSF(SCA, bandpass,
 
     # Now call _get_single_PSF().
     psf = _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
-                          n_waves, extra_aberrations, logger, wavelength,
+                          n_waves, extra_aberrations, wavelength,
                           pupil_plane_type, gsparams)
     return psf
 
@@ -241,7 +239,7 @@ def getPSF(SCA, bandpass,
 aper_cache = {}
 
 def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
-                    n_waves, extra_aberrations, logger, wavelength,
+                    n_waves, extra_aberrations, wavelength,
                     pupil_plane_type, gsparams):
     """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
@@ -290,7 +288,6 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
         aper_cache[aper_params] = aper
 
     # Start reading in the aberrations for that SCA
-    if logger: logger.debug('Beginning to get the PSF aberrations for SCA %d.'%SCA)
     aberrations, x_pos, y_pos = _read_aberrations(SCA)
     # Do bilinear interpolation, unless we're exactly at the center (default).
     use_aberrations = _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos)
