@@ -34,8 +34,9 @@ zemax_filesuff = '.txt'
 zemax_wavelength = 1293. #nm
 
 def getPSF(SCA, bandpass,
-           SCA_pos=None, approximate_struts=False, n_waves=None, extra_aberrations=None,
-           logger=None, wavelength=None, high_accuracy=False, gsparams=None):
+           SCA_pos=None, pupil_bin=4, n_waves=None, extra_aberrations=None,
+           logger=None, wavelength=None, gsparams=None,
+           high_accuracy=None, approximate_struts=None):
     """Get a single PSF for Roman ST observations.
 
     The user must provide the SCA and bandpass; the latter is used when setting up the pupil
@@ -54,17 +55,21 @@ def getPSF(SCA, bandpass,
     long- and short-wavelength bands for Cycle 7 (the list of bands associated with each pupil plane
     is stored in ``galsim.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``).
 
-    To avoid using the full pupil plane configuration, use the optional keyword
-    ``approximate_struts``.  In this case, the pupil plane will have the correct obscuration and
-    number of struts, but the struts will be purely radial and evenly spaced instead of the true
-    configuration.  The simplicity of this arrangement leads to a much faster calculation, and
-    somewhat simplifies the configuration of the diffraction spikes.  Also note that currently the
-    orientation of the struts is fixed, rather than rotating depending on the orientation of the
-    focal plane.  Rotation of the PSF can easily be affected by the user via::
+    To avoid using the full pupil plane configuration, use the optional keyword ``pupil_bin``.
+    The full pupil-plane images are 4096 x 4096, which is more detail than is typically needed for
+    most applications. The default binning is 4x4, which results in an image that is 1024 x 1024.
+    This provides enough detail for most purposes and is much faster to render than using the full
+    pupil plane image.  Using pupil_bin=8 (resulting in a 512 x 512 image) still provides fairly
+    reasonable results and is even faster to render, but it is not recommended to use higher
+    binning than that, as the diffraction spikes will be noticeably degraded.
+
+    Also note that currently the orientation of the struts is fixed, rather than rotating depending
+    on the orientation of the focal plane.  Rotation of the PSF can easily be affected by the user
+    via::
 
        psf = galsim.roman.getPSF(...).rotate(angle)
 
-    which will rotate the entire PSF (including the diffraction spikes and any other features).
+    which will rotate the entire PSF (including the diffraction spikes and all other features).
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
     simple, understood wavelength-dependence.  (The Roman project webpage for Cycle 7 does in fact
@@ -76,11 +81,11 @@ def getPSF(SCA, bandpass,
     correct for those bands in the same range (i.e., long- or short-wavelength bands).
 
     For applications that require very high accuracy in the modeling of the PSF, with very limited
-    aliasing, the ``high_accuracy`` option can be set to True.  When using this option, the MTF has
-    a value below 1e-4 for all wavenumbers above the band limit when using
-    ``approximate_struts=True``, or below 3e-4 when using ``approximate_struts=False``.  In
-    contrast, when ``high_accuracy=False`` (the default), there are some bumps in the MTF above the
-    band limit that reach an amplitude of ~1e-2.
+    aliasing, you may want to lower the folding_threshold in the gsparams.  Otherwise very bright
+    stars will show some reflections in the spider pattern and possibly some boxiness at the
+    outskirts of the PSF.  Using ``gsparams = GSParams(folding_threshold=2.e-3)`` generally
+    provides good results even for very bright (e.g. mag=10) stars.  In these cases, you probably
+    also want to reduce ``pupil_bin`` somewhat from the default value of 4.
 
     By default, no additional aberrations are included above the basic design.  However, users can
     provide an optional keyword ``extra_aberrations`` that will be included on top of those that are
@@ -112,24 +117,19 @@ def getPSF(SCA, bandpass,
                             loaded.
         bandpass:           Single string specifying the bandpass to use when defining the
                             pupil plane configuration and/or interpolation of chromatic PSFs.
-                            If ``approximate_struts`` is True (which means we do not use a
-                            realistic pupil plane configuration) and ``n_waves`` is None (no
-                            interpolation of chromatic PSFs) then 'bandpass' can be None.  It
-                            is also possible to pass a string 'long' or 'short' for this
-                            argument; in that case, the correct pupil plane configuration
-                            will be used for long- or short-wavelength bands as defined using
-                            ``galsm.roman.longwave_bands`` and
-                            ``galsim.roman.shortwave_bands``, respectively (but no
-                            interpolation can be used, since it is defined using the extent
-                            of the chosen bandpass).
+                            You may also pass a string 'long' or 'short' for this argument, in
+                            which case, the correct pupil plane configuration will be used for
+                            long- or short-wavelength bands as defined using
+                            ``galsm.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``
+                            respectively (but no interpolation can be used, since it is defined
+                            using the extent of the chosen bandpass).  If ``wavelength`` is given,
+                            then bandpass may be None, which will use the short-wavelength pupil
+                            plane image.
         SCA_pos:            Single galsim.PositionD indicating the position within the SCA
                             for which the PSF should be created. If None, the exact center of
                             the SCA is chosen. [default: None]
-        approximate_struts: Should the routine use an approximate representation of the pupil
-                            plane, with 6 equally-spaced radial struts, instead of the exact
-                            representation of the pupil plane?  Setting this parameter to
-                            True will lead to faster calculations, with a slightly less
-                            realistic PSFs.  [default: False]
+        pupil_bin:          The binning to apply to the pupil plane image. (See discussion above.)
+                            [default: 4]
         n_waves:            Number of wavelengths to use for setting up interpolation of the
                             chromatic PSF objects, which can lead to much faster image
                             rendering.  If None, then no interpolation is used. Note that
@@ -152,12 +152,6 @@ def getPSF(SCA, bandpass,
                             (b) a bandpass object, in which case they will get achromatic
                             OpticalPSF objects defined at the effective wavelength of that
                             bandpass.  [default: False]
-        high_accuracy:      If True, make higher-fidelity representations of the PSF in
-                            Fourier space, to minimize aliasing (see plots on
-                            https://github.com/GalSim-developers/GalSim/issues/661 for more
-                            details).  This setting is more expensive in terms of time and
-                            RAM, and may not be necessary for many applications.
-                            [default: False]
         gsparams:           An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
 
@@ -167,38 +161,74 @@ def getPSF(SCA, bandpass,
 
     """
     from .. import PositionD
-    from .. import GalSimValueError
-    from . import n_pix, longwave_bands, shortwave_bands
+    from .. import GalSimValueError, GalSimRangeError
+    from . import n_pix, longwave_bands, shortwave_bands, n_sca
 
-    # Deal with inputs:
+    # Deprecated options
+    if high_accuracy:
+        if approximate_struts:
+            from ..deprecated import depr
+            from ..gsparams import GSParams
+            depr('high_accuracy=True,approximate_struts=True', 2.3,
+                 'pupil_bin=4, gsparams=galsim.GSParams(folding_threshold=2.e-3)',
+                 'Note: this is not actually equivalent to the old behavior, but it should '
+                 'be both faster and more accurate than the corresponding PSF in v2.2.')
+            # Set folding_threshold 2.5x smaller than default.
+            gsparams = GSParams.combine([gsparams, GSParams(folding_threshold=2.e-3)])
+            pupil_bin = 4
+        else:
+            from ..deprecated import depr
+            from ..gsparams import GSParams
+            depr('high_accuracy=True', 2.3,
+                 'pupil_bin=1, gsparams=galsim.GSParams(folding_threshold=2.e-3)',
+                 'Note: this is not actually equivalent to the old behavior, but it should '
+                 'be both faster and more accurate than the corresponding PSF in v2.2.')
+            # Set folding_threshold 2.5x smaller than default.
+            gsparams = GSParams.combine([gsparams, GSParams(folding_threshold=2.e-3)])
+            pupil_bin = 1
+    elif approximate_struts:
+        from ..deprecated import depr
+        from ..gsparams import GSParams
+        depr('approximate_struts=True', 2.3, 'pupil_bin=8',
+             'Note: this is not actually equivalent to the old behavior, but it should '
+             'be both faster and more accurate than the corresponding PSF in v2.2.')
+        pupil_bin = 8
+    elif approximate_struts is False or high_accuracy is False:
+        # If they are explicitly given, rather than default (None), then trigger this.
+        from ..deprecated import depr
+        from ..gsparams import GSParams
+        depr('approximate_struts=False, high_accuracy=False', 2.3, 'pupil_bin=4',
+             'Note: this is not actually equivalent to the old behavior, but it should '
+             'be both faster and more accurate than the corresponding PSF in v2.2.')
+        pupil_bin = 4
+
+    if SCA <= 0 or SCA > n_sca:
+        raise GalSimRangeError("Invalid SCA.", SCA, 1, n_sca)
 
     # SCA_pos: if None, then all should just be center of the SCA.
     if SCA_pos is None:
         SCA_pos = PositionD(n_pix/2, n_pix/2)
 
-    # Parse the bandpasses to see which pupil plane image is needed, if approximate_struts is False
-    # (otherwise just say None).
+    # Parse the bandpasses to see which pupil plane image is needed
     pupil_plane_type = None
-    if not approximate_struts:
-        if bandpass in longwave_bands or bandpass=='long':
-            pupil_plane_type = 'long'
-        elif bandpass in shortwave_bands or bandpass=='short':
-            pupil_plane_type = 'short'
-        else:
-            raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
-                                   bandpass, default_bandpass_list)
+    if bandpass in longwave_bands or bandpass=='long':
+        pupil_plane_type = 'long'
+    elif bandpass in shortwave_bands or bandpass=='short' or bandpass is None:
+        pupil_plane_type = 'short'
     else:
-        # Sanity checking:
-        # If we need to use bandpass info, require that it be one of the defaults.
-        # If we do not need to use bandpass info, allow it to be None.
-        if n_waves is not None:
-            if bandpass not in default_bandpass_list+['short','long']:
-                raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
-                                       bandpass, default_bandpass_list)
-        else:
-            if bandpass not in default_bandpass_list+['short','long'] and bandpass is not None:
-                raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
-                                       bandpass, default_bandpass_list)
+        raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
+                               bandpass, default_bandpass_list)
+    # Sanity checking:
+    # If we need to use bandpass info, require that it be one of the defaults.
+    # If we do not need to use bandpass info, allow it to be None.
+    if n_waves is not None:
+        if bandpass not in default_bandpass_list+['short','long']:
+            raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
+                                    bandpass, default_bandpass_list)
+    else:
+        if bandpass not in default_bandpass_list+['short','long'] and bandpass is not None:
+            raise GalSimValueError("Bandpass not a valid Roman bandpass or 'short'/'long'.",
+                                    bandpass, default_bandpass_list)
 
     # If bandpass is 'short'/'long', then make sure that interpolation is not called for, since that
     # requires an actual bandpass.
@@ -206,14 +236,14 @@ def getPSF(SCA, bandpass,
         raise GalSimValueError("Cannot use bandpass='short'/'long' with interpolation.", bandpass)
 
     # Now call _get_single_PSF().
-    psf = _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
+    psf = _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                           n_waves, extra_aberrations, logger, wavelength,
-                          high_accuracy, pupil_plane_type, gsparams)
+                          pupil_plane_type, gsparams)
     return psf
 
-def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
+def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                     n_waves, extra_aberrations, logger, wavelength,
-                    high_accuracy, pupil_plane_type, gsparams):
+                    pupil_plane_type, gsparams):
     """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
     """
@@ -236,22 +266,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, approximate_struts,
     pupil_plane_im.array[pupil_plane_im.array < 0.5] = 0.
     pupil_plane_im.scale = pupil_plane_scale
 
-    # Deal with some accuracy settings.
-    if high_accuracy:
-        from ..gsparams import GSParams
-        # Set folding_threshold 2.5x smaller than default.
-        gsparams = GSParams.combine([gsparams, GSParams(folding_threshold=2.e-3)])
-        bin_factor = 1
-    else:
-        # Low accuracy includes an extra factor of 2 in the binning, which is only possible
-        # when not decreasing the folding threshold (else warning about pupil image not
-        # sampled well enough).
-        bin_factor = 2
-
-    if approximate_struts:
-        bin_factor *= 4  # approximate struts now means bin by 8x8 or only 4x4 for high-acc.
-
-    pupil_plane_im = pupil_plane_im.bin(bin_factor,bin_factor)
+    pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
 
     # Start reading in the aberrations for that SCA
     if logger: logger.debug('Beginning to get the PSF aberrations for SCA %d.'%SCA)
