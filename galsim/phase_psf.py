@@ -964,7 +964,7 @@ class PhaseScreenList(object):
                                 [default: galsim.arcsec]
             ii_pad_factor:      Zero-padding factor by which to extend the image of the PSF when
                                 creating the ``InterpolatedImage``.  See the
-                                ``InterpolatedImage`` docstring for more details.  [default: 4.]
+                                ``InterpolatedImage`` docstring for more details.  [default: 1.5]
             suppress_warning:   If ``pad_factor`` is too small, the code will emit a warning
                                 telling you its best guess about how high you might want to raise
                                 it.  However, you can suppress this warning by using
@@ -1134,7 +1134,7 @@ class PhaseScreenPSF(GSObject):
                             [default: galsim.arcsec]
         ii_pad_factor:      Zero-padding factor by which to extend the image of the PSF when
                             creating the ``InterpolatedImage``.  See the ``InterpolatedImage``
-                            docstring for more details.  [default: 4.]
+                            docstring for more details.  [default: 1.5]
         suppress_warning:   If ``pad_factor`` is too small, the code will emit a warning telling
                             you its best guess about how high you might want to raise it.
                             However, you can suppress this warning by using
@@ -1205,7 +1205,7 @@ class PhaseScreenPSF(GSObject):
 
     def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0,
                  theta=(0.0*arcsec, 0.0*arcsec), interpolant=None,
-                 scale_unit=arcsec, ii_pad_factor=4., suppress_warning=False,
+                 scale_unit=arcsec, ii_pad_factor=1.5, suppress_warning=False,
                  geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2,
                  gsparams=None, _force_stepk=0., _force_maxk=0., _bar=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
@@ -1701,7 +1701,7 @@ class OpticalPSF(GSObject):
                             those larger than order unity.  [default: 1.5]
         ii_pad_factor:      Zero-padding factor by which to extend the image of the PSF when
                             creating the ``InterpolatedImage``.  See the ``InterpolatedImage``
-                            docstring for more details.  [default: 4.]
+                            docstring for more details.  [default: 1.5]
         suppress_warning:   If ``pad_factor`` is too small, the code will emit a warning telling you
                             its best guess about how high you might want to raise it.  However,
                             you can suppress this warning by using ``suppress_warning=True``.
@@ -1781,7 +1781,7 @@ class OpticalPSF(GSObject):
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                  aberrations=None, annular_zernike=False,
                  aper=None, circular_pupil=True, obscuration=0., interpolant=None,
-                 oversampling=1.5, pad_factor=1.5, ii_pad_factor=4., flux=1.,
+                 oversampling=1.5, pad_factor=1.5, ii_pad_factor=1.5, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*radians,
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*radians, scale_unit=arcsec, gsparams=None,
@@ -1905,7 +1905,7 @@ class OpticalPSF(GSObject):
             s += ", _force_stepk=%r" % self._force_stepk
         if self._force_maxk != 0.:
             s += ", _force_maxk=%r" % self._force_maxk
-        if self._ii_pad_factor != 4.:
+        if self._ii_pad_factor != 1.5:
             s += ", ii_pad_factor=%r" % self._ii_pad_factor
         s += ")"
         return s
