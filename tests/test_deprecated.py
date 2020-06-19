@@ -385,6 +385,39 @@ def test_wfirst():
     assert galsim.wfirst.allDetectorEffects is galsim.roman.allDetectorEffects
     assert galsim.wfirst.NLfunc is galsim.roman.NLfunc
 
+@timer
+def test_roman_psfs():
+    """Test the deprecated high_accuracy and approximate_struts options.
+    """
+    import galsim.roman
+
+    test_kwargs = [
+        ({ 'approximate_struts':True, 'high_accuracy':False },
+         { 'pupil_bin':8 }),
+        ({ 'approximate_struts':True, 'high_accuracy':True },
+         { 'pupil_bin':4, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) }),
+        ({ 'approximate_struts':False, 'high_accuracy':False },
+         { 'pupil_bin':4 }),
+    ]
+    if __name__ == "__main__":
+        test_kwargs.append(
+            ({ 'approximate_struts':False, 'high_accuracy':True },
+            { 'pupil_bin':1, 'gsparams':galsim.GSParams(folding_threshold=2.e-3) }),
+        )
+
+    use_sca = 5
+    use_lam = galsim.roman.getBandpasses()['Y106'].effective_wavelength
+    for kwargs1, kwargs2 in test_kwargs:
+        psf1 = check_dep(galsim.roman.getPSF, use_sca, 'Y106', **kwargs1)
+        psf2 = galsim.roman.getPSF(use_sca, 'Y106', **kwargs2)
+        assert psf1 == psf2
+
+    # Cheat to get coverage of False,True option without spending a long time doing the
+    # pupil plane FFT for that one.
+    with assert_raises(TypeError):
+        check_dep(galsim.roman.getPSF, SCA=use_sca, bandpass='Z087',
+                            approximate_struts=False, high_accuracy=True,
+                            wavelength='Z087')
 
 
 if __name__ == "__main__":
@@ -397,3 +430,4 @@ if __name__ == "__main__":
     test_randwalk_config()
     test_withOrigin()
     test_wfirst()
+    test_roman_psfs()
