@@ -27,6 +27,10 @@ API Changes
   shiftOrigin is equivalent to withOrigin, which still exists as a valid
   name for this action. (#1085)
 - Deprecated galsim.wfirst module.  Now called galsim.roman. (#1088)
+- Changed the default ii_pad_factor for PhaseScreenPSF and OpticalPSF to 1.5.
+  The old default of 4.0 (matching the InterpolatedImage default) is not
+  necessary for objects that will not be significantly sheared, which
+  PSF objects typically aren't.
 
 
 Config Updates
