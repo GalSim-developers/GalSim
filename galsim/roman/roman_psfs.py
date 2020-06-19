@@ -241,6 +241,10 @@ def getPSF(SCA, bandpass,
                           pupil_plane_type, gsparams)
     return psf
 
+# Usually a given run will only need one or a few different apertures for repeated getPSF calls.
+# So cache those apertures here to avoid having to remake them.
+aper_cache = {}
+
 def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                     n_waves, extra_aberrations, logger, wavelength,
                     pupil_plane_type, gsparams):
@@ -252,21 +256,43 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     from . import pupil_plane_file_longwave, pupil_plane_file_shortwave, pupil_plane_scale
     from . import diameter, obscuration
     from ..bounds import BoundsI
+    from ..phase_psf import Aperture
+    from ..bandpass import Bandpass
     from .roman_bandpass import getBandpasses
 
-    # Load the pupil plane image.
-    if pupil_plane_type == 'long':
-        pupil_plane_im = pupil_plane_file_longwave
+    if wavelength is None:
+        wave = zemax_wavelength
+    elif isinstance(wavelength, Bandpass):
+        wave = wavelength = wavelength.effective_wavelength
     else:
-        pupil_plane_im = pupil_plane_file_shortwave
-    # There is a weird artifact here -- a square around the main pupil image with
-    # amplitude ~0.03.  This eventually gets turned into 1 when cast as a boolean.
-    # The easiest way to deal with it is to simply take everything < 0.5 => 0.0.
-    pupil_plane_im = fits.read(pupil_plane_im)
-    pupil_plane_im.array[pupil_plane_im.array < 0.5] = 0.
-    pupil_plane_im.scale = pupil_plane_scale
+        wave = wavelength
 
-    pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
+    # All parameters relevant to the aperture.  We may be able to use a cached version.
+    aper_params = (pupil_plane_type, pupil_bin, wave, gsparams)
+
+    if aper_params in aper_cache:
+        aper = aper_cache[aper_params]
+    else:
+        # Load the pupil plane image.
+        if pupil_plane_type == 'long':
+            pupil_plane_im = pupil_plane_file_longwave
+        else:
+            pupil_plane_im = pupil_plane_file_shortwave
+        # There is a weird artifact here -- a square around the main pupil image with
+        # amplitude ~0.03.  This eventually gets turned into 1 when cast as a boolean.
+        # The easiest way to deal with it is to simply take everything < 0.5 => 0.0.
+        pupil_plane_im = fits.read(pupil_plane_im)
+        pupil_plane_im.array[pupil_plane_im.array < 0.5] = 0.
+        pupil_plane_im.scale = pupil_plane_scale
+
+        pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
+
+        aper = Aperture(lam=wavelength, diam=diameter,
+                        obscuration=obscuration,
+                        pupil_plane_im=pupil_plane_im,
+                        gsparams=gsparams)
+
+        aper_cache[aper_params] = aper
 
     # Start reading in the aberrations for that SCA
     if logger: logger.debug('Beginning to get the PSF aberrations for SCA %d.'%SCA)
@@ -285,8 +311,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     if wavelength is None:
         PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
                                   diam=diameter, aberrations=use_aberrations,
-                                  obscuration=obscuration,
-                                  pupil_plane_im=pupil_plane_im,
+                                  obscuration=obscuration, aper=aper,
                                   gsparams=gsparams)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
@@ -295,13 +320,10 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
             PSF = PSF.interpolate(waves=np.linspace(bp.blue_limit, bp.red_limit, n_waves),
                                   oversample_fac=1.5)
     else:
-        if not isinstance(wavelength, float):
-            raise TypeError("wavelength should either be a Bandpass, float, or None.")
         tmp_aberrations = use_aberrations * zemax_wavelength / wavelength
         PSF = OpticalPSF(lam=wavelength, diam=diameter,
                          aberrations=tmp_aberrations,
-                         obscuration=obscuration,
-                         pupil_plane_im=pupil_plane_im,
+                         obscuration=obscuration, aper=aper,
                          gsparams=gsparams)
 
     return PSF
