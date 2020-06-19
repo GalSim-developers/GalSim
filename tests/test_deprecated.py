@@ -406,7 +406,6 @@ def test_roman_psfs():
         )
 
     use_sca = 5
-    use_lam = galsim.roman.getBandpasses()['Y106'].effective_wavelength
     for kwargs1, kwargs2 in test_kwargs:
         psf1 = check_dep(galsim.roman.getPSF, use_sca, 'Y106', **kwargs1)
         psf2 = galsim.roman.getPSF(use_sca, 'Y106', **kwargs2)
