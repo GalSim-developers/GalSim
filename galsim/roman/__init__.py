@@ -43,11 +43,11 @@ thermal_backgrounds = {'J129': 0.023, # e-/pix/s
 
 # F184, W149
 longwave_bands = ['F184', 'W149']
-pupil_plane_file_longwave = os.path.join(meta_data.share_dir,
+pupil_plane_file_longwave = os.path.join(meta_data.share_dir, 'roman',
         "Roman_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz")
 # Z087, Y106, J129, H158
 shortwave_bands = ['Z087', 'Y106', 'J129', 'H158']
-pupil_plane_file_shortwave = os.path.join(meta_data.share_dir,
+pupil_plane_file_shortwave = os.path.join(meta_data.share_dir, 'roman',
         "Roman_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
 pupil_plane_file = pupil_plane_file_shortwave  # Let the canonical pupil be the shortwave one.
 

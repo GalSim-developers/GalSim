@@ -337,7 +337,7 @@ def _read_aberrations(SCA):
 
     # Construct filename.
     sca_str = '_%02d'%SCA
-    infile = os.path.join(meta_data.share_dir,
+    infile = os.path.join(meta_data.share_dir, 'roman',
                           zemax_filepref + sca_str + zemax_filesuff)
 
     # Read in data.
