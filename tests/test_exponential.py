@@ -68,6 +68,7 @@ def test_exponential():
     expon2 = galsim.Exponential(flux=1.7, scale_radius=0.91, gsparams=gsp)
     assert expon2 != expon
     assert expon2 == expon.withGSParams(gsp)
+    assert expon2 == expon.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     check_basic(expon, "Exponential")
 

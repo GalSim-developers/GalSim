@@ -315,14 +315,14 @@ class RealGalaxy(GSObject):
         logger.debug('RealGalaxy %d: Finished building RealGalaxy',use_index)
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
-        ret.original_gal = self.original_gal.withGSParams(ret._gsparams)
-        ret.original_psf = self.original_psf.withGSParams(ret._gsparams)
-        ret._gal_noise = self._gal_noise.withGSParams(ret._gsparams)
+        ret._gsparams = GSParams.check(gsparams, **kwargs)
+        ret.original_gal = self.original_gal.withGSParams(ret._gsparams, **kwargs)
+        ret.original_psf = self.original_psf.withGSParams(ret._gsparams, **kwargs)
+        ret._gal_noise = self._gal_noise.withGSParams(ret._gsparams, **kwargs)
         return ret
 
     @classmethod

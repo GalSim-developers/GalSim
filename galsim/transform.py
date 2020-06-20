@@ -206,7 +206,7 @@ class Transformation(GSObject):
                                flux_ratio=self.flux_ratio**2),
                     self.original.noise.wcs)
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given gsparams
 
         .. note::
@@ -217,9 +217,9 @@ class Transformation(GSObject):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._original = self.original.withGSParams(gsparams)
+            ret._original = self.original.withGSParams(ret._gsparams)
         return ret
 
     def __eq__(self, other):

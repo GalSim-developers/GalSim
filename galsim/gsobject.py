@@ -721,7 +721,7 @@ class GSObject(object):
         """
         raise NotImplementedError("%s does not implement kValue"%self.__class__.__name__)
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given `GSParams`.
         """
         # Note to developers: objects that wrap other objects should override this in order
@@ -732,7 +732,7 @@ class GSObject(object):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
     def withFlux(self, flux):

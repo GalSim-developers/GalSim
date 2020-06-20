@@ -95,6 +95,7 @@ def test_shapelet_drawImage():
             shapelet2 = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec, gsparams=gsp)
             assert shapelet2 != shapelet
             assert shapelet2 == shapelet.withGSParams(gsp)
+            assert shapelet2 == shapelet.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
             check_basic(shapelet, "Shapelet", approx_maxsb=True)
 

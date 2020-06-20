@@ -998,6 +998,11 @@ def test_gsparams():
     assert tr6.gsparams == gsp2
     assert tr6.original.gsparams == galsim.GSParams()
 
+    tr7 = tr5.withGSParams(folding_threshold=1.e-2, maxk_threshold=1.e-2)
+    assert tr7 != tr5
+    assert tr7 != tr6
+    assert tr7.gsparams == gsp2.withParams(maximum_fft_size=1.e4)
+
 
 if __name__ == "__main__":
     test_smallshear()

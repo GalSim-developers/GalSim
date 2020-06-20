@@ -169,7 +169,7 @@ class ChromaticObject(object):
         """
         return self.SED.redshift
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given gsparams
 
         Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
@@ -178,7 +178,7 @@ class ChromaticObject(object):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._obj = self._obj.withGSParams(gsparams)
+        ret._obj = self._obj.withGSParams(gsparams, **kwargs)
         return ret
 
     @staticmethod
@@ -1149,11 +1149,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         return self.deinterpolated.gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret.deinterpolated = self.deinterpolated.withGSParams(gsparams)
+        ret.deinterpolated = self.deinterpolated.withGSParams(gsparams, **kwargs)
         ret._build_objs()
         return ret
 
@@ -1447,11 +1447,11 @@ class ChromaticAtmosphere(ChromaticObject):
         return self.base_obj.gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret.base_obj = self.base_obj.withGSParams(gsparams)
+        ret.base_obj = self.base_obj.withGSParams(gsparams, **kwargs)
         return ret
 
     def __eq__(self, other):
@@ -1635,11 +1635,11 @@ class ChromaticTransformation(ChromaticObject):
         return self._gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
             ret._original = self._original.withGSParams(ret._gsparams)
         if self.interpolated:
@@ -1959,13 +1959,13 @@ class ChromaticSum(ChromaticObject):
         return self._obj_list
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
+            ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
         return ret
 
     @doc_inherit
@@ -2189,13 +2189,13 @@ class ChromaticConvolution(ChromaticObject):
         return self._obj_list
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
+            ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
         return ret
 
     @staticmethod
@@ -2489,13 +2489,13 @@ class ChromaticDeconvolution(ChromaticObject):
         return self._gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._obj = self._obj.withGSParams(gsparams)
+            ret._obj = self._obj.withGSParams(ret._gsparams)
         return ret
 
     def __eq__(self, other):
@@ -2577,13 +2577,13 @@ class ChromaticAutoConvolution(ChromaticObject):
         return self._gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._obj = self._obj.withGSParams(gsparams)
+            ret._obj = self._obj.withGSParams(ret._gsparams)
         return ret
 
     def __eq__(self, other):
@@ -2671,13 +2671,13 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return self._gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._obj = self._obj.withGSParams(gsparams)
+            ret._obj = self._obj.withGSParams(ret._gsparams)
         return ret
 
     def __eq__(self, other):
@@ -2766,13 +2766,13 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
         return self._gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._obj = self._obj.withGSParams(gsparams)
+            ret._obj = self._obj.withGSParams(ret._gsparams)
         return ret
 
     def __eq__(self, other):
@@ -2914,11 +2914,11 @@ class ChromaticOpticalPSF(ChromaticObject):
         return self._gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
     def __eq__(self, other):
@@ -3051,11 +3051,11 @@ class ChromaticAiry(ChromaticObject):
         return self._gsparams
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams=GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
     def __eq__(self, other):
