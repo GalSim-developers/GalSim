@@ -244,12 +244,17 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
     assert prof.withGSParams(prof.gsparams) is prof
     alt_gsp = galsim.GSParams(xvalue_accuracy=0.2, folding_threshold=0.03)
     prof_alt = prof.withGSParams(alt_gsp)
+    prof_alt2 = prof.withGSParams(xvalue_accuracy=0.2, folding_threshold=0.03)
     assert isinstance(prof_alt, prof.__class__)
     assert prof_alt.gsparams == alt_gsp
+    assert prof_alt2.gsparams == prof.gsparams.withParams(xvalue_accuracy=0.2,
+                                                          folding_threshold=0.03)
     assert prof_alt != prof  # Assuming none of our tests use this exact gsparams choice.
     # Back to the original, ==, but not is
     assert prof_alt.withGSParams(prof.gsparams) is not prof
     assert prof_alt.withGSParams(prof.gsparams) == prof
+    assert prof_alt2.withGSParams(xvalue_accuracy=prof.gsparams.xvalue_accuracy,
+                                  folding_threshold=prof.gsparams.folding_threshold) == prof
 
     # Repeat for a rotated version of the profile.
     # The rotated version is mathematically the same for most profiles (all axisymmetric ones),

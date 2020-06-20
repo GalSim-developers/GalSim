@@ -178,18 +178,32 @@ class GSParams(object):
     def shoot_accuracy(self): return self._shoot_accuracy
 
     @staticmethod
-    def check(gsparams, default=None):
+    def check(gsparams, default=None, **kwargs):
         """Checks that gsparams is either a valid GSParams instance or None.
 
         In the former case, it returns gsparams, in the latter it returns default
         (GSParams.default if no other default specified).
         """
         if gsparams is None:
-            return default if default is not None else GSParams.default
+            gsparams = default if default is not None else GSParams.default
         elif not isinstance(gsparams, GSParams):
             raise TypeError("Invalid GSParams: %s"%gsparams)
+        return gsparams.withParams(**kwargs)
+
+    def withParams(self, **kwargs):
+        """Return a `GSParams` that is identical to the current one except for any keyword
+        arguments given here, which supersede the current value.
+        """
+        import copy
+        if len(kwargs) == 0:
+            return self
         else:
-            return gsparams
+            ret = copy.copy(self)
+            for k in kwargs:
+                if not hasattr(ret, '_' + k):
+                    raise TypeError('parameter %s is invalid'%k)
+                setattr(ret, '_' + k, kwargs[k])
+            return ret
 
     @staticmethod
     def combine(gsp_list):
@@ -231,7 +245,7 @@ class GSParams(object):
     def __setstate__(self, state): self.__init__(*state)
 
     def __repr__(self):
-        return 'galsim.GSParams(%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r,%r)'% \
+        return 'galsim.GSParams(%d,%d,%r,%r,%r,%r,%r,%d,%r,%r,%r,%r,%r)'% \
                 self._getinitargs()
 
     def __eq__(self, other):

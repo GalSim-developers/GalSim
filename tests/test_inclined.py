@@ -137,6 +137,7 @@ def test_regression():
                              flux=flux, gsparams=gsp)
             assert test2 != test_profile
             assert test2 == test_profile.withGSParams(gsp)
+            assert test2 == test_profile.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
             check_basic(test_profile, mode)
 

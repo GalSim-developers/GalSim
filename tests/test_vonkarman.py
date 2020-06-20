@@ -58,6 +58,7 @@ def test_vk(slow=False):
                     vk2 = galsim.VonKarman(flux=2.2, gsparams=gsp, **kwargs)
                     assert vk2 != vk
                     assert vk2 == vk.withGSParams(gsp)
+                    assert vk2 == vk.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
                     check_basic(vk, "VonKarman")
                     do_pickle(vk)

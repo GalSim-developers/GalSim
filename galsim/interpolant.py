@@ -118,13 +118,13 @@ class Interpolant(object):
         depr('interpolant.tol', 2.2, 'interpolant.gsparams.kvalue_accuracy')
         return self._gsparams.kvalue_accuracy
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current interpolant with the given gsparams
         """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
     def __getstate__(self):

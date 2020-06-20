@@ -116,7 +116,7 @@ class FourierSqrtProfile(GSObject):
             galsim_warn("Unable to propagate noise in galsim.FourierSqrtProfile")
         return None
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given gsparams
 
         .. note::
@@ -127,9 +127,9 @@ class FourierSqrtProfile(GSObject):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+            ret._orig_obj = self._orig_obj.withGSParams(ret._gsparams)
         return ret
 
     def __eq__(self, other):

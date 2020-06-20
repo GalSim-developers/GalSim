@@ -98,6 +98,7 @@ def test_roundtrip():
         interp2 = galsim.InterpolatedImage(image_in, scale=test_scale, gsparams=gsp)
         assert interp2 != interp
         assert interp2 == interp.withGSParams(gsp)
+        assert interp2 == interp.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
         assert interp2.x_interpolant.gsparams == gsp
         assert interp2.k_interpolant.gsparams == gsp
         assert interp.x_interpolant.gsparams != gsp
@@ -1333,6 +1334,7 @@ def test_kroundtrip():
     b2 = galsim.InterpolatedKImage(kim_a, gsparams=gsp)
     assert b2 != b
     assert b2 == b.withGSParams(gsp)
+    assert b2 == b.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     assert b2.k_interpolant.gsparams == gsp
     assert b.k_interpolant.gsparams != gsp
 

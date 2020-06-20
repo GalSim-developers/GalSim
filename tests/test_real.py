@@ -187,6 +187,7 @@ def test_real_galaxy_ideal():
     rg_5 = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(67890), gsparams=gsp)
     assert rg_5 != rg_4
     assert rg_5 == rg_4.withGSParams(gsp)
+    assert rg_5 == rg_4.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     check_basic(rg, "RealGalaxy", approx_maxsb=True)
     check_basic(rg_1, "RealGalaxy", approx_maxsb=True)

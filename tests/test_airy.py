@@ -67,7 +67,7 @@ def test_airy():
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     airy2 = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=gsp)
     assert airy2 != airy
-    assert airy2 == airy.withGSParams(gsp)
+    assert airy2 == airy.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     # Check some properties
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=test_flux)

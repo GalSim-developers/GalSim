@@ -63,7 +63,7 @@ def test_box():
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     pixel2 = galsim.Pixel(flux=1.7, scale=2.3, gsparams=gsp)
     assert pixel2 != pixel
-    assert pixel2 == pixel.withGSParams(gsp)
+    assert pixel2 == pixel.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
@@ -107,6 +107,8 @@ def test_box():
         box2 = galsim.Box(width=width, height=height, flux=test_flux, gsparams=gsp2)
         assert box2 != box
         assert box2 == box.withGSParams(gsp2)
+        assert box2 != box.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+        assert box2.withGSParams(maximum_fft_size=30000) == box.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     # Check picklability
     do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
@@ -178,7 +180,7 @@ def test_tophat():
     gsp = galsim.GSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     tophat2 = galsim.TopHat(flux=1.7, radius=2.3, gsparams=gsp)
     assert tophat2 != tophat
-    assert tophat2 == tophat.withGSParams(gsp)
+    assert tophat2 == tophat.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     # Test photon shooting.
     do_shoot(tophat,myImg,"TopHat")

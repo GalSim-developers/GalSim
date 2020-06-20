@@ -59,6 +59,7 @@ def test_spergel():
         spergel2 = galsim.Spergel(nu=nu, half_light_radius=1.0, gsparams=gsp)
         assert spergel2 != spergel
         assert spergel2 == spergel.withGSParams(gsp)
+        assert spergel2 == spergel.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
         # nu < 0 has inf for xValue(0,0), so the x tests fail for them.
         check_basic(spergel, "Spergel with nu=%f"%nu, do_x=(nu > 0))

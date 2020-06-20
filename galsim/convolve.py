@@ -247,7 +247,7 @@ class Convolution(GSObject):
                 # else len == 0, so just use _noise directly.
         return _noise
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given gsparams
 
         .. note::
@@ -258,9 +258,9 @@ class Convolution(GSObject):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._obj_list = [ obj.withGSParams(gsparams) for obj in self.obj_list ]
+            ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
         return ret
 
     def __eq__(self, other):
@@ -522,7 +522,7 @@ class Deconvolution(GSObject):
             galsim_warn("Unable to propagate noise in galsim.Deconvolution")
         return None
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given gsparams
 
         .. note::
@@ -533,9 +533,9 @@ class Deconvolution(GSObject):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+            ret._orig_obj = self._orig_obj.withGSParams(ret._gsparams)
         return ret
 
     def __eq__(self, other):
@@ -750,7 +750,7 @@ class AutoConvolution(Convolution):
             galsim_warn("Unable to propagate noise in galsim.AutoConvolution")
         return None
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given gsparams
 
         .. note::
@@ -761,9 +761,9 @@ class AutoConvolution(Convolution):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+            ret._orig_obj = self._orig_obj.withGSParams(ret._gsparams)
         ret._obj_list = [ret._orig_obj, ret._orig_obj]
         return ret
 
@@ -920,7 +920,7 @@ class AutoCorrelation(Convolution):
             galsim_warn("Unable to propagate noise in galsim.AutoCorrelation")
         return None
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current object with the given gsparams
 
         .. note::
@@ -931,9 +931,9 @@ class AutoCorrelation(Convolution):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         if self._propagate_gsparams:
-            ret._orig_obj = self._orig_obj.withGSParams(gsparams)
+            ret._orig_obj = self._orig_obj.withGSParams(ret._gsparams)
         ret._obj_list = [ret._orig_obj, ret._orig_obj.transform(-1,0,0,-1)]
         return ret
 

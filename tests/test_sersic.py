@@ -62,6 +62,7 @@ def test_sersic():
     sersic2 = galsim.Sersic(n=3, flux=1.7, half_light_radius=2.3, gsparams=gsp)
     assert sersic2 != sersic
     assert sersic2 == sersic.withGSParams(gsp)
+    assert sersic2 == sersic.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     check_basic(sersic, "Sersic")
 
     # Test photon shooting.

@@ -352,13 +352,13 @@ class InterpolatedImage(GSObject):
         self._maxk = self._getMaxK(calculate_maxk, _force_maxk)
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
-        ret._x_interpolant = self._x_interpolant.withGSParams(ret._gsparams)
-        ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
+        ret._x_interpolant = self._x_interpolant.withGSParams(ret._gsparams, **kwargs)
+        ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams, **kwargs)
         return ret
 
     @lazy_property
@@ -952,12 +952,12 @@ class InterpolatedKImage(GSObject):
         return self._k_interpolant
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
-        ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
+        ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams, **kwargs)
         return ret
 
     @lazy_property

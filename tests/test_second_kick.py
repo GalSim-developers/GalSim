@@ -57,6 +57,7 @@ def test_init():
                 sk2 = galsim.SecondKick(flux=2.2, gsparams=gsp, **kwargs)
                 assert sk2 != sk
                 assert sk2 == sk.withGSParams(gsp)
+                assert sk2 == sk.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
                 # Raw sk objects are hard to draw due to a large maxk/stepk ratio.
                 # Decrease maxk by convolving in a smallish Gaussian.

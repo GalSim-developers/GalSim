@@ -1273,6 +1273,7 @@ def test_gsparams():
         gal.drawImage(bandpass)
     assert (galsim.Gaussian(fwhm=1) * bulge_SED) != gal
     assert (galsim.Gaussian(fwhm=1) * bulge_SED).withGSParams(gsparams) == gal
+    assert (galsim.Gaussian(fwhm=1) * bulge_SED).withGSParams(maximum_fft_size=16) == gal
 
     # Repeat, putting the gsparams argument in after the ChromaticObject constructor.
     gal = galsim.Gaussian(fwhm=1) * bulge_SED
@@ -2060,8 +2061,10 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
     assert obj.withGSParams(obj.gsparams) is obj
     alt_gsp = galsim.GSParams(xvalue_accuracy=0.23, folding_threshold=7.3e-4)
     obj_alt = obj.withGSParams(alt_gsp)
+    obj_alt2 = obj.withGSParams(xvalue_accuracy=0.23, folding_threshold=7.3e-4)
     assert isinstance(obj_alt, obj.__class__)
     assert obj_alt.gsparams == alt_gsp
+    assert obj_alt2.gsparams == alt_gsp
     print('obj_alt = ',obj_alt)
     print('obj.gsp = ',obj.gsparams)
     print('obj_alt.gsp = ',obj_alt.gsparams)

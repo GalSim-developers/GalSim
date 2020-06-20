@@ -173,7 +173,7 @@ def getPSF(SCA, bandpass,
                  'Note: this is not actually equivalent to the old behavior, but it should '
                  'be both faster and more accurate than the corresponding PSF in v2.2.')
             # Set folding_threshold 2.5x smaller than default.
-            gsparams = GSParams.combine([gsparams, GSParams(folding_threshold=2.e-3)])
+            gsparams = GSParams.check(gsparams, folding_threshold=2.e-3)
             pupil_bin = 4
         else:
             from ..deprecated import depr
@@ -183,7 +183,7 @@ def getPSF(SCA, bandpass,
                  'Note: this is not actually equivalent to the old behavior, but it should '
                  'be both faster and more accurate than the corresponding PSF in v2.2.')
             # Set folding_threshold 2.5x smaller than default.
-            gsparams = GSParams.combine([gsparams, GSParams(folding_threshold=2.e-3)])
+            gsparams = GSParams.check(gsparams, folding_threshold=2.e-3)
             pupil_bin = 1
     elif approximate_struts:
         from ..deprecated import depr

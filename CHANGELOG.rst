@@ -67,6 +67,9 @@ New Features
 - Updated LSST sensor files to match new lab measurements and use improved
   Poisson code calculations. (#1077, #1081)
 - Added makePhot method of GSObject. (#1078)
+- Made it easier to set specific GSParams parameters using the syntax (e.g.)
+  obj.withGSParams(folding_threshold=1.e-3) to just change that one value
+  and keep any other non-default parameters the same.
 
 
 Bug Fixes

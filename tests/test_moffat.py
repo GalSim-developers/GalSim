@@ -71,6 +71,7 @@ def test_moffat():
     moffat2 = galsim.Moffat(beta=3.7, flux=1.7, half_light_radius=2.3, trunc=8.2, gsparams=gsp)
     assert moffat2 != moffat
     assert moffat2 == moffat.withGSParams(gsp)
+    assert moffat2 == moffat.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     check_basic(moffat, "Moffat")
 

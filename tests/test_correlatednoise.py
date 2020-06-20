@@ -1305,10 +1305,14 @@ def test_gsparams():
 
     ucn1 = ucn.withGSParams(gsp)
     ucn2 = galsim.UncorrelatedNoise(rng=rng, variance=1.e3, gsparams=gsp)
+    ucn3 = ucn.withGSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
     print('ucn1 = ',repr(ucn1))
     print('ucn2 = ',repr(ucn2))
+    print('ucn3 = ',repr(ucn3))
     assert ucn != ucn1
     assert ucn1 == ucn2
+    assert ucn1 == ucn3
+    assert ucn2 == ucn3
     assert ucn.withGSParams(ucn.gsparams) is ucn
     assert ucn1.withGSParams(ucn.gsparams) is not ucn
     assert ucn1.withGSParams(ucn.gsparams) == ucn
@@ -1317,8 +1321,11 @@ def test_gsparams():
 
     ccn1 = ccn.withGSParams(gsp)
     ccn2 = galsim.getCOSMOSNoise(rng=rng, gsparams=gsp)
+    ccn3 = ccn.withGSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4, maximum_fft_size=1.e4)
     assert ccn != ccn1
     assert ccn1 == ccn2
+    assert ccn1 == ccn3
+    assert ccn2 == ccn3
     assert ccn.withGSParams(ccn.gsparams) is ccn
     assert ccn1.withGSParams(ccn.gsparams) is not ccn
     assert ccn1.withGSParams(ccn.gsparams) == ccn

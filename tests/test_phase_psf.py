@@ -560,6 +560,7 @@ def test_stepk_maxk():
     assert psf2 == psf1
     assert psf2.aper.gsparams == gsp
     assert psf.aper.gsparams != gsp
+    assert psf1 == psf.withGSParams(folding_threshold=1.e-3, maxk_threshold=1.e-4)
 
     aper3 = galsim.Aperture(diam=1.0, gsparams=gsp)
     psf3 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper3, scale_unit=galsim.arcsec)
@@ -1048,7 +1049,9 @@ def test_withGSP():
         screen._wavefront()
     psl = galsim.PhaseScreenList(screen)
     psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
-    psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    psfGSP = psf.withGSParams(folding_threshold=6e-3)
+    psfGSP2 = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    assert psfGSP == psfGSP2
     # Don't worry about repr for DummyScreen
     do_pickle(psf, irreprable=True)
     do_pickle(psfGSP, irreprable=True)
@@ -1103,14 +1106,14 @@ def test_withGSP():
     testimgs = []
     for copier in copiers:
         psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
-        psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))  # hasn't been drawn yet
+        psfGSP = psf.withGSParams(folding_threshold=6e-3)  # hasn't been drawn yet
         psf2 = copier(psfGSP)  # copy of undrawn
         assert psf2 is not psfGSP
         rng = galsim.BaseDeviate(57721) # reset rng
         testimgs.append(psf2.drawImage(rng=rng, **drawKwargs))
     # Draw the (fresh) withGSP PSF and compare
     psf = psl.makePSF(exptime=0.02, time_step=0.01, diam=1.1, lam=1000.0)
-    psfGSP = psf.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    psfGSP = psf.withGSParams(folding_threshold=6e-3)
     rng = galsim.BaseDeviate(57721)
     img = psfGSP.drawImage(rng=rng, **drawKwargs)
     for testimg in testimgs:
@@ -1118,7 +1121,7 @@ def test_withGSP():
 
     # Also test OpticalPSF
     optPSF = galsim.OpticalPSF(lam=500, diam=1.0)
-    optPSF2 = optPSF.withGSParams(galsim.GSParams(folding_threshold=6e-3))
+    optPSF2 = optPSF.withGSParams(folding_threshold=6e-3)
     assert isinstance(optPSF2, galsim.OpticalPSF)
     # And check that we really did get a different folding_threshold by comparing stepk and default
     # bounds

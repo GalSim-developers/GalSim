@@ -448,13 +448,13 @@ class Aperture(object):
         """
         return self._gsparams
 
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         """Create a version of the current aperture with the given gsparams
         """
         if gsparams == self.gsparams: return self
         from copy import copy
         ret = copy(self)
-        ret._gsparams = GSParams.check(gsparams)
+        ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         return ret
 
     # Used in Aperture.__str__ and OpticalPSF.__str__
@@ -1356,9 +1356,9 @@ class PhaseScreenPSF(GSObject):
         return self._screen_list
 
     @doc_inherit
-    def withGSParams(self, gsparams):
+    def withGSParams(self, gsparams=None, **kwargs):
         if gsparams == self.gsparams: return self
-        gsparams = GSParams.check(gsparams)
+        gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         aper = self.aper.withGSParams(gsparams)
         ret = self.__class__.__new__(self.__class__)
         ret.__dict__.update(self.__dict__)

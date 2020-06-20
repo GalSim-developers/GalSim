@@ -60,6 +60,7 @@ def test_knots_defaults():
     rw2 = galsim.RandomKnots(npoints, half_light_radius=hlr, rng=rng2, gsparams=gsp)
     assert rw2 != rw
     assert rw2 == rw.withGSParams(gsp)
+    assert rw2 == rw.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
 
     # Check that they produce identical images.
     psf = galsim.Gaussian(sigma=0.8)
