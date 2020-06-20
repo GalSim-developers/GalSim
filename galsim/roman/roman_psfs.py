@@ -18,6 +18,7 @@
 
 import numpy as np
 import os
+from ..utilities import LRU_Cache
 
 """
 @file roman_psfs.py
@@ -234,9 +235,35 @@ def getPSF(SCA, bandpass,
                           pupil_plane_type, gsparams)
     return psf
 
+def __make_aperture(pupil_plane_type, pupil_bin, wave, gsparams):
+    from . import diameter, obscuration
+    from . import pupil_plane_file_longwave, pupil_plane_file_shortwave, pupil_plane_scale
+    from .. import fits
+    from ..phase_psf import Aperture
+
+    # Load the pupil plane image.
+    if pupil_plane_type == 'long':
+        pupil_plane_im = pupil_plane_file_longwave
+    else:
+        pupil_plane_im = pupil_plane_file_shortwave
+    # There is a weird artifact here -- a square around the main pupil image with
+    # amplitude ~0.03.  This eventually gets turned into 1 when cast as a boolean.
+    # The easiest way to deal with it is to simply take everything < 0.5 => 0.0.
+    pupil_plane_im = fits.read(pupil_plane_im)
+    pupil_plane_im.array[pupil_plane_im.array < 0.5] = 0.
+    pupil_plane_im.scale = pupil_plane_scale
+
+    pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
+
+    aper = Aperture(lam=wave, diam=diameter,
+                    obscuration=obscuration,
+                    pupil_plane_im=pupil_plane_im,
+                    gsparams=gsparams)
+    return aper
+
 # Usually a given run will only need one or a few different apertures for repeated getPSF calls.
 # So cache those apertures here to avoid having to remake them.
-aper_cache = {}
+_make_aperture = LRU_Cache(__make_aperture)
 
 def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                     n_waves, extra_aberrations, wavelength,
@@ -244,12 +271,9 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
     """
-    from .. import fits
     from .. import Image, OpticalPSF, ChromaticOpticalPSF
-    from . import pupil_plane_file_longwave, pupil_plane_file_shortwave, pupil_plane_scale
     from . import diameter, obscuration
     from ..bounds import BoundsI
-    from ..phase_psf import Aperture
     from ..bandpass import Bandpass
     from .roman_bandpass import getBandpasses
 
@@ -261,31 +285,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
         wave = wavelength
 
     # All parameters relevant to the aperture.  We may be able to use a cached version.
-    aper_params = (pupil_plane_type, pupil_bin, wave, gsparams)
-
-    if aper_params in aper_cache:
-        aper = aper_cache[aper_params]
-    else:
-        # Load the pupil plane image.
-        if pupil_plane_type == 'long':
-            pupil_plane_im = pupil_plane_file_longwave
-        else:
-            pupil_plane_im = pupil_plane_file_shortwave
-        # There is a weird artifact here -- a square around the main pupil image with
-        # amplitude ~0.03.  This eventually gets turned into 1 when cast as a boolean.
-        # The easiest way to deal with it is to simply take everything < 0.5 => 0.0.
-        pupil_plane_im = fits.read(pupil_plane_im)
-        pupil_plane_im.array[pupil_plane_im.array < 0.5] = 0.
-        pupil_plane_im.scale = pupil_plane_scale
-
-        pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
-
-        aper = Aperture(lam=wavelength, diam=diameter,
-                        obscuration=obscuration,
-                        pupil_plane_im=pupil_plane_im,
-                        gsparams=gsparams)
-
-        aper_cache[aper_params] = aper
+    aper = _make_aperture(pupil_plane_type, pupil_bin, wave, gsparams)
 
     # Start reading in the aberrations for that SCA
     aberrations, x_pos, y_pos = _read_aberrations(SCA)
