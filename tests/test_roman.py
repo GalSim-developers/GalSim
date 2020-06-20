@@ -760,7 +760,7 @@ def test_roman_basic_numbers():
                                'H158': 0.022,
                                'W149': 0.023}
     ref_pupil_plane_file = os.path.join(
-            galsim.meta_data.share_dir,
+            galsim.meta_data.share_dir, 'roman',
             "Roman_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
     ref_stray_light_fraction = 0.1
     ref_ipc_kernel = np.array([ [0.001269938, 0.015399776, 0.001199862],

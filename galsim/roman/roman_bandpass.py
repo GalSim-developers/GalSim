@@ -90,13 +90,13 @@ def getBandpasses(AB_zeropoint=True, default_thin_trunc=True, **kwargs):
     from .. import Bandpass, LookupTable
 
     # Begin by reading in the file containing the info.
-    datafile = os.path.join(meta_data.share_dir, "afta_throughput.txt")
+    datafile = os.path.join(meta_data.share_dir, "roman", "afta_throughput.txt")
     # One line with the column headings, and the rest as a NumPy array.
     data = np.genfromtxt(datafile, names=True)
     wave = 1000.*data['Wave']
 
     # Read in and manipulate the sky background info.
-    sky_file = os.path.join(meta_data.share_dir, "roman_sky_backgrounds.txt")
+    sky_file = os.path.join(meta_data.share_dir, "roman", "roman_sky_backgrounds.txt")
     sky_data = np.loadtxt(sky_file).transpose()
     ecliptic_lat = sky_data[0, :]
     ecliptic_lon = sky_data[1, :]

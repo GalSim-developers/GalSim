@@ -51,7 +51,7 @@ prog_version = "0.5"
 # SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.  The ordering of SCAs was swapped
 # between cycle 5 and 6, with 1<->2, 4<->5, etc. swapping their y positions.  Gaps between the SCAs
 # were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.
-infile = os.path.join(meta_data.share_dir, 'sca_positions_7_6_8.txt')
+infile = os.path.join(meta_data.share_dir, 'roman', 'sca_positions_7_6_8.txt')
 sca_data = np.loadtxt(infile).transpose()
 sca_xc_mm = -sca_data[3,:]
 sca_yc_mm = sca_data[4,:]
@@ -76,7 +76,7 @@ sca_rot = np.zeros_like(sca_xc_mm)
 theta_fpa = -60.0*coord.degrees
 
 # File with SIP coefficients.
-sip_filename = os.path.join(meta_data.share_dir, 'sip_7_6_8.txt')
+sip_filename = os.path.join(meta_data.share_dir, 'roman', 'sip_7_6_8.txt')
 
 def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     """
