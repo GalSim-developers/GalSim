@@ -32,11 +32,11 @@ API Changes
   necessary for objects that will not be significantly sheared, which
   PSF objects typically aren't.  For almost all use cases, this will be
   simply a performance improvement, but if you need the higher ii_pad_factor
-  for some reason, you will now need to manually specify it.
+  for some reason, you will now need to manually specify it. (#1089)
 - Deprecated the high_accuracy and approximate_struts parameters for the
   roman.getPSF function.  You should now use pupil_bin and gsparams to
   effect similar adjustments to the default (which is now much better than
-  before in terms of both speed and accuracy).
+  before in terms of both speed and accuracy). (#1089)
 
 
 
@@ -69,7 +69,19 @@ New Features
 - Added makePhot method of GSObject. (#1078)
 - Made it easier to set specific GSParams parameters using the syntax (e.g.)
   obj.withGSParams(folding_threshold=1.e-3) to just change that one value
-  and keep any other non-default parameters the same.
+  and keep any other non-default parameters the same. (#1089)
+- Added a new pupil_bin option to the Roman getPSF function.  This controls
+  the resolution of the pupil plane mask, which involves a trade-off between
+  speed and accuracy of the PSF rendering. (#1089)
+
+
+Performance Improvements
+------------------------
+
+- Improved the rendering of Roman PSFs to always show 12 diffraction spikes
+  (rather than 6 in the now-deprecated approximate_struts mode), remove an
+  FFT artifact in the exact pupil plane mode, and significanly speed up all
+  PSF renderings. (#1089)
 
 
 Bug Fixes
