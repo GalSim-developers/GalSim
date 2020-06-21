@@ -354,8 +354,6 @@ def test_wfirst():
     assert galsim.wfirst.thermal_backgrounds == galsim.roman.thermal_backgrounds
     assert galsim.wfirst.longwave_bands == galsim.roman.longwave_bands
     assert galsim.wfirst.shortwave_bands == galsim.roman.shortwave_bands
-    assert galsim.wfirst.pupil_plane_file_longwave == galsim.roman.pupil_plane_file_longwave
-    assert galsim.wfirst.pupil_plane_file_shortwave == galsim.roman.pupil_plane_file_shortwave
     assert galsim.wfirst.pupil_plane_file == galsim.roman.pupil_plane_file
     assert galsim.wfirst.pupil_plane_scale == galsim.roman.pupil_plane_scale
     assert galsim.wfirst.stray_light_fraction == galsim.roman.stray_light_fraction
