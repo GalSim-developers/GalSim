@@ -34,6 +34,11 @@ zemax_filepref = "Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727"
 zemax_filesuff = '.txt'
 zemax_wavelength = 1293. #nm
 
+# These need 'SCA*' prepended to the start to get the file name, and they live in
+# the share/roman directory.
+pupil_plane_file_longwave = '_full_mask.fits.gz'
+pupil_plane_file_shortwave = '_rim_mask.fits.gz'
+
 def getPSF(SCA, bandpass,
            SCA_pos=None, pupil_bin=4, n_waves=None, extra_aberrations=None,
            wavelength=None, gsparams=None,
@@ -51,10 +56,13 @@ def getPSF(SCA, bandpass,
     (Note: the files at that url still use the old WFIRST name.  We have renamed them to use the
     new name of the telescope, Roman, after downloading.)
 
-    The default is to do the calculations using the full specification of the Roman pupil plane,
-    which is a costly calculation in terms of memory.  For this, we use the provided pupil plane for
-    long- and short-wavelength bands for Cycle 7 (the list of bands associated with each pupil plane
-    is stored in ``galsim.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``).
+    The mask images for the Roman pupil plane are available at from the Roman Reference Information
+    page: https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.
+    There are separate files for each SCA, since the view of the spider pattern varies somwhat
+    across the field of view of the wide field camera. Furthermore, the effect of the obscuration
+    is somewhat different at longer wavelengths, so F184 has a different set fo files than the
+    other filters.  cf. the ``galsm.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``
+    attributes, which define which bands use which pupil plane images.
 
     To avoid using the full pupil plane configuration, use the optional keyword ``pupil_bin``.
     The full pupil-plane images are 4096 x 4096, which is more detail than is typically needed for
@@ -120,10 +128,9 @@ def getPSF(SCA, bandpass,
                             pupil plane configuration and/or interpolation of chromatic PSFs.
                             You may also pass a string 'long' or 'short' for this argument, in
                             which case, the correct pupil plane configuration will be used for
-                            long- or short-wavelength bands as defined using
-                            ``galsm.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``
-                            respectively (but no interpolation can be used, since it is defined
-                            using the extent of the chosen bandpass).  If ``wavelength`` is given,
+                            long- or short-wavelength bands (F184 is long, all else is short).
+                            In this case, no interpolation can be used, since it is defined
+                            using the extent of the chosen bandpass. If ``wavelength`` is given,
                             then bandpass may be None, which will use the short-wavelength pupil
                             plane image.
         SCA_pos:            Single galsim.PositionD indicating the position within the SCA
@@ -162,7 +169,7 @@ def getPSF(SCA, bandpass,
     from ..position import PositionD
     from ..errors import GalSimValueError, GalSimRangeError
     from ..bandpass import Bandpass
-    from . import n_pix, longwave_bands, shortwave_bands, n_sca
+    from . import n_pix, n_sca, longwave_bands, shortwave_bands
 
     # Deprecated options
     if high_accuracy:
@@ -235,23 +242,24 @@ def getPSF(SCA, bandpass,
                           pupil_plane_type, gsparams)
     return psf
 
-def __make_aperture(pupil_plane_type, pupil_bin, wave, gsparams):
+def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
     from . import diameter, obscuration
-    from . import pupil_plane_file_longwave, pupil_plane_file_shortwave, pupil_plane_scale
     from .. import fits
+    from .. import meta_data
     from ..phase_psf import Aperture
 
     # Load the pupil plane image.
     if pupil_plane_type == 'long':
-        pupil_plane_im = pupil_plane_file_longwave
+        pupil_plane_im = os.path.join(meta_data.share_dir, 'roman',
+            'SCA%d'%SCA + pupil_plane_file_longwave)
     else:
-        pupil_plane_im = pupil_plane_file_shortwave
-    # There is a weird artifact here -- a square around the main pupil image with
-    # amplitude ~0.03.  This eventually gets turned into 1 when cast as a boolean.
-    # The easiest way to deal with it is to simply take everything < 0.5 => 0.0.
-    pupil_plane_im = fits.read(pupil_plane_im)
-    pupil_plane_im.array[pupil_plane_im.array < 0.5] = 0.
-    pupil_plane_im.scale = pupil_plane_scale
+        pupil_plane_im = os.path.join(meta_data.share_dir, 'roman',
+            'SCA%d'%SCA + pupil_plane_file_shortwave)
+    pupil_plane_im = fits.read(pupil_plane_im, read_header=True)
+    # Native pixel scale in the file is for the exit pupil.  We want the scale of the
+    # entrance pupil.  Fortunately, they provide the conversion as PUPILMAG in the header.
+    # They also use microns for units, and we want meters, hence the extra 1.e-6.
+    pupil_plane_im.scale *= pupil_plane_im.header['PUPILMAG'] * 1.e-6
 
     pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
 
@@ -285,7 +293,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
         wave = wavelength
 
     # All parameters relevant to the aperture.  We may be able to use a cached version.
-    aper = _make_aperture(pupil_plane_type, pupil_bin, wave, gsparams)
+    aper = _make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams)
 
     # Start reading in the aberrations for that SCA
     aberrations, x_pos, y_pos = _read_aberrations(SCA)
