@@ -99,10 +99,11 @@ thermal_backgrounds
     below).
 
 pupil_plane_file
-    The name of the file containing the image of the pupil plane for Roman,
-    to be used when constructing PSFs.  If using the `galsim.roman.getPSF`
-    routine, users will not need to supply this filename, since the routine
-    already knows about it.
+    There is actually a separate file for each SCA giving the pupil plane mask
+    for the Roman telescope as seen from the center of each SCA.  When building
+    the PSF with galsim.roman.getPSF, it will use the correct one for the given
+    SCA.  However, for backwards compatibility, if anyone needs a generic image
+    of the pupil plane, this file is for SCA 2, near the center of the WFC field.
 
 pupil_plane_scale
     The pixel scale in meters per pixel for the image in pupil_plane_file.

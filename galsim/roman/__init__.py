@@ -41,19 +41,24 @@ thermal_backgrounds = {'J129': 0.023, # e-/pix/s
                        'H158': 0.022,
                        'W149': 0.023}
 
-# F184, W149
-longwave_bands = ['F184', 'W149']
-pupil_plane_file_longwave = os.path.join(meta_data.share_dir, 'roman',
-        "Roman_SRR_WFC_Pupil_Mask_Longwave_2048_reformatted.fits.gz")
-# Z087, Y106, J129, H158
-shortwave_bands = ['Z087', 'Y106', 'J129', 'H158']
-pupil_plane_file_shortwave = os.path.join(meta_data.share_dir, 'roman',
-        "Roman_SRR_WFC_Pupil_Mask_Shortwave_2048_reformatted.fits.gz")
-pupil_plane_file = pupil_plane_file_shortwave  # Let the canonical pupil be the shortwave one.
+# There are actually separate pupil plane files for each SCA, since the view of the pupil
+# obscuration is different from different locations on the focal plane.  It's also modestly
+# wavelength dependent, so there is a different file appropriate for F184, the longest wavelength
+# filter.  This file is for SCA2, which is near the center and for short wavelengths, so in
+# some sense the most typical example of the pupil mask.  If anyone needs a generic pupil
+# plane file to use, this one should be fine.
+pupil_plane_file = os.path.join(meta_data.share_dir, 'roman', 'SCA2_rim_mask.fits.gz')
 
-# The pupil plane image has non-zero values with a diameter of 2042 pixels.  The Roman mirror
-# is 2.37 meters.  So the scale is 2.37 / 2042 = 0.00116 meters/pixel.
-pupil_plane_scale = diameter / 2042.
+# The pupil plane files all keep track of their correct pixel scale, but for the exit pupil,
+# rather than the input pupil.  The scaling to use to get to the entrance pupil, which is what
+# we actually want, is in the header as PUPILMAG. The result for the above file is given here.
+pupil_plane_scale = 0.00111175097
+
+# Which bands should use the long vs short pupil plane files for the PSF.
+# F184
+longwave_bands = ['F184']
+# Z087, Y106, J129, H158, W149
+shortwave_bands = ['Z087', 'Y106', 'J129', 'H158', 'W149']
 
 stray_light_fraction = 0.1
 
