@@ -16,13 +16,13 @@
 #    and/or other materials provided with the distribution.
 #
 
-from .input import InputLoader, GetInputObj, RegisterInputType
+from .input import InputLoader, GetInputObj, RegisterInputType, GetNumInputObj
 from .util import LoggerWrapper, GetIndex, GetRNG
 from .value import GetAllParams, SetDefaultIndex
 from .gsobject import RegisterObjectType
 from ..gsparams import GSParams
 from ..errors import GalSimConfigError
-from ..real import RealGalaxyCatalog, RealGalaxy
+from ..real import RealGalaxyCatalog, RealGalaxy, ChromaticRealGalaxy
 
 # This file adds input type real_catalog and gsobject types RealGalaxy and RealGalaxyOriginal.
 
@@ -79,7 +79,50 @@ def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
                                    param_name='RealGalaxyOriginal')
     return gal.original_gal, safe
 
+def _BuildChromaticRealGalaxy(config, base, ignore, gsparams, logger):
+    """Build a ChromaticRealGalaxy from several real_catalog input items.
+    """
+    param_name = 'ChromaticRealGalaxy'
+    ncats = GetNumInputObj('real_catalog', base)
+    real_cats = [ GetInputObj('real_catalog', config, base, param_name, n)
+                  for n in range(ncats)]
+
+    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
+    # But not if they specify 'id' or have 'random=True', which overrides that.
+    if 'id' not in config:
+        if 'random' not in config:
+            SetDefaultIndex(config, real_cats[0].getNObjects())
+        else:
+            if not config['random']:
+                SetDefaultIndex(config, real_cats[0].getNObjects())
+                # Need to do this to avoid being caught by the GetAllParams() call, which will flag
+                # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
+                del config['random']
+
+    kwargs, safe = GetAllParams(config, base,
+        req = ChromaticRealGalaxy._req_params,
+        opt = ChromaticRealGalaxy._opt_params,
+        single = ChromaticRealGalaxy._single_params,
+        ignore = ignore)
+    if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
+
+    kwargs['rng'] = GetRNG(config, base, logger, param_name)
+
+    if 'index' in kwargs:
+        index = kwargs['index']
+        if index >= real_cats[0].getNObjects() or index < 0:
+            raise GalSimConfigError(
+                "index=%s has gone past the number of entries in the RealGalaxyCatalog"%index)
+
+    kwargs['real_galaxy_catalogs'] = real_cats
+    logger.debug('obj %d: %s kwargs = %s',base.get('obj_num',0),param_name,kwargs)
+
+    gal = ChromaticRealGalaxy(**kwargs)
+
+    return gal, safe
+
 
 # Register these as valid gsobject types
 RegisterObjectType('RealGalaxy', _BuildRealGalaxy, input_type='real_catalog')
 RegisterObjectType('RealGalaxyOriginal', _BuildRealGalaxyOriginal, input_type='real_catalog')
+RegisterObjectType('ChromaticRealGalaxy', _BuildChromaticRealGalaxy, input_type='real_catalog')
