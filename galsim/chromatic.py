@@ -2992,6 +2992,10 @@ class ChromaticAiry(ChromaticObject):
                         gsparams.  See `galsim.Airy` docstring for a complete description of these
                         options.
     """
+    _req_params = { 'lam' : float }
+    _opt_params = { 'scale_unit' : str }
+    _single_params = [ {'diam' : float, 'lam_over_diam' : float} ]
+
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=None, gsparams=None,
                  **kwargs):
         from .angle import AngleUnit, arcsec, radians
