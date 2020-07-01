@@ -993,6 +993,17 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 them.  [default: None]
 
     """
+    _req_params = {}
+    # TODO: SEDs isn't implemented yet in config parser.
+    _opt_params = { "k_interpolant" : str ,
+                    "maxk" : float,
+                    "pad_factor" : float,
+                    "noise_pad_size" : float,
+                    "area_norm" : float
+                  }
+    _single_params = [ { "index" : int , "id" : str , "random" : bool } ]
+    _takes_rng = True
+
     def __init__(self, real_galaxy_catalogs, index=None, id=None, random=False, rng=None,
                  gsparams=None, logger=None, **kwargs):
         from .random import BaseDeviate, UniformDeviate

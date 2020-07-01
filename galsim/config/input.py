@@ -293,10 +293,18 @@ def SetupInputsForImage(config, logger=None):
                     input_obj = input_objs[i]
                     loader.setupImage(input_obj, field, config, logger)
 
+def GetNumInputObj(input_type, base):
+    """Get the number of input objects of the given type
+
+    Parameters:
+        input_type: The type of input object to count
+        base:       The base config dict
+    """
+    return len(base['_input_objs'][input_type])
 
 # A helper function for getting the input object needed for generating a value or building
 # a gsobject.
-def GetInputObj(input_type, config, base, param_name):
+def GetInputObj(input_type, config, base, param_name, num=0):
     """Get the input object needed for generating a particular value
 
     Parameters:
@@ -310,14 +318,12 @@ def GetInputObj(input_type, config, base, param_name):
         raise GalSimConfigError(
             "No input %s available for type = %s"%(input_type,param_name))
 
-    if 'num' in config:
+    if num == 0 and 'num' in config:
         num = ParseValue(config, 'num', base, int)[0]
-    else:
-        num = 0
 
     if num < 0:
         raise GalSimConfigValueError("Invalid num < 0 supplied for %s."%param_name, num)
-    if num >= len(base['_input_objs'][input_type]):
+    if num >= GetNumInputObj(input_type, base):
         raise GalSimConfigValueError("Invalid num supplied for %s (too large)"%param_name, num)
 
     return base['_input_objs'][input_type][num]

@@ -2510,7 +2510,7 @@ def test_chromatic():
 
     # ChromaticOpticalPSF
     config['psf'] =  {
-        'type' : 'ChromaticOpticalPSF' ,
+        'type' : 'ChromaticOpticalPSF',
         'lam' : 700,
         'lam_over_diam' : 0.6,
         'defocus' : 0.23,
@@ -2531,7 +2531,7 @@ def test_chromatic():
 
     # ChromaticOpticalPSF with aberrations
     config['psf'] =  {
-        'type' : 'ChromaticOpticalPSF' ,
+        'type' : 'ChromaticOpticalPSF',
         'lam' : 700,
         'diam' : 8.4,
         'aberrations' : [0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13],
@@ -2544,6 +2544,79 @@ def test_chromatic():
     final = galsim.Convolve(gal, psf6)
     image6 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     np.testing.assert_allclose(image.array, image6.array)
+
+    # ChromaticRealGalaxy
+    # This is pretty slow, so switch back to an achromatic PSF to help keep things reasonable.
+    config['psf'] = { 'type': 'Moffat', 'fwhm': 0.5, 'beta': 2.5, }
+    config['gal'] = {
+        'type' : 'ChromaticRealGalaxy',
+        # Default is to go in order, so start with index=0
+    }
+    config['input'] = {
+        'real_catalog' : [
+            { 'dir' : 'real_comparison_images',
+              'file_name' : 'AEGIS_F606w_catalog.fits',
+            },
+            { 'dir' : 'real_comparison_images',
+              'file_name' : 'AEGIS_F814w_catalog.fits',
+            },
+        ]
+    }
+    galsim.config.RemoveCurrent(config)
+    image = galsim.config.BuildImage(config)
+
+    image_dir = 'real_comparison_images'
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    print('ident = ',f606w_cat.ident)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+    gal7 = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+    psf = galsim.Moffat(fwhm=0.5, beta=2.5)
+    final = galsim.Convolve(gal7, psf)
+    image7 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image.array, image7.array)
+
+    galsim.config.RemoveCurrent(config)
+    config['gal']['index'] = 5
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['gal']['index'] = -1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+
+    # Some equivalent ways to get this same galaxy
+    config['gal'] = {
+        'type' : 'ChromaticRealGalaxy',
+        'index' : 0,
+        'gsparams' : { 'folding_threshold' : 5.e-3 }
+    }
+    galsim.config.RemoveCurrent(config)
+    image = galsim.config.BuildImage(config)
+    np.testing.assert_allclose(image.array, image7.array)
+
+    config['gal'] = {
+        'type' : 'ChromaticRealGalaxy',
+        'id' : '23409',
+    }
+    galsim.config.RemoveCurrent(config)
+    image = galsim.config.BuildImage(config)
+    np.testing.assert_allclose(image.array, image7.array)
+
+    config['gal'] = {
+        'type' : 'ChromaticRealGalaxy',
+        'random' : False
+    }
+    galsim.config.RemoveCurrent(config)
+    image = galsim.config.BuildImage(config)
+    np.testing.assert_allclose(image.array, image7.array)
+
+    config['gal'] = {
+        'type' : 'ChromaticRealGalaxy',
+        'random' : True
+    }
+    config['image']['random_seed'] = 1239 # This seed happens to get index=0 first.
+    galsim.config.RemoveCurrent(config)
+    image = galsim.config.BuildImage(config)
+    np.testing.assert_allclose(image.array, image7.array)
 
     # Finally check that without bandpass, we get an error.
     del config['image']['bandpass']
