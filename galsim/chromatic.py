@@ -2959,15 +2959,27 @@ class ChromaticOpticalPSF(ChromaticObject):
         Parameters:
              wave:  Wavelength in nanometers.
         """
-        # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
-        # wavelength.  Likewise, the aberrations were in units of wavelength for the fiducial
-        # wavelength, so we have to convert to units of waves for *this* wavelength.
-        ret = OpticalPSF(
-                lam=wave, diam=self.diam,
-                aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
-                gsparams=self.gsparams, **self.kwargs)
-        return ret
+        # The aberrations were in units of wavelength for the fiducial wavelength, so we have to
+        # convert to units of waves for *this* wavelength.
+        wave_factor = self.lam / wave
 
+        # stepk and maxk also scale basically with this ratio, and they are fairly slow to
+        # calculate, so once we've done this once, store the results and just rescale all future
+        # versions with this factor.
+        if hasattr(self, '_stepk'):
+            return OpticalPSF(
+                    lam=wave, diam=self.diam,
+                    aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
+                    _force_stepk=self._stepk*wave_factor, _force_maxk=self._maxk*wave_factor,
+                    gsparams=self.gsparams, **self.kwargs)
+        else:
+            ret = OpticalPSF(
+                    lam=wave, diam=self.diam,
+                    aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
+                    gsparams=self.gsparams, **self.kwargs)
+            self._stepk = ret.stepk / wave_factor
+            self._maxk = ret.maxk / wave_factor
+            return ret
 
 class ChromaticAiry(ChromaticObject):
     """A subclass of `ChromaticObject` meant to represent chromatic Airy profiles.
