@@ -2383,6 +2383,13 @@ def test_blend():
 def test_chromatic():
     """Test drawing a chromatic object on an image with a bandpass
     """
+    if __name__ == '__main__':
+        bp_file = 'LSST_r.dat'
+    else:
+        # In nosetests, use a simple bandpass to go faster.
+        bp_file = 'chromatic_reference_images/simple_bandpass.dat'
+
+    # First check a chromatic galaxy with a regular PSF.
     config = {
         'image': {
             'type': 'Single',
@@ -2390,7 +2397,7 @@ def test_chromatic():
             'pixel_scale': 0.2,
 
             'bandpass': {
-                'file_name': 'LSST_r.dat',
+                'file_name': bp_file,
                 'wave_type': 'nm',
                 'thin': 1.e-4,
             }
@@ -2417,7 +2424,7 @@ def test_chromatic():
     }
     image = galsim.config.BuildImage(config)
 
-    bandpass = galsim.Bandpass('LSST_r.dat', 'nm').thin(1.e-4)
+    bandpass = galsim.Bandpass(bp_file, 'nm').thin(1.e-4)
     sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').withFluxDensity(1.0, 500).atRedshift(0.8)
 
     gal = galsim.Exponential(half_light_radius=0.5) * sed
@@ -2426,6 +2433,7 @@ def test_chromatic():
     image1 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     np.testing.assert_allclose(image.array, image1.array)
 
+    # Now check ChromaticAtmosphere
     galsim.config.RemoveCurrent(config)
     config['psf'] =  {
         'type': 'ChromaticAtmosphere',
@@ -2487,20 +2495,57 @@ def test_chromatic():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
+    # ChromaticAiry
     config['psf'] =  {
         'type': 'ChromaticAiry',
         'lam' : 550,
         'diam' : 6.5,
     }
     galsim.config.RemoveCurrent(config)
-    print(config)
     image = galsim.config.BuildImage(config)
-
     psf4 = galsim.ChromaticAiry(lam=550, diam=6.5)
     final = galsim.Convolve(gal, psf4)
     image4 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     np.testing.assert_allclose(image.array, image4.array)
 
+    # ChromaticOpticalPSF
+    config['psf'] =  {
+        'type' : 'ChromaticOpticalPSF' ,
+        'lam' : 700,
+        'lam_over_diam' : 0.6,
+        'defocus' : 0.23,
+        'astig1' : -0.12,
+        'astig2' : 0.11,
+        'coma1' : -0.09,
+        'coma2' : 0.03,
+        'spher' : 0.19,
+    }
+    galsim.config.RemoveCurrent(config)
+    image = galsim.config.BuildImage(config)
+    psf5 = galsim.ChromaticOpticalPSF(lam=700, lam_over_diam=0.6, defocus=0.23,
+                                      astig1=-0.12, astig2=0.11,
+                                      coma1=-0.09, coma2=0.03, spher=0.19)
+    final = galsim.Convolve(gal, psf5)
+    image5 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image.array, image5.array)
+
+    # ChromaticOpticalPSF with aberrations
+    config['psf'] =  {
+        'type' : 'ChromaticOpticalPSF' ,
+        'lam' : 700,
+        'diam' : 8.4,
+        'aberrations' : [0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13],
+    }
+    galsim.config.RemoveCurrent(config)
+    image = galsim.config.BuildImage(config)
+    psf6 = galsim.ChromaticOpticalPSF(lam=700, diam=8.4,
+                                      aberrations=[0,0,0,0,
+                                                   0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13])
+    final = galsim.Convolve(gal, psf6)
+    image6 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image.array, image6.array)
+
+    # Finally check that without bandpass, we get an error.
     del config['image']['bandpass']
     del config['bandpass']
     with assert_raises(galsim.GalSimConfigError):

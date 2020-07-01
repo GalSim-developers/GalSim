@@ -30,7 +30,7 @@ from ..phase_psf import OpticalPSF
 from ..shear import Shear
 from ..angle import Angle
 from ..gsobject import GSObject
-from ..chromatic import ChromaticObject
+from ..chromatic import ChromaticObject, ChromaticOpticalPSF
 from ..gsparams import GSParams
 from ..utilities import basestring
 
@@ -409,13 +409,11 @@ def _BuildList(config, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
-def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
-    """Build an OpticalPSF.
-    """
+def _BuildJointOpticalPSF(cls, config, base, ignore, gsparams, logger):
     kwargs, safe = GetAllParams(config, base,
-        req = OpticalPSF._req_params,
-        opt = OpticalPSF._opt_params,
-        single = OpticalPSF._single_params,
+        req = cls._req_params,
+        opt = cls._opt_params,
+        single = cls._single_params,
         ignore = [ 'aberrations' ] + ignore)
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
@@ -424,14 +422,25 @@ def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
         aberrations = config['aberrations']
         if not isinstance(aberrations,list):
             raise GalSimConfigError(
-                "aberrations entry for config.OpticalPSF entry is not a list.")
+                "aberrations entry for config.%s entry is not a list."%(cls.__name__))
         for i in range(len(aberrations)):
             value, safe1 = ParseValue(aberrations, i, base, float)
             aber_list.append(value)
             safe = safe and safe1
         kwargs['aberrations'] = aber_list
 
-    return OpticalPSF(**kwargs), safe
+    return cls(**kwargs), safe
+
+def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
+    """Build an OpticalPSF.
+    """
+    return _BuildJointOpticalPSF(OpticalPSF, config, base, ignore, gsparams, logger)
+
+def _BuildChromaticOpticalPSF(config, base, ignore, gsparams, logger):
+    """Build a ChromaticOpticalPSF.
+    """
+    # All the code for this is the same as for OpticalPSF, so use a shared implementation above.
+    return _BuildJointOpticalPSF(ChromaticOpticalPSF, config, base, ignore, gsparams, logger)
 
 def _BuildChromaticAtmosphere(config, base, ignore, gsparams, logger):
     """Build a ChromaticAtmosphere.
@@ -588,4 +597,5 @@ RegisterObjectType('Convolve', _BuildConvolve)
 RegisterObjectType('Convolution', _BuildConvolve)
 RegisterObjectType('List', _BuildList)
 RegisterObjectType('OpticalPSF', _BuildOpticalPSF)
+RegisterObjectType('ChromaticOpticalPSF', _BuildChromaticOpticalPSF)
 RegisterObjectType('ChromaticAtmosphere', _BuildChromaticAtmosphere)

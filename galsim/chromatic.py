@@ -24,6 +24,7 @@ from .bandpass import Bandpass
 from .position import PositionD, PositionI
 from .utilities import lazy_property, doc_inherit
 from .gsparams import GSParams
+from .phase_psf import OpticalPSF
 from . import utilities
 from . import integ
 from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
@@ -2855,6 +2856,10 @@ class ChromaticOpticalPSF(ChromaticObject):
                         related to struts, obscuration, oversampling, etc.  See OpticalPSF
                         docstring for a complete list of options.
     """
+    _req_params = { 'lam' : float }
+    _opt_params = { k:v for k,v in OpticalPSF._opt_params.items() if k != 'diam' }
+    _single_params = [ {'diam' : float, 'lam_over_diam' : float} ]
+
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
                  scale_unit=None, gsparams=None, **kwargs):
         from .angle import AngleUnit, arcsec, radians
@@ -2954,7 +2959,6 @@ class ChromaticOpticalPSF(ChromaticObject):
         Parameters:
              wave:  Wavelength in nanometers.
         """
-        from .phase_psf import OpticalPSF
         # We need to rescale the stored lam/diam by the ratio of input wavelength to stored fiducial
         # wavelength.  Likewise, the aberrations were in units of wavelength for the fiducial
         # wavelength, so we have to convert to units of waves for *this* wavelength.
