@@ -2486,7 +2486,20 @@ def test_chromatic():
     del config['sky_pos']
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
-    config['sky_pos'] = sky_pos
+
+    config['psf'] =  {
+        'type': 'ChromaticAiry',
+        'lam' : 550,
+        'diam' : 6.5,
+    }
+    galsim.config.RemoveCurrent(config)
+    print(config)
+    image = galsim.config.BuildImage(config)
+
+    psf4 = galsim.ChromaticAiry(lam=550, diam=6.5)
+    final = galsim.Convolve(gal, psf4)
+    image4 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    np.testing.assert_allclose(image.array, image4.array)
 
     del config['image']['bandpass']
     del config['bandpass']

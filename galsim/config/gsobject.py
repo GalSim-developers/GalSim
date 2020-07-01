@@ -30,6 +30,7 @@ from ..phase_psf import OpticalPSF
 from ..shear import Shear
 from ..angle import Angle
 from ..gsobject import GSObject
+from ..chromatic import ChromaticObject
 from ..gsparams import GSParams
 from ..utilities import basestring
 
@@ -185,7 +186,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     else:
         raise GalSimConfigValueError("Unrecognised gsobject type", type_name)
 
-    if inspect.isclass(build_func) and issubclass(build_func, GSObject):
+    if inspect.isclass(build_func) and issubclass(build_func, (GSObject, ChromaticObject)):
         gsobject, safe = _BuildSimple(build_func, param, base, ignore, gsparams, logger)
     else:
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
@@ -268,13 +269,13 @@ def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
     type_name = config['type']
     logger.debug('obj %d: BuildSimple for type = %s',base.get('obj_num',0),type_name)
 
-    req = build_func._req_params if hasattr(build_func,'_req_params') else {}
-    opt = build_func._opt_params if hasattr(build_func,'_opt_params') else {}
-    single = build_func._single_params if hasattr(build_func,'_single_params') else []
+    req = getattr(build_func, '_req_params', {})
+    opt = getattr(build_func, '_opt_params', {})
+    single = getattr(build_func, '_single_params', [])
     kwargs, safe = GetAllParams(config, base, req=req, opt=opt, single=single, ignore=ignore)
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
-    if build_func._takes_rng:
+    if getattr(build_func, '_takes_rng', False):
         kwargs['rng'] = GetRNG(config, base, logger, type_name)
         safe = False
 
