@@ -2966,11 +2966,6 @@ class ChromaticOpticalPSF(ChromaticObject):
                 lam=wave, diam=self.diam,
                 aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
                 gsparams=self.gsparams, **self.kwargs)
-        if '_force_stepk' not in self.kwargs:
-            # These don't change much, and figuring out good stepk and maxk values are very slow.
-            # So once we've done this once, just keep using those values.
-            self.kwargs['_force_stepk'] = ret.stepk
-            self.kwargs['_force_maxk'] = ret.maxk
         return ret
 
 
