@@ -338,6 +338,7 @@ def find_eigen_dir(output=False):
         dir = 'downloaded_eigen'
         if os.path.isdir(dir):
             # If this exists, it was tried above and failed.  Something must be wrong with it.
+            print("Previous attempt to download eigen found. Deleting and trying again.")
             shutil.rmtree(dir)
         os.mkdir(dir)
         url = 'https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2'
