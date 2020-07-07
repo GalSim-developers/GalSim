@@ -122,7 +122,7 @@ before_install:
     # Don't install eigen on 3.7 so we test the ability of setup.py to install it for us.
     - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then sudo -H apt-get install -y libeigen3-dev; fi
     # Shouldn't usually need this, but occasionally might.
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
+    #- if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw wget; fi
     - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then brew install eigen; brew link --overwrite eigen; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cask install gfortran; fi
