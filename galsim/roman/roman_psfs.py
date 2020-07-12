@@ -56,7 +56,7 @@ def getPSF(SCA, bandpass,
     (Note: the files at that url still use the old WFIRST name.  We have renamed them to use the
     new name of the telescope, Roman, after downloading.)
 
-    The mask images for the Roman pupil plane are available at from the Roman Reference Information
+    The mask images for the Roman pupil plane are available at the Roman Reference Information
     page: https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.
     There are separate files for each SCA, since the view of the spider pattern varies somwhat
     across the field of view of the wide field camera. Furthermore, the effect of the obscuration
