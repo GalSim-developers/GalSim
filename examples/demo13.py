@@ -132,7 +132,7 @@ def main(argv):
     # (diameter, bandpasses, obscuration, etc.).  Note that we arbitrarily choose a single SCA
     # (Sensor Chip Assembly) rather than all of them, for faster calculations, and use a simple
     # representation of the struts for faster calculations.  To do a more exact calculation of the
-    # chromaticity and pupil plane configuration, remove the `n_waves` keyword from the call to
+    # chromaticity, remove the `n_waves` keyword from the call to
     # getPSF():
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF.')
