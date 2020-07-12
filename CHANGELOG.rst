@@ -80,7 +80,7 @@ Performance Improvements
 
 - Improved the rendering of Roman PSFs to always show 12 diffraction spikes
   (rather than 6 in the now-deprecated approximate_struts mode), remove an
-  FFT artifact in the exact pupil plane mode, and significanly speed up all
+  FFT artifact in the exact pupil plane mode, and significantly speed up all
   PSF renderings. (#1089)
 
 
