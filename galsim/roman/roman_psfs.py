@@ -60,7 +60,7 @@ def getPSF(SCA, bandpass,
     page: https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.
     There are separate files for each SCA, since the view of the spider pattern varies somewhat
     across the field of view of the wide field camera. Furthermore, the effect of the obscuration
-    is somewhat different at longer wavelengths, so F184 has a different set fo files than the
+    is somewhat different at longer wavelengths, so F184 has a different set of files than the
     other filters.  cf. the ``galsm.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``
     attributes, which define which bands use which pupil plane images.
 
