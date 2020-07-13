@@ -1078,10 +1078,17 @@ class LRU_Cache:
     """
     def __init__(self, user_function, maxsize=1024):
         # Link layout:     [PREV, NEXT, KEY, RESULT]
-        self.root = root = [None, None, None, None]
+        self.root = [None, None, None, None]
         self.user_function = user_function
-        self.cache = cache = {}
+        self.cache = {}
+        self.maxsize = maxsize
+        self.clear()
 
+    def clear(self):
+        self.root = [None, None, None, None]
+        root = self.root
+        cache = self.cache
+        maxsize = self.maxsize
         last = root
         for i in range(maxsize):
             key = object()
@@ -1126,7 +1133,7 @@ class LRU_Cache:
         Parameters:
             maxsize:    The new maximum number of inputs to cache.
         """
-        oldsize = len(self.cache)
+        oldsize = self.maxsize
         if maxsize == oldsize:
             return
         else:
@@ -1148,6 +1155,7 @@ class LRU_Cache:
                     cache[key] = link = [root, root[1], key, None]
                     root[1][0] = link
                     root[1] = link
+        self.maxsize = maxsize
 
 
 @contextmanager
