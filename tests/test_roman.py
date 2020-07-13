@@ -731,6 +731,12 @@ def test_roman_psfs():
             im_chrom.array, im_achrom.array, decimal=8,
             err_msg='getPSF with %s has discrepency for chrom/achrom'%kwargs)
 
+    # Check the stated method for recovering memory used in aperture caches.
+    # Despite using a leading-underscore, sub-module-level function, the fact that we
+    # document it makes it officially part of the API.  It requires a proper deprecation
+    # if we change the syntax of this.
+    galsim.roman.roman_psfs._make_aperture.clear()
+
     # Check for exceptions if we:
     # (1) Include optional aberrations in an unacceptable form.
     # (2) Invalid SCA numbers.

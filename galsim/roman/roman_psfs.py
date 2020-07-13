@@ -81,7 +81,7 @@ def getPSF(SCA, bandpass,
         SCA and bandpass should be much faster after the first call, as the pupil plane will
         already be loaded.  If you need to clear the cache for memory reasons, you may call::
 
-            galsim.roman.roman_psfs._make_aperture.cache.clear()
+            galsim.roman.roman_psfs._make_aperture.clear()
 
         to recover any memory currently being used for this cache.  Of course, subsequent calls to
         `getPSF` will need to rebuild the aperture at that point.
