@@ -79,8 +79,13 @@ def test_gaussian():
     gauss2 = galsim.Gaussian(flux=1.7, sigma=2.3, gsparams=gsp)
     assert gauss2 != gauss
     assert gauss2 == gauss.withGSParams(gsp)
-    gauss3 = gauss.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
     assert gauss2 == gauss.withGSParams(xvalue_accuracy=1.e-8, kvalue_accuracy=1.e-8)
+    assert gauss2 == gauss.withGSParams(xvalue_accuracy=1.e-8).withGSParams(kvalue_accuracy=1.e-8)
+    assert gauss2 == gauss.withGSParams(galsim.GSParams(xvalue_accuracy=1.e-8),
+                                        kvalue_accuracy=1.e-8)
+    assert gauss2 == gauss.withGSParams(gsp).withGSParams(kvalue_accuracy=1.e-8)
+    assert gauss2 == gauss.withGSParams(galsim.GSParams(xvalue_accuracy=1.e-8)).withGSParams(
+                                            kvalue_accuracy=1.e-8)
     check_basic(gauss, "Gaussian")
 
     # Check invalid parameters
