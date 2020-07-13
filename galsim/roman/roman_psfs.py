@@ -62,15 +62,29 @@ def getPSF(SCA, bandpass,
     across the field of view of the wide field camera. Furthermore, the effect of the obscuration
     is somewhat different at longer wavelengths, so F184 has a different set of files than the
     other filters.  cf. the ``galsm.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``
-    attributes, which define which bands use which pupil plane images.
+    attributes, which define which bands use which pupil plane images.  Users usually don't need
+    to worry about any of this, as GalSim will select the correct pupil image automatically based
+    on the SCA and bandpass provided.
 
-    To avoid using the full pupil plane configuration, use the optional keyword ``pupil_bin``.
-    The full pupil-plane images are 4096 x 4096, which is more detail than is typically needed for
-    most applications. The default binning is 4x4, which results in an image that is 1024 x 1024.
-    This provides enough detail for most purposes and is much faster to render than using the full
-    pupil plane image.  Using pupil_bin=8 (resulting in a 512 x 512 image) still provides fairly
-    reasonable results and is even faster to render, but it is not recommended to use higher
-    binning than that, as the diffraction spikes will be noticeably degraded.
+    The full pupil plane images are 4096 x 4096, which use a lot of memory and are somewhat slow
+    to use, so we normally bin them by a factor of 4 (resulting in 1024 x 1024 images). This
+    provides enough detail for most purposes and is much faster to render than using the full pupil
+    plane images.  This bin factor is a settable parameter, called ``pupil_bin``.  If you want the
+    more accurate, slower calculation using the full images, you can set it to 1. In the other
+    direction, using pupil_bin=8 (resulting in a 512 x 512 image) still provides fairly reasonable
+    results and is even faster to render.  It is not generally recommended to use higher binning
+    than that, as the diffraction spikes will become noticeably degraded.
+
+    .. note::
+
+        This function will cache the aperture calculation, so repeated calls with the same
+        SCA and bandpass should be much faster after the first call, as the pupil plane will
+        already be loaded.  If you need to clear the cache for memory reasons, you may call::
+
+            galsim.roman.roman_psfs._make_aperture.cache.clear()
+
+        to recover any memory currently being used for this cache.  Of course, subsequent calls to
+        `getPSF` will need to rebuild the aperture at that point.
 
     Also note that currently the orientation of the struts is fixed, rather than rotating depending
     on the orientation of the focal plane.  Rotation of the PSF can easily be affected by the user

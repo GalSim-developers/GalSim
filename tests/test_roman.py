@@ -605,11 +605,13 @@ def test_roman_psfs():
     # images for interpolation can be expensive, particularly when using the full pupil plane
     # functionality.  To speed up our calculations, we will limit the unit tests to certain
     # situations:
-    # - fully chromatic PSFs without interpolation and without loading the pupil plane image.  But
-    #   then we just want to play with the objects in a fast way (e.g., evaluating at one
-    #   wavelength, not integrating over a bandpass).
+    # - fully chromatic PSFs without interpolation.  Then we just want to play with the objects in
+    #   a fast way (e.g., evaluating at one  wavelength, not integrating over a bandpass).
     # - fully chromatic PSFs with interpolation, but only interpolating between two wavelengths.
-    # - achromatic PSFs without loading the pupil plane image.
+    # - achromatic PSFs.
+    #
+    # We also only test pupil_bin=4,8 in nosetests runs.  Tests of pupil_bin=1,2 are done in
+    # __main__ runs.
 
     # Providing a wavelength returns achromatic PSFs
     psf_5 = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8)

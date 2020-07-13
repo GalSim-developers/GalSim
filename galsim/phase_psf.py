@@ -1203,9 +1203,11 @@ class PhaseScreenPSF(GSObject):
     _is_analytic_x = True
     _is_analytic_k = True
 
+    _default_iipf = 1.5
+
     def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0,
-                 theta=(0.0*arcsec, 0.0*arcsec), interpolant=None,
-                 scale_unit=arcsec, ii_pad_factor=1.5, suppress_warning=False,
+                 theta=(0.0*arcsec, 0.0*arcsec), interpolant=None, scale_unit=arcsec,
+                 ii_pad_factor=None, suppress_warning=False,
                  geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2,
                  gsparams=None, _force_stepk=0., _force_maxk=0., _bar=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
@@ -1246,7 +1248,7 @@ class PhaseScreenPSF(GSObject):
         if self.exptime < 0:
             raise GalSimRangeError("Cannot integrate PSF for negative time.", self.exptime, 0.)
 
-        self._ii_pad_factor = ii_pad_factor
+        self._ii_pad_factor = ii_pad_factor if ii_pad_factor is not None else self._default_iipf
 
         self._bar = _bar if _bar else dict()  # with dict() _bar.update() is a trivial no op.
         self._flux = float(flux)
@@ -1777,11 +1779,13 @@ class OpticalPSF(GSObject):
     _is_analytic_x = True
     _is_analytic_k = True
 
+    _default_iipf = 1.5  # The default ii_pad_factor, since we need to check it for the repr
+
     def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                  aberrations=None, annular_zernike=False,
                  aper=None, circular_pupil=True, obscuration=0., interpolant=None,
-                 oversampling=1.5, pad_factor=1.5, ii_pad_factor=1.5, flux=1.,
+                 oversampling=1.5, pad_factor=1.5, ii_pad_factor=None, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*radians,
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*radians, scale_unit=arcsec, gsparams=None,
@@ -1855,7 +1859,7 @@ class OpticalPSF(GSObject):
         self._aper = aper
         self._force_stepk = _force_stepk
         self._force_maxk = _force_maxk
-        self._ii_pad_factor = ii_pad_factor
+        self._ii_pad_factor = ii_pad_factor if ii_pad_factor is not None else self._default_iipf
 
     @lazy_property
     def _psf(self):
@@ -1905,7 +1909,7 @@ class OpticalPSF(GSObject):
             s += ", _force_stepk=%r" % self._force_stepk
         if self._force_maxk != 0.:
             s += ", _force_maxk=%r" % self._force_maxk
-        if self._ii_pad_factor != 1.5:
+        if self._ii_pad_factor != OpticalPSF._default_iipf:
             s += ", ii_pad_factor=%r" % self._ii_pad_factor
         s += ")"
         return s
