@@ -3442,6 +3442,60 @@ def test_bin():
     np.testing.assert_almost_equal((origin6.x, origin6.y), (origin1.x, origin1.y), 6,
                                    "Binning past the edge resulted in wrong wcs")
 
+@timer
+def test_fpack():
+    """Test the functionality that we advertise as being equivalent to fpack/funpack
+    """
+    from astropy.io import fits
+    file_name0 = os.path.join('des_data','DECam_00158414_01.fits.fz')
+    hdulist = fits.open(file_name0)
+    hdulist.verify('silentfix')
+    # Remove a few invalid header keys in the DECam fits file
+    # The I/O works if we don't, but it complicates the later tests.
+    for k in list(hdulist[1].header.keys()):
+        if k.startswith('G-') or k.startswith('time_recorded'):
+            print('remove header key ',k,hdulist[1].header[k])
+            del hdulist[1].header[k]
+    file_name1 = os.path.join('des_data','DECam_00158414_01_fix.fits.fz')
+    hdulist.writeto(file_name1, overwrite=True)
+
+    file_name2 = os.path.join('output','DECam_00158414_01.fits')
+    file_name3 = os.path.join('output','DECam_00158414_01.fits.fz')
+
+    # This line basically does funpack:
+    galsim.fits.writeMulti(galsim.fits.readMulti(file_name1, read_headers=True), file_name2)
+
+    # This line basically does fpack:
+    galsim.fits.writeMulti(galsim.fits.readMulti(file_name2, read_headers=True), file_name3)
+
+    # Check that the final file is essentially equivalent to the original.
+    imlist1 = galsim.fits.readMulti(file_name1, read_headers=True)
+    imlist3 = galsim.fits.readMulti(file_name3, read_headers=True)
+
+    assert len(imlist1) == len(imlist3)
+    for im1, im3 in zip(imlist1, imlist3):
+        for key in im1.header.keys():
+            #if key in im3.header and key not in ['XTENSION','COMMENT','HISTORY','']:
+            if key in im3.header and key not in ['COMMENT','HISTORY','']:
+                if isinstance(im1.header[key], str):
+                    assert im1.header[key] == im3.header[key]
+                else:
+                    np.testing.assert_allclose(im1.header[key], im3.header[key])
+        assert im1.bounds == im3.bounds
+        if isinstance(im1.wcs, galsim.GSFitsWCS):
+            assert im1.wcs.wcs_type == im3.wcs.wcs_type
+            np.testing.assert_array_equal(im1.wcs.crpix, im3.wcs.crpix)
+            np.testing.assert_array_equal(im1.wcs.cd, im3.wcs.cd)
+            np.testing.assert_array_equal(im1.wcs.center, im3.wcs.center)
+            # pv isn't identical through round trip, but vv close
+            np.testing.assert_allclose(im1.wcs.pv, im3.wcs.pv, rtol=1.e-15)
+        else:
+            assert im1.wcs == im3.wcs
+        # array is not identical. Rice compression is lossy, so most pixel values change somewhat.
+        # Noise is ~100 ADU, so differences of < 1 ADU are small here.
+        np.testing.assert_allclose(im1.array, im3.array, atol=1)
+
+
 if __name__ == "__main__":
     test_Image_basic()
     test_undefined_image()
@@ -3483,3 +3537,4 @@ if __name__ == "__main__":
     test_wrap()
     test_FITS_bad_type()
     test_bin()
+    test_fpack()
