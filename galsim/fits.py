@@ -316,6 +316,13 @@ def _add_hdu(hdu_list, data, pyfits_compress):
     hdu_list.append(hdu)
     return hdu
 
+def _add_to_header(hdu, image):
+    h = FitsHeader(hdu.header)
+    if hasattr(image, 'header'):
+        h.extend(image.header)
+    if image.wcs:
+        image.wcs.writeToFitsHeader(h, image.bounds)
+
 
 def _check_hdu(hdu, pyfits_compress, header_only=False):
     """Check that an input ``hdu`` is valid
@@ -444,12 +451,7 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
         hdu_list = pyfits.HDUList()
 
     hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-    if hasattr(image, 'header'):
-        # Automatically handle old pyfits versions correctly...
-        hdu_header = FitsHeader(hdu.header)
-        hdu_header.extend(image.header)
-    if image.wcs:
-        image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+    _add_to_header(hdu, image)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
@@ -516,8 +518,7 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
     for image in image_list:
         if isinstance(image, Image):
             hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-            if image.wcs:
-                image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+            _add_to_header(hdu, image)
         else:
             # Assume that image is really an HDU.  If not, this should give a reasonable error
             # message.  (The base type of HDUs vary among versions of pyfits, so it's hard to
@@ -645,8 +646,9 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
 
 
     hdu = _add_hdu(hdu_list, cube, pyfits_compress)
-    if wcs:
-        wcs.writeToFitsHeader(hdu.header, bounds)
+    if not is_all_numpy:
+        # Use any header/wcs in the first image
+        _add_to_header(hdu, image_list[0])
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
