@@ -3449,13 +3449,16 @@ def test_fpack():
     from astropy.io import fits
     file_name0 = os.path.join('des_data','DECam_00158414_01.fits.fz')
     hdulist = fits.open(file_name0)
-    hdulist.verify('silentfix')
+
     # Remove a few invalid header keys in the DECam fits file
-    # The I/O works if we don't, but it complicates the later tests.
+    # The I/O works if we don't, but they complicate the later tests.
+    # Easier to just get rid of them.
+    hdulist.verify('silentfix')
     for k in list(hdulist[1].header.keys()):
         if k.startswith('G-') or k.startswith('time_recorded'):
             print('remove header key ',k,hdulist[1].header[k])
             del hdulist[1].header[k]
+
     file_name1 = os.path.join('des_data','DECam_00158414_01_fix.fits.fz')
     hdulist.writeto(file_name1, overwrite=True)
 
@@ -3475,8 +3478,7 @@ def test_fpack():
     assert len(imlist1) == len(imlist3)
     for im1, im3 in zip(imlist1, imlist3):
         for key in im1.header.keys():
-            #if key in im3.header and key not in ['XTENSION','COMMENT','HISTORY','']:
-            if key in im3.header and key not in ['COMMENT','HISTORY','']:
+            if key in im3.header and key not in ['XTENSION','COMMENT','HISTORY','']:
                 if isinstance(im1.header[key], str):
                     assert im1.header[key] == im3.header[key]
                 else:
