@@ -3459,7 +3459,7 @@ def test_fpack():
             print('remove header key ',k,hdulist[1].header[k])
             del hdulist[1].header[k]
 
-    file_name1 = os.path.join('des_data','DECam_00158414_01_fix.fits.fz')
+    file_name1 = os.path.join('output','DECam_00158414_01_fix.fits.fz')
     hdulist.writeto(file_name1, overwrite=True)
 
     file_name2 = os.path.join('output','DECam_00158414_01.fits')
