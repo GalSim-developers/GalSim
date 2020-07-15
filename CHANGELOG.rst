@@ -92,3 +92,5 @@ Bug Fixes
   of (r0, L0, lam). (#1058)
 - Fixed minor bug in repr of OpticalPSF class. (#1061)
 - Fixed bug in RandomKnots when multiplied by an SED. (#1064)
+- Fixed bug that galsim.fits.writeMulti didn't properly write the header
+  information in each hdu. (#1091)
