@@ -192,6 +192,8 @@ _read_file = _ReadFile()
 
 # Do the same trick for _write_file(file,hdu_list,clobber,file_compress,pyfits_compress):
 class _WriteFile:
+    # kwargs to use for the writeto function
+    kw = {'output_verify' : 'silentfix+ignore'}
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
     def gzip_call(self, hdu_list, file):
@@ -200,7 +202,7 @@ class _WriteFile:
             try:
                 p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout,
                                      close_fds=True)
-                hdu_list.writeto(p.stdin)
+                hdu_list.writeto(p.stdin, **self.kw)
             except (OSError, AttributeError, TypeError, ValueError): # pragma: no cover
                 # This OSError should mean that the gunzip call itself was invalid on this system.
                 # Convert to a NotImplementedError, so we can try a different method.
@@ -217,7 +219,7 @@ class _WriteFile:
         # The compression routines work better if we first write to an internal buffer
         # and then output that to a file.
         buf = io.BytesIO()
-        hdu_list.writeto(buf)
+        hdu_list.writeto(buf, **self.kw)
         data = buf.getvalue()
         # There is a compresslevel option (for both gzip and bz2), but we just use the
         # default.
@@ -229,7 +231,7 @@ class _WriteFile:
         with open(file, 'wb') as fout:
             try:
                 p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
-                hdu_list.writeto(p.stdin)
+                hdu_list.writeto(p.stdin, **self.kw)
             except (OSError, AttributeError, TypeError, ValueError): # pragma: no cover
                 # This OSError should mean that the gunzip call itself was invalid on this system.
                 # Convert to a NotImplementedError, so we can try a different method.
@@ -244,7 +246,7 @@ class _WriteFile:
         import bz2
         import io
         buf = io.BytesIO()
-        hdu_list.writeto(buf)
+        hdu_list.writeto(buf, **self.kw)
         data = buf.getvalue()
         with bz2.BZ2File(file, 'wb') as fout:
             fout.write(data)
@@ -272,7 +274,7 @@ class _WriteFile:
                 raise OSError('File %r already exists'%file)
 
         if not file_compress:
-            hdu_list.writeto(file)
+            hdu_list.writeto(file, **self.kw)
         elif file_compress == 'gzip':
             while self.gz_index < len(self.gz_methods):
                 try:
