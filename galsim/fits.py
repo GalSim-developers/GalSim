@@ -465,6 +465,19 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
 
     The details of how the images are written to file depends on the arguments.
 
+    .. note::
+
+        This function along with `readMulti` can be used to effect the equivalent of a simple
+        version of fpack or funpack. To Rice compress a fits file, you can call::
+
+            fname = 'some_image_file.fits'
+            galsim.fits.writeMulti(galsim.fits.readMulti(fname, read_headers=True), fname+'.fz')
+
+        To uncompress::
+
+            fname = 'some_image_file.fits.fz'
+            galsim.fits.writeMulti(galsim.fits.readMulti(fname, read_headers=True), fname[:-3])
+
     Parameters:
         image_list:     A Python list of `Image` instances.  (For convenience, some items in this
                         list may be HDUs already.  Any `Image` will be converted into an
@@ -819,6 +832,19 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto', read_
     scale will be set to 1.0.
 
     This function is called as ``im = galsim.fits.readMulti(...)``
+
+    .. note::
+
+        This function along with `writeMulti` can be used to effect the equivalent of a simple
+        version of fpack or funpack. To Rice compress a fits file, you can call::
+
+            fname = 'some_image_file.fits'
+            galsim.fits.writeMulti(galsim.fits.readMulti(fname, read_headers=True), fname+'.fz')
+
+        To uncompress::
+
+            fname = 'some_image_file.fits.fz'
+            galsim.fits.writeMulti(galsim.fits.readMulti(fname, read_headers=True), fname[:-3])
 
     Parameters:
         file_name:      The name of the file to read in.  [Either ``file_name`` or ``hdu_list`` is
