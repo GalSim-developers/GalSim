@@ -838,6 +838,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
 
     def __hash__(self): return hash(repr(self))
 
+
 class GSFitsWCS(CelestialWCS):
     """This WCS uses a GalSim implementation to read a WCS from a FITS file.
 
@@ -1660,6 +1661,7 @@ fits_wcs_types = [
 
 ]
 
+
 def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
             text_file=False, suppress_warning=False):
     """This factory function will try to read the WCS from a FITS file and return a WCS that will
@@ -1761,3 +1763,92 @@ FitsWCS._single_params = []
 FitsWCS._takes_rng = False
 
 
+def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
+    """A WCS constructed from a list of reference celestial and image
+    coordinates.
+
+    Parameters:
+        x:      Image x-coordinates of reference stars in pixels
+        y:      Image y-coordinates of reference stars in pixels
+        ra:     Right ascension of reference stars in radians
+        dec:    Declination of reference stars in radians
+        order:  The order of the Simple Imaging Polynomial (SIP) used to
+                describe the WCS distortion.  Should be in the range [1, 9]
+                [default: 3]
+        center: A `CelestialCoord` defining the location on the sphere where the
+                tangent plane is centered.  [default: None, which means use the
+                average position of the list of reference stars]
+    """
+    from scipy.optimize import least_squares
+    from .celestial import CelestialCoord
+    if center is None:
+        # Use deprojected 3D mean of ra/dec unit sphere points as center
+        wx = np.mean(np.cos(dec)*np.cos(ra))
+        wy = np.mean(np.cos(dec)*np.sin(ra))
+        wz = np.mean(np.sin(dec))
+        center = CelestialCoord.from_xyz(wx, wy, wz)
+
+    if order < 1 or order > 9:
+        raise GalSimValueError("Illegal SIP order", order)
+
+    # Project radec onto uv so we can linearly fit the CRPIX and CD matrix
+    # initial guesses
+    u, v = center.project_rad(ra, dec)
+    a = np.array(np.broadcast_arrays(1., -u, v)).T
+    b = np.array([x, y]).T
+    r, _, _, _ = np.linalg.lstsq(a, b, rcond=None)
+    crpix_guess = r[0]
+    cd_guess = np.linalg.inv(np.deg2rad(r[1:]))
+
+    # SIP coefficient initial guesses are just 0.0
+    ab_guess = []
+    for i in range(order+1):
+        for j in range(order+1):
+            if (i+j > 1) and (i+j <= order):
+                ab_guess.extend([0.0, 0.0])
+    ab_guess = np.array(ab_guess)
+    guess = np.hstack([crpix_guess, cd_guess.ravel(), ab_guess.ravel()])
+
+    def _getWCS(params):
+        crpix = params[:2]
+        cd = params[2:6].reshape(2, 2)
+
+        k = 0
+        a = []
+        b = []
+        for i in range(order+1):
+            for j in range(order+1):
+                if (i+j < 2) or (i+j > order):
+                    a.append(0.0)
+                    b.append(0.0)
+                else:
+                    a.append(params[6+k])
+                    b.append(params[6+k+1])
+                    k += 2
+        a = np.array(a).reshape((order+1, order+1))
+        b = np.array(b).reshape((order+1, order+1))
+        ab = np.array([a, b])
+
+        _data = [
+            'TAN',
+            crpix,
+            cd,
+            center,
+            None, # pv, unused
+            ab,
+            None  # abp, unused
+        ]
+        return GSFitsWCS(_data=_data)
+
+    def _loss(params):
+        wcs = _getWCS(params)
+        ra_pred, dec_pred = wcs.xyToradec(x, y, units='rad')
+        u_pred, v_pred = center.project_rad(ra_pred, dec_pred)
+        resid = np.hstack([u-u_pred, v-v_pred])
+        resid = np.rad2deg(resid)*3600*1e6  # Work in microarcseconds
+        return resid
+
+    result = least_squares(_loss, guess)
+    # rmse = np.sqrt(2*result.cost/len(u))
+    # print(f"rmse: {rmse:.2f} microarcsec")
+    return _getWCS(result.x)

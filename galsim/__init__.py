@@ -186,6 +186,7 @@ from .celestial import CelestialCoord
 from .wcs import BaseWCS, PixelScale, ShearWCS, JacobianWCS
 from .wcs import OffsetWCS, OffsetShearWCS, AffineTransform, UVFunction, RaDecFunction
 from .fitswcs import AstropyWCS, PyAstWCS, WcsToolsWCS, GSFitsWCS, FitsWCS, TanWCS
+from .fitswcs import FittedSIPWCS
 
 # Lensing stuff
 from .lensing_ps import PowerSpectrum

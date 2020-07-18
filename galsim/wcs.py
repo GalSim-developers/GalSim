@@ -88,13 +88,18 @@ class BaseWCS(object):
        - `WcsToolsWCS`         -- requires wcstools command line functions to be installed
        - `GSFitsWCS`           -- native code, but has less functionality than the above
 
-    There is also a factory function called `FitsWCS` (also defined in fitswcs.py), which is
-    intended to act like a class initializer.  It tries to read a fits file using one of the
-    above classes and returns an instance of whichever one it found was successful.  It should
-    always be successful, since its final attempt uses `AffineTransform`, which has reasonable
-    defaults when the WCS key words are not in the file, but of course this will only be
-    a very rough approximation of the true WCS.
+    There are also a few factory functions in fitswcs.py intended to act like class initializers:
 
+    - `FitsWCS` tries to read a fits file using one of the above classes and returns an instance of
+      whichever one it found was successful.  It should always be successful, since its final
+      attempt uses `AffineTransform`, which has reasonable defaults when the WCS key words are not
+      in the file, but of course this will only be a very rough approximation of the true WCS.
+
+    - `TanWCS` constructs a simple tangent plane projection WCS directly from the projection
+      parameters instead of from a fits header.
+
+    - `FittedSIPWCS` constructs a TAN-SIP WCS by fitting to a list of reference celestial and image
+      coordinates.
 
     Some things you can do with a WCS instance:
 
