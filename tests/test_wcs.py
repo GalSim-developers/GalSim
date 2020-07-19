@@ -2440,6 +2440,96 @@ def test_fitswcs():
         wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
         assert isinstance(wcs, galsim.AffineTransform)
 
+def check_sphere(ra1, dec1, ra2, dec2, atol=1):
+    # Vectorizing CelestialCoord.distanceTo()
+    # ra/dec in rad
+    # atol in arcsec
+    x1 = np.cos(dec1)*np.cos(ra1)
+    y1 = np.cos(dec1)*np.sin(ra1)
+    z1 = np.sin(dec1)
+    x2 = np.cos(dec2)*np.cos(ra2)
+    y2 = np.cos(dec2)*np.sin(ra2)
+    z2 = np.sin(dec2)
+    dsq = (x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2
+    dist = 2*np.arcsin(0.5*np.sqrt(dsq))
+    w = dsq >= 3.99
+    if np.any(w):
+        cross = np.cross(np.array([x1, y1, z1])[w], np.array([x2, y2, z2])[w])
+        crosssq = cross[0]**2 + cross[1]**2 + cross[2]**2
+        dist[w] = np.pi - np.arcsin(np.sqrt(crossq))
+    dist = np.rad2deg(dist)*3600
+    np.testing.assert_allclose(dist, 0.0, rtol=0.0, atol=atol)
+
+
+@timer
+def test_fittedsipwcs():
+    """Test our ability to construct a WCS from x, y, ra, dec tuples
+    """
+    rng = galsim.UniformDeviate(57721)
+    x = np.empty(100, dtype=float)
+    y = np.empty(100, dtype=float)
+    rng.generate(x)
+    rng.generate(y)
+    x *= 150  # rough range of reference WCS image coords
+    y *= 150
+
+    if __name__ == '__main__':
+        test_tags = all_tags
+    else:
+        test_tags = ['TAN', 'SIP', 'TAN-PV']
+
+    dir = 'fits_files'
+
+    for tag in test_tags:
+        print(tag)
+        file_name, ref_list = references[tag]
+        wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
+        if not wcs.isCelestial():
+            continue
+        ra, dec = wcs.xyToradec(x, y, units='rad')
+
+        fittedWCS = galsim.FittedSIPWCS(
+            x[:50], y[:50], ra[:50], dec[:50],
+            order=7
+        )
+        # First check that points used in fit are close to fit function values
+        ra_test, dec_test = fittedWCS.xyToradec(x[:50], y[:50], units='rad')
+        check_sphere(
+            ra[:50], dec[:50], ra_test, dec_test,
+            atol=1 if tag == 'ZPN' else 1e-3
+        )
+        # Now check on some "reserve" points
+        ra_test, dec_test = fittedWCS.xyToradec(x[50:], y[50:], units='rad')
+        check_sphere(
+            ra[50:], dec[50:], ra_test, dec_test,
+            atol=30 if tag == 'ZPN' else 1e-3
+        )
+
+        # Try again, but force a different center
+        # Increase tolerance since WCS no longer nicely centered on region of
+        # interest.
+        center = galsim.CelestialCoord(
+            galsim.Angle.from_hms(ref_list[0][0]),
+            galsim.Angle.from_dms(ref_list[0][1])
+        )
+        fittedWCS = galsim.FittedSIPWCS(
+            x[:50], y[:50], ra[:50], dec[:50],
+            order=7, center=center
+        )
+        ra_test, dec_test = fittedWCS.xyToradec(x[:50], y[:50], units='rad')
+        check_sphere(
+            ra[:50], dec[:50], ra_test, dec_test,
+            atol=60 if tag == 'ZPN' else 10
+        )
+        assert fittedWCS.center == center
+
+        # Check illegal values
+        with np.testing.assert_raises(galsim.GalSimValueError):
+            galsim.FittedSIPWCS(x, y, ra, dec, order=0)
+        with np.testing.assert_raises(galsim.GalSimValueError):
+            galsim.FittedSIPWCS(x, y, ra, dec, order=10)
+
+
 @timer
 def test_scamp():
     """Test that we can read in a SCamp .head file correctly
@@ -2788,6 +2878,7 @@ if __name__ == "__main__":
     test_gsfitswcs()
     test_tanwcs()
     test_fitswcs()
+    test_fittedsipwcs()
     test_scamp()
     test_compateq()
     test_coadd()
