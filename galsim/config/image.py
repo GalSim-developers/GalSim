@@ -146,7 +146,8 @@ def SetupConfigImageNum(config, image_num, obj_num, logger=None):
         image['type'] = 'Single'
     image_type = image['type']
     if image_type not in valid_image_types:
-        raise GalSimConfigValueError("Invalid image.type.", image_type, valid_image_types)
+        raise GalSimConfigValueError("Invalid image.type.", image_type,
+                                     list(valid_image_types.keys()))
 
     # In case this hasn't been done yet.
     SetupInput(config, logger)
@@ -319,7 +320,8 @@ def GetNObjForImage(config, image_num):
     image = config.get('image',{})
     image_type = image.get('type','Single')
     if image_type not in valid_image_types:
-        raise GalSimConfigValueError("Invalid image.type.", image_type, valid_image_types)
+        raise GalSimConfigValueError("Invalid image.type.", image_type,
+                                     list(valid_image_types.keys()))
     return valid_image_types[image_type].getNObj(image,config,image_num)
 
 
@@ -393,7 +395,8 @@ def MakeImageTasks(config, jobs, logger):
     image = config.get('image', {})
     image_type = image.get('type', 'Single')
     if image_type not in valid_image_types:
-        raise GalSimConfigValueError("Invalid image.type.", image_type, valid_image_types)
+        raise GalSimConfigValueError("Invalid image.type.", image_type,
+                                     list(valid_image_types.keys()))
     return valid_image_types[image_type].makeTasks(image, config, jobs, logger)
 
 

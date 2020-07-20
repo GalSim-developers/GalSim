@@ -251,7 +251,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     stamp = config['stamp']
     stamp_type = stamp['type']
     if stamp_type not in valid_stamp_types:
-        raise GalSimConfigValueError("Invalid stamp.type.", stamp_type, valid_stamp_types)
+        raise GalSimConfigValueError("Invalid stamp.type.", stamp_type,
+                                     list(valid_stamp_types.keys()))
     builder = valid_stamp_types[stamp_type]
 
     if builder.quickSkip(stamp, config):

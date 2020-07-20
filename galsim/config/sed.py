@@ -74,7 +74,7 @@ def BuildSED(config, key, base, logger=None):
             return csed, csafe
 
     if sed_type not in valid_sed_types:
-        raise GalSimConfigValueError("Invalid sed.type.", sed_type, valid_sed_types)
+        raise GalSimConfigValueError("Invalid sed.type.", sed_type, list(valid_sed_types.keys()))
     logger.debug('obj %d: Building sed type %s', base.get('obj_num',0), sed_type)
     builder = valid_sed_types[sed_type]
     sed, safe = builder.buildSED(param, base, logger)

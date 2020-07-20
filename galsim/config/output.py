@@ -280,7 +280,8 @@ def GetNFiles(config):
     output = config.get('output',{})
     output_type = output.get('type','Fits')
     if output_type not in valid_output_types:
-        raise GalSimConfigValueError("Invalid output.type.", output_type, valid_output_types)
+        raise GalSimConfigValueError("Invalid output.type.", output_type,
+                                     list(valid_output_types.keys()))
     return valid_output_types[output_type].getNFiles(output, config)
 
 
@@ -299,7 +300,8 @@ def GetNImagesForFile(config, file_num):
     output = config.get('output',{})
     output_type = output.get('type','Fits')
     if output_type not in valid_output_types:
-        raise GalSimConfigValueError("Invalid output.type.", output_type, valid_output_types)
+        raise GalSimConfigValueError("Invalid output.type.", output_type,
+                                     list(valid_output_types.keys()))
     return valid_output_types[output_type].getNImages(output, config, file_num)
 
 
@@ -319,7 +321,8 @@ def GetNObjForFile(config, file_num, image_num):
     output = config.get('output',{})
     output_type = output.get('type','Fits')
     if output_type not in valid_output_types:
-        raise GalSimConfigValueError("Invalid output.type.", output_type, valid_output_types)
+        raise GalSimConfigValueError("Invalid output.type.", output_type,
+                                     list(valid_output_types.keys()))
     return valid_output_types[output_type].getNObjPerImage(output, config, file_num, image_num)
 
 
@@ -361,7 +364,8 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
     # Check that the type is valid
     output_type = config['output']['type']
     if output_type not in valid_output_types:
-        raise GalSimConfigValueError("Invalid output.type.", output_type, valid_output_types)
+        raise GalSimConfigValueError("Invalid output.type.", output_type,
+                                     list(valid_output_types.keys()))
 
 
 class OutputBuilder(object):

@@ -96,7 +96,8 @@ def BuildWCS(config, key, base, logger=None):
         param['origin'] = origin
 
     if wcs_type not in valid_wcs_types:
-        raise GalSimConfigValueError("Invalid image.wcs.type.", wcs_type, valid_wcs_types)
+        raise GalSimConfigValueError("Invalid image.wcs.type.", wcs_type,
+                                     list(valid_wcs_types.keys()))
     logger.debug('image %d: Building wcs type %s', base.get('image_num',0), wcs_type)
     builder = valid_wcs_types[wcs_type]
     wcs = builder.buildWCS(param, base, logger)

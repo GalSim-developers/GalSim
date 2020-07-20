@@ -79,7 +79,8 @@ def AddNoise(config, im, current_var=0., logger=None):
     # Default is Poisson
     noise_type = noise.get('type', 'Poisson')
     if noise_type not in valid_noise_types:
-        raise GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
+        raise GalSimConfigValueError("Invalid noise.type.", noise_type,
+                                     list(valid_noise_types.keys()))
 
     # We need to use image_num for the index_key, but if we are running this from the stamp
     # building phase, then we want to use obj_num_rng for the noise rng.  So get the rng now
@@ -114,7 +115,8 @@ def CalculateNoiseVariance(config):
 
     noise_type = noise.get('type', 'Poisson')
     if noise_type not in valid_noise_types:
-        raise GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
+        raise GalSimConfigValueError("Invalid noise.type.", noise_type,
+                                     list(valid_noise_types.keys()))
 
     index, orig_index_key = GetIndex(noise, config)
     config['index_key'] = 'image_num'
@@ -152,7 +154,8 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
 
     noise_type = noise.get('type', 'Poisson')
     if noise_type not in valid_noise_types:
-        raise GalSimConfigValueError("Invalid noise.type.", noise_type, valid_noise_types)
+        raise GalSimConfigValueError("Invalid noise.type.", noise_type,
+                                     list(valid_noise_types.keys()))
 
     index, orig_index_key = GetIndex(noise, config)
     config['index_key'] = 'image_num'

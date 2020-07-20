@@ -74,7 +74,8 @@ def BuildBandpass(config, key, base, logger=None):
             return cbandpass, csafe
 
     if bandpass_type not in valid_bandpass_types:
-        raise GalSimConfigValueError("Invalid bandpass.type.", bandpass_type, valid_bandpass_types)
+        raise GalSimConfigValueError("Invalid bandpass.type.", bandpass_type,
+                                     list(valid_bandpass_types.keys()))
     logger.debug('obj %d: Building bandpass type %s', base.get('obj_num',0), bandpass_type)
     builder = valid_bandpass_types[bandpass_type]
     bandpass, safe = builder.buildBandpass(param, base, logger)
