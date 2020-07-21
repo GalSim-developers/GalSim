@@ -45,11 +45,11 @@ namespace galsim {
         return py::make_tuple(u,v);
     }
 
-    py::tuple CallInvertAB(int m, double x, double y, size_t ab_data, size_t abp_data)
+    py::tuple CallInvertAB(int m, double x, double y, size_t ab_data, size_t abp_data, bool doiter)
     {
         const double* abar = reinterpret_cast<const double*>(ab_data);
         const double* abpar = reinterpret_cast<const double*>(abp_data);
-        InvertAB(m, x, y, abar, abpar);
+        InvertAB(m, x, y, abar, abpar, doiter);
         return py::make_tuple(x,y);
     }
 
@@ -62,4 +62,3 @@ namespace galsim {
     }
 
 } // namespace galsim
-

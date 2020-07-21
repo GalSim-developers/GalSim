@@ -886,13 +886,14 @@ class GSFitsWCS(CelestialWCS):
     _takes_rng = False
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
-                 origin=None, _data=None):
+                 origin=None, _data=None, _doiter=True):
         # Note: _data is not intended for end-user use.  It enables the equivalent of a
         #       private constructor of GSFitsWCS by the function TanWCS.  The details of its
         #       use are intentionally not documented above.
 
         self._color = None
         self._tag = None # Write something useful here (see below). This is just used for the str.
+        self._doiter = _doiter
 
         # If _data is given, copy the data and we're done.
         if _data is not None:
@@ -1366,14 +1367,14 @@ class GSFitsWCS(CelestialWCS):
             len(x)
         except TypeError:
             with convert_cpp_errors():
-                return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data)
+                return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data, self._doiter)
         else:
             invabx = np.empty(len(x))
             invaby = np.empty(len(x))
             for i in range(len(x)):
                 with convert_cpp_errors():
                     xx, yy = _galsim.InvertAB(len(self.ab[0]), x[i], y[i], self.ab.ctypes.data,
-                                              abp_data)
+                                              abp_data, self._doiter)
                 invabx[i] = xx
                 invaby[i] = yy
             return invabx, invaby
@@ -1781,6 +1782,7 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
     """
     from scipy.optimize import least_squares
     from .celestial import CelestialCoord
+
     if center is None:
         # Use deprojected 3D mean of ra/dec unit sphere points as center
         wx = np.mean(np.cos(dec)*np.cos(ra))
@@ -1809,26 +1811,7 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
     ab_guess = np.array(ab_guess)
     guess = np.hstack([crpix_guess, cd_guess.ravel(), ab_guess.ravel()])
 
-    def _getWCS(params):
-        crpix = params[:2]
-        cd = params[2:6].reshape(2, 2)
-
-        k = 0
-        a = []
-        b = []
-        for i in range(order+1):
-            for j in range(order+1):
-                if (i+j < 2) or (i+j > order):
-                    a.append(0.0)
-                    b.append(0.0)
-                else:
-                    a.append(params[6+k])
-                    b.append(params[6+k+1])
-                    k += 2
-        a = np.array(a).reshape((order+1, order+1))
-        b = np.array(b).reshape((order+1, order+1))
-        ab = np.array([a, b])
-
+    def _getWCS(center, crpix, cd, ab, abp=None, doiter=False):
         _data = [
             'TAN',
             crpix,
@@ -1836,19 +1819,67 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
             center,
             None, # pv, unused
             ab,
-            None  # abp, unused
+            abp
         ]
-        return GSFitsWCS(_data=_data)
+        return GSFitsWCS(_data=_data, _doiter=doiter)
 
-    def _loss(params):
-        wcs = _getWCS(params)
-        ra_pred, dec_pred = wcs.xyToradec(x, y, units='rad')
-        u_pred, v_pred = center.project_rad(ra_pred, dec_pred)
-        resid = np.hstack([u-u_pred, v-v_pred])
+    def _decodeSIP(order, params, min=2):
+        k = 0
+        a = []
+        b = []
+        for i in range(order+1):
+            for j in range(order+1):
+                if (i+j < min) or (i+j > order):
+                    a.append(0.0)
+                    b.append(0.0)
+                else:
+                    a.append(params[k])
+                    b.append(params[k+1])
+                    k += 2
+        a = np.array(a).reshape((order+1, order+1))
+        b = np.array(b).reshape((order+1, order+1))
+        ab = np.array([a, b])
+        return ab
+
+    def _abLoss(params, order, center, x, y, u, v):
+        crpix = params[:2]
+        cd = params[2:6].reshape(2, 2)
+        ab = _decodeSIP(order, params[6:])
+        wcs = _getWCS(center, crpix, cd, ab)
+        ra_p, dec_p = wcs.xyToradec(x, y, units='rad')
+        u_p, v_p = center.project_rad(ra_p, dec_p)
+        resid = np.hstack([u-u_p, v-v_p])
         resid = np.rad2deg(resid)*3600*1e6  # Work in microarcseconds
         return resid
 
-    result = least_squares(_loss, guess)
+    result = least_squares(_abLoss, guess, args=(order, center, x, y, u, v))
     # rmse = np.sqrt(2*result.cost/len(u))
     # print(f"rmse: {rmse:.2f} microarcsec")
-    return _getWCS(result.x)
+    crpix = result.x[0:2]
+    cd = result.x[2:6].reshape(2, 2)
+    ab = _decodeSIP(order, result.x[6:])
+
+    # Now go back holding crpix, cd, and ab constant, and solve for inverse
+    # coefficients abp
+    # ABP SIP coefficient initial guesses are just 0.0
+    abp_guess = []
+    for i in range(order+1):
+        for j in range(order+1):
+            if (i+j > 0) and (i+j <= order):
+                abp_guess.extend([0.0, 0.0])
+    abp_guess = np.array(abp_guess)
+
+    def _abpLoss(params, order, center, crpix, cd, ab, ra, dec, x, y):
+        abp = _decodeSIP(order, params, min=1)
+        wcs = _getWCS(center, crpix, cd, ab, abp)
+        x_p, y_p = wcs.radecToxy(ra, dec, units='rad')
+        resid = np.hstack([x-x_p, y-y_p])*1e6  # work in micropixels
+        return resid
+    result = least_squares(
+        _abpLoss, abp_guess,
+        args=(order, center, crpix, cd, ab, ra, dec, x, y)
+    )
+    # rmse = np.sqrt(2*result.cost/len(u))
+    # print(f"rmse: {rmse:.2f} micropixels")
+    abp = _decodeSIP(order, result.x, min=1)
+    return _getWCS(center, crpix, cd, ab, abp, doiter=True)
