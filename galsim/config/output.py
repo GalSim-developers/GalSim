@@ -92,6 +92,10 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         nproc = 1
     orig_config = CopyConfig(config)
 
+    if nfiles == 0:
+        logger.error("No files were made, since nfiles == 0.")
+        return orig_config
+
     for k in range(nfiles + first_file_num):
         SetupConfigFileNum(config, file_num, image_num, obj_num, logger)
 
@@ -158,11 +162,8 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
                            except_abort = except_abort)
     t2 = time.time()
 
-    if not results:
-        nfiles_written = 0
-    else:
-        fnames, times = zip(*results)
-        nfiles_written = sum([ t!=0 for t in times])
+    fnames, times = zip(*results)
+    nfiles_written = sum([ t!=0 for t in times])
 
     if nfiles_written == 0:
         logger.error('No files were written.  All were either skipped or had errors.')

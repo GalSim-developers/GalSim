@@ -82,6 +82,10 @@ def BuildStamps(nobjects, config, obj_num=0,
     logger.debug('image %d: BuildStamps nobjects = %d: obj = %d',
                  config.get('image_num',0),nobjects,obj_num)
 
+    if nobjects == 0:
+        logger.error("No stamps were built, since nstamps == 0.")
+        return [], []
+
     # Figure out how many processes we will use for building the stamps:
     if nobjects > 1 and 'image' in config and 'nproc' in config['image']:
         nproc = ParseValue(config['image'], 'nproc', config, int)[0]

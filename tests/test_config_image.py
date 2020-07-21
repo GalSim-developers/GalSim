@@ -127,8 +127,6 @@ def test_single():
         galsim.config.BuildImage(config)
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImages(3,config)
-    with assert_raises(galsim.GalSimConfigError):
-        galsim.config.BuildImages(0,config)
     config['image'] = { 'type' : 'Single', 'xsize' : 32 }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
@@ -531,20 +529,30 @@ def test_reject():
     #print(cl.output)
     assert "No stamps were built.  All objects were skipped." in cl.output
 
+    # Different message if nstamps=0, rather than all failures.
+    with CaptureLog() as cl:
+        galsim.config.BuildStamps(0, config, do_noise=False, logger=cl.logger)[0]
+    assert "No stamps were built, since nstamps == 0." in cl.output
+
     # Likewise with BuildImages, but with a slightly different message.
     with CaptureLog() as cl:
         im_list4 = galsim.config.BuildImages(nimages, config, logger=cl.logger)
     assert "No images were built.  All were either skipped or had errors." in cl.output
+
+    # Different message if nimages=0, rather than all failures.
+    with CaptureLog() as cl:
+        galsim.config.BuildImages(0, config, logger=cl.logger)
+    assert "No images were built, since nimages == 0." in cl.output
 
     # And BuildFiles
     with CaptureLog() as cl:
         galsim.config.BuildFiles(nimages, config, logger=cl.logger)
     assert "No files were written.  All were either skipped or had errors." in cl.output
 
-    # Slighty different path if results is empty list, rather than all failures.
+    # Different message if nfiles=0, rather than all failures.
     with CaptureLog() as cl:
         galsim.config.BuildFiles(0, config, logger=cl.logger)
-    assert "No files were written.  All were either skipped or had errors." in cl.output
+    assert "No files were made, since nfiles == 0." in cl.output
 
     # Finally, with a fake logger, this covers the LoggerWrapper functionality.
     logger = galsim.config.LoggerWrapper(None)

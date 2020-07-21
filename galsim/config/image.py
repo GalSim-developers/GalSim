@@ -64,6 +64,10 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                  config.get('file_num',0),nimages,image_num,obj_num)
 
+    if nimages == 0:
+        logger.error('No images were built, since nimages == 0.')
+        return []
+
     # Figure out how many processes we will use for building the images.
     if 'image' not in config: config['image'] = {}
     image = config['image']
@@ -346,7 +350,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     logger = LoggerWrapper(logger)
     rng = config['image_num_rng']
     nobjects = len(stamps)
-    max_current_var = max(current_vars)
+    max_current_var = max(current_vars, default=0)
     if max_current_var > 0:
         logger.debug('image %d: maximum noise varance in any stamp is %f',
                      config['image_num'], max_current_var)
