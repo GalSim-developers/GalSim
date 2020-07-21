@@ -1774,8 +1774,9 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
         ra:     Right ascension of reference stars in radians
         dec:    Declination of reference stars in radians
         order:  The order of the Simple Imaging Polynomial (SIP) used to
-                describe the WCS distortion.  Should be in the range [1, 9]
-                [default: 3]
+                describe the WCS distortion.  SIP coefficients kick in when
+                order >= 2.  If you supply order=1, then just fit a TAN WCS
+                without any SIP coefficients.  [default: 3]
         center: A `CelestialCoord` defining the location on the sphere where the
                 tangent plane is centered.  [default: None, which means use the
                 average position of the list of reference stars]
@@ -1790,7 +1791,7 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
         wz = np.mean(np.sin(dec))
         center = CelestialCoord.from_xyz(wx, wy, wz)
 
-    if order < 1 or order > 9:
+    if order < 1:
         raise GalSimValueError("Illegal SIP order", order)
 
     # Project radec onto uv so we can linearly fit the CRPIX and CD matrix
@@ -1811,7 +1812,7 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
     ab_guess = np.array(ab_guess)
     guess = np.hstack([crpix_guess, cd_guess.ravel(), ab_guess.ravel()])
 
-    def _getWCS(center, crpix, cd, ab, abp=None, doiter=False):
+    def _getWCS(center, crpix, cd, ab=None, abp=None, doiter=False):
         _data = [
             'TAN',
             crpix,
@@ -1858,6 +1859,9 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
     crpix = result.x[0:2]
     cd = result.x[2:6].reshape(2, 2)
     ab = _decodeSIP(order, result.x[6:])
+
+    if order == 1:
+        return _getWCS(center, crpix, cd)
 
     # Now go back holding crpix, cd, and ab constant, and solve for inverse
     # coefficients abp
