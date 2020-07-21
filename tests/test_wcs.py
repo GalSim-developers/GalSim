@@ -2496,19 +2496,18 @@ def test_fittedsipwcs():
     rng = galsim.UniformDeviate(57721)
 
     for tag in test_tags:
-        print(tag)
         file_name, ref_list = references[tag]
         header = fits.getheader(os.path.join(dir, file_name))
         wcs = galsim.FitsWCS(header=header, suppress_warning=True)
+        if not wcs.isCelestial():
+            continue
+        print(tag)
         x = np.empty(nref, dtype=float)
         y = np.empty(nref, dtype=float)
         rng.generate(x)
         rng.generate(y)
         x *= header['NAXIS1']  # rough range of reference WCS image coords
         y *= header['NAXIS2']
-        # wcs = galsim.FitsWCS(header=header, suppress_warning=True)
-        if not wcs.isCelestial():
-            continue
         ra, dec = wcs.xyToradec(x, y, units='rad')
 
         fittedWCS = galsim.FittedSIPWCS(
@@ -2623,8 +2622,17 @@ def test_fittedsipwcs():
         # Check illegal values
         with np.testing.assert_raises(galsim.GalSimValueError):
             galsim.FittedSIPWCS(x, y, ra, dec, order=0)
-        with np.testing.assert_raises(galsim.GalSimValueError):
-            galsim.FittedSIPWCS(x, y, ra, dec, order=10)
+
+        # Check that we get a standard TAN WCS if order=1
+        header = {}
+        wcs = galsim.FittedSIPWCS(x, y, ra, dec, order=1)
+        wcs.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
+        assert "A_ORDER" not in header
+        # and a TAN-SIP WCS if order > 1
+        header = {}
+        wcs = galsim.FittedSIPWCS(x, y, ra, dec, order=2)
+        wcs.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
+        assert "A_ORDER" in header
 
 
 @timer
