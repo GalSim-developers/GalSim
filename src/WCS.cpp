@@ -236,7 +236,7 @@ namespace galsim {
         for (int i=2; i<xpow.size(); ++i) xpow[i] = xpow[i-1] * x;
     }
 
-    void InvertAB(int m, double& x, double& y, const double* abar, const double* abpar)
+    void InvertAB(int m, double& x, double& y, const double* abar, const double* abpar, bool doiter)
     {
         dbg<<"start invert_ab: "<<x<<" "<<y<<std::endl;
         double x0 = x;
@@ -287,6 +287,8 @@ namespace galsim {
 #endif
         }
 
+        if (!doiter) return;
+
         // We do this iteration even if we have AP and BP matrices, since the inverse
         // transformation is not always very accurate.
         // The assumption here is that the A and B matrices are correct and the AP and BP
@@ -315,7 +317,7 @@ namespace galsim {
 
             // Check that things are improving...
             double err = std::max(std::abs(dx),std::abs(dy));
-            if (prev_err >= 0. && err > prev_err) 
+            if (prev_err >= 0. && err > prev_err)
                 throw std::runtime_error("Unable to solve for image_pos (not improving)");
             prev_err = err;
             dbg<<"err = "<<err<<std::endl;

@@ -2465,44 +2465,127 @@ def check_sphere(ra1, dec1, ra2, dec2, atol=1):
 def test_fittedsipwcs():
     """Test our ability to construct a WCS from x, y, ra, dec tuples
     """
-    rng = galsim.UniformDeviate(57721)
-    x = np.empty(100, dtype=float)
-    y = np.empty(100, dtype=float)
-    rng.generate(x)
-    rng.generate(y)
-    x *= 150  # rough range of reference WCS image coords
-    y *= 150
+    import astropy.io.fits as fits
 
     if __name__ == '__main__':
         test_tags = all_tags
     else:
         test_tags = ['TAN', 'SIP', 'TAN-PV']
 
+    tol = {  #(arcsec, pixels)
+        'HPX': (5.0, 0.01),
+        'TAN': (5.0, 0.01),
+        'TSC': (5.0, 0.01),
+        'STG': (5.0, 0.01),
+        'ZEA': (10.0, 0.1),
+        'ARC': (5.0, 0.02),
+        'ZPN': (2500.0, 2.5),
+        'SIP': (1e-6, 0.01),
+        'TPV': (1e-6, 1e-3),
+        'TAN-PV': (1e-6, 2e-4),
+        'TAN-FLIP': (1e-6, 1e-6),
+        'REGION': (1e-6, 1e-6),
+        'TNX': (1e-6, 2e-5)
+    }
+
     dir = 'fits_files'
+
+    nref = 100
+    nfit = 50
+
+    rng = galsim.UniformDeviate(57721)
 
     for tag in test_tags:
         print(tag)
         file_name, ref_list = references[tag]
-        wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
+        header = fits.getheader(os.path.join(dir, file_name))
+        wcs = galsim.FitsWCS(header=header, suppress_warning=True)
+        x = np.empty(nref, dtype=float)
+        y = np.empty(nref, dtype=float)
+        rng.generate(x)
+        rng.generate(y)
+        x *= header['NAXIS1']  # rough range of reference WCS image coords
+        y *= header['NAXIS2']
+        # wcs = galsim.FitsWCS(header=header, suppress_warning=True)
         if not wcs.isCelestial():
             continue
         ra, dec = wcs.xyToradec(x, y, units='rad')
 
         fittedWCS = galsim.FittedSIPWCS(
-            x[:50], y[:50], ra[:50], dec[:50],
-            order=7
+            x[:nfit], y[:nfit], ra[:nfit], dec[:nfit],
+            order=3
         )
+        ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
+
+        # import matplotlib.pyplot as plt
+        # fig, axes = plt.subplots(ncols=2, figsize=(10, 3))
+        # dra = np.rad2deg(((ra-ra_test)+np.pi)%(2*np.pi)-np.pi)*3600
+        # ddec = np.rad2deg(dec-dec_test)*3600
+        # s0 = axes[0].scatter(
+        #     np.rad2deg(ra), np.rad2deg(dec),
+        #     c=dra, vmin=np.min(dra[:nfit]), vmax=np.max(dra[:nfit])
+        # )
+        # plt.colorbar(s0, ax=axes[0])
+        # s1 = axes[1].scatter(
+        #     np.rad2deg(ra), np.rad2deg(dec),
+        #     c=ddec, vmin=np.min(ddec[:nfit]), vmax=np.max(ddec[:nfit])
+        # )
+        # plt.colorbar(s1, ax=axes[1])
+        # axes[0].scatter(
+        #     np.rad2deg(ra[:nfit]), np.rad2deg(dec[:nfit]),
+        #     facecolors='none', edgecolors='k', s=100
+        # )
+        # axes[1].scatter(
+        #     np.rad2deg(ra[:nfit]), np.rad2deg(dec[:nfit]),
+        #     facecolors='none', edgecolors='k', s=100
+        # )
+        # plt.show()
+
         # First check that points used in fit are close to fit function values
-        ra_test, dec_test = fittedWCS.xyToradec(x[:50], y[:50], units='rad')
         check_sphere(
-            ra[:50], dec[:50], ra_test, dec_test,
-            atol=1 if tag == 'ZPN' else 1e-3
+            ra[:nfit], dec[:nfit], ra_test[:nfit], dec_test[:nfit],
+            atol=tol[tag][0]
         )
         # Now check on some "reserve" points
-        ra_test, dec_test = fittedWCS.xyToradec(x[50:], y[50:], units='rad')
         check_sphere(
-            ra[50:], dec[50:], ra_test, dec_test,
-            atol=30 if tag == 'ZPN' else 1e-3
+            ra[nfit:], dec[nfit:], ra_test[nfit:], dec_test[nfit:],
+            atol=tol[tag][0]
+        )
+
+        # Check reverse
+        x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
+
+        # import matplotlib.pyplot as plt
+        # fig, axes = plt.subplots(ncols=2, figsize=(10, 3))
+        # dx = x-x_test
+        # dy = y-y_test
+        # s0 = axes[0].scatter(
+        #     x, y, c=dx, vmin=np.min(dx[:nfit]), vmax=np.max(dx[:nfit])
+        # )
+        # plt.colorbar(s0, ax=axes[0])
+        # s1 = axes[1].scatter(
+        #     x, y, c=dy, vmin=np.min(dy[:nfit]), vmax=np.max(dy[:nfit])
+        # )
+        # plt.colorbar(s1, ax=axes[1])
+        # axes[0].scatter(
+        #     x[:nfit], y[:nfit], facecolors='none', edgecolors='k', s=100
+        # )
+        # axes[1].scatter(
+        #     x[:nfit], y[:nfit], facecolors='none', edgecolors='k', s=100
+        # )
+        # plt.show()
+
+        np.testing.assert_allclose(
+            np.hstack([x[:nfit], y[:nfit]]),
+            np.hstack([x_test[:nfit], y_test[:nfit]]),
+            rtol=0,
+            atol=tol[tag][1]
+        )
+        np.testing.assert_allclose(
+            np.hstack([x[nfit:], y[nfit:]]),
+            np.hstack([x_test[nfit:], y_test[nfit:]]),
+            rtol=0,
+            atol=tol[tag][1]
         )
 
         # Try again, but force a different center
@@ -2513,13 +2596,27 @@ def test_fittedsipwcs():
             galsim.Angle.from_dms(ref_list[0][1])
         )
         fittedWCS = galsim.FittedSIPWCS(
-            x[:50], y[:50], ra[:50], dec[:50],
-            order=7, center=center
+            x[:nfit], y[:nfit], ra[:nfit], dec[:nfit],
+            order=3, center=center
         )
-        ra_test, dec_test = fittedWCS.xyToradec(x[:50], y[:50], units='rad')
+        ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
         check_sphere(
-            ra[:50], dec[:50], ra_test, dec_test,
-            atol=60 if tag == 'ZPN' else 10
+            ra[:nfit], dec[:nfit], ra_test[:nfit], dec_test[:nfit],
+            atol=tol[tag][0]
+        )
+        # Check reverse
+        x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
+        np.testing.assert_allclose(
+            np.hstack([x[:nfit], y[:nfit]]),
+            np.hstack([x_test[:nfit], y_test[:nfit]]),
+            rtol=0,
+            atol=tol[tag][1]
+        )
+        np.testing.assert_allclose(
+            np.hstack([x[nfit:], y[nfit:]]),
+            np.hstack([x_test[nfit:], y_test[nfit:]]),
+            rtol=0,
+            atol=tol[tag][1]
         )
         assert fittedWCS.center == center
 
