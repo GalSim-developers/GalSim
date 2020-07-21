@@ -544,11 +544,14 @@ class RealGalaxyCatalog(object):
                 "Cannot specify both the sample and file_name.",
                 sample=sample, file_name=file_name)
 
+        logger = LoggerWrapper(logger)
+
         self.file_name, self.image_dir, self.sample = _parse_files_dirs(file_name, dir, sample)
 
         with pyfits.open(self.file_name) as fits:
             self.cat = fits[1].data
         self.nobjects = len(self.cat) # number of objects in the catalog
+        logger.debug('RealGalaxyCatalog %s has %d objects',self.file_name,self.nobjects)
         if _nobjects_only: return  # Exit early if that's all we needed.
         ident = self.cat.field('ident') # ID for object in the training sample
 
@@ -596,7 +599,6 @@ class RealGalaxyCatalog(object):
 
         self.saved_noise_im = {}
         self.loaded_files = {}
-        self.logger = LoggerWrapper(logger)
 
         # The pyfits commands aren't thread safe.  So we need to make sure the methods that
         # use pyfits are not run concurrently from multiple threads.
@@ -650,13 +652,11 @@ class RealGalaxyCatalog(object):
         a big speedup if memory isn't an issue.
         """
         from ._pyfits import pyfits
-        self.logger.debug('RealGalaxyCatalog: start preload')
         for file_name in np.concatenate((self.gal_file_name , self.psf_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in
             # the original file.  Stupid.  But this next line removes it.
             file_name = file_name.strip()
             if file_name not in self.loaded_files:
-                self.logger.debug('RealGalaxyCatalog: preloading %s',file_name)
                 # I use memmap=False, because I was getting problems with running out of
                 # file handles in the great3 real_gal run, which uses a lot of rgc files.
                 # I think there must be a bug in pyfits that leaves file handles open somewhere
@@ -672,16 +672,13 @@ class RealGalaxyCatalog(object):
     def _getFile(self, file_name):
         from ._pyfits import pyfits
         if file_name in self.loaded_files:
-            self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
             f = self.loaded_files[file_name]
         else:
             self.loaded_lock.acquire()
             # Check again in case two processes both hit the else at the same time.
             if file_name in self.loaded_files: # pragma: no cover
-                self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
                 f = self.loaded_files[file_name]
             else:
-                self.logger.debug('RealGalaxyCatalog: open file %s',file_name)
                 f = pyfits.open(file_name,memmap=False)
                 self.loaded_files[file_name] = f
             self.loaded_lock.release()
@@ -703,7 +700,6 @@ class RealGalaxyCatalog(object):
         """Returns the galaxy at index ``i`` as an `Image` object.
         """
         from .image import Image
-        self.logger.debug('RealGalaxyCatalog %d: Start getGalImage',i)
         if i >= len(self.gal_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.gal_file_name)-1),i)
         f = self._getFile(self.gal_file_name[i])
@@ -719,7 +715,6 @@ class RealGalaxyCatalog(object):
         """Returns the PSF at index ``i`` as an `Image` object.
         """
         from .image import Image
-        self.logger.debug('RealGalaxyCatalog %d: Start getPSFImage',i)
         if i >= len(self.psf_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.psf_file_name)-1),i)
         f = self._getFile(self.psf_file_name[i])
@@ -743,7 +738,6 @@ class RealGalaxyCatalog(object):
            as a tuple (im, scale, var).
         """
         from .image import Image
-        self.logger.debug('RealGalaxyCatalog %d: Start getNoise',i)
         if self.noise_file_name is None:
             im = None
         else:
@@ -751,13 +745,11 @@ class RealGalaxyCatalog(object):
                 raise GalSimIndexError('index out of range (0..%d)'%(len(self.noise_file_name)-1),i)
             if self.noise_file_name[i] in self.saved_noise_im:
                 im = self.saved_noise_im[self.noise_file_name[i]]
-                self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
             else:
                 self.noise_lock.acquire()
                 # Again, a second check in case two processes get here at the same time.
                 if self.noise_file_name[i] in self.saved_noise_im:  # pragma: no cover
                     im = self.saved_noise_im[self.noise_file_name[i]]
-                    self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
                 else:
                     from ._pyfits import pyfits
                     with pyfits.open(self.noise_file_name[i]) as fits:
@@ -765,7 +757,6 @@ class RealGalaxyCatalog(object):
                     im = Image(np.ascontiguousarray(array.astype(np.float64)),
                                       scale=self.pixel_scale[i])
                     self.saved_noise_im[self.noise_file_name[i]] = im
-                    self.logger.debug('RealGalaxyCatalog %d: Built noise im',i)
                 self.noise_lock.release()
 
         return im, self.pixel_scale[i], self.variance[i]

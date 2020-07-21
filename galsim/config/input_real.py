@@ -28,7 +28,7 @@ from ..real import RealGalaxyCatalog, RealGalaxy, ChromaticRealGalaxy
 
 # The RealGalaxyCatalog doesn't need anything special other than registration as a valid
 # input type.
-RegisterInputType('real_catalog', InputLoader(RealGalaxyCatalog))
+RegisterInputType('real_catalog', InputLoader(RealGalaxyCatalog, takes_logger=True))
 
 # There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
 

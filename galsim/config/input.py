@@ -22,7 +22,7 @@ import os
 import logging
 
 from .value import RegisterValueType
-from .util import LoggerWrapper, RemoveCurrent, GetRNG
+from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..catalog import Catalog, Dict
@@ -362,10 +362,11 @@ class InputLoader(object):
                 dict input object. Thus, dict is our canonical example of an input type for
                 which this parameter should be True.
     """
-    def __init__(self, init_func, has_nobj=False, file_scope=False):
+    def __init__(self, init_func, has_nobj=False, file_scope=False, takes_logger=False):
         self.init_func = init_func
         self.has_nobj = has_nobj
         self.file_scope = file_scope
+        self.takes_logger = takes_logger
 
     def getKwargs(self, config, base, logger):
         """Parse the config dict and return the kwargs needed to build the input object.
@@ -404,6 +405,8 @@ class InputLoader(object):
             rng = GetRNG(config, base, logger, 'input '+self.init_func.__name__)
             kwargs['rng'] = rng
             safe = False
+        if self.takes_logger:
+            kwargs['logger'] = GetLoggerProxy(logger)
         return kwargs, safe
 
     def setupImage(self, input_obj, config, base, logger):
