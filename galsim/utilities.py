@@ -1436,10 +1436,17 @@ def math_eval(str, other_modules=()):
     exec('import galsim', gdict)
     exec('import numpy', gdict)
     exec('import numpy as np', gdict)
+
     exec('import math', gdict)
     exec('import coord', gdict)
     for m in other_modules:  # pragma: no cover  (We don't use this.)
         exec('import ' + m, gdict)
+
+    # A few other things that show up in reprs, so useful to import here.
+    exec('from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray',
+         gdict)
+    exec('from astropy.units import Unit', gdict)
+
     return eval(str, gdict)
 
 def binomial(a, b, n):
