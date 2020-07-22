@@ -26,6 +26,7 @@ from . import _galsim
 from . import fits
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimNotImplementedError, convert_cpp_errors, galsim_warn
+from .utilities import horner2d
 
 #########################################################################################
 #
@@ -1281,18 +1282,13 @@ class GSFitsWCS(CelestialWCS):
             return pv2
 
     def _apply_pv(self, u, v):
-        # Do this in C++ layer for speed.
-        with convert_cpp_errors():
-            _galsim.ApplyPV(len(u), 4, u.ctypes.data, v.ctypes.data, self.pv.ctypes.data)
-        return u, v
+        u1 = horner2d(u, v, self.pv[0], triangle=True)
+        v1 = horner2d(u, v, self.pv[1], triangle=True)
+        return u1, v1
 
     def _apply_ab(self, x, y):
-        # Do this in C++ layer for speed.
-        dx = x.copy()
-        dy = y.copy()
-        with convert_cpp_errors():
-            _galsim.ApplyPV(len(x), len(self.ab[0]), dx.ctypes.data, dy.ctypes.data,
-                            self.ab.ctypes.data)
+        dx = horner2d(x, y, self.ab[0], triangle=True)
+        dy = horner2d(x, y, self.ab[1], triangle=True)
         return x+dx, y+dy
 
     def _apply_cd(self, x, y):
@@ -1367,16 +1363,27 @@ class GSFitsWCS(CelestialWCS):
             len(x)
         except TypeError:
             with convert_cpp_errors():
-                return _galsim.InvertAB(len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data, self._doiter)
+                if not self._doiter:
+                    invabx = float(horner2d(x, y, self.abp[0]))
+                    invaby = float(horner2d(x, y, self.abp[1]))
+                    return invabx, invaby
+                else:
+                    return _galsim.InvertAB(
+                        len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data
+                    )
         else:
-            invabx = np.empty(len(x))
-            invaby = np.empty(len(x))
-            for i in range(len(x)):
-                with convert_cpp_errors():
-                    xx, yy = _galsim.InvertAB(len(self.ab[0]), x[i], y[i], self.ab.ctypes.data,
-                                              abp_data, self._doiter)
-                invabx[i] = xx
-                invaby[i] = yy
+            if not self._doiter:
+                invabx = horner2d(x, y, self.abp[0])
+                invaby = horner2d(x, y, self.abp[1])
+            else:
+                invabx = np.empty(len(x))
+                invaby = np.empty(len(x))
+                for i in range(len(x)):
+                    with convert_cpp_errors():
+                        xx, yy = _galsim.InvertAB(len(self.ab[0]), x[i], y[i], self.ab.ctypes.data,
+                                                  abp_data)
+                    invabx[i] = xx
+                    invaby[i] = yy
             return invabx, invaby
 
     def _xy(self, ra, dec, color=None):

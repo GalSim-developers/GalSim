@@ -30,14 +30,6 @@ namespace galsim {
         ApplyCD(n, xar, yar, cdar);
     }
 
-    void CallApplyPV(int n, int m, size_t u_data, size_t v_data, size_t pv_data)
-    {
-        double* uar = reinterpret_cast<double*>(u_data);
-        double* var = reinterpret_cast<double*>(v_data);
-        const double* pvar = reinterpret_cast<const double*>(pv_data);
-        ApplyPV(n, m, uar, var, pvar);
-    }
-
     py::tuple CallInvertPV(double u, double v, size_t pv_data)
     {
         const double* pvar = reinterpret_cast<const double*>(pv_data);
@@ -45,17 +37,16 @@ namespace galsim {
         return py::make_tuple(u,v);
     }
 
-    py::tuple CallInvertAB(int m, double x, double y, size_t ab_data, size_t abp_data, bool doiter)
+    py::tuple CallInvertAB(int m, double x, double y, size_t ab_data, size_t abp_data)
     {
         const double* abar = reinterpret_cast<const double*>(ab_data);
         const double* abpar = reinterpret_cast<const double*>(abp_data);
-        InvertAB(m, x, y, abar, abpar, doiter);
+        InvertAB(m, x, y, abar, abpar);
         return py::make_tuple(x,y);
     }
 
     void pyExportWCS(PY_MODULE& _galsim)
     {
-        GALSIM_DOT def("ApplyPV", &CallApplyPV);
         GALSIM_DOT def("ApplyCD", &CallApplyCD);
         GALSIM_DOT def("InvertPV", &CallInvertPV);
         GALSIM_DOT def("InvertAB", &CallInvertAB);
