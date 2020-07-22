@@ -176,8 +176,9 @@ def process_config(all_config, args, logger):
     # Process each config document
     for config in all_config:
 
+        root = os.path.splitext(args.config_file)[0]
         if 'root' not in config:
-            config['root'] = os.path.splitext(args.config_file)[0]
+            config['root'] = root
 
         # Parse the command-line variables:
         new_params = parse_variables(args.variables, logger)
@@ -204,6 +205,7 @@ def process_config(all_config, args, logger):
             from StringIO import StringIO
         except ImportError:
             from io import StringIO
+        pr.dump_stats(root + '.pstats')
         s = StringIO()
         sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid
                          # alias for this that is backwards compatible to older versions
@@ -211,6 +213,7 @@ def process_config(all_config, args, logger):
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
         ps.print_stats()
         logger.error(s.getvalue())
+        logger.error("Stats file also output to %s for further analysis.",root+'.pstats')
 
 def main(command_args):
     """The whole process given command-line parameters in their native (non-ArgParse) form.
