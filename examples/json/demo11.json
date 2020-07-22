@@ -29,7 +29,8 @@
 "psf" : {
     "type" : "InterpolatedImage",
     "image" : "data/example_sdss_psf_sky0.fits.bz2",
-    "scale" : 0.2
+    "scale" : 0.2,
+    "flux" : 1
 },
 
 "gal" : {
