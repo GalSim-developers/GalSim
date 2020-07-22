@@ -70,71 +70,6 @@ namespace galsim {
 #endif
     }
 
-    void ApplyPV(int n, const int m, double* uar, double* var, const double* pvar)
-    {
-#ifdef USE_TMV
-        tmv::ConstMatrixView<double> pvuT(pvar, m, m, 1, m, tmv::NonConj);
-        tmv::ConstMatrixView<double> pvvT(pvar + m*m, m, m, 1, m, tmv::NonConj);
-#else
-        Eigen::Map<const Eigen::MatrixXd> pvuT(pvar, m, m);
-        Eigen::Map<const Eigen::MatrixXd> pvvT(pvar + m*m, m, m);
-#endif
-        while (n) {
-            // Do this in blocks of at most 256 to avoid blowing up the memory usage when
-            // this is run on a large image. It's also a bit faster this way, since there
-            // are fewer cache misses.
-            const int nn = n >= 256 ? 256 : n;
-
-#ifdef USE_TMV
-            MapVectorXd u(uar, nn, 1, tmv::NonConj);
-            MapVectorXd v(var, nn, 1, tmv::NonConj);
-#else
-            MapVectorXd u(uar, nn);
-            MapVectorXd v(var, nn);
-#endif
-            MatrixXd upow(nn, m);
-            MatrixXd vpow(nn, m);
-
-            setup_pow(u, upow);
-            setup_pow(v, vpow);
-
-            // If we only have one input position, then the new values of u,v are
-            //
-            //     u' = [ 1 u u^2 u^3 ] pvu [ 1 v v^2 v^3 ]^T
-            //     v' = [ 1 u u^2 u^3 ] pvv [ 1 v v^2 v^3 ]^T
-            //
-            // When there are multiple inputs, then upow and vpow are each Nx4 matrices.
-            // The values we want are the diagonal of the matrix you would get from the
-            // above formulae.  So we use the fact that
-            //     diag(AT . B) = sum_rows(A * B)
-
-#ifdef USE_TMV
-            VectorXd ones(m, 1.);
-#else
-            VectorXd ones = Eigen::VectorXd::Ones(m);
-#endif
-            MatrixXd temp = vpow * pvuT;
-#ifdef USE_TMV
-            temp = ElemProd(upow, temp);
-#else
-            temp.array() *= upow.array();
-#endif
-            u = temp * ones;
-
-            temp = vpow * pvvT;
-#ifdef USE_TMV
-            temp = ElemProd(upow, temp);
-#else
-            temp.array() *= upow.array();
-#endif
-            v = temp * ones;
-
-            uar += nn;
-            var += nn;
-            n -= nn;
-        }
-    }
-
     void InvertPV(double& u, double& v, const double* pvar)
     {
         // Let (u0,v0) be the current value of (u,v).  Then we want to find a new (u,v) such that
@@ -236,7 +171,7 @@ namespace galsim {
         for (int i=2; i<xpow.size(); ++i) xpow[i] = xpow[i-1] * x;
     }
 
-    void InvertAB(int m, double& x, double& y, const double* abar, const double* abpar, bool doiter)
+    void InvertAB(int m, double& x, double& y, const double* abar, const double* abpar)
     {
         dbg<<"start invert_ab: "<<x<<" "<<y<<std::endl;
         double x0 = x;
@@ -286,8 +221,6 @@ namespace galsim {
             y += xpow.dot(aby_ypow);
 #endif
         }
-
-        if (!doiter) return;
 
         // We do this iteration even if we have AP and BP matrices, since the inverse
         // transformation is not always very accurate.
