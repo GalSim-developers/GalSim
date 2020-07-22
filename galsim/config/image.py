@@ -350,7 +350,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     logger = LoggerWrapper(logger)
     rng = config['image_num_rng']
     nobjects = len(stamps)
-    max_current_var = max(current_vars, default=0)
+    max_current_var = max(current_vars + (0,))  # Include 0 in case current_vars is empty.
     if max_current_var > 0:
         logger.debug('image %d: maximum noise varance in any stamp is %f',
                      config['image_num'], max_current_var)
