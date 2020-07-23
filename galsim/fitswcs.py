@@ -1357,7 +1357,7 @@ class GSFitsWCS(CelestialWCS):
             vv = v.copy()
 
         # Usually converges in ~3 iterations.
-        for iter in range(10):
+        for iter in range(10):  # pragma: no branch
             # Want Jac^-1 . du
             # du
             du = horner2d(uu, vv, pv[0], triangle=True) - u
@@ -1378,7 +1378,7 @@ class GSFitsWCS(CelestialWCS):
             # convergence.
             if iter > 2 and np.max(np.abs(np.array([duu, dvv]))) < 1e-12:
                 break
-        else:
+        else:  # pragma: no cover
             raise GalSimError("Unable to solve for image_pos.")
         return uu, vv
 
