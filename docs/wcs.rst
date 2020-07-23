@@ -104,6 +104,8 @@ Celestial WCS's
 
 .. autofunction:: galsim.TanWCS
 
+.. autofunction:: galsim.FittedSIPWCS
+
 Celestial Coordinates
 =====================
 
@@ -125,5 +127,3 @@ WCS Utilities
 .. autofunction:: galsim.wcs.readFromFitsHeader
 
 .. autofunction:: galsim.wcs.compatible
-
-
