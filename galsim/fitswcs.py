@@ -907,11 +907,11 @@ class GSFitsWCS(CelestialWCS):
             self.abp = _data[6]
             if self.wcs_type in ('TAN', 'TPV', 'TNX', 'TAN-SIP'):
                 self.projection = 'gnomonic'
-            elif self.wcs_type == 'STG':
+            elif self.wcs_type in ('STG', 'STG-SIP'):
                 self.projection = 'stereographic'
-            elif self.wcs_type == 'ZEA':
+            elif self.wcs_type in ('ZEA', 'ZEA-SIP'):
                 self.projection = 'lambert'
-            elif self.wcs_type == 'ARC':
+            elif self.wcs_type in ('ARC', 'ARC-SIP'):
                 self.projection = 'postel'
             else:
                 raise ValueError("Invalid wcs_type in _data")
@@ -980,16 +980,17 @@ class GSFitsWCS(CelestialWCS):
         self.wcs_type = ctype1[5:]
         if self.wcs_type in ('TAN', 'TPV', 'TNX', 'TAN-SIP'):
             self.projection = 'gnomonic'
-        elif self.wcs_type == 'STG':
+        elif self.wcs_type in ('STG', 'STG-SIP'):
             self.projection = 'stereographic'
-        elif self.wcs_type == 'ZEA':
+        elif self.wcs_type in ('ZEA', 'ZEA-SIP'):
             self.projection = 'lambert'
-        elif self.wcs_type == 'ARC':
+        elif self.wcs_type in ('ARC', 'ARC-SIP'):
             self.projection = 'postel'
         else:
             raise GalSimValueError("GSFitsWCS cannot read files using given wcs_type.",
                                    self.wcs_type,
-                                   ('TAN', 'TPV', 'TNX', 'TAN-SIP', 'STG', 'ZEA', 'ARC'))
+                                   ('TAN', 'TPV', 'TNX', 'TAN-SIP', 'STG', 'STG-SIP', 'ZEA',
+                                    'ZEA-SIP', 'ARC', 'ARC-SIP'))
         crval1 = float(header['CRVAL1'])
         crval2 = float(header['CRVAL2'])
         crpix1 = float(header['CRPIX1'])
@@ -1051,7 +1052,7 @@ class GSFitsWCS(CelestialWCS):
             self._read_tpv(header)
         elif self.wcs_type == 'TNX':
             self._read_tnx(header)
-        elif self.wcs_type == 'TAN-SIP':
+        elif self.wcs_type in ('TAN-SIP', 'STG-SIP', 'ZEA-SIP', 'ARC-SIP'):
             self._read_sip(header)
 
         # I think the CUNIT specification applies to the CD matrix as well, but I couldn't actually
@@ -1784,22 +1785,24 @@ FitsWCS._single_params = []
 FitsWCS._takes_rng = False
 
 
-def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
+def FittedSIPWCS(x, y, ra, dec, wcs_type='TAN', order=3, center=None):
     """A WCS constructed from a list of reference celestial and image
     coordinates.
 
     Parameters:
-        x:      Image x-coordinates of reference stars in pixels
-        y:      Image y-coordinates of reference stars in pixels
-        ra:     Right ascension of reference stars in radians
-        dec:    Declination of reference stars in radians
-        order:  The order of the Simple Imaging Polynomial (SIP) used to
-                describe the WCS distortion.  SIP coefficients kick in when
-                order >= 2.  If you supply order=1, then just fit a TAN WCS
-                without any SIP coefficients.  [default: 3]
-        center: A `CelestialCoord` defining the location on the sphere where the
-                tangent plane is centered.  [default: None, which means use the
-                average position of the list of reference stars]
+        x:         Image x-coordinates of reference stars in pixels
+        y:         Image y-coordinates of reference stars in pixels
+        ra:        Right ascension of reference stars in radians
+        dec:       Declination of reference stars in radians
+        wcs_type:  The type of the tangent plane projection to use.  Should be
+                   one of ['TAN', 'STG', 'ZEA', or 'ARC'].  [default: 'TAN']
+        order:     The order of the Simple Imaging Polynomial (SIP) used to
+                   describe the WCS distortion.  SIP coefficients kick in when
+                   order >= 2.  If you supply order=1, then just fit a WCS
+                   without any SIP coefficients.  [default: 3]
+        center:    A `CelestialCoord` defining the location on the sphere where
+                   the tangent plane is centered.  [default: None, which means
+                   use the average position of the list of reference stars]
     """
     from scipy.optimize import least_squares
     from .celestial import CelestialCoord
@@ -1832,9 +1835,9 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
     ab_guess = np.array(ab_guess)
     guess = np.hstack([crpix_guess, cd_guess.ravel(), ab_guess.ravel()])
 
-    def _getWCS(center, crpix, cd, ab=None, abp=None, doiter=False):
+    def _getWCS(wcs_type, center, crpix, cd, ab=None, abp=None, doiter=False):
         _data = [
-            'TAN',
+            wcs_type if order == 1 else wcs_type+'-SIP',
             crpix,
             cd,
             center,
@@ -1845,6 +1848,8 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
         return GSFitsWCS(_data=_data, _doiter=doiter)
 
     def _decodeSIP(order, params, min=2):
+        if order == 1:
+            return None
         k = 0
         a = []
         b = []
@@ -1862,18 +1867,22 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
         ab = np.array([a, b])
         return ab
 
-    def _abLoss(params, order, center, x, y, u, v):
+    def _abLoss(params, order, wcs_type, center, x, y, u, v):
         crpix = params[:2]
         cd = params[2:6].reshape(2, 2)
         ab = _decodeSIP(order, params[6:])
-        wcs = _getWCS(center, crpix, cd, ab)
+        wcs = _getWCS(wcs_type, center, crpix, cd, ab)
         ra_p, dec_p = wcs.xyToradec(x, y, units='rad')
         u_p, v_p = center.project_rad(ra_p, dec_p)
         resid = np.hstack([u-u_p, v-v_p])
         resid = np.rad2deg(resid)*3600*1e6  # Work in microarcseconds
         return resid
 
-    result = least_squares(_abLoss, guess, args=(order, center, x, y, u, v))
+    result = least_squares(
+        _abLoss,
+        guess,
+        args=(order, wcs_type, center, x, y, u, v)
+    )
     # rmse = np.sqrt(2*result.cost/len(u))
     # print(f"rmse: {rmse:.2f} microarcsec")
     crpix = result.x[0:2]
@@ -1881,7 +1890,7 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
     ab = _decodeSIP(order, result.x[6:])
 
     if order == 1:
-        return _getWCS(center, crpix, cd)
+        return _getWCS(wcs_type, center, crpix, cd)
 
     # Now go back holding crpix, cd, and ab constant, and solve for inverse
     # coefficients abp
@@ -1893,17 +1902,17 @@ def FittedSIPWCS(x, y, ra, dec, order=3, center=None):
                 abp_guess.extend([0.0, 0.0])
     abp_guess = np.array(abp_guess)
 
-    def _abpLoss(params, order, center, crpix, cd, ab, ra, dec, x, y):
+    def _abpLoss(params, order, wcs_type, center, crpix, cd, ab, ra, dec, x, y):
         abp = _decodeSIP(order, params, min=1)
-        wcs = _getWCS(center, crpix, cd, ab, abp)
+        wcs = _getWCS(wcs_type, center, crpix, cd, ab, abp)
         x_p, y_p = wcs.radecToxy(ra, dec, units='rad')
         resid = np.hstack([x-x_p, y-y_p])*1e6  # work in micropixels
         return resid
     result = least_squares(
         _abpLoss, abp_guess,
-        args=(order, center, crpix, cd, ab, ra, dec, x, y)
+        args=(order, wcs_type, center, crpix, cd, ab, ra, dec, x, y)
     )
     # rmse = np.sqrt(2*result.cost/len(u))
     # print(f"rmse: {rmse:.2f} micropixels")
     abp = _decodeSIP(order, result.x, min=1)
-    return _getWCS(center, crpix, cd, ab, abp, doiter=True)
+    return _getWCS(wcs_type, center, crpix, cd, ab, abp, doiter=True)

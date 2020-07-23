@@ -2467,10 +2467,7 @@ def test_fittedsipwcs():
     """
     import astropy.io.fits as fits
 
-    if __name__ == '__main__':
-        test_tags = all_tags
-    else:
-        test_tags = ['TAN', 'SIP', 'TAN-PV']
+    test_tags = all_tags
 
     tol = {  #(arcsec, pixels)
         'HPX': (5.0, 0.01),
@@ -2482,6 +2479,7 @@ def test_fittedsipwcs():
         'ZPN': (2500.0, 2.5),
         'SIP': (1e-6, 0.01),
         'TPV': (1e-6, 1e-3),
+        'ZPX': (1e-5, 2e-5),
         'TAN-PV': (1e-6, 2e-4),
         'TAN-FLIP': (1e-6, 1e-6),
         'REGION': (1e-6, 1e-6),
@@ -2510,9 +2508,30 @@ def test_fittedsipwcs():
         y *= header['NAXIS2']
         ra, dec = wcs.xyToradec(x, y, units='rad')
 
+        # First check that we can get a fit without distorions, using appropriate
+        # Projections.  Should get very high accuracy here.
+        if tag in ('STG', 'ZEA', 'ARC', 'TAN'):
+            fittedWCS = galsim.FittedSIPWCS(
+                x[:nfit], y[:nfit], ra[:nfit], dec[:nfit],
+                order=1, wcs_type=tag, center=wcs.center
+            )
+            ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
+            check_sphere(ra, dec, ra_test, dec_test, atol=1e-9)
+            x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
+            np.testing.assert_allclose(
+                np.hstack([x, y]),
+                np.hstack([x_test, y_test]),
+                rtol=0,
+                atol=1e-9
+            )
+            header = {}
+            fittedWCS.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
+            assert header['CTYPE1'] == 'RA---'+tag
+
+        # Now try adding in SIP distortions.  We'll just use TAN projection from
+        # here forward.
         fittedWCS = galsim.FittedSIPWCS(
-            x[:nfit], y[:nfit], ra[:nfit], dec[:nfit],
-            order=3
+            x[:nfit], y[:nfit], ra[:nfit], dec[:nfit]
         )
         ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
 
@@ -2540,16 +2559,7 @@ def test_fittedsipwcs():
         # )
         # plt.show()
 
-        # First check that points used in fit are close to fit function values
-        check_sphere(
-            ra[:nfit], dec[:nfit], ra_test[:nfit], dec_test[:nfit],
-            atol=tol[tag][0]
-        )
-        # Now check on some "reserve" points
-        check_sphere(
-            ra[nfit:], dec[nfit:], ra_test[nfit:], dec_test[nfit:],
-            atol=tol[tag][0]
-        )
+        check_sphere(ra, dec, ra_test, dec_test, atol=tol[tag][0])
 
         # Check reverse
         x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
@@ -2575,14 +2585,8 @@ def test_fittedsipwcs():
         # plt.show()
 
         np.testing.assert_allclose(
-            np.hstack([x[:nfit], y[:nfit]]),
-            np.hstack([x_test[:nfit], y_test[:nfit]]),
-            rtol=0,
-            atol=tol[tag][1]
-        )
-        np.testing.assert_allclose(
-            np.hstack([x[nfit:], y[nfit:]]),
-            np.hstack([x_test[nfit:], y_test[nfit:]]),
+            np.hstack([x, y]),
+            np.hstack([x_test, y_test]),
             rtol=0,
             atol=tol[tag][1]
         )
@@ -2599,21 +2603,12 @@ def test_fittedsipwcs():
             order=3, center=center
         )
         ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
-        check_sphere(
-            ra[:nfit], dec[:nfit], ra_test[:nfit], dec_test[:nfit],
-            atol=tol[tag][0]
-        )
+        check_sphere(ra, dec, ra_test, dec_test, atol=tol[tag][0])
         # Check reverse
         x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
         np.testing.assert_allclose(
-            np.hstack([x[:nfit], y[:nfit]]),
-            np.hstack([x_test[:nfit], y_test[:nfit]]),
-            rtol=0,
-            atol=tol[tag][1]
-        )
-        np.testing.assert_allclose(
-            np.hstack([x[nfit:], y[nfit:]]),
-            np.hstack([x_test[nfit:], y_test[nfit:]]),
+            np.hstack([x, y]),
+            np.hstack([x_test, y_test]),
             rtol=0,
             atol=tol[tag][1]
         )
@@ -2628,11 +2623,42 @@ def test_fittedsipwcs():
         wcs = galsim.FittedSIPWCS(x, y, ra, dec, order=1)
         wcs.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
         assert "A_ORDER" not in header
+        assert header['CTYPE1'] == 'RA---TAN'
         # and a TAN-SIP WCS if order > 1
         header = {}
         wcs = galsim.FittedSIPWCS(x, y, ra, dec, order=2)
         wcs.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
         assert "A_ORDER" in header
+        assert header['CTYPE1'] == 'RA---TAN-SIP'
+
+    # Finally, the ZPN fit isn't very good with a TAN projection.
+    # See if it does better starting with a ZEA projection.
+    file_name, ref_list = references['ZPN']
+    header = fits.getheader(os.path.join(dir, file_name))
+    wcs = galsim.FitsWCS(header=header, suppress_warning=True)
+    x = np.empty(nref, dtype=float)
+    y = np.empty(nref, dtype=float)
+    rng.generate(x)
+    rng.generate(y)
+    x *= header['NAXIS1']  # rough range of reference WCS image coords
+    y *= header['NAXIS2']
+    ra, dec = wcs.xyToradec(x, y, units='rad')
+    fittedWCS = galsim.FittedSIPWCS(
+        x[:nfit], y[:nfit], ra[:nfit], dec[:nfit], wcs_type='ZEA', order=3
+    )
+    ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
+    check_sphere(ra, dec, ra_test, dec_test, atol=3000)  # Nope. Worse actually.
+    x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
+    np.testing.assert_allclose(
+        np.hstack([x, y]),
+        np.hstack([x_test, y_test]),
+        rtol=0,
+        atol=3.0  # Worse here too.
+    )
+    # We can at least confirm we made a ZEA-SIP WCS though
+    header = {}
+    fittedWCS.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
+    assert header['CTYPE1'] == 'RA---ZEA-SIP'
 
 
 @timer
