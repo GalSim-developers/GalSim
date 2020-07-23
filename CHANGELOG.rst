@@ -73,6 +73,9 @@ New Features
 - Added a new pupil_bin option to the Roman getPSF function.  This controls
   the resolution of the pupil plane mask, which involves a trade-off between
   speed and accuracy of the PSF rendering. (#1089)
+- Added FittedSIPWCS to fit a WCS from a list of image and celestial
+  coordinates. (#1092)
+- Extended GSFitsWCS to support -SIP distortions for non-TAN WCSs. (#1092)
 
 
 Performance Improvements
@@ -82,6 +85,7 @@ Performance Improvements
   (rather than 6 in the now-deprecated approximate_struts mode), remove an
   FFT artifact in the exact pupil plane mode, and significantly speed up all
   PSF renderings. (#1089)
+- Sped up GSFitsWCS.radecToxy for SIP and PV distorted WCSs by ~20x. (#1092)
 
 
 Bug Fixes
