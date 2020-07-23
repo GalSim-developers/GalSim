@@ -1339,52 +1339,65 @@ class GSFitsWCS(CelestialWCS):
             assert x.shape == y.shape
             return ra, dec
 
-    def _invert_pv(self, u, v):
-        # Do this in C++ layer for speed.
-        try:
-            len(u)
-        except TypeError:
-            with convert_cpp_errors():
-                return _galsim.InvertPV(u, v, self.pv.ctypes.data)
+    def _invert_pv(self, u, v, pv=None, uu=None, vv=None):
+        # Do the inversion via Newton-Raphson iteration.
+        # We're solving u, v = horner2d(u', v', pv) for u' and v' given u and v.
+        # uu and vv are optional initial guesses, if absent, use u and v.
+        if pv is None:
+            pv = self.pv
+        # Assemble horner2d coefs for derivatives
+        _, nx, ny = pv.shape
+        uducoef = (np.arange(nx)[:,None]*pv[0])[1:,:-1]
+        udvcoef = (np.arange(ny)*pv[0])[:-1,1:]
+        vducoef = (np.arange(nx)[:,None]*pv[1])[1:,:-1]
+        vdvcoef = (np.arange(ny)*pv[1])[:-1,1:]
+        if uu is None:
+            uu = u.copy()
+        if vv is None:
+            vv = v.copy()
+
+        # Usually converges in ~3 iterations.
+        for iter in range(10):
+            # Want Jac^-1 . du
+            # du
+            du = horner2d(uu, vv, pv[0], triangle=True) - u
+            dv = horner2d(uu, vv, pv[1], triangle=True) - v
+            # J
+            pvudu = horner2d(uu, vv, uducoef, triangle=True)
+            pvudv = horner2d(uu, vv, udvcoef, triangle=True)
+            pvvdu = horner2d(uu, vv, vducoef, triangle=True)
+            pvvdv = horner2d(uu, vv, vdvcoef, triangle=True)
+            # J^-1 . du
+            det = pvudu*pvvdv - pvudv*pvvdu
+            duu = -(du*pvvdv - dv*pvudv)/det
+            dvv = -(-du*pvvdu + dv*pvudu)/det
+
+            uu += duu
+            vv += dvv
+            # Do at least 2 iterations before spending the time to check for
+            # convergence.
+            if iter > 2 and np.max(np.abs(np.array([duu, dvv]))) < 1e-12:
+                break
         else:
-            invpvu = np.empty(len(u))
-            invpvv = np.empty(len(u))
-            for i in range(len(u)):
-                with convert_cpp_errors():
-                    uu, vv = _galsim.InvertPV(u[i], v[i], self.pv.ctypes.data)
-                invpvu[i] = uu
-                invpvv[i] = vv
-            return invpvu, invpvv
+            raise GalSimError("Unable to solve for image_pos.")
+        return uu, vv
 
     def _invert_ab(self, x, y):
-        # Do this in C++ layer for speed.
-        abp_data = 0 if self.abp is None else self.abp.ctypes.data
-        try:
-            len(x)
-        except TypeError:
-            with convert_cpp_errors():
-                if not self._doiter:
-                    invabx = float(horner2d(x, y, self.abp[0]))
-                    invaby = float(horner2d(x, y, self.abp[1]))
-                    return invabx, invaby
-                else:
-                    return _galsim.InvertAB(
-                        len(self.ab[0]), x, y, self.ab.ctypes.data, abp_data
-                    )
+        if self.abp is not None:
+            dx = horner2d(x, y, self.abp[0])
+            dy = horner2d(x, y, self.abp[1])
         else:
-            if not self._doiter:
-                invabx = horner2d(x, y, self.abp[0])
-                invaby = horner2d(x, y, self.abp[1])
-            else:
-                invabx = np.empty(len(x))
-                invaby = np.empty(len(x))
-                for i in range(len(x)):
-                    with convert_cpp_errors():
-                        xx, yy = _galsim.InvertAB(len(self.ab[0]), x[i], y[i], self.ab.ctypes.data,
-                                                  abp_data)
-                    invabx[i] = xx
-                    invaby[i] = yy
-            return invabx, invaby
+            dx = np.zeros_like(x)
+            dy = np.zeros_like(y)
+        if not self._doiter:
+            return x+dx, y+dy
+
+        # Turn an ab matrix into a pv matrix
+        pv = self.ab.copy()
+        pv[1,0,1] += 1
+        pv[0,1,0] += 1
+        x, y = self._invert_pv(x, y, pv=pv, uu=x+dx, vv=y+dy)
+        return x, y
 
     def _xy(self, ra, dec, color=None):
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
