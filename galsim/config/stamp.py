@@ -330,6 +330,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Draw the object on the postage stamp
             im = builder.draw(prof, im, method, offset, stamp, config, logger)
+            # Store the final version of the current profile for reference.
+            config['current_prof'] = prof
 
             # Update the drawn image according to the SNR if desired.
             scale_factor = builder.getSNRScale(im, stamp, config, logger)
