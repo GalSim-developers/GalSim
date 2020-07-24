@@ -2659,13 +2659,13 @@ def test_fittedsipwcs():
         center=center
     )
     ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
-    check_sphere(ra, dec, ra_test, dec_test, atol=1800)
+    check_sphere(ra, dec, ra_test, dec_test, atol=2000)
     x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
     np.testing.assert_allclose(
         np.hstack([x, y]),
         np.hstack([x_test, y_test]),
         rtol=0,
-        atol=2.0
+        atol=5.0
     )
     # We can at least confirm we made an ARC-SIP WCS
     header = {}
