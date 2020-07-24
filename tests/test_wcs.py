@@ -2672,6 +2672,18 @@ def test_fittedsipwcs():
     fittedWCS.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
     assert header['CTYPE1'] == 'RA---ARC-SIP'
 
+    # Check that error is raised if not enough stars are supplied.
+    # 3 stars is enough for order=1
+    wcs = galsim.FittedSIPWCS(x[:3], y[:3], ra[:3], dec[:3], order=1)
+    # but 2 is not.
+    with np.testing.assert_raises(galsim.GalSimError):
+        wcs = galsim.FittedSIPWCS(x[:2], y[:2], ra[:2], dec[:2], order=1)
+    # For order=3, there are 2*(3+4) ab coefficiens, 2 crpix, and 4 cd.
+    # 2 constraints per star means we need at least 10 stars
+    wcs = galsim.FittedSIPWCS(x[:10], y[:10], ra[:10], dec[:10], order=3)
+    with np.testing.assert_raises(galsim.GalSimError):
+        wcs = galsim.FittedSIPWCS(x[:9], y[:9], ra[:9], dec[:9], order=3)
+
 
 @timer
 def test_scamp():

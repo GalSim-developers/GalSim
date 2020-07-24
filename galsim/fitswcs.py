@@ -1807,15 +1807,26 @@ def FittedSIPWCS(x, y, ra, dec, wcs_type='TAN', order=3, center=None):
     from scipy.optimize import least_squares
     from .celestial import CelestialCoord
 
+    if order < 1:
+        raise GalSimValueError("Illegal SIP order", order)
+
+    nstar = len(x)
+    # Make sure we have enough stars.
+    # We need 1 star for crpix, 2 more for cd, and then
+    # (order+2)*(order+1)/2 - 3 for ab.  The total is then (order+1)*(order+2)/2
+    nrequire = (order+1)*(order+2)/2
+    if nstar < nrequire:
+        raise GalSimError(
+            "Require at least {:0} stars for SIP order {:1}"
+            .format(nrequire, order)
+        )
+
     if center is None:
         # Use deprojected 3D mean of ra/dec unit sphere points as center
         wx = np.mean(np.cos(dec)*np.cos(ra))
         wy = np.mean(np.cos(dec)*np.sin(ra))
         wz = np.mean(np.sin(dec))
         center = CelestialCoord.from_xyz(wx, wy, wz)
-
-    if order < 1:
-        raise GalSimValueError("Illegal SIP order", order)
 
     # Project radec onto uv so we can linearly fit the CRPIX and CD matrix
     # initial guesses
