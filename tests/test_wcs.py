@@ -2632,7 +2632,13 @@ def test_fittedsipwcs():
         assert header['CTYPE1'] == 'RA---TAN-SIP'
 
     # Finally, the ZPN fit isn't very good with a TAN projection.
-    # See if it does better starting with a ZEA projection.
+    # The native projection for ZPN is ARC (postel), and there are radial
+    # polynomial corrections up to 7th order in this particular WCS. Our 2D SIP
+    # corrections can't reproduce an odd-powered radial correction, (would need
+    # a sqrt to do so) so we never really get that close here.  Best ARC-SIP I
+    # could find is order=4, which gives an error of ~0.5 degree over an image a
+    # few 10s of degrees across.  Not great, but I think this is just an
+    # exceptional WCS, and not a problem with the code.
     file_name, ref_list = references['ZPN']
     header = fits.getheader(os.path.join(dir, file_name))
     wcs = galsim.FitsWCS(header=header, suppress_warning=True)
@@ -2640,25 +2646,31 @@ def test_fittedsipwcs():
     y = np.empty(nref, dtype=float)
     rng.generate(x)
     rng.generate(y)
-    x *= header['NAXIS1']  # rough range of reference WCS image coords
+    x *= header['NAXIS1']
     y *= header['NAXIS2']
     ra, dec = wcs.xyToradec(x, y, units='rad')
+    # Use the same center of projection as the source wcs.
+    center = galsim.CelestialCoord(
+        ra=header['LONPOLE']*galsim.degrees,
+        dec=header['LATPOLE']*galsim.degrees
+    )
     fittedWCS = galsim.FittedSIPWCS(
-        x[:nfit], y[:nfit], ra[:nfit], dec[:nfit], wcs_type='ZEA', order=3
+        x[:nfit], y[:nfit], ra[:nfit], dec[:nfit], wcs_type='ARC', order=4,
+        center=center
     )
     ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
-    check_sphere(ra, dec, ra_test, dec_test, atol=3000)  # Nope. Worse actually.
+    check_sphere(ra, dec, ra_test, dec_test, atol=1800)
     x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
     np.testing.assert_allclose(
         np.hstack([x, y]),
         np.hstack([x_test, y_test]),
         rtol=0,
-        atol=3.0  # Worse here too.
+        atol=2.0
     )
-    # We can at least confirm we made a ZEA-SIP WCS though
+    # We can at least confirm we made an ARC-SIP WCS
     header = {}
     fittedWCS.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
-    assert header['CTYPE1'] == 'RA---ZEA-SIP'
+    assert header['CTYPE1'] == 'RA---ARC-SIP'
 
 
 @timer
