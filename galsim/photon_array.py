@@ -455,8 +455,8 @@ class PhotonArray(object):
         return photons
 
 class WavelengthSampler(object):
-    """This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths
-    array of a `PhotonArray`.
+    """A photon operator that uses sed.sampleWavelength to set the wavelengths array of a
+    `PhotonArray`.
 
     Parameters:
         sed:        The `SED` to use for the objects spectral energy distribution.
@@ -480,8 +480,7 @@ class WavelengthSampler(object):
                 photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
 
 class FRatioAngles(object):
-    """A surface-layer operator that assigns photon directions based on the f/ratio and
-    obscuration.
+    """A photon operator that assigns photon directions based on the f/ratio and obscuration.
 
     Assigns arrival directions at the focal plane for photons, drawing from a uniform
     brightness distribution between the obscuration angle and the edge of the pupil defined
@@ -541,7 +540,7 @@ class FRatioAngles(object):
         dydz[:] = tantheta * np.cos(phi)
 
 class PhotonDCR(object):
-    r"""A surface-layer operator that applies the effect of differential chromatic refraction (DCR)
+    r"""A photon operator that applies the effect of differential chromatic refraction (DCR)
     and optionally the chromatic dilation due to atmospheric seeing.
 
     Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence
@@ -567,12 +566,12 @@ class PhotonDCR(object):
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
     they are broadly reasonable for most observatories.
 
-    This surface op is intended to match the functionality of `ChromaticAtmosphere`, but acting
+    This photon op is intended to match the functionality of `ChromaticAtmosphere`, but acting
     on the photon array rather than as a `ChromaticObject`.  The photons will need to have
     wavelengths defined in order to work.
 
     .. warning::
-        The alpha parameter is only appropriate for stars.  This surface op will act on
+        The alpha parameter is only appropriate for stars.  This photon op will act on
         all of the photons, so applying a chromatic dilation according to the chromatic
         seeing is the wrong thing to do when the surface brightness being rendered is
         not a pure PSF.  As such, the default is alpha=0, not -0.2, which would be
@@ -653,8 +652,8 @@ class PhotonDCR(object):
 
 
 class Refraction(object):
-    """A surface-layer operator that refracts photons (manipulating their dxdz and dydz values) at
-    an interface, commonly the interface between vacuum and silicon at the surface of a CCD.
+    """A photon operator that refracts photons (manipulating their dxdz and dydz values) at an
+    interface, commonly the interface between vacuum and silicon at the surface of a CCD.
 
     Assumes that the surface normal is along the z-axis.  If the refraction would result in total
     internal reflection, then those photon's dxdz and dydz values are set to NaN, and flux values
@@ -713,7 +712,7 @@ class Refraction(object):
 
 
 class FocusDepth(object):
-    """Surface-layer operator that focuses/defocuses photons by changing the height of the focal
+    """A photon operator that focuses/defocuses photons by changing the height of the focal
     surface with respect to the conical beam.
 
     Parameters:

@@ -1237,8 +1237,9 @@ class GSObject(object):
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   center=None, use_true_center=True, offset=None,
                   n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, sensor=None, surface_ops=(), n_subsample=3, maxN=None,
-                  save_photons=False, bandpass=None, setup_only=False):
+                  poisson_flux=None, sensor=None, photon_ops=(), n_subsample=3, maxN=None,
+                  save_photons=False, bandpass=None, setup_only=False,
+                  surface_ops=None):
         """Draws an `Image` of the object.
 
         The drawImage() method is used to draw an `Image` of the current object using one of several
@@ -1464,10 +1465,10 @@ class GSObject(object):
         passed into the sensor object.  For instance, the photons may need to be given appropriate
         incidence angles according to the optics of the telescope (since this matters for where the
         photons are converted to electrons).  You may also need to give the photons wavelengths
-        according to the `SED` of the object.  Such steps are specified in a ``surface_ops``
+        according to the `SED` of the object.  Such steps are specified in a ``photon_ops``
         parameter, which should be a list of any such operations you wish to perform on the photon
         array before passing them to the sensor.  See `FRatioAngles` and `WavelengthSampler` for
-        two examples of such surface operators.
+        two examples of such photon operators.
 
         Since the sensor deals with photons, it is most natural to use this feature in conjunction
         with photon shooting (``method='phot'``).  However, it is allowed with FFT methods too.
@@ -1556,7 +1557,7 @@ class GSObject(object):
                             is False]
             sensor:         An optional `Sensor` instance, which will be used to accumulate the
                             photons onto the image. [default: None]
-            surface_ops:    A list of operators that can modify the photon array that will be
+            photon_ops:     A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
                             [default: ()]
             n_subsample:    The number of sub-pixels per final pixel to use for fft drawing when
@@ -1586,6 +1587,11 @@ class GSObject(object):
         from .box import Pixel
         from .wcs import PixelScale
         from .photon_array import PhotonArray
+
+        if surface_ops is not None:
+            from .deprecated import depr
+            depr('surface_ops', 2.3, 'photon_ops')
+            photon_ops = surface_ops
 
         # Check that image is sane
         if image is not None and not isinstance(image, Image):
@@ -1633,10 +1639,10 @@ class GSObject(object):
                 raise GalSimIncompatibleValuesError(
                     "poisson_flux is only relevant for method='phot'",
                     method=method, sensor=sensor, poisson_flux=poisson_flux)
-            if surface_ops != ():
+            if photon_ops != ():
                 raise GalSimIncompatibleValuesError(
-                    "surface_ops are only relevant for method='phot'",
-                    method=method, sensor=sensor, surface_ops=surface_ops)
+                    "photon_ops are only relevant for method='phot'",
+                    method=method, sensor=sensor, photon_ops=photon_ops)
             if maxN != None:
                 raise GalSimIncompatibleValuesError(
                     "maxN is only relevant for method='phot'",
@@ -1715,7 +1721,7 @@ class GSObject(object):
         if method == 'phot':
             added_photons, photons = prof.drawPhot(imview, gain, add_to_image,
                                                    n_photons, rng, max_extra_noise, poisson_flux,
-                                                   sensor, surface_ops, maxN,
+                                                   sensor, photon_ops, maxN,
                                                    orig_center, local_wcs)
         else:
             # If not using phot, but doing sensor, then make a copy.
@@ -1753,7 +1759,7 @@ class GSObject(object):
 
             if sensor is not None:
                 photons = PhotonArray.makeFromImage(draw_image, rng=rng)
-                for op in surface_ops:
+                for op in photon_ops:
                     op.applyTo(photons, local_wcs)
                 if imview.dtype in (np.float32, np.float64):
                     added_photons = sensor.accumulate(photons, imview, orig_center)
@@ -2088,7 +2094,7 @@ class GSObject(object):
 
 
     def makePhot(self, n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 surface_ops=(), local_wcs=None):
+                 photon_ops=(), local_wcs=None, surface_ops=None):
         """
         Make photons for a profile.
 
@@ -2137,7 +2143,7 @@ class GSObject(object):
                             Poisson statistics for ``n_photons`` samples when photon shooting.
                             [default: True, unless ``n_photons`` is given, in which case the default
                             is False]
-            surface_ops:    A list of operators that can modify the photon array that will be
+            photon_ops:     A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
                             [default: ()]
             local_wcs:      The local wcs in the original image. [default: None]
@@ -2145,6 +2151,11 @@ class GSObject(object):
         Returns:
             - a `PhotonArray` with the data about the photons.
         """
+        if surface_ops is not None:
+            from .deprecated import depr
+            depr('surface_ops', 2.3, 'photon_ops')
+            photon_ops = surface_ops
+
         # Make sure the type of n_photons is correct and has a valid value:
         if n_photons < 0.:
             raise GalSimRangeError("Invalid n_photons < 0.", n_photons, 0., None)
@@ -2172,7 +2183,7 @@ class GSObject(object):
         if g != 1.:
             photons.scaleFlux(g)
 
-        for op in surface_ops:
+        for op in photon_ops:
             op.applyTo(photons, local_wcs)
 
         return photons
@@ -2180,8 +2191,8 @@ class GSObject(object):
 
     def drawPhot(self, image, gain=1., add_to_image=False,
                  n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 sensor=None, surface_ops=(), maxN=None, orig_center=PositionI(0,0),
-                 local_wcs=None):
+                 sensor=None, photon_ops=(), maxN=None, orig_center=PositionI(0,0),
+                 local_wcs=None, surface_ops=None):
         """
         Draw this profile into an `Image` by shooting photons.
 
@@ -2234,7 +2245,7 @@ class GSObject(object):
                             is False]
             sensor:         An optional `Sensor` instance, which will be used to accumulate the
                             photons onto the image. [default: None]
-            surface_ops:    A list of operators that can modify the photon array that will be
+            photon_ops:     A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
                             [default: ()]
             maxN:           Sets the maximum number of photons that will be added to the image
@@ -2251,6 +2262,12 @@ class GSObject(object):
         """
         from .sensor import Sensor
         from .image import ImageD
+
+        if surface_ops is not None:
+            from .deprecated import depr
+            depr('surface_ops', 2.3, 'photon_ops')
+            photon_ops = surface_ops
+
         # Make sure the type of n_photons is correct and has a valid value:
         if n_photons < 0.:
             raise GalSimRangeError("Invalid n_photons < 0.", n_photons, 0., None)
@@ -2309,7 +2326,7 @@ class GSObject(object):
             if image.scale != 1.:
                 photons.scaleXY(1./image.scale)  # Convert x,y to image coords if necessary
 
-            for op in surface_ops:
+            for op in photon_ops:
                 op.applyTo(photons, local_wcs)
 
             if image.dtype in (np.float32, np.float64):

@@ -539,9 +539,9 @@ def test_sensor_wavelengths_and_angles():
 
         # Use photon shooting first
         obj.drawImage(im1, method='phot', sensor=silicon, rng=rng1)
-        obj.drawImage(im2, method='phot', sensor=silicon, surface_ops=[sampler], rng=rng2)
-        obj.drawImage(im3, method='phot', sensor=silicon, surface_ops=[assigner], rng=rng3)
-        obj.drawImage(im4, method='phot', sensor=silicon, surface_ops=[sampler, assigner], rng=rng4)
+        obj.drawImage(im2, method='phot', sensor=silicon, photon_ops=[sampler], rng=rng2)
+        obj.drawImage(im3, method='phot', sensor=silicon, photon_ops=[assigner], rng=rng3)
+        obj.drawImage(im4, method='phot', sensor=silicon, photon_ops=[sampler, assigner], rng=rng4)
 
         r1 = im1.calculateMomentRadius(flux=obj.flux)
         r2 = im2.calculateMomentRadius(flux=obj.flux)
@@ -566,9 +566,9 @@ def test_sensor_wavelengths_and_angles():
 
         # Now check fft
         obj.drawImage(im1, method='fft', sensor=silicon, rng=rng1)
-        obj.drawImage(im2, method='fft', sensor=silicon, surface_ops=[sampler], rng=rng2)
-        obj.drawImage(im3, method='fft', sensor=silicon, surface_ops=[assigner], rng=rng3)
-        obj.drawImage(im4, method='fft', sensor=silicon, surface_ops=[sampler, assigner], rng=rng4)
+        obj.drawImage(im2, method='fft', sensor=silicon, photon_ops=[sampler], rng=rng2)
+        obj.drawImage(im3, method='fft', sensor=silicon, photon_ops=[assigner], rng=rng3)
+        obj.drawImage(im4, method='fft', sensor=silicon, photon_ops=[sampler, assigner], rng=rng4)
 
         r1 = im1.calculateMomentRadius(flux=obj.flux)
         r2 = im2.calculateMomentRadius(flux=obj.flux)

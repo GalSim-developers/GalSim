@@ -416,6 +416,38 @@ def test_roman_psfs():
                             approximate_struts=False, high_accuracy=True,
                             wavelength='Z087')
 
+@timer
+def test_surface_ops():
+
+    # Based on test_sensor.py:test_wavelengths_and_angles, but massively simplified.
+
+    rng = galsim.BaseDeviate(1234)
+
+    fratio = 1.2
+    obscuration = 0.2
+    assigner = galsim.FRatioAngles(fratio, obscuration, rng=rng)
+
+    sed = galsim.SED('CWW_E_ext.sed', 'nm', 'flambda').thin()
+    bandpass = galsim.Bandpass('LSST_i.dat', 'nm').thin()
+    sampler = galsim.WavelengthSampler(sed, bandpass, rng=rng)
+
+    obj = galsim.Gaussian(flux=353, sigma=0.3)
+    im = galsim.Image(63,63, scale=1)
+    check_dep(obj.drawImage, im, method='phot', surface_ops=[sampler, assigner], rng=rng,
+              save_photons=True)
+
+    rng.reset(1234)
+    assigner.ud.reset(rng)
+    sampler.rng.reset(rng)
+    photons = check_dep(obj.makePhot, surface_ops=[sampler, assigner], rng=rng)
+    assert photons == im.photons
+
+    rng.reset(1234)
+    assigner.ud.reset(rng)
+    sampler.rng.reset(rng)
+    _, photons2 = check_dep(obj.drawPhot, image=im.copy(), surface_ops=[sampler, assigner], rng=rng)
+    assert photons2 == im.photons
+
 
 if __name__ == "__main__":
     test_gsparams()
@@ -428,3 +460,4 @@ if __name__ == "__main__":
     test_withOrigin()
     test_wfirst()
     test_roman_psfs()
+    test_surface_ops()

@@ -351,20 +351,20 @@ def test_wavelength_sampler():
         def applyTo(self, photon_array, local_wcs=None):
             photon_array.flux[photon_array.wavelength < 600] = 0.
 
-    # Use (a new) sampler and clip600 as surface_ops in drawImage
+    # Use (a new) sampler and clip600 as photon_ops in drawImage
     im2 = galsim.Image(64,64,scale=1)
     im2.setCenter(0,0)
     clip600 = Clip600()
     rng2 = galsim.BaseDeviate(1234)
     sampler2 = galsim.WavelengthSampler(sed, bandpass, rng2)
     obj.drawImage(im2, method='phot', n_photons=nphotons, use_true_center=False,
-                  surface_ops=[sampler2,clip600], rng=rng2, save_photons=True)
+                  photon_ops=[sampler2,clip600], rng=rng2, save_photons=True)
     print('sum = ',im1.array.sum(),im2.array.sum())
     np.testing.assert_array_equal(im1.array, im2.array)
 
     # Equivalent version just getting photons back
     rng2.seed(1234)
-    photons = obj.makePhot(n_photons=nphotons, surface_ops=[sampler2,clip600], rng=rng2)
+    photons = obj.makePhot(n_photons=nphotons, photon_ops=[sampler2,clip600], rng=rng2)
     print('phot.x = ',photons.x)
     print('im2.photons.x = ',im2.photons.x)
     assert photons == im2.photons
@@ -534,8 +534,8 @@ def test_dcr():
     achrom = base_PSF.withFlux(flux)
     rng = galsim.BaseDeviate(31415)
     wave_sampler = galsim.WavelengthSampler(sed, bandpass, rng)
-    surface_ops = [wave_sampler, dcr]
-    achrom.drawImage(image=im2, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    achrom.drawImage(image=im2, method='phot', rng=rng, photon_ops=photon_ops)
 
     im1 /= flux  # Divide by flux, so comparison is on a relative basis.
     im2 /= flux
@@ -551,7 +551,7 @@ def test_dcr():
     print('len bp = %d => %d'%(len(bandpass.wave_list), len(thin_bandpass.wave_list)))
     print('len sed = %d => %d'%(len(sed.wave_list), len(thin_sed.wave_list)))
     wave_sampler = galsim.WavelengthSampler(thin_sed, thin_bandpass, rng)
-    achrom.drawImage(image=im3, method='phot', rng=rng, surface_ops=surface_ops)
+    achrom.drawImage(image=im3, method='phot', rng=rng, photon_ops=photon_ops)
 
     im3 /= flux
     printval(im3, im1, show=False)
@@ -565,8 +565,8 @@ def test_dcr():
                            parallactic_angle=parallactic_angle,
                            scale_unit='arcmin',
                            alpha=alpha)
-    surface_ops = [wave_sampler, dcr]
-    achrom.dilate(1./60).drawImage(image=im4, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    achrom.dilate(1./60).drawImage(image=im4, method='phot', rng=rng, photon_ops=photon_ops)
     im4 /= flux
     printval(im4, im1, show=False)
     np.testing.assert_almost_equal(im4.array, im1.array, decimal=4,
@@ -597,8 +597,8 @@ def test_dcr():
                            temperature=290,     # default is 293.15
                            H2O_pressure=0.9)    # default is 1.067
                            #alpha=0)            # default is 0, so don't need to set it.
-    surface_ops = [wave_sampler, dcr]
-    achrom.drawImage(image=im5, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    achrom.drawImage(image=im5, method='phot', rng=rng, photon_ops=photon_ops)
 
     im6 = galsim.ImageD(50, 50, wcs=wcs)
     star = galsim.DeltaFunction() * sed
@@ -661,7 +661,7 @@ def test_dcr():
                   scale_unit='inches')                  # invalid scale_unit
 
     # Invalid to use dcr without some way of setting wavelengths.
-    assert_raises(galsim.GalSimError, achrom.drawImage, im2, method='phot', surface_ops=[dcr])
+    assert_raises(galsim.GalSimError, achrom.drawImage, im2, method='phot', photon_ops=[dcr])
 
 @unittest.skipIf(no_astroplan, 'Unable to import astroplan')
 @timer
@@ -769,8 +769,8 @@ def test_dcr_moments():
                            HA = -2 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat - 20 * galsim.degrees))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('1. HA < 0, Dec < lat: ',moments)
     assert moments['My'] > 0   # up
@@ -782,8 +782,8 @@ def test_dcr_moments():
                            HA = 0 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat - 20 * galsim.degrees))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('2. HA = 0, Dec < lat: ',moments)
     assert moments['My'] > 0   # up
@@ -796,8 +796,8 @@ def test_dcr_moments():
                            HA = 2 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat - 20 * galsim.degrees))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('3. HA > 0, Dec < lat: ',moments)
     assert moments['My'] > 0   # up
@@ -809,8 +809,8 @@ def test_dcr_moments():
                            HA = -2 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('4. HA < 0, Dec = lat: ',moments)
     assert abs(moments['My']) < 1.   # not up or down  (Actually slightly down in the south.)
@@ -823,8 +823,8 @@ def test_dcr_moments():
                            HA = 0 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('5. HA = 0, Dec = lat: ',moments)
     assert abs(moments['My']) < 0.05   # not up or down
@@ -837,8 +837,8 @@ def test_dcr_moments():
                            HA = 2 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('6. HA > 0, Dec = lat: ',moments)
     assert abs(moments['My']) < 1.   # not up or down  (Actually slightly down in the south.)
@@ -851,8 +851,8 @@ def test_dcr_moments():
                            HA = -2 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat + 20 * galsim.degrees))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('7. HA < 0, Dec > lat: ',moments)
     assert moments['My'] < 0   # down
@@ -864,8 +864,8 @@ def test_dcr_moments():
                            HA = 0 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat + 20 * galsim.degrees))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('8. HA = 0, Dec > lat: ',moments)
     assert moments['My'] < 0   # down
@@ -878,8 +878,8 @@ def test_dcr_moments():
                            HA = 2 * galsim.hours,
                            latitude = lat,
                            obj_coord = galsim.CelestialCoord(ra, lat + 20 * galsim.degrees))
-    surface_ops = [wave_sampler, dcr]
-    star.drawImage(image=im, method='phot', rng=rng, surface_ops=surface_ops)
+    photon_ops = [wave_sampler, dcr]
+    star.drawImage(image=im, method='phot', rng=rng, photon_ops=photon_ops)
     moments = galsim.utilities.unweighted_moments(im, origin=im.true_center)
     print('9. HA > 0, Dec > lat: ',moments)
     assert moments['My'] < 0   # down
@@ -1062,7 +1062,7 @@ def test_lsst_y_focus():
     sed = galsim.SED("1", wave_type='nm', flux_type='flambda')
     obj = galsim.Gaussian(fwhm=1e-5)
     oversampling = 32
-    surface_ops0 = [
+    photon_ops0 = [
         galsim.WavelengthSampler(sed, bandpass, rng=rng),
         galsim.FRatioAngles(1.234, 0.606, rng=rng),
         galsim.FocusDepth(0.0),
@@ -1072,7 +1072,7 @@ def test_lsst_y_focus():
         sensor=galsim.SiliconSensor(),
         method='phot',
         n_photons=100000,
-        surface_ops=surface_ops0,
+        photon_ops=photon_ops0,
         scale=0.2/oversampling,
         nx=32*oversampling,
         ny=32*oversampling,
@@ -1090,7 +1090,7 @@ def test_lsst_y_focus():
 
     depth1 = -6.  # microns, negative means surface is intrafocal
     depth1 /= 10  # microns => pixels
-    surface_ops1 = [
+    photon_ops1 = [
         galsim.WavelengthSampler(sed, bandpass, rng=rng),
         galsim.FRatioAngles(1.234, 0.606, rng=rng),
         galsim.FocusDepth(depth1),
@@ -1100,7 +1100,7 @@ def test_lsst_y_focus():
         sensor=galsim.SiliconSensor(),
         method='phot',
         n_photons=100000,
-        surface_ops=surface_ops1,
+        photon_ops=photon_ops1,
         scale=0.2/oversampling,
         nx=32*oversampling,
         ny=32*oversampling,
