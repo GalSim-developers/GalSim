@@ -1375,9 +1375,9 @@ class GSFitsWCS(CelestialWCS):
 
             uu += duu
             vv += dvv
-            # Do at least 2 iterations before spending the time to check for
+            # Do at least 3 iterations before spending the time to check for
             # convergence.
-            if iter > 2 and np.max(np.abs(np.array([duu, dvv]))) < 1e-12:
+            if iter >= 2 and np.max(np.abs(np.array([duu, dvv]))) < 1e-12:
                 break
         else:  # pragma: no cover
             raise GalSimError("Unable to solve for image_pos.")
