@@ -47,8 +47,6 @@ class Catalog(object):
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str , 'hdu' : int }
-    _single_params = []
-    _takes_rng = False
 
     # _nobjects_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.

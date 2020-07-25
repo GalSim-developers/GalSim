@@ -133,8 +133,6 @@ class NFWHalo(object):
     """
     _req_params = { 'mass' : float , 'conc' : float , 'redshift' : float }
     _opt_params = { 'halo_pos' : PositionD , 'omega_m' : float , 'omega_lam' : float }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, mass, conc, redshift, halo_pos=PositionD(0,0),
                  omega_m=None, omega_lam=None, cosmo=None):

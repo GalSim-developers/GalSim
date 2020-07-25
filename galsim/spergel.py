@@ -90,7 +90,6 @@ class Spergel(GSObject):
     _req_params = { "nu" : float }
     _opt_params = { "flux" : float}
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
-    _takes_rng = False
 
     _has_hard_edges = False
     _is_axisymmetric = True

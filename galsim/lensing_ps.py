@@ -164,11 +164,8 @@ class PowerSpectrum(object):
                             k^-1 and sqrt(P)). This should be either an `AngleUnit` instance
                             (e.g. galsim.radians) or a string (e.g. 'radians'). [default: arcsec]
     """
-    _req_params = {}
     _opt_params = { 'e_power_function' : str, 'b_power_function' : str,
                     'delta2' : bool, 'units' : str }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, e_power_function=None, b_power_function=None, delta2=False, units=arcsec):
         # Check that at least one power function is not None

@@ -103,7 +103,6 @@ class VonKarman(GSObject):
     _req_params = { "lam" : float }
     _opt_params = { "L0" : float, "flux" : float, "scale_unit" : str, "do_delta" : bool }
     _single_params = [ { "r0" : float, "r0_500" : float } ]
-    _takes_rng = False
 
     _has_hard_edges = False
     _is_axisymmetric = True

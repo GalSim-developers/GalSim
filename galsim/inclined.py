@@ -74,7 +74,6 @@ class InclinedExponential(GSObject):
     _req_params = { "inclination" : Angle }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float }
-    _takes_rng = False
 
     _has_hard_edges = False
     _is_axisymmetric = False

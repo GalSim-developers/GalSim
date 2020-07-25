@@ -18,7 +18,7 @@
 
 import logging
 
-from .util import LoggerWrapper, GetIndex, GetRNG
+from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
 from .value import ParseValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -167,9 +167,7 @@ class SimpleWCSBuilder(WCSBuilder):
         """
         # Then use the standard trick of reading the required and optional parameters
         # from the class or function attributes.
-        req = build_func._req_params
-        opt = build_func._opt_params
-        single = build_func._single_params
+        req, opt, single, takes_rng = get_cls_params(build_func)
 
         # Pull in the image layer pixel_scale as a scale item if necessary.
         if ( ('scale' in req or 'scale' in opt) and 'scale' not in config and
@@ -179,7 +177,7 @@ class SimpleWCSBuilder(WCSBuilder):
         kwargs, safe = GetAllParams(config, base, req, opt, single)
 
         # This would be weird, but might as well check...
-        if build_func._takes_rng: # pragma: no cover
+        if takes_rng: # pragma: no cover
             kwargs['rng'] = GetRNG(config, base)
         return kwargs
 

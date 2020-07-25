@@ -87,8 +87,6 @@ class SecondKick(GSObject):
     """
     _req_params = { "lam" : float, "r0" : float, "diam" : float }
     _opt_params = { "obscuration" : float, "kcrit" : float, "flux" : float, "scale_unit" : str }
-    _single_params = []
-    _takes_rng = False
 
     _has_hard_edges = False
     _is_axisymmetric = True

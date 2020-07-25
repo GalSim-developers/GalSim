@@ -188,7 +188,6 @@ class Sersic(GSObject):
     _req_params = { "n" : float }
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
-    _takes_rng = False
 
     _is_axisymmetric = True
     _is_analytic_x = True
@@ -403,7 +402,6 @@ class DeVaucouleurs(Sersic):
     _req_params = {}
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
-    _takes_rng = False
 
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):

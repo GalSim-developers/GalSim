@@ -118,14 +118,12 @@ class Kolmogorov(GSObject):
         fwhm:               The full-width half-max size
         half_light_radius:  The half-light radius
     """
-    _req_params = {}
     _opt_params = { "flux" : float, "r0" : float, "r0_500" : float, "scale_unit" : str }
     # Note that this is not quite right; it's true that exactly one of these 4 should be supplied,
     # but if lam is supplied then r0 is required.  Errors in which parameters are used may be
     # caught either by config or by the python code itself, depending on the particular error.
     _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float,
                          "lam" : float } ]
-    _takes_rng = False
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
     # In SBKolmogorov.cpp we refine this factor to 0.9758634299

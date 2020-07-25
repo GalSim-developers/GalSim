@@ -90,7 +90,6 @@ class RandomKnots(GSObject):
         "half_light_radius": float,
         "profile": GSObject,
     }
-    _single_params = []
     _takes_rng = True
 
     _has_hard_edges = False
