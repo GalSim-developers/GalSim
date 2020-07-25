@@ -1158,8 +1158,6 @@ class FitsHeader(object):
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str , 'text_file' : bool }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, header=None, file_name=None, dir=None, hdu_list=None, hdu=None,
                  compression='auto', text_file=False):

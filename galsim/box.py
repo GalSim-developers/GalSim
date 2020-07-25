@@ -39,8 +39,6 @@ class Box(GSObject):
     """
     _req_params = { "width" : float, "height" : float }
     _opt_params = { "flux" : float }
-    _single_params = []
-    _takes_rng = False
 
     _has_hard_edges = True
     _is_axisymmetric = False
@@ -154,8 +152,6 @@ class Pixel(Box):
     """
     _req_params = { "scale" : float }
     _opt_params = { "flux" : float }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, scale, flux=1., gsparams=None):
         super(Pixel, self).__init__(width=scale, height=scale, flux=flux, gsparams=gsparams)
@@ -193,8 +189,6 @@ class TopHat(GSObject):
     """
     _req_params = { "radius" : float }
     _opt_params = { "flux" : float }
-    _single_params = []
-    _takes_rng = False
 
     _has_hard_edges = True
     _is_axisymmetric = True

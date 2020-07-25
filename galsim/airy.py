@@ -85,7 +85,6 @@ class Airy(GSObject):
     # may be caught either by config or by the python code itself, depending on the particular
     # error.
     _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
-    _takes_rng = False
 
     # For an unobscured Airy, we have the following factor which can be derived using the
     # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),

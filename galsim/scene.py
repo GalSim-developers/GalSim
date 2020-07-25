@@ -146,14 +146,11 @@ class COSMOSCatalog(object):
     Attributes:
         nobjects:       The number of objects in the catalog
     """
-    _req_params = {}
     _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
                     'preload' : bool, 'use_real' : bool,
                     'exclusion_level' : str, 'min_hlr' : float, 'max_hlr' : float,
                     'min_flux' : float, 'max_flux' : float
                   }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, file_name=None, sample=None, dir=None, preload=False,
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,

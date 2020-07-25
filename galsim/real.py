@@ -162,7 +162,6 @@ class RealGalaxy(GSObject):
         logger:                 A logger object for output of progress statements if the user wants
                                 them.  [default: None]
     """
-    _req_params = {}
     _opt_params = { "x_interpolant" : str ,
                     "k_interpolant" : str ,
                     "flux" : float ,
@@ -525,11 +524,8 @@ class RealGalaxyCatalog(object):
                     various calls to `getGalImage` and `getPSFImage`.  [default: False]
         logger:     An optional logger object to log progress. [default: None]
     """
-    _req_params = {}
     _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
                     'preload' : bool }
-    _single_params = []
-    _takes_rng = False
 
     # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
@@ -984,7 +980,6 @@ class ChromaticRealGalaxy(ChromaticSum):
                                 them.  [default: None]
 
     """
-    _req_params = {}
     # TODO: SEDs isn't implemented yet in config parser.
     _opt_params = { "k_interpolant" : str ,
                     "maxk" : float,

@@ -203,16 +203,17 @@ class GSObject(object):
     #     _stepk (the sampling in k space necessary to avoid folding of image in x space)
     #     _maxk (the value of k beyond which aliasing can be neglected)
     #     _has_hard_edges (true if should use real-space convolution with another hard edge profile)
-    #     _is_axisymmetric (true if f(x,y) = f(r)
+    #     _is_axisymmetric (true if f(x,y) = f(r))
     #     _is_analytic_x (true if _xValue and _drawReal are implemented)
     #     _is_analytic_k (true if _kValue and _drawKImage are implemented)
     #
-    # Required for use with config processing (typically class attributes):
+    # Required and typically class attributes, but there are defaults in each case:
     #
-    #     _req_params (dict of required config parameters: name : type)
-    #     _opt_params (dict of optional config parameters)
-    #     _single_params (list of dicts for parameters where exactly one of several is required)
-    #     _takes_rng (bool specifying whether rng is an input parameter)
+    #     _req_params (dict of required config parameters: name : type, default: {})
+    #     _opt_params (dict of optional config parameters: name : type, default: {})
+    #     _single_params (list of dicts for parameters where exactly one of several is required,
+    #                    default: [])
+    #     _takes_rng (bool specifying whether rng is an input parameter, default: False)
     #
     # Optional
     #

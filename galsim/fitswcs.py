@@ -95,8 +95,6 @@ class AstropyWCS(CelestialWCS):
     _req_params = { "file_name" : str }
     _opt_params = { "dir" : str, "hdu" : int, "origin" : PositionD,
                     "compression" : str }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcs=None, origin=None):
@@ -339,8 +337,6 @@ class PyAstWCS(CelestialWCS):
     _req_params = { "file_name" : str }
     _opt_params = { "dir" : str, "hdu" : int, "origin" : PositionD,
                     "compression" : str }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcsinfo=None, origin=None):
@@ -608,8 +604,6 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
     """
     _req_params = { "file_name" : str }
     _opt_params = { "dir" : str, "origin" : PositionD }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, file_name, dir=None, origin=None):
         self._color = None
@@ -883,8 +877,6 @@ class GSFitsWCS(CelestialWCS):
     _req_params = { "file_name" : str }
     _opt_params = { "dir" : str, "hdu" : int, "origin" : PositionD,
                     "compression" : str }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  origin=None, _data=None, _doiter=True):
@@ -1781,9 +1773,6 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
 # Let this function work like a class in config.
 FitsWCS._req_params = { "file_name" : str }
 FitsWCS._opt_params = { "dir" : str, "hdu" : int, "compression" : str, 'text_file' : bool }
-FitsWCS._single_params = []
-FitsWCS._takes_rng = False
-
 
 def FittedSIPWCS(x, y, ra, dec, wcs_type='TAN', order=3, center=None):
     """A WCS constructed from a list of reference celestial and image

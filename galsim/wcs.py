@@ -1411,9 +1411,6 @@ class PixelScale(LocalWCS):
         scale:  The pixel scale, typically in units of arcsec/pixel.
     """
     _req_params = { "scale" : float }
-    _opt_params = {}
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, scale):
         self._color = None
@@ -1519,9 +1516,6 @@ class ShearWCS(LocalWCS):
     transformation represented by the ShearWCS will conserve object area also.
     """
     _req_params = { "scale" : float, "shear" : Shear }
-    _opt_params = {}
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, scale, shear):
         self._color = None
@@ -1656,9 +1650,6 @@ class JacobianWCS(LocalWCS):
         dvdy:       dv/dy
     """
     _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
-    _opt_params = {}
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, dudx, dudy, dvdx, dvdy):
         self._color = None
@@ -1928,8 +1919,6 @@ class OffsetWCS(UniformWCS):
     """
     _req_params = { "scale" : float }
     _opt_params = { "origin" : PositionD, "world_origin": PositionD }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, scale, origin=None, world_origin=None):
         self._color = None
@@ -2016,8 +2005,6 @@ class OffsetShearWCS(UniformWCS):
     """
     _req_params = { "scale" : float, "shear" : Shear }
     _opt_params = { "origin" : PositionD, "world_origin": PositionD }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, scale, shear, origin=None, world_origin=None):
         self._color = None
@@ -2118,8 +2105,6 @@ class AffineTransform(UniformWCS):
     """
     _req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float }
     _opt_params = { "origin" : PositionD, "world_origin": PositionD }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, dudx, dudy, dvdx, dvdy, origin=None, world_origin=None):
         self._color = None
@@ -2424,8 +2409,6 @@ class UVFunction(EuclideanWCS):
     _req_params = { "ufunc" : str, "vfunc" : str }
     _opt_params = { "xfunc" : str, "yfunc" : str,
                     "origin" : PositionD, "world_origin": PositionD }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, ufunc, vfunc, xfunc=None, yfunc=None, origin=None, world_origin=None,
                  uses_color=False):
@@ -2703,8 +2686,6 @@ class RaDecFunction(CelestialWCS):
     """
     _req_params = { "ra_func" : str, "dec_func" : str }
     _opt_params = { "origin" : PositionD }
-    _single_params = []
-    _takes_rng = False
 
     def __init__(self, ra_func, dec_func=None, origin=None):
         self._color = None

@@ -17,7 +17,7 @@
 #
 
 from .input import InputLoader, GetInputObj, RegisterInputType, GetNumInputObj
-from .util import LoggerWrapper, GetIndex, GetRNG
+from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
 from .value import GetAllParams, SetDefaultIndex
 from .gsobject import RegisterObjectType
 from ..gsparams import GSParams
@@ -49,11 +49,8 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
                 # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
                 del config['random']
 
-    kwargs, safe = GetAllParams(config, base,
-        req = RealGalaxy._req_params,
-        opt = RealGalaxy._opt_params,
-        single = RealGalaxy._single_params,
-        ignore = ignore + ['num'])
+    req, opt, single, _ = get_cls_params(RealGalaxy)
+    kwargs, safe = GetAllParams(config, base, req, opt, single, ignore = ignore + ['num'])
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
     kwargs['rng'] = GetRNG(config, base, logger, param_name)
@@ -99,11 +96,9 @@ def _BuildChromaticRealGalaxy(config, base, ignore, gsparams, logger):
                 # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
                 del config['random']
 
-    kwargs, safe = GetAllParams(config, base,
-        req = ChromaticRealGalaxy._req_params,
-        opt = ChromaticRealGalaxy._opt_params,
-        single = ChromaticRealGalaxy._single_params,
-        ignore = ignore)
+    req, opt, single, _ = get_cls_params(ChromaticRealGalaxy)
+
+    kwargs, safe = GetAllParams(config, base, req, opt, single, ignore)
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
     kwargs['rng'] = GetRNG(config, base, logger, param_name)

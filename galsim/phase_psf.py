@@ -1744,7 +1744,6 @@ class OpticalPSF(GSObject):
                             etc.).  [default: galsim.arcsec]
         gsparams:           An optional `GSParams` argument. [default: None]
     """
-    _req_params = {}
     _opt_params = {
         "diam": float,
         "defocus": float,
@@ -1772,7 +1771,6 @@ class OpticalPSF(GSObject):
         "pupil_plane_size": float,
         "scale_unit": str}
     _single_params = [{"lam_over_diam": float, "lam": float}]
-    _takes_rng = False
 
     _has_hard_edges = False
     _is_axisymmetric = False

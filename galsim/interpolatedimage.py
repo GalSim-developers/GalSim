@@ -257,7 +257,6 @@ class InterpolatedImage(GSObject):
         'use_true_center' : bool ,
         'hdu' : int
     }
-    _single_params = []
     _takes_rng = True
     _cache_noise_pad = {}
 
@@ -848,8 +847,6 @@ class InterpolatedKImage(GSObject):
         'k_interpolant' : str, 'stepk': float,
         'real_hdu': int, 'imag_hdu': int,
     }
-    _single_params = []
-    _takes_rng = False
 
     _has_hard_edges = False
     _is_axisymmetric = False

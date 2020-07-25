@@ -87,9 +87,6 @@ class Shapelet(GSObject):
         gsparams:   An optional `GSParams` argument. [default: None]
     """
     _req_params = { "sigma" : float, "order" : int }
-    _opt_params = {}
-    _single_params = []
-    _takes_rng = False
 
     _has_hard_edges = False
     _is_axisymmetric = False

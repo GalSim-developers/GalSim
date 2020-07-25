@@ -39,16 +39,7 @@ class DeltaFunction(GSObject):
         flux:       The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:   An optional `GSParams` argument. [default: None]
     """
-    # Initialization parameters of the object, with type information, to indicate
-    # which attributes are allowed / required in a config file for this object.
-    # _req_params are required
-    # _opt_params are optional
-    # _single_params are a list of sets for which exactly one in the list is required.
-    # _takes_rng indicates whether the constructor should be given the current rng.
-    _req_params = {}
     _opt_params = { "flux" : float }
-    _single_params = []
-    _takes_rng = False
 
     _mock_inf = 1.e300  # Some arbitrary very large number to use when we need infinity.
 

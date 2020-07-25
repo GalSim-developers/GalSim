@@ -22,7 +22,7 @@ import os
 import logging
 
 from .value import RegisterValueType
-from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy
+from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..catalog import Catalog, Dict
@@ -397,11 +397,9 @@ class InputLoader(object):
         Returns:
             kwargs, safe
         """
-        req = self.init_func._req_params
-        opt = self.init_func._opt_params
-        single = self.init_func._single_params
+        req, opt, single, takes_rng = get_cls_params(self.init_func)
         kwargs, safe = GetAllParams(config, base, req=req, opt=opt, single=single)
-        if self.init_func._takes_rng:  # pragma: no cover  (We don't have any inputs that do this.)
+        if takes_rng:  # pragma: no cover  (We don't have any inputs that do this.)
             rng = GetRNG(config, base, logger, 'input '+self.init_func.__name__)
             kwargs['rng'] = rng
             safe = False

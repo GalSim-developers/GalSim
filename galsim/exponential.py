@@ -50,10 +50,8 @@ class Exponential(GSObject):
         flux:               The flux (in photons/cm^2/s) of the profile. [default: 1]
         gsparams:           An optional `GSParams` argument. [default: None]
     """
-    _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
-    _takes_rng = False
 
     # The half-light-radius is not analytic, but can be calculated numerically
     # by iterative solution of equation:

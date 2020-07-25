@@ -972,3 +972,15 @@ def RetryIO(func, args, ntries, file_name, logger):
             break
     return ret
 
+def get_cls_params(cls):
+    """Get the _req_params, _opt_params, _single_params, and _takes_rng definitions
+    from the given class (or function, but usually class).
+
+    This handles the defaults of empty dict or list or False as appropriate.
+    """
+    req = getattr(cls,'_req_params', {})
+    opt = getattr(cls,'_opt_params', {})
+    single = getattr(cls,'_single_params', [])
+    takes_rng = getattr(cls,'_takes_rng', False)
+
+    return req, opt, single, takes_rng

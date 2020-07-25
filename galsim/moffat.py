@@ -67,7 +67,6 @@ class Moffat(GSObject):
     _req_params = { "beta" : float }
     _opt_params = { "trunc" : float , "flux" : float }
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
-    _takes_rng = False
 
     _is_axisymmetric = True
     _is_analytic_x = True

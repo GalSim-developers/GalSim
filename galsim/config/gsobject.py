@@ -18,7 +18,7 @@
 import logging
 import inspect
 
-from .util import LoggerWrapper, GetIndex, GetRNG
+from .util import LoggerWrapper, GetIndex, GetRNG, get_cls_params
 from .value import ParseValue, GetCurrentValue, GetAllParams, CheckAllParams, SetDefaultIndex
 from .input import RegisterInputConnectedType
 from .sed import BuildSED
@@ -269,13 +269,11 @@ def _BuildSimple(build_func, config, base, ignore, gsparams, logger):
     type_name = config['type']
     logger.debug('obj %d: BuildSimple for type = %s',base.get('obj_num',0),type_name)
 
-    req = getattr(build_func, '_req_params', {})
-    opt = getattr(build_func, '_opt_params', {})
-    single = getattr(build_func, '_single_params', [])
+    req, opt, single, takes_rng = get_cls_params(build_func)
     kwargs, safe = GetAllParams(config, base, req=req, opt=opt, single=single, ignore=ignore)
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
-    if getattr(build_func, '_takes_rng', False):
+    if takes_rng:
         kwargs['rng'] = GetRNG(config, base, logger, type_name)
         safe = False
 
@@ -410,11 +408,9 @@ def _BuildList(config, base, ignore, gsparams, logger):
     return gsobject, safe
 
 def _BuildJointOpticalPSF(cls, config, base, ignore, gsparams, logger):
-    kwargs, safe = GetAllParams(config, base,
-        req = cls._req_params,
-        opt = cls._opt_params,
-        single = cls._single_params,
-        ignore = [ 'aberrations' ] + ignore)
+    req, opt, single, _ = get_cls_params(cls)
+
+    kwargs, safe = GetAllParams(config, base, req, opt, single, ignore = ['aberrations'] + ignore)
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
 
     if 'aberrations' in config:
