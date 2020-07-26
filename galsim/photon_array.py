@@ -595,7 +595,7 @@ class FRatioAngles(PhotonOp):
         dxdz[:] = tantheta * np.sin(phi)
         dydz[:] = tantheta * np.cos(phi)
 
-    def __repr__(self):
+    def __str__(self):
         return "galsim.FRatioAngles(fratio=%s, obscration=%s, rng=%s)"%(
             self.fratio, self.obscuration, self.ud)
 
