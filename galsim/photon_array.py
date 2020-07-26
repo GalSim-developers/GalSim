@@ -473,6 +473,13 @@ class PhotonOp(object):
         """
         raise NotImplementedError("Cannot call applyTo on a pure PhotonOp object")
 
+    # These simpler versions of == and hash are fine.
+    def __eq__(self, other):
+        return repr(self) == repr(other)
+
+    def __hash__(self):
+        return hash(repr(self))
+
 
 class WavelengthSampler(PhotonOp):
     """A photon operator that uses sed.sampleWavelength to set the wavelengths array of a
@@ -504,6 +511,14 @@ class WavelengthSampler(PhotonOp):
         """
         photon_array.wavelength = self.sed.sampleWavelength(
                 photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
+
+    def __str__(self):
+        return "galsim.WavelengthSampler(sed=%s, bandpass=%s, rng=%s, npoints=%s)"%(
+            self.sed, self.bandpass, self.rng, self.npoints)
+
+    def __repr__(self):
+        return "galsim.WavelengthSampler(sed=%r, bandpass=%r, rng=%r, npoints=%r)"%(
+            self.sed, self.bandpass, self.rng, self.npoints)
 
 
 class FRatioAngles(PhotonOp):
@@ -570,6 +585,14 @@ class FRatioAngles(PhotonOp):
         tantheta = np.sqrt(np.square(sintheta) / (1. - np.square(sintheta)))
         dxdz[:] = tantheta * np.sin(phi)
         dydz[:] = tantheta * np.cos(phi)
+
+    def __repr__(self):
+        return "galsim.FRatioAngles(fratio=%s, obscration=%s, rng=%s)"%(
+            self.fratio, self.obscuration, self.ud)
+
+    def __repr__(self):
+        return "galsim.FRatioAngles(fratio=%r, obscration=%r, rng=%r)"%(
+            self.fratio, self.obscuration, self.ud)
 
 
 class PhotonDCR(PhotonOp):
@@ -687,6 +710,15 @@ class PhotonDCR(PhotonOp):
         photon_array.x += dx
         photon_array.y += dy
 
+    def __repr__(self):
+        s = "galsim.PhotonDCR(base_wavelength=%r, scale_unit=%r, alpha=%r, "%(
+                self.base_wavelength, self.scale_unit, self.alpha)
+        s += "zenith_angle=%r, parallactic_angle=%r"%(self.zenith_angle, self.parallactic_angle)
+        for k in self.kw:
+            s += ", %s=%r"%(k, self.kw[k])
+        s += ")"
+        return s
+
 
 class Refraction(PhotonOp):
     """A photon operator that refracts photons (manipulating their dxdz and dydz values) at an
@@ -752,6 +784,9 @@ class Refraction(PhotonOp):
         photon_array.dydz /= factor
         photon_array.flux = np.where(np.isnan(factor), 0.0, photon_array.flux)
 
+    def __repr__(self):
+        return "galsim.Refraction(index_ratio=%r)"%self.index_ratio
+
 
 class FocusDepth(PhotonOp):
     """A photon operator that focuses/defocuses photons by changing the height of the focal
@@ -779,3 +814,6 @@ class FocusDepth(PhotonOp):
             raise GalSimError("FocusDepth requires that angles be set")
         photon_array.x += self.depth * photon_array.dxdz
         photon_array.y += self.depth * photon_array.dydz
+
+    def __repr__(self):
+        return "galsim.FocusDepth(depth=%r)"%self.depth

@@ -317,6 +317,8 @@ def test_wavelength_sampler():
     assert photon_array.hasAllocatedWavelengths()
     assert not photon_array.hasAllocatedAngles()
 
+    do_pickle(sampler)
+
     print('mean wavelength = ',np.mean(photon_array.wavelength))
     print('min wavelength = ',np.min(photon_array.wavelength))
     print('max wavelength = ',np.max(photon_array.wavelength))
@@ -395,6 +397,8 @@ def test_photon_angles():
     for rng in [ None, ud, 12345 ]:
         assigner = galsim.FRatioAngles(fratio, obscuration, rng)
         assigner.applyTo(photon_array)
+
+        do_pickle(assigner)
 
         dxdz = photon_array.dxdz
         dydz = photon_array.dydz
@@ -541,6 +545,8 @@ def test_dcr():
     photon_ops = [wave_sampler, dcr]
     achrom.drawImage(image=im2, method='phot', rng=rng, photon_ops=photon_ops)
 
+    do_pickle(dcr)
+
     im1 /= flux  # Divide by flux, so comparison is on a relative basis.
     im2 /= flux
     printval(im2, im1, show=False)
@@ -603,6 +609,8 @@ def test_dcr():
                            #alpha=0)            # default is 0, so don't need to set it.
     photon_ops = [wave_sampler, dcr]
     achrom.drawImage(image=im5, method='phot', rng=rng, photon_ops=photon_ops)
+
+    do_pickle(dcr)
 
     im6 = galsim.ImageD(50, 50, wcs=wcs)
     star = galsim.DeltaFunction() * sed
@@ -909,6 +917,8 @@ def test_refract():
         refract = galsim.Refraction(index_ratio)
         refract.applyTo(photon_array)
 
+        do_pickle(refract)
+
         # Triangle is length 1 in the z direction and length sqrt(dxdz**2+dydz**2)
         # in the 'r' direction.
         rsqr0 = dxdz0**2 + dydz0**2
@@ -1014,6 +1024,9 @@ def test_focus_depth():
         fd1.applyTo(photon_array)
         fd2.applyTo(photon_array)
         fd3.applyTo(photon_array2)
+
+        do_pickle(fd1)
+
         np.testing.assert_allclose(photon_array.x, photon_array2.x, rtol=0, atol=1e-15)
         np.testing.assert_allclose(photon_array.y, photon_array2.y, rtol=0, atol=1e-15)
         # Assuming focus is at x=y=0, then
