@@ -2761,6 +2761,33 @@ def test_photon_ops():
     im5 = galsim.config.BuildStamp(config)[0]
     np.testing.assert_array_equal(im5.array, im2.array)
 
+    # Test various errors
+    galsim.config.RemoveCurrent(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOps(config['stamp']['photon_ops'], 0, config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOp(config['stamp'], 'photon_ops', config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOp(config, 'gal', config)
+    with assert_raises(NotImplementedError):
+        galsim.config.photon_ops.PhotonOpBuilder().buildPhotonOp(config,config,None)
+    del config['photon_ops_orig'][1]['sed']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOp(config['photon_ops_orig'], 1, config)
+    config['photon_ops_orig'][1]['sed'] = sed
+    del config['bandpass']
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOp(config['photon_ops_orig'], 1, config)
+    config['stamp']['photon_ops'][0]['index'] = 1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOp(config['stamp']['photon_ops'], 0, config)
+    config['stamp']['photon_ops'][0]['index'] = -1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOp(config['stamp']['photon_ops'], 0, config)
+    config['stamp']['photon_ops'][0]['index'] = 0
+    config['stamp']['photon_ops'][0]['items'] = galsim.Refraction(3.9)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOp(config['stamp']['photon_ops'], 0, config)
 
 if __name__ == "__main__":
     test_single()

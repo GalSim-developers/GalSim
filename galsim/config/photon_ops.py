@@ -94,6 +94,10 @@ def BuildPhotonOp(config, key, base, logger=None):
     if op_type in ('Eval', 'Current'):
         return ParseValue(config, key, base, None)[0]
 
+    if op_type not in valid_photon_op_types:
+        raise GalSimConfigValueError("Invalid photon_op type.", op_type,
+                                     list(valid_photon_op_types.keys()))
+
     # Check if we can use the current cached object
     index, index_key = GetIndex(param, base)
     if 'current' in param:
@@ -103,10 +107,6 @@ def BuildPhotonOp(config, key, base, logger=None):
             logger.debug('image %d: index_key = %s, index = %d',base.get('image_num',0),
                          cindex_key, cindex)
             return cop
-
-    if op_type not in valid_photon_op_types:
-        raise GalSimConfigValueError("Invalid photon_op type.", op_type,
-                                     list(valid_photon_op_types.keys()))
     logger.debug('image %d: Building photon_op type %s', base.get('image_num',0), op_type)
     builder = valid_photon_op_types[op_type]
     op = builder.buildPhotonOp(param, base, logger)
