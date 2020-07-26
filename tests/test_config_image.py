@@ -2910,6 +2910,38 @@ def test_sensor():
     im4 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im4.array, im3.array)
 
+    # Test one with all the optional bits to SiliconSensor
+    config['stamp']['sensor'] = {
+        'type' : 'Silicon',
+        'name' : 'lsst_e2v_50_8',
+        'strength' : 0.8,
+        'diffusion_factor' : 0.2,
+        'qdist' : 2,
+        'nrecalc' : 3000,
+        'treering_func' : {
+            'type' : 'File',
+            'file_name' : 'tree_ring_lookup.dat',
+            'amplitude' : 0.5
+        },
+        'treering_center' : {
+            'type' : 'XY',
+            'x' : 0,
+            'y' : -500
+        }
+    }
+    galsim.config.SetupConfigRNG(config, seed_offset=1)
+    galsim.config.RemoveCurrent(config)
+    rng.reset(1235)
+    frat.ud.reset(rng)
+    wave.rng.reset(rng)
+    trfunc = galsim.LookupTable.from_file('tree_ring_lookup.dat', amplitude=0.5)
+    sensor = galsim.SiliconSensor(name='lsst_e2v_50_8', rng=rng,
+                                  strength=0.8, diffusion_factor=0.2, qdist=2, nrecalc=3000,
+                                  treering_func=trfunc, treering_center=galsim.PositionD(0,-500))
+    im5 = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops, sensor=sensor)
+    im6 = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im6.array, im5.array)
+
     # Test various errors
     galsim.config.RemoveCurrent(config)
     config['sensor'] = { 'type' : 'Invalid' }

@@ -28,6 +28,7 @@ from ..angle import Angle, AngleUnit, radians, degrees, hours
 from ..position import PositionD
 from ..celestial import CelestialCoord
 from ..shear import Shear
+from ..table import LookupTable
 from ..utilities import basestring
 
 # This file handles the parsing of values given in the config dict.  It includes the basic
@@ -749,6 +750,15 @@ def _GenerateFromSum(config, base, value_type):
 
     return sum, safe
 
+def _GenerateFromFile(config, base, value_type):
+    """Return a LookupTable from reading a file
+    """
+    req = { 'file_name' : str }
+    opt = { 'interpolant' : str, 'x_log' : bool, 'f_log' : bool, 'amplitude' : float }
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
+    table = LookupTable.from_file(**kwargs)
+    return table, False
+
 def _GenerateFromCurrent(config, base, value_type):
     """Get the current value of another config item.
     """
@@ -813,9 +823,10 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
 
 
 RegisterValueType('List', _GenerateFromList,
-                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord ])
+                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, LookupTable ])
 RegisterValueType('Current', _GenerateFromCurrent,
-                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, None ])
+                  [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, LookupTable,
+                    None ])
 RegisterValueType('Sum', _GenerateFromSum, [ float, int, Angle, Shear, PositionD ])
 RegisterValueType('Sequence', _GenerateFromSequence, [ float, int, bool ])
 RegisterValueType('NumberedFile', _GenerateFromNumberedFile, [ str ])
@@ -834,3 +845,4 @@ RegisterValueType('QBeta', _GenerateFromQBeta, [ Shear ])
 RegisterValueType('XY', _GenerateFromXY, [ PositionD ])
 RegisterValueType('RTheta', _GenerateFromRTheta, [ PositionD ])
 RegisterValueType('RADec', _GenerateFromRADec, [ CelestialCoord ])
+RegisterValueType('File', _GenerateFromFile, [ LookupTable ])
