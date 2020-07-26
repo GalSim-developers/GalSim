@@ -28,6 +28,7 @@ from .gsobject import BuildGSObject
 from .value import ParseValue, CheckAllParams
 from .noise import CalculateNoiseVariance, AddSky, AddNoise
 from .wcs import BuildWCS
+from .photon_ops import BuildPhotonOp
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..image import Image, ImageF
 from ..wcs import PixelScale
@@ -227,7 +228,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos', 'sky_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
-                'n_photons', 'max_extra_noise', 'poisson_flux',
+                'n_photons', 'max_extra_noise', 'poisson_flux', 'photon_ops',
                 'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr',
                 'quick_skip', 'obj_rng', 'index_key', 'rng_index_key', 'rng_num']
 
@@ -500,6 +501,16 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     if isinstance(prof, ChromaticObject) and 'bandpass' not in base:
         raise GalSimConfigError("Drawing chromatic object requires specifying bandpass")
     kwargs['bandpass'] = base.get('bandpass',None)
+
+    if 'photon_ops' in config:
+        if not isinstance(config['photon_ops'], list):
+            raise GalSimConfigError("photon_ops must be a list")
+        photon_ops = config['photon_ops']  # The list in the config dict
+        ops = [] # List of the actual operators
+        for i in range(len(photon_ops)):
+            op = BuildPhotonOp(photon_ops, i, base, logger)
+            ops.append(op)
+        kwargs['photon_ops'] = ops
 
     if logger.isEnabledFor(logging.DEBUG):
         # Don't output the full image array.  Use str(image) for that kwarg.  And Bandpass.

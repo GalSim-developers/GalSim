@@ -2632,6 +2632,94 @@ def test_chromatic():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
+@timer
+def test_photon_ops():
+    # Test photon ops and sensor options
+    config = {
+        'stamp' : {
+            'photon_ops' : [
+                {
+                    'type' : 'FRatioAngles',
+                    'fratio' : 1.234,
+                    'obscuration' : 0.606,
+                },
+                {
+                    'type' : 'WavelengthSampler',
+                    'sed': {
+                        'file_name': 'CWW_E_ext.sed',
+                        'wave_type': 'Ang',
+                        'flux_type': 'flambda',
+                        'norm_flux_density': 1.0,
+                        'norm_wavelength': 500,
+                        'redshift' : '@gal.redshift',
+                    },
+                },
+                {
+                    'type' : 'PhotonDCR',
+                    'base_wavelength' : '$bandpass.effective_wavelength',
+                    'latitude' : '-30.24463 degrees',
+                    'HA' : '-1.48 hours',
+                },
+                {
+                    'type' : 'FocusDepth',
+                    'depth' : -0.6,  # pixels.  Negative means intrafocal (focus is in silicon)
+                },
+                {
+                    'type' : 'Refraction',
+                    'index_ratio' : 3.9
+                },
+            ],
+            'sky_pos' : {
+                'type' : 'RADec',
+                'ra' : '13 hr',
+                'dec' : '-17 deg'
+            }
+        },
+        'image' : {
+            'type' : 'Single',
+            'pixel_scale' : 0.2,
+            'bandpass' : {
+                'file_name': 'LSST_g.dat',
+                'wave_type': 'nm',
+            },
+            'random_seed' : 1234,
+            'draw_method' : 'phot',
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 2.3,
+            'flux' : 10000,
+            'redshift' : 0.8,
+        },
+        'psf' : {
+            'type' : 'Moffat',
+            'fwhm' : 0.7,
+            'beta' : 3.5,
+        },
+    }
+
+    rng = galsim.BaseDeviate(1235)
+    gal = galsim.Gaussian(sigma=2.3, flux=10000)
+    psf = galsim.Moffat(beta=3.5, fwhm=0.7)
+    obj = galsim.Convolve(gal, psf)
+    bp = galsim.Bandpass('LSST_g.dat', wave_type='nm')
+    sed = galsim.SED('CWW_E_ext.sed', wave_type='Ang', flux_type='flambda')
+    sed = sed.withFluxDensity(1.0, 500).atRedshift(0.8)
+    sky_pos = galsim.CelestialCoord(ra=13*galsim.hours, dec=-17*galsim.degrees)
+
+    frat = galsim.FRatioAngles(fratio=1.234, obscuration=0.606, rng=rng)
+    wave = galsim.WavelengthSampler(sed=sed, bandpass=bp, rng=rng)
+    dcr = galsim.PhotonDCR(base_wavelength=bp.effective_wavelength,
+                           latitude=-30.24463 * galsim.degrees,
+                           obj_coord=sky_pos, HA=-1.48 * galsim.hours)
+    depth = galsim.FocusDepth(-0.6)
+    ref = galsim.Refraction(3.9)
+    photon_ops = [frat, wave, dcr, depth, ref]
+
+    im1a = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops)
+    im1b = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im1b.array, im1a.array)
+
 
 if __name__ == "__main__":
     test_single()
@@ -2653,3 +2741,4 @@ if __name__ == "__main__":
     test_variable_cat_size()
     test_blend()
     test_chromatic()
+    test_photon_ops()

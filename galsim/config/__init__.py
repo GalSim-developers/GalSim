@@ -28,6 +28,7 @@ from .noise import *
 from .wcs import *
 from .bandpass import *
 from .sed import *
+from .photon_ops import *
 from .gsobject import *
 from .value import *
 from .value_eval import eval_base_variables

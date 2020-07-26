@@ -58,7 +58,7 @@ def _type_by_letter(key):
 eval_base_variables = [ 'image_pos', 'world_pos', 'image_center', 'image_origin', 'image_bounds',
                         'image_xsize', 'image_ysize', 'stamp_xsize', 'stamp_ysize', 'pixel_scale',
                         'wcs', 'rng', 'file_num', 'image_num', 'obj_num', 'start_obj_num',
-                        'world_center', 'sky_pos', ]
+                        'world_center', 'sky_pos', 'bandpass' ]
 
 from .value import standard_ignore
 eval_ignore = ['str','_fn'] + standard_ignore
