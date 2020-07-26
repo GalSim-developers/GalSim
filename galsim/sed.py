@@ -19,7 +19,6 @@
 import numpy as np
 from astropy import units
 from astropy import constants
-import weakref
 
 from .gsobject import GSObject
 from .table import LookupTable

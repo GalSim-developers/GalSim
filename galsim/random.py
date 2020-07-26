@@ -17,7 +17,6 @@
 #
 
 import numpy as np
-import weakref
 
 from . import _galsim
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
@@ -744,7 +743,7 @@ class DistDeviate(BaseDeviate):
                         "python callable function",
                         function=function, x_min=x_min, x_max=x_max)
 
-            self.__function = weakref.ref(function) # Save the inputs to be used in repr
+            self.__function = function # Save the inputs to be used in repr
 
         # Compute the probability distribution function, pdf(x)
         if (npoints is None and isinstance(function, LookupTable) and
@@ -824,7 +823,7 @@ class DistDeviate(BaseDeviate):
 
     @property
     def _function(self):
-        return  self.__function if isinstance(self.__function, str) else self.__function()
+        return self.__function if isinstance(self.__function, str) else self.__function
 
     def __repr__(self):
         return ('galsim.DistDeviate(seed=%r, function=%r, x_min=%r, x_max=%r, interpolant=%r, '
