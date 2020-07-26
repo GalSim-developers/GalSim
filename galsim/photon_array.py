@@ -20,8 +20,11 @@ import numpy as np
 
 from . import _galsim
 from .random import UniformDeviate, BaseDeviate
+from .sed import SED
+from .bandpass import Bandpass
+from .celestial import CelestialCoord
 from .utilities import lazy_property
-from .angle import radians, arcsec, AngleUnit
+from .angle import radians, arcsec, Angle, AngleUnit
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
@@ -495,7 +498,10 @@ class WavelengthSampler(PhotonOp):
         npoints:    Number of points `DistDeviate` should use for its internal interpolation
                     tables. [default: None, which uses the `DistDeviate` default]
     """
-    def __init__(self, sed, bandpass, rng=None, npoints=None):
+    _opt_params = { 'npoints' : int }
+    _takes_rng = True
+
+    def __init__(self, sed, bandpass=None, rng=None, npoints=None):
         self.sed = sed
         self.bandpass = bandpass
         self.rng = BaseDeviate(rng)
@@ -536,8 +542,11 @@ class FRatioAngles(PhotonOp):
         rng:            A random number generator to use or None, in which case an rng
                         will be automatically constructed for you. [default: None]
     """
-    def __init__(self, fratio, obscuration=0.0, rng=None):
+    _req_params = { 'fratio' : float }
+    _opt_params = { 'obscuration' : float }
+    _takes_rng = True
 
+    def __init__(self, fratio, obscuration=0.0, rng=None):
         if fratio < 0:
             raise GalSimRangeError("The f-ratio must be positive.", fratio, 0.)
         if obscuration < 0 or obscuration >= 1:
@@ -652,6 +661,12 @@ class PhotonDCR(PhotonOp):
         temperature:        Temperature in Kelvins.  [default: 293.15 K]
         H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
+    _req_params = { 'base_wavelength' : float }
+    _opt_params = { 'scale_units' : str, 'alpha' : float,
+                    'parallactic_angle' : Angle, 'latitude' : Angle,
+                    'pressure' : float, 'temperature' : float, 'H2O_pressure' : float }
+    _single_params = [ { 'zenith_angle' : Angle, 'HA' : Angle, 'zenit_coord' : CelestialCoord } ]
+
     def __init__(self, base_wavelength, scale_unit=arcsec, **kwargs):
         from . import dcr
 
@@ -734,6 +749,8 @@ class Refraction(PhotonOp):
                         latter case, the function should accept a numpy array of vacuum wavelengths
                         as input and return a numpy array of refractive index ratios.
     """
+    _req_params = { 'index_ratio' : float }
+
     def __init__(self, index_ratio):
         self.index_ratio = index_ratio
 
@@ -799,6 +816,8 @@ class FocusDepth(PhotonOp):
                  converged, and depth < 0 means the sensor surface intersects the beam before it
                  has converged.
     """
+    _req_params = { 'depth' : float }
+
     def __init__(self, depth):
         self.depth = depth
 
