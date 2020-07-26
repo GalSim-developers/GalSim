@@ -76,7 +76,7 @@ def BuildPhotonOp(config, key, base, logger=None):
         a object that would be valid in a photon_ops list
     """
     logger = LoggerWrapper(logger)
-    logger.debug('image %d: Start BuildPhotonOp key = %s',base.get('image_num',0),key)
+    logger.debug('obj %d: Start BuildPhotonOp key = %s',base.get('obj_num',0),key)
 
     param = config[key]
 
@@ -103,14 +103,16 @@ def BuildPhotonOp(config, key, base, logger=None):
     if 'current' in param:
         cop, csafe, cvalue_type, cindex, cindex_key = param['current']
         if cindex == index:
-            logger.debug('image %d: The photon_op is already current', base.get('image_num',0))
-            logger.debug('image %d: index_key = %s, index = %d',base.get('image_num',0),
+            logger.debug('obj %d: The photon_op is already current', base.get('obj_num',0))
+            logger.debug('obj %d: index_key = %s, index = %d',base.get('obj_num',0),
                          cindex_key, cindex)
             return cop
-    logger.debug('image %d: Building photon_op type %s', base.get('image_num',0), op_type)
+
+    # Need to use a builder.
+    logger.debug('obj %d: Building photon_op type %s', base.get('obj_num',0), op_type)
     builder = valid_photon_op_types[op_type]
     op = builder.buildPhotonOp(param, base, logger)
-    logger.debug('image %d: photon_op = %s', base.get('image_num',0), op)
+    logger.debug('obj %d: photon_op = %s', base.get('obj_num',0), op)
 
     param['current'] = op, False, None, index, index_key
 

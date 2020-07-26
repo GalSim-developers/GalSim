@@ -84,8 +84,8 @@ class SiliconSensor(Sensor):
     into account the repulsion of previously accumulated electrons (known as the brighter-fatter
     effect).
 
-    There are currently four up-to-date sensors shipped with GalSim, which you can specify as the ``name``
-    parameter mentioned below. The _50_ indicates 50V back-bias.
+    There are currently four up-to-date sensors shipped with GalSim, which you can specify as the
+    ``name`` parameter mentioned below. The _50_ indicates 50V back-bias.
 
         lsst_itl_50_8
                     The ITL sensor being used for LSST, using 8 points along each side of the
@@ -151,6 +151,11 @@ class SiliconSensor(Sensor):
         transpose:          Transpose the meaning of (x,y) so the brighter-fatter effect is
                             stronger along the x direction. [default: False]
     """
+    _opt_params = { 'name' : str, 'strength' : float, 'diffusion_factor' : float,
+                    'qdist' : int, 'nrecalc' : float, 'transpose' : bool,
+                    'treering_func' : LookupTable, 'treering_center' : PositionD }
+    _takes_rng = True
+
     def __init__(self, name='lsst_itl_50_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000, treering_func=None, treering_center=PositionD(0,0),
                  transpose=False):

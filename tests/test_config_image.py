@@ -2634,7 +2634,7 @@ def test_chromatic():
 
 @timer
 def test_photon_ops():
-    # Test photon ops and sensor options
+    # Test photon ops in config
     config = {
         'stamp' : {
             'photon_ops' : [
@@ -2769,6 +2769,9 @@ def test_photon_ops():
         galsim.config.BuildPhotonOp(config['stamp'], 'photon_ops', config)
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildPhotonOp(config, 'gal', config)
+    config['photon_op'] = { 'type' : 'Invalid' }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildPhotonOp(config, 'photon_op', config)
     with assert_raises(NotImplementedError):
         galsim.config.photon_ops.PhotonOpBuilder().buildPhotonOp(config,config,None)
     del config['photon_ops_orig'][1]['sed']
@@ -2788,6 +2791,145 @@ def test_photon_ops():
     config['stamp']['photon_ops'][0]['items'] = galsim.Refraction(3.9)
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildPhotonOp(config['stamp']['photon_ops'], 0, config)
+
+@timer
+def test_sensor():
+    # Test sensor option in config
+    config = {
+        'stamp' : {
+            'photon_ops' : [
+                {
+                    'type' : 'FRatioAngles',
+                    'fratio' : 1.234,
+                    'obscuration' : 0.606,
+                },
+                {
+                    'type' : 'WavelengthSampler',
+                    'sed': {
+                        'file_name': 'CWW_E_ext.sed',
+                        'wave_type': 'Ang',
+                        'flux_type': 'flambda',
+                        'norm_flux_density': 1.0,
+                        'norm_wavelength': 500,
+                        'redshift' : '@gal.redshift',
+                    },
+                },
+            ],
+            'sky_pos' : {
+                'type' : 'RADec',
+                'ra' : '13 hr',
+                'dec' : '-17 deg'
+            },
+            'sensor' : {
+                'type' : 'Silicon'
+            }
+        },
+        'image' : {
+            'type' : 'Single',
+            'pixel_scale' : 0.2,
+            'bandpass' : {
+                'file_name': 'LSST_g.dat',
+                'wave_type': 'nm',
+            },
+            'random_seed' : 1234,
+            'draw_method' : 'phot',
+        },
+        'gal' : {
+            'type' : 'Gaussian',
+            'sigma' : 2.3,
+            'flux' : 10000,
+            'redshift' : 0.8,
+        },
+        'psf' : {
+            'type' : 'Moffat',
+            'fwhm' : 0.7,
+            'beta' : 3.5,
+        },
+    }
+
+    rng = galsim.BaseDeviate(1235)
+    gal = galsim.Gaussian(sigma=2.3, flux=10000)
+    psf = galsim.Moffat(beta=3.5, fwhm=0.7)
+    obj = galsim.Convolve(gal, psf)
+    bp = galsim.Bandpass('LSST_g.dat', wave_type='nm')
+    sed = galsim.SED('CWW_E_ext.sed', wave_type='Ang', flux_type='flambda')
+    sed = sed.withFluxDensity(1.0, 500).atRedshift(0.8)
+    sky_pos = galsim.CelestialCoord(ra=13*galsim.hours, dec=-17*galsim.degrees)
+
+    frat = galsim.FRatioAngles(fratio=1.234, obscuration=0.606, rng=rng)
+    wave = galsim.WavelengthSampler(sed=sed, bandpass=bp, rng=rng)
+    photon_ops = [frat, wave]
+    sensor = galsim.SiliconSensor(rng=rng)
+
+    im1 = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops, sensor=sensor)
+    im2 = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im2.array, im1.array)
+
+    # If we do it again, it uses the current values
+    sensor2 = galsim.config.BuildSensor(config['stamp'], 'sensor', config)
+    assert sensor2 == sensor
+
+    # Can access this as a Current value, but only if it's already been evaluated normally.
+    config['sensor3'] = '@stamp.sensor'
+    sensor3 = galsim.config.BuildSensor(config, 'sensor3', config)
+    assert sensor3 == sensor
+    config['sensor4'] = { 'type' : 'Current', 'key' : 'stamp.sensor' }
+    sensor4 = galsim.config.BuildSensor(config, 'sensor4', config)
+    assert sensor4 == sensor
+
+    # Can be an Eval string
+    config['sensor5'] = '$galsim.SiliconSensor(rng=rng)'
+    sensor5 = galsim.config.BuildSensor(config, 'sensor5', config)
+    assert sensor5 == sensor
+    config['sensor6'] = { 'type' : 'Eval', 'str' : 'galsim.SiliconSensor(rng=rng)' }
+    sensor6 = galsim.config.BuildSensor(config, 'sensor6', config)
+    assert sensor6 == sensor
+
+    # Can be a Sensor instance
+    config['sensor7'] = sensor
+    sensor7 = galsim.config.BuildSensor(config, 'sensor7', config)
+    assert sensor7 == sensor
+
+    # Can be a List
+    config['sensor8'] = { 'type' : 'List', 'items' : [ sensor ] }
+    sensor8 = galsim.config.BuildSensor(config, 'sensor8', config)
+    assert sensor8 == sensor
+
+    # Won't use current if we are on the next object
+    galsim.config.SetupConfigObjNum(config, obj_num=1)
+    galsim.config.SetupConfigRNG(config, seed_offset=1)
+    sensor9 = galsim.config.BuildSensor(config['stamp'], 'sensor', config)
+    assert sensor9 != sensor
+
+    # Default sensor is equivalent to not using one.
+    galsim.config.SetupConfigRNG(config, seed_offset=1)
+    galsim.config.RemoveCurrent(config)
+    rng.reset(1235)
+    config['stamp']['sensor'] = {}
+    im3 = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops)
+    im4 = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im4.array, im3.array)
+
+    # Test various errors
+    galsim.config.RemoveCurrent(config)
+    config['sensor'] = { 'type' : 'Invalid' }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildSensor(config, 'sensor', config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildSensor(config, 'gal', config)
+    with assert_raises(NotImplementedError):
+        galsim.config.sensor.SensorBuilder().buildSensor(config,config,None)
+    config['sensor8']['index'] = 1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildSensor(config, 'sensor8', config)
+    config['sensor8']['index'] = -1
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildSensor(config, 'sensor8', config)
+    config['sensor8']['index'] = 0
+    config['sensor8']['items'] = sensor
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildSensor(config, 'sensor8', config)
+
 
 if __name__ == "__main__":
     test_single()
@@ -2810,3 +2952,4 @@ if __name__ == "__main__":
     test_blend()
     test_chromatic()
     test_photon_ops()
+    test_sensor()
