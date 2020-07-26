@@ -37,7 +37,9 @@ API Changes
   roman.getPSF function.  You should now use pupil_bin and gsparams to
   effect similar adjustments to the default (which is now much better than
   before in terms of both speed and accuracy). (#1089)
-
+- Deprecated the ``surface_ops`` parameter to `GSObject.drawImage`, switching
+  to the name ``photon_ops``, since these don't have to be something that
+  happens at the surface of the sensor. (#1093)
 
 
 Config Updates
@@ -52,6 +54,8 @@ Config Updates
 - Fixed a subtle issue in Eval string processing if one Current item is a
   shorter version of another one.  e.g. @gal and @gal.index.  It had been
   the case that the longer one might not be parsed properly. (#1083)
+- Added ``photon_ops`` and ``sensor`` as options in the stamp processing.
+  (#1093)
 
 
 New Features
@@ -63,7 +67,7 @@ New Features
   the pickles to be recovered after writing to disk and reading back in,
   which otherwise would not work. (#1057)
 - Added force_stepk option to VonKarman. (#1060)
-- Added Refraction and FocusDepth surface ops. (#1068, #1069)
+- Added Refraction and FocusDepth photon ops. (#1068, #1069)
 - Updated LSST sensor files to match new lab measurements and use improved
   Poisson code calculations. (#1077, #1081)
 - Added makePhot method of GSObject. (#1078)
