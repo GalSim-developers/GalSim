@@ -2716,9 +2716,50 @@ def test_photon_ops():
     ref = galsim.Refraction(3.9)
     photon_ops = [frat, wave, dcr, depth, ref]
 
-    im1a = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops)
-    im1b = galsim.config.BuildImage(config)
-    np.testing.assert_array_equal(im1b.array, im1a.array)
+    im1 = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops)
+    im2 = galsim.config.BuildImage(config)
+    np.testing.assert_array_equal(im2.array, im1.array)
+
+    # If we do it again, it uses the current values
+    ops2 = galsim.config.BuildPhotonOps(config['stamp'], 'photon_ops', config)
+    assert ops2 == photon_ops
+
+    # But not if we are on the next object
+    galsim.config.SetupConfigObjNum(config, obj_num=1)
+    galsim.config.SetupConfigRNG(config, seed_offset=1)
+    ops3 = galsim.config.BuildPhotonOps(config['stamp'], 'photon_ops', config)
+    assert ops3 != photon_ops
+
+    # Check some alternate ways to get the same photon_ops
+    config['photon_ops_orig'] = config['stamp']['photon_ops']
+    config['stamp']['photon_ops'] = [
+        {
+            'type' : 'List',
+            'items' : ['$galsim.FRatioAngles(fratio=1.234, obscuration=0.606, rng=rng)']
+        },
+        {
+            'type' : 'Eval',
+            'str' : 'galsim.WavelengthSampler(sed=@photon_ops_orig.1.sed, bandpass=bandpass, '
+                    'rng=rng)',
+        },
+        '@photon_ops_orig.2',
+        {
+            'type' : 'Current',
+            'key' : 'photon_ops_orig.3',
+        },
+        galsim.Refraction(3.9)
+    ]
+    galsim.config.SetupConfigObjNum(config, obj_num=0)
+    galsim.config.SetupConfigRNG(config, seed_offset=1)
+    galsim.config.RemoveCurrent(config)
+    ops4 = galsim.config.BuildPhotonOps(config, 'photon_ops_orig', config)
+    ops5 = galsim.config.BuildPhotonOps(config['stamp'], 'photon_ops', config)
+    assert ops4 == ops5
+
+    galsim.config.RemoveCurrent(config)
+    galsim.config.BuildPhotonOps(config, 'photon_ops_orig', config)
+    im5 = galsim.config.BuildStamp(config)[0]
+    np.testing.assert_array_equal(im5.array, im2.array)
 
 
 if __name__ == "__main__":

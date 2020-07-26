@@ -28,7 +28,7 @@ from .gsobject import BuildGSObject
 from .value import ParseValue, CheckAllParams
 from .noise import CalculateNoiseVariance, AddSky, AddNoise
 from .wcs import BuildWCS
-from .photon_ops import BuildPhotonOp
+from .photon_ops import BuildPhotonOps
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..image import Image, ImageF
 from ..wcs import PixelScale
@@ -503,14 +503,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     kwargs['bandpass'] = base.get('bandpass',None)
 
     if 'photon_ops' in config:
-        if not isinstance(config['photon_ops'], list):
-            raise GalSimConfigError("photon_ops must be a list")
-        photon_ops = config['photon_ops']  # The list in the config dict
-        ops = [] # List of the actual operators
-        for i in range(len(photon_ops)):
-            op = BuildPhotonOp(photon_ops, i, base, logger)
-            ops.append(op)
-        kwargs['photon_ops'] = ops
+        kwargs['photon_ops'] = BuildPhotonOps(config, 'photon_ops', base, logger)
 
     if logger.isEnabledFor(logging.DEBUG):
         # Don't output the full image array.  Use str(image) for that kwarg.  And Bandpass.
