@@ -36,8 +36,32 @@ from ..photon_array import WavelengthSampler, FRatioAngles, PhotonDCR, Refractio
 valid_photon_op_types = {}
 
 
+def BuildPhotonOps(config, key, base, logger=None):
+    """Read the parameters from config[key] (which should be a list) and return a constructed
+    photon_ops as a list.
+
+    Parameters:
+        config:     A dict with the configuration information for the photon ops.
+                    (usually base['stamp'])
+        key:        The key in the dict for the photon_ops list.
+        base:       The base dict of the configuration.
+        logger:     Optionally, provide a logger for logging debug statements. [default: None]
+
+    Returns:
+        the photon_ops list
+    """
+    logger = LoggerWrapper(logger)
+    if not isinstance(config[key], list):
+        raise GalSimConfigError("photon_ops must be a list")
+    photon_ops = config[key]  # The list in the config dict
+    ops = [] # List of the actual operators
+    for i in range(len(photon_ops)):
+        op = BuildPhotonOp(photon_ops, i, base, logger)
+        ops.append(op)
+    return ops
+
 def BuildPhotonOp(config, key, base, logger=None):
-    """Read the parameters from config[key] and return a constructed photon_op object.
+    """Read the parameters from config[key] and return a single constructed photon_op object.
 
     Parameters:
         config:     A list with the configuration information for the photon ops.
@@ -175,7 +199,7 @@ class WavelengthSamplerBuilder(PhotonOpBuilder):
     def buildPhotonOp(self, config, base, logger):
         req, opt, single, takes_rng = get_cls_params(WavelengthSampler)
         kwargs, safe = GetAllParams(config, base, req, opt, single, ignore=['sed'])
-        kwargs['rng'] = GetRNG(config, base)
+        kwargs['rng'] = GetRNG(config, base, logger, 'WavelengthSampler')
         if 'sed' not in config:
             raise GalSimConfigError("sed is required for WavelengthSampler")
         sed = BuildSED(config, 'sed', base, logger)[0]
