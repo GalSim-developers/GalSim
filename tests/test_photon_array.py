@@ -369,6 +369,10 @@ def test_wavelength_sampler():
     print('im2.photons.x = ',im2.photons.x)
     assert photons == im2.photons
 
+    # Base class is invalid to try to use.
+    op = galsim.PhotonOp()
+    with assert_raises(NotImplementedError):
+        op.applyTo(photon_array)
 
 @timer
 def test_photon_angles():
