@@ -21,7 +21,7 @@ import numpy as np
 from . import _galsim
 from .random import UniformDeviate, BaseDeviate
 from .utilities import lazy_property
-from .angle import radians, arcsec
+from .angle import radians, arcsec, AngleUnit
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
 
@@ -454,7 +454,27 @@ class PhotonArray(object):
             photons.wavelength = data['wavelength']
         return photons
 
-class WavelengthSampler(object):
+
+class PhotonOp(object):
+    """A base class for photon operators, which just defines the interface.
+
+    Photon operators are designed to apply some physical effect to a bundle of photons.  They
+    may adjust the fluxes in some way, or the positions, maybe in a wavelength-dependent way, etc.
+    They are typically applied via a ``photon_ops`` argument to the `GSObject.drawImage` method.
+    The order typically matters, so the operators are applied in the order they appear in the list.
+    """
+    def applyTo(self, photon_array, local_wcs=None):
+        """Apply the photon operator to a PhotonArray.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+        """
+        raise NotImplementedError("Cannot call applyTo on a pure PhotonOp object")
+
+
+class WavelengthSampler(PhotonOp):
     """A photon operator that uses sed.sampleWavelength to set the wavelengths array of a
     `PhotonArray`.
 
@@ -475,11 +495,18 @@ class WavelengthSampler(object):
         self.npoints = npoints
 
     def applyTo(self, photon_array, local_wcs=None):
-        """Assign wavelengths to the photons sampled from the SED * Bandpass."""
+        """Assign wavelengths to the photons sampled from the SED * Bandpass.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+        """
         photon_array.wavelength = self.sed.sampleWavelength(
                 photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
 
-class FRatioAngles(object):
+
+class FRatioAngles(PhotonOp):
     """A photon operator that assigns photon directions based on the f/ratio and obscuration.
 
     Assigns arrival directions at the focal plane for photons, drawing from a uniform
@@ -508,8 +535,13 @@ class FRatioAngles(object):
 
 
     def applyTo(self, photon_array, local_wcs=None):
-        """Assign directions to the photons in photon_array."""
+        """Assign directions to the photons in photon_array.
 
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+        """
         dxdz = photon_array.dxdz
         dydz = photon_array.dydz
         n_photons = len(dxdz)
@@ -539,7 +571,8 @@ class FRatioAngles(object):
         dxdz[:] = tantheta * np.sin(phi)
         dydz[:] = tantheta * np.cos(phi)
 
-class PhotonDCR(object):
+
+class PhotonDCR(PhotonOp):
     r"""A photon operator that applies the effect of differential chromatic refraction (DCR)
     and optionally the chromatic dilation due to atmospheric seeing.
 
@@ -598,13 +631,12 @@ class PhotonDCR(object):
     """
     def __init__(self, base_wavelength, scale_unit=arcsec, **kwargs):
         from . import dcr
-        from . import angle
 
         # This matches the code in ChromaticAtmosphere.
         self.base_wavelength = base_wavelength
 
         if isinstance(scale_unit, str):
-            scale_unit = angle.AngleUnit.from_name(scale_unit)
+            scale_unit = AngleUnit.from_name(scale_unit)
         self.scale_unit = scale_unit
         self.alpha = kwargs.pop('alpha', 0.)
 
@@ -621,6 +653,11 @@ class PhotonDCR(object):
 
     def applyTo(self, photon_array, local_wcs):
         """Apply the DCR effect to the photons
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
         """
         from . import dcr
         if not photon_array.hasAllocatedWavelengths():
@@ -651,7 +688,7 @@ class PhotonDCR(object):
         photon_array.y += dy
 
 
-class Refraction(object):
+class Refraction(PhotonOp):
     """A photon operator that refracts photons (manipulating their dxdz and dydz values) at an
     interface, commonly the interface between vacuum and silicon at the surface of a CCD.
 
@@ -670,6 +707,11 @@ class Refraction(object):
 
     def applyTo(self, photon_array, local_wcs=None):
         """Refract photons
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
         """
         if hasattr(self.index_ratio, '__call__'):
             index_ratio = self.index_ratio(photon_array.wavelength)
@@ -711,7 +753,7 @@ class Refraction(object):
         photon_array.flux = np.where(np.isnan(factor), 0.0, photon_array.flux)
 
 
-class FocusDepth(object):
+class FocusDepth(PhotonOp):
     """A photon operator that focuses/defocuses photons by changing the height of the focal
     surface with respect to the conical beam.
 
@@ -726,6 +768,13 @@ class FocusDepth(object):
         self.depth = depth
 
     def applyTo(self, photon_array, local_wcs=None):
+        """Adjust a photon bundle to account for the change in focal depth.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+        """
         if not photon_array.hasAllocatedAngles():
             raise GalSimError("FocusDepth requires that angles be set")
         photon_array.x += self.depth * photon_array.dxdz
