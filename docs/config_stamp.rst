@@ -33,7 +33,6 @@ Some attributes that are allowed for all stamp types are:
 * ``quick_skip`` = *bool_value* (default=False)  Skip this stamp before doing any work, even making the rng or calculating the position.  (Usually used by some other part of the processing to precalculate objects that are not worth doing for some reason.)
 * ``obj_rng`` = *bool_value* (default=True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.
 * ``photon_ops``  See `Photon Operators List` below.
-* ``sensor``  See `Sensor Field` below.
 
 Stamp Types
 -----------
@@ -236,67 +235,4 @@ Then you can use this as a valid photon operator type:
                 type: CustomPhotonOp
                 ...
 
-Sensor Field
-------------
-
-When drawing with ``method='phot'``, one can use a `Sensor` to model the conversion of photons
-to electrons and then the accumulation of these electrons in the pixels.
-
-The sensor types defined by GalSim are:
-
-* 'Simple' is the default, which does nothing but accumulate the photons at their (x,y)
-  positions onto the corresponding pixels in the image.  Typically, in this case, you would
-  omit the ``sensor`` field entirely.
-
-* 'Silicon' models a silicon-based CCD sensor that converts photons to electrons at a wavelength-
-  dependent depth (probabilistically) and drifts them down to the wells, properly taking
-  into account the repulsion of previously accumulated electrons (known as the brighter-fatter
-  effect).  See `SiliconSensor` for details.
-
-    * ``name`` = *str_value* (default = 'lsst_itl_50_8')  The naem of the sensor model to use.
-      See `SiliconSensor` for the other allowed values.
-    * ``strength`` = *float_value* (default = 1.0)  The strength of the brighter-fatter effect
-      relative to the nominal value in the model.
-    * ``diffusion_factor`` = *float_value* (default = 1.0)  The magnitude of the diffusion
-      relative to the nominal value in the model.
-    * ``qdist`` = *int_value* (default = 3)  The maximum number of pixels away to calculate the
-      distortions due to charge accumulation.
-    * ``nrecalc`` = *int_value* (default = 10000)  The number of electrons to accumulate before
-      recalculating the distortion of the pixel shapes.
-    * ``treering_func`` = *table_value* (optional) A `LookupTable` giving the tree ring pattern
-      as a radial function f(r).
-    * ``treering_center`` = *pos_value* (optional) The position of the center of the tree ring
-      pattern in image coordinates (which may be off the edge of the image).
-    * ``transpose`` = *bool_value* (default = False) Whether to transpose the meaning of (x,y)
-      for the purpose of the brighter-fatter effect.  This changes which direction the BFE
-      causes more elongation.
-
-You may also define your own custom `Sensor` type in the usual way
-with an importable module where you define a custom Builder class and register it with GalSim.
-The class should be a subclass of `galsim.config.SensorBuilder`.
-
-.. autoclass:: galsim.config.SensorBuilder
-    :members:
-
-Then, as usual, you need to register this type using::
-
-    galsim.config.RegisterSensorType('CustomSensor', CustomSensorBuilder())
-
-.. autofunction:: galsim.config.RegisterSensorType
-
-and tell the config parser the name of the module to load at the start of processing.
-
-.. code-block:: yaml
-
-    modules:
-        - my_custom_sensor
-
-Then you can use this as a valid sensor type:
-
-.. code-block:: yaml
-
-    stamp:
-        sensors:
-            type: CustomSensor
-            ...
 

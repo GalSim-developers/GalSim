@@ -63,6 +63,9 @@ class Sensor(object):
             raise GalSimUndefinedBoundsError("Calling accumulate on image with undefined bounds")
         return photons.addTo(image)
 
+    def updateRNG(self, rng):
+        pass
+
     def __repr__(self):
         return 'galsim.Sensor()'
 
@@ -221,6 +224,9 @@ class SiliconSensor(Sensor):
                                             vertex_data.ctypes.data,
                                             self.treering_func._tab, self.treering_center._p,
                                             self.abs_length_table._tab, self.transpose)
+
+    def updateRNG(self, rng):
+        self.rng.reset(rng)
 
     def __str__(self):
         s = 'galsim.SiliconSensor(%r'%self.name
