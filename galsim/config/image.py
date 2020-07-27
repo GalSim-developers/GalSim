@@ -24,6 +24,7 @@ from .input import SetupInput, SetupInputsForImage
 from .extra import SetupExtraOutputsForImage, ProcessExtraOutputsForImage
 from .value import ParseValue, GetAllParams
 from .wcs import BuildWCS
+from .sensor import BuildSensor
 from .bandpass import BuildBandpass
 from .stamp import BuildStamp, MakeStampTasks
 from ..errors import GalSimConfigError, GalSimConfigValueError
@@ -233,7 +234,8 @@ def SetupConfigBandpass(config, logger=None):
 # Ignore these when parsing the parameters for specific Image types:
 from .stamp import stamp_image_keys
 image_ignore = [ 'random_seed', 'noise', 'pixel_scale', 'wcs', 'sky_level', 'sky_level_pixel',
-                 'world_center', 'index_convention', 'nproc', 'bandpass'] + stamp_image_keys
+                 'world_center', 'index_convention', 'nproc', 'bandpass', 'sensor'
+               ] + stamp_image_keys
 
 def BuildImage(config, image_num=0, obj_num=0, logger=None):
     """
@@ -277,6 +279,9 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Likewise for the extra output items.
     SetupExtraOutputsForImage(config, logger)
+
+    # If there is a sensor, build it now.
+    config['sensor'] = builder.buildSensor(cfg_image, config, image_num, obj_num, logger)
 
     # Actually build the image now.  This is the main working part of this function.
     # It calls out to the appropriate build function for this image type.
@@ -452,6 +457,23 @@ class ImageBuilder(object):
 
         return xsize, ysize
 
+    def buildSensor(self, config, base, image_num, obj_num, logger):
+        """Build the sensor if given in the config dict.
+
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
+            obj_num:    The first object number in the image.
+            logger:     If given, a logger object to log progress.
+
+        Returns:
+            a galsim.Sensor or None
+        """
+        if 'sensor' in config:
+            return BuildSensor(config, 'sensor', base, logger)
+        else:
+            return None
 
     def buildImage(self, config, base, image_num, obj_num, logger):
         """Build an Image based on the parameters in the config dict.

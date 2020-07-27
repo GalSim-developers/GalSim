@@ -29,7 +29,6 @@ from .value import ParseValue, CheckAllParams
 from .noise import CalculateNoiseVariance, AddSky, AddNoise
 from .wcs import BuildWCS
 from .photon_ops import BuildPhotonOps
-from .sensor import BuildSensor
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..image import Image, ImageF
 from ..wcs import PixelScale
@@ -229,7 +228,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos', 'sky_pos',
                 'offset', 'retry_failures', 'gsparams', 'draw_method',
-                'n_photons', 'max_extra_noise', 'poisson_flux', 'photon_ops', 'sensor',
+                'n_photons', 'max_extra_noise', 'poisson_flux', 'photon_ops',
                 'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr',
                 'quick_skip', 'obj_rng', 'index_key', 'rng_index_key', 'rng_num']
 
@@ -464,8 +463,10 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     kwargs['method'] = method
     if 'wcs' not in kwargs and 'scale' not in kwargs:
         kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
-    if method == 'phot' and 'rng' not in kwargs:
-        kwargs['rng'] = GetRNG(config, base, logger, "method='phot'")
+    sensor = base.get('sensor',None)
+    if (method == 'phot' or sensor is not None) and 'rng' not in kwargs:
+        rng = GetRNG(config, base, logger, "method='phot'")
+        kwargs['rng'] = rng
 
     # Check validity of extra phot options:
     max_extra_noise = None
@@ -506,8 +507,9 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     if 'photon_ops' in config:
         kwargs['photon_ops'] = BuildPhotonOps(config, 'photon_ops', base, logger)
 
-    if 'sensor' in config:
-        kwargs['sensor'] = BuildSensor(config, 'sensor', base, logger)
+    if sensor is not None:
+        sensor.updateRNG(rng)
+        kwargs['sensor'] = sensor
 
     if logger.isEnabledFor(logging.DEBUG):
         # Don't output the full image array.  Use str(image) for that kwarg.  And Bandpass.

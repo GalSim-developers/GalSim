@@ -25,7 +25,7 @@ from ..sensor import Sensor, SiliconSensor
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..utilities import basestring
 
-# This file handles the construction of a Sensor in config['stamp']['sensor'].
+# This file handles the construction of a Sensor in config['image']['sensor'].
 
 # This module-level dict will store all the registered sensor types.
 # See the RegisterSensorType function at the end of this file.
@@ -39,7 +39,7 @@ def BuildSensor(config, key, base, logger=None):
 
     Parameters:
         config:     A dict with the configuration information for the sensor.
-                    (usually base['stamp'])
+                    (usually base['image'])
         key:        The key in the dict for the sensor configuration.
         base:       The base dict of the configuration.
         logger:     Optionally, provide a logger for logging debug statements. [default: None]

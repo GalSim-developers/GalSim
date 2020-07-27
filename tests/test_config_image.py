@@ -2820,9 +2820,6 @@ def test_sensor():
                 'ra' : '13 hr',
                 'dec' : '-17 deg'
             },
-            'sensor' : {
-                'type' : 'Silicon'
-            }
         },
         'image' : {
             'type' : 'Single',
@@ -2833,6 +2830,9 @@ def test_sensor():
             },
             'random_seed' : 1234,
             'draw_method' : 'phot',
+            'sensor' : {
+                'type' : 'Silicon'
+            }
         },
         'gal' : {
             'type' : 'Gaussian',
@@ -2866,14 +2866,14 @@ def test_sensor():
     np.testing.assert_array_equal(im2.array, im1.array)
 
     # If we do it again, it uses the current values
-    sensor2 = galsim.config.BuildSensor(config['stamp'], 'sensor', config)
+    sensor2 = galsim.config.BuildSensor(config['image'], 'sensor', config)
     assert sensor2 == sensor
 
     # Can access this as a Current value, but only if it's already been evaluated normally.
-    config['sensor3'] = '@stamp.sensor'
+    config['sensor3'] = '@image.sensor'
     sensor3 = galsim.config.BuildSensor(config, 'sensor3', config)
     assert sensor3 == sensor
-    config['sensor4'] = { 'type' : 'Current', 'key' : 'stamp.sensor' }
+    config['sensor4'] = { 'type' : 'Current', 'key' : 'image.sensor' }
     sensor4 = galsim.config.BuildSensor(config, 'sensor4', config)
     assert sensor4 == sensor
 
@@ -2898,20 +2898,20 @@ def test_sensor():
     # Won't use current if we are on the next object
     galsim.config.SetupConfigObjNum(config, obj_num=1)
     galsim.config.SetupConfigRNG(config, seed_offset=1)
-    sensor9 = galsim.config.BuildSensor(config['stamp'], 'sensor', config)
+    sensor9 = galsim.config.BuildSensor(config['image'], 'sensor', config)
     assert sensor9 != sensor
 
     # Default sensor is equivalent to not using one.
     galsim.config.SetupConfigRNG(config, seed_offset=1)
     galsim.config.RemoveCurrent(config)
     rng.reset(1235)
-    config['stamp']['sensor'] = {}
+    config['image']['sensor'] = {}
     im3 = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops)
     im4 = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im4.array, im3.array)
 
     # Test one with all the optional bits to SiliconSensor
-    config['stamp']['sensor'] = {
+    config['image']['sensor'] = {
         'type' : 'Silicon',
         'name' : 'lsst_e2v_50_8',
         'strength' : 0.8,
