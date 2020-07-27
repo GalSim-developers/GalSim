@@ -27,30 +27,29 @@ from ..angle import Angle
 from ..position import PositionD
 from ..celestial import CelestialCoord
 from ..shear import Shear
+from ..table import LookupTable
 
 # This file handles the parsing for the special Eval type.
+letter_codes = {
+    'f' : float,
+    'i' : int,
+    'b' : bool,
+    's' : str,
+    'a' : Angle,
+    'p' : PositionD,
+    'c' : CelestialCoord,
+    'g' : Shear,
+    't' : LookupTable,
+    'x' : None,
+}
+
 
 def _type_by_letter(key):
     if len(key) < 2:
         raise GalSimConfigError("Invalid user-defined variable %r"%key)
-    if key[0] == 'f':
-        return float
-    elif key[0] == 'i':
-        return int
-    elif key[0] == 'b':
-        return bool
-    elif key[0] == 's':
-        return str
-    elif key[0] == 'a':
-        return Angle
-    elif key[0] == 'p':
-        return PositionD
-    elif key[0] == 'c':
-        return CelestialCoord
-    elif key[0] == 'g':
-        return Shear
-    elif key[0] == 'x':
-        return None
+    letter = key[0]
+    if letter in letter_codes.keys():
+        return letter_codes[letter]
     else:
         raise GalSimConfigError(
             "Invalid Eval variable: %s (starts with an invalid letter)"%key)
