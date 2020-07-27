@@ -176,7 +176,8 @@ def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     # Recurse to lower levels, if any
     force = False  # If lower levels removed anything, then force removal at this level as well.
     for key in config:
-        if key[0] == '_': continue  # These are our own implementation details, not the normal dict.
+        if isinstance(key, str) and key[0] == '_':
+            continue  # These are our own implementation details, not the normal dict.
         if isinstance(config[key],list):
             for item in config[key]:
                 force = RemoveCurrent(item, keep_safe, type, index_key) or force
