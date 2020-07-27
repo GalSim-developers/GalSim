@@ -1590,6 +1590,61 @@ def test_pos_value():
     assert clean_config == orig_config
 
 @timer
+def test_table_value():
+    """Test various ways to generate a LookupTable value
+    """
+    config = {
+        'val1' : galsim.LookupTable([0,1,2,3], [0,10,10,0], interpolant='linear'),
+        'file1' : { 'type' : 'File',
+                    'file_name' : '../examples/data/cosmo-fid.zmed1.00.out' },
+        'file2' : { 'type' : 'File',
+                    'file_name' : '../examples/data/cosmo-fid.zmed1.00.out',
+                    'interpolant' : 'linear', 'x_log' : True, 'f_log' : True },
+        'file3' : { 'type' : 'File',
+                    'file_name' : 'tree_ring_lookup.dat', 'amplitude' : 0.3 },
+        'list1' : { 'type' : 'List',
+                    'items' : [ galsim.LookupTable([0,1,2,3], [0,10,10,0], interpolant='linear'),
+                                galsim.LookupTable([0,3], [0,10], interpolant='linear'),
+                              ]
+                  },
+        'cur1' : { 'type' : 'Current', 'key' : 'file3' },
+        'cur2' : { 'type' : 'Current', 'key' : 'list1.items.1' }
+    }
+
+    # Test direct values
+    val1 = galsim.config.ParseValue(config,'val1',config, galsim.LookupTable)[0]
+    assert val1 == config['val1']
+
+    # You can also give None as the value type, which just returns whatever is in the dict.
+    val1b  = galsim.config.ParseValue(config,'val1',config, None)[0]
+    assert val1b == config['val1']
+
+    # Test from file
+    file1 = galsim.config.ParseValue(config,'file1',config, galsim.LookupTable)[0]
+    assert file1 == galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00.out')
+
+    file2 = galsim.config.ParseValue(config,'file2',config, galsim.LookupTable)[0]
+    assert file2 == galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00.out',
+                                                 interpolant='linear', x_log=True, f_log=True)
+
+    file3 = galsim.config.ParseValue(config,'file3',config, galsim.LookupTable)[0]
+    assert file3 == galsim.LookupTable.from_file('tree_ring_lookup.dat', amplitude=0.3)
+
+    # Test values taken from a List
+    list1 = []
+    config['index_key'] = 'obj_num'
+    for k in range(2):
+        config['obj_num'] = k
+        list1.append(galsim.config.ParseValue(config,'list1',config, galsim.LookupTable)[0])
+    assert list1 == config['list1']['items']
+
+    # Test Current
+    cur1 = galsim.config.ParseValue(config,'cur1',config, galsim.LookupTable)[0]
+    assert cur1 == file3
+    cur2 = galsim.config.ParseValue(config,'cur2',config, galsim.LookupTable)[0]
+    assert cur2 == list1[1]
+
+@timer
 def test_eval():
     """Test various ways that we evaluate a string as a function or value
     """
@@ -1605,6 +1660,8 @@ def test_eval():
                              'ppos' : galsim.PositionD(1.8,0),
                              'ccoord' : galsim.CelestialCoord(1.8*galsim.radians,0*galsim.radians),
                              'gshear' : galsim.Shear(g1=0.5, g2=0),
+                             'ttable' : galsim.LookupTable([0,1,2,3], [0,18,18,0],
+                                                           interpolant='linear'),
                              'xlit_two' : 2,
                            },
         # Shorthand notation with $
@@ -1631,7 +1688,7 @@ def test_eval():
         'eval19' : { 'type' : 'Eval', 'str' : 'np.exp(-shear.g1 * pos.x * coord.ra.rad)' },
         # Can access the input object as a current.
         'eval20' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * ((@input.catalog).nobjects*0.6)**2)' },
-        'eval21' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * (@input.dict["f"]*18)**2)' },
+        'eval21' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * (@input.dict["f"]*table(1.5))**2)' },
 
         # Some that raise exceptions
         'bad1' : { 'type' : 'Eval', 'str' : 'npexp(-0.5)' },
@@ -1824,4 +1881,5 @@ if __name__ == "__main__":
     test_angle_value()
     test_shear_value()
     test_pos_value()
+    test_table_value()
     test_eval()
