@@ -219,17 +219,6 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     else:
         config['world_center'] = wcs.toWorld(config['image_center'])
 
-def SetupConfigBandpass(config, logger=None):
-    """If thre is a 'bandpass' field in config['image'], load it.
-
-    Parameters:
-        config:     The configuration dict.
-        logger:     If given, a logger object to log progress. [default: None]
-    """
-    image = config['image']
-    if 'bandpass' in image:
-        config['bandpass'] = BuildBandpass(image, 'bandpass', config, logger)[0]
-
 
 # Ignore these when parsing the parameters for specific Image types:
 from .stamp import stamp_image_keys
@@ -271,14 +260,14 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     logger.debug('image %d: image_origin = %s',image_num,config['image_origin'])
     logger.debug('image %d: image_center = %s',image_num,config['image_center'])
 
-    # If there is a bandpass field, load it into config['bandpass']
-    SetupConfigBandpass(config, logger)
-
     # Sometimes an input field needs to do something special at the start of an image.
     SetupInputsForImage(config, logger)
 
     # Likewise for the extra output items.
     SetupExtraOutputsForImage(config, logger)
+
+    # If there is a bandpass field, load it into config['bandpass']
+    config['bandpass'] = builder.buildBandpass(cfg_image, config, image_num, obj_num, logger)
 
     # If there is a sensor, build it now.
     config['sensor'] = builder.buildSensor(cfg_image, config, image_num, obj_num, logger)
@@ -456,6 +445,24 @@ class ImageBuilder(object):
             config['image_pos'] = PositionD(0,0)
 
         return xsize, ysize
+
+    def buildBandpass(self, config, base, image_num, obj_num, logger):
+        """If thre is a 'bandpass' field in config['image'], load it.
+
+        Parameters:
+            config:     The configuration dict for the image field.
+            base:       The base configuration dict.
+            image_num:  The current image number.
+            obj_num:    The first object number in the image.
+            logger:     If given, a logger object to log progress.
+
+        Returns:
+            a gasim.Bandpass or None
+        """
+        if 'bandpass' in config:
+            return BuildBandpass(config, 'bandpass', base, logger)[0]
+        else:
+            return None
 
     def buildSensor(self, config, base, image_num, obj_num, logger):
         """Build the sensor if given in the config dict.

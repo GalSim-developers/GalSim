@@ -500,9 +500,11 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         max_extra_noise *= noise_var
         kwargs['max_extra_noise'] = max_extra_noise
 
-    if isinstance(prof, ChromaticObject) and 'bandpass' not in base:
+    bandpass = base.get('bandpass', None)
+    if bandpass is not None:
+        kwargs['bandpass'] = bandpass
+    elif isinstance(prof, ChromaticObject):
         raise GalSimConfigError("Drawing chromatic object requires specifying bandpass")
-    kwargs['bandpass'] = base.get('bandpass',None)
 
     if 'photon_ops' in config:
         kwargs['photon_ops'] = BuildPhotonOps(config, 'photon_ops', base, logger)
