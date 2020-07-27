@@ -1023,11 +1023,6 @@ class StampBuilder(object):
             raise GalSimConfigError(
                 "Need to specify noise level when using %s.signal_to_noise"%key)
         sn_target = ParseValue(base[key], 'signal_to_noise', base, float)[0]
-        try:
-            # In case noise variance is an image
-            noise_var = noise_var.array.mean()
-        except AttributeError:
-            pass
 
         # Now determine what flux we need to get our desired S/N
         # There are lots of definitions of S/N, but here is the one used by Great08

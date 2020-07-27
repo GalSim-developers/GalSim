@@ -45,12 +45,12 @@ def AddSky(config, im):
     """Add the sky level to the image
 
     Parameters:
-        config:         The configuration dict
+        config:         The (base) configuration dict
         im:             The image onto which to add the sky
     """
     index, orig_index_key = GetIndex(config['image'], config)
     config['index_key'] = 'image_num'
-    sky = GetSky(config['image'], config)
+    sky = GetSky(config['image'], config, full=True)
     if sky:
         im += sky
     config['index_key'] = orig_index_key
@@ -61,7 +61,7 @@ def AddNoise(config, im, current_var=0., logger=None):
     Add noise to an image according to the noise specifications in the noise dict.
 
     Parameters:
-        config:         The configuration dict
+        config:         The (base) configuration dict
         im:             The image onto which to add the noise
         current_var:    The current noise variance present in the image already [default: 0]
         logger:         If given, a logger object to log progress. [default: None]
@@ -99,12 +99,14 @@ def AddNoise(config, im, current_var=0., logger=None):
 
     return var
 
-def CalculateNoiseVariance(config):
+def CalculateNoiseVariance(config, full=False):
     """
     Calculate the noise variance from the noise specified in the noise dict.
 
     Parameters:
-        config:     The configuration dict
+        config:     The (base) configuration dict
+        full:       If the noise is variable across the image, return the full image with the
+                    noise variance at every pixel.  Otherwise, just return the value at the center.
 
     Returns:
         the noise variance
@@ -122,7 +124,7 @@ def CalculateNoiseVariance(config):
     config['index_key'] = 'image_num'
 
     builder = valid_noise_types[noise_type]
-    var = builder.getNoiseVariance(noise, config)
+    var = builder.getNoiseVariance(noise, config, full=full)
     config['index_key'] = orig_index_key
 
     return var
@@ -133,7 +135,7 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     Typically, this is used for building a weight map, which is typically the inverse variance.
 
     Parameters:
-        config:             The configuration dict
+        config:             The (base) configuration dict
         im:                 The image onto which to add the variance values
         include_obj_var:    Whether to add the variance from the object photons for noise
                             models that have a component based on the number of photons.
@@ -164,7 +166,7 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     builder.addNoiseVariance(noise, config, im, include_obj_var, logger)
     config['index_key'] = orig_index_key
 
-def GetSky(config, base, logger=None):
+def GetSky(config, base, logger=None, full=False):
     """Parse the sky information and return either a float value for the sky level per pixel
     or an image, as needed.
 
@@ -173,12 +175,16 @@ def GetSky(config, base, logger=None):
     a current image_pos, then we are doing a stamp.  Otherwise a full image.
 
     Parameters:
-        config:             The configuration dict
+        config:             The configuration field with the sky specification, which can be either
+                            base['image'] or base['image']['noise']
         base:               The base configuration dict
         logger:             If given, a logger object to log progress. [default: None]
+        full:               If the sky level is variable across the image, return the full
+                            image with the sky at every pixel.  Otherwise, just return the
+                            sky at the image center.
 
     Returns:
-        sky, either a float value or an Image.
+        sky, either a float value or an Image.  (The latter only if full=True)
     """
     logger = LoggerWrapper(logger)
     if 'sky_level' in config:
@@ -195,7 +201,7 @@ def GetSky(config, base, logger=None):
             logger.debug('image %d, obj %d: Uniform: sky_level_pixel = %f',
                          base.get('image_num',0),base.get('obj_num',0), sky_level_pixel)
             return sky_level_pixel
-        else:
+        elif full:
             # This calculation is non-trivial, so store this in case we need it again.
             tag = (id(base), base['file_num'], base['image_num'])
             if config.get('_current_sky_tag',None) == tag:
@@ -211,6 +217,9 @@ def GetSky(config, base, logger=None):
                 config['_current_sky_tag'] = tag
                 config['_current_sky'] = sky
                 return sky
+        else:
+            center = base['current_noise_image'].bounds.true_center
+            return wcs.local(image_pos=center).pixelArea() * sky_level
     elif 'sky_level_pixel' in config:
         sky_level_pixel = ParseValue(config,'sky_level_pixel',base,float)[0]
         logger.debug('image %d, obj %d: sky_level_pixel = %f',
@@ -244,12 +253,15 @@ class NoiseBuilder(object):
         """
         raise NotImplementedError("The %s class has not overridden addNoise"%self.__class__)
 
-    def getNoiseVariance(self, config, base):
+    def getNoiseVariance(self, config, base, full=False):
         """Read the noise parameters from the config dict and return the variance.
 
         Parameters:
-            config:         The configuration dict for the noise field.
-            base:           The base configuration dict.
+            config:     The configuration dict for the noise field.
+            base:       The base configuration dict.
+            full:       If the noise is variable across the image, return the full image with the
+                        noise variance at every pixel.  Otherwise, just return the value at the
+                        center.
 
         Returns:
             the variance of the noise model
@@ -278,7 +290,7 @@ class NoiseBuilder(object):
                                 Poisson and CCDNoise.
             logger:             If given, a logger object to log progress.
         """
-        im += self.getNoiseVariance(config, base)
+        im += self.getNoiseVariance(config, base, full=True)
 
 #
 # Gaussian
@@ -312,7 +324,7 @@ class GaussianNoiseBuilder(NoiseBuilder):
 
         return ret
 
-    def getNoiseVariance(self, config, base):
+    def getNoiseVariance(self, config, base, full=False):
 
         # The noise level can be specified either as a sigma or a variance.  Here we just calculate
         # the value of the variance from either one.
@@ -334,8 +346,8 @@ class PoissonNoiseBuilder(NoiseBuilder):
     def addNoise(self, config, base, im, rng, current_var, draw_method, logger):
 
         # Get how much extra sky to assume from the image.noise attribute.
-        sky = GetSky(base['image'], base, logger)
-        extra_sky = GetSky(config, base, logger)
+        sky = GetSky(base['image'], base, logger, full=True)
+        extra_sky = GetSky(config, base, logger, full=True)
         total_sky = sky + extra_sky # for the return value
         if isinstance(total_sky, Image):
             var = np.mean(total_sky.array)
@@ -387,10 +399,10 @@ class PoissonNoiseBuilder(NoiseBuilder):
                      base.get('image_num',0),base.get('obj_num',0))
         return var
 
-    def getNoiseVariance(self, config, base):
+    def getNoiseVariance(self, config, base, full=False):
         # The noise variance is the net sky level per pixel
-        sky = GetSky(base['image'], base)
-        sky += GetSky(config, base)
+        sky = GetSky(base['image'], base, full=full)
+        sky += GetSky(config, base, full=full)
         return sky
 
     def addNoiseVariance(self, config, base, im, include_obj_var, logger):
@@ -405,7 +417,7 @@ class PoissonNoiseBuilder(NoiseBuilder):
             # is still the best we can do.
 
         # Add the total sky level
-        im += self.getNoiseVariance(config, base)
+        im += self.getNoiseVariance(config, base, full=True)
 
 
 #
@@ -433,8 +445,8 @@ class CCDNoiseBuilder(NoiseBuilder):
         gain, read_noise, read_noise_var = self.getCCDNoiseParams(config, base)
 
         # Get how much extra sky to assume from the image.noise attribute.
-        sky = GetSky(base['image'], base, logger)
-        extra_sky = GetSky(config, base, logger)
+        sky = GetSky(base['image'], base, logger, full=True)
+        extra_sky = GetSky(config, base, logger, full=True)
         total_sky = sky + extra_sky # for the return value
         if isinstance(total_sky, Image):
             var = np.mean(total_sky.array) + read_noise_var
@@ -509,13 +521,13 @@ class CCDNoiseBuilder(NoiseBuilder):
 
         return var
 
-    def getNoiseVariance(self, config, base):
+    def getNoiseVariance(self, config, base, full=False):
         # The noise variance is sky / gain + (read_noise/gain)**2
         gain, read_noise, read_noise_var = self.getCCDNoiseParams(config, base)
 
         # Start with the background sky level for the image
-        sky = GetSky(base['image'], base)
-        sky += GetSky(config, base)
+        sky = GetSky(base['image'], base, full=full)
+        sky += GetSky(config, base, full=full)
 
         # Account for the gain and read_noise
         read_noise_var_adu = read_noise_var / gain**2
@@ -532,7 +544,7 @@ class CCDNoiseBuilder(NoiseBuilder):
                 im += base['current_noise_image']
 
         # Now add on the regular CCDNoise from the sky and read noise.
-        im += self.getNoiseVariance(config,base)
+        im += self.getNoiseVariance(config, base, full=True)
 
 
 #
@@ -579,7 +591,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
                      base.get('image_num',0),base.get('obj_num',0), var)
         return var
 
-    def getNoiseVariance(self, config, base):
+    def getNoiseVariance(self, config, base, full=False):
         cn = self.getCOSMOSNoise(config,base)
         return cn.getVariance()
 
