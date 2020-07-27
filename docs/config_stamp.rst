@@ -32,6 +32,8 @@ Some attributes that are allowed for all stamp types are:
 * ``skip`` = *bool_value* (default=False)  Skip this stamp.
 * ``quick_skip`` = *bool_value* (default=False)  Skip this stamp before doing any work, even making the rng or calculating the position.  (Usually used by some other part of the processing to precalculate objects that are not worth doing for some reason.)
 * ``obj_rng`` = *bool_value* (default=True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.
+* ``photon_ops``  See `Photon Operators List` below.
+* ``sensor``  See `Sensor Field` below.
 
 Stamp Types
 -----------
@@ -131,4 +133,170 @@ It may also be helpful to look at the GalSim implementation of the include ``Rin
 
 .. autoclass:: galsim.config.stamp_ring.RingBuilder
     :show-inheritance:
+
+Photon Operators List
+---------------------
+
+When drawing with ``method='phot'``, there are a number of operators you can apply to the
+photon array before accumulating the photons on the sensor.  You can specify these using
+``photon_ops`` in the ``stamp`` field.  This directive should be a lit of dicts, each
+specifying a `PhotonOp` in the order in which the operators should be applied to the photons.
+
+The photon operator types defined by GalSim are:
+
+* 'WavelengthSampler' assigns wavelengths to the photons based on an SED and the current Bandpass.
+
+    * ``sed`` = *SED* (required)  The SED to use.  To use the galaxy SED (which would be typical),
+      you can use ``@gal.sed`` for this.
+    * ``npoints`` = *int_value* (optional)  The number of points `DistDeviate` should use for its
+      interpolation table.
+
+* 'FRatioAngles' assigns incidence angles (in terms of their tangent, dxdz and dydz) to the
+  photons randomly given an f/ratio and an obscuration.
+
+    * ``fratio`` = *float_vale* (required)  The f/ratio of the telescope.
+    * ``obscuration`` = *float_value* (default = 0.0)  The linear dimension of the central
+      obscuration as a fraction of the aperture size.
+
+* 'PhotonDCR' adjusts the positions of the photons according to the effect of differential
+  chromatic refraction in the atmosphere.  There are several ways one can define the
+  parallactic angle needed to compute the DCR effect.  One of the following is required.
+
+  1. ``zenith_angle`` and ``parallactic_angle``
+  2. ``zenith_angle`` alone, implicitly taking ``parallactic_angle = 0``.
+  3. ``zenith_coord`` along with either ``sky_pos`` in the ``stamp`` field or using a
+     `CelestialWCS` so GalSim can determine the sky position from the image coordinates.
+  4. ``HA`` and ``latitude`` along with either ``sky_pos`` in the ``stamp`` field or using a
+     `CelestialWCS` so GalSim can determine the sky position from the image coordinates.
+
+    * ``base_wavelength`` = *float_value* (required)  The wavelength (in nm) for the fiducial
+      photon positions.
+    * ``scale_unit`` = *str_value* (default = 'arcsec')  The scale unit for the photon positions.
+    * ``alpha`` = *float_value* (default = 0.0)  A power law index for wavelength-dependent
+      seeing.  This should only be used if doing a star-only simulation.  It is not correct when
+      drawing galaxies.
+    * ``zenith_angle`` = *angle_value* (optional; see above) the angle from the object to zenith.
+    * ``parallactic_angle`` = *angle_value* (option; see above) the parallactic angle.
+    * ``zenith_coord`` = *sky_value* (optional; see above) the celestial coordinates of the zenith.
+    * ``HA`` = *angle_value* (optional; see above) the local hour angle.
+    * ``latitude`` = *angle_value* (optional; see above) the latitude of the telescope.
+    * ``pressure`` = *float_value* (default = 69.328) the pressure in kPa.
+    * ``temperature`` = *float_value* (default = 293.15) the temperature in Kelvin.
+    * ``H2O_pressure`` = *float_value* (default = 1.067) the water vapor pressure in kPa.
+
+* 'FocusDepth' adjusts the positions of the photons at the surface of the sensor to account for
+  the nominal focus being either above or below the sensor surface.  The depth value is typically
+  negative, since the best focus is generally somewhere in the bulk of the sensor (although for
+  short wavelengths it is often very close to the surface).
+
+   * ``depth`` = *float_value* (required)  The distance above the surface where the photons are
+     nominally in focus.  A negative value means the focus in below the surface of the sensor.
+
+* 'Refraction' adjusts the incidence angles to account for refraction at the surface of the
+  sensor.
+
+  .. note::
+
+        If this is combined with FocusDepth, then the order of the two operators is important.
+        If FocusDepth is before Refraction, then the depth refers to the distance the sensor
+        would need to move for the bundle to be in focus at the surface.
+        If FocusDepth is after Refraction, then the depth refers to the physical distance
+        below the surface of the sensor where the photons actually come to a focus.
+
+   * ``index_ratio`` = *float_value* (required) The ratio of the index of refraction of the
+     sensor material to that of the air.
+
+You may also define your own custom `PhotonOp` type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of `galsim.config.PhotonOpBuilder`.
+
+.. autoclass:: galsim.config.PhotonOpBuilder
+    :members:
+
+Then, as usual, you need to register this type using::
+
+    galsim.config.RegisterPhotonOpType('CustomPhotonOp', CustomPhotonOpBuilder())
+
+.. autofunction:: galsim.config.RegisterPhotonOpType
+
+and tell the config parser the name of the module to load at the start of processing.
+
+.. code-block:: yaml
+
+    modules:
+        - my_custom_photon_op
+
+Then you can use this as a valid photon operator type:
+
+.. code-block:: yaml
+
+    stamp:
+        photon_ops:
+            -
+                type: CustomPhotonOp
+                ...
+
+Sensor Field
+------------
+
+When drawing with ``method='phot'``, one can use a `Sensor` to model the conversion of photons
+to electrons and then the accumulation of these electrons in the pixels.
+
+The sensor types defined by GalSim are:
+
+* 'Simple' is the default, which does nothing but accumulate the photons at their (x,y)
+  positions onto the corresponding pixels in the image.  Typically, in this case, you would
+  omit the ``sensor`` field entirely.
+
+* 'Silicon' models a silicon-based CCD sensor that converts photons to electrons at a wavelength-
+  dependent depth (probabilistically) and drifts them down to the wells, properly taking
+  into account the repulsion of previously accumulated electrons (known as the brighter-fatter
+  effect).  See `SiliconSensor` for details.
+
+    * ``name`` = *str_value* (default = 'lsst_itl_50_8')  The naem of the sensor model to use.
+      See `SiliconSensor` for the other allowed values.
+    * ``strength`` = *float_value* (default = 1.0)  The strength of the brighter-fatter effect
+      relative to the nominal value in the model.
+    * ``diffusion_factor`` = *float_value* (default = 1.0)  The magnitude of the diffusion
+      relative to the nominal value in the model.
+    * ``qdist`` = *int_value* (default = 3)  The maximum number of pixels away to calculate the
+      distortions due to charge accumulation.
+    * ``nrecalc`` = *int_value* (default = 10000)  The number of electrons to accumulate before
+      recalculating the distortion of the pixel shapes.
+    * ``treering_func`` = *table_value* (optional) A `LookupTable` giving the tree ring pattern
+      as a radial function f(r).
+    * ``treering_center`` = *pos_value* (optional) The position of the center of the tree ring
+      pattern in image coordinates (which may be off the edge of the image).
+    * ``transpose`` = *bool_value* (default = False) Whether to transpose the meaning of (x,y)
+      for the purpose of the brighter-fatter effect.  This changes which direction the BFE
+      causes more elongation.
+
+You may also define your own custom `Sensor` type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of `galsim.config.SensorBuilder`.
+
+.. autoclass:: galsim.config.SensorBuilder
+    :members:
+
+Then, as usual, you need to register this type using::
+
+    galsim.config.RegisterSensorType('CustomSensor', CustomSensorBuilder())
+
+.. autofunction:: galsim.config.RegisterSensorType
+
+and tell the config parser the name of the module to load at the start of processing.
+
+.. code-block:: yaml
+
+    modules:
+        - my_custom_sensor
+
+Then you can use this as a valid sensor type:
+
+.. code-block:: yaml
+
+    stamp:
+        sensors:
+            type: CustomSensor
+            ...
 

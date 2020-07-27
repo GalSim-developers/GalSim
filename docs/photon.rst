@@ -69,17 +69,17 @@ customize the behavior to some extent:
                 diffusion, and other effects present in real sensors.  See `Sensor Models`
                 for more information about the current options.
 
-    surface_ops
+    photon_ops
                 Prior to accumulating on the sensor, one might want to apply one or more
-                `Surface Operators` to the photons.  These operators can be used to apply
+                `Photon Operators` to the photons.  These operators can be used to apply
                 a variety of effects ot the photons: changing their fluxes or positions,
-                assigning wavelengths or incidence angles, etc.  The ``surface_ops`` argument
+                assigning wavelengths or incidence angles, etc.  The ``photon_ops`` argument
                 should be a list of any such operators you want to apply.
 
     maxN
                 For very bright objects, one might want to limit the number of photons that are
                 shot before being accumulated.  Normally all the photons are generated first
-                and stored in a `PhotonArray`.  Then the `Surface Operators` (if any) are
+                and stored in a `PhotonArray`.  Then the `Photon Operators` (if any) are
                 applied.  And finally the photons are accumulated onto the image pixels.
                 If you set ``maxN``, then this process will be done in batches of at most this
                 many photons at a time.
@@ -100,7 +100,7 @@ methods:
 
     `GSObject.shoot`
                 This is the method that actually shoots the photons for a `GSObject`.  It
-                does not apply any surface operators or accumulate onto the `Image`.
+                does not apply any photon operators or accumulate onto the `Image`.
 
 
 .. toctree::
@@ -108,5 +108,5 @@ methods:
 
     photon_array
     sensor
-    surface
+    photon_ops
 

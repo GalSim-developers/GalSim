@@ -38,7 +38,7 @@ class PhotonArray(object):
     typically constructed as the return value of the `GSObject.shoot` method.
     At this point, the photons only have x,y,flux values.
 
-    Then there are a number of `Surface Operators`, which perform various modifications to the
+    Then there are a number of `Photon Operators`, which perform various modifications to the
     photons such as giving them wavelengths (`WavelengthSampler` or inclination angles
     (`FRatioAngles`) or move them around according to the effect of differential chromatic
     refraction (DCR; `PhotonDCR`).
