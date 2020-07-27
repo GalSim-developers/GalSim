@@ -77,8 +77,7 @@ def ParseValue(config, key, base, value_type):
     if isinstance(param, dict):
 
         type_name = param.get('type',None)
-        #print('type = ',type_name)
-        #print(param['type'], value_type)
+        #print('type = ',type_name, value_type)
 
         # Check what index key we want to use for this value.
         index, index_key = GetIndex(param, base, is_sequence=(type_name=='Sequence'))
@@ -102,9 +101,11 @@ def ParseValue(config, key, base, value_type):
                             "%s and %s"%(key, value_type, cvalue_type))
                     #print(index,'Using current value of ',key,' = ',param['current'][0])
                     return cval, csafe
+        elif value_type is dict and type_name is None:
+            return param, True
         else:
             # Only need to check this the first time.
-            if 'type' not in param:
+            if type_name is None:
                 raise GalSimConfigError(
                     "%s.type attribute required when providing a dict."%(key))
 
@@ -826,7 +827,7 @@ RegisterValueType('List', _GenerateFromList,
                   [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, LookupTable ])
 RegisterValueType('Current', _GenerateFromCurrent,
                   [ float, int, bool, str, Angle, Shear, PositionD, CelestialCoord, LookupTable,
-                    None ])
+                    dict, list, None ])
 RegisterValueType('Sum', _GenerateFromSum, [ float, int, Angle, Shear, PositionD ])
 RegisterValueType('Sequence', _GenerateFromSequence, [ float, int, bool ])
 RegisterValueType('NumberedFile', _GenerateFromNumberedFile, [ str ])

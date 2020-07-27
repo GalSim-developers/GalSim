@@ -40,6 +40,8 @@ letter_codes = {
     'c' : CelestialCoord,
     'g' : Shear,
     't' : LookupTable,
+    'd' : dict,
+    'l' : list,
     'x' : None,
 }
 
