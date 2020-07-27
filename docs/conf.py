@@ -29,15 +29,18 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+# MJ: I find things work better if it's installed properly and you don't do this.
 #
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../galsim'))
+#import os
+#import sys
+#sys.path.insert(0, os.path.abspath('../galsim'))
 
 
 # -- Project information -----------------------------------------------------
 
 import galsim
+import galsim.roman
+import galsim.des
 
 project = 'GalSim'
 copyright = '2019, GalSim-developers'

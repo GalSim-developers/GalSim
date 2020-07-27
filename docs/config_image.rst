@@ -18,6 +18,8 @@ Some attributes that are allowed for all image types are:
     * If ``random_seed`` is a list, then multiple random number generators will be available for each object according to the multiple seed specifications.  This is normally used to have one random number repeat with some cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure).  Whenever you want to use an rng other than the first one, add ``rng_num`` to the field and set it to the number of the rng you want to use in this list.
 
 * ``nproc`` = *int_value*  (default = 1)  Specify the number of processors to use when drawing images. If nproc <= 0, then this means to try to automatically figure out the number of cpus and use that.
+* ``wcs`` See `WCS Field` below.
+* ``bandpass`` See `Bandpass Field` below.
 
 Image Types
 -----------

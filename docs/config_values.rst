@@ -335,6 +335,8 @@ Options are:
 angle_value
 -----------
 
+These represent `Angle` values.
+
 Options are:
 
 * A string consisting of a float followed by one of the following angle units: radians, degrees, hours, arcminutes, arcseconds. These may be abbreviated as rad, deg, hr, arcmin, arcsec. (e.g. '45 deg')
@@ -370,6 +372,8 @@ Options are:
 
 shear_value
 -----------
+
+These represent `Shear` values.
 
 Options are:
 
@@ -452,6 +456,8 @@ Options are:
 pos_value
 ---------
 
+These represent `PositionD` values, usually for a location on the image.
+
 Options are:
 
 * A string consisting of two floats separated by a comma and possibly white space. (e.g. '1.7, 3.0')
@@ -500,6 +506,8 @@ Options are:
 sky_value
 ---------
 
+These represent `CelestialCoord` values for a location in the sky.
+
 Options are:
 
 * A dict with:
@@ -514,6 +522,42 @@ Options are:
         * 'Eval'  Evaluate a string.  See `Eval type`.
 
 * A string that starts with '$' or '@'.  See `Shorthand Notation`.
+
+table_value
+-----------
+
+These represent `LookupTable` values to provide some kind of unary function, although in some
+cases you may be able to provide a regular function instead, e.g. via an Eval type using a lambda
+function.
+
+Options are:
+
+* A dict with:
+
+    * ``type`` = *str* (required)  Valid options are:
+
+        * 'File'  Read a `LookupTable` from a file.  cf. `LookupTable.from_file`.
+
+            * ``file_name`` = *str_value* (required)
+            * ``interpolant`` = *str_value* (default = 'spline') Which interpolant to use.
+            * ``x_log`` = *bool_value* (default = False) Whether to use log(x) for the abscissae.
+            * ``f_log`` = *bool_value* (default = False) Whether to use log(f) for the ordinates.
+            * ``amplitude`` = *float_value* (default = 1.0) An optional scaling to apply to the
+              ordinates.
+
+        * 'List'  Select items from a list.
+
+            * ``items`` = *list* (required)  A list of *angle_value* items.
+            * ``index`` = *int_value* (default = 'Sequence' from 0 to len(items)-1)
+
+        * 'Current'  Use the current value of some other item in the config file.  (See the description of this for *float_value* for more details.)
+
+            * ``key`` = *str_value* (required)  The key name of the item to use.
+
+        * 'Eval'  Evaluate a string.  See `Eval type`.
+
+* A string that starts with '$' or '@'.  See `Shorthand Notation`.
+
 
 Eval type
 ---------
@@ -585,6 +629,10 @@ Variables that GalSim will provide for you to use:
 
     * A `galsim.BaseWCS` instance
 
+* ``bandpass`` = the bandpass of the current image if defined.
+
+    * A `galsim.Bandpass` instance
+
 * ``file_num`` = the number of the file currently being worked on.
 * ``image_num`` = the number of the image currently being worked on.
 
@@ -649,6 +697,9 @@ Initial letters of user-defined variables for 'Eval':
 * 'a' = `galsim.Angle`
 * 'p' = `galsim.PositionD`
 * 'g' = `galsim.Shear`
+* 't' = `galsim.LookupTable`
+* 'd' = ``dict``  (This takes a dict as a literal, rather than evaluating it.)
+* 'l' = ``list``  (Similarly, this allows for a literal list in the config file.)
 
 The eval-variables field
 ^^^^^^^^^^^^^^^^^^^^^^^^
