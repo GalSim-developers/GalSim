@@ -2961,6 +2961,9 @@ def test_sensor():
     config['sensor8']['items'] = sensor
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildSensor(config, 'sensor8', config)
+    config['sensor'] = [sensor]
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildSensor(config, 'sensor', config)
 
 
 if __name__ == "__main__":
