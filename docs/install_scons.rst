@@ -9,11 +9,11 @@ with the pip or conda installation methods.
 
     Two options that are available with the SCons installation method,
     but not the other methods, are:
-    
+
     (1) using TMV instead of Eigen for the linear algebra back end, and
     (2) using Boost.Python instead of PyBind11 for the wrapping the C++ code
         to be called from Python.
-    
+
     If you need either of these options, then you should use the SCons installation.
 
 
@@ -34,7 +34,7 @@ that other Python 3.x versions are compatible, but these are the only ones
 being actively tested.
 
 
-SCons 
+SCons
 ^^^^^
 
 You can download SCons from:
@@ -51,7 +51,7 @@ if it is installed, and if so which version, by typing::
 See Section 5 for some more suggestions about installing this on your platform.
 
 
-FFTW 
+FFTW
 ^^^^
 
 You can download FFTW from:
@@ -71,7 +71,7 @@ GalSim can use either Eigen or TMV for its linear algebra routines.  See
 the appropriate section in `Installation Instructions` if you want to use Eigen.
 To use TMV (which was required prior to version 2.0), read on.
 
-You should download TMV from 
+You should download TMV from
 
 https://github.com/rmjarvis/tmv/
 
@@ -87,7 +87,7 @@ However, if you are trying to install it into a system directory then you need
 to use sudo scons install [PREFIX=<installdir>].
 
 
-Boost C++ 
+Boost C++
 ^^^^^^^^^
 
 GalSim can use either PyBind11 or Boost for wrapping the C++ code to use in
@@ -337,7 +337,7 @@ https://github.com/GalSim-developers/GalSim/wiki/Installation%20FAQ
 
 You can ask also about your particular problem on stackoverflow.com.  Some of
 the GalSim developers have automatic alerts set up for the tag 'galsim'.  So
-yout can ask your question there, and there is a good chance that it will be
+you can ask your question there, and there is a good chance that it will be
 answered.  You might also try searching that site to see if anyone else asked
 about the same problem.
 

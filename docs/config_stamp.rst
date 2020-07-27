@@ -99,7 +99,7 @@ cases where it would be useful for custom stamp types.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_stamp.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_stamp.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml
@@ -109,7 +109,7 @@ in the config file:
 
 This ``modules`` field is a list, so it can contain more than one module to load if you want.
 Then before processing anything, the code will execute the command ``import my_custom_stamp``,
-which will read your file and execute the registration command to add the buidler to the list
+which will read your file and execute the registration command to add the builder to the list
 of valid stamp types.
 
 Then you can use this as a valid stamp type:
@@ -125,7 +125,7 @@ For examples of custom stamps, see
 * :download:`blend.yaml <../examples/des/blend.yaml>`
 * :download:`blendset.yaml <../examples/des/blendset.yaml>`
 
-which use custom stamp types ``Blend`` and ``BlendSet`` defined in :download:`blend.py <../examples/des/blend.py>`. 
+which use custom stamp types ``Blend`` and ``BlendSet`` defined in :download:`blend.py <../examples/des/blend.py>`.
 
 It may also be helpful to look at the GalSim implementation of the include ``Ring`` type:
 (click on the ``[source]`` link):
@@ -138,7 +138,7 @@ Photon Operators List
 
 When drawing with ``method='phot'``, there are a number of operators you can apply to the
 photon array before accumulating the photons on the sensor.  You can specify these using
-``photon_ops`` in the ``stamp`` field.  This directive should be a lit of dicts, each
+``photon_ops`` in the ``stamp`` field.  This directive should be a list of dicts, each
 specifying a `PhotonOp` in the order in which the operators should be applied to the photons.
 
 The photon operator types defined by GalSim are:
@@ -234,5 +234,3 @@ Then you can use this as a valid photon operator type:
             -
                 type: CustomPhotonOp
                 ...
-
-

@@ -10,7 +10,7 @@ When we "shoot" a `GSObject`, :math:`N_\gamma` photons are created with fluxes :
 positions :math:`x_i`.  The total photon flux within any region has an expectation value of the
 integrated surface brightness of the `GSObject` in that region, and the total photon flux in any
 two regions are uncorrelated.  The actual realized flux in each region is distributed according
-to Poisson statistics of the number of photons that actuall fall in the region.
+to Poisson statistics of the number of photons that actually fall in the region.
 
 We allow for non-uniform :math:`f_i` values primarily so that we can represent negative values of
 surface brightness. This is necessary to realize interpolation with kernels that have negative
@@ -39,7 +39,7 @@ customize the behavior to some extent:
                 profiles, this times ``area * exptime`` (both of which default to 1) will equal
                 the number of photons shot.  (See the discussion in Rowe et al, 2015, for why
                 this might be modified for `InterpolatedImage` and related profiles.)  However,
-                you can manually set a different number of photons with ``n_photons``. 
+                you can manually set a different number of photons with ``n_photons``.
 
     rng
                 Since photon shooting is a stochastic process, it needs a random number generator.
@@ -72,7 +72,7 @@ customize the behavior to some extent:
     photon_ops
                 Prior to accumulating on the sensor, one might want to apply one or more
                 `Photon Operators` to the photons.  These operators can be used to apply
-                a variety of effects ot the photons: changing their fluxes or positions,
+                a variety of effects to the photons: changing their fluxes or positions,
                 assigning wavelengths or incidence angles, etc.  The ``photon_ops`` argument
                 should be a list of any such operators you want to apply.
 
@@ -109,4 +109,3 @@ methods:
     photon_array
     sensor
     photon_ops
-

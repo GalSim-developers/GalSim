@@ -8,10 +8,10 @@ occurrence:
 `GalSimError`
             This is the base class for all other GalSim exceptions.  So you can catch this
             exception if you want to catch just the exceptions raised by GalSim.  It is
-            roughly analagous to a ``RuntimeError``.
+            roughly analogous to a ``RuntimeError``.
 
 `GalSimValueError`
-            This indicates that your provided an invalid value for an argument to a function.
+            This indicates that you provided an invalid value for an argument to a function.
             It includes attributes that tell you about what value you provided and sometimes
             about the allowed values.
 
@@ -21,7 +21,7 @@ occurrence:
 
 `GalSimIndexError`
             This indicates that you tried to access some list-like object (e.g. `RealGalaxyCatalog`)
-            with an invalue index.
+            with an invalid index.
 
 `GalSimRangeError`
             This indicates that you provided a value that is outside of the allowed range.  It
@@ -59,7 +59,7 @@ occurrence:
             simulation or to adjust the object's `GSParams` options.
 
 `GalSimConfigError`
-            This indicates that there was some kind of failure processing an configuration file.
+            This indicates that there was some kind of failure processing a configuration file.
 
 `GalSimConfigValueError`
             This indicates that some parameter in your configuration file is an invalid value.

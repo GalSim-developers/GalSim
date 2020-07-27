@@ -42,7 +42,7 @@ FFTW is not directly pip installable, so if the above installation fails,
 you may need to install it separately. See section 3 below for more details
 about how to do this.
 
-Fianlly, a version of Eigen can be installed by pip, but you might prefer to
+Finally, a version of Eigen can be installed by pip, but you might prefer to
 install this manually.  See section 4 below for more details.
 
 Installing Python Dependencies
@@ -93,7 +93,7 @@ Installing FFTW
 ---------------
 
 GalSim uses FFTW (The Fastest Fourier Transform in the West) for performing
-fast fourier transforms.
+fast Fourier transforms.
 
 We require FFTW version >= 3.0.  Most tests have been done with FFTW 3.3.7,
 so if you have trouble with an earlier version, try upgrading to 3.3.7 or later.

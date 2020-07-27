@@ -29,7 +29,7 @@ The ``input`` fields defined by GalSim are:
     * ``dir`` = *str_value* (default = '.')  The directory the file is in.
     * ``file_type`` = *str_value* (default = automatically determined from extension of ``file_name``) Valid options are:
 
-        * 'yaml' Read from a YAML file.  
+        * 'yaml' Read from a YAML file.
         * 'json' Read from a JSON file.
         * 'pickle' Read from a python pickle file.
 
@@ -41,7 +41,7 @@ The ``input`` fields defined by GalSim are:
     * ``dir`` = *str_value* (default = '.') The directory the file is in.
     * ``hdu`` = *int_value* (optional) Which HDU to read from the input file.  Default is 0 (the primary HDU), unless the compression implies that the first extension should be used.
     * ``compression`` = *str_value* (optional) The kind of compression if any.  The default is to base the compression on the file extension.  e.g. 'blah.fits.fz' implies Rice compression.  But it can also be specified explicitly.  Supported values are 'none', 'rice', 'gzip', 'bzip2', 'gzip_tile', 'hcompress', 'plio'.
-    * ``text_file`` = *bool_value* (default = False) Whether the input file is actually a text file, rather than a binary FITS file.  Normally the file is taken to be a FITS file, but if this is True, then it will read it as a text file containing the header information, such as the .head file output from SCamp. 
+    * ``text_file`` = *bool_value* (default = False) Whether the input file is actually a text file, rather than a binary FITS file.  Normally the file is taken to be a FITS file, but if this is True, then it will read it as a text file containing the header information, such as the .head file output from SCamp.
 
 * ``real_catalog`` defines a catalog of real galaxy images.  Connected with 'RealGalaxy' profile described in `Config Objects`.
 
@@ -75,7 +75,7 @@ The ``input`` fields defined by GalSim are:
     * ``conc`` = *float_value* (required)  The concentration parameter, defined as the virial radius / scale radius.
     * ``redshift`` = *float_value* (required)  The redshift of the halo.
     * ``halo_pos`` = *pos_value* (default = 0,0)  The position of the halo in world coordinates relative to the origin of the world coordinate system. (Typically you would want to to set ``wcs.origin`` to 'center' to get the halo in the center of the image.)
-    * ``omega_m`` = *float_value* (default = 1 - ``omega_lam``)  
+    * ``omega_m`` = *float_value* (default = 1 - ``omega_lam``)
     * ``omega_lam`` = *float_value* (default = 1 - ``omega_m`` or 0.7 if neither is specified)
 
 * ``power_spectrum`` defines a lensing power spectrum.  Connected with 'PowerSpectrumShear' and 'PowerSpectrumMagnification' value types described in `Config Values`.
@@ -84,19 +84,19 @@ The ``input`` fields defined by GalSim are:
     * ``b_power_function`` = *str_value* (at least one of ``e_power_function`` and ``b_power_function`` is required)  A string describing the function of k to use for the B-mode power function.  e.g. ``'k**2'``. Alternatively, it may be a file name from which a tabulated power spectrum is read in.
     * ``delta2`` = *bool_value* (default = False)  Whether the function is really Delta^2(k) = k^2 P(k)/2pi rather than P(k).
     * ``units`` = *str_value*  (default = 'arcsec')  The appropriate units for k^-1.  The default is to use our canonical units, arcsec, for all position variables.  However, power spectra are often more appropriately defined in terms of radians, so that can be specified here to let GalSim handle the units conversion.  Other choices are arcmin or degrees.
-    * ``grid_spacing`` = *float_value*  (required for 'Scattered' image type, automatic for 'Tiled')  The distance between grid points on which the power spectrum shears are instantiated.  
+    * ``grid_spacing`` = *float_value*  (required for 'Scattered' image type, automatic for 'Tiled')  The distance between grid points on which the power spectrum shears are instantiated.
     * ``interpolant`` = *str_value* (default = 'Linear')  What to use for interpolating between pixel centers.  Options are 'Nearest', 'Linear', 'Cubic', 'Quintic', 'Sinc', or 'LanczosN', where the 'N' after 'Lanczos' should be replaced with the integer order to use for the Lanczos filter.
     * ``ngrid`` = *int_value* (optional) The number of grid points to use.  The default is to use image_size * scale / grid_spacing.
     * ``center`` = *pos_value* (optional) The center point of the grid.  The default is to use the image center.
     * ``index`` = *str_value* (optional) If set, the power spectrum will only be computed when this index changed.  E.g. if ``index`` is 'file_num', then it will only update with each new file, not with each image.
-    * ``variance`` = *float_value* (optional) If set, rescale the overal variance of the generated shears to this value.
+    * ``variance`` = *float_value* (optional) If set, rescale the overall variance of the generated shears to this value.
 
 Another feature of the ``input`` field is that it may optionally be a list.  So you can have multiple input catalogs for instance; one for object parameters and one for overall image parameters perhaps.  When using values with the type 'InputCatalog', you would specify which catalog to use with ``num``.  If you only have a single item for one of the inputs, you can omit the ``num`` parameter when you are using it.
 
 Custom Input Types
 ------------------
 
-To define your own input type, you will need to write an importable Python module 
+To define your own input type, you will need to write an importable Python module
 (typically a file in the current directory where you are running ``galsim``, but it could also
 be something you have installed in your Python distro) with a class that will be used
 to load whatever information you want loaded::
@@ -141,7 +141,7 @@ that defines the object being built, which would in this case be ``base['input']
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_input.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_input.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml

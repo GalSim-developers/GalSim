@@ -10,7 +10,7 @@ There are also some `Generic Types` that can be appropriate for either.
 
 Each object type sets a number of other items that either must or may be present in the dict
 for the object (i.e. in the top level ``psf`` or ``gal`` field or farther down in the dict where
-an object is being defined, such is in a 'List' object type).  These attributes are given as 
+an object is being defined, such is in a 'List' object type).  These attributes are given as
 bullet items for each type defined below.
 
 There are also some `Other attributes` that are allowed for any object (or
@@ -83,7 +83,7 @@ PSF Types
     * ``zenith_angle`` = *Angle_value* (optional) The zenith angle.
     * ``parallactic_angle`` = *Angle_value*  (optional) The parallactic angle.
     * ``zenith_coord`` = *CelestialCoord*  (optional)  The (ra,dec) coordinate of the zenith.
-    * ``HA`` = *Angle_value* (optiona)  Hour angle of the observation.
+    * ``HA`` = *Angle_value* (optional)  Hour angle of the observation.
     * ``latitude`` = *Angle_value* (optional)  Latitude of the observatory.
     * ``pressure`` = *float_value* (default = 69.328)  Air pressure in kPa.
     * ``temperature`` = *float_value* (default = 293.15)  Temperature in K.
@@ -141,7 +141,7 @@ Galaxy Types
 
 * 'InclinedExponential'  The 2D projection of a 3D exponential profile: :math:`I(R,z) \sim \mathrm{sech}^2 (z/h_s) * \exp(-R/R_s)` at an arbitrary inclination angle, where :math:`h_s` is the ``scale_height`` and :math:`R_s` is the ``scale_radius``  The base profile is inclined along the y-axis, so if you want a different position angle, you should add a ``rotate`` field.
 
-    * ``inclination`` = *angle_value* (required) The inclination angle, defined such that 0 degrees is face-on and 90 degrees is edge-on. 
+    * ``inclination`` = *angle_value* (required) The inclination angle, defined such that 0 degrees is face-on and 90 degrees is edge-on.
     * ``half_light_radius`` = *float_value* (exactly one of ``half_light_radius`` or ``scale_radius`` is required) The half-light radius as an alternative to ``scale_radius``.
     * ``scale_radius`` = *float_value* (exactly one of ``half_light_radius`` or ``scale_radius`` is required) The scale_radius, R_s.
     * ``scale_height`` = *float_value* (exactly one of ``scale_height`` or ``scale_h_over_r`` is required) The scale height, h_s.
@@ -172,7 +172,7 @@ Generic Types
 
     * ``sigma`` = *float_value* (exactly one of ``sigma``, ``fwhm`` or ``half_light_radius`` is required)
     * ``fwhm`` = *float_value* (exactly one of ``sigma``, ``fwhm`` or ``half_light_radius`` is required)
-    * ``half_light_radius`` = *float_value* (exactly one of ``sigma``, ``fwhm`` or ``half_light_radius`` is required)  
+    * ``half_light_radius`` = *float_value* (exactly one of ``sigma``, ``fwhm`` or ``half_light_radius`` is required)
 
 * 'InterpolatedImage'  A profile described simply by a provided image (given in a fits file).
 
@@ -229,8 +229,8 @@ Some of these operations do not commute with each other, so the order is importa
 The following transformations will be applied in the order given here, which corresponds
 roughly to when they occur to the light packet traveling through the universe.
 
-The first few, ``flux``, ``dilate``, ``ellip``, and ``rotate``, are typically used to define the 
-intrinsic profile of the object. 
+The first few, ``flux``, ``dilate``, ``ellip``, and ``rotate``, are typically used to define the
+intrinsic profile of the object.
 The next two, ``magnify`` and ``shear``, are typically used to define how the profile is
 modified by lensing.
 The next one, ``shift``, is used to shift the position of the galaxy relative to its nominal
@@ -259,7 +259,7 @@ and not for ``psf``.
 Custom Object Types
 -------------------
 
-To define your own object type, you will need to write an importable Python module 
+To define your own object type, you will need to write an importable Python module
 (typically a file in the current directory where you are running ``galsim``, but it could also
 be something you have installed in your Python distro) with a function that will be used
 to build a GalSim `GSObject`.
@@ -274,7 +274,7 @@ The build function should have the following functional form:
         Parameters:
             config:     The configuration dict of the object being built
             base:       The base configuration dict.
-            ignore:     A list of parameters that might be in the config dict, 
+            ignore:     A list of parameters that might be in the config dict,
                         but which may be ignored.  i.e. it is not an error for
                         these items to be present.
             gsparams:   An optional dict of items used to build a GSParams object
@@ -283,8 +283,8 @@ The build function should have the following functional form:
 
         Returns:
             gsobject, safe
-    
-        The returned gsobject is the built GSObject instance, and safe is a bool 
+
+        The returned gsobject is the built GSObject instance, and safe is a bool
         value that indicates whether the object is safe to reuse for future stamps
         (e.g. if all the parameters used to build this object are constant and will
         not change for later stamps).
@@ -296,7 +296,7 @@ The build function should have the following functional form:
         # The gsparams are passed around using a dict so they can be easily added to.
         # At this point, we would typically convert them to a regular GSParams
         # instance to use when building the GSObject.
-        if gsparams: 
+        if gsparams:
             gsparams = galsim.GSParams( **gsparams )
 
         # If you need a random number generator, this is the one to use.
@@ -311,7 +311,7 @@ The build function should have the following functional form:
 
 The ``base`` parameter is the original full configuration dict that is being used for running the
 simulation.  The ``config`` parameter is the local portion of the full dict that defines the object
-being built, e.g. ``config`` might be ``base['gal']`` or it might be farther down as an item in 
+being built, e.g. ``config`` might be ``base['gal']`` or it might be farther down as an item in
 the ``items`` attribute of a 'List' or 'Sum' object.
 
 Then, in the Python module, you need to register this function with some type name, which will
@@ -325,7 +325,7 @@ If the builder will use a particular input type, you should let GalSim know this
 the ``input_type`` when registering.  E.g. if the builder expects to use an input ``dict`` file
 to define some properties that will be used, you would register this fact using::
 
-    galsim.config.RegisterObjectType('CustomObject', BuildCustomObject, 
+    galsim.config.RegisterObjectType('CustomObject', BuildCustomObject,
                                      input_type='dict')
 
 The input object can be accessed in the build function as e.g.::
@@ -333,7 +333,7 @@ The input object can be accessed in the build function as e.g.::
     input_dict = galsim.config.GetInputObj('dict', config, base, 'CustomObject')
     ignore = ignore + ['num']
 
-The last argument is just used to help give sensible error messages if there is some problem, 
+The last argument is just used to help give sensible error messages if there is some problem,
 but it should typically be the name of the object type being built.  When you are using an
 input object, the 'num' attribute is reserved for indicating which of possibly several input
 objects (``dict`` in this case) to use.  You should not also define a num attribute that has
@@ -342,7 +342,7 @@ invalid parameters, you would thus want to add 'num' to the list.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_object.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_object.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml

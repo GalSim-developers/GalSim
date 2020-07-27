@@ -9,7 +9,7 @@ Image Field Attributes
 
 Some attributes that are allowed for all image types are:
 
-* ``pixel_scale`` = *float_value* (default = 1.0)  The pixel scale, typically taken to be arcsec/pixel. Most size parameters for the profiles are taken to be specified in arcsec. If you would rather specify everything in pixels, just leave off the pixel_scale (or set it to 1.0) and then 1 pixel = 1 arcsec, so everything should work the way you expect.  Or if you want all your units to be degrees or radians or something else, then just set this pixel scale in the same units. 
+* ``pixel_scale`` = *float_value* (default = 1.0)  The pixel scale, typically taken to be arcsec/pixel. Most size parameters for the profiles are taken to be specified in arcsec. If you would rather specify everything in pixels, just leave off the pixel_scale (or set it to 1.0) and then 1 pixel = 1 arcsec, so everything should work the way you expect.  Or if you want all your units to be degrees or radians or something else, then just set this pixel scale in the same units.
 * ``sky_level`` = *float_value* (default = 0.0; only one of ``sky_level`` and ``sky_level_pixel`` is allowed)  The background level of the image in ADU/arcsec^2
 * ``sky_level_pixel`` = *float_value* (default = 0.0; only one of ``sky_level`` and ``sky_level_pixel`` is allowed)  The background level of the image in ADU/pixel
 * ``index_convention`` = *str_value* (default = 'FITS')  The convention for what to call the lower left pixel of the image.  The standard FITS convention is to call this pixel (1,1).  However, this can be counter-intuitive to people used to C or python indexing.  So if ``index_convention`` is 'C' or 'python' or '0', then the image origin will be considered (0,0) instead.  (While unnecessary to specify explicitly since it is the default, the (1,1) convention may be called 'FITS', 'Fortran' or '1'.)
@@ -39,7 +39,7 @@ The image types defined by GalSim are:
     * ``world_pos`` = *pos_value* The position of the object in world coordinates.  For the Single image type, this is unconnected to the object rendering on the image, which is always at the center.  However, it may be provided as something that other calculations need to access.  e.g. shear from a PowerSpectrum or NFWHalo.
     * ``image_pos`` = *pos_value* The nominal position on the image at which to center of the object.  For the Single image type, the object is always placed as close as possible to the center of the image (unless an explicit offset is specified), but the bounds will be adjusted so that position is equal to ``image_pos``.
 
-* 'Tiled' The image consists of a tiled array of postage stamps. 
+* 'Tiled' The image consists of a tiled array of postage stamps.
 
     * ``nx_tiles`` = *int_value* (required)
     * ``ny_tiles`` = *int_value* (required)
@@ -61,7 +61,7 @@ The image types defined by GalSim are:
     * ``stamp_xsize`` = *int_value* (default = ``stamp_size``)
     * ``stamp_ysize`` = *int_value* (default = ``stamp_size``)
     * ``world_pos`` = *pos_value* (only one of ``world_pos`` and ``image_pos`` is allowed) The position in world coordinates relative to the center of the image at which to center of the object.
-    * ``image_pos`` = *pos_value* (only one of ``world_pos`` and ``image_pos`` is allowed; default if neither is given isi to use type 'XY' with ``x`` = 'Random' from 1 .. ``xsize``, ``y`` = 'Random' from 1 .. ``ysize``)  The position on the image at which to center of the object.
+    * ``image_pos`` = *pos_value* (only one of ``world_pos`` and ``image_pos`` is allowed; default if neither is given is to use type 'XY' with ``x`` = 'Random' from 1 .. ``xsize``, ``y`` = 'Random' from 1 .. ``ysize``)  The position on the image at which to center of the object.
 
 Custom Image Types
 ------------------
@@ -96,7 +96,7 @@ cases where it would be useful for custom image types.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_image.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_image.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml
@@ -106,7 +106,7 @@ in the config file:
 
 This ``modules`` field is a list, so it can contain more than one module to load if you want.
 Then before processing anything, the code will execute the command ``import my_custom_image``,
-which will read your file and execute the registration command to add the buidler to the list
+which will read your file and execute the registration command to add the builder to the list
 of valid image types.
 
 Then you can use this as a valid image type:
@@ -213,7 +213,7 @@ WCS Field
 
 The ``pixel_scale`` attribute mentioned above is the usual way to define the connection between
 pixel coordinates and sky coordinates.  However, one can define a more complicated relationship,
-which is known as a World Coordinate System (WCS) if desired.  To do this, use the ``wcs`` 
+which is known as a World Coordinate System (WCS) if desired.  To do this, use the ``wcs``
 attribute instead of the ``pixel_scale`` attribute.  This should be a dict with a ``type``
 attribute that defines what kind of WCS to use.  The wcs types that are defined by GalSim are:
 
@@ -240,7 +240,7 @@ attribute that defines what kind of WCS to use.  The wcs types that are defined 
     * ``xfunc`` = *str_value* (optional) A string that can be turned into the function x(u,v) of the inverse transformation via the python command ``eval('lambda u,v : ' + xfunc)``.
     * ``yfunc`` = *str_value* (optional) A string that can be turned into the function y(u,v) of the inverse transformation via the python command ``eval('lambda u,v : ' + yfunc)``.
 
-* 'RaDecFunction' implements an arbitrary transformation from image coordinates (x,y) to celestial coordinates (ra,dec) via two functions ra(x,y) and dec(x,y).  
+* 'RaDecFunction' implements an arbitrary transformation from image coordinates (x,y) to celestial coordinates (ra,dec) via two functions ra(x,y) and dec(x,y).
 
     * ``ra_func`` = *str_value* (required) A string that can be turned into the function ra(x,y) via the python command ``eval('lambda x,y : ' + rafunc)``.
     * ``dec_func`` = *str_value* (required) A string that can be turned into the function dec(x,y) via the python command ``eval('lambda x,y : ' + decfunc)``.
@@ -333,7 +333,7 @@ other types, including custom Bandpass types.
     * ``wave_type`` = *str_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `Bandpass`)
     * ``blue_limit`` = *float_value* (optional)  Hard cut off on the blue side.
     * ``red_limit`` = *float value* (optional)  Hard cut off on the red side.
-    * ``zeropoint`` = *flaot_value* (optional)  The zero-point to use.
+    * ``zeropoint`` = *float_value* (optional)  The zero-point to use.
     * ``thin`` = *float_value* (optional)  If given, call `Bandpass.thin` on the Bandpass after reading in from the file, using this for the ``rel_err``.
 
 You may also define your own custom Bandpass type in the usual way
