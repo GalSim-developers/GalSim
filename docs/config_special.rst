@@ -8,7 +8,7 @@ modules
 -------
 
 Almost all aspects of the file building can be customized by the user if the existing GalSim
-types do not do precisely what you need.  How to do this is described in the pages about 
+types do not do precisely what you need.  How to do this is described in the pages about
 each of the different top-level fields.  In all cases, you need to tell GalSim what Python
 modules to load at the start of processing to get the implementations of your custom types.
 That is what this field is for.
@@ -31,7 +31,7 @@ eval_variables
 
 Sometimes, it can be useful to define some configuration parameters right at the top of the
 config file that might be used farther down in the file somewhere to highlight them.
-Or sometimes, there are calculations that are needed by several different values in the 
+Or sometimes, there are calculations that are needed by several different values in the
 config file, which you only want to calculate once.
 
 You can put such values in a top-level ``eval_variables`` field.  They work just like
@@ -47,7 +47,7 @@ For examples of this field, see:
 template
 --------
 
-This feature directs the config processing to first load in some other file (or specific 
+This feature directs the config processing to first load in some other file (or specific
 field with that file) and then possibly modify some components of that dict.
 
 To load in some other config file named ``config.yaml``, you would write::
@@ -73,10 +73,10 @@ you could write a new file that looks something like this:
 .. code-block:: yaml
 
     template : my_sim.yaml
-    gal: 
+    gal:
         type : Sersic
         n : { type : Random, min : 1, max: 4 }
-        half_light_radius : 
+        half_light_radius :
             template : my_sim.yaml:gal.half_light_radius
         flux : 1000
     output.dir : sersic_sim
@@ -103,7 +103,7 @@ Note that the modifications do not start with ``psf.``, since the template proce
 within the ``psf`` field.
 
 Finally, if you want to use a different field from the current config dict as a template, you can
-use the colon notation without the file. 
+use the colon notation without the file.
 E.g. To have a bulge plus disk that have the same kinds of parameters, except that the overall type is a DeVaucouleurs and Exponential respectively, you could do:
 
 .. code-block:: yaml
@@ -123,7 +123,7 @@ E.g. To have a bulge plus disk that have the same kinds of parameters, except th
                 template: :gal.items.0
                 type: Exponential
 
-This would gererate different values for the size, flux, and shape of each component.  But the way those numbers are drawn would be the same for each.
+This would generate different values for the size, flux, and shape of each component.  But the way those numbers are drawn would be the same for each.
 
 See:
 
@@ -161,7 +161,7 @@ It is also possible for a custom module to add additional valid values here by a
 rng_index_key
 -------------
 
-Each ``index_key`` has its own random number generator to use for generatinv values that need an rng object.  Normally you want these to match up, but this lets you specify to use the rng for a different key than is used for the actual sequencing.
+Each ``index_key`` has its own random number generator to use for generating values that need an rng object.  Normally you want these to match up, but this lets you specify to use the rng for a different key than is used for the actual sequencing.
 
 For instance, if you set ``rng_index_key = 'image_num'`` for a ``gal`` value, then it will use the rng normally used for image_num items, but it will still generate a new value for each obj_num.
 
@@ -179,4 +179,3 @@ exposures, while other properties of the observations are different for each exp
 
 You would specify which random number you want to use from such a list using ``rng_num`` in a
 field. See the description of ``random_seed`` in  `Image Field Attributes` for more information.
-

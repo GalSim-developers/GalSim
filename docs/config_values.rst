@@ -111,7 +111,7 @@ Options are:
             * ``first`` = *float_value* (default = 0)
             * ``step`` = *float_value* (default = 1) The step size between items.
             * ``repeat`` = *int_value* (default = 1) How many times to repeat the same value before moving on.
-            * ``last`` = *float_value* (optional; at most one of ``last`` and ``nitems`` is allowed) 
+            * ``last`` = *float_value* (optional; at most one of ``last`` and ``nitems`` is allowed)
 
                 .. note::
 
@@ -149,7 +149,7 @@ int_value
 Options are:
 
 * A normal int value (e.g. 8)
-* Anything that python can convert into an int (e.g. 8.0, '8')  
+* Anything that python can convert into an int (e.g. 8.0, '8')
 
     .. note::
 
@@ -194,10 +194,10 @@ Options are:
             * ``first`` = *int_value* (default = 0)
             * ``step`` = *int_value* (default = 1) The step size between items.
             * ``repeat`` = *int_value* (default = 1) How many times to repeat the same value before moving on.
-            * ``last`` = *float_value* (optional; at most one of ``last`` and ``nitems`` is allowed)  
+            * ``last`` = *float_value* (optional; at most one of ``last`` and ``nitems`` is allowed)
 
                 .. note::
-                   
+
                     if ``last`` is provided, once a value passes ``last``, the sequence will
                     repeat starting with ``first`` again.
 
@@ -253,10 +253,10 @@ Options are:
 
             * ``p`` = *float_value* (default = 0.5)  The probability of getting True.  [New in v1.5]
 
-        * 'RandomBinomial'  Generate random values from a Binomial deviate with N=1. 
+        * 'RandomBinomial'  Generate random values from a Binomial deviate with N=1.
 
             .. note::
-               
+
                 The default case with ``p`` = 0.5 is equivalent to the 'Random' type.  So this
                 would normally be used for random booleans with a different probability of True.
 
@@ -436,10 +436,10 @@ Options are:
 
         * 'Sum'  The sum of two other *shear_value* items.
 
-            .. note:: 
-             
+            .. note::
+
                 Unlike the other kinds of values, shears addition is not commutative.
-                ``g_a + g_b`` is not the same as ``g_b + g_a``.  Thus, the order of the elements 
+                ``g_a + g_b`` is not the same as ``g_b + g_a``.  Thus, the order of the elements
                 in the ``items`` list matters.  The shear effects are applied from last to first,
                 so the effects should be listed in order from closest to the observer to farthest
                 along the light path.  This is a *somewhat* standard convention for what
@@ -475,10 +475,10 @@ Options are:
             * ``r`` = *float_value* (required)
             * ``theta`` = *angle_value* (required)
 
-        * 'RandomCircle'  Generate a random value uniformly distributed within a circle of a given radius.  
+        * 'RandomCircle'  Generate a random value uniformly distributed within a circle of a given radius.
 
             .. note::
-             
+
                 This is different from 'RTheta' with each one random, since that would
                 preferentially pick locations near the center of the circle.
 
@@ -512,7 +512,7 @@ Options are:
 
 * A dict with:
 
-    * ``type`` = *str* (required)  There is currenly only one valid option:
+    * ``type`` = *str* (required)  There is currently only one valid option:
 
         * 'RaDec' Specify x and y separately.
 
@@ -563,7 +563,7 @@ Eval type
 ---------
 
 Every kind of value has 'Eval' as one of its allowed types.  This works a little bit differently
-than the other types, so we describe it here in its own section.  
+than the other types, so we describe it here in its own section.
 
 The only required attribute to go along with an 'Eval' is ``str``, which is the string to be
 evaluated using the python ``eval`` function.
@@ -571,16 +571,16 @@ evaluated using the python ``eval`` function.
 For example ``str : '800 * 1.e-9 / 4 * 206265'`` will evaluate to 0.041253.  (This example is taken from demo3.yaml.)  This might either be easier than doing a calculation
 yourself or perhaps be clearer as to how the number was formed.  For example, this example
 calculates ``lam_over_diam`` using lambda = 800 nm, D = 4 m, converting the result into arcsec.
-If you later wanted to change to a 6.5m telescope, it would be very clear what to change, 
+If you later wanted to change to a 6.5m telescope, it would be very clear what to change,
 as opposed to if the value were listed as 0.041253.
 
 Preset variables
 ^^^^^^^^^^^^^^^^
 
-The 'Eval' type gets even more powerful when you use variables.  The file demo10.yaml has some 
-examples that use the ``pos`` variable, the position of the galaxy relative to the center of the 
-image, which GalSim will make available for you for any 
-'Tiled' or 'Scattered' image.  The PSF ``fwhm`` is given as 
+The 'Eval' type gets even more powerful when you use variables.  The file demo10.yaml has some
+examples that use the ``pos`` variable, the position of the galaxy relative to the center of the
+image, which GalSim will make available for you for any
+'Tiled' or 'Scattered' image.  The PSF ``fwhm`` is given as
 ``'0.9 + 0.5 * (world_pos.x**2 + world_pos.y**2) / 100**2'``, which calculates the PSF size as a function of
 position on the image.
 
@@ -658,9 +658,9 @@ Python modules that GalSim will import for you to use:
 User-defined variables
 ^^^^^^^^^^^^^^^^^^^^^^
 
-It is also possible to define your own variables to use in your expression simply by 
-defining more attributes in addition to ``str``.  The first letter of the attribute 
-declares what type it should be evaluated to.  Then the rest of the attribute name is 
+It is also possible to define your own variables to use in your expression simply by
+defining more attributes in addition to ``str``.  The first letter of the attribute
+declares what type it should be evaluated to.  Then the rest of the attribute name is
 the name of your variable.
 
 For example, we do not have a specific type for drawing from a Log-Normal distribution.
@@ -674,8 +674,8 @@ the following:
         str : '1.e5 * math.exp(normal)'
         fnormal : { type : RandomGaussian , sigma : 0.2 }
 
-The ``f`` at the start of ``fnormal`` indicates that the variable ``normal`` should be 
-evaluated as a *float_value*.  In this case using ``type`` = 'RandomGaussian'.  
+The ``f`` at the start of ``fnormal`` indicates that the variable ``normal`` should be
+evaluated as a *float_value*.  In this case using ``type`` = 'RandomGaussian'.
 
 Another example appears in demo10.yaml.  There, we define the magnitude of the ellipticity as:
 
@@ -706,7 +706,7 @@ The eval-variables field
 
 Sometimes it is useful to have the same variable used by multiple Eval calculations.  For such cases, Eval will look for a top-level field called ``eval_variables``.  If this field is present, then anything defined there will be accessible in all Eval calculations in addition to whatever variables are defined for each specific Eval item.
 
-This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an ``&`` before it before any value.  Then later, you can refer to the value by that name preceded by a ``*``, rather than write the value again.  This can lead to more maintainable config files.  E.g. demo10.yaml uses this functionality for ``num_in_ring``, since the value is needed in two different calculations.  
+This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an ``&`` before it before any value.  Then later, you can refer to the value by that name preceded by a ``*``, rather than write the value again.  This can lead to more maintainable config files.  E.g. demo10.yaml uses this functionality for ``num_in_ring``, since the value is needed in two different calculations.
 
 It can be convenient to combine the YAML naming scheme with our ``eval_variables`` setup in the following way:
 
@@ -737,7 +737,7 @@ or as part of an ``Eval`` item:
 Shorthand notation
 ^^^^^^^^^^^^^^^^^^
 
-It can be a bit cumbersome at times to write out a full dict with ``type : Eval`` and the 
+It can be a bit cumbersome at times to write out a full dict with ``type : Eval`` and the
 ``str`` item you want to evaluate.  To streamline this, we also allow for a shorthand notation
 for both Eval and Current types.
 
@@ -781,7 +781,7 @@ The generator function should have the following functional form::
 
         @returns value, safe
 
-        The returned value should be something of type value_type, and safe is a bool 
+        The returned value should be something of type value_type, and safe is a bool
         value that indicates whether the value is safe to reuse for future stamps
         (i.e. it is a constant value that will not change for later stamps).
         """
@@ -828,7 +828,7 @@ but it should typically be the name of the value type being built.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_value.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_value.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml

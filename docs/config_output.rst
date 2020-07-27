@@ -38,7 +38,7 @@ The output types defined by GalSim are:
 Custom Output Types
 -------------------
 
-To define your own output type, you will need to write an importable Python module 
+To define your own output type, you will need to write an importable Python module
 (typically a file in the current directory where you are running ``galsim``, but it could also
 be something you have installed in your Python distro) with a class that will be used
 to build the output file.
@@ -68,7 +68,7 @@ cases where it would be useful for custom output types.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_output.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_output.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml
@@ -78,7 +78,7 @@ in the config file:
 
 This ``modules`` field is a list, so it can contain more than one module to load if you want.
 Then before processing anything, the code will execute the command ``import my_custom_output``,
-which will read your file and execute the registration command to add the buidler to the list
+which will read your file and execute the registration command to add the builder to the list
 of valid output types.
 
 Then you can use this as a valid output type:
@@ -90,21 +90,21 @@ Then you can use this as a valid output type:
         ...
 
 For an example of a custom output type, see `MEDSBuilder` in `The DES Module`,
-which is used by :download:`meds.yaml <../examples/des/meds.yaml>`. 
+which is used by :download:`meds.yaml <../examples/des/meds.yaml>`.
 
 It may also be helpful to look at the GalSim implementation of the included output types
 (click on the ``[source]`` links):
 
 .. autoclass:: galsim.config.output_datacube.DataCubeBuilder
     :show-inheritance:
-    
+
 .. autoclass:: galsim.config.output_multifits.MultiFitsBuilder
     :show-inheritance:
 
 Extra Outputs
 -------------
 
-In addition to the fields for defining the main output file(s), there may also be fields 
+In addition to the fields for defining the main output file(s), there may also be fields
 specifying optional "extra" outputs.  Either extra files to be written, or sometimes extra HDUs
 to be added to the main FITS files.  These extra output fields are dicts that may have a number
 of parameters defining how they should be built or where they should be written.
@@ -172,7 +172,7 @@ cases where it would be useful for custom output types.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_output.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_output.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml
@@ -198,7 +198,7 @@ For examples of custom extra outputs, see
 * :download:`blend.yaml <../examples/des/blend.yaml>`
 * :download:`blendset.yaml <../examples/des/blendset.yaml>`
 
-which use custom extra outputs ``deblend`` and ``deblend_meds`` defined in :download:`blend.py <../examples/des/blend.py>`. 
+which use custom extra outputs ``deblend`` and ``deblend_meds`` defined in :download:`blend.py <../examples/des/blend.py>`.
 
 Also,
 
@@ -220,4 +220,3 @@ It may also be helpful to look at the GalSim implementation of the included extr
 
 .. autoclass:: galsim.config.extra_badpix.BadPixBuilder
     :show-inheritance:
-    

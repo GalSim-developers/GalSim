@@ -62,10 +62,10 @@ The main classes of note are:
         manually.  The `OpticalPSF` class constructor will handle this for you.
 
 `SecondKick`
-    A `GSObject` describing the kigh-k turbulence portion of an atmospheric PSF convolved by
+    A `GSObject` describing the high-k turbulence portion of an atmospheric PSF convolved by
     an `Airy` PSF.  When using photon shooting with a `PhaseScreenPSF`, small scale (high-k)
     features are not well approximated by the geometric optics approximation, since this is
-    where Fourier effects such as diffaction become important.  The `SecondKick` class can
+    where Fourier effects such as diffraction become important.  The `SecondKick` class can
     compensate by simulating the appropriate behavior at high k values.
 
 `Atmosphere`

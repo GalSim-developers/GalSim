@@ -9,7 +9,7 @@ Older Versions
 
 Below is a summary of the major changes with each new tagged version of GalSim.
 Each version may also include various other minor changes and bug fixes not
-listed here for brevity.  See the CHANGLELOG files associated with each
+listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
@@ -34,7 +34,7 @@ v2.2
 
 *Config Updates*
 
-- Added some more cumstomization hooks in the StampBuilder class. (#1048)
+- Added some more customization hooks in the StampBuilder class. (#1048)
 - Added ``quick_skip``, ``obj_rng=False``, ``rng_index_key`` options. (#1048)
 
 *Documentation Updates*
