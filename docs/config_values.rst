@@ -12,6 +12,7 @@ have been designating using the following italic names:
 - *shear_value* corresponds to a GalSim `Shear` instance.  See `shear_value`
 - *pos_value* corresponds to a GalSim `PositionD` instance.  See `pos_value`
 - *sky_value* corresponds to a GalSim `CelestialCoord` instance.  See `sky_value`
+- *table_value* corresponds to a GalSim `LookupTable` instance.  See `table_value`
 
 Each of the Python types can be given as a constant value using the normal Python conventions
 for how to specify such a value.  The GalSim *angle_value* and *pos_value* also have
@@ -547,7 +548,7 @@ Options are:
 
         * 'List'  Select items from a list.
 
-            * ``items`` = *list* (required)  A list of *angle_value* items.
+            * ``items`` = *list* (required)  A list of *table_value* items.
             * ``index`` = *int_value* (default = 'Sequence' from 0 to len(items)-1)
 
         * 'Current'  Use the current value of some other item in the config file.  (See the description of this for *float_value* for more details.)
