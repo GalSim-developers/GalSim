@@ -299,7 +299,7 @@ class SiliconSensor(Sensor):
         return self._silicon.accumulate(photons._pa, self.rng._rng, image._image, orig_center._p,
                                         resume)
 
-    def calculate_pixel_areas(self, image, orig_center=PositionI(0,0)):
+    def calculate_pixel_areas(self, image, orig_center=PositionI(0,0), use_flux=True):
         """Create an image with the corresponding pixel areas according to the `SiliconSensor`
         model.
 
@@ -317,6 +317,10 @@ class SiliconSensor(Sensor):
             image:          The `Image` with the current flux values.
             orig_center:    The `Position` of the image center in the original image coordinates.
                             [default: (0,0)]
+            use_flux:       Whether to properly handle the current flux in the image (True) or
+                            to just calculate the pixel areas for a zero-flux image (False).
+                            [default: True]  (Note that use_flux=True potentially uses a lot of
+                            memory!)
 
         Returns:
             an `Image` with the pixel areas
@@ -324,7 +328,7 @@ class SiliconSensor(Sensor):
         from .wcs import PixelScale
         area_image = image.copy()
         area_image.wcs = PixelScale(1.0)
-        self._silicon.fill_with_pixel_areas(area_image._image, orig_center._p)
+        self._silicon.fill_with_pixel_areas(area_image._image, orig_center._p, use_flux)
         return area_image
 
     def _read_config_file(self, filename):
