@@ -44,10 +44,14 @@ def test_pos():
     pi3 = galsim.PositionI(x=11.0, y=23.0)
     pi4 = galsim.PositionI(pi1)
     pi5 = galsim.PositionI(galsim.PositionD(11.0,23.0))
+    pi6 = galsim.PositionD(11.3,23.4).round()
+    pi7 = pi2.round()
     assert pi2 == pi1
     assert pi3 == pi1
     assert pi4 == pi1
     assert pi5 == pi1
+    assert pi6 == pi1
+    assert pi7 == pi1
     assert isinstance(pi3.x, int)
     assert isinstance(pi3.y, int)
     assert isinstance(pi5.x, int)
@@ -64,10 +68,12 @@ def test_pos():
     pd3 = galsim.PositionD(x=11.0, y=23.0)
     pd4 = galsim.PositionD(pd1)
     pd5 = galsim.PositionD(pi1)
+    pd6 = galsim.PositionD(galsim.PositionD(11.3,23.4).round())
     assert pd2 == pd1
     assert pd3 == pd1
     assert pd4 == pd1
     assert pd5 == pd1
+    assert pd6 == pd1
     assert isinstance(pd3.x, float)
     assert isinstance(pd3.y, float)
     assert isinstance(pd5.x, float)
