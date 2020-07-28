@@ -52,6 +52,9 @@ namespace galsim
         template <typename T>
         void updatePixelDistortions(ImageView<T> target);
 
+        void calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
+                                         Polygon& poly) const;
+
         template <typename T>
         void addTreeRingDistortions(ImageView<T> target, Position<int> orig_center);
 
@@ -60,7 +63,7 @@ namespace galsim
                           Position<int> orig_center, bool resume);
 
         template <typename T>
-        void fillWithPixelAreas(ImageView<T> target, Position<int> orig_center);
+        void fillWithPixelAreas(ImageView<T> target, Position<int> orig_center, bool use_flux);
 
     private:
         Polygon _emptypoly;

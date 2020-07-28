@@ -100,6 +100,9 @@ namespace galsim {
         // an undistorted polygon, and a polygon for test.
 
         _nv = 4 * _numVertices + 4; // Number of vertices in each pixel
+        dbg<<"_numVertices = "<<_numVertices<<", _nv = "<<_nv<<std::endl;
+        dbg<<"nx,ny = "<<nx<<", "<<ny<<"  ntot = "<<nx*ny<<std::endl;
+        dbg<<"total memory = "<<nx*ny*_nv*sizeof(Point)/(1024.*1024.)<<" MBytes"<<std::endl;
 
         buildEmptyPoly(_emptypoly, _numVertices);
         // These are mutable Polygons we'll use as scratch space
@@ -144,7 +147,7 @@ namespace galsim {
             double y = _distortions[i * _ny + j][n].y;
             y = ((y1 - y0) / _pixelSize + 0.5 - y) / numElec;
             _distortions[i * _ny + j][n].y = y;
-#ifdef DEBUGLOGGING
+#if 0
             if (index == 73) { // Test print out of read in
                 dbg<<"Successfully reading the Pixel vertex file\n";
                 //dbg<<"line = "<<line<<std::endl;
@@ -227,10 +230,34 @@ namespace galsim {
         }
     }
 
+    void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
+                                              Polygon& poly) const
+    {
+        double shift = 0.0;
+        for (int n=0; n<_nv; n++) {
+            xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
+                poly[n].x <<"  "<< poly[n].y<<std::endl;
+            double tx = (double)i + poly[n].x - _treeRingCenter.x + (double)orig_center.x;
+            double ty = (double)j + poly[n].y - _treeRingCenter.y + (double)orig_center.y;
+            xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
+            double r = sqrt(tx * tx + ty * ty);
+            shift = _tr_radial_table.lookup(r);
+            xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+            // Shifts are along the radial vector in direction of the doping gradient
+            double dx = shift * tx / r;
+            double dy = shift * ty / r;
+            xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+            poly[n].x += dx;
+            poly[n].y += dy;
+            xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
+        }
+    }
+
     template <typename T>
     void Silicon::addTreeRingDistortions(ImageView<T> target, Position<int> orig_center)
     {
         if (_tr_radial_table.size() == 2) {
+            //dbg<<"Trivial radial table\n";
             // The no tree rings case is indicated with a table of size 2, which
             // wouldn't make any sense as a user input.
             return;
@@ -247,32 +274,13 @@ namespace galsim {
         const int j1 = b.getYMin();
         const int j2 = b.getYMax();
         const int ny = j2-j1+1;
-        double shift = 0.0;
         // Now we cycle through the pixels in the target image and add
         // the (small) distortions due to tree rings
         std::vector<bool> changed(_imagepolys.size(), false);
         for (int i=i1; i<=i2; ++i) {
             for (int j=j1; j<=j2; ++j) {
                 int index = (i - i1) * ny + (j - j1);
-                for (int n=0; n<_nv; n++) {
-                    xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
-                        _imagepolys[index][n].x <<"  "<< _imagepolys[index][n].y<<std::endl;
-                    double tx = (double)i + _imagepolys[index][n].x - _treeRingCenter.x +
-                        (double)orig_center.x;
-                    double ty = (double)j + _imagepolys[index][n].y - _treeRingCenter.y +
-                        (double)orig_center.y;
-                    xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
-                    double r = sqrt(tx * tx + ty * ty);
-                    shift = _tr_radial_table.lookup(r);
-                    xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
-                    // Shifts are along the radial vector in direction of the doping gradient
-                    double dx = shift * tx / r;
-                    double dy = shift * ty / r;
-                    xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
-                    _imagepolys[index][n].x += dx;
-                    _imagepolys[index][n].y += dy;
-                    xdbg<<"    x,y => "<<_imagepolys[index][n].x <<"  "<< _imagepolys[index][n].y;
-                }
+                calculateTreeRingDistortion(i, j, orig_center, _imagepolys[index]);
                 changed[index] = true;
             }
         }
@@ -443,7 +451,8 @@ namespace galsim {
     }
 
     template <typename T>
-    void Silicon::fillWithPixelAreas(ImageView<T> target, Position<int> orig_center)
+    void Silicon::fillWithPixelAreas(ImageView<T> target, Position<int> orig_center,
+                                     bool use_flux)
     {
         Bounds<int> b = target.getBounds();
         if (!b.isDefined())
@@ -457,25 +466,61 @@ namespace galsim {
         const int nx = i2-i1+1;
         const int ny = j2-j1+1;
         const int nxny = nx * ny;
-        dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
 
-        _imagepolys.resize(nxny);
-        for (int i=0; i<nxny; ++i)
-            _imagepolys[i] = _emptypoly;
+        if (use_flux) {
+            dbg<<"Start full pixel area calculation\n";
+            dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
+            dbg<<"total memory = "<<nxny*_nv*sizeof(Point)/(1024.*1024.)<<" MBytes"<<std::endl;
 
-        // Set up the pixel information according to the current flux in the image.
-        addTreeRingDistortions(target, orig_center);
-        updatePixelDistortions(target);
+            _imagepolys.resize(nxny);
+            for (int i=0; i<nxny; ++i)
+                _imagepolys[i] = _emptypoly;
 
-        // Fill target with the area in each pixel.
-        const int skip = target.getNSkip();
-        const int step = target.getStep();
-        T* ptr = target.getData();
+            // Set up the pixel information according to the current flux in the image.
+            addTreeRingDistortions(target, orig_center);
+            updatePixelDistortions(target);
 
-        for (int j=j1; j<=j2; ++j, ptr+=skip) {
-            for (int i=i1; i<=i2; ++i, ptr+=step) {
-                int index = (i - i1) * ny + (j - j1);
-                *ptr = _imagepolys[index].area();
+            // Fill target with the area in each pixel.
+            const int skip = target.getNSkip();
+            const int step = target.getStep();
+            T* ptr = target.getData();
+
+            for (int j=j1; j<=j2; ++j, ptr+=skip) {
+                for (int i=i1; i<=i2; ++i, ptr+=step) {
+                    int index = (i - i1) * ny + (j - j1);
+                    *ptr = _imagepolys[index].area();
+                }
+            }
+        } else {
+            // If we don't care about respecting the flux in the image (which we usually don't
+            // since this is generally used for making sky images with the tree ring patterns),
+            // we can save a lot of the memory required for the above algorithm and just
+            // calculate one polygon at a time and get the area.
+            if (_tr_radial_table.size() == 2) {
+                //dbg<<"Trivial radial table\n";
+                // The no tree rings case is indicated with a table of size 2, which
+                // wouldn't make any sense as a user input.
+                target.fill(1.);
+                return;
+            }
+            dbg<<"Start no-flux pixel area calculation\n";
+
+            // Cycle through the pixels in the target image and add
+            // the (small) distortions due to tree rings.
+            // Then write the area to the target image.
+            const int skip = target.getNSkip();
+            const int step = target.getStep();
+            T* ptr = target.getData();
+
+            // Temporary space.
+            Polygon poly;
+
+            for (int j=j1; j<=j2; ++j, ptr+=skip) {
+                for (int i=i1; i<=i2; ++i, ptr+=step) {
+                    poly = _emptypoly;
+                    calculateTreeRingDistortion(i, j, orig_center, poly);
+                    *ptr = poly.area();
+                }
             }
         }
     }
@@ -768,7 +813,9 @@ namespace galsim {
                                         ImageView<float> target, Position<int> orig_center,
                                         bool resume);
 
-    template void Silicon::fillWithPixelAreas(ImageView<double> target, Position<int> orig_center);
-    template void Silicon::fillWithPixelAreas(ImageView<float> target, Position<int> orig_center);
+    template void Silicon::fillWithPixelAreas(ImageView<double> target, Position<int> orig_center,
+                                              bool);
+    template void Silicon::fillWithPixelAreas(ImageView<float> target, Position<int> orig_center,
+                                              bool);
 
 } // namespace galsim

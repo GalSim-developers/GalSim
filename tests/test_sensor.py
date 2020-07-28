@@ -752,6 +752,18 @@ def test_treerings():
     assert_raises(TypeError, galsim.SiliconSensor, treering_func=lambda x:np.cos(x))
     assert_raises(TypeError, galsim.SiliconSensor, treering_func=tr7, treering_center=(3,4))
 
+    # With tree rings, the pixel areas are non-trivial even with no flux.
+    areas0 = sensor5.calculate_pixel_areas(im)
+    print('min/max area0 = ',np.min(areas0.array),np.max(areas0.array))
+    im.fill(0)
+    areas1 = sensor5.calculate_pixel_areas(im)
+    print('min/max area1 = ',np.min(areas1.array),np.max(areas1.array))
+    areas2 = sensor5.calculate_pixel_areas(im, use_flux=False)
+    np.testing.assert_array_equal(areas1.array, areas2.array)
+    print('min/max area2 = ',np.min(areas2.array),np.max(areas2.array))
+    # But the areas with flux have a larger range (in both directions) because of the BFE
+    assert np.min(areas0.array) < np.min(areas2.array)
+    assert np.max(areas0.array) > np.max(areas2.array)
 
 @timer
 def test_resume():
