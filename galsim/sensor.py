@@ -50,7 +50,7 @@ class Sensor(object):
         Parameters:
             photons:        A `PhotonArray` instance describing the incident photons.
             image:          The `Image` into which the photons should be accumuated.
-            orig_center:    The `Position` of the image center in the original image coordinates.
+            orig_center:    The `Position` of the (0,0) point in the original image coordinates.
                             [default: (0,0)]
             resume:         Resume accumulating on the same image as a previous call to accumulate.
                             In the base class, this has no effect, but it can provide an efficiency
@@ -62,6 +62,32 @@ class Sensor(object):
         if not image.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Calling accumulate on image with undefined bounds")
         return photons.addTo(image)
+
+    def calculate_pixel_areas(self, image, orig_center=PositionI(0,0), use_flux=True):
+        """Return the pixel areas according to the given sensor.
+
+        If the pixels are all the same size, then this should just return 1.0.
+
+        But if the pixels vary in size, it should return an Image with the pixel areas
+        relative to the nominal pixel size. The input image gives the flux values if relevant
+        (e.g. to set the current levels of the brighter-fatter distortions).
+
+        The returned image will have the same size and bounds as the input image, and will have
+        for its flux values the net pixel area for each pixel according to the sensor model.
+
+        Parameters:
+            image:          The `Image` with the current flux values.
+            orig_center:    The `Position` of the (0,0) point in the original image coordinates.
+                            [default: (0,0)]
+            use_flux:       Whether to properly handle the current flux in the image (True) or
+                            to just calculate the pixel areas for a zero-flux image (False).
+                            [default: True]
+
+        Returns:
+            either 1.0 or an `Image` with the pixel areas
+            (The base class return 1.0.)
+        """
+        return 1.
 
     def updateRNG(self, rng):
         pass
@@ -275,7 +301,7 @@ class SiliconSensor(Sensor):
         Parameters:
             photons:        A `PhotonArray` instance describing the incident photons
             image:          The `Image` into which the photons should be accumuated.
-            orig_center:    The `Position` of the image center in the original image coordinates.
+            orig_center:    The `Position` of the (0,0) point in the original image coordinates.
                             [default: (0,0)]
             resume:         Resume accumulating on the same image as a previous call to accumulate.
                             This skips an initial (slow) calculation at the start of the
@@ -315,7 +341,7 @@ class SiliconSensor(Sensor):
 
         Parameters:
             image:          The `Image` with the current flux values.
-            orig_center:    The `Position` of the image center in the original image coordinates.
+            orig_center:    The `Position` of the (0,0) point in the original image coordinates.
                             [default: (0,0)]
             use_flux:       Whether to properly handle the current flux in the image (True) or
                             to just calculate the pixel areas for a zero-flux image (False).
