@@ -163,6 +163,11 @@ class PositionD(Position):
     def _p(self):
         return _galsim.PositionD(self.x, self.y)
 
+    def round(self):
+        """Return the rounded-off PositionI version of this position.
+        """
+        return PositionI(int(round(self.x)), int(round(self.y)))
+
     def _check_scalar(self, other, op):
         try:
             if other == float(other): return
@@ -188,6 +193,10 @@ class PositionI(Position):
     @property
     def _p(self):
         return _galsim.PositionI(self.x, self.y)
+
+    def round(self):
+        # Just for consistency between PositionD and PositionI
+        return self
 
     def _check_scalar(self, other, op):
         try:
