@@ -223,7 +223,8 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
 # Ignore these when parsing the parameters for specific Image types:
 from .stamp import stamp_image_keys
 image_ignore = [ 'random_seed', 'noise', 'pixel_scale', 'wcs', 'sky_level', 'sky_level_pixel',
-                 'world_center', 'index_convention', 'nproc', 'bandpass', 'sensor'
+                 'world_center', 'index_convention', 'nproc', 'bandpass', 'sensor',
+                 'use_flux_sky_areas'
                ] + stamp_image_keys
 
 def BuildImage(config, image_num=0, obj_num=0, logger=None):

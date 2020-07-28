@@ -218,7 +218,11 @@ def GetSky(config, base, logger=None, full=False):
                 sensor = base.get('sensor', None)
                 if sensor is not None:
                     center = base.get('image_origin', PositionI(1,1)) - sky.origin
-                    area = sensor.calculate_pixel_areas(sky, orig_center=center, use_flux=False)
+                    use_flux = config.get('use_flux_sky_areas', False)
+                    # TODO: If use_flux_sky_areas = True, then we should really build this up
+                    #       in steps.  E.g. for a flat field.
+                    #       This one step calcualtion isn't right.
+                    area = sensor.calculate_pixel_areas(sky, orig_center=center, use_flux=use_flux)
                     sky *= area
                 config['_current_sky_tag'] = tag
                 config['_current_sky'] = sky
@@ -236,7 +240,7 @@ def GetSky(config, base, logger=None, full=False):
 
 
 # items that are parsed separately from the normal noise function
-noise_ignore = [ 'whiten', 'symmetrize' ]
+noise_ignore = [ 'whiten', 'symmetrize', 'use_flux_sky_areas' ]
 
 class NoiseBuilder(object):
     """A base class for building noise objects and applying the noise to images.
