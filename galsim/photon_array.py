@@ -49,9 +49,12 @@ class PhotonArray(object):
     A PhotonArray instance has the following attributes, each of which is a numpy array:
 
     Attributes:
-        x:          The incidence x position at the top of the detector
-        y:          The incidence y position at the top of the detector
-        flux:       The flux of the photons
+        x:          The incidence x position of the photons in image coordinates (pixels),
+                    typically measured at the top of the detector.
+        y:          The incidence y position of the photons in image coordinates (pixels),
+                    typically measured at the top of the detector.
+        flux:       The flux of the photons in units of photons. Typically, these are all 1,
+                    but see the note below for reasons some photons might have flux != 1.
         dxdz:       The tangent of the inclination angles in the x direction.  Note that we define
                     the +z direction as towards towards the dielectric medium of the detector and
                     -z as towards vacuum; consequently, a photon with increasing x in time has
@@ -123,7 +126,8 @@ class PhotonArray(object):
 
     @property
     def x(self):
-        """The incidence x position at the top of the detector.
+        """The incidence x position in image coordinates (pixels), typically at the top of
+        the detector.
         """
         return self._x
     @x.setter
@@ -132,7 +136,8 @@ class PhotonArray(object):
 
     @property
     def y(self):
-        """The incidence y position at the top of the detector.
+        """The incidence y position in image coordinates (pixels), typically at the top of
+        the detector.
         """
         return self._y
     @y.setter
