@@ -496,6 +496,10 @@ def test_silicon_area():
 
     do_pickle(siliconT)
 
+    # Finally, the regular Sensor pixel areas are just 1.
+    simple = galsim.Sensor()
+    assert simple.calculate_pixel_areas(im) == 1.
+
 
 @timer
 def test_sensor_wavelengths_and_angles():
