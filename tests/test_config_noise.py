@@ -181,6 +181,40 @@ def test_poisson():
     im3b = galsim.config.BuildImage(config)
     np.testing.assert_almost_equal(im3b.array, im3a.array, decimal=6)
 
+    # With tree rings, the sky includes them as well.
+    config['image']['sensor'] = {
+        'type' : 'Silicon',
+        'treering_func' : {
+            'type' : 'File',
+            'file_name' : 'tree_ring_lookup.dat',
+            'amplitude' : 0.5
+        },
+        'treering_center' : {
+            'type' : 'XY',
+            'x' : 0,
+            'y' : -500
+        }
+    }
+    galsim.config.RemoveCurrent(config)
+    config = galsim.config.CleanConfig(config)
+    rng.seed(1234+1)
+    trfunc = galsim.LookupTable.from_file('tree_ring_lookup.dat', amplitude=0.5)
+    sensor = galsim.SiliconSensor(treering_func=trfunc, treering_center=galsim.PositionD(0,-500),
+                                  rng=rng)
+    im4a = gal.drawImage(nx=32, ny=32, wcs=wcs, method='phot', rng=rng, sensor=sensor)
+    sky_im = galsim.Image(im3a.bounds, wcs=wcs)
+    wcs.makeSkyImage(sky_im, sky)
+    areas = sensor.calculate_pixel_areas(sky_im, use_flux=False)
+    sky_im *= areas
+    im4a += sky_im
+    noise_im = sky_im.copy()
+    noise_im *= 2.
+    noise_im.addNoise(galsim.PoissonNoise(rng))
+    noise_im -= 2.*sky_im
+    im4a += noise_im
+    im4b = galsim.config.BuildImage(config)
+    np.testing.assert_almost_equal(im4b.array, im4a.array, decimal=6)
+
     # Can't have both sky_level and sky_level_pixel
     config['image']['noise']['sky_level_pixel'] = 2000.
     with assert_raises(galsim.GalSimConfigError):

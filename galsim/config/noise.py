@@ -24,6 +24,7 @@ from .value import ParseValue, GetCurrentValue, GetAllParams
 from .input import RegisterInputConnectedType
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..image import Image
+from ..position import PositionI
 from ..random import PoissonDeviate
 from ..noise import GaussianNoise, PoissonNoise, DeviateNoise, CCDNoise
 from ..correlatednoise import getCOSMOSNoise, UncorrelatedNoise
@@ -214,6 +215,11 @@ def GetSky(config, base, logger=None, full=False):
                 bounds = base['current_noise_image'].bounds
                 sky = Image(bounds, wcs=wcs)
                 wcs.makeSkyImage(sky, sky_level)
+                sensor = base.get('sensor', None)
+                if sensor is not None:
+                    center = base.get('image_origin', PositionI(1,1)) - sky.origin
+                    area = sensor.calculate_pixel_areas(sky, orig_center=center, use_flux=False)
+                    sky *= area
                 config['_current_sky_tag'] = tag
                 config['_current_sky'] = sky
                 return sky
