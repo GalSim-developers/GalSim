@@ -137,19 +137,6 @@ def main(argv):
     use_SCA = 7 # This could be any number from 1...18
     logger.info('Doing expensive pre-computation of PSF.')
     t1 = time.time()
-    # Need to make a separate PSF for each filter.  We are, however, ignoring the
-    # position-dependence of the PSF within each SCA, just using the PSF at the center of the SCA
-    # (default kwargs).
-    PSFs = {}
-    for filter_name, filter_ in filters.items():
-        logger.info('PSF pre-computation for SCA %d, filter %s.'%(use_SCA, filter_name))
-        PSFs[filter_name] = roman.getPSF(use_SCA, filter_name, n_waves=10)
-    t2 = time.time()
-    logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
-
-    # Define the size of the postage stamp that we use for each individual galaxy within the larger
-    # image, and for the PSF images.
-    stamp_size = 256
 
     # We choose a particular (RA, dec) location on the sky for our observation.
     ra_targ = 90.*galsim.degrees
@@ -161,11 +148,25 @@ def main(argv):
     # panels pointed most directly towards the Sun given this targ_pos and date).  The output of
     # this routine is a dict of WCS objects, one for each SCA.  We then take the WCS for the SCA
     # that we are using.
-    wcs_list = roman.getWCS(world_pos=targ_pos, SCAs=use_SCA)
-    wcs = wcs_list[use_SCA]
+    wcs_dict = roman.getWCS(world_pos=targ_pos, SCAs=use_SCA)
+    wcs = wcs_dict[use_SCA]
     # We need to find the center position for this SCA.  We'll tell it to give us a CelestialCoord
     # corresponding to (X, Y) = (roman.n_pix/2, roman.n_pix/2).
     SCA_cent_pos = wcs.toWorld(galsim.PositionD(roman.n_pix/2, roman.n_pix/2))
+
+    # Need to make a separate PSF for each filter.  We are, however, ignoring the
+    # position-dependence of the PSF within each SCA, just using the PSF at the center of the SCA
+    # (default kwargs).
+    PSFs = {}
+    for filter_name, filter_ in filters.items():
+        logger.info('PSF pre-computation for SCA %d, filter %s.'%(use_SCA, filter_name))
+        PSFs[filter_name] = roman.getPSF(use_SCA, filter_name, n_waves=10, wcs=wcs)
+    t2 = time.time()
+    logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
+
+    # Define the size of the postage stamp that we use for each individual galaxy within the larger
+    # image, and for the PSF images.
+    stamp_size = 256
 
     # We randomly distribute points in (X, Y) on the CCD.
     # If we had a real galaxy catalog with positions in terms of RA, dec we could use wcs.toImage()
