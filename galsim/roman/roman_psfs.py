@@ -40,7 +40,8 @@ pupil_plane_file_longwave = '_full_mask.fits.gz'
 pupil_plane_file_shortwave = '_rim_mask.fits.gz'
 
 def getPSF(SCA, bandpass,
-           SCA_pos=None, pupil_bin=4, n_waves=None, extra_aberrations=None,
+           SCA_pos=None, pupil_bin=4, wcs=None,
+           n_waves=None, extra_aberrations=None,
            wavelength=None, gsparams=None,
            logger=None, high_accuracy=None, approximate_struts=None):
     """Get a single PSF for Roman ST observations.
@@ -86,13 +87,13 @@ def getPSF(SCA, bandpass,
         to recover any memory currently being used for this cache.  Of course, subsequent calls to
         `getPSF` will need to rebuild the aperture at that point.
 
-    Also note that currently the orientation of the struts is fixed, rather than rotating depending
-    on the orientation of the focal plane.  Rotation of the PSF can easily be affected by the user
-    via::
-
-       psf = galsim.roman.getPSF(...).rotate(angle)
-
-    which will rotate the entire PSF (including the diffraction spikes and all other features).
+    The PSF that is returned be default will be oriented with respect to the image coordinates,
+    not world coordinates as is typical in GalSim.  The pupil plane has a fixed orientation
+    with respect to the focal plane, so the PSF rotates with the telescope.  To obtain a
+    PSF in world coordinates, which can be convolved with galaxies (who are normally described
+    in world coordinates), you may pass in a ``wcs`` parameter to this function.  This will
+    project the PSF into world coordinates according to that WCS before returning it.  Otherwise,
+    the return value is equivalent to using ``wcs=galim.PixelScale(galsim.roman.pixel_scale)``.
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
     simple, understood wavelength-dependence.  (The Roman project webpage for Cycle 7 does in fact
@@ -152,6 +153,8 @@ def getPSF(SCA, bandpass,
                             the SCA is chosen. [default: None]
         pupil_bin:          The binning to apply to the pupil plane image. (See discussion above.)
                             [default: 4]
+        wcs:                The WCS to use to project the PSF into world coordinates.
+                            [default: galsim.PixelScale(galsim.roman.pixel_scale)]
         n_waves:            Number of wavelengths to use for setting up interpolation of the
                             chromatic PSF objects, which can lead to much faster image
                             rendering.  If None, then no interpolation is used. Note that
@@ -183,7 +186,8 @@ def getPSF(SCA, bandpass,
     from ..position import PositionD
     from ..errors import GalSimValueError, GalSimRangeError
     from ..bandpass import Bandpass
-    from . import n_pix, n_sca, longwave_bands, shortwave_bands
+    from ..wcs import PixelScale
+    from . import n_pix, n_sca, longwave_bands, shortwave_bands, pixel_scale
 
     # Deprecated options
     if high_accuracy:
@@ -254,6 +258,15 @@ def getPSF(SCA, bandpass,
     psf = _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                           n_waves, extra_aberrations, wavelength,
                           pupil_plane_type, gsparams)
+
+    # Apply WCS.
+    # The current version is in arcsec units, but oriented parallel to the image coordinates.
+    # So to apply the right WCS, project to pixels using the Roman mean pixel_scale, then
+    # project back to world coordinates with the provided wcs.
+    if wcs is not None:
+        scale = PixelScale(pixel_scale)
+        psf = wcs.toWorld(scale.toImage(psf), image_pos=SCA_pos)
+
     return psf
 
 def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
