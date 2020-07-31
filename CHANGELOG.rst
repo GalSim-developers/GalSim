@@ -80,6 +80,8 @@ New Features
 - Added FittedSIPWCS to fit a WCS from a list of image and celestial
   coordinates. (#1092)
 - Extended GSFitsWCS to support -SIP distortions for non-TAN WCSs. (#1092)
+- Added wcs option to Roman getPSF function to more easily get the right PSF
+  in world coordinates for a particular observation. (#1094)
 
 
 Performance Improvements
