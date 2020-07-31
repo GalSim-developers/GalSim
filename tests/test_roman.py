@@ -20,6 +20,7 @@
 
 from __future__ import print_function
 import numpy as np
+import datetime
 
 import galsim
 import galsim.roman
@@ -812,6 +813,36 @@ def test_roman_basic_numbers():
     assert galsim.roman.jitter_rms==ref_jitter_rms
     assert galsim.roman.charge_diffusion==ref_charge_diffusion
 
+@timer
+def test_roman_psf_wcs():
+    """Test drawing the PSF with a provided WCS."""
+
+    # Make a PSF without giving a wcs
+    image_pos = galsim.PositionD(153, 921)
+    psf = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8,
+                              SCA_pos=image_pos)
+
+    # Draw it on an image with pixel_scale wcs
+    im_scale = psf.drawImage(scale=galsim.roman.pixel_scale, center=image_pos)
+
+    # Get a plausible commemorative observation for Roman's 100th birthday.
+    world_pos = galsim.CelestialCoord(
+        ra = galsim.Angle.from_hms('16:01:41.01257'),  # AG Draconis
+        dec = galsim.Angle.from_dms('66:48:10.1312')
+    )
+    PA = 112*galsim.degrees  # Random.
+    date = datetime.datetime(2025, 5, 16)  # NGR's 100th birthday.
+    wcs_dict = galsim.roman.getWCS(PA=PA, world_pos=world_pos, date=date)
+    wcs = wcs_dict[5]
+
+    # Get the PSF in real world coordinates with this wcs
+    psf = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8,
+                              SCA_pos=image_pos, wcs=wcs)
+    # Draw on an image with this wcs.
+    im_wcs = psf.drawImage(bounds=im_scale.bounds, wcs=wcs, center=image_pos)
+
+    np.testing.assert_allclose(im_wcs.array, im_scale.array)
+
 if __name__ == "__main__":
     #import cProfile, pstats
     #pr = cProfile.Profile()
@@ -822,6 +853,7 @@ if __name__ == "__main__":
     test_roman_detectors()
     test_roman_psfs()
     test_roman_basic_numbers()
+    test_roman_psf_wcs()
     #pr.disable()
     #ps = pstats.Stats(pr).sort_stats('tottime')
     #ps.print_stats(30)
