@@ -205,8 +205,9 @@ class BaseWCS(object):
 
            Equivalent to ``wcs.profileToWorld(image_profile, ...)``.
         """
+        from .chromatic import ChromaticObject
         if len(args) == 1:
-            if isinstance(args[0], GSObject):
+            if isinstance(args[0], (GSObject, ChromaticObject)):
                 return self.profileToWorld(*args, **kwargs)
             else:
                 return self.posToWorld(*args, **kwargs)
@@ -295,8 +296,9 @@ class BaseWCS(object):
 
            Equivalent to `profileToImage`.
         """
+        from .chromatic import ChromaticObject
         if len(args) == 1:
-            if isinstance(args[0], GSObject):
+            if isinstance(args[0], (GSObject, ChromaticObject)):
                 return self.profileToImage(*args, **kwargs)
             else:
                 return self.posToImage(*args, **kwargs)
@@ -1440,14 +1442,18 @@ class PixelScale(LocalWCS):
         return v / self._scale
 
     def _profileToWorld(self, image_profile, flux_ratio, offset):
-        from .transform import _Transform
-        return _Transform(image_profile, (self._scale, 0., 0., self._scale),
-                          flux_ratio=self._scale**-2 * flux_ratio, offset=offset)
+        from .transform import _Transform, Transform
+        # In the usual case of GSObject, it's more efficient to use the _Transform version.
+        # else, it's a ChromaticObject, and we need to use the regular Transform function.
+        Transform = _Transform if isinstance(image_profile, GSObject) else Transform
+        return Transform(image_profile, (self._scale, 0., 0., self._scale),
+                         flux_ratio=self._scale**-2 * flux_ratio, offset=offset)
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
-        from .transform import _Transform
-        return _Transform(world_profile, (1./self._scale, 0., 0., 1./self._scale),
-                          flux_ratio=self._scale**2 * flux_ratio, offset=offset)
+        from .transform import _Transform, Transform
+        Transform = _Transform if isinstance(world_profile, GSObject) else Transform
+        return Transform(world_profile, (1./self._scale, 0., 0., 1./self._scale),
+                         flux_ratio=self._scale**2 * flux_ratio, offset=offset)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1707,17 +1713,21 @@ class JacobianWCS(LocalWCS):
             raise GalSimError("Transformation is singular")
 
     def _profileToWorld(self, image_profile, flux_ratio, offset):
-        from .transform import _Transform
-        return _Transform(image_profile, (self._dudx, self._dudy, self._dvdx, self._dvdy),
-                          flux_ratio=flux_ratio/self._pixelArea(), offset=offset)
+        from .transform import _Transform, Transform
+        # In the usual case of GSObject, it's more efficient to use the _Transform version.
+        # else, it's a ChromaticObject, and we need to use the regular Transform function.
+        Transform = _Transform if isinstance(image_profile, GSObject) else Transform
+        return Transform(image_profile, (self._dudx, self._dudy, self._dvdx, self._dvdy),
+                         flux_ratio=flux_ratio/self._pixelArea(), offset=offset)
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
-        from .transform import _Transform
+        from .transform import _Transform, Transform
+        Transform = _Transform if isinstance(world_profile, GSObject) else Transform
         try:
-            return _Transform(world_profile,
-                              (self._dvdy/self._det, -self._dudy/self._det,
-                               -self._dvdx/self._det, self._dudx/self._det),
-                              flux_ratio=flux_ratio*self._pixelArea(), offset=offset)
+            return Transform(world_profile,
+                             (self._dvdy/self._det, -self._dudy/self._det,
+                              -self._dvdx/self._det, self._dudx/self._det),
+                             flux_ratio=flux_ratio*self._pixelArea(), offset=offset)
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
