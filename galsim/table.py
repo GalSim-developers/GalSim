@@ -307,7 +307,7 @@ class LookupTable(object):
                                      # it from pandas.
         try:
             import pandas
-            from pandas.io.common import ParserError
+            from pandas.errors import ParserError
             data = pandas.read_csv(file_name, comment='#', delim_whitespace=True, header=None)
             data = data.values.transpose()
         except (ImportError, AttributeError, ParserError):
