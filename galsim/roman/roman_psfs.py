@@ -87,7 +87,7 @@ def getPSF(SCA, bandpass,
         to recover any memory currently being used for this cache.  Of course, subsequent calls to
         `getPSF` will need to rebuild the aperture at that point.
 
-    The PSF that is returned be default will be oriented with respect to the image coordinates,
+    The PSF that is returned by default will be oriented with respect to the SCA coordinates,
     not world coordinates as is typical in GalSim.  The pupil plane has a fixed orientation
     with respect to the focal plane, so the PSF rotates with the telescope.  To obtain a
     PSF in world coordinates, which can be convolved with galaxies (who are normally described
