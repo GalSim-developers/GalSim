@@ -51,7 +51,7 @@ class ScatteredImageBuilder(ImageBuilder):
         logger.debug('image %d: Building Scattered: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
-        self.nobjects = self.getNObj(config, base, image_num)
+        self.nobjects = self.getNObj(config, base, image_num, logger=logger)
         logger.debug('image %d: nobj = %d',image_num,self.nobjects)
 
         # These are allowed for Scattered, but we don't use them here.
@@ -179,13 +179,14 @@ class ScatteredImageBuilder(ImageBuilder):
         AddNoise(base,image,current_var,logger)
 
 
-    def getNObj(self, config, base, image_num):
+    def getNObj(self, config, base, image_num, logger=None):
         """Get the number of objects that will be built for this image.
 
         Parameters:
             config:     The configuration dict for the image field.
             base:       The base configuration dict.
             image_num:  The current image number.
+            logger:     If given, a logger object to log progress.
 
         Returns:
             the number of objects
@@ -196,7 +197,7 @@ class ScatteredImageBuilder(ImageBuilder):
 
         # Allow nobjects to be automatic based on input catalog
         if 'nobjects' not in config:
-            nobj = ProcessInputNObjects(base)
+            nobj = ProcessInputNObjects(base, logger=logger)
             if nobj is None:
                 raise GalSimConfigError(
                     "Attribute nobjects is required for image.type = Scattered")

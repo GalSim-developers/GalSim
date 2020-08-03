@@ -529,7 +529,7 @@ class MEDSBuilder(OutputBuilder):
         """
         WriteMEDS(data, file_name)
 
-    def getNImages(self, config, base, file_num):
+    def getNImages(self, config, base, file_num, logger=None):
         # This gets called before starting work on the file, so we can use this opportunity
         # to make sure that weight and psf processing are turned on.
         # We just add these as empty dicts, so there is no hdu or file_name parameter, which
