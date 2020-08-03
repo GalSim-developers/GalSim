@@ -111,20 +111,12 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
             for key in all_keys:
                 fields = config['input'][key]
                 nfields = len(fields) if isinstance(fields, list) else 1
-                for i in range(nfields):
-                    tag = key + str(i)
+                for num in range(nfields):
+                    tag = key + str(num)
                     InputManager.register(tag, valid_input_types[key].init_func)
             # Start up the input_manager
             config['_input_manager'] = InputManager()
             config['_input_manager'].start()
-
-        if '_input_objs' not in config:
-            config['_input_objs'] = {}
-            for key in all_keys:
-                fields = config['input'][key]
-                nfields = len(fields) if isinstance(fields, list) else 1
-                config['_input_objs'][key] = [ None for i in range(nfields) ]
-                config['_input_objs'][key+'_safe'] = [ None for i in range(nfields) ]
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
@@ -136,71 +128,10 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
 
             logger.debug('file %d: Process input key %s',file_num,key)
             fields = config['input'][key]
-            # Make sure all the input fields are lists.  If not, then we make them a
-            # list with one element.
-            if not isinstance(fields, list): fields = [ fields ]
+            nfields = len(fields) if isinstance(fields, list) else 1
 
-            for i in range(len(fields)):
-                field = fields[i]
-                input_objs = config['_input_objs'][key]
-                input_objs_safe = config['_input_objs'][key+'_safe']
-                logger.debug('file %d: Current values for %s are %s, safe = %s',
-                             file_num, key, str(input_objs[i]), input_objs_safe[i])
-                if input_objs[i] is not None and input_objs_safe[i]:
-                    logger.debug('file %d: Using %s already read in',file_num,key)
-                else:
-                    logger.debug('file %d: Build input type %s',file_num,key)
-                    try:
-                        kwargs, safe = loader.getKwargs(field, config, logger)
-                    except KeyboardInterrupt:
-                        raise
-                    except Exception as e:
-                        # If an exception was raised here, and we are doing the safe_only run,
-                        # then it probably needed an rng that we don't have yet.  So really, that
-                        # just implies that this input object isn't safe to keep around anyway.
-                        # So in this case, we just continue on.  If it was not a safe_only run,
-                        # the exception is reraised.
-                        if safe_only:
-                            logger.debug('file %d: Skip %s %d, since caught exception: %s',
-                                         file_num,key,i,e)
-                            input_objs[i] = None
-                            input_objs_safe[i] = None
-                            continue
-                        else:
-                            raise
-
-                    if safe_only and not safe:
-                        logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
-                        input_objs[i] = None
-                        input_objs_safe[i] = None
-                        continue
-
-                    logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
-                    if use_manager:
-                        tag = key + str(i)
-                        input_obj = getattr(config['_input_manager'],tag)(**kwargs)
-                    else:
-                        input_obj = loader.init_func(**kwargs)
-
-                    logger.debug('file %d: Built input object %s %d',file_num,key,i)
-                    if 'file_name' in kwargs:
-                        logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
-                    if loader.has_nobj:
-                        logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
-
-                    # Store input_obj in the config for use by BuildGSObject function.
-                    input_objs[i] = input_obj
-                    input_objs_safe[i] = safe
-                    # Invalidate any currently cached values that use this kind of input object:
-                    # TODO: This isn't quite correct if there are multiple versions of this input
-                    #       item.  e.g. you might want to invalidate dict0, but not dict1.
-                    for value_type in connected_types[key]:
-                        RemoveCurrent(config, type=value_type)
-                        logger.debug('file %d: Cleared current vals for items with type %s',
-                                     file_num,value_type)
-                    # Also put these in the normal "current" location, so this can be used
-                    # e.g. as @input.catalog in an Eval statement.
-                    field['current'] = (input_obj, safe, None, file_num, 'file_num')
+            for num in range(nfields):
+                LoadInputObj(config, key, num, safe_only, logger)
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
@@ -223,6 +154,101 @@ def SetupInput(config, logger=None):
         config['index_key'] = 'file_num'
         ProcessInput(config, logger=logger)
         config['index_key'] = orig_index_key
+
+def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
+    """Load a single input object, named key, with definition given by the dict field.
+
+    .. note::
+
+        This is designed as an internal implementation detail, not meant to be used by end users.
+        So it doesn't have some of the safeguards we normally put on public facing functions.
+        However, we expect the API to persist, and we'll try to use deprecations if we change
+        anything, so if users find it useful, it is fine to go ahead and use it in your own
+        custom input module implementations.
+
+    Parameters:
+        config:     The configuration dict to process
+        key:        The key name of this input type
+        num:        Which number in the list of this key, if needed. [default: 0]
+        safe_only:  Only load "safe" input objects.
+        logger:     If given, a logger object to log progress. [default: None]
+
+    Returns:
+        The constructed input object, which is also saved in config['_input_objs'][key]
+    """
+    logger = LoggerWrapper(logger)
+    if '_input_objs' not in config:
+        config['_input_objs'] = {}
+    all_input_objs = config['_input_objs']
+    fields = config['input'][key]
+    nfields = len(fields) if isinstance(fields, list) else 1
+
+    if key not in all_input_objs:
+        all_input_objs[key] = [ None for num in range(nfields) ]
+        all_input_objs[key+'_safe'] = [ None for num in range(nfields) ]
+
+    loader = valid_input_types[key]
+    field = fields[num] if isinstance(fields, list) else fields
+    input_objs = all_input_objs[key]
+    input_objs_safe = all_input_objs[key+'_safe']
+    file_num = config.get('file_num',0)
+
+    logger.debug('file %d: Current values for %s are %s, safe = %s',
+                 file_num, key, str(input_objs[num]), input_objs_safe[num])
+    if input_objs_safe[num]:
+        logger.debug('file %d: Using %s already read in',file_num,key)
+        input_obj = input_objs[num]
+    else:
+        logger.debug('file %d: Build input type %s',file_num,key)
+        try:
+            kwargs, safe = loader.getKwargs(field, config, logger)
+        except Exception as e:
+            # If an exception was raised here, and we are doing the safe_only run,
+            # then it probably needed an rng that we don't have yet.  So really, that
+            # just implies that this input object isn't safe to keep around anyway.
+            # So in this case, we just continue on.  If it was not a safe_only run,
+            # the exception is reraised.
+            if safe_only:
+                logger.debug('file %d: caught exception: %s', file_num,e)
+                safe = False
+            else:
+                raise
+
+        if safe_only and not safe:
+            logger.debug('file %d: Skip %s %d, since not safe',file_num,key,num)
+            input_objs[num] = None
+            input_objs_safe[num] = None
+            return
+
+        logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
+        if '_input_manager' in config:
+            tag = key + str(num)
+            input_obj = getattr(config['_input_manager'],tag)(**kwargs)
+        else:
+            input_obj = loader.init_func(**kwargs)
+
+        logger.debug('file %d: Built input object %s %d',file_num,key,num)
+        if 'file_name' in kwargs:
+            logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
+        if loader.has_nobj:
+            logger.info('Input %s has %d objects',key,input_obj.getNObjects())
+
+        input_objs[num] = input_obj
+        input_objs_safe[num] = safe
+        # Invalidate any currently cached values that use this kind of input object:
+        # TODO: This isn't quite correct if there are multiple versions of this input
+        #       item.  e.g. you might want to invalidate dict0, but not dict1.
+        #       So ideally, we would check for the num parameter in each config before
+        #       invalidating it.  Right now, we just invalidate everything with this type.
+        for value_type in connected_types[key]:
+            RemoveCurrent(config, type=value_type)
+            logger.debug('file %d: Cleared current vals for items with type %s',
+                            file_num,value_type)
+        # Also put these in the normal "current" location, so this can be used
+        # e.g. as @input.catalog in an Eval statement.
+        field['current'] = (input_obj, safe, None, file_num, 'file_num')
+
+    return input_obj
 
 
 def ProcessInputNObjects(config, logger=None):
@@ -254,16 +280,8 @@ def ProcessInputNObjects(config, logger=None):
         for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input'] and loader.has_nobj:
-                field = config['input'][key]
                 # If it's a list, just use the first one.
-                if isinstance(field, list): field = field[0]
-
-                if key in config['_input_objs'] and config['_input_objs'][key+'_safe'][0]:
-                    input_obj = config['_input_objs'][key][0]
-                else:
-                    kwargs, safe = loader.getKwargs(field, config, logger)
-                    kwargs['_nobjects_only'] = True
-                    input_obj = loader.init_func(**kwargs)
+                input_obj = LoadInputObj(config, key, num=0, logger=logger)
                 logger.debug('file %d: Found nobjects = %d for %s',
                              config.get('file_num',0),input_obj.getNObjects(),key)
                 return input_obj.getNObjects()
@@ -288,9 +306,9 @@ def SetupInputsForImage(config, logger=None):
                 # Make fields a list if necessary.
                 if not isinstance(fields, list): fields = [ fields ]
 
-                for i in range(len(fields)):
-                    field = fields[i]
-                    input_obj = input_objs[i]
+                for num in range(len(fields)):
+                    field = fields[num]
+                    input_obj = input_objs[num]
                     loader.setupImage(input_obj, field, config, logger)
 
 def GetNumInputObj(input_type, base):
