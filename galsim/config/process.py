@@ -243,7 +243,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
 
     # Determine how many files we will be processing in total.
     # Usually, this is just output.nfiles, but different output types may define this differently.
-    nfiles = GetNFiles(config)
+    nfiles = GetNFiles(config, logger=logger)
     logger.debug('nfiles = %d',nfiles)
 
     if njobs > 1:

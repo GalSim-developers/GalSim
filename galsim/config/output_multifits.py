@@ -45,7 +45,7 @@ class MultiFitsBuilder(OutputBuilder):
         Returns:
             a list of the images built
         """
-        nimages = self.getNImages(config, base, file_num)
+        nimages = self.getNImages(config, base, file_num, logger=logger)
 
         # The above call sets up a default nimages if appropriate.  Now, check that there are no
         # invalid parameters in the config dict.
@@ -55,7 +55,7 @@ class MultiFitsBuilder(OutputBuilder):
 
         return BuildImages(nimages, base, image_num, obj_num, logger=logger)
 
-    def getNImages(self, config, base, file_num):
+    def getNImages(self, config, base, file_num, logger=None):
         """
         Get the number of images for a MultiFits file type.
 
@@ -63,6 +63,7 @@ class MultiFitsBuilder(OutputBuilder):
             config:         The configuration dict for the output field.
             base:           The base configuration dict.
             file_num:       The current file number.
+            logger:         If given, a logger object to log progress.
 
         Returns:
             the number of images

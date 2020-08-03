@@ -40,6 +40,9 @@ API Changes
 - Deprecated the ``surface_ops`` parameter to `GSObject.drawImage`, switching
   to the name ``photon_ops``, since these don't have to be something that
   happens at the surface of the sensor. (#1093)
+- Added logger option to some config functions and methods. If you are using
+  custom Image or Output types, you may need to add a ``logger=None`` optional
+  parameter to some method signatures.
 
 
 Config Updates

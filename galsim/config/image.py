@@ -83,7 +83,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     for k in range(nimages):
         kwargs = { 'image_num' : image_num, 'obj_num' : obj_num }
         jobs.append(kwargs)
-        obj_num += GetNObjForImage(config, image_num)
+        obj_num += GetNObjForImage(config, image_num, logger=logger)
         image_num += 1
 
     def done_func(logger, proc, k, image, t):
@@ -304,7 +304,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     return image
 
 
-def GetNObjForImage(config, image_num):
+def GetNObjForImage(config, image_num, logger=None):
     """
     Get the number of objects that will be made for the image number image_num based on
     the information in the config dict.
@@ -312,6 +312,7 @@ def GetNObjForImage(config, image_num):
     Parameters:
         config:         The configuration dict.
         image_num:      The current image number.
+        logger:         If given, a logger object to log progress.
 
     Returns:
         the number of objects
@@ -321,7 +322,7 @@ def GetNObjForImage(config, image_num):
     if image_type not in valid_image_types:
         raise GalSimConfigValueError("Invalid image.type.", image_type,
                                      list(valid_image_types.keys()))
-    return valid_image_types[image_type].getNObj(image,config,image_num)
+    return valid_image_types[image_type].getNObj(image,config,image_num,logger=logger)
 
 
 def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
@@ -560,7 +561,7 @@ class ImageBuilder(object):
         """
         pass
 
-    def getNObj(self, config, base, image_num):
+    def getNObj(self, config, base, image_num, logger=None):
         """Get the number of objects that will be built for this image.
 
         For Single, this is just 1, but other image types would figure this out from the
@@ -570,6 +571,7 @@ class ImageBuilder(object):
             config:     The configuration dict for the image field.
             base:       The base configuration dict.
             image_num:  The current image number.
+            logger:     If given, a logger object to log progress.
 
         Returns:
             the number of objects

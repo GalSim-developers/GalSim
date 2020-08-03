@@ -52,7 +52,7 @@ class DataCubeBuilder(OutputBuilder):
             a list of the images built
         """
         import time
-        nimages = self.getNImages(config, base, file_num)
+        nimages = self.getNImages(config, base, file_num, logger=logger)
 
         # The above call sets up a default nimages if appropriate.  Now, check that there are no
         # invalid parameters in the config dict.
@@ -80,19 +80,20 @@ class DataCubeBuilder(OutputBuilder):
         images = [ image0 ]
 
         if nimages > 1:
-            obj_num += GetNObjForImage(base, image_num)
+            obj_num += GetNObjForImage(base, image_num, logger=logger)
             images += BuildImages(nimages-1, base, logger=logger,
                                   image_num=image_num+1, obj_num=obj_num)
 
         return images
 
-    def getNImages(self, config, base, file_num):
+    def getNImages(self, config, base, file_num, logger=None):
         """Returns the number of images to be built.
 
         Parameters:
             config:         The configuration dict for the output field.
             base:           The base configuration dict.
             file_num:       The current file number.
+            logger:         If given, a logger object to log progress.
 
         Returns:
             the number of images to build.
