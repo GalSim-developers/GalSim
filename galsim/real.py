@@ -533,6 +533,7 @@ class RealGalaxyCatalog(object):
     def __init__(self, file_name=None, sample=None, dir=None, preload=False, logger=None):
         from ._pyfits import pyfits
         from .config import LoggerWrapper
+        from multiprocessing import Lock
 
         if sample is not None and file_name is not None:
             raise GalSimIncompatibleValuesError(
@@ -547,11 +548,17 @@ class RealGalaxyCatalog(object):
             self.cat = fits[1].data
         self.nobjects = len(self.cat) # number of objects in the catalog
         logger.debug('RealGalaxyCatalog %s has %d objects',self.file_name,self.nobjects)
-        # That might be all we need, so return now.  Finish the load process only if needed.
-        self._loaded = False
+
         self._preload = preload
         self.loaded_files = {}
         self.saved_noise_im = {}
+        # The pyfits commands aren't thread safe.  So we need to make sure the methods that
+        # use pyfits are not run concurrently from multiple threads.
+        self.gal_lock = Lock()  # Use this when accessing gal files
+        self.psf_lock = Lock()  # Use this when accessing psf files
+        self.loaded_lock = Lock()  # Use this when opening new files from disk
+        self.noise_lock = Lock()  # Use this for building the noise image(s) (usually just one)
+
 
     # Some lazy properties that we set up the first time they are used.
     @lazy_property
@@ -635,25 +642,6 @@ class RealGalaxyCatalog(object):
         except KeyError:
             return None
 
-    def load(self):
-        if self._loaded: return
-
-        # The pyfits commands aren't thread safe.  So we need to make sure the methods that
-        # use pyfits are not run concurrently from multiple threads.
-        from multiprocessing import Lock
-        self.gal_lock = Lock()  # Use this when accessing gal files
-        self.psf_lock = Lock()  # Use this when accessing psf files
-        self.loaded_lock = Lock()  # Use this when opening new files from disk
-        self.noise_lock = Lock()  # Use this for building the noise image(s) (usually just one)
-
-        # Preload all files if desired
-        if self._preload: self.preload()
-
-        # eventually I think we'll want information about the training dataset,
-        # i.e. (dataset, ID within dataset)
-        # also note: will be adding bits of information, like noise properties and galaxy fit params
-        self._loaded = True
-
     def __del__(self):
         # Make sure to clean up pyfits open files if people forget to call close()
         self.close()
@@ -683,6 +671,15 @@ class RealGalaxyCatalog(object):
         else:
             raise GalSimValueError('ID not found in list of IDs',id, self.ident)
 
+    def _maybe_preload(self):
+        # Preload all files if desired.
+        # This is delayed until the first time we might need it, since we might only need
+        # to know nobjects and not load the data at all.  The first time we try to do something
+        # that needs the files, we'll call preload (if requested).
+        if self._preload:
+            self.preload()
+            self._preload = False  # Once we've loaded them.  Don't do it again.
+
     def preload(self):
         """Preload the files into memory.
 
@@ -690,6 +687,7 @@ class RealGalaxyCatalog(object):
         a big speedup if memory isn't an issue.
         """
         from ._pyfits import pyfits
+        self.loaded_lock.acquire()
         for file_name in np.concatenate((self.gal_file_name , self.psf_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in
             # the original file.  Stupid.  But this next line removes it.
@@ -706,10 +704,11 @@ class RealGalaxyCatalog(object):
                 # Access all the data from all hdus to force PyFits to read the data
                 for hdu in f:
                     hdu.data
+        self.loaded_lock.release()
 
     def _getFile(self, file_name):
         from ._pyfits import pyfits
-        self.load()
+        self._maybe_preload()
         if file_name in self.loaded_files:
             f = self.loaded_files[file_name]
         else:
@@ -739,7 +738,6 @@ class RealGalaxyCatalog(object):
         """Returns the galaxy at index ``i`` as an `Image` object.
         """
         from .image import Image
-        self.load()
         if i >= len(self.gal_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.gal_file_name)-1),i)
         f = self._getFile(self.gal_file_name[i])
@@ -755,7 +753,6 @@ class RealGalaxyCatalog(object):
         """Returns the PSF at index ``i`` as an `Image` object.
         """
         from .image import Image
-        self.load()
         if i >= len(self.psf_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.psf_file_name)-1),i)
         f = self._getFile(self.psf_file_name[i])
@@ -779,7 +776,6 @@ class RealGalaxyCatalog(object):
            as a tuple (im, scale, var).
         """
         from .image import Image
-        self.load()
         if self.noise_file_name is None:
             im = None
         else:
