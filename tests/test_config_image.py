@@ -1845,13 +1845,20 @@ def test_index_key():
 
     # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/index_key.yaml')[0]
+    if __name__ == '__main__':
+        logger = logging.getLogger('test_index_key')
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger = None
 
     # Normal sequential
     config1 = galsim.config.CopyConfig(config)
     # Note: Using BuildFiles(config1) would normally work, but it has an extra copy internally,
     # which messes up some of the current checks later.
     for n in range(nfiles):
-        galsim.config.BuildFile(config1, file_num=n, image_num=n*nimages, obj_num=n*n_per_file)
+        galsim.config.BuildFile(config1, file_num=n, image_num=n*nimages, obj_num=n*n_per_file,
+                                logger=logger)
     images1 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
     if __name__ == '__main__':
@@ -1863,14 +1870,16 @@ def test_index_key():
         config2 = galsim.config.CopyConfig(config)
         config2['output']['nproc'] = nfiles
         for n in range(nfiles):
-            galsim.config.BuildFile(config2, file_num=n, image_num=n*nimages, obj_num=n*n_per_file)
+            galsim.config.BuildFile(config2, file_num=n, image_num=n*nimages, obj_num=n*n_per_file,
+                                    logger=logger)
         images2 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
         # Multiprocessing images
         config3 = galsim.config.CopyConfig(config)
         config3['image']['nproc'] = nfiles
         for n in range(nfiles):
-            galsim.config.BuildFile(config3, file_num=n, image_num=n*nimages, obj_num=n*n_per_file)
+            galsim.config.BuildFile(config3, file_num=n, image_num=n*nimages, obj_num=n*n_per_file,
+                                    logger=logger)
         images3 = [ galsim.fits.readMulti('output/index_key%02d.fits'%n) for n in range(nfiles) ]
 
         # New config for each file
@@ -1879,7 +1888,8 @@ def test_index_key():
             galsim.config.SetupConfigFileNum(config4[n], n, n*nimages, n*n_per_file)
             galsim.config.SetupConfigRNG(config4[n])
         images4 = [ galsim.config.BuildImages(nimages, config4[n],
-                                              image_num=n*nimages, obj_num=n*n_per_file)
+                                              image_num=n*nimages, obj_num=n*n_per_file,
+                                              logger=logger)
                     for n in range(nfiles) ]
 
     # New config for each image
@@ -1890,7 +1900,8 @@ def test_index_key():
 
     images5 = [ [ galsim.config.BuildImage(galsim.config.CopyConfig(config5[n]),
                                            image_num=n*nimages+i,
-                                           obj_num=n*n_per_file + i*n_per_image)
+                                           obj_num=n*n_per_file + i*n_per_image,
+                                           logger=logger)
                   for i in range(nimages) ]
                 for n in range(nfiles) ]
 
