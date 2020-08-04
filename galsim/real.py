@@ -630,8 +630,9 @@ class RealGalaxyCatalog(object):
         # fail since we use uniform deviates in the range 0 to 1.
         try:
             weight = self.cat.field('weight')
-        except KeyError:
-            return None
+        except KeyError:  # pragma: no cover
+            raise OSError("You still have the old COSMOS catalog.  Run the program "
+                          "`galsim_download_cosmos -s %s` to upgrade."%(self.sample))
         else:
             return weight/np.max(weight)
 
@@ -639,8 +640,9 @@ class RealGalaxyCatalog(object):
     def stamp_flux(self):
         try:
             return self.cat.field('stamp_flux')
-        except KeyError:
-            return None
+        except KeyError:  # pragma: no cover
+            raise OSError("You still have the old COSMOS catalog.  Run the program "
+                          "`galsim_download_cosmos -s %s` to upgrade."%(self.sample))
 
     def __del__(self):
         # Make sure to clean up pyfits open files if people forget to call close()

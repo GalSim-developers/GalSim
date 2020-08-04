@@ -236,7 +236,7 @@ def test_cosmos_random():
     np.testing.assert_almost_equal(np.mean(wtrand), wavg_weight_val,3,
                                    err_msg='Average weight for random sample is wrong')
 
-    # The example catalog doesn't have weights, so it does unweighted selection, which emits a
+    # The param-only catalog doesn't have weights, so it does unweighted selection, which emits a
     # warning.  We know about this and want to ignore it here.
     with assert_warns(galsim.GalSimWarning):
         randind = cat_param.selectRandomIndex(30000, rng=galsim.BaseDeviate(1234))

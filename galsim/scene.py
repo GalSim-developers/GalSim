@@ -266,9 +266,6 @@ class COSMOSCatalog(object):
             # subtraction or deblending errors.  Some of these are eliminated by other cuts when
             # using exclusion_level='marginal'.
             if self.real_cat is not None:
-                if self.real_cat.stamp_flux is None: # pragma: no cover
-                    raise OSError("You still have the old COSMOS catalog.  Run the program "
-                                  "`galsim_download_cosmos -s %s` to upgrade."%(self.use_sample))
                 mask &= self.real_cat.stamp_flux > 0
 
         if exclusion_level in ('bad_fits', 'marginal'):
@@ -531,7 +528,7 @@ class COSMOSCatalog(object):
         if rng is None:
             rng = BaseDeviate()
 
-        if self.real_cat is not None and self.real_cat.weight is not None:
+        if self.real_cat is not None:
             use_weights = self.real_cat.weight[self.orig_index]
         else:
             galsim_warn("Selecting random object without correcting for catalog-level "
