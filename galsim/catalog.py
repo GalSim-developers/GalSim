@@ -103,7 +103,6 @@ class Catalog(object):
     def readAscii(self):
         """Read in an input catalog from an ASCII file.
         """
-        print('readAscii: ',self.file_name)
         if self.comments is not None and len(self.comments) > 1:
             raise GalSimValueError('Invalid comments character', self.comments)
 
@@ -124,7 +123,6 @@ class Catalog(object):
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an
         # error if one tries to convert them to float at some point.
-        print('finishReadAscii: ',self.file_name)
         self._data = np.loadtxt(self.file_name, comments=self.comments, dtype=bytes, ndmin=2)
         # Convert the bytes to str.  For Py2, this is a no op.
         self._data = self._data.astype(str)
