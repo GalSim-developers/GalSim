@@ -373,7 +373,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         except SkipThisObject as e:
             if e.msg != '':
                 logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
-            logger.info('Skipping object %d',obj_num)
+            logger.info('Skipping object %d %s', obj_num, e.msg)
             # If xsize, ysize != 0, then this makes a blank stamp for this object.
             # Otherwise, it's just None here.
             im = builder.makeStamp(stamp, config, xsize, ysize, logger)
