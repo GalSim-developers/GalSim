@@ -76,6 +76,19 @@ def test_real_galaxy_catalog():
 
     assert rgc.getIndexForID(100533) == 0
 
+    # Test some values that are lazy evaluated:
+    assert rgc.ident[0] == '100533'
+    assert rgc.gal_file_name[0] == './real_comparison_images/test_images.fits'
+    assert rgc.psf_file_name[0] == './real_comparison_images/test_images.fits'
+    assert rgc.noise_file_name is None
+    np.testing.assert_array_equal(rgc.gal_hdu, [0,1])
+    np.testing.assert_array_equal(rgc.psf_hdu, [2,3])
+    assert np.isclose(rgc.pixel_scale[0], 0.03)
+    assert np.isclose(rgc.variance[0], 8.22509992e-06)
+    assert np.isclose(rgc.mag[0], 20.3220005)
+    assert rgc.band[0] == 'F814W'
+    assert rgc.weight[0] == 1
+
     assert_raises(TypeError, galsim.RealGalaxyCatalog, catalog_file, dir=image_dir, sample='25.2')
     assert_raises(ValueError, galsim.RealGalaxyCatalog, sample='23.2')
     assert_raises(ValueError, galsim.RealGalaxyCatalog, sample='23.2')
