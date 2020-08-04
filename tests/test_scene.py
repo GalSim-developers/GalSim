@@ -312,7 +312,7 @@ def test_cosmos_random():
     # Also check for the unweighted case.  Just remove that info from the catalogs and redo the
     # test.
     cat.real_cat = None
-    del rgc.weight
+    rgc.weight = None
     with assert_warns(galsim.GalSimWarning):
         ind_cc = cat.selectRandomIndex(1, rng=galsim.BaseDeviate(use_seed))
     foo = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(use_seed))

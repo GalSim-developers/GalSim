@@ -23,6 +23,7 @@ import os
 from .real import RealGalaxy, RealGalaxyCatalog
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimNotImplementedError, galsim_warn
+from .utilities import lazy_property
 
 # Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that
 # GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,
@@ -154,7 +155,7 @@ class COSMOSCatalog(object):
 
     def __init__(self, file_name=None, sample=None, dir=None, preload=False,
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
-                 min_flux=0., max_flux=0., _nobjects_only=False):
+                 min_flux=0., max_flux=0.):
         if sample is not None and file_name is not None:
             raise GalSimIncompatibleValuesError(
                 "Cannot specify both the sample and file_name.",
@@ -162,7 +163,9 @@ class COSMOSCatalog(object):
 
         from ._pyfits import pyfits
         from .real import _parse_files_dirs
+
         self.use_real = use_real
+        self.preload = preload
 
         # We'll set these up if and when we need them.
         self._bandpass = None
@@ -172,34 +175,21 @@ class COSMOSCatalog(object):
             raise GalSimValueError("Invalid value of exclusion_level.", exclusion_level,
                                    ('none', 'bad_stamp', 'bad_fits', 'marginal'))
 
-        # Start by parsing the file name
+        # Parse the file name
         self.full_file_name, _, self.use_sample = _parse_files_dirs(file_name, dir, sample)
 
-        if self.use_real and not _nobjects_only:
-            # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
-            # constructor do most of the work.  But note that we don't actually need to
-            # bother with this if all we care about is the nobjects attribute.
-            self.real_cat = RealGalaxyCatalog(file_name, sample=sample, dir=dir, preload=preload)
-
-            # The fits name has _fits inserted before the .fits ending.
-            # Note: don't just use k = -5 in case it actually ends with .fits.fz
-            param_file_name = self.real_cat.file_name.replace('.fits', '_fits.fits')
+        try:
+            # Read in data.
+            with pyfits.open(self.full_file_name) as fits:
+                self.param_cat = fits[1].data
+            # Check if this was the right file.  It should have a 'fit_status' column.
+            self.param_cat['fit_status']
+        except KeyError:
+            # But if that doesn't work, then the name might be the name of the real catalog,
+            # so try adding _fits to it as above.
+            param_file_name = self.full_file_name.replace('.fits', '_fits.fits')
             with pyfits.open(param_file_name) as fits:
                 self.param_cat = fits[1].data
-        else:
-            self.real_cat = None
-            try:
-                # Read in data.
-                with pyfits.open(self.full_file_name) as fits:
-                    self.param_cat = fits[1].data
-                # Check if this was the right file.  It should have a 'fit_status' column.
-                self.param_cat['fit_status']
-            except KeyError:
-                # But if that doesn't work, then the name might be the name of the real catalog,
-                # so try adding _fits to it as above.
-                param_file_name = self.full_file_name.replace('.fits', '_fits.fits')
-                with pyfits.open(param_file_name) as fits:
-                    self.param_cat = fits[1].data
 
         # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
         # record array in each record (e.g. in getParametricRecord) and then doesn't
@@ -215,6 +205,12 @@ class COSMOSCatalog(object):
         self.orig_index = np.arange(len(self.param_cat))
         self._apply_exclusion(exclusion_level, min_hlr, max_hlr, min_flux, max_flux)
 
+    @lazy_property
+    def real_cat(self):
+        if self.use_real:
+            return RealGalaxyCatalog(self.full_file_name, preload=self.preload)
+        else:
+            return None
 
     def _apply_exclusion(self, exclusion_level, min_hlr=0, max_hlr=0, min_flux=0, max_flux=0):
         from ._pyfits import pyfits
@@ -270,7 +266,7 @@ class COSMOSCatalog(object):
             # subtraction or deblending errors.  Some of these are eliminated by other cuts when
             # using exclusion_level='marginal'.
             if self.real_cat is not None:
-                if not hasattr(self.real_cat, 'stamp_flux'): # pragma: no cover
+                if self.real_cat.stamp_flux is None: # pragma: no cover
                     raise OSError("You still have the old COSMOS catalog.  Run the program "
                                   "`galsim_download_cosmos -s %s` to upgrade."%(self.use_sample))
                 mask &= self.real_cat.stamp_flux > 0
@@ -535,7 +531,7 @@ class COSMOSCatalog(object):
         if rng is None:
             rng = BaseDeviate()
 
-        if hasattr(self.real_cat, 'weight'):
+        if self.real_cat is not None and self.real_cat.weight is not None:
             use_weights = self.real_cat.weight[self.orig_index]
         else:
             galsim_warn("Selecting random object without correcting for catalog-level "

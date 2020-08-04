@@ -224,7 +224,7 @@ class RealGalaxy(GSObject):
             elif random:
                 ud = UniformDeviate(self.rng)
                 use_index = int(real_galaxy_catalog.nobjects * ud())
-                if hasattr(real_galaxy_catalog, 'weight'):
+                if real_galaxy_catalog.weight is not None:
                     # If weight factors are available, make sure the random selection uses the
                     # weights to remove the catalog-level selection effects (flux_radius-dependent
                     # probability of making a postage stamp for a given object).
@@ -530,8 +530,7 @@ class RealGalaxyCatalog(object):
     # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name=None, sample=None, dir=None, preload=False,
-                 logger=None, _nobjects_only=False):
+    def __init__(self, file_name=None, sample=None, dir=None, preload=False, logger=None):
         from ._pyfits import pyfits
         from .config import LoggerWrapper
 
@@ -548,39 +547,73 @@ class RealGalaxyCatalog(object):
             self.cat = fits[1].data
         self.nobjects = len(self.cat) # number of objects in the catalog
         logger.debug('RealGalaxyCatalog %s has %d objects',self.file_name,self.nobjects)
-        if _nobjects_only: return  # Exit early if that's all we needed.
-        ident = self.cat.field('ident') # ID for object in the training sample
+        # That might be all we need, so return now.  Finish the load process only if needed.
+        self._loaded = False
+        self._preload = preload
+        self.loaded_files = {}
+        self.saved_noise_im = {}
 
+    # Some lazy properties that we set up the first time they are used.
+    @lazy_property
+    def ident(self):
+        ident = self.cat.field('ident') # ID for object in the training sample
         # We want to make sure that the ident array contains all strings.
         # Strangely, ident.astype(str) produces a string with each element == '1'.
         # Hence this way of doing the conversion:
-        self.ident = [ "%s"%val for val in ident ]
+        return [ "%s"%val for val in ident ]
 
-        self.gal_file_name = self.cat.field('gal_filename') # file containing the galaxy image
-        self.psf_file_name = self.cat.field('PSF_filename') # file containing the PSF image
-
+    @lazy_property
+    def gal_file_name(self):
+        gal_file_name = self.cat.field('gal_filename') # file containing the galaxy image
         # Add the directories:
         # Note the strip call.  Sometimes the filenames have an extra space at the end.
         # This gets rid of that space.
-        self.gal_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.gal_file_name ]
-        self.psf_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.psf_file_name ]
+        return [os.path.join(self.image_dir,f.strip()) for f in gal_file_name]
 
+    @lazy_property
+    def psf_file_name(self):
+        psf_file_name = self.cat.field('PSF_filename') # file containing the PSF image
+        return [os.path.join(self.image_dir,f.strip()) for f in psf_file_name]
+
+    @lazy_property
+    def noise_file_name(self):
         # We don't require the noise_filename column.  If it is not present, we will use
         # Uncorrelated noise based on the variance column.
         try:
-            self.noise_file_name = self.cat.field('noise_filename') # file containing the noise cf
-            self.noise_file_name = [ os.path.join(self.image_dir,f) for f in self.noise_file_name ]
+            noise_file_name = self.cat.field('noise_filename') # file containing the noise cf
         except KeyError:
-            self.noise_file_name = None
+            return None
+        else:
+            return [os.path.join(self.image_dir,f) for f in noise_file_name]
 
-        self.gal_hdu = self.cat.field('gal_hdu') # HDU containing the galaxy image
-        self.psf_hdu = self.cat.field('PSF_hdu') # HDU containing the PSF image
-        self.pixel_scale = self.cat.field('pixel_scale') # pixel scale for image (could be different
+    @lazy_property
+    def gal_hdu(self):
+        return self.cat.field('gal_hdu') # HDU containing the galaxy image
+
+    @lazy_property
+    def psf_hdu(self):
+        return self.cat.field('PSF_hdu') # HDU containing the PSF image
+
+    @lazy_property
+    def pixel_scale(self):
+        return self.cat.field('pixel_scale') # pixel scale for image (could be different
         # if we have training data from other datasets... let's be general here and make it a
         # vector in case of mixed training set)
-        self.variance = self.cat.field('noise_variance') # noise variance for image
-        self.mag = self.cat.field('mag')   # apparent magnitude
-        self.band = self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
+
+    @lazy_property
+    def variance(self):
+        return self.cat.field('noise_variance') # noise variance for image
+
+    @lazy_property
+    def mag(self):
+        return self.cat.field('mag')   # apparent magnitude
+
+    @lazy_property
+    def band(self):
+        return self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
+
+    @lazy_property
+    def weight(self):
         # The weight factor should be a float value >=0 (so that random selections of indices can
         # use it to remove any selection effects in the catalog creation process).
         # Here we renormalize by the maximum weight.  If the maximum is below 1, that just means
@@ -588,13 +621,22 @@ class RealGalaxyCatalog(object):
         # relative selection effects within the catalog, not absolute subsampling.  If the maximum
         # is above 1, then our random number generation test used to draw a weighted sample will
         # fail since we use uniform deviates in the range 0 to 1.
-        weight = self.cat.field('weight')
-        self.weight = weight/np.max(weight)
-        if 'stamp_flux' in self.cat.names:
-            self.stamp_flux = self.cat.field('stamp_flux')
+        try:
+            weight = self.cat.field('weight')
+        except KeyError:
+            return None
+        else:
+            return weight/np.max(weight)
 
-        self.saved_noise_im = {}
-        self.loaded_files = {}
+    @lazy_property
+    def stamp_flux(self):
+        try:
+            return self.cat.field('stamp_flux')
+        except KeyError:
+            return None
+
+    def load(self):
+        if self._loaded: return
 
         # The pyfits commands aren't thread safe.  So we need to make sure the methods that
         # use pyfits are not run concurrently from multiple threads.
@@ -605,12 +647,12 @@ class RealGalaxyCatalog(object):
         self.noise_lock = Lock()  # Use this for building the noise image(s) (usually just one)
 
         # Preload all files if desired
-        if preload: self.preload()
-        self._preload = preload
+        if self._preload: self.preload()
 
         # eventually I think we'll want information about the training dataset,
         # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
+        self._loaded = True
 
     def __del__(self):
         # Make sure to clean up pyfits open files if people forget to call close()
@@ -667,6 +709,7 @@ class RealGalaxyCatalog(object):
 
     def _getFile(self, file_name):
         from ._pyfits import pyfits
+        self.load()
         if file_name in self.loaded_files:
             f = self.loaded_files[file_name]
         else:
@@ -696,6 +739,7 @@ class RealGalaxyCatalog(object):
         """Returns the galaxy at index ``i`` as an `Image` object.
         """
         from .image import Image
+        self.load()
         if i >= len(self.gal_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.gal_file_name)-1),i)
         f = self._getFile(self.gal_file_name[i])
@@ -711,6 +755,7 @@ class RealGalaxyCatalog(object):
         """Returns the PSF at index ``i`` as an `Image` object.
         """
         from .image import Image
+        self.load()
         if i >= len(self.psf_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.psf_file_name)-1),i)
         f = self._getFile(self.psf_file_name[i])
@@ -734,6 +779,7 @@ class RealGalaxyCatalog(object):
            as a tuple (im, scale, var).
         """
         from .image import Image
+        self.load()
         if self.noise_file_name is None:
             im = None
         else:

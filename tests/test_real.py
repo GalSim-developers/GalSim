@@ -76,19 +76,6 @@ def test_real_galaxy_catalog():
 
     assert rgc.getIndexForID(100533) == 0
 
-    # With _nobjects_only=True, it doesn't finish loadin
-    rgc2 = galsim.RealGalaxyCatalog(file_name=catalog_file, dir=image_dir, _nobjects_only=True)
-    assert len(rgc2) == rgc2.nobjects == rgc2.getNObjects() == 2
-    assert rgc2.file_name == os.path.join(image_dir, catalog_file)
-    assert rgc2.image_dir == image_dir
-    assert rgc2.sample == None
-    with assert_raises(AttributeError):
-        rgc2.ident
-    with assert_raises(AttributeError):
-        rgc2.getGalImage(0)
-    with assert_raises(AttributeError):
-        rgc2.getPSFImage(0)
-
     assert_raises(TypeError, galsim.RealGalaxyCatalog, catalog_file, dir=image_dir, sample='25.2')
     assert_raises(ValueError, galsim.RealGalaxyCatalog, sample='23.2')
     assert_raises(ValueError, galsim.RealGalaxyCatalog, sample='23.2')
