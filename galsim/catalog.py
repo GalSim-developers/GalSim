@@ -20,6 +20,7 @@ import os
 import numpy as np
 
 from .errors import GalSimValueError, GalSimKeyError, GalSimIndexError
+from .utilities import lazy_property
 
 class Catalog(object):
     """A class storing the data from an input catalog.
@@ -48,11 +49,7 @@ class Catalog(object):
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str , 'hdu' : int }
 
-    # _nobjects_only is an intentionally undocumented kwarg that should be used only by
-    # the config structure.  It indicates that all we care about is the nobjects parameter.
-    # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name, dir=None, file_type=None, comments='#', hdu=1,
-                 _nobjects_only=False):
+    def __init__(self, file_name, dir=None, file_type=None, comments='#', hdu=1):
 
         # First build full file_name
         self.file_name = file_name.strip()
@@ -77,9 +74,25 @@ class Catalog(object):
         self.hdu = hdu
 
         if file_type == 'FITS':
-            self.readFits(hdu, _nobjects_only)
+            self.readFits()
         else:  # file_type == 'ASCII':
-            self.readAscii(comments, _nobjects_only)
+            self.readAscii()
+
+    def finishRead(self):
+        if self.file_type == 'ASCII':
+            self.finishReadAscii()
+        # FITS is already finished.
+
+    # A couple things only get set for ASCII if finishRead has been run.
+    @lazy_property
+    def data(self):
+        self.finishRead()
+        return self._data
+
+    @lazy_property
+    def ncols(self):
+        self.finishRead()
+        return self._ncols
 
     # When we make a proxy of this class (cf. galsim/config/stamp.py), the attributes
     # don't get proxied.  Only callable methods are.  So make method versions of these.
@@ -87,47 +100,47 @@ class Catalog(object):
     def isFits(self) : return self.isfits
     def __len__(self) : return self.nobjects
 
-    def readAscii(self, comments, _nobjects_only=False):
+    def readAscii(self):
         """Read in an input catalog from an ASCII file.
         """
-        if comments is not None and len(comments) > 1:
-            raise GalSimValueError('Invalid comments character', comments)
+        print('readAscii: ',self.file_name)
+        if self.comments is not None and len(self.comments) > 1:
+            raise GalSimValueError('Invalid comments character', self.comments)
 
-        # If all we care about is nobjects, this is quicker:
-        if _nobjects_only:
-            # See the script devel/testlinecounting.py that tests several possibilities.
-            # An even faster version using buffering is possible although it requires some care
-            # around edge cases, so we use this one instead, which is "correct by inspection".
-            with open(self.file_name) as f:
-                if comments is not None:
-                    c = comments[0]
-                    self.nobjects = sum(1 for line in f if line[0] != c)
-                else:  # comments == None.  No comments.
-                    self.nobjects = sum(1 for line in f)
-            return
+        # In the first pass, just figure out nobjects.  We may not need to go past this.
+        # See the script devel/testlinecounting.py that tests several possibilities.
+        # An even faster version using buffering is possible although it requires some care
+        # around edge cases, so we use this one instead, which is "correct by inspection".
+        with open(self.file_name) as f:
+            if self.comments is not None:
+                c = self.comments[0]
+                self.nobjects = sum(1 for line in f if line[0] != c)
+            else:  # comments == None.  No comments.
+                self.nobjects = sum(1 for line in f)
+        self.isfits = False
 
+    def finishReadAscii(self):
         # Read in the data using the numpy convenience function
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an
         # error if one tries to convert them to float at some point.
-        self.data = np.loadtxt(self.file_name, comments=comments, dtype=bytes, ndmin=2)
+        print('finishReadAscii: ',self.file_name)
+        self._data = np.loadtxt(self.file_name, comments=self.comments, dtype=bytes, ndmin=2)
         # Convert the bytes to str.  For Py2, this is a no op.
-        self.data = self.data.astype(str)
+        self._data = self._data.astype(str)
 
-        self.nobjects = self.data.shape[0]
-        self.ncols = self.data.shape[1]
-        self.isfits = False
+        assert self.nobjects == self._data.shape[0]
+        self._ncols = self._data.shape[1]
 
-    def readFits(self, hdu, _nobjects_only=False):
+    def readFits(self):
         """Read in an input catalog from a FITS file.
         """
         from ._pyfits import pyfits
         with pyfits.open(self.file_name) as fits:
-            self.data = fits[hdu].data.copy()
-        self.names = self.data.columns.names
-        self.nobjects = len(self.data)
-        if (_nobjects_only): return
-        self.ncols = len(self.names)
+            self._data = fits[self.hdu].data.copy()
+        self.names = self._data.columns.names
+        self.nobjects = len(self._data)
+        self._ncols = len(self.names)
         self.isfits = True
 
     def get(self, index, col):

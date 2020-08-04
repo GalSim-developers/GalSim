@@ -59,6 +59,11 @@ Config Updates
   the case that the longer one might not be parsed properly. (#1083)
 - Added ``photon_ops`` and ``sensor`` as options in the stamp processing.
   (#1093)
+- Removed the ``_nobjects_only`` mechanism from input objects.  If this
+  pattern was useful for a custom input type, you should switch to using lazy
+  properties to delay the loading of data other than what is needed for
+  determining the number of objects.  See `Catalog` for an example of how
+  to do this.
 
 
 New Features

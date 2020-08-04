@@ -44,15 +44,6 @@ def test_ascii_catalog():
     assert len(cat2) == cat2.nobjects == cat2.getNObjects() == cat.nobjects
     assert cat2.ncols == cat.ncols
 
-    # Special _nobjects_only option sets nobjects, but doesn't finish setting up object.
-    cat3 = galsim.Catalog('catalog.txt', 'config_input', _nobjects_only=True)
-    assert cat3 == cat
-    assert len(cat3) == cat3.nobjects == cat3.getNObjects() == cat.nobjects
-    with assert_raises(AttributeError):
-        assert cat3.ncols
-    with assert_raises(AttributeError):
-        assert cat3.get(1,11)
-
     cat2 = galsim.Catalog('catalog2.txt', 'config_input', comments='%')
     assert cat2.nobjects == cat.nobjects
     np.testing.assert_array_equal(cat2.data, cat.data)
@@ -64,9 +55,6 @@ def test_ascii_catalog():
     np.testing.assert_array_equal(cat3.data, cat.data)
     assert cat3 != cat
     do_pickle(cat3)
-
-    cat3n = galsim.Catalog('catalog3.txt', 'config_input', comments=None, _nobjects_only=True)
-    assert cat3n.nobjects == 3
 
     # Check construction errors
     assert_raises(galsim.GalSimValueError, galsim.Catalog, 'catalog.txt', file_type='invalid')
@@ -102,15 +90,6 @@ def test_fits_catalog():
     assert len(cat2) == cat2.nobjects == cat2.getNObjects() == cat.nobjects
     assert cat2.ncols == cat.ncols
 
-    # Special _nobjects_only option sets nobjects, but doesn't finish setting up object.
-    cat3 = galsim.Catalog('catalog.fits', 'config_input', _nobjects_only=True)
-    assert cat3 == cat
-    assert len(cat3) == cat3.nobjects == cat3.getNObjects() == cat.nobjects
-    with assert_raises(AttributeError):
-        assert cat3.ncols
-    with assert_raises(AttributeError):
-        cat3.get(1, 'angle2')
-
     # Check construction errors
     assert_raises(galsim.GalSimValueError, galsim.Catalog, 'catalog.fits', file_type='invalid')
     assert_raises((IOError, OSError), galsim.Catalog, 'catalog.fits')  # Wrong dir
@@ -136,9 +115,6 @@ def test_fits_catalog():
     assert cat3 != cat
     assert cat3 != cat2  # Even though these are the same, it doesn't know 'data' is hdu 2.
     do_pickle(cat3)
-
-    cat2n = galsim.Catalog('catalog2.fits', 'config_input', hdu=2, _nobjects_only=True)
-    assert cat2n.nobjects == 3
 
 
 
