@@ -214,15 +214,29 @@ def CopyConfig(config):
     """
     from .process import top_level_fields, rng_fields
 
-    import copy
-    config1 = copy.copy(config)
+    # Start with a shallow copy of the regular things that aren't one of our special fields.
+    # Make sure not to copy the input_manager if there is one, since using it isn't thread safe.
+    galsim_fields = top_level_fields + rng_fields
+    config1 = { k:v for k,v in config.items() if k not in galsim_fields and k != '_input_manager' }
 
-    # Make sure the input_manager isn't in the copy
-    config1.pop('_input_manager',None)
+    def recursive_copy(d):
+        # copy the given dict, skipping any current leading underscore fields.
+        if isinstance(d, dict):
+            return {k:recursive_copy(v) for k,v in d.items() if not k.startswith('_')}
+        elif isinstance(d, list):
+            return [recursive_copy(v) for v in d]
+        else:
+            return d
 
-    # Now deepcopy all the regular config fields to make sure things like current don't
-    # get clobbered by two processes writing to the same dict.  Also the rngs.
-    for field in top_level_fields + rng_fields:
+    # Now copy all the regular config fields to make sure things like current don't
+    # get clobbered by two processes writing to the same dict.  Keep any current items
+    # that are already here, since they should be safe, but remove leading underscore items.
+    for field in top_level_fields:
+        if field in config:
+            config1[field] = recursive_copy(config[field])
+
+    # And deep copy any rng fields:
+    for field in rng_fields:
         if field in config:
             config1[field] = copy.deepcopy(config[field])
 
