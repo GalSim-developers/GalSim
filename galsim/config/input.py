@@ -184,7 +184,7 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     nfields = len(fields) if isinstance(fields, list) else 1
 
     if key not in all_input_objs:
-        all_input_objs[key] = [ None for num in range(nfields) ]
+        all_input_objs[key] = [None] * nfields
 
     loader = valid_input_types[key]
     field = fields[num] if isinstance(fields, list) else fields
@@ -331,6 +331,7 @@ def GetInputObj(input_type, config, base, param_name, num=0):
         base:       The base config dict
         param_name: The type of value that we are trying to construct (only used for
                     error messages).
+        num:        Which number in the list of this key, if needed. [default: 0]
     """
     if '_input_objs' not in base or input_type not in base['_input_objs']:
         raise GalSimConfigError(

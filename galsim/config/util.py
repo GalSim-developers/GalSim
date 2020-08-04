@@ -222,7 +222,9 @@ def CopyConfig(config):
     def recursive_copy(d):
         # copy the given dict, skipping any current leading underscore fields.
         if isinstance(d, dict):
-            return {k:recursive_copy(v) for k,v in d.items() if not k.startswith('_')}
+            # Use type(d) rather than dict comprehension, since in python 2.7, 3.5, this may
+            # be an OrderedDict, and we want to preserve that.
+            return type(d)([(k,recursive_copy(v)) for k,v in d.items() if not k.startswith('_')])
         elif isinstance(d, list):
             return [recursive_copy(v) for v in d]
         else:
