@@ -22,7 +22,7 @@ import os
 import logging
 
 from .value import RegisterValueType
-from .util import LoggerWrapper, RemoveCurrent, GetRNG, get_cls_params
+from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..catalog import Catalog, Dict
@@ -225,6 +225,10 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
     if '_input_manager' in config:
         tag = key + str(num)
+        if 'logger' in kwargs:
+            # Loggers can't be pickled. (At least prior to py3.7.  Maybe they fixed this?)
+            # So if we have a logger, switch it for a proxy instead.
+            kwargs['logger'] = GetLoggerProxy(kwargs['logger'])
         input_obj = getattr(config['_input_manager'],tag)(**kwargs)
     else:
         input_obj = loader.init_func(**kwargs)

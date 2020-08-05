@@ -1090,6 +1090,7 @@ def test_scattered_whiten():
                 'variance' : variance,
                 'whiten' : True,
             },
+            'nproc' : 2,
         },
         'gal' : {
             'type' : 'RealGalaxy',
@@ -1157,6 +1158,10 @@ def test_scattered_whiten():
     np.testing.assert_almost_equal(im2.array, im1.array)
 
     # Should give a warning for the objects that fall off the edge
+    # Note: CaptureLog doesn't work correctly in multiprocessing for some reason.
+    # I haven't figured out what about the implementation fails, but it prints these
+    # just fine when usinga  regular logger with nproc=2.  Oh well.
+    config['image']['nproc'] = 1
     with CaptureLog() as cl:
         im3 = galsim.config.BuildImage(config, logger=cl.logger)
     #print(cl.output)
