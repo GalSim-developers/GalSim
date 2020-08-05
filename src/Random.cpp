@@ -60,9 +60,14 @@ namespace galsim {
         // Note that this class could be templated with the type of Boost.Random generator that
         // you want to use instead of mt19937
         typedef boost::mt19937 rng_type;
+
         BaseDeviateImpl() : _rng(new rng_type) {}
         shared_ptr<rng_type> _rng;
     };
+
+    BaseDeviate::BaseDeviate() :
+        _impl(new BaseDeviateImpl())
+    {}
 
     BaseDeviate::BaseDeviate(long lseed) :
         _impl(new BaseDeviateImpl())
@@ -92,6 +97,21 @@ namespace galsim {
         std::ostringstream oss;
         oss << *_impl->_rng;
         return oss.str();
+    }
+
+    BaseDeviate BaseDeviate::duplicate()
+    {
+#if 0
+        // This is the bespoke, but slow, way to do this.
+        return BaseDeviate(serialize().c_str());
+#else
+        // This is a hack, but it seems to work.  And it's around 100x faster. (!)
+        // cf. https://stackoverflow.com/a/16310375/1332281
+        // Although in this context, a direct copy is simpler than their suggestion.
+        BaseDeviate ret;
+        std::memcpy(ret._impl->_rng.get(), _impl->_rng.get(), sizeof(*_impl->_rng));
+        return ret;
+#endif
     }
 
     void BaseDeviate::seedurandom()
