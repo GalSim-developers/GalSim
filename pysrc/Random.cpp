@@ -52,6 +52,7 @@ namespace galsim {
             .def(py::init<long>())
             .def(py::init<const BaseDeviate&>())
             .def(py::init<const char*>())
+            .def("duplicate", &BaseDeviate::duplicate)
             .def("seed", (void (BaseDeviate::*) (long) )&BaseDeviate::seed)
             .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset)
             .def("clearCache", &BaseDeviate::clearCache)
@@ -64,38 +65,45 @@ namespace galsim {
         py::class_<UniformDeviate, BP_BASES(BaseDeviate)>(
             GALSIM_COMMA "UniformDeviateImpl" BP_NOINIT)
             .def(py::init<const BaseDeviate&>())
+            .def("duplicate", &UniformDeviate::duplicate)
             .def("generate1", &UniformDeviate::generate1);
 
         py::class_<GaussianDeviate, BP_BASES(BaseDeviate)>(
             GALSIM_COMMA "GaussianDeviateImpl" BP_NOINIT)
             .def(py::init<const BaseDeviate&, double, double>())
+            .def("duplicate", &GaussianDeviate::duplicate)
             .def("generate1", &GaussianDeviate::generate1)
             .def("generate_from_variance", &GenerateFromVariance);
 
         py::class_<BinomialDeviate, BP_BASES(BaseDeviate)>(
             GALSIM_COMMA "BinomialDeviateImpl" BP_NOINIT)
             .def(py::init<const BaseDeviate&, int, double>())
+            .def("duplicate", &BinomialDeviate::duplicate)
             .def("generate1", &BinomialDeviate::generate1);
 
         py::class_<PoissonDeviate, BP_BASES(BaseDeviate)>(
             GALSIM_COMMA "PoissonDeviateImpl" BP_NOINIT)
             .def(py::init<const BaseDeviate&, double>())
+            .def("duplicate", &PoissonDeviate::duplicate)
             .def("generate1", &PoissonDeviate::generate1)
             .def("generate_from_expectation", &GenerateFromExpectation);
 
         py::class_<WeibullDeviate, BP_BASES(BaseDeviate)>(
             GALSIM_COMMA "WeibullDeviateImpl" BP_NOINIT)
             .def(py::init<const BaseDeviate&, double, double>())
+            .def("duplicate", &WeibullDeviate::duplicate)
             .def("generate1", &WeibullDeviate::generate1);
 
         py::class_<GammaDeviate, BP_BASES(BaseDeviate)>(
             GALSIM_COMMA "GammaDeviateImpl" BP_NOINIT)
             .def(py::init<const BaseDeviate&, double, double>())
+            .def("duplicate", &GammaDeviate::duplicate)
             .def("generate1", &GammaDeviate::generate1);
 
         py::class_<Chi2Deviate, BP_BASES(BaseDeviate)>(
             GALSIM_COMMA "Chi2DeviateImpl" BP_NOINIT)
             .def(py::init<const BaseDeviate&, double>())
+            .def("duplicate", &Chi2Deviate::duplicate)
             .def("generate1", &Chi2Deviate::generate1);
     }
 

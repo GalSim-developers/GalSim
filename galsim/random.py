@@ -144,8 +144,7 @@ class BaseDeviate(object):
         ret = BaseDeviate.__new__(self.__class__)
         ret.__dict__.update(self.__dict__)
         with convert_cpp_errors():
-            rng = _galsim.BaseDeviateImpl(self.serialize())
-            ret._rng = self._rng_type(rng, *ret._rng_args)
+            ret._rng = self._rng.duplicate()
         return ret
 
     def __copy__(self):

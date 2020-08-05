@@ -118,8 +118,7 @@ namespace galsim {
          *
          * Both this and the returned duplicate will produce identical sequences of values.
          */
-        BaseDeviate duplicate()
-        { return BaseDeviate(serialize().c_str()); }
+        BaseDeviate duplicate();
 
         /**
          * @brief Return a string that can act as the repr in python
@@ -235,6 +234,9 @@ namespace galsim {
          * if this is not possible.
          */
         void seedurandom();
+
+    private:
+        BaseDeviate();  // Private no-action constructor used by duplicate().
     };
 
     /**
@@ -269,7 +271,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         UniformDeviate duplicate()
-        { return UniformDeviate(serialize().c_str()); }
+        { return UniformDeviate(BaseDeviate::duplicate()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -338,7 +340,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         GaussianDeviate duplicate()
-        { return GaussianDeviate(serialize().c_str(), getMean(), getSigma()); }
+        { return GaussianDeviate(BaseDeviate::duplicate(), getMean(), getSigma()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -448,7 +450,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         BinomialDeviate duplicate()
-        { return BinomialDeviate(serialize().c_str(), getN(), getP()); }
+        { return BinomialDeviate(BaseDeviate::duplicate(), getN(), getP()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -550,7 +552,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         PoissonDeviate duplicate()
-        { return PoissonDeviate(serialize().c_str(), getMean()); }
+        { return PoissonDeviate(BaseDeviate::duplicate(), getMean()); }
 
         /**
          * @brief Report current distribution mean
@@ -642,7 +644,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         WeibullDeviate duplicate()
-        { return WeibullDeviate(serialize().c_str(), getA(), getB()); }
+        { return WeibullDeviate(BaseDeviate::duplicate(), getA(), getB()); }
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -745,7 +747,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         GammaDeviate duplicate()
-        { return GammaDeviate(serialize().c_str(), getK(), getTheta()); }
+        { return GammaDeviate(BaseDeviate::duplicate(), getK(), getTheta()); }
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -848,7 +850,7 @@ namespace galsim {
          * Both this and the returned duplicate will produce identical sequences of values.
          */
         Chi2Deviate duplicate()
-        { return Chi2Deviate(serialize().c_str(), getN()); }
+        { return Chi2Deviate(BaseDeviate::duplicate(), getN()); }
 
         /**
          * @brief Draw a new random number from the distribution.
