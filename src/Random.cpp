@@ -23,6 +23,7 @@
 #include <vector>
 #include <sstream>
 #include <unistd.h>
+#include <cstring>  // For memcpy
 #include "Random.h"
 
 #include "galsim/IgnoreWarnings.h"
