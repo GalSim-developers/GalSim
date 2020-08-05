@@ -760,7 +760,7 @@ class SED(object):
         blue_limit = self.blue_limit * zfactor
         red_limit = self.red_limit * zfactor
 
-        return SED(self._orig_spec, self.wave_type, self.flux_type, redshift, self.fast,
+        return SED(self._spec, self.wave_type, self.flux_type, redshift, self.fast,
                    _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
 
     def calculateFlux(self, bandpass):

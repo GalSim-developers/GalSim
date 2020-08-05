@@ -105,6 +105,8 @@ def test_SED_basic():
         s_list[21].thin(),
         s_list[21].thin(preserve_range=True),
         galsim.SED('1000', 'nm', 'flambda', redshift=4),
+        galsim.SED(galsim.LookupTable([1,1e4],[100,100], interpolant='linear'),
+                   wave_type='ang', flux_type='flambda').atRedshift(4.0),
         galsim.SED('1000', 'nm', 'flambda').atRedshift(4.0),
     ]
 
@@ -117,13 +119,17 @@ def test_SED_basic():
         waves = np.arange(700,800,10)
         np.testing.assert_array_almost_equal(s(waves) * h*c/waves, 200, decimal=10)
 
-        if k < len(s_list)-2:
+        if k < len(s_list)-3:
             np.testing.assert_equal(s.redshift, 0.)
         else:
             np.testing.assert_almost_equal(s.redshift, 4.)
 
-        # Only the first one is not picklable
-        if k > 0:
+        # Not picklable when the original spec is a lambda.
+        # This is just true for the first (explicit lambda) and last (atRedshift with something
+        # that had to be converted into a lambda).
+        if isinstance(s._orig_spec, type(lambda: None)):
+            print('\nSkip pickle test for k=%d, since spec is %s\n'%(k,s._spec))
+        else:
             do_pickle(s, lambda x: (x(470), x(490), x(910)) )
             do_pickle(s)
 
