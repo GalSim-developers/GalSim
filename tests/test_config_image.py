@@ -50,7 +50,7 @@ def test_single():
 
     logger = logging.getLogger('test_single')
     logger.addHandler(logging.StreamHandler(sys.stdout))
-    #logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 
     # Test a little bit of the LoggerWrapper functionality
     logger_wrapper = galsim.config.LoggerWrapper(logger)
