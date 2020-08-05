@@ -22,7 +22,7 @@ import os
 import logging
 
 from .value import RegisterValueType
-from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
+from .util import LoggerWrapper, RemoveCurrent, GetRNG, get_cls_params
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..catalog import Catalog, Dict
@@ -424,7 +424,7 @@ class InputLoader(object):
             kwargs['rng'] = rng
             safe = False
         if self.takes_logger:
-            kwargs['logger'] = GetLoggerProxy(logger)
+            kwargs['logger'] = logger
         return kwargs, safe
 
     def setupImage(self, input_obj, config, base, logger):
