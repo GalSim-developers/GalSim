@@ -77,7 +77,7 @@ def BuildStamps(nobjects, config, obj_num=0,
         logger:         If given, a logger object to log progress. [default: None]
 
     Returns:
-        the tuple (images, current_vars).  Both are lists.
+        the tuple (images, current_vars).  Both are themselves tuples.
     """
     logger = LoggerWrapper(logger)
     logger.debug('image %d: BuildStamps nobjects = %d: obj = %d',
@@ -85,7 +85,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     if nobjects == 0:
         logger.error("No stamps were built, since nstamps == 0.")
-        return [], []
+        return (), ()
 
     # Figure out how many processes we will use for building the stamps:
     if nobjects > 1 and 'image' in config and 'nproc' in config['image']:
