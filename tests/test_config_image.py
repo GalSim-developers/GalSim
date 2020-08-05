@@ -52,6 +52,14 @@ def test_single():
     logger.addHandler(logging.StreamHandler(sys.stdout))
     #logger.setLevel(logging.DEBUG)
 
+    # Test a little bit of the LoggerWrapper functionality
+    logger_wrapper = galsim.config.LoggerWrapper(logger)
+    assert logger_wrapper.level == logger.getEffectiveLevel()
+    assert logger_wrapper.getEffectiveLevel() == logger.getEffectiveLevel()
+    assert logger_wrapper.isEnabledFor(logging.WARNING)
+    assert logger_wrapper.isEnabledFor(logging.CRITICAL)
+    assert not logger_wrapper.isEnabledFor(logging.DEBUG)
+
     im1_list = []
     nimages = 6
     for k in range(nimages):

@@ -284,36 +284,40 @@ class LoggerWrapper(object):
             self.logger = logger.logger
         else:
             self.logger = logger
+        # When multiprocessing, it is faster to check if the level is enabled locally, rather than
+        # communicating over the pipe to ask the base logger if it isEnabledFor a given level.
+        # If the logger is None, use more than the top logging level (CRITICAL).
+        self.level = self.logger.getEffectiveLevel() if self.logger else logging.CRITICAL+1
+
+    def getEffectiveLevel(self):
+        return self.level
 
     def __bool__(self):
         return self.logger is not None
     __nonzero__ = __bool__
 
     def debug(self, *args, **kwargs):
-        if self.logger and self.logger.isEnabledFor(logging.DEBUG):
+        if self.logger and self.isEnabledFor(logging.DEBUG):
             self.logger.debug(*args, **kwargs)
 
     def info(self, *args, **kwargs):
-        if self.logger and self.logger.isEnabledFor(logging.INFO):
+        if self.logger and self.isEnabledFor(logging.INFO):
             self.logger.info(*args, **kwargs)
 
     def warning(self, *args, **kwargs):
-        if self.logger and self.logger.isEnabledFor(logging.WARNING):
+        if self.logger and self.isEnabledFor(logging.WARNING):
             self.logger.warning(*args, **kwargs)
 
     def error(self, *args, **kwargs):
-        if self.logger and self.logger.isEnabledFor(logging.ERROR):
+        if self.logger and self.isEnabledFor(logging.ERROR):
             self.logger.error(*args, **kwargs)
 
-    def log(self, lvl, *args, **kwargs):
-        if self.logger and self.logger.isEnabledFor(lvl):
-            self.logger.log(lvl, *args, **kwargs)
+    def log(self, level, *args, **kwargs):
+        if self.logger and self.isEnabledFor(level):
+            self.logger.log(level, *args, **kwargs)
 
-    def isEnabledFor(self, *args, **kwargs):
-        if self.logger:
-            return self.logger.isEnabledFor(*args,**kwargs)
-        else:
-            return False
+    def isEnabledFor(self, level):
+        return level >= self.level
 
 
 def UpdateNProc(nproc, ntot, config, logger=None):
