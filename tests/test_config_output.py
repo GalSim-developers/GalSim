@@ -116,9 +116,25 @@ def test_fits():
     # nproc > njobs should drop back to nproc = njobs
     config = galsim.config.CopyConfig(config1)
     with CaptureLog() as cl:
-        galsim.config.Process(config, logger=cl.logger)
         galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : 10})
     assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
+
+    # There is a feature that we reduce the number of tasks to be < 32767 to avoid problems
+    # with the multiprocessing.Queue overflowing.  That 32767 number is a settable paramter,
+    # mostly so we can test this without requiring a crazy huge simultation run.
+    # So set it to 4 here to test it.
+    galsim.config.util.max_queue_size = 4
+    config = galsim.config.CopyConfig(config1)
+    config['output']['nproc'] = 2
+    with CaptureLog() as cl:
+        galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : 2})
+    print(cl.output)
+    assert 'len(tasks) = 6 is more than max_queue_size = 4' in cl.output
+    for k in range(nfiles):
+        file_name = 'output_fits/test_fits_%d.fits'%k
+        im2 = galsim.fits.read(file_name)
+        np.testing.assert_array_equal(im2.array, im1_list[k].array)
+    galsim.config.util.max_queue_size = 32767  # Set it back.
 
     # Check that profile outputs something appropriate for multithreading.
     # (The single-thread profiling is handled by the galsim executable, which we don't

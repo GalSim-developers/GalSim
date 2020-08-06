@@ -25,6 +25,10 @@ from ..utilities import SimpleGenerator
 from ..random import BaseDeviate
 from ..errors import GalSimConfigError, GalSimConfigValueError
 
+max_queue_size = 32767  # This is where multiprocessing.Queue starts to have trouble.
+                        # We make it a settable parameter here really for unit testing.
+                        # I don't think there is any reason for end users to want to set this.
+
 def MergeConfig(config1, config2, logger=None):
     """
     Merge config2 into config1 such that it has all the information from either config1 or
@@ -737,7 +741,19 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         from multiprocessing.managers import BaseManager
 
         # Send the tasks to the task_queue.
-        task_queue = Queue()
+        ntasks = len(tasks)
+        if ntasks > max_queue_size:
+            logger.warning("len(tasks) = %d is more than max_queue_size = %d",
+                           len(tasks),max_queue_size)
+            njoin = (ntasks-1) // max_queue_size + 1
+            new_size = (ntasks-1) // njoin + 1
+            tasks = [
+                [job for task in tasks[njoin*k : min(njoin*(k+1),ntasks)] for job in task]
+                for k in range(new_size)
+            ]
+            ntasks = len(tasks)
+            logger.warning("joined in groups of %d: new len(tasks) = %d",njoin,ntasks)
+        task_queue = Queue(ntasks)
         for task in tasks:
             task_queue.put(task)
 
@@ -756,7 +772,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         # Each Process command starts up a parallel process that will keep checking the queue
         # for a new task. If there is one there, it grabs it and does it. If not, it waits
         # until there is one to grab. When it finds a 'STOP', it shuts down.
-        results_queue = Queue()
+        results_queue = Queue(ntasks)
         p_list = []
         for j in range(nproc):
             # The process name is actually the default name that Process would generate on its
