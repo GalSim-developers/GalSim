@@ -743,8 +743,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         # Send the tasks to the task_queue.
         ntasks = len(tasks)
         if ntasks > max_queue_size:
-            logger.warning("len(tasks) = %d is more than max_queue_size = %d",
-                           len(tasks),max_queue_size)
+            logger.info("len(tasks) = %d is more than max_queue_size = %d",
+                        len(tasks),max_queue_size)
             njoin = (ntasks-1) // max_queue_size + 1
             new_size = (ntasks-1) // njoin + 1
             tasks = [
@@ -752,7 +752,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 for k in range(new_size)
             ]
             ntasks = len(tasks)
-            logger.warning("joined in groups of %d: new len(tasks) = %d",njoin,ntasks)
+            logger.info("Joined in groups of %d: new len(tasks) = %d",njoin,ntasks)
         task_queue = Queue(ntasks)
         for task in tasks:
             task_queue.put(task)
