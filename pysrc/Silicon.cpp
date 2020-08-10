@@ -55,6 +55,7 @@ namespace galsim {
         WrapTemplates<float>(pySilicon);
 
         GALSIM_DOT def("SetOMPThreads", &SetOMPThreads);
+        GALSIM_DOT def("GetOMPThreads", &GetOMPThreads);
     }
 
 } // namespace galsim

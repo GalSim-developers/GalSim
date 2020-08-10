@@ -1019,12 +1019,17 @@ def test_omp():
 
     # If num_threads == 1, it should always set to 1
     assert galsim.set_omp_threads(1) == 1
+    assert galsim.get_omp_threads() == 1
 
     # If num_threads > 1, it could be 1 or up to the input num_threads
+    num_threads = galsim.set_omp_threads(2)
     assert galsim.set_omp_threads(2) >= 1
     assert galsim.set_omp_threads(2) <= 2
+    assert galsim.get_omp_threads() == num_threads
+    num_threads = galsim.set_omp_threads(20)
     assert galsim.set_omp_threads(20) >= 1
     assert galsim.set_omp_threads(20) <= 20
+    assert galsim.get_omp_threads() == num_threads
 
     # Repeat and check that appropriate messages are emitted
     with CaptureLog() as cl:
