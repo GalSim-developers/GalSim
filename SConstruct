@@ -2076,7 +2076,7 @@ def DoCppChecks(config):
         if not ok:
             ErrorExit(
                 'Eigen/Core not found',
-                'You should specify the location of Eigen as EIGEN_DIR=... '
+                'You should specify the location of Eigen as EIGEN_DIR=... ')
 
 
 def DoPyChecks(config):
