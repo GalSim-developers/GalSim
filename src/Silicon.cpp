@@ -793,6 +793,15 @@ namespace galsim {
 #endif
     }
 
+    int GetOMPThreads()
+    {
+#ifdef _OPENMP
+        return omp_get_max_threads();
+#else
+        return 1;
+#endif
+    }
+
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                                        ImageView<double> target, bool*) const;
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,

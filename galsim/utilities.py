@@ -1881,3 +1881,10 @@ def set_omp_threads(num_threads, logger=None):
             logger.warning("Unable to use multiple threads, since OpenMP is not enabled.")
 
     return num_threads
+
+def get_omp_threads():
+    """Get the current number of OpenMP threads to be used in the C++ layer.
+
+    :returns: num_threads
+    """
+    return _galsim.GetOMPThreads()

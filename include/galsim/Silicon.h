@@ -81,6 +81,7 @@ namespace galsim
     };
 
     int SetOMPThreads(int num_threads);
+    int GetOMPThreads();
 
 }
 
