@@ -625,6 +625,27 @@ def UpdateConfig(config, new_params):
         SetInConfig(config, key, value)
 
 
+class single_threaded(object):
+    """A context manager that turns off (or down) OpenMP threading e.g. during multiprocessing.
+
+    Parameters:
+        num_threads:    The number of threads you want during the context [default: 1]
+    """
+    def __init__(self, num_threads=1):
+        # Get the current number of threads here, so we can set it back when we're done.
+        from ..utilities import get_omp_threads
+        self.orig_num_threads = get_omp_threads()
+        self.temp_num_threads = num_threads
+
+    def __enter__(self):
+        from ..utilities import set_omp_threads
+        set_omp_threads(self.temp_num_threads)
+
+    def __exit__(self, type, value, traceback):
+        from ..utilities import set_omp_threads
+        set_omp_threads(self.orig_num_threads)
+
+
 def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                  done_func=None, except_func=None, except_abort=True):
     """A helper function for performing a task using multiprocessing.
@@ -740,23 +761,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager
 
-        # Send the tasks to the task_queue.
-        ntasks = len(tasks)
-        if ntasks > max_queue_size:
-            logger.info("len(tasks) = %d is more than max_queue_size = %d",
-                        len(tasks),max_queue_size)
-            njoin = (ntasks-1) // max_queue_size + 1
-            new_size = (ntasks-1) // njoin + 1
-            tasks = [
-                [job for task in tasks[njoin*k : min(njoin*(k+1),ntasks)] for job in task]
-                for k in range(new_size)
-            ]
-            ntasks = len(tasks)
-            logger.info("Joined in groups of %d: new len(tasks) = %d",njoin,ntasks)
-        task_queue = Queue(ntasks)
-        for task in tasks:
-            task_queue.put(task)
-
         # Temporarily mark that we are multiprocessing, so we know not to start another
         # round of multiprocessing later.
         config['current_nproc'] = nproc
@@ -768,77 +772,98 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         # processes can emit logging information safely.
         logger_proxy = GetLoggerProxy(logger)
 
-        # Run the tasks.
-        # Each Process command starts up a parallel process that will keep checking the queue
-        # for a new task. If there is one there, it grabs it and does it. If not, it waits
-        # until there is one to grab. When it finds a 'STOP', it shuts down.
-        results_queue = Queue(ntasks)
-        p_list = []
-        for j in range(nproc):
-            # The process name is actually the default name that Process would generate on its
-            # own for the first time we do this. But after that, if we start another round of
-            # multiprocessing, then it just keeps incrementing the numbers, rather than starting
-            # over at Process-1.  As far as I can tell, it's not actually spawning more
-            # processes, so for the sake of the logging output, we name the processes explicitly.
-            p = Process(target=worker, args=(task_queue, results_queue, config, logger_proxy),
-                        name='Process-%d'%(j+1))
-            p.start()
-            p_list.append(p)
+        # We need to set the number of OpenMP threads to 1 during multiprocessing, otherwise
+        # it may spawn e.g. 64 threads in each of 64 processes, which tends to be bad.
+        with single_threaded():
 
-        raise_error = None
+            # Send the tasks to the task_queue.
+            ntasks = len(tasks)
+            if ntasks > max_queue_size:
+                logger.info("len(tasks) = %d is more than max_queue_size = %d",
+                            len(tasks),max_queue_size)
+                njoin = (ntasks-1) // max_queue_size + 1
+                new_size = (ntasks-1) // njoin + 1
+                tasks = [
+                    [job for task in tasks[njoin*k : min(njoin*(k+1),ntasks)] for job in task]
+                    for k in range(new_size)
+                ]
+                ntasks = len(tasks)
+                logger.info("Joined in groups of %d: new len(tasks) = %d",njoin,ntasks)
+            task_queue = Queue(ntasks)
+            for task in tasks:
+                task_queue.put(task)
 
-        try:
-            # In the meanwhile, the main process keeps going.  We pull each set of images off of the
-            # results_queue and put them in the appropriate place in the lists.
-            # This loop is happening while the other processes are still working on their tasks.
-            results = [ None for k in range(njobs) ]
-            for kk in range(njobs):
-                res, k, t, proc = results_queue.get()
-                if isinstance(res, Exception):
-                    # res is really the exception, e
-                    # t is really the traceback
-                    # k is the index for the job that failed
-                    if except_func is not None:  # pragma: no branch
-                        except_func(logger, proc, k, res, t)
-                    if except_abort or isinstance(res, KeyboardInterrupt):
-                        for j in range(nproc):
-                            p_list[j].terminate()
-                        raise_error = res
-                        break
-                else:
-                    # The normal case
-                    if done_func is not None:  # pragma: no branch
-                        done_func(logger, proc, k, res, t)
-                    results[k] = res
-
-        except BaseException as e:  # pragma: no cover
-            # I'm actually not sure how to make this happen.  We do a good job of catching
-            # all the normal kinds of exceptions that might occur and dealing with them cleanly.
-            # However, if something happens that we didn't anticipate, this should make an
-            # attempt to clean up the task queue and worker before raising the error further.
-            logger.error("Caught a fatal exception during multiprocessing:\n%r",e)
-            logger.error("%s",traceback.format_exc())
-            # Clear any unclaimed jobs that are still in the queue
-            while not task_queue.empty():
-                task_queue.get()
-            # And terminate any jobs that might still be running.
+            # Run the tasks.
+            # Each Process command starts up a parallel process that will keep checking the queue
+            # for a new task. If there is one there, it grabs it and does it. If not, it waits
+            # until there is one to grab. When it finds a 'STOP', it shuts down.
+            results_queue = Queue(ntasks)
+            p_list = []
             for j in range(nproc):
-                p_list[j].terminate()
-            raise_error = e
+                # The process name is actually the default name that Process would generate on its
+                # own for the first time we do this. But after that, if we start another round of
+                # multiprocessing, then it just keeps incrementing the numbers, rather than starting
+                # over at Process-1.  As far as I can tell, it's not actually spawning more
+                # processes, so for the sake of the logging output, we name the processes explicitly.
+                p = Process(target=worker, args=(task_queue, results_queue, config, logger_proxy),
+                            name='Process-%d'%(j+1))
+                p.start()
+                p_list.append(p)
 
-        finally:
-            # Stop the processes
-            # Once you are done with the processes, putting nproc 'STOP's will stop them all.
-            # This is important, because the program will keep running as long as there are running
-            # processes, even if the main process gets to the end.  So you do want to make sure to
-            # add those 'STOP's at some point!
-            for j in range(nproc):
-                task_queue.put('STOP')
-            for j in range(nproc):
-                p_list[j].join()
-            task_queue.close()
+            raise_error = None
 
-            del config['current_nproc']
+            try:
+                # In the meanwhile, the main process keeps going.  We pull each set of images off
+                # of the results_queue and put them in the appropriate place in the lists.
+                # This loop is happening while the other processes are still working on their tasks.
+                results = [ None for k in range(njobs) ]
+                for kk in range(njobs):
+                    res, k, t, proc = results_queue.get(timeout=300)
+                    if isinstance(res, Exception):
+                        # res is really the exception, e
+                        # t is really the traceback
+                        # k is the index for the job that failed
+                        if except_func is not None:  # pragma: no branch
+                            except_func(logger, proc, k, res, t)
+                        if except_abort or isinstance(res, KeyboardInterrupt):
+                            for j in range(nproc):
+                                p_list[j].terminate()
+                            raise_error = res
+                            break
+                    else:
+                        # The normal case
+                        if done_func is not None:  # pragma: no branch
+                            done_func(logger, proc, k, res, t)
+                        results[k] = res
+
+            except BaseException as e:  # pragma: no cover
+                # I'm actually not sure how to make this happen.  We do a good job of catching
+                # all the normal kinds of exceptions that might occur and dealing with them cleanly.
+                # However, if something happens that we didn't anticipate, this should make an
+                # attempt to clean up the task queue and worker before raising the error further.
+                logger.error("Caught a fatal exception during multiprocessing:\n%r",e)
+                logger.error("%s",traceback.format_exc())
+                # Clear any unclaimed jobs that are still in the queue
+                while not task_queue.empty():
+                    task_queue.get()
+                # And terminate any jobs that might still be running.
+                for j in range(nproc):
+                    p_list[j].terminate()
+                raise_error = e
+
+            finally:
+                # Stop the processes
+                # Once you are done with the processes, putting nproc 'STOP's will stop them all.
+                # This is important, because the program will keep running as long as there are
+                # running processes, even if the main process gets to the end.  So you do want to
+                # make sure to add those 'STOP's at some point!
+                for j in range(nproc):
+                    task_queue.put('STOP')
+                for j in range(nproc):
+                    p_list[j].join()
+                task_queue.close()
+
+        del config['current_nproc']
 
         if raise_error is not None:
             raise raise_error
