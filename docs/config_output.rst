@@ -4,6 +4,39 @@ Config Output Field
 The ``output`` field indicates where to write the output files and what kind of output format
 they should be.
 
+.. note::
+
+    **Multiprocessing**
+
+    The config processing can use python multiprocessing to split the work among multiple
+    processes on a single node.  This can be done either at the file level or the image level.
+    If you set output.nproc != 1, then it will parallelize the creation of files, building
+    and writing each file in a separate process.  If you instead set image.nproc != 1, then
+    the files will be built one at a time, but the work for drawing the objects will be
+    parallelized across the processes.
+
+    There are tradeoffs between these two kinds of multiprocessing that the user should be
+    aware of.  Python multiprocessing uses pickle to pass information between processes.
+    In the image-based multiprocessing, each process builds a postage stamp image for each
+    object and sends that stamp back to the main process to assemble into the final image.
+    If the objects are all very easy to draw, this communication can end up dominating the
+    run time as python will pickle the image data to send back to the main process.
+
+    File-based multiprocessing has much less communication between processes, since each image
+    is fully built and written all in a single process.  However, this kind of multiprocessing
+    often requires more memory, since each process holds a full image to be written to disk
+    as it is building it.  Users should consider this tradeoff carefully when deciding which
+    kind of multiprocessing (if either) is appropriate for their use case.
+
+    Finally, one last caveat about multiprocessing.  Galsim turns off OpenMP threading when
+    in a multiprocessing context, so you don't, for instance, have 64 processes, each spawning
+    64 OpenMP threads at once.  This works for OpenMP, but not some other sources of threading
+    that may be initiated by numpy functions.  If you get errors related to being unable to
+    create threads, you should install (via pip or conda) the ``threadpoolctl`` package.
+    If this package is installed, GalSim will use it to turn off threading for all of the
+    possible backends used by numpy.
+
+
 Output Field Attributes
 -----------------------
 
@@ -13,7 +46,7 @@ of output files, or aspects of how to build and write the output files.
 * ``file_name`` = *str_value* (default = '\<config file root name\>.fits')  You would typically want to specify this explicitly, but if you do not, then if the configuration file is called my_test.yaml, the output file would be my_test.fits.
 * ``dir`` = *str_value* (default = '.')  In which directory should the output file be put.
 * ``nfiles`` = *int_value* (default = 1)  How many files to build. Note: if ``nfiles`` > 1, then ``file_name`` and/or ``dir`` should not be a simple string. Rather it should be some generated string that provides a different save location for each file. See the section below on setting *str_value*.
-* ``nproc`` = *int_value*  (default = 1)  Specify the number of processors to use when building files. If nproc <= 0, then this means to try to automatically figure out the number of cpus and use that. If you are doing many files, it is more efficient to split up the processes at this level rather than when drawing the postage stamps (which is what ``image.nproc`` means).
+* ``nproc`` = *int_value*  (default = 1)  Specify the number of processors to use when building files. If nproc <= 0, then this means to try to automatically figure out the number of cpus and use that. If you are doing many files, it is often more efficient to split up the processes at this level rather than when drawing the postage stamps (which is what ``image.nproc`` means).
 * ``skip`` = *bool_value* (default = False) Specify files to skip.  This would normally be an evaluated boolean rather than simply True or False of course.  e.g. To only do the fifth file, you could use ``skip : { type : Eval, str : 'ffile_num != 4' }``, which may be useful during debugging if you are trying to diagnose a problem in one particular file.
 * ``noclobber`` = *bool_value* (default = False) Specify whether to skip building files that already exist.  This may be useful if you are running close to the memory limit on your machine with multiprocessing.  e.g. You could use ``nproc`` > 1 for a first run using multiprocessing, and then run again with ``nproc`` = 1 and ``noclobber`` = True to clean up any files that failed from insufficient memory during the multiprocessing run.
 * ``retry_io`` = *int_value* (default = 0) How many times to retry the write command if there is any kind of failure.  Some systems have trouble with multiple concurrent writes to disk, so if you are doing a big parallel job, this can be helpful.  If this is > 0, then after an IOError exception on the write command, the code will wait an increasing number of seconds (starting with 1 for the first failure), and then try again up to this many times.
