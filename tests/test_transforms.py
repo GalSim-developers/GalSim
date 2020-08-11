@@ -298,14 +298,23 @@ def test_lens():
     pix_scale = 0.1
     imsize = 100
     ser = galsim.Sersic(n, half_light_radius = re)
+
+    ser1 = ser.shear(g1=g1, g2=g2).magnify(mu)
+    im1 = galsim.ImageF(imsize, imsize, scale=pix_scale)
+    im1 = ser1.drawImage(im1, method='no_pixel')
+
     ser2 = ser.lens(g1, g2, mu)
-    ser = ser.shear(g1=g1, g2=g2).magnify(mu)
-    im = galsim.ImageF(imsize, imsize, scale=pix_scale)
-    im = ser.drawImage(im, method='no_pixel')
     im2 = galsim.ImageF(imsize, imsize, scale=pix_scale)
     im2 = ser2.drawImage(im2, method='no_pixel')
-    np.testing.assert_array_almost_equal(im.array, im2.array, 5,
+    np.testing.assert_array_almost_equal(im2.array, im1.array, 5,
         err_msg="Lensing of Sersic profile done in two different ways gives different answer")
+
+    # _lens is equivalent in this case.
+    ser3 = ser._lens(g1, g2, mu)
+    im3 = galsim.ImageF(imsize, imsize, scale=pix_scale)
+    im3 = ser3.drawImage(im3, method='no_pixel')
+    np.testing.assert_array_almost_equal(im3.array, im1.array, 5,
+        err_msg="Lensing of Sersic profile with _lens gives different answer")
 
 
 @timer

@@ -913,8 +913,7 @@ class GSObject(object):
             the sheared object.
         """
         from .transform import _Transform
-        new_obj = _Transform(self, shear.getMatrix())
-        return new_obj
+        return _Transform(self, shear.getMatrix())
 
     def lens(self, g1, g2, mu):
         """Create a version of the current object with both a lensing shear and magnification
@@ -937,7 +936,33 @@ class GSObject(object):
         Returns:
             the lensed object.
         """
-        return self.shear(g1=g1, g2=g2).magnify(mu)
+        from .transform import Transform
+        from .shear import Shear
+        shear = Shear(g1=g1, g2=g2)
+        return Transform(self, shear.getMatrix() * math.sqrt(mu))
+
+    def _lens(self, g1, g2, mu):
+        """Equivalent to `GSObject.lens`, but without the overhead of some of the sanity checks.
+
+        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular
+        `GSObject.lens` method.
+
+        Also, it won't propagate any noise attribute.
+
+        Parameters:
+            g1:         First component of lensing (reduced) shear to apply to the object.
+            g2:         Second component of lensing (reduced) shear to apply to the object.
+            mu:         Lensing magnification to apply to the object.  This is the factor by which
+                        the solid angle subtended by the object is magnified, preserving surface
+                        brightness.
+
+        Returns:
+            the lensed object.
+        """
+        from .shear import _Shear
+        from .transform import _Transform
+        shear = _Shear(g1 + 1j*g2)
+        return _Transform(self, shear.getMatrix() * math.sqrt(mu))
 
     def rotate(self, theta):
         """Rotate this object by an `Angle` ``theta``.
