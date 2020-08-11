@@ -637,13 +637,26 @@ class single_threaded(object):
         self.orig_num_threads = get_omp_threads()
         self.temp_num_threads = num_threads
 
+        # If threadpoolctl is installed, use that too, since it will set blas libraries to
+        # be single threaded too. This makes it so you don't need to set the environment
+        # variables OPENBLAS_NUM_THREAD=1 or MKL_NUM_THREADS=1, etc.
+        try:
+            import threadpoolctl
+        except ImportError:
+            self.tpl = None
+        else:  # pragma: no cover  (Not installed on Travis currently.)
+            self.tpl = threadpoolctl.threadpool_limits(num_threads)
+
     def __enter__(self):
         from ..utilities import set_omp_threads
         set_omp_threads(self.temp_num_threads)
+        return self
 
     def __exit__(self, type, value, traceback):
         from ..utilities import set_omp_threads
         set_omp_threads(self.orig_num_threads)
+        if self.tpl is not None:  # pragma: no cover
+            self.tpl.unregister()
 
 
 def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
