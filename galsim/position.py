@@ -231,3 +231,22 @@ class PositionI(Position):
         except (TypeError, ValueError):
             pass
         raise TypeError("Can only %s a PositionI by integer values"%op)
+
+def _PositionD(x, y):
+    """Equivalent to `PositionD` constructor, but skips some sanity checks and argument parsing.
+    This requires that x,y are floats.
+    """
+    ret = PositionD.__new__(PositionD)
+    ret.x = float(x)
+    ret.y = float(y)
+    return ret
+
+
+def _PositionI(x, y):
+    """Equivalent to `PositionI` constructor, but skips some sanity checks and argument parsing.
+    This requires that the four values already be int types.
+    """
+    ret = PositionI.__new__(PositionI)
+    ret.x = int(x)
+    ret.y = int(y)
+    return ret
