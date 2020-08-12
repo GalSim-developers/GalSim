@@ -1278,14 +1278,11 @@ class GSFitsWCS(CelestialWCS):
             pv2 = np.dot(xm.T , np.dot(pv, ym))
             return pv2
 
-    def _apply_pv(self, u, v):
-        u1 = horner2d(u, v, self.pv[0], triangle=True)
-        v1 = horner2d(u, v, self.pv[1], triangle=True)
-        return u1, v1
-
-    def _apply_ab(self, x, y):
-        x1 = horner2d(x, y, self.ab[0], triangle=True)
-        y1 = horner2d(x, y, self.ab[1], triangle=True)
+    def _apply_ab(self, x, y, ab):
+        # Note: this is used for both pv and ab, since the action is the same.
+        # They just occur at two different places in the calculation.
+        x1 = horner2d(x, y, ab[0], triangle=True)
+        y1 = horner2d(x, y, ab[1], triangle=True)
         return x1, y1
 
     def _apply_cd(self, x, y):
@@ -1305,14 +1302,14 @@ class GSFitsWCS(CelestialWCS):
         y -= self.crpix[1]
 
         if self.ab is not None:
-            x, y = self._apply_ab(x, y)
+            x, y = self._apply_ab(x, y, self.ab)
 
         # This converts to (u,v) in the tangent plane
         # Expanding this out is a bit faster than using np.dot for 2x2 matrix.
         u, v = self._apply_cd(x, y)
 
         if self.pv is not None:
-            u, v = self._apply_pv(u, v)
+            u, v = self._apply_ab(u, v, self.pv)
 
         # Convert (u,v) from degrees to radians
         # Also, the FITS standard defines u,v backwards relative to our standard.
