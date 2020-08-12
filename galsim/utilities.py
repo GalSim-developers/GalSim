@@ -158,7 +158,7 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
     Returns:
         a `Position` instance, possibly also with other values if ``others`` is given.
     """
-    from .position import PositionD, PositionI
+    from .position import PositionD, PositionI, _PositionD, _PositionI
     def canindex(arg):
         try: arg[0], arg[1]
         except (TypeError, IndexError): return False
@@ -208,9 +208,9 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         raise TypeError("Received unexpected keyword arguments: %s",kwargs)
 
     if integer:
-        pos = PositionI(int(x),int(y))
+        pos = _PositionI(int(x),int(y))
     else:
-        pos = PositionD(float(x),float(y))
+        pos = _PositionD(float(x),float(y))
     if other_vals:
         return (pos,) + tuple(other_vals)
     else:
@@ -814,7 +814,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
         `interleaveImages`.
     """
     from .image import Image
-    from .position import PositionD
+    from .position import _PositionD
     from .wcs import JacobianWCS, PixelScale
     if isinstance(N,int):
         n1,n2 = N,N
@@ -840,7 +840,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
             #    i  = -n DX[i'] + 0.5*(n-1)
             dx,dy = -(i+0.5)/n1+0.5,-(j+0.5)/n2+0.5
-            offset = PositionD(dx,dy)
+            offset = _PositionD(dx,dy)
             img_arr = image.array[j::n2,i::n1].copy()
             img = Image(img_arr)
             if conserve_flux is True:
@@ -1493,9 +1493,9 @@ def unweighted_moments(image, origin=None):
     Returns:
         Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]
     """
-    from .position import PositionD
+    from .position import _PositionD
     if origin is None:
-        origin = PositionD(0,0)
+        origin = _PositionD(0,0)
     a = image.array.astype(float)
     offset = image.origin - origin
     xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + offset.x,
@@ -1829,20 +1829,20 @@ def find_out_of_bounds_position(x, y, bounds, grid=False):
     Returns:
         a `PositionD` from x and y that is out-of-bounds of bounds.
     """
-    from .position import PositionD
+    from .position import _PositionD
     if grid:
         # It's enough to check corners for grid input
         for x_ in (np.min(x), np.max(x)):
             for y_ in (np.min(y), np.max(y)):
                 if (x_ < bounds.xmin or x_ > bounds.xmax or
                     y_ < bounds.ymin or y_ > bounds.ymax):
-                    return PositionD(x_, y_)
+                    return _PositionD(x_, y_)
     else:
         # Faster to check all points than to iterate through them one-by-one?
         w = np.where((x < bounds.xmin) | (x > bounds.xmax) |
                      (y < bounds.ymin) | (y > bounds.ymax))
         if len(w[0]) > 0:
-            return PositionD(x[w[0][0]], y[w[0][0]])
+            return _PositionD(x[w[0][0]], y[w[0][0]])
     raise GalSimError("No out-of-bounds position")
 
 def set_omp_threads(num_threads, logger=None):

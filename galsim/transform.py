@@ -24,10 +24,10 @@ from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit, WeakMethod
-from .position import PositionD
+from .position import PositionD, _PositionD
 from .errors import GalSimError, convert_cpp_errors
 
-def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gsparams=None,
+def Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1., gsparams=None,
               propagate_gsparams=True):
     """A function for transforming either a `GSObject` or `ChromaticObject`.
 
@@ -83,7 +83,7 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1., gs
         # that is already non-separable.  But we don't bother trying to do that currently.
         elif (isinstance(obj, ChromaticConvolution or isinstance(obj, Convolution))
               and np.array_equal(np.asarray(jac).ravel(),(1,0,0,1))
-              and offset == PositionD(0.,0.)):
+              and offset == _PositionD(0.,0.)):
             first = Transform(obj.obj_list[0], flux_ratio=flux_ratio, gsparams=gsparams,
                               propagate_gsparams=propagate_gsparams)
             return ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
@@ -136,7 +136,7 @@ class Transformation(GSObject):
     be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
     threshold parameters will simply be ignored).
     """
-    def __init__(self, obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.), flux_ratio=1.,
+    def __init__(self, obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1.,
                  gsparams=None, propagate_gsparams=True):
         self._jac = np.asarray(jac, dtype=float).reshape(2,2)
         self._offset = PositionD(offset)
@@ -355,7 +355,7 @@ class Transformation(GSObject):
 
     @lazy_property
     def _kfactor(self):
-        if self._offset == PositionD(0,0):
+        if self._offset == _PositionD(0,0):
             return WeakMethod(self._kf_nophase)
         else:
             return WeakMethod(self._kf_phase)
@@ -443,7 +443,7 @@ class Transformation(GSObject):
         #     stepk = Pi/R
         #     R <- R + |shift|
         #     stepk <- Pi/(Pi/stepk + |shift|)
-        if self._offset != PositionD(0.,0.):
+        if self._offset != _PositionD(0.,0.):
             dr = math.hypot(self._offset.x, self._offset.y)
             stepk = math.pi / (math.pi/stepk + dr)
         return stepk
@@ -457,7 +457,7 @@ class Transformation(GSObject):
         return bool(self._original.is_axisymmetric and
                     self._jac[0,0] == self._jac[1,1] and
                     self._jac[0,1] == -self._jac[1,0] and
-                    self._offset == PositionD(0.,0.))
+                    self._offset == _PositionD(0.,0.))
 
     @property
     def _is_analytic_x(self):
@@ -470,7 +470,7 @@ class Transformation(GSObject):
     @property
     def _centroid(self):
         cen = self._original.centroid
-        cen = PositionD(self._fwd(cen.x, cen.y))
+        cen = _PositionD(*self._fwd(cen.x, cen.y))
         cen += self._offset
         return cen
 
@@ -489,17 +489,17 @@ class Transformation(GSObject):
     @doc_inherit
     def _xValue(self, pos):
         pos -= self._offset
-        inv_pos = PositionD(self._inv(pos.x, pos.y))
+        inv_pos = _PositionD(*self._inv(pos.x, pos.y))
         return self._original._xValue(inv_pos) * self._amp_scaling
 
     @doc_inherit
     def _kValue(self, kpos):
-        fwdT_kpos = PositionD(self._fwdT(kpos.x, kpos.y))
+        fwdT_kpos = _PositionD(*self._fwdT(kpos.x, kpos.y))
         return self._original._kValue(fwdT_kpos) * self._kfactor(kpos.x, kpos.y)
 
     @doc_inherit
     def _drawReal(self, image):
-        if self.offset == PositionD(0.,0.) and np.array_equal(self.jac.ravel(), [1,0,0,1]):
+        if self.offset == _PositionD(0.,0.) and np.array_equal(self.jac.ravel(), [1,0,0,1]):
             self._original._drawReal(image)
             if self._flux_ratio != 1.:
                 image *= self._flux_ratio
@@ -520,7 +520,7 @@ class Transformation(GSObject):
         self._sbp.drawK(image._image, image.scale)
 
 
-def _Transform(obj, jac=(1.,0.,0.,1.), offset=PositionD(0.,0.),
+def _Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.),
                flux_ratio=1., gsparams=None):
     """Approximately equivalent to Transform, but without some of the sanity checks (such as
     checking for chromatic options).

@@ -19,7 +19,7 @@
 import numpy as np
 
 from .gsobject import GSObject
-from .position import Position, PositionI, PositionD
+from .position import Position, PositionD, _PositionI, _PositionD
 from .celestial import CelestialCoord
 from .shear import Shear
 from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimNotImplementedError
@@ -542,7 +542,7 @@ class BaseWCS(object):
             image_pos = self.toImage(world_pos, color=color)
         elif image_pos is None:
             # Both are None.  Must be a local WCS
-            image_pos = PositionD(0,0)
+            image_pos = _PositionD(0,0)
 
         if self.isCelestial():
             return jac.withOrigin(image_pos)
@@ -665,7 +665,7 @@ class BaseWCS(object):
             # ds9 always assumes the image has an origin at (1,1), so we always write the
             # WCS to the file with this convention.  We'll convert back when we read it
             # in if necessary.
-            delta = PositionI(1-bounds.xmin, 1-bounds.ymin)
+            delta = _PositionI(1-bounds.xmin, 1-bounds.ymin)
             bounds = bounds.shift(delta)
             wcs = self.shiftOrigin(delta)
         else:
@@ -703,13 +703,13 @@ class BaseWCS(object):
     # A lot of classes will need these checks, so consolidate them here
     def _set_origin(self, origin, world_origin=None):
         if origin is None:
-            self._origin = PositionD(0,0)
+            self._origin = _PositionD(0,0)
         else:
             if not isinstance(origin, Position):
                 raise TypeError("origin must be a PositionD or PositionI argument")
             self._origin = origin
         if world_origin is None:
-            self._world_origin = PositionD(0,0)
+            self._world_origin = _PositionD(0,0)
         else:
             if not isinstance(world_origin, Position):
                 raise TypeError("world_origin must be a PositionD argument")
@@ -766,7 +766,7 @@ def readFromFitsHeader(header):
         header = fits.FitsHeader(header)
     xmin = header.get("GS_XMIN", 1)
     ymin = header.get("GS_YMIN", 1)
-    origin = PositionI(xmin, ymin)
+    origin = _PositionI(xmin, ymin)
     wcs_name = header.get("GS_WCS", None)
     if wcs_name is not None:
         gdict = globals().copy()
@@ -780,7 +780,7 @@ def readFromFitsHeader(header):
     if xmin != 1 or ymin != 1:
         # ds9 always assumes the image has an origin at (1,1), so convert back to actual
         # xmin, ymin if necessary.
-        delta = PositionI(xmin-1, ymin-1)
+        delta = _PositionI(xmin-1, ymin-1)
         wcs = wcs.shiftOrigin(delta)
 
     return wcs, origin
@@ -876,7 +876,7 @@ class EuclideanWCS(BaseWCS):
     def _posToWorld(self, image_pos, color):
         x = image_pos.x - self.x0
         y = image_pos.y - self.y0
-        return PositionD(self._u(x,y,color), self._v(x,y,color)) + self.world_origin
+        return _PositionD(self._u(x,y,color), self._v(x,y,color)) + self.world_origin
 
     def _xyTouv(self, x, y, color):
         x = x - self.x0  # Not -=, since don't want to modify the input arrays in place.
@@ -892,7 +892,7 @@ class EuclideanWCS(BaseWCS):
     def _posToImage(self, world_pos, color):
         u = world_pos.x - self.u0
         v = world_pos.y - self.v0
-        return PositionD(self._x(u,v,color),self._y(u,v,color)) + self.origin
+        return _PositionD(self._x(u,v,color),self._y(u,v,color)) + self.origin
 
     def _uvToxy(self, u, v, color):
         u = u - self.u0
@@ -1122,19 +1122,19 @@ class LocalWCS(UniformWCS):
     def origin(self):
         """The image coordinate position to use as the origin.
         """
-        return PositionD(0,0)
+        return _PositionD(0,0)
 
     @property
     def world_origin(self):
         """The world coordinate position to use as the origin.
         """
-        return PositionD(0,0)
+        return _PositionD(0,0)
 
     # For LocalWCS, there is no origin to worry about.
     def _posToWorld(self, image_pos, color):
         x = image_pos.x
         y = image_pos.y
-        return PositionD(self._u(x,y),self._v(x,y))
+        return _PositionD(self._u(x,y),self._v(x,y))
 
     def _xyTouv(self, x, y, color):
         return self._u(x,y), self._v(x,y)
@@ -1143,7 +1143,7 @@ class LocalWCS(UniformWCS):
     def _posToImage(self, world_pos, color):
         u = world_pos.x
         v = world_pos.y
-        return PositionD(self._x(u,v),self._y(u,v))
+        return _PositionD(self._x(u,v),self._y(u,v))
 
     def _uvToxy(self, u, v, color):
         return self._x(u,v), self._y(u,v)
@@ -1329,7 +1329,7 @@ class CelestialWCS(BaseWCS):
             return coord
         else:
             u,v = project_center.project(coord, projection=projection)
-            return PositionD(u/arcsec, v/arcsec)
+            return _PositionD(u/arcsec, v/arcsec)
 
     def _xyToradec(self, x, y, units, color):
         from .angle import radians
@@ -1345,7 +1345,7 @@ class CelestialWCS(BaseWCS):
         ra = world_pos.ra.rad
         dec = world_pos.dec.rad
         x, y = self._xy(ra,dec,color)
-        return PositionD(x,y) + self.origin
+        return _PositionD(x,y) + self.origin
 
     def _radecToxy(self, ra, dec, units, color):
         from .angle import radians
@@ -1964,7 +1964,7 @@ class OffsetWCS(UniformWCS):
         y0 = header["GS_Y0"]
         u0 = header["GS_U0"]
         v0 = header["GS_V0"]
-        return OffsetWCS(scale, PositionD(x0,y0), PositionD(u0,v0))
+        return OffsetWCS(scale, _PositionD(x0,y0), _PositionD(u0,v0))
 
     def _newOrigin(self, origin, world_origin):
         return OffsetWCS(self._scale, origin, world_origin)
@@ -2058,7 +2058,7 @@ class OffsetShearWCS(UniformWCS):
         y0 = header["GS_Y0"]
         u0 = header["GS_U0"]
         v0 = header["GS_V0"]
-        return OffsetShearWCS(scale, Shear(g1=g1, g2=g2), PositionD(x0,y0), PositionD(u0,v0))
+        return OffsetShearWCS(scale, Shear(g1=g1, g2=g2), _PositionD(x0,y0), _PositionD(u0,v0))
 
     def _newOrigin(self, origin, world_origin):
         return OffsetShearWCS(self.scale, self.shear, origin, world_origin)
@@ -2185,7 +2185,7 @@ class AffineTransform(UniformWCS):
         u0 = header.get("CRVAL1",0.)
         v0 = header.get("CRVAL2",0.)
 
-        return AffineTransform(dudx, dudy, dvdx, dvdy, PositionD(x0,y0), PositionD(u0,v0))
+        return AffineTransform(dudx, dudy, dvdx, dvdy, _PositionD(x0,y0), _PositionD(u0,v0))
 
     def _newOrigin(self, origin, world_origin):
         return AffineTransform(self.dudx, self.dudy, self.dvdx, self.dvdy,
@@ -2608,8 +2608,8 @@ class UVFunction(EuclideanWCS):
         vfunc = _readFuncFromHeader('V', header)
         xfunc = _readFuncFromHeader('X', header)
         yfunc = _readFuncFromHeader('Y', header)
-        return UVFunction(ufunc, vfunc, xfunc, yfunc, PositionD(x0,y0),
-                          PositionD(u0,v0), uses_color)
+        return UVFunction(ufunc, vfunc, xfunc, yfunc, _PositionD(x0,y0),
+                          _PositionD(u0,v0), uses_color)
 
     def copy(self):
         return UVFunction(self._orig_ufunc, self._orig_vfunc, self._orig_xfunc, self._orig_yfunc,
@@ -2765,7 +2765,7 @@ class RaDecFunction(CelestialWCS):
         y0 = header["GS_Y0"]
         ra_func = _readFuncFromHeader('R', header)
         dec_func = _readFuncFromHeader('D', header)
-        return RaDecFunction(ra_func, dec_func, PositionD(x0,y0))
+        return RaDecFunction(ra_func, dec_func, _PositionD(x0,y0))
 
     def copy(self):
         return RaDecFunction(self._orig_ra_func, self._orig_dec_func, self.origin)

@@ -21,7 +21,7 @@ import numpy as np
 from .gsobject import GSObject
 from .sed import SED
 from .bandpass import Bandpass
-from .position import PositionD, PositionI
+from .position import Position, PositionD, _PositionD
 from .utilities import lazy_property, doc_inherit
 from .gsparams import GSParams
 from .phase_psf import OpticalPSF
@@ -702,7 +702,7 @@ class ChromaticObject(object):
             flux = np.trapz(bp * fluxes, w)
             xcentroid = np.trapz(bp * fluxes * xcentroids, w) / flux
             ycentroid = np.trapz(bp * fluxes * ycentroids, w) / flux
-            return PositionD(xcentroid, ycentroid)
+            return _PositionD(xcentroid, ycentroid)
         else:
             flux_integrand = lambda w: self.evaluateAtWavelength(w).flux * bandpass(w)
             def xcentroid_integrand(w):
@@ -718,7 +718,7 @@ class ChromaticObject(object):
             ycentroid = 1./flux * integ.int1d(ycentroid_integrand,
                                               bandpass.blue_limit,
                                               bandpass.red_limit)
-            return PositionD(xcentroid, ycentroid)
+            return _PositionD(xcentroid, ycentroid)
 
     def calculateFlux(self, bandpass):
         """Return the flux (photons/cm^2/s) of the `ChromaticObject` through a `Bandpass` bandpass.
@@ -1044,7 +1044,7 @@ class ChromaticObject(object):
                     # Then it's a function returning a tuple or list or array.
                     # Just make sure it is actually an array to make our life easier later.
                     offset = lambda w: np.asarray(args[0](w))
-            elif isinstance(args[0], PositionD) or isinstance(args[0], PositionI):
+            elif isinstance(args[0], Position):
                 offset = np.asarray( (args[0].x, args[0].y) )
             else:
                 # Let python raise the appropriate exception if this isn't valid.
@@ -1553,7 +1553,7 @@ class ChromaticTransformation(ChromaticObject):
     """
     def __init__(self, obj, jac=np.identity(2), offset=(0.,0.), flux_ratio=1., redshift=None,
                  gsparams=None, propagate_gsparams=True):
-        if isinstance(offset, PositionD) or isinstance(offset, PositionI):
+        if isinstance(offset, Position):
             offset = (offset.x, offset.y)
         if not hasattr(jac,'__call__'):
             jac = np.asarray(jac).reshape(2,2)
@@ -1701,7 +1701,7 @@ class ChromaticTransformation(ChromaticObject):
         if hasattr(self._offset, '__call__'):
             offset = self._offset
         else:
-            offset = PositionD(*(self._offset.tolist()))
+            offset = _PositionD(*(self._offset.tolist()))
         return ('galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, '
                 'redshift=%r, gsparams=%r, propagate_gsparams=%r)')%(
             self.original, jac, offset, self._flux_ratio, self.redshift,
@@ -1732,7 +1732,7 @@ class ChromaticTransformation(ChromaticObject):
             offset = self._offset(wave)
         else:
             offset = self._offset
-        offset = PositionD(*offset)
+        offset = _PositionD(*offset)
         flux_ratio = self._flux_ratio(wave)
         return jac, offset, flux_ratio
 

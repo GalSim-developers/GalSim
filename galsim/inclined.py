@@ -24,7 +24,6 @@ from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
 from .exponential import Exponential
 from .angle import Angle
-from .position import PositionD
 from .errors import GalSimRangeError, GalSimIncompatibleValuesError, convert_cpp_errors
 
 

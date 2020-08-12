@@ -21,7 +21,7 @@ import math
 
 from . import _galsim
 from .gsparams import GSParams
-from .position import PositionD, PositionI, Position
+from .position import _PositionD, _PositionI, Position
 from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .errors import GalSimFFTSizeError, GalSimNotImplementedError, convert_cpp_errors, galsim_warn
@@ -309,7 +309,7 @@ class GSObject(object):
     @lazy_property
     def _centroid(self):
         # Most profiles are centered at 0,0, so make this the default.
-        return PositionD(0,0)
+        return _PositionD(0,0)
 
     @property
     def positive_flux(self):
@@ -527,7 +527,7 @@ class GSObject(object):
 
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         # The offset is to make all the rsq values different to help the precision a bit.
-        offset = PositionD(0.2, 0.33)
+        offset = _PositionD(0.2, 0.33)
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, dtype=float)
 
         center = im.true_center + offset + centroid/scale
@@ -643,7 +643,7 @@ class GSObject(object):
         # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the
         # raw surface brightness profile, not integrated over pixels.
         # The offset is to make all the rsq values different to help the precision a bit.
-        offset = PositionD(0.2, 0.33)
+        offset = _PositionD(0.2, 0.33)
 
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb', dtype=float)
 
@@ -1139,14 +1139,14 @@ class GSObject(object):
                         "Must set either both or neither of nx, ny", nx=nx, ny=ny)
                 image = Image(nx, ny, dtype=dtype)
                 if center is not None:
-                    image.shift(PositionI(np.floor(center.x+0.5-image.true_center.x),
-                                          np.floor(center.y+0.5-image.true_center.y)))
+                    image.shift(_PositionI(np.floor(center.x+0.5-image.true_center.x),
+                                           np.floor(center.y+0.5-image.true_center.y)))
             else:
                 N = self.getGoodImageSize(1.0)
                 if odd: N += 1
                 image = Image(N, N, dtype=dtype)
                 if center is not None:
-                    image.setCenter(PositionI(np.ceil(center.x), np.ceil(center.y)))
+                    image.setCenter(_PositionI(np.ceil(center.x), np.ceil(center.y)))
 
         return image
 
@@ -1170,29 +1170,29 @@ class GSObject(object):
         else:
             obj_cen = bounds.center
             # Convert from PositionI to PositionD
-            obj_cen = PositionD(obj_cen.x, obj_cen.y)
+            obj_cen = _PositionD(obj_cen.x, obj_cen.y)
         # _parse_offset has already turned offset=None into PositionD(0,0), so it is safe to add.
         obj_cen += offset
         return wcs.local(image_pos=obj_cen)
 
     def _parse_offset(self, offset):
         if offset is None:
-            return PositionD(0,0)
+            return _PositionD(0,0)
         elif isinstance(offset, Position):
-            return PositionD(offset.x, offset.y)
+            return _PositionD(offset.x, offset.y)
         else:
             # Let python raise the appropriate exception if this isn't valid.
-            return PositionD(offset[0], offset[1])
+            return _PositionD(offset[0], offset[1])
 
     def _parse_center(self, center):
         # Almost the same as _parse_offset, except we leave it as None in that case.
         if center is None:
             return None
         elif isinstance(center, Position):
-            return PositionD(center.x, center.y)
+            return _PositionD(center.x, center.y)
         else:
             # Let python raise the appropriate exception if this isn't valid.
-            return PositionD(center[0], center[1])
+            return _PositionD(center[0], center[1])
 
     def _get_new_bounds(self, image, nx, ny, bounds, center):
         from .bounds import BoundsI
@@ -1201,8 +1201,8 @@ class GSObject(object):
         elif nx is not None and ny is not None:
             b = BoundsI(1,nx,1,ny)
             if center is not None:
-                b = b.shift(PositionI(np.floor(center.x+0.5)-b.center.x,
-                                      np.floor(center.y+0.5)-b.center.y))
+                b = b.shift(_PositionI(np.floor(center.x+0.5)-b.center.x,
+                                       np.floor(center.y+0.5)-b.center.y))
             return b
         elif bounds is not None and bounds.isDefined():
             return bounds
@@ -1216,7 +1216,7 @@ class GSObject(object):
                 offset += center - new_bounds.center
             else:
                 # Then will be created as even sized image.
-                offset += PositionD(center.x-np.ceil(center.x), center.y-np.ceil(center.y))
+                offset += _PositionD(center.x-np.ceil(center.x), center.y-np.ceil(center.y))
         elif use_true_center:
             # For even-sized images, the SBProfile draw function centers the result in the
             # pixel just up and right of the real center.  So shift it back to make sure it really
@@ -1227,7 +1227,7 @@ class GSObject(object):
             shape = new_bounds.numpyShape()
             if shape[1] % 2 == 0: dx -= 0.5
             if shape[0] % 2 == 0: dy -= 0.5
-            offset = PositionD(dx,dy)
+            offset = _PositionD(dx,dy)
         return offset
 
     def _determine_wcs(self, scale, wcs, image, default_wcs=None):
@@ -1716,7 +1716,7 @@ class GSObject(object):
 
         # Convert the profile in world coordinates to the profile in image coordinates:
         prof = local_wcs.profileToImage(self, flux_ratio=flux_scale, offset=offset)
-        if offset != PositionD(0,0):
+        if offset != _PositionD(0,0):
             local_wcs = local_wcs.shiftOrigin(offset)
 
         # If necessary, convolve by the pixel
@@ -2217,7 +2217,7 @@ class GSObject(object):
 
     def drawPhot(self, image, gain=1., add_to_image=False,
                  n_photons=0, rng=None, max_extra_noise=0., poisson_flux=None,
-                 sensor=None, photon_ops=(), maxN=None, orig_center=PositionI(0,0),
+                 sensor=None, photon_ops=(), maxN=None, orig_center=_PositionI(0,0),
                  local_wcs=None, surface_ops=None):
         """
         Draw this profile into an `Image` by shooting photons.
@@ -2505,13 +2505,13 @@ class GSObject(object):
                     "Cannot provide nx,ny if image is provided", nx=nx, ny=ny, image=image)
 
         # Can't both recenter a provided image and add to it.
-        if recenter and image.center != PositionI(0,0) and add_to_image:
+        if recenter and image.center != _PositionI(0,0) and add_to_image:
             raise GalSimIncompatibleValuesError(
                 "Cannot use add_to_image=True unless image is centered at (0,0) or recenter=False",
                 recenter=recenter, image=image, add_to_image=add_to_image)
 
         # Set the center to 0,0 if appropriate
-        if recenter and image.center != PositionI(0,0):
+        if recenter and image.center != _PositionI(0,0):
             image._shift(-image.center)
 
         # Set the wcs of the images to use the dk scale size

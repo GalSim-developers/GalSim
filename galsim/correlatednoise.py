@@ -550,11 +550,11 @@ class BaseCorrelatedNoise(object):
 
         This is the variance of values in an image filled with noise according to this model.
         """
-        from .position import PositionD
+        from .position import _PositionD
         # Test whether we can simply return the zero-lag correlation function value, which gives the
         # variance of an image of noise generated according to this model
         if self._profile.is_analytic_x:
-            variance = self._profile.xValue(PositionD(0., 0.))
+            variance = self._profile.xValue(_PositionD(0., 0.))
         else:
             # If the profile has changed since last time (or if we have never been here before),
             # clear out the stored values.

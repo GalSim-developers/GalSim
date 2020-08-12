@@ -275,7 +275,7 @@ class Shapelet(GSObject):
         if not center:
             center = image.true_center
         # convert from PositionI if necessary
-        center = PositionD(center.x,center.y)
+        center = PositionD(center)
 
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
             raise GalSimValueError("Invalid normalization requested.", normalization,

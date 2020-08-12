@@ -23,7 +23,6 @@ from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
-from .position import PositionD
 from .errors import convert_cpp_errors
 
 

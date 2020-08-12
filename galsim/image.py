@@ -20,7 +20,7 @@ from __future__ import division
 import numpy as np
 
 from . import _galsim
-from .position import PositionI, PositionD
+from .position import PositionI, _PositionD
 from .bounds import BoundsI, BoundsD
 from .wcs import BaseWCS, PixelScale, JacobianWCS
 from . import utilities
@@ -833,7 +833,7 @@ class Image(object):
             # Set the origin so that corresponding image positions correspond to the same world_pos
             x0 = (self.wcs.origin.x - self.xmin + 0.5) / nx + 0.5
             y0 = (self.wcs.origin.y - self.ymin + 0.5) / ny + 0.5
-            target_wcs = target_wcs.shiftOrigin(PositionD(x0,y0), self.wcs.world_origin)
+            target_wcs = target_wcs.shiftOrigin(_PositionD(x0,y0), self.wcs.world_origin)
 
         target_bounds = BoundsI(1, nbins_x, 1, nbins_y)
 
@@ -887,7 +887,7 @@ class Image(object):
             # Set the origin so that corresponding image positions correspond to the same world_pos
             x0 = (self.wcs.origin.x - self.xmin + 0.5) * nx + 0.5
             y0 = (self.wcs.origin.y - self.ymin + 0.5) * ny + 0.5
-            target_wcs = target_wcs.shiftOrigin(PositionD(x0,y0), self.wcs.world_origin)
+            target_wcs = target_wcs.shiftOrigin(_PositionD(x0,y0), self.wcs.world_origin)
 
         target_bounds = BoundsI(1, npix_x, 1, npix_y)
 
