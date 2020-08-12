@@ -109,7 +109,7 @@ if not os.path.exists(lib_file): # pragma: no cover
 # Import things from other files we want to be in the galsim namespace
 
 # First some basic building blocks that don't usually depend on anything else
-from .position import Position, PositionI, PositionD
+from .position import Position, PositionI, PositionD, _PositionI, _PositionD
 from .bounds import Bounds, BoundsI, BoundsD, _BoundsI, _BoundsD
 from .shear import Shear, _Shear
 from .angle import Angle, AngleUnit, _Angle, radians, hours, degrees, arcmin, arcsec

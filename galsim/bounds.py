@@ -449,7 +449,7 @@ class BoundsI(Bounds):
 
 def _BoundsD(xmin, xmax, ymin, ymax):
     """Equivalent to `BoundsD` constructor, but skips some sanity checks and argument parsing.
-    This requires that the four values already be int types.
+    This requires that the four values be float types.
     """
     ret = BoundsD.__new__(BoundsD)
     ret._isdefined = True
@@ -462,7 +462,7 @@ def _BoundsD(xmin, xmax, ymin, ymax):
 
 def _BoundsI(xmin, xmax, ymin, ymax):
     """Equivalent to `BoundsI` constructor, but skips some sanity checks and argument parsing.
-    This requires that the four values already be int types.
+    This requires that the four values be int types.
     """
     ret = BoundsI.__new__(BoundsI)
     ret._isdefined = True
