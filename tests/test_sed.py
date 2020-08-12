@@ -416,7 +416,7 @@ def test_combine_wave_list():
 
     # Degenerate case works.
     sed = galsim.SED('CWW_Scd_ext.sed', wave_type='nm', flux_type='flambda')
-    wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(sed)
+    wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([sed])
     np.testing.assert_equal(wave_list, sed.wave_list)
     np.testing.assert_equal(blue_limit, sed.blue_limit)
     np.testing.assert_equal(red_limit, sed.red_limit)
