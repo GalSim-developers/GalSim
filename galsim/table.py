@@ -20,7 +20,6 @@ import numbers
 
 from . import _galsim
 from .utilities import lazy_property, convert_interpolant, find_out_of_bounds_position
-from .position import PositionD
 from .bounds import BoundsD
 from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn

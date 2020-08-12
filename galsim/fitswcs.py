@@ -20,7 +20,7 @@ import warnings
 import numpy as np
 
 from .wcs import CelestialWCS
-from .position import PositionD, PositionI
+from .position import PositionD, _PositionD
 from .angle import radians, arcsec, degrees, AngleUnit
 from . import _galsim
 from . import fits
@@ -259,7 +259,7 @@ class AstropyWCS(CelestialWCS):
     def _readHeader(header):
         x0 = header.get("GS_X0",0.)
         y0 = header.get("GS_Y0",0.)
-        return AstropyWCS(header=header, origin=PositionD(x0,y0))
+        return AstropyWCS(header=header, origin=_PositionD(x0,y0))
 
     def copy(self):
         ret = AstropyWCS.__new__(AstropyWCS)
@@ -541,7 +541,7 @@ class PyAstWCS(CelestialWCS):
     def _readHeader(header):
         x0 = header.get("GS_X0",0.)
         y0 = header.get("GS_Y0",0.)
-        return PyAstWCS(header=header, origin=PositionD(x0,y0))
+        return PyAstWCS(header=header, origin=_PositionD(x0,y0))
 
     def copy(self):
         ret = PyAstWCS.__new__(PyAstWCS)
@@ -815,7 +815,7 @@ class WcsToolsWCS(CelestialWCS): # pragma: no cover
         file = header["GS_FILE"]
         x0 = header["GS_X0"]
         y0 = header["GS_Y0"]
-        return WcsToolsWCS(file, origin=PositionD(x0,y0))
+        return WcsToolsWCS(file, origin=_PositionD(x0,y0))
 
     def copy(self):
         # The copy module version of copying the dict works fine here.
@@ -951,7 +951,7 @@ class GSFitsWCS(CelestialWCS):
     def origin(self):
         """The origin in image coordinates of the WCS function.
         """
-        return PositionD(0.,0.)
+        return _PositionD(0.,0.)
 
     def _read_header(self, header):
         from .angle import AngleUnit

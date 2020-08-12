@@ -23,7 +23,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .image import Image
 from .bounds import _BoundsI
-from .position import PositionD
+from .position import PositionD, _PositionD
 from .interpolant import Quintic, Interpolant, SincInterpolant
 from .utilities import convert_interpolant, lazy_property, doc_inherit, basestring
 from .random import BaseDeviate
@@ -376,7 +376,7 @@ class InterpolatedImage(GSObject):
 
         # Apply the offset
         prof = self
-        if self._offset != PositionD(0,0):
+        if self._offset != _PositionD(0,0):
             prof = prof._shift(-self._offset)  # Opposite direction of what drawImage does.
 
         # If the user specified a flux, then set to that flux value.

@@ -22,7 +22,6 @@ import math
 from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
-from .position import PositionD
 from .utilities import doc_inherit
 from .errors import convert_cpp_errors
 

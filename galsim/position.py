@@ -140,7 +140,7 @@ class Position(object):
         elif isinstance(other, self.__class__):
             return self.__class__(self.x - other.x, self.y - other.y)
         else:
-            return PositionD(self.x - other.x, self.y - other.y)
+            return _PositionD(self.x - other.x, self.y - other.y)
 
     def __repr__(self):
         return "galsim.%s(x=%r, y=%r)"%(self.__class__.__name__, self.x, self.y)
@@ -193,7 +193,7 @@ class PositionD(Position):
     def round(self):
         """Return the rounded-off PositionI version of this position.
         """
-        return PositionI(int(round(self.x)), int(round(self.y)))
+        return _PositionI(int(round(self.x)), int(round(self.y)))
 
     def _check_scalar(self, other, op):
         try:

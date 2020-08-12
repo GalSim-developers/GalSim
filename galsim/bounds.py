@@ -19,7 +19,7 @@
 import math
 
 from . import _galsim
-from .position import Position, PositionI, PositionD
+from .position import Position, PositionI, PositionD, _PositionD, _PositionI
 from .errors import GalSimUndefinedBoundsError
 
 class Bounds(object):
@@ -195,7 +195,7 @@ class Bounds(object):
         """
         if not self.isDefined():
             raise GalSimUndefinedBoundsError("true_center is invalid for an undefined Bounds")
-        return PositionD((self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2.)
+        return _PositionD((self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2.)
 
     def includes(self, *args):
         """Test whether a supplied ``(x,y)`` pair, `Position`, or `Bounds` lie within a defined
@@ -388,7 +388,7 @@ class BoundsD(Bounds):
 
     @property
     def _center(self):
-        return PositionD( (self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2. )
+        return _PositionD( (self.xmax + self.xmin)/2., (self.ymax + self.ymin)/2. )
 
 
 class BoundsI(Bounds):
@@ -443,8 +443,8 @@ class BoundsI(Bounds):
         # e.g. (1,10,1,10) -> (6,6)
         #      (-10,-1,-10,-1) -> (-5,-5)
         # Just up and to the right of the true center in both cases.
-        return PositionI( self.xmin + (self.xmax - self.xmin + 1)//2,
-                          self.ymin + (self.ymax - self.ymin + 1)//2 )
+        return _PositionI( self.xmin + (self.xmax - self.xmin + 1)//2,
+                           self.ymin + (self.ymax - self.ymin + 1)//2 )
 
 
 def _BoundsD(xmin, xmax, ymin, ymax):

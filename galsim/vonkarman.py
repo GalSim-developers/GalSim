@@ -22,7 +22,7 @@ from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
-from .position import PositionD
+from .position import _PositionD
 from .angle import arcsec, AngleUnit
 from .errors import GalSimError, convert_cpp_errors, galsim_warn
 from .errors import GalSimIncompatibleValuesError
@@ -290,7 +290,7 @@ class VonKarman(GSObject):
 
     @property
     def _max_sb(self):
-        return self._sbvk.xValue(PositionD(0,0)._p)
+        return self._sbvk.xValue(_PositionD(0,0)._p)
 
     @doc_inherit
     def _xValue(self, pos):
