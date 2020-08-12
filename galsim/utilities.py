@@ -1334,28 +1334,29 @@ def combine_wave_list(*args):
     from .gsobject import GSObject
     from .chromatic import ChromaticObject
     if len(args) == 1:
-        if isinstance(args[0],
-                      (SED, Bandpass, ChromaticObject, GSObject)):
-            args = [args[0]]
-        elif isinstance(args[0], (list, tuple)):
+        if isinstance(args[0], (list, tuple)):
             args = args[0]
         else:
-            raise TypeError("Single input argument must be an SED, Bandpass, GSObject, "
-                            "ChromaticObject or a (possibly mixed) list of them.")
+            raise TypeError("Single input argument must be a list or tuple")
 
-    blue_limit = 0.0
-    red_limit = np.inf
-    wave_list = np.array([], dtype=float)
-    for obj in args:
-        if hasattr(obj, 'blue_limit'):
-            blue_limit = max(blue_limit, obj.blue_limit)
-        if hasattr(obj, 'red_limit'):
-            red_limit = min(red_limit, obj.red_limit)
-        wave_list = np.union1d(wave_list, obj.wave_list)
-    wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+    if len(args) == 0:
+        return np.array([], dtype=float), 0.0, np.inf
+
+    if len(args) == 1:
+        obj = args[0]
+        return obj.wave_list, getattr(obj, 'blue_limit', 0.0), getattr(obj, 'red_limit', np.inf)
+
+    blue_limit = np.max([getattr(obj, 'blue_limit', 0.0) for obj in args])
+    red_limit = np.min([getattr(obj, 'red_limit', np.inf) for obj in args])
     if blue_limit > red_limit:
         raise GalSimError("Empty wave_list intersection.")
-    # Make sure both limits are included.
+
+    waves = [np.asarray(obj.wave_list) for obj in args]
+    waves = [w[(blue_limit <= w) & (w <= red_limit)] for w in waves]
+    wave_list = np.union1d(waves[0], waves[1])
+    for w in waves[2:]:
+        wave_list = np.union1d(wave_list, w)
+    # Make sure both limits are included in final list
     if len(wave_list) > 0 and (wave_list[0] != blue_limit or wave_list[-1] != red_limit):
         wave_list = np.union1d([blue_limit, red_limit], wave_list)
     return wave_list, blue_limit, red_limit
