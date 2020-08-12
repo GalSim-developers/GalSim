@@ -1336,61 +1336,39 @@ class GSFitsWCS(CelestialWCS):
             assert x.shape == y.shape
             return ra, dec
 
-    def _invert_pv(self, u, v, pv=None, uu=None, vv=None):
-        # Do the inversion via Newton-Raphson iteration.
-        # We're solving u, v = horner2d(u', v', pv) for u' and v' given u and v.
-        # uu and vv are optional initial guesses, if absent, use u and v.
-        if pv is None:
-            pv = self.pv
-        # Assemble horner2d coefs for derivatives
-        _, nx, ny = pv.shape
-        uducoef = (np.arange(nx)[:,None]*pv[0])[1:,:-1]
-        udvcoef = (np.arange(ny)*pv[0])[:-1,1:]
-        vducoef = (np.arange(nx)[:,None]*pv[1])[1:,:-1]
-        vdvcoef = (np.arange(ny)*pv[1])[:-1,1:]
-        if uu is None:
-            uu = u.copy()
-        if vv is None:
-            vv = v.copy()
+    def _invert_ab(self, u, v, ab, x=None, y=None, abp=None):
+        # This is used both for inverting (u,v) = PV (u',v')
+        # and for inverting (x,y) = AB (x',y')
+        # Here (and in C++) the notation is (u,v) = AB(x,y), even though both (u,v) and (x,y)
+        # in this context are either in CCD coordinates (normally called x,y) or tangent plane
+        # coordinates (normally called u,v).
+        # The provided x and y are optional initial guesses, if absent, use u and v.
+        # abp is an optional set of coefficients to make a good guess for x,y
+        if x is None:
+            x = u.copy()
+        if y is None:
+            y = v.copy()
 
-        # Usually converges in ~3 iterations.
-        for iter in range(10):  # pragma: no branch
-            # Want Jac^-1 . du
-            # du
-            du = horner2d(uu, vv, pv[0], triangle=True) - u
-            dv = horner2d(uu, vv, pv[1], triangle=True) - v
-            # J
-            pvudu = horner2d(uu, vv, uducoef, triangle=True)
-            pvudv = horner2d(uu, vv, udvcoef, triangle=True)
-            pvvdu = horner2d(uu, vv, vducoef, triangle=True)
-            pvvdv = horner2d(uu, vv, vdvcoef, triangle=True)
-            # J^-1 . du
-            det = pvudu*pvvdv - pvudv*pvvdu
-            duu = -(du*pvvdv - dv*pvudv)/det
-            dvv = -(-du*pvvdu + dv*pvudu)/det
+        uu = np.ascontiguousarray(u)  # Don't overwrite the give u,v, since we need it at the end
+        vv = np.ascontiguousarray(v)  # to check it we were provided scalars or arrays.
+        x = np.ascontiguousarray(x)
+        y = np.ascontiguousarray(y)
 
-            uu += duu
-            vv += dvv
-            # Do at least 3 iterations before spending the time to check for
-            # convergence.
-            if iter >= 2 and np.max(np.abs(np.array([duu, dvv]))) < 1e-12:
-                break
-        else:  # pragma: no cover
-            raise GalSimError("Unable to solve for image_pos.")
-        return uu, vv
+        with convert_cpp_errors():
+            nab = ab.shape[1]
+            nabp = abp.shape[1] if abp is not None else 0
+            _galsim.InvertAB(len(x), nab, uu.ctypes.data, vv.ctypes.data, ab.ctypes.data,
+                             x.ctypes.data, y.ctypes.data, self._doiter,
+                             nabp, abp.ctypes.data if abp is not None else 0)
 
-    def _invert_ab(self, x, y):
-        if self.abp is not None:
-            xx = horner2d(x, y, self.abp[0])
-            yy = horner2d(x, y, self.abp[1])
+        # Return the right type for u,v
+        try:
+            len(u)
+        except TypeError:
+            return x[0], y[0]
         else:
-            xx = x.copy()
-            yy = y.copy()
-        if not self._doiter:
-            return xx, yy
+            return x, y
 
-        x, y = self._invert_pv(x, y, pv=self.ab, uu=xx, vv=yy)
-        return x, y
 
     def _xy(self, ra, dec, color=None):
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
@@ -1401,7 +1379,7 @@ class GSFitsWCS(CelestialWCS):
         v *= factor
 
         if self.pv is not None:
-            u, v = self._invert_pv(u, v)
+            u, v = self._invert_ab(u, v, self.pv)
 
         if not hasattr(self, 'cdinv'):
             self.cdinv = np.linalg.inv(self.cd)
@@ -1410,7 +1388,7 @@ class GSFitsWCS(CelestialWCS):
         y = self.cdinv[1,0] * u + self.cdinv[1,1] * v
 
         if self.ab is not None:
-            x, y = self._invert_ab(x, y)
+            x, y = self._invert_ab(x, y, self.ab, abp=self.abp)
 
         x += self.crpix[0]
         y += self.crpix[1]

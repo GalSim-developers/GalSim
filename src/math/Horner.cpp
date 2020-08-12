@@ -25,7 +25,7 @@
 namespace galsim {
 namespace math {
 
-    void HornerStep(double* x, int n, double c, double* r)
+    void HornerStep(const double* x, int n, const double c, double* r)
     {
 #ifdef __SSE2__
         for (; n && (!IsAligned(r) || !IsAligned(x)); --n, ++r, ++x)
@@ -38,7 +38,7 @@ namespace math {
         if (n2) {
             __m128d cx = _mm_set1_pd(c);
             __m128d* rx = reinterpret_cast<__m128d*>(r);
-            __m128d* xx = reinterpret_cast<__m128d*>(x);
+            const __m128d* xx = reinterpret_cast<const __m128d*>(x);
             do {
                 *rx = _mm_add_pd(_mm_mul_pd(*rx, *xx), cx);
                 ++rx;
@@ -56,7 +56,7 @@ namespace math {
 #endif
     }
 
-    void HornerBlock(double* x, int nx, double* coef, double* c, double* result)
+    void HornerBlock(const double* x, int nx, const double* coef, const double* c, double* result)
     {
         // Repeatedly multiply by x and add next coefficient
         double* r = result;
@@ -67,10 +67,10 @@ namespace math {
         // In the last step, we will have added the constant term, and we're done.
     }
 
-    void Horner(double* x, int nx, double* coef, const int nc, double* result)
+    void Horner(const double* x, int nx, const double* coef, const int nc, double* result)
     {
         // Start at highest power
-        double* c = coef + nc-1;
+        const double* c = coef + nc-1;
         // Ignore any trailing zeros
         while (*c == 0. && c > coef) --c;
 
@@ -82,7 +82,7 @@ namespace math {
         HornerBlock(x, nx, coef, c, result);
     }
 
-    void HornerStep2(double* x, int n, double* t, double* r)
+    void HornerStep2(const double* x, int n, const double* t, double* r)
     {
 #ifdef __SSE2__
         for (; n && (!IsAligned(r) || !IsAligned(x) || !IsAligned(t)); --n, ++r, ++x, ++t)
@@ -94,8 +94,8 @@ namespace math {
 
         if (n2) {
             __m128d* rx = reinterpret_cast<__m128d*>(r);
-            __m128d* xx = reinterpret_cast<__m128d*>(x);
-            __m128d* tx = reinterpret_cast<__m128d*>(t);
+            const __m128d* xx = reinterpret_cast<const __m128d*>(x);
+            const __m128d* tx = reinterpret_cast<const __m128d*>(t);
             do {
                 *rx = _mm_add_pd(_mm_mul_pd(*rx, *xx), *tx);
                 ++rx;
@@ -115,8 +115,8 @@ namespace math {
 #endif
     }
 
-    void HornerBlock2(double* x, double* y, int nx, double* coef, double* c, const int ncy,
-                      double* result, double* temp)
+    void HornerBlock2(const double* x, const double* y, int nx, const double* coef,
+                      const double* c, const int ncy, double* result, double* temp)
     {
         Horner(y, nx, c, ncy, result);
         while((c -= ncy) >= coef) {
@@ -125,11 +125,11 @@ namespace math {
         }
     }
 
-    void Horner2D(double* x, double* y, int nx,
-                  double* coef, const int ncx, const int ncy,
+    void Horner2D(const double* x, const double* y, int nx,
+                  const double* coef, const int ncx, const int ncy,
                   double* result, double* temp)
     {
-        double* c = coef + (ncx-1) * ncy;
+        const double* c = coef + (ncx-1) * ncy;
 
         // Better for caching to do this in blocks of 64 rather than all at once.
         const int BLOCK_SIZE = 64;

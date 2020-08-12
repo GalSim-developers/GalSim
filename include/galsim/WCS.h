@@ -22,6 +22,8 @@
 namespace galsim {
 
     void ApplyCD(int n, double* x, double* y, const double* cd);
+    void InvertAB(int n, int nab, const double* x, const double* y, const double* ab,
+                  double* xx, double* yy, bool doiter, int nabp, const double* abp);
 
 }
 
