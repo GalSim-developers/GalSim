@@ -1333,23 +1333,19 @@ class GSFitsWCS(CelestialWCS):
             assert x.shape == y.shape
             return ra, dec
 
-    def _invert_ab(self, u, v, ab, x=None, y=None, abp=None):
+    def _invert_ab(self, u, v, ab, abp=None):
         # This is used both for inverting (u,v) = PV (u',v')
         # and for inverting (x,y) = AB (x',y')
         # Here (and in C++) the notation is (u,v) = AB(x,y), even though both (u,v) and (x,y)
         # in this context are either in CCD coordinates (normally called x,y) or tangent plane
         # coordinates (normally called u,v).
-        # The provided x and y are optional initial guesses, if absent, use u and v.
         # abp is an optional set of coefficients to make a good guess for x,y
-        if x is None:
-            x = u.copy()
-        if y is None:
-            y = v.copy()
 
         uu = np.ascontiguousarray(u)  # Don't overwrite the give u,v, since we need it at the end
         vv = np.ascontiguousarray(v)  # to check it we were provided scalars or arrays.
-        x = np.ascontiguousarray(x)
-        y = np.ascontiguousarray(y)
+
+        x = np.atleast_1d(u.copy())    # Start with x,y = u,v.
+        y = np.atleast_1d(v.copy())    # This may be updated below if abp is provided.
 
         with convert_cpp_errors():
             nab = ab.shape[1]
