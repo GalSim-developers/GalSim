@@ -2472,14 +2472,14 @@ def test_fittedsipwcs():
     tol = {  #(arcsec, pixels)
         'HPX': (5.0, 0.02),
         'TAN': (5.0, 0.02),
-        'TSC': (5.0, 0.02),
+        'TSC': (6.0, 0.02),
         'STG': (5.0, 0.02),
         'ZEA': (10.0, 0.1),
         'ARC': (5.0, 0.02),
-        'ZPN': (2500.0, 2.5),
+        'ZPN': (3000.0, 6),
         'SIP': (1e-6, 0.01),
         'TPV': (1e-6, 1e-3),
-        'ZPX': (1e-5, 2e-5),
+        'ZPX': (1e-5, 3e-5),
         'TAN-PV': (1e-6, 2e-4),
         'TAN-FLIP': (1e-6, 1e-6),
         'REGION': (1e-6, 1e-6),
@@ -2488,7 +2488,12 @@ def test_fittedsipwcs():
 
     dir = 'fits_files'
 
-    nref = 100
+    if __name__ != "__main__":
+        # For pytest runs, don't bother with the crazy ones.  We really only care about
+        # testing that the code works correctly.  That can be done with just a couple of these.
+        test_tags = ['TAN', 'TPV', 'SIP', 'TNX']
+
+    nref = 300  # Use more than 256, since that's the block length in C++.
     nfit = 50
 
     rng = galsim.UniformDeviate(57721)
@@ -2631,6 +2636,21 @@ def test_fittedsipwcs():
         assert "A_ORDER" in header
         assert header['CTYPE1'] == 'RA---TAN-SIP'
 
+    # Check that error is raised if not enough stars are supplied.
+    # 3 stars is enough for order=1
+    wcs = galsim.FittedSIPWCS(x[:3], y[:3], ra[:3], dec[:3], order=1)
+    # but 2 is not.
+    with np.testing.assert_raises(galsim.GalSimError):
+        wcs = galsim.FittedSIPWCS(x[:2], y[:2], ra[:2], dec[:2], order=1)
+    # For order=3, there are 2*(3+4) ab coefficiens, 2 crpix, and 4 cd.
+    # 2 constraints per star means we need at least 10 stars
+    wcs = galsim.FittedSIPWCS(x[:10], y[:10], ra[:10], dec[:10], order=3)
+    with np.testing.assert_raises(galsim.GalSimError):
+        wcs = galsim.FittedSIPWCS(x[:9], y[:9], ra[:9], dec[:9], order=3)
+
+    if __name__ != "__main__":
+        return
+
     # Finally, the ZPN fit isn't very good with a TAN projection.
     # The native projection for ZPN is ARC (postel), and there are radial
     # polynomial corrections up to 7th order in this particular WCS. Our 2D SIP
@@ -2659,30 +2679,18 @@ def test_fittedsipwcs():
         center=center
     )
     ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
-    check_sphere(ra, dec, ra_test, dec_test, atol=2000)
+    check_sphere(ra, dec, ra_test, dec_test, atol=2200)
     x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
     np.testing.assert_allclose(
         np.hstack([x, y]),
         np.hstack([x_test, y_test]),
         rtol=0,
-        atol=5.0
+        atol=10.0
     )
     # We can at least confirm we made an ARC-SIP WCS
     header = {}
     fittedWCS.writeToFitsHeader(header, galsim.BoundsI(0, 192, 0, 192))
     assert header['CTYPE1'] == 'RA---ARC-SIP'
-
-    # Check that error is raised if not enough stars are supplied.
-    # 3 stars is enough for order=1
-    wcs = galsim.FittedSIPWCS(x[:3], y[:3], ra[:3], dec[:3], order=1)
-    # but 2 is not.
-    with np.testing.assert_raises(galsim.GalSimError):
-        wcs = galsim.FittedSIPWCS(x[:2], y[:2], ra[:2], dec[:2], order=1)
-    # For order=3, there are 2*(3+4) ab coefficiens, 2 crpix, and 4 cd.
-    # 2 constraints per star means we need at least 10 stars
-    wcs = galsim.FittedSIPWCS(x[:10], y[:10], ra[:10], dec[:10], order=3)
-    with np.testing.assert_raises(galsim.GalSimError):
-        wcs = galsim.FittedSIPWCS(x[:9], y[:9], ra[:9], dec[:9], order=3)
 
 
 @timer
