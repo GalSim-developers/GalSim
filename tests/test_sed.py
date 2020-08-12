@@ -421,6 +421,11 @@ def test_combine_wave_list():
     np.testing.assert_equal(blue_limit, sed.blue_limit)
     np.testing.assert_equal(red_limit, sed.red_limit)
 
+    wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([])
+    np.testing.assert_equal(wave_list, [])
+    np.testing.assert_equal(blue_limit, 0)
+    np.testing.assert_equal(red_limit, np.inf)
+
     # Doesn't know about our A class though.
     assert_raises(TypeError, galsim.utilities.combine_wave_list, a)
 
