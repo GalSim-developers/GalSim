@@ -90,7 +90,7 @@ def getPSF(SCA, bandpass,
     The PSF that is returned by default will be oriented with respect to the SCA coordinates,
     not world coordinates as is typical in GalSim.  The pupil plane has a fixed orientation
     with respect to the focal plane, so the PSF rotates with the telescope.  To obtain a
-    PSF in world coordinates, which can be convolved with galaxies (who are normally described
+    PSF in world coordinates, which can be convolved with galaxies (that are normally described
     in world coordinates), you may pass in a ``wcs`` parameter to this function.  This will
     project the PSF into world coordinates according to that WCS before returning it.  Otherwise,
     the return value is equivalent to using ``wcs=galim.PixelScale(galsim.roman.pixel_scale)``.
