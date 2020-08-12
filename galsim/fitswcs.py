@@ -1102,6 +1102,8 @@ class GSFitsWCS(CelestialWCS):
         b = [ float(header.get('B_'+str(i)+'_'+str(j),0.))
                 for i in range(order+1) for j in range(order+1) ]
         b = np.array(b).reshape((order+1,order+1))
+        a[1,0] += 1  # Standard A,B are a differential calculation.  It's more convenient to
+        b[0,1] += 1  # keep this as an absolute calculation like PV does.
         self.ab = np.array([a, b])
 
         # The reverse transformation is not required to be there.
@@ -1115,6 +1117,8 @@ class GSFitsWCS(CelestialWCS):
             bp = [ float(header.get('BP_'+str(i)+'_'+str(j),0.))
                     for i in range(order+1) for j in range(order+1) ]
             bp = np.array(bp).reshape((order+1,order+1))
+            ap[1,0] += 1
+            bp[0,1] += 1
             self.abp = np.array([ap, bp])
 
     def _read_tnx(self, header):
@@ -1280,9 +1284,9 @@ class GSFitsWCS(CelestialWCS):
         return u1, v1
 
     def _apply_ab(self, x, y):
-        dx = horner2d(x, y, self.ab[0], triangle=True)
-        dy = horner2d(x, y, self.ab[1], triangle=True)
-        return x+dx, y+dy
+        x1 = horner2d(x, y, self.ab[0], triangle=True)
+        y1 = horner2d(x, y, self.ab[1], triangle=True)
+        return x1, y1
 
     def _apply_cd(self, x, y):
         # Do this in C++ layer for speed.
@@ -1377,19 +1381,15 @@ class GSFitsWCS(CelestialWCS):
 
     def _invert_ab(self, x, y):
         if self.abp is not None:
-            dx = horner2d(x, y, self.abp[0])
-            dy = horner2d(x, y, self.abp[1])
+            xx = horner2d(x, y, self.abp[0])
+            yy = horner2d(x, y, self.abp[1])
         else:
-            dx = np.zeros_like(x)
-            dy = np.zeros_like(y)
+            xx = x.copy()
+            yy = y.copy()
         if not self._doiter:
-            return x+dx, y+dy
+            return xx, yy
 
-        # Turn an ab matrix into a pv matrix
-        pv = self.ab.copy()
-        pv[1,0,1] += 1
-        pv[0,1,0] += 1
-        x, y = self._invert_pv(x, y, pv=pv, uu=x+dx, vv=y+dy)
+        x, y = self._invert_pv(x, y, pv=self.ab, uu=xx, vv=yy)
         return x, y
 
     def _xy(self, ra, dec, color=None):
@@ -1451,7 +1451,7 @@ class GSFitsWCS(CelestialWCS):
             order = len(self.ab[0])-1
             xpow = x ** np.arange(order+1)
             ypow = y ** np.arange(order+1)
-            p1 += np.dot(np.dot(self.ab, ypow), xpow)
+            p1 = np.dot(np.dot(self.ab, ypow), xpow)
 
             dxpow = np.zeros(order+1)
             dypow = np.zeros(order+1)
@@ -1459,7 +1459,6 @@ class GSFitsWCS(CelestialWCS):
             dypow[1:] = (np.arange(order)+1.) * ypow[:-1]
             j1 = np.transpose([ np.dot(np.dot(self.ab, ypow), dxpow) ,
                                 np.dot(np.dot(self.ab, dypow), xpow) ])
-            j1 += np.diag([1,1])
             jac = np.dot(j1,jac)
 
         # The jacobian here is just the cd matrix.
@@ -1536,25 +1535,33 @@ class GSFitsWCS(CelestialWCS):
             header["A_ORDER"] = order
             for i in range(order+1):
                 for j in range(order+1):
-                    if self.ab[0,i,j] != 0.:
-                        header["A_"+str(i)+"_"+str(j)] = self.ab[0, i, j]
+                    aij = self.ab[0,i,j]
+                    if i==1 and j==0: aij -= 1  # Turn back into standard form.
+                    if aij != 0.:
+                        header["A_"+str(i)+"_"+str(j)] = aij
             header["B_ORDER"] = order
             for i in range(order+1):
                 for j in range(order+1):
-                    if self.ab[1,i,j] != 0.:
-                        header["B_"+str(i)+"_"+str(j)] = self.ab[1, i, j]
+                    bij = self.ab[1,i,j]
+                    if i==0 and j==1: bij -= 1
+                    if bij != 0.:
+                        header["B_"+str(i)+"_"+str(j)] = bij
         if self.abp is not None:
             order = len(self.abp[0])-1
             header["AP_ORDER"] = order
             for i in range(order+1):
                 for j in range(order+1):
-                    if self.abp[0,i,j] != 0.:
-                        header["AP_"+str(i)+"_"+str(j)] = self.abp[0, i, j]
+                    apij = self.abp[0,i,j]
+                    if i==1 and j==0: apij -= 1
+                    if apij != 0.:
+                        header["AP_"+str(i)+"_"+str(j)] = apij
             header["BP_ORDER"] = order
             for i in range(order+1):
                 for j in range(order+1):
-                    if self.abp[1,i,j] != 0.:
-                        header["BP_"+str(i)+"_"+str(j)] = self.abp[1, i, j]
+                    bpij = self.abp[1,i,j]
+                    if i==0 and j==1: bpij -= 1
+                    if bij != 0.:
+                        header["BP_"+str(i)+"_"+str(j)] = bpij
         return header
 
     @staticmethod
@@ -1864,6 +1871,8 @@ def FittedSIPWCS(x, y, ra, dec, wcs_type='TAN', order=3, center=None):
                     k += 2
         a = np.array(a).reshape((order+1, order+1))
         b = np.array(b).reshape((order+1, order+1))
+        a[1,0] += 1  # GSFitsWCS wants these with the identity included.
+        b[0,1] += 1
         ab = np.array([a, b])
         return ab
 
