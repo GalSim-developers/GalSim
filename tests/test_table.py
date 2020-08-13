@@ -26,6 +26,7 @@ script devutils/external/make_table_testarrays.py
 from __future__ import print_function
 import os
 import numpy as np
+import time
 
 import galsim
 from galsim_test_helpers import *
@@ -988,19 +989,39 @@ def test_ne():
 @timer
 def test_integrate():
     functions = [
-        galsim.LookupTable([0,1,2,3,4], [0,5,5,8,1], interpolant='linear')
+        galsim.LookupTable([0,1,2,3,4], [0,5,5,8,1], interpolant='linear'),
+        galsim.LookupTable([0,4], [0,8], interpolant='linear'),
+        galsim.LookupTable([0,0.1,0.2,3.5,4], [0,5,5,8,1], interpolant='linear'),
+        galsim.LookupTable([0,2.1,2.2,2.5,4], [0,5,5,8,1], interpolant='linear'),
     ]
 
     for func in functions:
+        print('func = ',repr(func))
         for xmin in [None, func.x_min, func.x_min+1]:
             for xmax in [None, func.x_max, func.x_max-1]:
-                func_int = func.integrate(xmin, xmax)
+                func_ans = func.integrate(xmin, xmax)
                 if xmin is None: xmin = func.x_min
                 if xmax is None: xmax = func.x_max
                 x = np.linspace(xmin, xmax, 10000)
                 f = func(x)
-                np_int = np.trapz(f,x)
-                np.testing.assert_allclose(func_int, np_int)
+                np_ans = np.trapz(f,x)
+                print('integrate range %s..%s = %s  %s'%(xmin,xmax,func_ans,np_ans))
+                np.testing.assert_allclose(func_ans, np_ans)
+
+    # Time how long it takes to integrate a really big table
+    x = np.linspace(-1,1,10000000)
+    y = 1. - x**2
+    assert np.min(y) >= 0.
+    y = 2 * np.sqrt(y)
+    t0 = time.time()
+    func = galsim.LookupTable(x,y, interpolant='linear')
+    ans = func.integrate()
+    t1 = time.time()
+    ans2 = np.trapz(y,x)
+    t2 = time.time()
+    print('integration time = ',t1-t0, t2-t1)
+    print('ans - pi = ',ans-np.pi, ans2-np.pi)
+    np.testing.assert_allclose(ans, np.pi)
 
 
 if __name__ == "__main__":
