@@ -976,6 +976,23 @@ def test_ne():
     ])
     all_obj_diff(lts)
 
+@timer
+def test_integrate():
+    functions = [
+        galsim.LookupTable([0,1,2,3,4], [0,5,5,8,1], interpolant='linear')
+    ]
+
+    for func in functions:
+        for xmin in [None, func.x_min, func.x_min+1]:
+            for xmax in [None, func.x_max, func.x_max-1]:
+                func_int = func.integrate(xmin, xmax)
+                if xmin is None: xmin = func.x_min
+                if xmax is None: xmax = func.x_max
+                x = np.linspace(xmin, xmax, 10000)
+                f = func(x)
+                np_int = np.trapz(f,x)
+                np.testing.assert_allclose(func_int, np_int)
+
 
 if __name__ == "__main__":
     test_table()
@@ -989,3 +1006,4 @@ if __name__ == "__main__":
     test_table2d_cubic()
     test_table2d_GSInterp()
     test_ne()
+    test_integrate()
