@@ -1531,7 +1531,7 @@ class GSFitsWCS(CelestialWCS):
                 for j in range(order+1):
                     bpij = self.abp[1,i,j]
                     if i==0 and j==1: bpij -= 1
-                    if bij != 0.:
+                    if bpij != 0.:
                         header["BP_"+str(i)+"_"+str(j)] = bpij
         return header
 
