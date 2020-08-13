@@ -260,17 +260,7 @@ class LookupTable(object):
             raise GalSimRangeError("Provided x_max must be in LookupTable's domain.",
                                    x_max, self.x_min, self.x_max)
 
-        # For linear, trapz works fine.
-        index = np.where((self.x > x_min) & (self.x < x_max))[0]
-        x = np.empty(len(index) + 2)
-        f = np.empty(len(index) + 2)
-        x[1:-1] = self.x[index]
-        x[0] = x_min
-        x[-1] = x_max
-        f[1:-1] = self.f[index]
-        f[0] = self(x_min)
-        f[-1] = self(x_max)
-        return np.trapz(f, x)
+        return self._tab.integrate(x_min, x_max)
 
     def _check_range(self, x):
         slop = (self.x_max - self.x_min) * 1.e-6

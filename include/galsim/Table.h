@@ -66,6 +66,9 @@ namespace galsim {
         /// interp many values at once
         void interpMany(const double* argvec, double* valvec, int N) const;
 
+        // Integrate the function from xmin to xmax
+        double integrate(double xmin, double xmax) const;
+
         class TableImpl;
     protected:
         shared_ptr<TableImpl> _pimpl;
