@@ -121,10 +121,15 @@ class LookupTable(object):
         # turn x and f into numpy arrays so that all subsequent math is possible (unlike for
         # lists, tuples).  Also make sure the dtype is float
         x = np.asarray(x, dtype=float)
-        f = np.asarray(f, dtype=float)
-        s = np.argsort(x)
-        self.x = np.ascontiguousarray(x[s])
-        self.f = np.ascontiguousarray(f[s])
+        if np.all(x[1:] >= x[:-1]):
+            # Already sorted (a common case, so avoid the sort.
+            self.x = np.ascontiguousarray(x, dtype=float)
+            self.f = np.ascontiguousarray(f, dtype=float)
+        else:
+            f = np.asarray(f, dtype=float)
+            s = np.argsort(x)
+            self.x = np.ascontiguousarray(x[s])
+            self.f = np.ascontiguousarray(f[s])
 
         self._x_min = self.x[0]
         self._x_max = self.x[-1]

@@ -163,6 +163,15 @@ def test_init():
         np.testing.assert_allclose(tab_ps2.x, tab_ps.x, rtol=1.e-12, atol=1.e-12)
         np.testing.assert_allclose(tab_ps2.f, tab_ps.f, rtol=1.e-12, atol=1.e-12)
 
+    # We expect that people will normally initialize with sorted x values, but that's not actually
+    # required.  Check that we get the smae thing with a different order.
+    index = np.arange(len(tab_ps.x))
+    np.random.shuffle(index)
+    x1 = tab_ps.x[index]
+    f1 = tab_ps.f[index]
+    tab_ps3 = galsim.LookupTable(x1, f1)
+    assert tab_ps3 == tab_ps
+
 @timer
 def test_log():
     """Some simple tests of interpolation using logs."""
