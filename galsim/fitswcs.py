@@ -1341,7 +1341,7 @@ class GSFitsWCS(CelestialWCS):
         # coordinates (normally called u,v).
         # abp is an optional set of coefficients to make a good guess for x,y
 
-        uu = np.ascontiguousarray(u)  # Don't overwrite the give u,v, since we need it at the end
+        uu = np.ascontiguousarray(u)  # Don't overwrite the given u,v, since we need it at the end
         vv = np.ascontiguousarray(v)  # to check it we were provided scalars or arrays.
 
         x = np.atleast_1d(u.copy())    # Start with x,y = u,v.
