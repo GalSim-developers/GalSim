@@ -226,6 +226,47 @@ class LookupTable(object):
             f = np.exp(f)
         return f
 
+    def integrate(self, x_min=None, x_max=None):
+        """Calculate an estimate of the integral of the tabulated function from xmin to xmax
+
+        Parameters:
+            x_min:      The minimum abscissa to use for the integral.  [default: None, which
+                        means to use self.x_min]
+            x_max:      The maximum abscissa to use for the integral.  [default: None, which
+                        means to use self.x_max]
+
+        Returns:
+            an estimate of the integral
+        """
+        if self.x_log:
+            raise GalSimNotImplementedError("log x spacing not implemented yet.")
+        if self.f_log:
+            raise GalSimNotImplementedError("log f values not implemented yet.")
+        if self.interpolant != 'linear':
+            raise GalSimNotImplementedError("Only linear interpolation is implemented yet.")
+        if x_min is None:
+            x_min = self.x_min
+        elif x_min < self.x_min or x_min > self.x_max:
+            raise GalSimRangeError("Provided x_min must be in LookupTable's domain.",
+                                   x_min, self.x_min, self.x_max)
+        if x_max is None:
+            x_max = self.x_max
+        elif x_max < self.x_min or x_max > self.x_max:
+            raise GalSimRangeError("Provided x_max must be in LookupTable's domain.",
+                                   x_max, self.x_min, self.x_max)
+
+        # For linear, trapz works fine.
+        index = np.where((self.x > x_min) & (self.x < x_max))[0]
+        x = np.empty(len(index) + 2)
+        f = np.empty(len(index) + 2)
+        x[1:-1] = self.x[index]
+        x[0] = x_min
+        x[-1] = x_max
+        f[1:-1] = self.f[index]
+        f[0] = self(x_min)
+        f[-1] = self(x_max)
+        return np.trapz(f, x)
+
     def _check_range(self, x):
         slop = (self.x_max - self.x_min) * 1.e-6
         if np.min(x) < self.x_min - slop:
