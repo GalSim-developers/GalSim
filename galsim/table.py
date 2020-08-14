@@ -236,6 +236,11 @@ class LookupTable(object):
     def integrate(self, x_min=None, x_max=None):
         """Calculate an estimate of the integral of the tabulated function from xmin to xmax
 
+        .. note::
+
+            This function is not implemented for LookupTables that use log for either x or f,
+            or that use a ``galsim.Interpolant``.
+
         Parameters:
             x_min:      The minimum abscissa to use for the integral.  [default: None, which
                         means to use self.x_min]
