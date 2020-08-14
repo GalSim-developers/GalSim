@@ -20,9 +20,11 @@ import numbers
 
 from . import _galsim
 from .utilities import lazy_property, convert_interpolant, find_out_of_bounds_position
+from .utilities import basestring
 from .bounds import BoundsD
 from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
 from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
+from .errors import GalSimNotImplementedError
 from .interpolant import Interpolant
 
 class LookupTable(object):
@@ -247,8 +249,9 @@ class LookupTable(object):
             raise GalSimNotImplementedError("log x spacing not implemented yet.")
         if self.f_log:
             raise GalSimNotImplementedError("log f values not implemented yet.")
-        if self.interpolant != 'linear':
-            raise GalSimNotImplementedError("Only linear interpolation is implemented yet.")
+        if not isinstance(self.interpolant, basestring):
+            raise GalSimNotImplementedError(
+                "Integration with interpolant=%s is not implemented."%(self.interpolant))
         if x_min is None:
             x_min = self.x_min
         elif x_min < self.x_min or x_min > self.x_max:
