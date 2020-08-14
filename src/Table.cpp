@@ -228,13 +228,19 @@ namespace galsim {
         TableImpl(const double* args, const double* vals, int N) :
             _args(args, N), _n(N), _vals(vals) {}
 
+        virtual int find(double a) const = 0;
         virtual double lookup(double a) const = 0;
+        virtual double interp(double a, int i) const = 0;
         virtual void interpMany(const double* argvec, double* valvec, int N) const = 0;
         virtual double integrate(double xmin, double max) const = 0;
+        virtual double integrateProduct(const Table::TableImpl& g,
+                                        double xmin, double max) const = 0;
 
         double argMin() const { return _args.front(); }
         double argMax() const { return _args.back(); }
-        size_t size() const { return _args.size(); }
+        int size() const { return _n; }
+        inline double getArg(int i) const { return _args[i]; }
+        inline double getVal(int i) const { return _vals[i]; }
 
         virtual ~TableImpl() {}
     protected:
@@ -250,7 +256,14 @@ namespace galsim {
         using Table::TableImpl::TableImpl;
 
         double lookup(double a) const override {
-            int i = _args.upperIndex(a);
+            return interp(a, find(a));
+        }
+
+        int find(double a) const override {
+            return _args.upperIndex(a);
+        }
+
+        double interp(double a, int i) const override {
             return static_cast<const T*>(this)->interp(a, i);
         }
 
@@ -259,13 +272,13 @@ namespace galsim {
             _args.upperIndexMany(xvec, indices.data(), N);
 
             for (int k=0; k<N; k++) {
-                valvec[k] = static_cast<const T*>(this)->interp(xvec[k], indices[k]);
+                valvec[k] = interp(xvec[k], indices[k]);
             }
         }
 
-        double integrate(double xmin, double xmax) const override {
+        double integrate(double xmin, double xmax) const override
+        {
             dbg<<"Start integrate: "<<xmin<<" "<<xmax<<std::endl;
-            //set_verbose(2);
             int i = _args.upperIndex(xmin);
             xdbg<<"i = "<<i<<std::endl;
             double x1 = xmin;
@@ -278,8 +291,8 @@ namespace galsim {
                 // then it requires some extra special handling.
                 x2 = xmax;
                 dbg<<"do special case full range x1,x2 = "<<x1<<','<<x2<<std::endl;
-                f1 = static_cast<const T*>(this)->interp(x1, i);
-                f2 = static_cast<const T*>(this)->interp(x2, i);
+                f1 = interp(x1, i);
+                f2 = interp(x2, i);
                 double ans = static_cast<const T*>(this)->integ_step_full(x1,f1,x2,f2,i);
                 dbg<<"ans = "<<ans<<std::endl;
                 return ans;
@@ -291,7 +304,7 @@ namespace galsim {
             if (x2 > x1) {
                 xdbg<<"do first step: x1,x2 = "<<x1<<','<<x2<<std::endl;
                 // if x1 == x2, then skip "first" step, since it is 0.
-                f1 = static_cast<const T*>(this)->interp(x1, i);
+                f1 = interp(x1, i);
                 double step = static_cast<const T*>(this)->integ_step_first(x1,f1,x2,f2,i);
                 ans += step;
                 xdbg<<"ans = "<<ans<<std::endl;
@@ -300,10 +313,9 @@ namespace galsim {
             f1 = f2;
             x2 = _args[++i];
             f2 = _vals[i];
-            xdbg<<"x1,x2,f1,f2 = "<<x1<<','<<x2<<','<<f1<<','<<f2<<std::endl;
 
             // Accumulate the main part of the integral
-            while (x2 <= xmax && i<_n) {
+            while (x2 <= xmax && i<size()) {
                 xdbg<<x2<<" "<<i<<std::endl;
                 double step = static_cast<const T*>(this)->integ_step(x1,f1,x2,f2,i);
                 xdbg<<"integration step = "<<step<<std::endl;
@@ -319,7 +331,7 @@ namespace galsim {
             // Last step also needs special handling.
             if (x1 < xmax) {
                 x2 = xmax;
-                f2 = static_cast<const T*>(this)->interp(xmax, i);
+                f2 = interp(xmax, i);
                 xdbg<<"last f("<<x2<<") = "<<f2<<std::endl;
                 double step = static_cast<const T*>(this)->integ_step_last(x1,f1,x2,f2,i);
                 xdbg<<"integration step = "<<step<<std::endl;
@@ -330,16 +342,76 @@ namespace galsim {
             return ans;
         }
 
+        double integrateProduct(const Table::TableImpl& g, double xmin, double xmax) const override
+        {
+            // Here with two sets of abscissae, we never assume we have a full interval,
+            // since most of the time we won't for either f or g.  This will only be a little
+            // inefficient when f is spline interpolated and g was a function or happens to have
+            // exactly the same x values.  Not our dominant use case, so it doesn't seem worth
+            // trying to optimize for that.
+            dbg<<"Start integrateProduct: "<<xmin<<" "<<xmax<<std::endl;
+            int i = find(xmin);
+            int j = g.find(xmin);
+            xdbg<<"i,j = "<<i<<"  "<<j<<std::endl;
+
+            double x1 = xmin;
+            double f1 = interp(x1, i);
+            double g1 = g.interp(x1, j);
+            double x2 = std::min(getArg(i), g.getArg(j));
+            double f2 = interp(x2, i);
+            double g2 = g.interp(x2, j);
+            xdbg<<"x1 = "<<x1<<"  "<<f1<<"  "<<g1<<std::endl;
+            xdbg<<"x2 = "<<x2<<"  "<<f2<<"  "<<g2<<std::endl;
+
+            double ans = 0.;
+            while (x2 < xmax) {
+                xdbg<<x2<<" "<<i<<"  "<<j<<std::endl;
+                double step = static_cast<const T*>(this)->integ_prod_step(x1,f1,x2,f2,i,g1,g2);
+                xdbg<<"integration step = "<<step<<std::endl;
+                ans += step;
+                xdbg<<"ans = "<<ans<<std::endl;
+                x1 = x2;
+                f1 = f2;
+                g1 = g2;
+                // x1 is now either _args[i] or g._args[j] (or both).
+                assert((x1 == getArg(i)) || (x1 == g.getArg(j)));
+                if (x1 == getArg(i)) ++i;
+                else assert(x1 < getArg(i));
+                if (x1 == g.getArg(j)) ++j;
+                else assert(x1 < g.getArg(j));
+                x2 = std::min(getArg(i), g.getArg(j));
+                f2 = interp(x2, i);
+                g2 = g.interp(x2, j);
+            }
+
+            // Last step needs special handling.
+            x2 = xmax;
+            f2 = interp(xmax, i);
+            g2 = g.interp(xmax, j);
+            double step = static_cast<const T*>(this)->integ_prod_step(x1,f1,x2,f2,i,g1,g2);
+            xdbg<<"integration step = "<<step<<std::endl;
+            ans += step;
+            dbg<<"final ans = "<<ans<<std::endl;
+            return ans;
+        }
+
         // Many of the cases don't need any special handling for first/last steps.
         // So for those, just use the regular step.  Only override if necessary.
-        double integ_step_first(double x1, double f1, double x2, double f2, int i) const {
+        double integ_step(double x1, double f1, double x2, double f2, int i) const {
             return static_cast<const T*>(this)->integ_step(x1,f1,x2,f2,i);
+        }
+        double integ_step_first(double x1, double f1, double x2, double f2, int i) const {
+            return integ_step(x1,f1,x2,f2,i);
         }
         double integ_step_last(double x1, double f1, double x2, double f2, int i) const {
-            return static_cast<const T*>(this)->integ_step(x1,f1,x2,f2,i);
+            return integ_step(x1,f1,x2,f2,i);
         }
         double integ_step_full(double x1, double f1, double x2, double f2, int i) const {
-            return static_cast<const T*>(this)->integ_step(x1,f1,x2,f2,i);
+            return integ_step(x1,f1,x2,f2,i);
+        }
+        double integ_prod_step(double x1, double f1, double x2, double f2, int i,
+                               double g1, double g2) const {
+            return static_cast<const T*>(this)->integ_prod_step(x1,f1,x2,f2,i,g1,g2);
         }
     };
 
@@ -359,6 +431,11 @@ namespace galsim {
             return f1 * (x2-x1);
         }
         // No special handling needed for first or last.
+
+        double integ_prod_step(double x1, double f1, double x2, double f2, int i,
+                               double g1, double g2) const {
+            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+        }
     };
 
 
@@ -374,6 +451,11 @@ namespace galsim {
             return f2 * (x2-x1);
         }
         // No special handling needed for first or last.
+
+        double integ_prod_step(double x1, double f1, double x2, double f2, int i,
+                               double g1, double g2) const {
+            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+        }
     };
 
 
@@ -418,6 +500,11 @@ namespace galsim {
                 return f1 * (xm-x1) + f2 * (x2-xm);
             }
         }
+
+        double integ_prod_step(double x1, double f1, double x2, double f2, int i,
+                               double g1, double g2) const {
+            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+        }
     };
 
 
@@ -434,6 +521,11 @@ namespace galsim {
             return 0.5 * (f1+f2) * (x2-x1);
         }
         // No special handling needed for first or last.
+
+        double integ_prod_step(double x1, double f1, double x2, double f2, int i,
+                               double g1, double g2) const {
+            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+        }
     };
 
 
@@ -497,6 +589,11 @@ namespace galsim {
             double z1 = 2*x3-x1-x2;
             double z2 = x1+x2-2*x0;
             return 0.5 * (f1+f2) * h - (1./24.) * (_y2[i-1]*z1 + _y2[i]*z2) * h3 / (x3-x0);
+        }
+
+        double integ_prod_step(double x1, double f1, double x2, double f2, int i,
+                               double g1, double g2) const {
+            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
         }
 
     private:
@@ -684,6 +781,11 @@ namespace galsim {
     double Table::integrate(double xmin, double xmax) const
     {
         return _pimpl->integrate(xmin, xmax);
+    }
+
+    double Table::integrateProduct(const Table& g, double xmin, double xmax) const
+    {
+        return _pimpl->integrateProduct(*g._pimpl, xmin, xmax);
     }
 
     void TableBuilder::finalize()

@@ -69,6 +69,9 @@ namespace galsim {
         // Integrate the function from xmin to xmax
         double integrate(double xmin, double xmax) const;
 
+        // Integrate f(x) g(x) from xmin to xmax
+        double integrateProduct(const Table& g, double xmin, double xmax) const;
+
         class TableImpl;
     protected:
         shared_ptr<TableImpl> _pimpl;

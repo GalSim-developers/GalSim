@@ -232,7 +232,11 @@ class LookupTable(object):
         return f
 
     def integrate(self, x_min=None, x_max=None):
-        """Calculate an estimate of the integral of the tabulated function from xmin to xmax
+        r"""Calculate an estimate of the integral of the tabulated function from x_min to x_max:
+
+        .. math::
+
+            \int_{x_\mathrm{min}}^{x_\mathrm{max}} f(x) dx
 
         .. note::
 
@@ -283,6 +287,63 @@ class LookupTable(object):
                                    x_max, self.x_min, self.x_max)
 
         return self._tab.integrate(x_min, x_max)
+
+    def integrate_product(self, g, x_min=None, x_max=None):
+        r"""Calculate an estimate of the integral of the tabulated function multiplied by a second
+        function from x_min to x_max:
+
+        .. math::
+
+            \int_{x_\mathrm{min}}^{x_\mathrm{max}} f(x) g(x) dx
+
+        If the second function, :math:`g(x)`, is another `LookupTable`, then the quadrature will
+        use the abscissae from both that function and :math:`f(x)` (i.e. ``self``).
+        Otherwise, the second function will be evaluated at the abscissae of :math:`f(x)`.
+
+        .. note::
+
+            This function is not implemented for LookupTables that use log for either x or f,
+            or that use a ``galsim.Interpolant``.
+
+            Also, the second function :math:`g(x)` is always approximated with linear interpolation
+            between the abscissae, even if it is a `LookupTable` with a different specified
+            interpolation.
+
+        Parameters:
+            g:          The function to multiply by the current function for the integral.
+            x_min:      The minimum abscissa to use for the integral.  [default: None, which
+                        means to use self.x_min]
+            x_max:      The maximum abscissa to use for the integral.  [default: None, which
+                        means to use self.x_max]
+
+        Returns:
+            an estimate of the integral
+        """
+        if self.x_log:
+            raise GalSimNotImplementedError("log x spacing not implemented yet.")
+        if self.f_log:
+            raise GalSimNotImplementedError("log f values not implemented yet.")
+        if not isinstance(self.interpolant, basestring):
+            raise GalSimNotImplementedError(
+                "Integration with interpolant=%s is not implemented."%(self.interpolant))
+        if x_min is None:
+            x_min = self.x_min
+        elif x_min < self.x_min or x_min > self.x_max:
+            raise GalSimRangeError("Provided x_min must be in LookupTable's domain.",
+                                   x_min, self.x_min, self.x_max)
+        if x_max is None:
+            x_max = self.x_max
+        elif x_max < self.x_min or x_max > self.x_max:
+            raise GalSimRangeError("Provided x_max must be in LookupTable's domain.",
+                                   x_max, self.x_min, self.x_max)
+
+        if not isinstance(g, LookupTable):
+            gx = np.union1d(self.x, [x_min, x_max])
+            # Let this raise an appropriate error if g is not a valid function over this domain.
+            gf = g(gx)
+            g = _LookupTable(gx, gf, 'linear')
+
+        return self._tab.integrate_product(g._tab, x_min, x_max)
 
     def _check_range(self, x):
         slop = (self.x_max - self.x_min) * 1.e-6
