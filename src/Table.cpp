@@ -467,11 +467,37 @@ namespace galsim {
 #endif
         }
         double integ_step(double x1, double f1, double x2, double f2, int i) const {
+            // It turns out that the integral over the spline is close to the same as
+            // the trapezoid rule.  There is a small correction bit for the cubic part.
             double h = x2-x1;
             double h3 = h*h*h;
-            return 0.5 * (f1+f2) * h + (1./24.) * (_y2[i-1]+_y2[i]) * h3;
+            return 0.5 * (f1+f2) * h - (1./24.) * (_y2[i-1]+_y2[i]) * h3;
         }
-        // TODO: Need first and last.
+        double integ_step_first(double x1, double f1, double x2, double f2, int i) const {
+            double h = x2-x1;
+            double h3 = h*h*h;
+            double x0 = _args[i-1];
+            double z2 = x1+x2-2*x0;
+            return 0.5 * (f1+f2) * h - (1./24.) * (_y2[i-1]*h + _y2[i]*z2) * h3 / (x2-x0);
+        }
+        double integ_step_last(double x1, double f1, double x2, double f2, int i) const {
+            double h = x2-x1;
+            double h3 = h*h*h;
+            double x3 = _args[i];
+            double z1 = 2*x3-x1-x2;
+            return 0.5 * (f1+f2) * h - (1./24.) * (_y2[i-1]*z1 + _y2[i]*h) * h3 / (x3-x1);
+        }
+        double integ_step_full(double x1, double f1, double x2, double f2, int i) const {
+            // When the endpoints aren't the tabulated points, the trapozoid part stays the same,
+            // but there is a slight adjustment to the correction term.
+            double h = x2-x1;
+            double h3 = h*h*h;
+            double x0 = _args[i-1];
+            double x3 = _args[i];
+            double z1 = 2*x3-x1-x2;
+            double z2 = x1+x2-2*x0;
+            return 0.5 * (f1+f2) * h - (1./24.) * (_y2[i-1]*z1 + _y2[i]*z2) * h3 / (x3-x0);
+        }
 
     private:
         std::vector<double> _y2;

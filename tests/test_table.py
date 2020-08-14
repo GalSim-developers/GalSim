@@ -989,10 +989,20 @@ def test_ne():
 @timer
 def test_integrate():
     functions = [
-        galsim.LookupTable([0,1,2,3,4], [0,5,5,8,1], interpolant='linear'),
-        galsim.LookupTable([0,4], [0,8], interpolant='linear'),
-        galsim.LookupTable([0,0.1,0.2,3.5,4], [0,5,5,8,1], interpolant='linear'),
-        galsim.LookupTable([0,2.1,2.2,2.5,4], [0,5,5,8,1], interpolant='linear'),
+        galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='linear'),
+        galsim.LookupTable([0,4], [1,8], interpolant='linear'),
+        galsim.LookupTable([0,0.1,0.2,3.5,4], [1,5,5,8,1], interpolant='linear'),
+        galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,8,1], interpolant='linear'),
+        galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='floor'),
+        galsim.LookupTable([0,4], [1,8], interpolant='floor'),
+        galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='ceil'),
+        galsim.LookupTable([0,4], [1,8], interpolant='ceil'),
+        galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='nearest'),
+        galsim.LookupTable([0,4], [1,8], interpolant='nearest'),
+        galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='spline'),
+        galsim.LookupTable([0,1,4], [1,1,8], interpolant='spline'),
+        galsim.LookupTable([0,0.1,0.2,3.5,4], [1,2,2,8,7], interpolant='spline'),
+        galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,5,1], interpolant='spline'),
     ]
 
     for func in functions:
@@ -1006,22 +1016,33 @@ def test_integrate():
                 f = func(x)
                 np_ans = np.trapz(f,x)
                 print('integrate range %s..%s = %s  %s'%(xmin,xmax,func_ans,np_ans))
-                np.testing.assert_allclose(func_ans, np_ans)
+                if func.interpolant in ['linear', 'spline']:
+                    rtol = 1.e-7
+                else:
+                    # ceil, floor, and nearest not super well approximated by trapz integration.
+                    rtol = 1.e-3
+                np.testing.assert_allclose(func_ans, np_ans, rtol=rtol)
 
     # Time how long it takes to integrate a really big table
-    x = np.linspace(-1,1,10000000)
+    x = np.linspace(-1,1,1000000)
     y = 1. - x**2
     assert np.min(y) >= 0.
     y = 2 * np.sqrt(y)
     t0 = time.time()
     func = galsim.LookupTable(x,y, interpolant='linear')
-    ans = func.integrate()
+    ans1 = func.integrate()
     t1 = time.time()
-    ans2 = np.trapz(y,x)
+    func = galsim.LookupTable(x,y)  # Spline
+    ans2 = func.integrate()
     t2 = time.time()
-    print('integration time = ',t1-t0, t2-t1)
-    print('ans - pi = ',ans-np.pi, ans2-np.pi)
-    np.testing.assert_allclose(ans, np.pi)
+    ans3 = np.trapz(y,x)
+    t3 = time.time()
+    # Amazingly, LookupTable(linear) is faster than np.trapz.  And equally accurate.
+    # Spline is a bit slower, but about 2x more accurate.
+    print('integration time = ',t1-t0, t2-t1, t3-t2)
+    print('ans - pi = ',ans1-np.pi, ans2-np.pi, ans3-np.pi)
+    np.testing.assert_allclose(ans1, np.pi, atol=4.e-9)
+    np.testing.assert_allclose(ans2, np.pi, atol=2.e-9)
 
 
 if __name__ == "__main__":
