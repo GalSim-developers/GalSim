@@ -239,6 +239,22 @@ class LookupTable(object):
             This function is not implemented for LookupTables that use log for either x or f,
             or that use a ``galsim.Interpolant``.
 
+        .. note::
+
+            The simplest version of this function is equivalent in functionality to the numpy
+            ``trapz`` function.  However, it is usually significantly faster.  If you have a
+            time-critical integration for which you are currently using ``np.trapz``::
+
+                >>> ans = np.trapz(f, x)
+
+            the following replacement may be faster::
+
+                >>> ans = galsim.trapz(f, x)
+
+            which is an alias for::
+
+                >>> ans = galsim._LookupTable(x, f, 'linear').integrate()
+
         Parameters:
             x_min:      The minimum abscissa to use for the integral.  [default: None, which
                         means to use self.x_min]
@@ -430,6 +446,22 @@ def _LookupTable(x, f, interpolant='spline', x_log=False, f_log=False):
     else:
         ret._interp1d = convert_interpolant(interpolant)
     return ret
+
+
+def trapz(f, x):
+    """Integrate f(x) using the trapezoidal rule.
+
+    Equivalent to np.trapz(f,x) for 1d array inputs.  Intended as a drop-in replacement,
+    which is usually faster.
+
+    Parameters:
+        f:      The ordinates of the function to integrate.
+        x:      The abscissae of the function to integrate.
+
+    Returns:
+        Estimate of the integral.
+    """
+    return _LookupTable(x,f,'linear').integrate()
 
 
 class LookupTable2D(object):
