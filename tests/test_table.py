@@ -1044,6 +1044,24 @@ def test_integrate():
     np.testing.assert_allclose(ans1, np.pi, atol=4.e-9)
     np.testing.assert_allclose(ans2, np.pi, atol=2.e-9)
 
+    # Check errors
+    with assert_raises(NotImplementedError):
+        galsim.LookupTable([1,2,3,4], [5,5,8,1], x_log=True).integrate()
+    with assert_raises(NotImplementedError):
+        galsim.LookupTable([1,2,3,4], [5,5,8,1], f_log=True).integrate()
+    with assert_raises(NotImplementedError):
+        galsim.LookupTable([1,2,3,4], [5,5,8,1], x_log=True, f_log=True).integrate()
+    with assert_raises(NotImplementedError):
+        galsim.LookupTable([1,2,3,4], [5,5,8,1], interpolant=galsim.Quintic()).integrate()
+    with assert_raises(NotImplementedError):
+        galsim.LookupTable([1,2,3,4], [5,5,8,1], interpolant=galsim.Linear()).integrate()
+    with assert_raises(NotImplementedError):
+        galsim.LookupTable([1,2,3,4], [5,5,8,1], interpolant=galsim.Lanczos(5)).integrate()
+    with assert_raises(ValueError):
+        galsim.LookupTable([1,2,3,4], [5,5,8,1]).integrate(0,3)
+    with assert_raises(ValueError):
+        galsim.LookupTable([1,2,3,4], [5,5,8,1]).integrate(1,5)
+
 
 if __name__ == "__main__":
     test_table()
