@@ -1035,25 +1035,43 @@ def test_integrate():
                 np.testing.assert_allclose(func_ans, np_ans, rtol=rtol)
 
     # Time how long it takes to integrate a really big table
-    x = np.linspace(-1,1,1000000)
-    y = 1. - x**2
+    x = np.linspace(0,2,1000000)
+    y = 4. - x**2
     assert np.min(y) >= 0.
-    y = 2 * np.sqrt(y)
+    y = np.sqrt(y)
     t0 = time.time()
-    func = galsim._LookupTable(x,y, interpolant='linear')
-    ans1 = func.integrate()
+    ans1 = galsim._LookupTable(x,y,'linear').integrate()
     t1 = time.time()
-    func = galsim._LookupTable(x,y)  # Spline
-    ans2 = func.integrate()
+    ans2 = galsim._LookupTable(x,y,'spline').integrate()
     t2 = time.time()
-    ans3 = np.trapz(y,x)
+    ans3 = galsim._LookupTable(x,y,'floor').integrate()
     t3 = time.time()
-    # Amazingly, LookupTable(linear) is faster than np.trapz.  And equally accurate.
+    ans4 = galsim._LookupTable(x,y,'ceil').integrate()
+    t4 = time.time()
+    ans5 = galsim._LookupTable(x,y,'nearest').integrate()
+    t5 = time.time()
+    ans6 = galsim.trapz(y,x)
+    t6 = time.time()
+    ans7 = np.trapz(y,x)
+    t7 = time.time()
+    # Amazingly, LookupTable(linear) is more than 2x faster than np.trapz, and equally accurate.
     # Spline is a bit slower, but about 2x more accurate.
-    print('integration time = ',t1-t0, t2-t1, t3-t2)
-    print('ans - pi = ',ans1-np.pi, ans2-np.pi, ans3-np.pi)
-    np.testing.assert_allclose(ans1, np.pi, atol=4.e-9)
-    np.testing.assert_allclose(ans2, np.pi, atol=2.e-9)
+    # Floor and ceil are slightly faster still, but not nearly as accurate.
+    print('           integration time       answer - Pi')
+    print('linear         %.6f          %.6e'%(t1-t0,ans1-np.pi))
+    print('spline         %.6f          %.6e'%(t2-t1,ans2-np.pi))
+    print('floor          %.6f          %.6e'%(t3-t2,ans3-np.pi))
+    print('ceil           %.6f          %.6e'%(t4-t3,ans4-np.pi))
+    print('nearest        %.6f          %.6e'%(t5-t4,ans5-np.pi))
+    print('trapz          %.6f          %.6e'%(t6-t5,ans6-np.pi))
+    print('np.trapz       %.6f          %.6e'%(t7-t6,ans7-np.pi))
+    np.testing.assert_allclose(ans1, np.pi, atol=2.e-9)
+    np.testing.assert_allclose(ans2, np.pi, atol=1.e-9)
+    np.testing.assert_allclose(ans3, np.pi, atol=3.e-6)
+    np.testing.assert_allclose(ans4, np.pi, atol=3.e-6)
+    np.testing.assert_allclose(ans5, np.pi, atol=2.e-9)
+    np.testing.assert_allclose(ans6, np.pi, atol=2.e-9)
+    np.testing.assert_allclose(ans7, np.pi, atol=2.e-9)
 
     # Check errors
     with assert_raises(NotImplementedError):
