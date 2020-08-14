@@ -87,10 +87,8 @@ class LookupTable(object):
     log(f) rather than x and f.
 
     Parameters:
-        x:              The list, tuple, or NumPy array of ``x`` values (floats, doubles, or ints,
-                        which get silently converted to floats for the purpose of interpolation).
-        f:              The list, tuple, or NumPy array of ``f(x)`` values (floats, doubles, or ints,
-                        which get silently converted to floats for the purpose of interpolation).
+        x:              The list, tuple, or NumPy array of ``x`` values.
+        f:              The list, tuple, or NumPy array of ``f(x)`` values.
         interpolant:    Type of interpolation to use, with the options being 'floor', 'ceil',
                         'nearest', 'linear', 'spline', or a `galsim.Interpolant` or string
                         convertible to one.  [default: 'spline']
@@ -399,6 +397,39 @@ class LookupTable(object):
 
     def __setstate__(self, d):
         self.__dict__ = d
+
+def _LookupTable(x, f, interpolant='spline', x_log=False, f_log=False):
+    """Make a `LookupTable` but without using any of the sanity checks or array manipulation used
+    in the normal initializer.
+
+    The input x values must be already sorted.
+
+    Parameters:
+        x:              Strictly increasing NumPy array of ``x`` values.
+        f:              NumPy array of ``f(x)`` values.
+        interpolant:    Type of interpolation to use, with the options being 'floor', 'ceil',
+                        'nearest', 'linear', 'spline', or a `galsim.Interpolant` or string
+                        convertible to one.  [default: 'spline']
+        x_log:          Set to True if you wish to interpolate using log(x) rather than x.  Note
+                        that all inputs / outputs will still be x, it's just a question of how the
+                        interpolation is done. [default: False]
+        f_log:          Set to True if you wish to interpolate using log(f) rather than f.  Note
+                        that all inputs / outputs will still be f, it's just a question of how the
+                        interpolation is done. [default: False]
+    """
+    ret = LookupTable.__new__(LookupTable)
+    ret.x = np.ascontiguousarray(x, dtype=float)
+    ret.f = np.ascontiguousarray(f, dtype=float)
+    ret.interpolant = interpolant
+    ret.x_log = x_log
+    ret.f_log = f_log
+    ret._x_min = ret.x[0]
+    ret._x_max = ret.x[-1]
+    if interpolant in ('nearest', 'linear', 'ceil', 'floor', 'spline'):
+        ret._interp1d = None
+    else:
+        ret._interp1d = convert_interpolant(interpolant)
+    return ret
 
 
 class LookupTable2D(object):

@@ -122,6 +122,9 @@ def test_table():
         do_pickle(table1)
         do_pickle(table2)
 
+        table3 = galsim._LookupTable(x=args1,f=vals1,interpolant=interp)
+        assert table3 == table1
+
     assert_raises(ValueError, galsim.LookupTable, x=args1, f=vals1, interpolant='invalid')
     assert_raises(ValueError, galsim.LookupTable, x=[1], f=[1], interpolant='linear')
     assert_raises(ValueError, galsim.LookupTable, x=[1,2], f=[1,2], interpolant='spline')
@@ -253,11 +256,13 @@ def test_log():
         tab_2 = galsim.LookupTable(expx, y, x_log=True, interpolant=interpolant)
         tab_3 = galsim.LookupTable(x, expy, f_log=True, interpolant=interpolant)
         tab_4 = galsim.LookupTable(expx, expy, x_log=True, f_log=True, interpolant=interpolant)
+        tab_5 = galsim._LookupTable(expx, expy, x_log=True, f_log=True, interpolant=interpolant)
         for test_val in test_x_vals:
             result_1 = tab_1(test_val)
             result_2 = tab_2(np.exp(test_val))
             result_3 = np.log(tab_3(test_val))
             result_4 = np.log(tab_4(np.exp(test_val)))
+            result_5 = np.log(tab_5(np.exp(test_val)))
             np.testing.assert_almost_equal(
                 result_2, result_1, decimal=10,
                 err_msg='Disagreement when interpolating in log(x)')
@@ -267,6 +272,9 @@ def test_log():
             np.testing.assert_almost_equal(
                 result_4, result_1, decimal=10,
                 err_msg='Disagreement when interpolating in log(f) and log(x)')
+            np.testing.assert_almost_equal(
+                result_5, result_1, decimal=10,
+                err_msg='Disagreement when interpolating in log(f) and log(x) with _LookupTable')
 
     # Verify for exception when using x_log with non-equal-spaced galsim.Interpolant
     galsim.LookupTable(x, y, x_log=True, interpolant='linear') # works fine
@@ -379,6 +387,9 @@ def test_table_GSInterp():
             np.array([ii.xValue(x_, 10) for x_ in newx]),
             atol=1e-10, rtol=0
         )
+
+        tab2 = galsim._LookupTable(x, z[:,0], interpolant=interpolant)
+        assert tab2 == tab
 
 
 @timer
@@ -1029,10 +1040,10 @@ def test_integrate():
     assert np.min(y) >= 0.
     y = 2 * np.sqrt(y)
     t0 = time.time()
-    func = galsim.LookupTable(x,y, interpolant='linear')
+    func = galsim._LookupTable(x,y, interpolant='linear')
     ans1 = func.integrate()
     t1 = time.time()
-    func = galsim.LookupTable(x,y)  # Spline
+    func = galsim._LookupTable(x,y)  # Spline
     ans2 = func.integrate()
     t2 = time.time()
     ans3 = np.trapz(y,x)
