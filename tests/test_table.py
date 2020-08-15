@@ -125,9 +125,17 @@ def test_table():
         table3 = galsim._LookupTable(x=args1,f=vals1,interpolant=interp)
         assert table3 == table1
 
+    # Spline interpolation with only 2 points is just linear.
+    table1 = galsim.LookupTable([1,5],[9,3],'linear')
+    table2 = galsim.LookupTable([1,5],[9,3],'spline')
+    assert np.isclose(table1(3), 6)
+    assert np.isclose(table2(3), 6)
+    assert table1.interpolant == 'linear'
+    assert table2.interpolant == 'spline'
+
     assert_raises(ValueError, galsim.LookupTable, x=args1, f=vals1, interpolant='invalid')
     assert_raises(ValueError, galsim.LookupTable, x=[1], f=[1], interpolant='linear')
-    assert_raises(ValueError, galsim.LookupTable, x=[1,2], f=[1,2], interpolant='spline')
+    assert_raises(ValueError, galsim.LookupTable, x=[], f=[])
     assert_raises(ValueError, galsim.LookupTable, x=[1,1,1], f=[1,2,3])
     assert_raises(ValueError, galsim.LookupTable, x=[0,1,2], f=[1,2,3], x_log=True)
     assert_raises(ValueError, galsim.LookupTable, x=[-1,0,1], f=[1,2,3], x_log=True)

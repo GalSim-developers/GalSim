@@ -640,13 +640,17 @@ namespace galsim {
         // End points 2nd-derivatives zero for natural cubic spline
         _y2[0] = 0.;
         _y2[_n-1] = 0.;
-        // For 3 points second derivative at i=1 is simple
-        if (_n == 3){
+        assert(_n >= 2);
+        if (_n == 2) {
+            // Nothing to do if only 2 points.
+        } else if (_n == 3) {
+            // For 3 points second derivative at i=1 is simple
 
             _y2[1] = 3.*((_vals[2] - _vals[1]) / (_args[2] - _args[1]) -
                         (_vals[1] - _vals[0]) / (_args[1] - _args[0])) / (_args[2] - _args[0]);
 
-        } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
+        } else {
+            // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
 
 #ifdef USE_TMV
             tmv::SymBandMatrix<double> M(_n-2, 1);

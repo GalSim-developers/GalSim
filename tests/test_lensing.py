@@ -838,8 +838,6 @@ def test_tabulated():
     assert_raises(ValueError, galsim.LookupTable, k_arr, p_arr, interpolant='splin')
     ## k, P arrays not the same size
     assert_raises(ValueError, galsim.LookupTable, 0.01*np.arange(100.), p_arr)
-    ## arrays too small
-    assert_raises(ValueError, galsim.LookupTable, (1.,2.), (1., 2.))
     ## try to make shears, but grid includes k values that were not part of the originally
     ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an
     ## exception should be raised)
