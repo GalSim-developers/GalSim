@@ -22,6 +22,7 @@ import numpy as np
 import sys
 from astropy import units, constants
 import warnings
+import time
 
 import galsim
 from galsim_test_helpers import *
@@ -649,28 +650,58 @@ def test_SED_calculateMagnitude():
 
 @timer
 def test_redshift_calculateFlux():
-    sed = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0]),
+    sed = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0], 'linear'),
                      wave_type='nm', flux_type='fphotons')
-    bp = galsim.Bandpass(galsim.LookupTable([4,6], [1,1], interpolant='linear'),
-                         wave_type='nm')
+    bp1 = galsim.Bandpass(galsim.LookupTable([4,6], [1,1]), wave_type='nm')
+    bp2 = galsim.Bandpass(galsim.LookupTable([40,60], [1,1]), wave_type='Ang')
 
     for z in [0, 0.19, 0.2, 0.21, 2.5, 2.99, 3, 3.01, 4]:
         sedz = sed.atRedshift(z)
-        if sedz.blue_limit > bp.blue_limit or sedz.red_limit < bp.red_limit:
+        if sedz.blue_limit > bp1.blue_limit or sedz.red_limit < bp1.red_limit:
             with assert_raises(ValueError):
-                sedz.calculateFlux(bp)
+                sedz.calculateFlux(bp1)
+            with assert_raises(ValueError):
+                sedz.calculateFlux(bp2)
         else:
-            print('z = {} flux = {}'.format(z, sedz.calculateFlux(bp)))
+            flux1 = sedz.calculateFlux(bp1)
+            flux2 = sedz.calculateFlux(bp2)
+            print('z = {} flux = {}, {}'.format(z, flux1, flux2))
+            wave = np.linspace(bp1.blue_limit, bp1.red_limit, 10000)
+            f = sedz(wave) * bp1(wave)
+            flux3 = np.trapz(f, wave)
+            np.testing.assert_allclose(flux1, flux3)
+            np.testing.assert_allclose(flux2, flux3)
 
     # All analytic has easy to check answers
     sed = galsim.SED('(wave/500)**2', wave_type='nm', flux_type='fphotons')
-    bp = galsim.Bandpass('1', blue_limit=500, red_limit=1000, wave_type='nm')
+    bp1 = galsim.Bandpass('1', blue_limit=500, red_limit=1000, wave_type='nm')
+    bp2 = galsim.Bandpass(galsim.LookupTable(np.arange(500,1001),np.ones(501)), wave_type='nm')
+    bp3 = galsim.Bandpass(galsim.LookupTable(np.arange(5000,10001),np.ones(5001)), wave_type='Ang')
 
     for z in [0, 0.19, 0.2, 0.21, 2.5, 2.99, 3, 3.01, 4]:
         sedz = sed.atRedshift(z)
-        f = sedz.calculateFlux(bp)
-        print('z = {} flux = {}'.format(z, f))
-        np.testing.assert_almost_equal(f, 7./3. * 500 / (1.+z)**2)
+        f1 = sedz.calculateFlux(bp1)
+        f2 = sedz.calculateFlux(bp2)
+        f3 = sedz.calculateFlux(bp3)
+        print('z = {} flux = {}, {}'.format(z, f1, f2))
+        np.testing.assert_allclose(f1, 7./3. * 500 / (1.+z)**2)
+        np.testing.assert_allclose(f2, 7./3. * 500 / (1.+z)**2, rtol=1.e-6)
+        np.testing.assert_allclose(f3, 7./3. * 500 / (1.+z)**2, rtol=1.e-7)
+
+    # Time the flux calculation for a real SED through a non-trivial bandpass
+    sed = galsim.SED('CWW_Sbc_ext.sed', 'nm', 'flambda')
+    bp = galsim.Bandpass('ACS_wfc_F606W.dat', 'nm')
+    t0 = time.time()
+    flux0 = sed.calculateFlux(bp)
+    t1 = time.time()
+    flux1 = sed.atRedshift(1).calculateFlux(bp)
+    t2 = time.time()
+    print('z=0 disk in HST V band: flux = ',flux0, t1-t0)
+    print('z=1 disk in HST V band: flux = ',flux1, t2-t1)
+
+    # Regression tests
+    np.testing.assert_allclose(flux0, 2.993792e+15, rtol=1.e-4)
+    np.testing.assert_allclose(flux1, 4.395954e+14, rtol=1.e-4)
 
 
 @timer
