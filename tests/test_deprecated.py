@@ -449,6 +449,46 @@ def test_surface_ops():
     assert photons2 == im.photons
 
 
+@timer
+def test_midpoint_basic():
+    """Test the basic functionality of the midpt() method.
+    """
+    # This shouldn't be super accurate, but just make sure it's not really broken.
+    x = 0.01*np.arange(1000)
+    f = x**2
+    result = check_dep(galsim.integ.midpt, f, x)
+    expected_val = 10**3./3.
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=2, verbose=True,
+        err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
+
+
+@timer
+def test_trapz_basic():
+    """Test the basic functionality of the trapz() method.
+    """
+    # This shouldn't be super accurate, but just make sure it's not really broken.
+    func = lambda x: x**2
+    result = check_dep(galsim.integ.trapz, func, 0, 1)
+    expected_val = 1.**3./3.
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=6, verbose=True,
+        err_msg='Simple test of trapz() method failed for f(x)=x^2 from 0 to 1')
+
+    result = check_dep(galsim.integ.trapz, func, 0, 1, np.linspace(0, 1, 100000))
+    expected_val = 1.**3./3.
+    np.testing.assert_almost_equal(
+        result/expected_val, 1.0, decimal=6, verbose=True,
+        err_msg='Test of trapz() with points failed for f(x)=x^2 from 0 to 1')
+
+    with assert_raises(ValueError):
+        check_dep(galsim.integ.trapz, func, 0, 1, points=np.linspace(0, 1.1, 100))
+    with assert_raises(ValueError):
+        check_dep(galsim.integ.trapz, func, 0.1, 1, points=np.linspace(0, 1, 100))
+    with assert_raises(TypeError):
+        check_dep(galsim.integ.trapz, func, 0.1, 1, points=2.3)
+
+
 if __name__ == "__main__":
     test_gsparams()
     test_phase_psf()
@@ -461,3 +501,5 @@ if __name__ == "__main__":
     test_wfirst()
     test_roman_psfs()
     test_surface_ops()
+    test_midpoint_basic()
+    test_trapz_basic()

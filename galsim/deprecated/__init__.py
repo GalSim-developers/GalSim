@@ -49,3 +49,4 @@ def depr(f, v, s1, s2=None):
 
 from . import correlatednoise
 from . import randwalk
+from . import integ
