@@ -834,8 +834,7 @@ def test_SED_sampleWavelength():
         centers = bins[:-1] + step/2.
         cts1,_ = np.histogram(out,nbins)
 
-        #cts2 = np.array([galsim.integ.int1d(sed,low,low+step,1e-3,1e-6) for low in bins[:-1]])
-        cts2 = np.array([galsim.integ.trapz(sed,low,low+step) for low in bins[:-1]])
+        cts2 = np.array([galsim.integ.int1d(sed,low,low+step,1e-3,1e-6) for low in bins[:-1]])
         cts2 *= (float(len(out))/cts2.sum())
         return centers,(cts1, cts2)
 

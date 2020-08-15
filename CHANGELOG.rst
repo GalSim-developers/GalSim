@@ -43,6 +43,11 @@ API Changes
 - Added logger option to some config functions and methods. If you are using
   custom Image or Output types, you may need to add a ``logger=None`` optional
   parameter to some method signatures.
+- Deprecated ``galsim.integ.trapz``.  You should use ``galsim.integ.int1d``
+  instead, which is almost always more efficient.
+- Deprecated ``galsim.integ.midpt``.  You should use ``np.trapz`` or
+  ``galsim.trapz`` instead, which are almost equivalent, but slightly more
+  accurate.
 
 
 Config Updates

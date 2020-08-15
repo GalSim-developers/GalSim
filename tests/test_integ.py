@@ -192,19 +192,12 @@ def test_invroot_infinite_limits():
 
 @timer
 def test_midpoint_basic():
-    """Test the basic functionality of the midpt() method.
+    """Test the basic functionality of the midptRule() function.
     """
     # This shouldn't be super accurate, but just make sure it's not really broken.
     x = 0.01*np.arange(1000)
-    f = x**2
-    result = galsim.integ.midpt(f, x)
-    expected_val = 10**3./3.
-    np.testing.assert_almost_equal(
-        result/expected_val, 1.0, decimal=2, verbose=True,
-        err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
-
-    # Also test midptRule
     result = galsim.integ.midptRule(lambda x:x**2, x)
+    expected_val = 1.e3/3.
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=2, verbose=True,
         err_msg='Simple test of midptRule() method failed for f(x)=x^2 from 0 to 10')
@@ -212,32 +205,16 @@ def test_midpoint_basic():
 
 @timer
 def test_trapz_basic():
-    """Test the basic functionality of the trapz() method.
+    """Test the basic functionality of the trapzRule() function.
     """
     # This shouldn't be super accurate, but just make sure it's not really broken.
+    x = np.linspace(0, 1, 100000)
     func = lambda x: x**2
-    result = galsim.integ.trapz(func, 0, 1)
-    expected_val = 1.**3./3.
-    np.testing.assert_almost_equal(
-        result/expected_val, 1.0, decimal=6, verbose=True,
-        err_msg='Simple test of trapz() method failed for f(x)=x^2 from 0 to 1')
-
-    result = galsim.integ.trapz(func, 0, 1, np.linspace(0, 1, 100000))
-    expected_val = 1.**3./3.
-    np.testing.assert_almost_equal(
-        result/expected_val, 1.0, decimal=6, verbose=True,
-        err_msg='Test of trapz() with points failed for f(x)=x^2 from 0 to 1')
-
-    #Also test trapzRule
     result = galsim.integ.trapzRule(func, np.linspace(0, 1, 100000))
+    expected_val = 1./3.
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=6, verbose=True,
         err_msg='Test of trapzRule() with points failed for f(x)=x^2 from 0 to 1')
-
-    assert_raises(ValueError, galsim.integ.trapz, func, 0, 1, points=np.linspace(0, 1.1, 100))
-    assert_raises(ValueError, galsim.integ.trapz, func, 0.1, 1, points=np.linspace(0, 1, 100))
-    assert_raises(TypeError, galsim.integ.trapz, func, 0.1, 1, points=2.3)
-
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()
