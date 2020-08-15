@@ -34,18 +34,18 @@ namespace integ {
         public std::unary_function<double, double>
     {
     public:
-        PyFunc(const py::object& func) : _func(func) {}
+        PyFunc(const py::function& func) : _func(func) {}
         double operator()(double x) const
         { return PY_CAST<double>(_func(x)); }
     private:
-        const py::object& _func;
+        const py::function& _func;
     };
 #if defined(__GNUC__) && __GNUC__ >= 6
 #pragma GCC visibility pop
 #endif
 
     // Integrate a python function using int1d.
-    py::tuple PyInt1d(const py::object& func, double min, double max,
+    py::tuple PyInt1d(const py::function& func, double min, double max,
                       double rel_err=DEFRELERR, double abs_err=DEFABSERR)
     {
         PyFunc pyfunc(func);
