@@ -434,7 +434,7 @@ namespace galsim {
 
         double integ_prod_step(double x1, double f1, double x2, double f2, int i,
                                double g1, double g2) const {
-            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+            return 0.5 * f1 * (g1+g2) * (x2-x1);
         }
     };
 
@@ -454,7 +454,7 @@ namespace galsim {
 
         double integ_prod_step(double x1, double f1, double x2, double f2, int i,
                                double g1, double g2) const {
-            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+            return 0.5 * f2 * (g1+g2) * (x2-x1);
         }
     };
 
@@ -503,7 +503,17 @@ namespace galsim {
 
         double integ_prod_step(double x1, double f1, double x2, double f2, int i,
                                double g1, double g2) const {
-            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+            double x0 = _args[i-1];
+            double x3 = _args[i];
+            double xm = 0.5 * (x0+x3);
+            if (x2 <= xm) {
+                return 0.5 * f1 * (g1+g2) * (x2-x1);
+            } else if (x1 >= xm) {
+                return 0.5 * f2 * (g1+g2) * (x2-x1);
+            } else {
+                double gm = (g1*(x2-xm) + g2*(xm-x1)) / (x2-x1);
+                return 0.5 * f1 * (g1+gm) * (xm-x1) + 0.5 * f2 * (gm+g2) * (x2-xm);
+            }
         }
     };
 
@@ -593,7 +603,16 @@ namespace galsim {
 
         double integ_prod_step(double x1, double f1, double x2, double f2, int i,
                                double g1, double g2) const {
-            return (1./6.) * (x2-x1) * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+            double h = x2-x1;
+            double h3 = h*h*h;
+            double x0 = _args[i-1];
+            double x3 = _args[i];
+            double z1 = x1*g2 + x2*g1 + (15*x3 - 8*(x1+x2)) * (g1+g2);
+            double z2 = x1*g1 + x2*g2 + (7*(x1+x2) - 15*x0) * (g1+g2);
+
+            double step = (1./6.) * h * (f1*(2.*g1 + g2) + f2*(g1 + 2.*g2));
+            step -= (1./360.) * (_y2[i-1] * z1 + _y2[i] * z2) * h3 / (x3-x0);
+            return step;
         }
 
     private:
