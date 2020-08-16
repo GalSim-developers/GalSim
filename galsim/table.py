@@ -236,10 +236,9 @@ class LookupTable(object):
 
             \int_{x_\mathrm{min}}^{x_\mathrm{max}} f(x) dx
 
-        .. note::
-
-            This function is not implemented for LookupTables that use log for either x or f,
-            or that use a ``galsim.Interpolant``.
+        This function is not implemented for LookupTables that use log for either x or f,
+        or that use a ``galsim.Interpolant``.  Also, if x_min or x_max are beyond the range
+        of the tabulated function, the function will be considered to be zero there.
 
         .. note::
 
@@ -275,14 +274,12 @@ class LookupTable(object):
                 "Integration with interpolant=%s is not implemented."%(self.interpolant))
         if x_min is None:
             x_min = self.x_min
-        elif x_min < self.x_min or x_min > self.x_max:
-            raise GalSimRangeError("Provided x_min must be in LookupTable's domain.",
-                                   x_min, self.x_min, self.x_max)
+        else:
+            x_min = max(x_min, self.x_min)
         if x_max is None:
             x_max = self.x_max
-        elif x_max < self.x_min or x_max > self.x_max:
-            raise GalSimRangeError("Provided x_max must be in LookupTable's domain.",
-                                   x_max, self.x_min, self.x_max)
+        else:
+            x_max = min(x_max, self.x_max)
 
         return self._tab.integrate(x_min, x_max)
 
@@ -298,14 +295,13 @@ class LookupTable(object):
         use the abscissae from both that function and :math:`f(x)` (i.e. ``self``).
         Otherwise, the second function will be evaluated at the abscissae of :math:`f(x)`.
 
-        .. note::
+        This function is not implemented for LookupTables that use log for either x or f,
+        or that use a ``galsim.Interpolant``.  Also, if x_min or x_max are beyond the range
+        of either tabulated function, the function will be considered to be zero there.
 
-            This function is not implemented for LookupTables that use log for either x or f,
-            or that use a ``galsim.Interpolant``.
-
-            Also, the second function :math:`g(x)` is always approximated with linear interpolation
-            between the abscissae, even if it is a `LookupTable` with a different specified
-            interpolation.
+        Also, the second function :math:`g(x)` is always approximated with linear interpolation
+        between the abscissae, even if it is a `LookupTable` with a different specified
+        interpolation.
 
         Parameters:
             g:          The function to multiply by the current function for the integral.
@@ -328,17 +324,20 @@ class LookupTable(object):
                 "Integration with interpolant=%s is not implemented."%(self.interpolant))
         if x_min is None:
             x_min = self.x_min / x_factor
-        elif x_min * x_factor < self.x_min or x_min * x_factor > self.x_max:
-            raise GalSimRangeError("Provided x_min must be in LookupTable's domain.",
-                                   x_min * x_factor, self.x_min, self.x_max)
+        else:
+            x_min = max(x_min, self.x_min / x_factor)
         if x_max is None:
             x_max = self.x_max / x_factor
-        elif x_max * x_factor < self.x_min or x_max * x_factor > self.x_max:
-            raise GalSimRangeError("Provided x_max must be in LookupTable's domain.",
-                                   x_max * x_factor, self.x_min, self.x_max)
+        else:
+            x_max = min(x_max, self.x_max / x_factor)
 
-        if not isinstance(g, LookupTable):
-            gx = np.union1d(self.x / x_factor, [x_min, x_max])
+        if isinstance(g, LookupTable):
+            x_min = max(x_min, g.x_min)
+            x_max = min(x_max, g.x_max)
+        else:
+            gx = self.x / x_factor
+            gx = gx[(gx >= x_min) & (gx <= x_max)]
+            gx = np.union1d(gx, [x_min, x_max])
             # Let this raise an appropriate error if g is not a valid function over this domain.
             gf = g(gx)
             g = _LookupTable(gx, gf, 'linear')
