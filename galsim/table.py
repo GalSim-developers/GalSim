@@ -286,7 +286,7 @@ class LookupTable(object):
 
         return self._tab.integrate(x_min, x_max)
 
-    def integrate_product(self, g, x_min=None, x_max=None):
+    def integrate_product(self, g, x_min=None, x_max=None, x_factor=1.):
         r"""Calculate an estimate of the integral of the tabulated function multiplied by a second
         function from x_min to x_max:
 
@@ -313,6 +313,8 @@ class LookupTable(object):
                         means to use self.x_min]
             x_max:      The maximum abscissa to use for the integral.  [default: None, which
                         means to use self.x_max]
+            x_factor:   Optionally scale the x values of f by this factor when doing the integral.
+                        I.e. Find :math:`\int f(x x_\mathrm{factor}) g(x) dx`. [default: 1]
 
         Returns:
             an estimate of the integral
@@ -325,23 +327,23 @@ class LookupTable(object):
             raise GalSimNotImplementedError(
                 "Integration with interpolant=%s is not implemented."%(self.interpolant))
         if x_min is None:
-            x_min = self.x_min
-        elif x_min < self.x_min or x_min > self.x_max:
+            x_min = self.x_min / x_factor
+        elif x_min * x_factor < self.x_min or x_min * x_factor > self.x_max:
             raise GalSimRangeError("Provided x_min must be in LookupTable's domain.",
-                                   x_min, self.x_min, self.x_max)
+                                   x_min * x_factor, self.x_min, self.x_max)
         if x_max is None:
-            x_max = self.x_max
-        elif x_max < self.x_min or x_max > self.x_max:
+            x_max = self.x_max / x_factor
+        elif x_max * x_factor < self.x_min or x_max * x_factor > self.x_max:
             raise GalSimRangeError("Provided x_max must be in LookupTable's domain.",
-                                   x_max, self.x_min, self.x_max)
+                                   x_max * x_factor, self.x_min, self.x_max)
 
         if not isinstance(g, LookupTable):
-            gx = np.union1d(self.x, [x_min, x_max])
+            gx = np.union1d(self.x / x_factor, [x_min, x_max])
             # Let this raise an appropriate error if g is not a valid function over this domain.
             gf = g(gx)
             g = _LookupTable(gx, gf, 'linear')
 
-        return self._tab.integrate_product(g._tab, x_min, x_max)
+        return self._tab.integrate_product(g._tab, float(x_min), float(x_max), float(x_factor))
 
     def _check_range(self, x):
         slop = (self.x_max - self.x_min) * 1.e-6

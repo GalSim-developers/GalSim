@@ -70,7 +70,7 @@ namespace galsim {
         double integrate(double xmin, double xmax) const;
 
         // Integrate f(x) g(x) from xmin to xmax
-        double integrateProduct(const Table& g, double xmin, double xmax) const;
+        double integrateProduct(const Table& g, double xmin, double xmax, double xfact) const;
 
         class TableImpl;
     protected:

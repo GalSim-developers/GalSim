@@ -1106,26 +1106,26 @@ def test_integrate_product():
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='linear'),
         galsim.LookupTable([0,4], [1,8], interpolant='linear'),
         galsim.LookupTable([0,0.1,0.2,3.5,4], [1,5,5,8,1], interpolant='linear'),
-        galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,8,1], interpolant='linear'),
+        #galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,8,1], interpolant='linear'),
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='floor'),
-        galsim.LookupTable([0,4], [1,8], interpolant='floor'),
+        #galsim.LookupTable([0,4], [1,8], interpolant='floor'),
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='ceil'),
-        galsim.LookupTable([0,4], [1,8], interpolant='ceil'),
+        #galsim.LookupTable([0,4], [1,8], interpolant='ceil'),
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='nearest'),
-        galsim.LookupTable([0,4], [1,8], interpolant='nearest'),
+        #galsim.LookupTable([0,4], [1,8], interpolant='nearest'),
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='spline'),
         #galsim.LookupTable([0,1,4], [1,1,8], interpolant='spline'),
         #galsim.LookupTable([0,0.1,0.2,3.5,4], [1,2,2,8,7], interpolant='spline'),
-        #galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,5,1], interpolant='spline'),
+        galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,5,1], interpolant='spline'),
     ]
 
     g_functions = [
-        galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='linear'),
-        galsim.LookupTable([0,4], [1,8], interpolant='linear'),
-        galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='spline'),
-        galsim.LookupTable([0,1,4], [1,1,8], interpolant='spline'),
-        galsim.LookupTable([0,0.1,0.2,3.5,4], [1,2,2,8,7], interpolant='spline'),
-        galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,5,1], interpolant='spline'),
+        galsim.LookupTable([0,2,4,6], [1,5,8,1], interpolant='linear'),
+        galsim.LookupTable([0,6], [1,8], interpolant='linear'),
+        galsim.LookupTable([0,1,2,3,6], [1,5,5,8,1], interpolant='spline'),
+        #galsim.LookupTable([0,1,6], [1,1,8], interpolant='spline'),
+        #galsim.LookupTable([0,0.1,0.2,3.5,6], [1,2,2,8,7], interpolant='spline'),
+        galsim.LookupTable([0,2.1,2.2,2.5,6], [1,5,5,5,1], interpolant='spline'),
         lambda x: x**3,
         np.exp,
     ]
@@ -1133,29 +1133,31 @@ def test_integrate_product():
     for func in functions:
         print('func = ',repr(func))
         for g in g_functions:
-            print('g = ',repr(g))
-            for xmin in [None, func.x_min, func.x_min+1]:
-                for xmax in [None, func.x_max, func.x_max-1]:
-                    func_ans = func.integrate_product(g, xmin, xmax)
-                    if xmin is None: xmin = func.x_min
-                    if xmax is None: xmax = func.x_max
-                    x = np.linspace(xmin, xmax, 10000)
-                    # Make the version of g that integrate_product approximates it as.
-                    if isinstance(g, galsim.LookupTable):
-                        x2 = np.union1d(func.x, g.x)
-                    else:
-                        x2 = func.x
-                    x2 = np.union1d(x2, [xmin, xmax])
-                    g2 = galsim.LookupTable(x2, g(x2), 'linear')
-                    fg = func(x) * g2(x)
-                    np_ans = np.trapz(fg,x)
-                    print('integrate range %s..%s = %s  %s'%(xmin,xmax,func_ans,np_ans))
-                    if func.interpolant in ['linear', 'spline']:
-                        rtol = 1.e-7
-                    else:
-                        # ceil, floor, and nearest not super well approximated by trapz integration.
-                        rtol = 1.e-3
-                    np.testing.assert_allclose(func_ans, np_ans, rtol=rtol)
+            #print('g = ',repr(g))
+            for xfact in [1, 1.25, 0.9]:
+                #print('xfact = ',xfact)
+                for xmin in [None, func.x_min/xfact, func.x_min/xfact+1]:
+                    for xmax in [None, func.x_max/xfact, func.x_max/xfact-1]:
+                        func_ans = func.integrate_product(g, xmin, xmax, xfact)
+                        if xmin is None: xmin = func.x_min / xfact
+                        if xmax is None: xmax = func.x_max / xfact
+                        x = np.linspace(xmin, xmax, 10000)
+                        # Make the version of g that integrate_product approximates it as.
+                        if isinstance(g, galsim.LookupTable):
+                            x2 = np.union1d(func.x / xfact, g.x)
+                        else:
+                            x2 = func.x / xfact
+                        x2 = np.union1d(x2, [xmin, xmax])
+                        g2 = galsim.LookupTable(x2, g(x2), 'linear')
+                        fg = func(x*xfact) * g2(x)
+                        np_ans = np.trapz(fg,x)
+                        #print('integrate range %s..%s = %s  %s'%(xmin,xmax,func_ans,np_ans))
+                        if func.interpolant in ['linear', 'spline']:
+                            rtol = 1.e-7
+                        else:
+                            # ceil, floor, and nearest not super well approximated by trapz integration.
+                            rtol = 1.e-3
+                        np.testing.assert_allclose(func_ans, np_ans, rtol=rtol)
 
     # Check errors
     with assert_raises(NotImplementedError):
