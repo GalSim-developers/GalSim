@@ -1026,11 +1026,11 @@ def test_integrate():
 
     for func in functions:
         print('func = ',repr(func))
-        for xmin in [None, func.x_min, func.x_min+1]:
-            for xmax in [None, func.x_max, func.x_max-1]:
+        for xmin in [None, func.x_min, func.x_min+1, func.x_min-1]:
+            for xmax in [None, func.x_max, func.x_max-1, func.x_max+1]:
                 func_ans = func.integrate(xmin, xmax)
-                if xmin is None: xmin = func.x_min
-                if xmax is None: xmax = func.x_max
+                if xmin is None or xmin < func.x_min: xmin = func.x_min
+                if xmax is None or xmax > func.x_max: xmax = func.x_max
                 x = np.linspace(xmin, xmax, 10000)
                 f = func(x)
                 np_ans = np.trapz(f,x)
@@ -1094,10 +1094,6 @@ def test_integrate():
         galsim.LookupTable([1,2,3,4], [5,5,8,1], interpolant=galsim.Linear()).integrate()
     with assert_raises(NotImplementedError):
         galsim.LookupTable([1,2,3,4], [5,5,8,1], interpolant=galsim.Lanczos(5)).integrate()
-    with assert_raises(ValueError):
-        galsim.LookupTable([1,2,3,4], [5,5,8,1]).integrate(0,3)
-    with assert_raises(ValueError):
-        galsim.LookupTable([1,2,3,4], [5,5,8,1]).integrate(1,5)
 
 
 @timer
@@ -1106,26 +1102,18 @@ def test_integrate_product():
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='linear'),
         galsim.LookupTable([0,4], [1,8], interpolant='linear'),
         galsim.LookupTable([0,0.1,0.2,3.5,4], [1,5,5,8,1], interpolant='linear'),
-        #galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,8,1], interpolant='linear'),
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='floor'),
-        #galsim.LookupTable([0,4], [1,8], interpolant='floor'),
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='ceil'),
-        #galsim.LookupTable([0,4], [1,8], interpolant='ceil'),
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='nearest'),
-        #galsim.LookupTable([0,4], [1,8], interpolant='nearest'),
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='spline'),
-        #galsim.LookupTable([0,1,4], [1,1,8], interpolant='spline'),
-        #galsim.LookupTable([0,0.1,0.2,3.5,4], [1,2,2,8,7], interpolant='spline'),
         galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,5,1], interpolant='spline'),
     ]
 
     g_functions = [
-        galsim.LookupTable([0,2,4,6], [1,5,8,1], interpolant='linear'),
+        galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='linear'),
         galsim.LookupTable([0,6], [1,8], interpolant='linear'),
-        galsim.LookupTable([0,1,2,3,6], [1,5,5,8,1], interpolant='spline'),
-        #galsim.LookupTable([0,1,6], [1,1,8], interpolant='spline'),
-        #galsim.LookupTable([0,0.1,0.2,3.5,6], [1,2,2,8,7], interpolant='spline'),
-        galsim.LookupTable([0,2.1,2.2,2.5,6], [1,5,5,5,1], interpolant='spline'),
+        galsim.LookupTable([0,2,4,6], [1,5,8,1], interpolant='spline'),
+        galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,5,1], interpolant='spline'),
         lambda x: x**3,
         np.exp,
     ]
@@ -1136,19 +1124,26 @@ def test_integrate_product():
             #print('g = ',repr(g))
             for xfact in [1, 1.25, 0.9]:
                 #print('xfact = ',xfact)
-                for xmin in [None, func.x_min/xfact, func.x_min/xfact+1]:
-                    for xmax in [None, func.x_max/xfact, func.x_max/xfact-1]:
+                for xmin in [None, func.x_min/xfact, func.x_min/xfact+1, func.x_min/xfact-1]:
+                    for xmax in [None, func.x_max/xfact, func.x_max/xfact-1, func.x_max/xfact+1]:
+                        #print('xmin/xmax = ',xmin,xmax)
                         func_ans = func.integrate_product(g, xmin, xmax, xfact)
-                        if xmin is None: xmin = func.x_min / xfact
-                        if xmax is None: xmax = func.x_max / xfact
-                        x = np.linspace(xmin, xmax, 10000)
+                        if xmin is None or xmin < func.x_min: xmin = func.x_min / xfact
+                        if xmax is None or xmax > func.x_max: xmax = func.x_max / xfact
+
                         # Make the version of g that integrate_product approximates it as.
                         if isinstance(g, galsim.LookupTable):
+                            if xmin < g.x_min: xmin = g.x_min
+                            if xmax > g.x_max: xmax = g.x_max
                             x2 = np.union1d(func.x / xfact, g.x)
+                            x2 = x2[(x2>=xmin) & (x2<=xmax)]
                         else:
                             x2 = func.x / xfact
                         x2 = np.union1d(x2, [xmin, xmax])
                         g2 = galsim.LookupTable(x2, g(x2), 'linear')
+
+                        # Do the integral using trapz with fine x spacing.
+                        x = np.linspace(xmin, xmax, 10000)
                         fg = func(x*xfact) * g2(x)
                         np_ans = np.trapz(fg,x)
                         #print('integrate range %s..%s = %s  %s'%(xmin,xmax,func_ans,np_ans))
@@ -1172,10 +1167,6 @@ def test_integrate_product():
         galsim.LookupTable([1,2,3,4], [5,5,8,1], interpolant=galsim.Linear()).integrate_product(g)
     with assert_raises(NotImplementedError):
         galsim.LookupTable([1,2,3,4], [5,5,8,1], interpolant=galsim.Lanczos(5)).integrate_product(g)
-    with assert_raises(ValueError):
-        galsim.LookupTable([1,2,3,4], [5,5,8,1]).integrate_product(g,0,3)
-    with assert_raises(ValueError):
-        galsim.LookupTable([1,2,3,4], [5,5,8,1]).integrate_product(g,1,5)
 
 
 if __name__ == "__main__":
