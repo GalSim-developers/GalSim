@@ -1116,6 +1116,7 @@ def test_integrate_product():
         galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,5,1], interpolant='spline'),
         lambda x: x**3,
         np.exp,
+        lambda x: 17.,
     ]
 
     for func in functions:
@@ -1140,7 +1141,9 @@ def test_integrate_product():
                         else:
                             x2 = func.x / xfact
                         x2 = np.union1d(x2, [xmin, xmax])
-                        g2 = galsim.LookupTable(x2, g(x2), 'linear')
+                        gf2 = g(x2)
+                        if isinstance(gf2, float): gf2 = gf2 * np.ones(len(x2))
+                        g2 = galsim.LookupTable(x2, gf2, 'linear')
 
                         # Do the integral using trapz with fine x spacing.
                         x = np.linspace(xmin, xmax, 10000)

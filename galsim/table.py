@@ -340,6 +340,14 @@ class LookupTable(object):
             gx = np.union1d(gx, [x_min, x_max])
             # Let this raise an appropriate error if g is not a valid function over this domain.
             gf = g(gx)
+            # If g is a constant function (like lambda wave: 1), then this doesn't return
+            # an array.  Make it one.
+            try:
+                len(gf)
+            except TypeError:
+                gf1 = gf
+                gf = np.empty_like(gx, dtype=float)
+                gf.fill(gf1)
             g = _LookupTable(gx, gf, 'linear')
 
         return self._tab.integrate_product(g._tab, float(x_min), float(x_max), float(x_factor))
