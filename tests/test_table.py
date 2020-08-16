@@ -1026,11 +1026,21 @@ def test_integrate():
 
     for func in functions:
         print('func = ',repr(func))
-        for xmin in [None, func.x_min, func.x_min+1, func.x_min-1]:
-            for xmax in [None, func.x_max, func.x_max-1, func.x_max+1]:
-                func_ans = func.integrate(xmin, xmax)
-                if xmin is None or xmin < func.x_min: xmin = func.x_min
-                if xmax is None or xmax > func.x_max: xmax = func.x_max
+        for x_min in [None, func.x_min, func.x_min+1, func.x_min-1]:
+            for x_max in [None, func.x_max, func.x_max-1, func.x_max+1]:
+                func_ans = func.integrate(x_min, x_max)
+
+                # Note: To keep the original values, x_min, x_max are the loop values
+                #       and xmin, xmax are what I use for the test integration, which may
+                #       need to be adjusted somewhat.
+                if x_min is None or x_min < func.x_min:
+                    xmin = func.x_min
+                else:
+                    xmin = x_min
+                if x_max is None or x_max > func.x_max:
+                    xmax = func.x_max
+                else:
+                    xmax = x_max
                 x = np.linspace(xmin, xmax, 10000)
                 f = func(x)
                 np_ans = np.trapz(f,x)
@@ -1038,9 +1048,20 @@ def test_integrate():
                 if func.interpolant in ['linear', 'spline']:
                     rtol = 1.e-7
                 else:
-                    # ceil, floor, and nearest not super well approximated by trapz integration.
+                    # ceil, floor, and nearest not super well approximated by trapz
                     rtol = 1.e-3
                 np.testing.assert_allclose(func_ans, np_ans, rtol=rtol)
+
+                # if xmin > xmax, return the negative.
+                if x_min is not None and x_max is not None:
+                    neg_func_ans = func.integrate(x_max, x_min)
+                    np.testing.assert_allclose(neg_func_ans, -np_ans, rtol=rtol)
+
+                # if xmin == xmax, result should be 0.
+                if x_min is not None and x_max is None:
+                    zero_func_ans = func.integrate(x_min, x_min)
+                    np.testing.assert_allclose(zero_func_ans, 0, atol=1.e-12)
+
 
     # Time how long it takes to integrate a really big table
     x = np.linspace(0,2,1000000)
@@ -1112,11 +1133,12 @@ def test_integrate_product():
     g_functions = [
         galsim.LookupTable([0,1,2,3,4], [1,5,5,8,1], interpolant='linear'),
         galsim.LookupTable([0,6], [1,8], interpolant='linear'),
-        galsim.LookupTable([0,2,4,6], [1,5,8,1], interpolant='spline'),
+        galsim.LookupTable([2,4,6,8], [1,5,8,1], interpolant='spline'),
         galsim.LookupTable([0,2.1,2.2,2.5,4], [1,5,5,5,1], interpolant='spline'),
         lambda x: x**3,
         np.exp,
         lambda x: 17.,
+        galsim.LookupTable([5,10], [1,8], interpolant='linear'),
     ]
 
     for func in functions:
@@ -1125,12 +1147,18 @@ def test_integrate_product():
             #print('g = ',repr(g))
             for xfact in [1, 1.25, 0.9]:
                 #print('xfact = ',xfact)
-                for xmin in [None, func.x_min/xfact, func.x_min/xfact+1, func.x_min/xfact-1]:
-                    for xmax in [None, func.x_max/xfact, func.x_max/xfact-1, func.x_max/xfact+1]:
-                        #print('xmin/xmax = ',xmin,xmax)
-                        func_ans = func.integrate_product(g, xmin, xmax, xfact)
-                        if xmin is None or xmin < func.x_min: xmin = func.x_min / xfact
-                        if xmax is None or xmax > func.x_max: xmax = func.x_max / xfact
+                for x_min in [None, func.x_min/xfact, func.x_min/xfact+1, func.x_min/xfact-1]:
+                    for x_max in [None, func.x_max/xfact, func.x_max/xfact-1, func.x_max/xfact+1]:
+                        #print('xmin/xmax = ',x_min,x_max)
+                        func_ans = func.integrate_product(g, x_min, x_max, xfact)
+                        if x_min is None or x_min < func.x_min:
+                            xmin = func.x_min / xfact
+                        else:
+                            xmin = x_min
+                        if x_max is None or x_max > func.x_max:
+                            xmax = func.x_max / xfact
+                        else:
+                            xmax = x_max
 
                         # Make the version of g that integrate_product approximates it as.
                         if isinstance(g, galsim.LookupTable):
@@ -1140,6 +1168,9 @@ def test_integrate_product():
                             x2 = x2[(x2>=xmin) & (x2<=xmax)]
                         else:
                             x2 = func.x / xfact
+                        if xmin >= xmax:
+                            np.testing.assert_allclose(func_ans, 0, atol=1.e-12)
+                            continue
                         x2 = np.union1d(x2, [xmin, xmax])
                         gf2 = g(x2)
                         if isinstance(gf2, float): gf2 = gf2 * np.ones(len(x2))
@@ -1153,9 +1184,20 @@ def test_integrate_product():
                         if func.interpolant in ['linear', 'spline']:
                             rtol = 1.e-7
                         else:
-                            # ceil, floor, and nearest not super well approximated by trapz integration.
+                            # ceil, floor, and nearest not super well approximated by trapz
                             rtol = 1.e-3
                         np.testing.assert_allclose(func_ans, np_ans, rtol=rtol)
+
+                        # if xmin > xmax, return the negative.
+                        if x_min is not None and x_max is not None:
+                            neg_func_ans = func.integrate_product(g, x_max, x_min, xfact)
+                            np.testing.assert_allclose(neg_func_ans, -np_ans, rtol=rtol)
+
+                        # if xmin == xmax, result should be 0.
+                        if x_min is not None and x_max is None:
+                            zero_func_ans = func.integrate_product(g, x_min, x_min, xfact)
+                            np.testing.assert_allclose(zero_func_ans, 0, atol=1.e-12)
+
 
     # Check errors
     with assert_raises(NotImplementedError):
