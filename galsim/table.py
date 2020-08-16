@@ -281,7 +281,12 @@ class LookupTable(object):
         else:
             x_max = min(x_max, self.x_max)
 
-        return self._tab.integrate(x_min, x_max)
+        if x_min < x_max:
+            return self._tab.integrate(x_min, x_max)
+        elif x_min == x_max:
+            return 0.
+        else:
+            return -self.integrate(x_max, x_min)
 
     def integrate_product(self, g, x_min=None, x_max=None, x_factor=1.):
         r"""Calculate an estimate of the integral of the tabulated function multiplied by a second
@@ -330,10 +335,16 @@ class LookupTable(object):
             x_max = self.x_max / x_factor
         else:
             x_max = min(x_max, self.x_max / x_factor)
+        if x_min > x_max:
+            return -self.integrate_product(g, x_max, x_min, x_factor)
+        elif x_min == x_max:
+            return 0.
 
         if isinstance(g, LookupTable):
             x_min = max(x_min, g.x_min)
             x_max = min(x_max, g.x_max)
+            if x_min >= x_max:
+                return 0.
         else:
             gx = self.x / x_factor
             gx = gx[(gx >= x_min) & (gx <= x_max)]
