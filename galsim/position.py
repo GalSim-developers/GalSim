@@ -62,6 +62,15 @@ class Position(object):
 
     Note though that the types generally need to match.  For example, you cannot multiply
     a PositionI by a float add a PositionD to a PositionI in place.
+
+    Position instances can be sheared by a `galsim.Shear`::
+
+        >>> pos = galsim.PositionD(x=0.5, y=-0.5)
+        >>> shear = galsim.Shear(g1=0.1, g2=-0.1)
+        >>> sheared_pos = pos.shear(shear)
+
+    Note that this operation will always return a PositionD even if
+    an integer position is being sheared.
     """
     def __init__(self):
         raise NotImplementedError("Cannot instantiate the base class.  "
@@ -148,6 +157,24 @@ class Position(object):
 
     def __hash__(self):
         return hash((self.__class__.__name__, self.x, self.y))
+
+    def shear(self, shear):
+        """Shear the position.
+
+        See the doc string of `galsim.Shear.getMatrix` for more details.
+
+        Parameters:
+            shear:    a `galsim.Shear` instance
+
+        Returns:
+            a `galsim.PositionD` instance.
+        """
+        shear_mat = shear.getMatrix()
+        return PositionD(
+            self.x * shear_mat[0, 0] + self.y * shear_mat[0, 1],
+            self.x * shear_mat[1, 0] + self.y * shear_mat[1, 1],
+        )
+
 
 class PositionD(Position):
     """A Position that takes floating point values.
