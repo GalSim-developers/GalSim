@@ -69,7 +69,7 @@ def test_shear_position():
 
 
 @timer
-def test_shear_position_image_integration():
+def test_shear_position_image_integration_pixelwcs():
     wcs = galsim.PixelScale(0.3)
     obj1 = galsim.Gaussian(sigma=3)
     obj2 = galsim.Gaussian(sigma=2)
@@ -88,9 +88,44 @@ def test_shear_position_image_integration():
         center=im2.center + wcs.toImage(pos2.shear(shear)),
     )
 
+    print("err:", np.max(np.abs(im1.array - im2.array)))
     assert np.allclose(im1.array, im2.array, rtol=0, atol=5e-8)
+
+
+@timer
+def test_shear_position_image_integration_offsetwcs():
+    wcs = galsim.OffsetShearWCS(
+        0.3,
+        galsim.Shear(g1=-0.2, g2=0.4),
+        origin=galsim.PositionD(x=-1.1, y=2.7),
+        world_origin=galsim.PositionD(x=0.6, y=-2.5),
+    )
+
+    obj1 = galsim.Gaussian(sigma=3)
+    obj2 = galsim.Gaussian(sigma=2)
+    pos2 = galsim.PositionD(3, 5)
+    pos1 = galsim.PositionD(0, 0)
+    sum_obj = obj1 + obj2.shift(pos2)
+    shear = galsim.Shear(g1=0.1, g2=0.18)
+    im1 = galsim.Image(50, 50, wcs=wcs)
+    sum_obj.shear(shear).drawImage(im1, center=wcs.toImage(pos1))
+
+    # Equivalent to shear each object separately and drawing at the sheared position.
+    im2 = galsim.Image(50, 50, wcs=wcs)
+    obj1.shear(shear).drawImage(im2, center=wcs.toImage(pos1))
+    obj2.shear(shear).drawImage(
+        im2,
+        add_to_image=True,
+        center=wcs.toImage(pos2.shear(shear)),
+    )
+
+    print("err:", np.max(np.abs(im1.array - im2.array)))
+    assert np.allclose(im1.array, im2.array, rtol=0, atol=2e-7), (
+        np.max(np.abs(im1.array - im2.array))
+    )
 
 
 if __name__ == "__main__":
     test_shear_position()
-    test_shear_position_image_integration()
+    test_shear_position_image_integration_pixelwcs()
+    test_shear_position_image_integration_offsetwcs()
