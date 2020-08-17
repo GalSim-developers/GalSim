@@ -85,7 +85,7 @@ def test_shear_position_image_integration():
     obj2.shear(shear).drawImage(
         im2,
         add_to_image=True,
-        center=im2.center + wcs.toImage((pos2).shear(shear)),
+        center=im2.center + wcs.toImage(pos2.shear(shear)),
     )
 
     assert np.allclose(im1.array, im2.array, rtol=0, atol=5e-8)
