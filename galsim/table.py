@@ -27,6 +27,18 @@ from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_wa
 from .errors import GalSimNotImplementedError
 from .interpolant import Interpolant
 
+def _str_array(a):
+    # Used by both LookupTable.__str__ and LookupTable2D.__str__
+    # to write the x, f, etc. numpy arrays in an abbreviated form so they don't fill the
+    # screen with numbers.
+    # The short form writes the whole array if it has at most 5 values,
+    # else just the first two and last two values in the array.
+    if len(a) <= 5:
+        return str(a.tolist())
+    else:
+        return "[{}, {}, ..., {}, {}]".format(a[0],a[1],a[-2],a[-1])
+
+
 class LookupTable(object):
     """
     LookupTable represents a lookup table to store function values that may be slow to calculate,
@@ -410,8 +422,7 @@ class LookupTable(object):
             self.x.tolist(), self.f.tolist(), self.interpolant, self.x_log, self.f_log)
 
     def __str__(self):
-        s = 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s]'%(
-            self.x[0], self.x[-1], self.f[0], self.f[-1])
+        s = 'galsim.LookupTable(x=%s, f=%s'%(_str_array(self.x), _str_array(self.f))
         if self.interpolant != 'spline':
             s += ', interpolant=%r'%(self.interpolant)
         if self.x_log:
@@ -1030,10 +1041,10 @@ class LookupTable2D(object):
             return dfdx, dfdy
 
     def __str__(self):
-        return ("galsim.LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
-                "f=[[%s,...,%s],...,[%s,...,%s]], interpolant=%r, edge_mode=%r)"%(
-            self.x[0], self.x[-1], self.y[0], self.y[-1],
-            self.f[0,0], self.f[0,-1], self.f[-1,0], self.f[-1,-1],
+        return ("galsim.LookupTable2D(x=%s, y=%s, "
+                "f=[%s,...,%s], interpolant=%r, edge_mode=%r)"%(
+            _str_array(self.x), _str_array(self.y),
+            _str_array(self.f[0]), _str_array(self.f[-1]),
             self.interpolant, self.edge_mode))
 
     def __repr__(self):
