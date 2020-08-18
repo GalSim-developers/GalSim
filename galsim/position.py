@@ -244,7 +244,7 @@ def _PositionD(x, y):
 
 def _PositionI(x, y):
     """Equivalent to `PositionI` constructor, but skips some sanity checks and argument parsing.
-    This requires that the four values already be int types.
+    This requires that x,y are ints.
     """
     ret = PositionI.__new__(PositionI)
     ret.x = int(x)
