@@ -579,6 +579,7 @@ class Bandpass(object):
         Returns:
             the thinned `Bandpass`.
         """
+        from .table import _LookupTable
         if len(self.wave_list) > 0:
             x = self.wave_list
             f = self(x)
@@ -586,7 +587,7 @@ class Bandpass(object):
                                                          trim_zeros=trim_zeros,
                                                          preserve_range=preserve_range,
                                                          fast_search=fast_search)
-            tp = LookupTable(newx, newf, interpolant='linear')
+            tp = _LookupTable(newx, newf, 'linear')
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
             wave_list = np.array(newx)
