@@ -2596,6 +2596,21 @@ def test_fittedsipwcs():
             atol=tol[tag][1]
         )
 
+        # Check x,y being higher dim than 1
+        x_test_2d, y_test_2d = fittedWCS.radecToxy(ra.reshape(30,10), dec.reshape(30,10),
+                                                   units='rad')
+        assert x_test_2d.shape == (30,10)
+        assert y_test_2d.shape == (30,10)
+        np.testing.assert_array_equal(x_test_2d.ravel(), x_test)
+        np.testing.assert_array_equal(y_test_2d.ravel(), y_test)
+
+        ra_test_3d, dec_test_3d = fittedWCS.xyToradec(x.reshape(5,5,12), y.reshape(5,5,12),
+                                                      units='rad')
+        assert ra_test_3d.shape == (5,5,12)
+        assert dec_test_3d.shape == (5,5,12)
+        np.testing.assert_array_equal(ra_test_3d.ravel(), ra_test)
+        np.testing.assert_array_equal(dec_test_3d.ravel(), dec_test)
+
         # Try again, but force a different center
         # Increase tolerance since WCS no longer nicely centered on region of
         # interest.
