@@ -2679,7 +2679,7 @@ def test_fittedsipwcs():
         center=center
     )
     ra_test, dec_test = fittedWCS.xyToradec(x, y, units='rad')
-    check_sphere(ra, dec, ra_test, dec_test, atol=2200)
+    check_sphere(ra, dec, ra_test, dec_test, atol=2400)
     x_test, y_test = fittedWCS.radecToxy(ra, dec, units='rad')
     np.testing.assert_allclose(
         np.hstack([x, y]),
