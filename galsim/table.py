@@ -377,10 +377,10 @@ class LookupTable(object):
 
     def _check_range(self, x):
         slop = (self.x_max - self.x_min) * 1.e-6
-        if np.min(x) < self.x_min - slop:
+        if np.min(x,initial=self.x_min) < self.x_min - slop:
             raise GalSimRangeError("x value(s) below the range of the LookupTable.",
                                    x, self.x_min, self.x_max)
-        if np.max(x) > self.x_max + slop:
+        if np.max(x,initial=self.x_max) > self.x_max + slop:
             raise GalSimRangeError("x value(s) above the range of the LookupTable.",
                                    x, self.x_min, self.x_max)
 
