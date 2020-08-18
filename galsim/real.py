@@ -689,24 +689,23 @@ class RealGalaxyCatalog(object):
         a big speedup if memory isn't an issue.
         """
         from ._pyfits import pyfits
-        self.loaded_lock.acquire()
-        for file_name in np.concatenate((self.gal_file_name , self.psf_file_name)):
-            # numpy sometimes add a space at the end of the string that is not present in
-            # the original file.  Stupid.  But this next line removes it.
-            file_name = file_name.strip()
-            if file_name not in self.loaded_files:
-                # I use memmap=False, because I was getting problems with running out of
-                # file handles in the great3 real_gal run, which uses a lot of rgc files.
-                # I think there must be a bug in pyfits that leaves file handles open somewhere
-                # when memmap = True.  Anyway, I don't know what the performance implications
-                # are (since I couldn't finish the run with the default memmap=True), but I
-                # don't think there is much impact either way with memory mapping in our case.
-                f = pyfits.open(file_name,memmap=False)
-                self.loaded_files[file_name] = f
-                # Access all the data from all hdus to force PyFits to read the data
-                for hdu in f:
-                    hdu.data
-        self.loaded_lock.release()
+        with self.loaded_lock:
+            for file_name in np.concatenate((self.gal_file_name , self.psf_file_name)):
+                # numpy sometimes add a space at the end of the string that is not present in
+                # the original file.  Stupid.  But this next line removes it.
+                file_name = file_name.strip()
+                if file_name not in self.loaded_files:
+                    # I use memmap=False, because I was getting problems with running out of
+                    # file handles in the great3 real_gal run, which uses a lot of rgc files.
+                    # I think there must be a bug in pyfits that leaves file handles open somewhere
+                    # when memmap = True.  Anyway, I don't know what the performance implications
+                    # are (since I couldn't finish the run with the default memmap=True), but I
+                    # don't think there is much impact either way with memory mapping in our case.
+                    f = pyfits.open(file_name,memmap=False)
+                    self.loaded_files[file_name] = f
+                    # Access all the data from all hdus to force PyFits to read the data
+                    for hdu in f:
+                        hdu.data
 
     def _getFile(self, file_name):
         from ._pyfits import pyfits
@@ -714,14 +713,13 @@ class RealGalaxyCatalog(object):
         if file_name in self.loaded_files:
             f = self.loaded_files[file_name]
         else:
-            self.loaded_lock.acquire()
-            # Check again in case two processes both hit the else at the same time.
-            if file_name in self.loaded_files: # pragma: no cover
-                f = self.loaded_files[file_name]
-            else:
-                f = pyfits.open(file_name,memmap=False)
-                self.loaded_files[file_name] = f
-            self.loaded_lock.release()
+            with self.loaded_lock:
+                # Check again in case two processes both hit the else at the same time.
+                if file_name in self.loaded_files: # pragma: no cover
+                    f = self.loaded_files[file_name]
+                else:
+                    f = pyfits.open(file_name,memmap=False)
+                    self.loaded_files[file_name] = f
         return f
 
     def getBandpass(self):
@@ -743,11 +741,8 @@ class RealGalaxyCatalog(object):
         if i >= len(self.gal_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.gal_file_name)-1),i)
         f = self._getFile(self.gal_file_name[i])
-        # For some reason the more elegant `with gal_lock:` syntax isn't working for me.
-        # It gives an EOFError.  But doing an explicit acquire and release seems to work fine.
-        self.gal_lock.acquire()
-        array = f[self.gal_hdu[i]].data
-        self.gal_lock.release()
+        with self.gal_lock:
+            array = f[self.gal_hdu[i]].data
         im = Image(np.ascontiguousarray(array.astype(np.float64)), scale=self.pixel_scale[i])
         return im
 
@@ -758,9 +753,8 @@ class RealGalaxyCatalog(object):
         if i >= len(self.psf_file_name):
             raise GalSimIndexError('index out of range (0..%d)'%(len(self.psf_file_name)-1),i)
         f = self._getFile(self.psf_file_name[i])
-        self.psf_lock.acquire()
-        array = f[self.psf_hdu[i]].data
-        self.psf_lock.release()
+        with self.psf_lock:
+            array = f[self.psf_hdu[i]].data
         return Image(np.ascontiguousarray(array.astype(np.float64)), scale=self.pixel_scale[i])
 
     def getPSF(self, i, x_interpolant=None, k_interpolant=None, gsparams=None):
@@ -786,18 +780,17 @@ class RealGalaxyCatalog(object):
             if self.noise_file_name[i] in self.saved_noise_im:
                 im = self.saved_noise_im[self.noise_file_name[i]]
             else:
-                self.noise_lock.acquire()
-                # Again, a second check in case two processes get here at the same time.
-                if self.noise_file_name[i] in self.saved_noise_im:  # pragma: no cover
-                    im = self.saved_noise_im[self.noise_file_name[i]]
-                else:
-                    from ._pyfits import pyfits
-                    with pyfits.open(self.noise_file_name[i]) as fits:
-                        array = fits[0].data
-                    im = Image(np.ascontiguousarray(array.astype(np.float64)),
-                                      scale=self.pixel_scale[i])
-                    self.saved_noise_im[self.noise_file_name[i]] = im
-                self.noise_lock.release()
+                with self.noise_lock:
+                    # Again, a second check in case two processes get here at the same time.
+                    if self.noise_file_name[i] in self.saved_noise_im:  # pragma: no cover
+                        im = self.saved_noise_im[self.noise_file_name[i]]
+                    else:
+                        from ._pyfits import pyfits
+                        with pyfits.open(self.noise_file_name[i]) as fits:
+                            array = fits[0].data
+                        im = Image(np.ascontiguousarray(array.astype(np.float64)),
+                                        scale=self.pixel_scale[i])
+                        self.saved_noise_im[self.noise_file_name[i]] = im
 
         return im, self.pixel_scale[i], self.variance[i]
 
