@@ -30,17 +30,17 @@ namespace galsim {
         ApplyCD(n, x, y, cd);
     }
 
-    void CallInvertAB(int n, int nab, size_t x_data, size_t y_data, size_t ab_data,
-                      size_t xx_data, size_t yy_data, bool doiter,
+    void CallInvertAB(int n, int nab, size_t u_data, size_t v_data, size_t ab_data,
+                      size_t x_data, size_t y_data, bool doiter,
                       int nabp, size_t abp_data)
     {
-        const double* x = reinterpret_cast<const double*>(x_data);
-        const double* y = reinterpret_cast<const double*>(y_data);
+        const double* u = reinterpret_cast<const double*>(u_data);
+        const double* v = reinterpret_cast<const double*>(v_data);
         const double* ab = reinterpret_cast<const double*>(ab_data);
         const double* abp = reinterpret_cast<const double*>(abp_data);
-        double* xx = reinterpret_cast<double*>(xx_data);
-        double* yy = reinterpret_cast<double*>(yy_data);
-        InvertAB(n, nab, x, y, ab, xx, yy, doiter, nabp, abp);
+        double* x = reinterpret_cast<double*>(x_data);
+        double* y = reinterpret_cast<double*>(y_data);
+        InvertAB(n, nab, u, v, ab, x, y, doiter, nabp, abp);
     }
 
     void pyExportWCS(PY_MODULE& _galsim)
