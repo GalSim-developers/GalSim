@@ -25,6 +25,7 @@ from .position import Position, PositionD, _PositionD
 from .utilities import lazy_property, doc_inherit
 from .gsparams import GSParams
 from .phase_psf import OpticalPSF
+from .table import _LookupTable
 from . import utilities
 from . import integ
 from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
@@ -391,7 +392,7 @@ class ChromaticObject(object):
         When creating a `ContinuousIntegrator`, the number of samples ``N`` is also an argument.
         For example::
 
-            >>> integrator = galsim.ContinuousIntegrator(rule=galsim.integ.midptRule, N=100)
+            >>> integrator = galsim.integ.ContinuousIntegrator(rule=galsim.integ.midptRule, N=100)
             >>> image = chromatic_obj.drawImage(bandpass, integrator=integrator)
 
         Finally, this method uses a cache to avoid recomputing the integral over the product of
@@ -418,7 +419,6 @@ class ChromaticObject(object):
         Returns:
             the drawn `Image`.
         """
-        from .table import LookupTable
         # Store the last bandpass used and any extra kwargs.
         self._last_bp = bandpass
         if self.SED.dimensionless:
@@ -446,8 +446,7 @@ class ChromaticObject(object):
                 raise GalSimIncompatibleValuesError(
                     "Cannot use SampleIntegrator when Bandpass and SED are both analytic.",
                     integrator=integrator, bandpass=bandpass, sed=self.SED)
-            bandpass = Bandpass(LookupTable(wave_list, bandpass(wave_list),
-                                            interpolant='linear'), 'nm')
+            bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
 
         add_to_image = kwargs.pop('add_to_image', False)
         integral = integrator(self.evaluateAtWavelength, bandpass, image, kwargs)
@@ -496,8 +495,6 @@ class ChromaticObject(object):
         Returns:
             a complex `Image` instance (created if necessary)
         """
-        from .table import LookupTable
-
         if self.SED.dimensionless:
             raise GalSimSEDError("Can only drawK ChromaticObjects with spectral SEDs.", self.SED)
 
@@ -510,11 +507,7 @@ class ChromaticObject(object):
         wave_list, _ , _ = utilities.combine_wave_list(self, bandpass)
 
         if self.separable:
-            if len(wave_list) > 0:
-                multiplier = np.trapz(self.SED(wave_list) * bandpass(wave_list), wave_list)
-            else:
-                multiplier = integ.int1d(lambda w: self.SED(w) * bandpass(w),
-                                         bandpass.blue_limit, bandpass.red_limit)
+            multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))
             prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
             image = prof0.drawKImage(image=image, **kwargs)
             return image
@@ -523,9 +516,7 @@ class ChromaticObject(object):
 
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, integ.SampleIntegrator):
-            bandpass = Bandpass(LookupTable(wave_list, bandpass(wave_list),
-                                            interpolant='linear'),
-                                wave_type='nm')
+            bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
 
         add_to_image = kwargs.pop('add_to_image', False)
         image_int = integrator(self.evaluateAtWavelength, bandpass, image, kwargs, doK=True)

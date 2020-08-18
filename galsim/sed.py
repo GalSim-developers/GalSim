@@ -21,7 +21,7 @@ from astropy import units
 from astropy import constants
 
 from .gsobject import GSObject
-from .table import LookupTable
+from .table import LookupTable, _LookupTable
 from . import utilities
 from . import integ
 from . import dcr
@@ -399,7 +399,7 @@ class SED(object):
                     f = self._rest_nm_to_photons(x)
                 else:
                     f = self._rest_nm_to_dimensionless(x)
-                return LookupTable(x, f, interpolant='linear')
+                return _LookupTable(x, f, interpolant='linear')
 
     def _call_fast(self, wave):
         """Return either flux in photons / sec / cm^2 / nm, or dimensionless normalization.
@@ -494,7 +494,7 @@ class SED(object):
                 and self._fast_spec.interpolant == 'linear'):
                 x = wave_list / (1.0 + self.redshift)
                 f = self._fast_spec(x) * other._tp(x*zfactor)
-                spec = LookupTable(x, f, interpolant='linear')
+                spec = _LookupTable(x, f, 'linear')
             else:
                 spec = lambda w: self._fast_spec(w) * other._tp(w*zfactor)
         else:
@@ -512,8 +512,8 @@ class SED(object):
             flux_type = self.flux_type
             x = self._spec.getArgs()
             f = np.array(self._spec.getVals()) * other
-            spec = LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
-                               interpolant=self._spec.interpolant)
+            spec = _LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
+                                interpolant=self._spec.interpolant)
         elif self._const:
             spec = self._spec(42.0) * other
             wave_type = 'nm'
@@ -607,8 +607,8 @@ class SED(object):
             # Make sure to keep the same properties about the table, flux_type, wave_type.
             x = self._spec.getArgs()
             f = [ val / other for val in self._spec.getVals() ]
-            spec = LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
-                               interpolant=self._spec.interpolant)
+            spec = _LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
+                                interpolant=self._spec.interpolant)
         else:
             spec = lambda w: self(w * (1.0 + self.redshift)) / other
 
@@ -662,7 +662,7 @@ class SED(object):
                 and other._fast_spec.interpolant == 'linear'):
             x = wave_list / (1.0 + self.redshift)
             f = self._fast_spec(x) + other._fast_spec(x)
-            spec = LookupTable(x, f, interpolant='linear')
+            spec = _LookupTable(x, f, interpolant='linear')
         else:
             spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0+self.redshift))
 
@@ -854,7 +854,7 @@ class SED(object):
                     rest_wave_native, spec_native, rel_err=rel_err,
                     trim_zeros=trim_zeros, preserve_range=preserve_range, fast_search=fast_search)
 
-            newspec = LookupTable(newx, newf, interpolant='linear')
+            newspec = _LookupTable(newx, newf, interpolant='linear')
             return SED(newspec, self.wave_type, self.flux_type, redshift=self.redshift,
                        fast=self.fast)
         else:
