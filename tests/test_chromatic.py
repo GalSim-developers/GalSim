@@ -374,8 +374,10 @@ def test_dcr_moments():
     image1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     image2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
-    image1 = final1.drawImage(bandpass, image=image1)
-    image2 = final2.drawImage(bandpass, image=image2)
+    # Need a little bit more wave density than the default to get to 5 d.p.
+    integrator = galsim.integ.ContinuousIntegrator(rule=galsim.integ.trapzRule, N=100)
+    image1 = final1.drawImage(bandpass, image=image1, integrator=integrator)
+    image2 = final2.drawImage(bandpass, image=image2, integrator=integrator)
     # plotme(image1)
 
     mom1 = galsim.utilities.unweighted_moments(image1)
@@ -401,7 +403,7 @@ def test_dcr_moments():
     print('analytic delta V: {0}'.format(dV_analytic))
     np.testing.assert_almost_equal(dR_image, dR_analytic, 5,
                                    err_msg="dRbar Shift from DCR doesn't match analytic formula")
-    np.testing.assert_almost_equal(dR_analytic, dR_centroid, 10,
+    np.testing.assert_almost_equal(dR_analytic, dR_centroid, 5,
                                    err_msg="direct dRbar calculation doesn't match"
                                            +" ChromaticObject.calculateCentroid()")
     np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
@@ -431,8 +433,10 @@ def test_chromatic_seeing_moments():
         image1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         image2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
-        image1 = final1.drawImage(bandpass, image=image1)
-        image2 = final2.drawImage(bandpass, image=image2)
+        # Need a little bit more wave density than the default to get to 5 d.p.
+        integrator = galsim.integ.ContinuousIntegrator(rule=galsim.integ.trapzRule, N=100)
+        image1 = final1.drawImage(bandpass, image=image1, integrator=integrator)
+        image2 = final2.drawImage(bandpass, image=image2, integrator=integrator)
 
         shape1 = galsim.utilities.unweighted_shape(image1)
         shape2 = galsim.utilities.unweighted_shape(image2)
@@ -525,12 +529,28 @@ def test_chromatic_flux():
     analytic_flux = bulge_SED.calculateFlux(bandpass)
 
     printval(image, image2)
-    np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 4,
+    np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticObject flux doesn't match " +
                                    "analytic prediction")
-    np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 4,
+    np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "analytic prediction")
+
+    # The default sample integrator is accurate to 3 dp.  With more points, it can be
+    # made more accurate, but a bit slower.
+    integrator = galsim.integ.ContinuousIntegrator(rule=galsim.integ.trapzRule, N=300)
+    final.drawImage(bandpass, image=image, integrator=integrator)
+    ChromaticConvolve_flux = image.array.sum()
+    galsim.ChromaticObject.drawImage(final, bandpass, image=image2, integrator=integrator)
+    ChromaticObject_flux = image2.array.sum()
+
+    printval(image, image2)
+    np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 5,
+                                   err_msg="Drawn ChromaticObject flux doesn't match " +
+                                   "analytic prediction (ContinuousIntegrator)")
+    np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 5,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match " +
+                                   "analytic prediction (ContinuousIntegrator)")
 
     # Also check that the flux is okay and the image fairly consistent when using interpolation
     # for the ChromaticAtmosphere.
@@ -577,7 +597,7 @@ def test_chromatic_flux():
     star2 = galsim.Gaussian(fwhm=1e-8) * bulge_SED2
     final = galsim.Convolve([star2, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using SED.withFlux()")
 
@@ -587,7 +607,7 @@ def test_chromatic_flux():
     star3 = galsim.Gaussian(fwhm=1e-8) * bulge_SED3
     final = galsim.Convolve([star3, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using SED * flux_ratio")
 
@@ -596,7 +616,7 @@ def test_chromatic_flux():
     star3 = galsim.Gaussian(fwhm=1e-8) * bulge_SED3
     final = galsim.Convolve([star3, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using flux_ratio * SED")
 
@@ -604,7 +624,7 @@ def test_chromatic_flux():
     star4 = star * flux_ratio
     final = galsim.Convolve([star4, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using ChromaticObject * flux_ratio")
 
@@ -612,7 +632,7 @@ def test_chromatic_flux():
     star4 = flux_ratio * star
     final = galsim.Convolve([star4, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using flux_ratio * ChromaticObject")
 
@@ -620,7 +640,7 @@ def test_chromatic_flux():
     star4 = star.withScaledFlux(lambda wave: flux_ratio)
     final = galsim.Convolve([star4, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using ChromaticObject.withScaledFlux(flux_ratio)")
     # Can't scale GSObject by function (just SED)
@@ -633,7 +653,7 @@ def test_chromatic_flux():
     star5 = star.withFlux(1.0, bandpass)
     final = galsim.Convolve([star5, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum(), 1.0, 4,
+    np.testing.assert_almost_equal(image.array.sum(), 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match "
                                    "using ChromaticObject.withFlux(1.0)")
 
@@ -644,7 +664,7 @@ def test_chromatic_flux():
     star6 = star.withMagnitude(25.0, bandpass2)
     final = galsim.Convolve([star6, PSF])
     final.drawImage(bandpass2, image=image)
-    np.testing.assert_almost_equal(image.array.sum(), 1.0, 4,
+    np.testing.assert_almost_equal(image.array.sum(), 1.0, 3,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match "
                                    "using ChromaticObject.withMagnitude(0.0)")
     assert_raises(galsim.GalSimError, star.withMagnitude, 25.0, bandpass)

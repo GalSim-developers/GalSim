@@ -187,7 +187,8 @@ class ChromaticObject(object):
         """Cached integral of product of sed and bandpass."""
         wave_list = np.array(wave_list)
         if len(wave_list) > 0:
-            multiplier = np.trapz(sed(wave_list) * bandpass(wave_list), wave_list)
+            bp = _LookupTable(wave_list, bandpass(wave_list), 'linear')
+            multiplier = bp.integrate_product(sed)
         else:
             multiplier = integ.int1d(lambda w: sed(w) * bandpass(w),
                                      bandpass.blue_limit, bandpass.red_limit)
@@ -685,14 +686,14 @@ class ChromaticObject(object):
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
             w, _, _ = utilities.combine_wave_list(self, bandpass)
             objs = [self.evaluateAtWavelength(ww) for ww in w]
-            fluxes = [o.flux for o in objs]
+            fluxes = np.array([o.flux for o in objs])
             centroids = [o.centroid for o in objs]
             xcentroids = np.array([c.x for c in centroids])
             ycentroids = np.array([c.y for c in centroids])
-            bp = bandpass(w)
-            flux = np.trapz(bp * fluxes, w)
-            xcentroid = np.trapz(bp * fluxes * xcentroids, w) / flux
-            ycentroid = np.trapz(bp * fluxes * ycentroids, w) / flux
+            bp = _LookupTable(w, bandpass(w), 'linear')
+            flux = bp.integrate_product(_LookupTable(w, fluxes, 'linear'))
+            xcentroid = bp.integrate_product(_LookupTable(w, fluxes * xcentroids, 'linear')) / flux
+            ycentroid = bp.integrate_product(_LookupTable(w, fluxes * ycentroids, 'linear')) / flux
             return _PositionD(xcentroid, ycentroid)
         else:
             flux_integrand = lambda w: self.evaluateAtWavelength(w).flux * bandpass(w)
