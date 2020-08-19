@@ -25,9 +25,9 @@ import subprocess
 import re
 import tempfile
 try:
-    from urllib2 import urlopen
+    import urllib2
 except ImportError:
-    from urllib.request import urlopen
+    import urllib.request as urllib2
 import tarfile
 import shutil
 
@@ -344,14 +344,14 @@ def find_eigen_dir(output=False):
         url = 'https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.tar.bz2'
         if output:
             print("Downloading eigen from ",url)
-        u = urlopen(url)
-        fname = 'eigen.tar.bz2'
-        block_sz = 32 * 1024
+        # Unfortunately, gitlab doesn't allow direct downloads. We need to spoof the request
+        # so it thinks we're a web browser.
+        # cf. https://stackoverflow.com/questions/42863240/how-to-get-round-the-http-error-403-forbidden-with-urllib-request-using-python
+        page=urllib2.Request(url,headers={'User-Agent': 'Mozilla/5.0'})
+        infile=urllib2.urlopen(page).read()
+        data = infile.decode('ISO-8859-1')
         with open(fname, 'wb') as f:
-            buffer = u.read(block_sz)
-            while buffer:
-                f.write(buffer)
-                buffer = u.read(block_sz)
+            f.write(data)
         if output:
             print("Downloaded %s.  Unpacking tarball."%fname)
         with tarfile.open(fname) as tar:
