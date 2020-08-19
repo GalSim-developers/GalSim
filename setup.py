@@ -328,7 +328,7 @@ def find_eigen_dir(output=False):
 
     if output:
         print("Could not find Eigen in any of the standard locations.")
-        print("Will now try to download it from bitbucket.org. This requires an internet")
+        print("Will now try to download it from gitlab.com. This requires an internet")
         print("connection, so it will fail if you are currently offline.")
         print("If Eigen is installed in a non-standard location, and you want to use that")
         print("instead, you should make sure the right directory is either in your")
@@ -341,7 +341,7 @@ def find_eigen_dir(output=False):
             print("Previous attempt to download eigen found. Deleting and trying again.")
             shutil.rmtree(dir)
         os.mkdir(dir)
-        url = 'https://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2'
+        url = 'https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.tar.bz2'
         if output:
             print("Downloading eigen from ",url)
         u = urlopen(url)
