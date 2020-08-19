@@ -918,13 +918,12 @@ class SED(object):
 
         # Now actually start calculating things.
         flux = self.calculateFlux(bandpass)
-        if len(bandpass.wave_list) > 0:
-            x, _, _ = combine_wave_list([self, bandpass])
-            R = dcr.get_refraction(x, zenith_angle, **kwargs)
-            photons = self(x)
-            throughput = bandpass(x)
-            Rbar = np.trapz(throughput * photons * R, x) / flux
-            V = np.trapz(throughput * photons * (R-Rbar)**2, x) / flux
+        if len(self.wave_list) > 0 or len(bandpass.wave_list) > 0:
+            w, _, _ = combine_wave_list(self, bandpass)
+            bp = _LookupTable(w,bandpass(w),'linear')
+            R = lambda w: dcr.get_refraction(w, zenith_angle, **kwargs)
+            Rbar = bp.integrate_product(lambda w: self(w) * R(w)) / flux
+            V = bp.integrate_product(lambda w: self(w) * (R(w)-Rbar)**2) / flux
         else:
             weight = lambda w: bandpass(w) * self(w)
             Rbar_kernel = lambda w: dcr.get_refraction(w, zenith_angle, **kwargs)
@@ -960,11 +959,17 @@ class SED(object):
         if self.dimensionless:
             raise GalSimSEDError("Cannot calculate seeing moment ratio of dimensionless SED.", self)
         flux = self.calculateFlux(bandpass)
-        if len(bandpass.wave_list) > 0:
-            x, _, _ = combine_wave_list([self, bandpass])
-            photons = self(x)
-            throughput = bandpass(x)
-            return np.trapz(photons * throughput * (x/base_wavelength)**(2*alpha), x) / flux
+        if len(self.wave_list) > 0 or len(bandpass.wave_list) > 0:
+            # With three things multiplied together, we can't rely on integrate_product
+            # being completely accurate if the waves are spaced too far apart, especially with
+            # a power law being one of the factors.
+            # So make sure to include a uniform density of points along with the native sed and
+            # bandpass points. The error goes like dx**3, so 100 points should give relative
+            # errors of order ~few e-6.
+            w, _, _ = combine_wave_list([self, bandpass])
+            w = np.union1d(w, np.linspace(w[0], w[-1], 100))
+            bp = _LookupTable(w,bandpass(w),'linear')
+            return bp.integrate_product(lambda w: self(w) * (w/base_wavelength)**(2*alpha)) / flux
         else:
             weight = lambda w: bandpass(w) * self(w)
             kernel = lambda w: (w/base_wavelength)**(2*alpha)

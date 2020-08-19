@@ -741,7 +741,7 @@ def test_SED_calculateDCRMomentShifts():
     # \bar{R} = \frac{\int{sed(\lambda) * bandpass(\lambda) * R(\lambda) d\lambda}}
     #                {\int{sed(\lambda) * bandpass(\lambda) d\lambda}}
     # where sed is in units of photons/nm (which is the default)
-    waves = np.union1d(sed.wave_list, bandpass.wave_list)
+    waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, 1000)
     R = galsim.dcr.get_refraction(waves, 45.*galsim.degrees)
     Rnum = np.trapz(sed(waves) * bandpass(waves) * R, waves)
     den = np.trapz(sed(waves) * bandpass(waves), waves)
@@ -795,7 +795,7 @@ def test_SED_calculateSeeingMomentRatio():
     # and now do the integral right here to compare.
     # \Delta r^2/r^2 = \frac{\int{sed(\lambda) * bandpass(\lambda) * (\lambda/500)^-0.4 d\lambda}}
     #                       {\int{sed(\lambda) * bandpass(\lambda) d\lambda}}
-    waves = np.union1d(sed.wave_list, bandpass.wave_list)
+    waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, 1000)
     num = np.trapz(sed(waves) * bandpass(waves) * (waves/500.0)**(-0.4), waves)
     den = np.trapz(sed(waves) * bandpass(waves), waves)
     np.testing.assert_almost_equal(relative_size, num/den, 5)
