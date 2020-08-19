@@ -348,8 +348,7 @@ def find_eigen_dir(output=False):
         # so it thinks we're a web browser.
         # cf. https://stackoverflow.com/questions/42863240/how-to-get-round-the-http-error-403-forbidden-with-urllib-request-using-python
         page=urllib2.Request(url,headers={'User-Agent': 'Mozilla/5.0'})
-        infile=urllib2.urlopen(page).read()
-        data = infile.decode('ISO-8859-1')
+        data=urllib2.urlopen(page).read()
         fname = 'eigen.tar.bz2'
         with open(fname, 'wb') as f:
             f.write(data)
