@@ -350,6 +350,7 @@ def find_eigen_dir(output=False):
         page=urllib2.Request(url,headers={'User-Agent': 'Mozilla/5.0'})
         infile=urllib2.urlopen(page).read()
         data = infile.decode('ISO-8859-1')
+        fname = 'eigen.tar.bz2'
         with open(fname, 'wb') as f:
             f.write(data)
         if output:
