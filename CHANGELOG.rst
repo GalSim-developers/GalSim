@@ -95,6 +95,9 @@ New Features
 - Extended GSFitsWCS to support -SIP distortions for non-TAN WCSs. (#1092)
 - Added wcs option to Roman getPSF function to more easily get the right PSF
   in world coordinates for a particular observation. (#1094)
+- Added `LookupTable.integrate` and `LookupTable.integrate_product`, along
+  with `galsim.trapz` as a drop in replacement for ``numpy.trapz``, which
+  is often somewhat faster.
 
 
 Performance Improvements
@@ -105,6 +108,8 @@ Performance Improvements
   FFT artifact in the exact pupil plane mode, and significantly speed up all
   PSF renderings. (#1089)
 - Sped up GSFitsWCS.radecToxy for SIP and PV distorted WCSs by ~20x. (#1092)
+- Sped up SED.calculateFlux by switching to `LookupTable.integrate_product`
+  for the implementation of the integral.
 
 
 Bug Fixes

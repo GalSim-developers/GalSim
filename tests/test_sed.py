@@ -526,19 +526,33 @@ def test_SED_withFlux():
             np.testing.assert_array_almost_equal(b.calculateFlux(rband), 1.0, 5,
                                                  "Setting SED flux failed.")
 
-            # Should be equivalent to multiplying an SED * Bandpass and computing the
-            # "bolometric" flux.
+            # Should be almost equivalent to multiplying an SED * Bandpass and computing the
+            # "bolometric" flux.  The above is a bit more accurate, since it correctly does
+            # the integration of the product of two linear segments between each tabulated point.
             ab = a * rband
             bb = b * rband
             bolo_bp = galsim.Bandpass('1', blue_limit=ab.blue_limit, red_limit=ab.red_limit,
                                       wave_type='nm')
+            np.testing.assert_array_almost_equal(ab.calculateFlux(bolo_bp), 1.0, 3,
+                                                 "Calculating SED flux from sed * bp failed.")
+            np.testing.assert_array_almost_equal(bb.calculateFlux(bolo_bp), 1.0, 3,
+                                                 "Calculating SED flux from sed * bp failed.")
+
+            # If one or the other table has finer wavelength gridding, then the agreement
+            # will be better.  Check with finer gridding for rband.
+            fine_wave = np.linspace(ab.blue_limit, ab.red_limit, 169101)
+            rband_fine = galsim.Bandpass(galsim.LookupTable(fine_wave, rband(fine_wave), 'linear'),
+                                         'nm')
+            ab = a * rband_fine
+            bb = b * rband_fine
+
             np.testing.assert_array_almost_equal(ab.calculateFlux(bolo_bp), 1.0, 5,
                                                  "Calculating SED flux from sed * bp failed.")
             np.testing.assert_array_almost_equal(bb.calculateFlux(bolo_bp), 1.0, 5,
                                                  "Calculating SED flux from sed * bp failed.")
 
             # Multiplying in the other order also works.
-            ba = rband * a
+            ba = rband_fine * a
             np.testing.assert_array_almost_equal(ba.calculateFlux(bolo_bp), 1.0, 5,
                                                  "Calculating SED flux from sed * bp failed.")
 
@@ -650,27 +664,30 @@ def test_SED_calculateMagnitude():
 
 @timer
 def test_redshift_calculateFlux():
-    sed = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0], 'linear'),
-                     wave_type='nm', flux_type='fphotons')
-    bp1 = galsim.Bandpass(galsim.LookupTable([4,6], [1,1]), wave_type='nm')
-    bp2 = galsim.Bandpass(galsim.LookupTable([40,60], [1,1]), wave_type='Ang')
+    sed1 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1, 1.9, 1.4, 1.8, 2.0], 'linear'),
+                      wave_type='nm', flux_type='fphotons')
+    sed2 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1, 3.9, 1.4, 3.8, 2.0], 'spline'),
+                      wave_type='nm', flux_type='fphotons')
+    bp1 = galsim.Bandpass(galsim.LookupTable([4,6], [1,2]), wave_type='nm')
+    bp2 = galsim.Bandpass(galsim.LookupTable([40,60], [1,2]), wave_type='Ang')
 
-    for z in [0, 0.19, 0.2, 0.21, 2.5, 2.99, 3, 3.01, 4]:
-        sedz = sed.atRedshift(z)
-        if sedz.blue_limit > bp1.blue_limit or sedz.red_limit < bp1.red_limit:
-            with assert_raises(ValueError):
-                sedz.calculateFlux(bp1)
-            with assert_raises(ValueError):
-                sedz.calculateFlux(bp2)
-        else:
-            flux1 = sedz.calculateFlux(bp1)
-            flux2 = sedz.calculateFlux(bp2)
-            print('z = {} flux = {}, {}'.format(z, flux1, flux2))
-            wave = np.linspace(bp1.blue_limit, bp1.red_limit, 10000)
-            f = sedz(wave) * bp1(wave)
-            flux3 = np.trapz(f, wave)
-            np.testing.assert_allclose(flux1, flux3)
-            np.testing.assert_allclose(flux2, flux3)
+    for sed in [sed1, sed2]:
+        for z in [0, 0.19, 0.2, 0.21, 2.5, 2.99, 3, 3.01, 4]:
+            sedz = sed.atRedshift(z)
+            if sedz.blue_limit > bp1.blue_limit or sedz.red_limit < bp1.red_limit:
+                with assert_raises(ValueError):
+                    sedz.calculateFlux(bp1)
+                with assert_raises(ValueError):
+                    sedz.calculateFlux(bp2)
+            else:
+                flux1 = sedz.calculateFlux(bp1)
+                flux2 = sedz.calculateFlux(bp2)
+                print('z = {} flux = {}, {}'.format(z, flux1, flux2))
+                wave = np.linspace(bp1.blue_limit, bp1.red_limit, 10000)
+                f = sedz(wave) * bp1(wave)
+                flux3 = np.trapz(f, wave)
+                np.testing.assert_allclose(flux1, flux3)
+                np.testing.assert_allclose(flux2, flux3)
 
     # All analytic has easy to check answers
     sed = galsim.SED('(wave/500)**2', wave_type='nm', flux_type='fphotons')

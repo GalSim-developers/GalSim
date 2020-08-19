@@ -786,8 +786,22 @@ class SED(object):
                                        "range for this SED.",
                                        (bandpass.blue_limit, bandpass.red_limit),
                                        self.blue_limit, self.red_limit)
-            x, _, _ = combine_wave_list(self, bandpass)
-            return np.trapz(bandpass(x) * self(x), x)
+            wmin = max(self.blue_limit, bandpass.blue_limit)
+            wmax = min(self.red_limit, bandpass.red_limit)
+            if self.fast and isinstance(self._fast_spec, LookupTable):
+                wf = 1./(1.+self.redshift) / bandpass.wave_factor
+                ff = 1./bandpass.wave_factor
+                wmin *= bandpass.wave_factor
+                wmax *= bandpass.wave_factor
+                return self._fast_spec.integrate_product(bandpass._tp, wmin, wmax, wf) * ff
+            else:
+                w, _, _ = combine_wave_list(self, bandpass)
+                if not self.fast and self.flux_type != 'fphotons':
+                    # When not fast, the SED definition is not linear between the wave_list
+                    # points, so this can be slightly inaccurate if the waves are too far apart.
+                    # Add in 100 uniformly spaced points to achieve relative accurace ~few e-6.
+                    w = np.union1d(w, np.linspace(w[0], w[-1], 100))
+                return _LookupTable(w,bandpass(w),'linear').integrate_product(self)
         else:
             return integ.int1d(lambda w: bandpass(w)*self(w),
                                bandpass.blue_limit, bandpass.red_limit)
