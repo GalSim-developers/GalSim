@@ -529,28 +529,12 @@ def test_chromatic_flux():
     analytic_flux = bulge_SED.calculateFlux(bandpass)
 
     printval(image, image2)
-    np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 3,
-                                   err_msg="Drawn ChromaticObject flux doesn't match " +
-                                   "analytic prediction")
-    np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 3,
-                                   err_msg="Drawn ChromaticConvolve flux doesn't match " +
-                                   "analytic prediction")
-
-    # The default sample integrator is accurate to 3 dp.  With more points, it can be
-    # made more accurate, but a bit slower.
-    integrator = galsim.integ.ContinuousIntegrator(rule=galsim.integ.trapzRule, N=300)
-    final.drawImage(bandpass, image=image, integrator=integrator)
-    ChromaticConvolve_flux = image.array.sum()
-    galsim.ChromaticObject.drawImage(final, bandpass, image=image2, integrator=integrator)
-    ChromaticObject_flux = image2.array.sum()
-
-    printval(image, image2)
     np.testing.assert_almost_equal(ChromaticObject_flux/analytic_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticObject flux doesn't match " +
-                                   "analytic prediction (ContinuousIntegrator)")
+                                   "analytic prediction")
     np.testing.assert_almost_equal(ChromaticConvolve_flux/analytic_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
-                                   "analytic prediction (ContinuousIntegrator)")
+                                   "analytic prediction")
 
     # Also check that the flux is okay and the image fairly consistent when using interpolation
     # for the ChromaticAtmosphere.
@@ -597,7 +581,7 @@ def test_chromatic_flux():
     star2 = galsim.Gaussian(fwhm=1e-8) * bulge_SED2
     final = galsim.Convolve([star2, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using SED.withFlux()")
 
@@ -607,7 +591,7 @@ def test_chromatic_flux():
     star3 = galsim.Gaussian(fwhm=1e-8) * bulge_SED3
     final = galsim.Convolve([star3, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using SED * flux_ratio")
 
@@ -616,7 +600,7 @@ def test_chromatic_flux():
     star3 = galsim.Gaussian(fwhm=1e-8) * bulge_SED3
     final = galsim.Convolve([star3, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using flux_ratio * SED")
 
@@ -624,7 +608,7 @@ def test_chromatic_flux():
     star4 = star * flux_ratio
     final = galsim.Convolve([star4, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using ChromaticObject * flux_ratio")
 
@@ -632,7 +616,7 @@ def test_chromatic_flux():
     star4 = flux_ratio * star
     final = galsim.Convolve([star4, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using flux_ratio * ChromaticObject")
 
@@ -640,7 +624,7 @@ def test_chromatic_flux():
     star4 = star.withScaledFlux(lambda wave: flux_ratio)
     final = galsim.Convolve([star4, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using ChromaticObject.withScaledFlux(flux_ratio)")
     # Can't scale GSObject by function (just SED)
@@ -653,7 +637,7 @@ def test_chromatic_flux():
     star5 = star.withFlux(1.0, bandpass)
     final = galsim.Convolve([star5, PSF])
     final.drawImage(bandpass, image=image)
-    np.testing.assert_almost_equal(image.array.sum(), 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum(), 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match "
                                    "using ChromaticObject.withFlux(1.0)")
 
@@ -664,7 +648,7 @@ def test_chromatic_flux():
     star6 = star.withMagnitude(25.0, bandpass2)
     final = galsim.Convolve([star6, PSF])
     final.drawImage(bandpass2, image=image)
-    np.testing.assert_almost_equal(image.array.sum(), 1.0, 3,
+    np.testing.assert_almost_equal(image.array.sum(), 1.0, 5,
                                    err_msg="Drawn ChromaticConvolve flux doesn't match "
                                    "using ChromaticObject.withMagnitude(0.0)")
     assert_raises(galsim.GalSimError, star.withMagnitude, 25.0, bandpass)
@@ -1569,7 +1553,7 @@ def test_interpolated_ChromaticObject():
 
     # Check kimage with midpoint rule too, also non-default.
     kscale = 2*np.pi/(scale*40)
-    kim_exact = exact_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40)
+    kim_exact = exact_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40, integrator='midpoint')
     kim_interp = interp_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40, integrator='midpoint')
     np.testing.assert_allclose(
         kim_interp.array, kim_exact.array, rtol=0, atol=1e-4*kim_exact.array.real.max(),
@@ -1644,7 +1628,7 @@ def test_interpolated_ChromaticObject():
     # an SED for this to work.
     exact_psf *= bulge_SED
     interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
-    im_exact = exact_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
+    im_exact = exact_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32, integrator='trapezoidal')
     im_interp = interp_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=3,
@@ -1669,7 +1653,7 @@ def test_interpolated_ChromaticObject():
     interp_psf = exact_psf.interpolate(tricky_waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
     interp_obj = galsim.Convolve(star, interp_psf)
-    im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
+    im_exact = exact_obj.drawImage(bandpass, scale=atm_scale, integrator='trapezoidal')
     im_interp = im_exact.copy()
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=atm_scale)
     # Note: peak value of array is around 4, so going to 3 decimal places is a reasonably

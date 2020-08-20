@@ -351,13 +351,15 @@ class ChromaticObject(object):
         # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
         # of `wave_list`.
         if isinstance(integrator, str):
-            if integrator == 'trapezoidal':
+            if integrator == 'quadratic':
+                rule = integ.quadRule
+            elif integrator == 'trapezoidal':
                 rule = integ.trapzRule
             elif integrator == 'midpoint':
                 rule = integ.midptRule
             else:
                 raise GalSimValueError("Unrecognized integration rule", integrator,
-                                       ('trapezoidal', 'midpoint'))
+                                       ('trapezoidal', 'midpoint', 'quadratic'))
             if len(wave_list) > 0:
                 integrator = integ.SampleIntegrator(rule)
             else:
@@ -366,7 +368,7 @@ class ChromaticObject(object):
             raise TypeError("Invalid type passed in for integrator!")
         return integrator
 
-    def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+    def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Base implementation for drawing an image of a `ChromaticObject`.
 
         Some subclasses may choose to override this for specific efficiency gains.  For instance,
@@ -387,7 +389,7 @@ class ChromaticObject(object):
         evaluate the integrand at 250 equally-spaced wavelengths between ``bandpass.blue_limit``
         and ``bandpass.red_limit``.
 
-        By default, the above two integrators will use the ``rule`` `galsim.integ.trapzRule`
+        By default, the above two integrators will use the ``rule`` `galsim.integ.quadRule`
         for integration.  The midpoint rule for integration can be specified instead by passing an
         integrator that has been initialized with the ``rule`` set to `galsim.integ.midptRule`.
         When creating a `ContinuousIntegrator`, the number of samples ``N`` is also an argument.
@@ -410,11 +412,11 @@ class ChromaticObject(object):
                             for details.)  [default: None]
             integrator:     When doing the exact evaluation of the profile, this argument should
                             be one of the image integrators from galsim.integ, or a string
-                            'trapezoidal' or 'midpoint', in which case the routine will use a
-                            `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
-                            not the object has a ``wave_list``.  [default: 'trapezoidal',
+                            'trapezoidal', 'midpoint', or 'quadratic', in which case the routine
+                            will use a `SampleIntegrator` or `ContinuousIntegrator` depending on
+                            whether or not the object has a ``wave_list``.  [default: 'quadratic',
                             which will try to select an appropriate integrator using the
-                            trapezoidal integration rule automatically.]
+                            quadratic integration rule automatically.]
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`
 
         Returns:
@@ -468,7 +470,7 @@ class ChromaticObject(object):
         self._last_wcs = image.wcs
         return image
 
-    def drawKImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+    def drawKImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Base implementation for drawing the Fourier transform of a `ChromaticObject`.
 
         The task of drawKImage() in a chromatic context is exactly analogous to the task of
@@ -486,10 +488,10 @@ class ChromaticObject(object):
                         [default: None]
             integrator: When doing the exact evaluation of the profile, this argument should be
                         one of the image integrators from galsim.integ, or a string
-                        'trapezoidal' or 'midpoint', in which case the routine will use a
-                        `SampleIntegrator` or `ContinuousIntegrator` depending on whether or not
-                        the object has a ``wave_list``.  [default: 'trapezoidal', which will try to
-                        select an appropriate integrator using the trapezoidal integration rule
+                        'trapezoidal', 'midpoint', or 'quadratic', in which case the routine will
+                        use a `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
+                        not the object has a ``wave_list``.  [default: 'quadratic', which will try
+                        to select an appropriate integrator using the quadratic integration rule
                         automatically.]
             **kwargs:   For all other kwarg options, see `GSObject.drawKImage`.
 
@@ -1224,11 +1226,12 @@ class InterpolatedChromaticObject(ChromaticObject):
     def _get_interp_image(self, bandpass, image=None, integrator='trapezoidal',
                           _flux_ratio=None, **kwargs):
         from .interpolatedimage import InterpolatedImage
-        if integrator not in ('trapezoidal', 'midpoint'):
+        if integrator not in ('quadratic', 'trapezoidal', 'midpoint'):
             if not isinstance(integrator, str):
                 raise TypeError("Integrator should be a string indicating trapezoidal"
                                 " or midpoint rule for integration")
-            raise GalSimValueError("Unknown integrator",integrator, ('trapezoidal', 'midpoint'))
+            raise GalSimValueError("Unknown integrator",integrator,
+                                    ('trapezoidal', 'midpoint', 'quadratic'))
 
         if _flux_ratio is None:
             _flux_ratio = lambda w: 1.0
@@ -1260,19 +1263,25 @@ class InterpolatedChromaticObject(ChromaticObject):
         # The integration is carried out using the following two basic principles:
         # (1) We use linear interpolation between the stored images to get an image at a given
         #     wavelength.
-        # (2) We use the trapezoidal or midpoint rule for integration, depending on what the user
-        #     has selected.
+        # (2) We use the trapezoidal, midpoint, or quadratic rule for integration, depending on
+        #     what the user has selected.
 
         # For the midpoint rule, we take the list of wavelengths in wave_list, and treat each of
         # those as the midpoint of a narrow wavelength range with width given by `dw` (to be
         # calculated below).  Then, we can take the summation over indices i:
-        #   integral ~ sum_i dw[i] * img[i].
+        #   integral ~ sum_i dw[i] img[i] b[i]
         # where the indices i run over the wavelengths in wave_list from i=0...N-1.
         #
         # For the trapezoidal rule, we treat the list of wavelengths in wave_list as the *edges* of
         # the regions, and sum over the areas of the trapezoids, giving
-        #   integral ~ sum_j dw[j] * img[j] + sum_k dw[k] *img[k]/2.
-        # where indices j go from j=1...N-2 and k is (0, N-1).
+        #   integral ~ sum_j (w[j]-w[j-1]) (img[j] b[k] + img[j-1] b[j-1]) / 2
+        # where indices j go from j=1...N-1
+        #
+        # For the quadratic rule, we treat the list of wavelengths in wave_list as the edges of
+        # the regions, and treat both the bandpass and the image variation as linear in between
+        # these wavelengths.  The integral is
+        #   integral ~ sum_j (w[j]-w[j-1]) (img[j-1] (2b[j-1]+b[j]) + img[j] (b[j-1]+2b[j])) / 6
+        # where indices j go from j=1...N-1
 
         # Figure out the dwave for each of the wavelengths in the combined wave_list.
         dw = [wave_list[1]-wave_list[0]]
@@ -1327,7 +1336,8 @@ class InterpolatedChromaticObject(ChromaticObject):
             image:          Optionally, the `Image` to draw onto.  (See `GSObject.drawImage`
                             for details.)  [default: None]
             integrator:     The integration algorithm to use, given as a string.  Either
-                            'midpoint' or 'trapezoidal' is allowed. [default: 'trapezoidal']
+                            'midpoint', 'trapezoidal', or 'quadratic' is allowed.
+                            [default: 'quadratic']
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:
@@ -1747,7 +1757,7 @@ class ChromaticTransformation(ChromaticObject):
         return Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
                               gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
-    def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+    def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """
         See `ChromaticObject.drawImage` for a full description.
 
@@ -1762,14 +1772,14 @@ class ChromaticTransformation(ChromaticObject):
                             for details.)  [default: None]
             integrator:     When doing the exact evaluation of the profile, this argument should
                             be one of the image integrators from galsim.integ, or a string
-                            'trapezoidal' or 'midpoint', in which case the routine will use a
-                            `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
-                            not the object has a ``wave_list``.  [default: 'trapezoidal',
+                            'trapezoidal', 'midpoint', 'quadratic', in which case the routine will
+                            use a `SampleIntegrator` or `ContinuousIntegrator` depending on whether
+                            or not the object has a ``wave_list``.  [default: 'quadratic',
                             which will try to select an appropriate integrator using the
-                            trapezoidal integration rule automatically.]
+                            quadratic integration rule automatically.]
                             If the object being transformed is an `InterpolatedChromaticObject`,
-                            then ``integrator`` can only be a string, either 'midpoint' or
-                            'trapezoidal'.
+                            then ``integrator`` can only be a string, either 'midpoint',
+                            'trapezoidal', or 'quadratic'.
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:
@@ -1999,7 +2009,7 @@ class ChromaticSum(ChromaticObject):
         return Add([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
                    gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
-    def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+    def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Slightly optimized draw method for `ChromaticSum` instances.
 
         Draws each summand individually and add resulting images together.  This might waste time if
@@ -2016,11 +2026,11 @@ class ChromaticSum(ChromaticObject):
                             for details.)  [default: None]
             integrator:     When doing the exact evaluation of the profile, this argument should
                             be one of the image integrators from galsim.integ, or a string
-                            'trapezoidal' or 'midpoint', in which case the routine will use a
-                            `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
-                            not the object has a ``wave_list``.  [default: 'trapezoidal',
+                            'trapezoidal', 'midpoint', 'quadratic', in which case the routine will
+                            use a `SampleIntegrator` or `ContinuousIntegrator` depending on whether
+                            or not the object has a ``wave_list``.  [default: 'quadratic',
                             which will try to select an appropriate integrator using the
-                            trapezoidal integration rule automatically.]
+                            quadratic integration rule automatically.]
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:
@@ -2256,7 +2266,7 @@ class ChromaticConvolution(ChromaticObject):
         return Convolve([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
                         gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
-    def drawImage(self, bandpass, image=None, integrator='trapezoidal', iimult=None, **kwargs):
+    def drawImage(self, bandpass, image=None, integrator='quadratic', iimult=None, **kwargs):
         """Optimized draw method for the `ChromaticConvolution` class.
 
         Works by finding sums of profiles which include separable portions, which can then be
@@ -2277,11 +2287,11 @@ class ChromaticConvolution(ChromaticObject):
                             for details.)  [default: None]
             integrator:     When doing the exact evaluation of the profile, this argument should
                             be one of the image integrators from galsim.integ, or a string
-                            'trapezoidal' or 'midpoint', in which case the routine will use a
-                            `SampleIntegrator` or `ContinuousIntegrator` depending on whether or
-                            not the object has a ``wave_list``.  [default: 'trapezoidal',
+                            'trapezoidal', 'midpoint', or 'quadratic', in which case the routine
+                            will use a `SampleIntegrator` or `ContinuousIntegrator` depending on
+                            whether or not the object has a ``wave_list``.  [default: 'quadratic',
                             which will try to select an appropriate integrator using the
-                            trapezoidal integration rule automatically.]
+                            quadratic integration rule automatically.]
             iimult:         Oversample any intermediate `InterpolatedImage` created to hold
                             effective profiles by this amount. [default: None]
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
