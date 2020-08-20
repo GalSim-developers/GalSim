@@ -226,7 +226,10 @@ namespace galsim {
     class Table::TableImpl {
     public:
         TableImpl(const double* args, const double* vals, int N) :
-            _args(args, N), _n(N), _vals(vals) {}
+            _args(args, N), _n(N), _vals(vals) ,
+            _slop_min(_args.front() - 1.e-6 * (_args.back() - _args.front())),
+            _slop_max(_args.back() + 1.e-6 * (_args.back() - _args.front()))
+        {}
 
         virtual int find(double a) const = 0;
         virtual double lookup(double a) const = 0;
@@ -247,6 +250,7 @@ namespace galsim {
         ArgVec _args;
         const int _n;
         const double* _vals;
+        const double _slop_min, _slop_max;
     };
 
 
@@ -264,7 +268,9 @@ namespace galsim {
         }
 
         double interp(double a, int i) const override {
-            return static_cast<const T*>(this)->interp(a, i);
+            if (!(a >= _slop_min && a <= _slop_max))
+                throw std::runtime_error("invalid argument to Table.interp");
+            return static_cast<const T*>(this)->_interp(a, i);
         }
 
         void interpMany(const double* xvec, double* valvec, int N) const override {
@@ -432,7 +438,7 @@ namespace galsim {
     public:
         using TCRTP<TFloor>::TCRTP;
 
-        double interp(double a, int i) const {
+        double _interp(double a, int i) const {
             // On entry, it is only guaranteed that _args[i-1] <= a <= _args[i].
             // Normally those ='s are ok, but for floor and ceil we make the extra
             // check to see if we should choose the opposite bound.
@@ -455,7 +461,7 @@ namespace galsim {
     public:
         using TCRTP<TCeil>::TCRTP;
 
-        double interp(double a, int i) const {
+        double _interp(double a, int i) const {
             if (a == _args[i-1]) i--;
             return _vals[i];
         }
@@ -475,7 +481,7 @@ namespace galsim {
     public:
         using TCRTP<TNearest>::TCRTP;
 
-        double interp(double a, int i) const {
+        double _interp(double a, int i) const {
             if ((a - _args[i-1]) < (_args[i] - a)) i--;
             return _vals[i];
         }
@@ -534,7 +540,7 @@ namespace galsim {
     public:
         using TCRTP<TLinear>::TCRTP;
 
-        double interp(double a, int i) const {
+        double _interp(double a, int i) const {
             double ax = (_args[i] - a) / (_args[i] - _args[i-1]);
             double bx = 1.0 - ax;
             return _vals[i]*bx + _vals[i-1]*ax;
@@ -559,7 +565,7 @@ namespace galsim {
             setupSpline();
         }
 
-        double interp(double a, int i) const {
+        double _interp(double a, int i) const {
 #if 0
             // Direct calculation saved for comparison:
             double h = _args[i] - _args[i-1];
@@ -713,7 +719,7 @@ namespace galsim {
         TGSInterpolant(const double* args, const double* vals, int N, const Interpolant* gsinterp) :
             TCRTP<TGSInterpolant>::TCRTP(args, vals, N), _gsinterp(gsinterp) {}
 
-        double interp(double a, int i) const {
+        double _interp(double a, int i) const {
             double dagrid = _args[i] - _args[i-1];
             double da = (a - _args[i-1])/dagrid;
 
@@ -809,19 +815,13 @@ namespace galsim {
 
     //lookup and interpolate an array of function values.
     void Table::interpMany(const double* argvec, double* valvec, int N) const
-    {
-        _pimpl->interpMany(argvec, valvec, N);
-    }
+    { _pimpl->interpMany(argvec, valvec, N); }
 
     double Table::integrate(double xmin, double xmax) const
-    {
-        return _pimpl->integrate(xmin, xmax);
-    }
+    { return _pimpl->integrate(xmin, xmax); }
 
     double Table::integrateProduct(const Table& g, double xmin, double xmax, double xfact) const
-    {
-        return _pimpl->integrateProduct(*g._pimpl, xmin, xmax, xfact);
-    }
+    { return _pimpl->integrateProduct(*g._pimpl, xmin, xmax, xfact); }
 
     void TableBuilder::finalize()
     {
