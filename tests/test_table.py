@@ -216,14 +216,21 @@ def test_log():
             result_4, result_1, decimal=3,
             err_msg='Disagreement when interpolating in log(f)')
 
+    # Before getting to the range check, numpy will issue a warning about
+    # "invalid value encountered in log".
+    # Seems like ok additional information for end users.  But we want to ignore that here.
     with assert_raises(galsim.GalSimRangeError):
-        tab_2(-1)
+        with assert_warns(RuntimeWarning):
+            tab_2(-1)
     with assert_raises(galsim.GalSimRangeError):
-        tab_3(-1)
+        with assert_warns(RuntimeWarning):
+            tab_3(-1)
     with assert_raises(galsim.GalSimRangeError):
-        tab_2(x_neg)
+        with assert_warns(RuntimeWarning):
+            tab_2(x_neg)
     with assert_raises(galsim.GalSimRangeError):
-        tab_3(x_neg)
+        with assert_warns(RuntimeWarning):
+            tab_3(x_neg)
 
     # Check picklability
     do_pickle(tab_1)

@@ -214,27 +214,31 @@ class LookupTable(object):
         Returns:
             the interpolated ``f(x)`` value(s).
         """
-        # Check that all x values are in the allowed range
-        self._check_range(x)
-
+        orig_x = x
         # Handle the log(x) if necessary
         if self.x_log:
             x = np.log(x)
 
         x = np.asarray(x, dtype=float)
-        if x.shape == ():
-            f = self._tab.interp(float(x))
-        else:
-            dimen = len(x.shape)
-            if dimen > 1:
-                f = np.empty_like(x.ravel(), dtype=float)
-                xx = x.astype(float,copy=False).ravel()
-                self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
-                f = f.reshape(x.shape)
+        try:
+            if x.shape == ():
+                f = self._tab.interp(float(x))
             else:
-                f = np.empty_like(x, dtype=float)
-                xx = x.astype(float,copy=False)
-                self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+                dimen = len(x.shape)
+                if dimen > 1:
+                    f = np.empty_like(x.ravel(), dtype=float)
+                    xx = x.astype(float,copy=False).ravel()
+                    self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+                    f = f.reshape(x.shape)
+                else:
+                    f = np.empty_like(x, dtype=float)
+                    xx = x.astype(float,copy=False)
+                    self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+        except RuntimeError:
+            # If there were points outside the valid range, this will have raised an exception.
+            # so call _check_range to give a better error message.
+            self._check_range(orig_x)
+            raise  # pragma: no cover (shouldn't be able to reach here, but just in case.)
 
         # Handle the log(f) if necessary
         if self.f_log:
