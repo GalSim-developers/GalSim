@@ -1127,8 +1127,8 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Find the stepk and maxk values for each object.  These will be used later on, so that we
         # can force these values when instantiating InterpolatedImages before drawing.
-        self.stepk_vals = [ obj.stepk for obj in objs ]
-        self.maxk_vals = [ obj.maxk for obj in objs ]
+        self.stepk_vals = np.array([ obj.stepk for obj in objs ])
+        self.maxk_vals = np.array([ obj.maxk for obj in objs ])
 
         # Finally, now that we have an image scale and size, draw all the images.  Note that
         # `no_pixel` is used (we want the object on its own, without a pixel response).
@@ -1223,18 +1223,22 @@ class InterpolatedChromaticObject(ChromaticObject):
         im, stepk, maxk = self._imageAtWavelength(wave)
         return InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
 
-    def _get_interp_image(self, bandpass, image=None, integrator='trapezoidal',
+    def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
         from .interpolatedimage import InterpolatedImage
-        if integrator not in ('quadratic', 'trapezoidal', 'midpoint'):
-            if not isinstance(integrator, str):
-                raise TypeError("Integrator should be a string indicating trapezoidal"
-                                " or midpoint rule for integration")
-            raise GalSimValueError("Unknown integrator",integrator,
+        if integrator == 'quadratic':
+            rule = integ.quadRule
+            #rule = integ.trapzRule
+        elif integrator == 'trapezoidal':
+            rule = integ.trapzRule
+        elif integrator == 'midpoint':
+            rule = integ.midptRule
+        else:
+            raise GalSimValueError("Unrecognized integration rule", integrator,
                                     ('trapezoidal', 'midpoint', 'quadratic'))
 
         if _flux_ratio is None:
-            _flux_ratio = lambda w: 1.0
+            _flux_ratio = lambda w: np.ones_like(w)
         # Constant flux_ratio is already an SED at this point, so can treat as function.
         #assert hasattr(_flux_ratio, '__call__')
 
@@ -1260,70 +1264,36 @@ class InterpolatedChromaticObject(ChromaticObject):
             raise GalSimRangeError("Requested wavelength is outside the allowed range.",
                                    wave_list, np.min(self.waves), np.max(self.waves))
 
-        # The integration is carried out using the following two basic principles:
-        # (1) We use linear interpolation between the stored images to get an image at a given
-        #     wavelength.
-        # (2) We use the trapezoidal, midpoint, or quadratic rule for integration, depending on
-        #     what the user has selected.
-
-        # For the midpoint rule, we take the list of wavelengths in wave_list, and treat each of
-        # those as the midpoint of a narrow wavelength range with width given by `dw` (to be
-        # calculated below).  Then, we can take the summation over indices i:
-        #   integral ~ sum_i dw[i] img[i] b[i]
-        # where the indices i run over the wavelengths in wave_list from i=0...N-1.
-        #
-        # For the trapezoidal rule, we treat the list of wavelengths in wave_list as the *edges* of
-        # the regions, and sum over the areas of the trapezoids, giving
-        #   integral ~ sum_j (w[j]-w[j-1]) (img[j] b[k] + img[j-1] b[j-1]) / 2
-        # where indices j go from j=1...N-1
-        #
-        # For the quadratic rule, we treat the list of wavelengths in wave_list as the edges of
-        # the regions, and treat both the bandpass and the image variation as linear in between
-        # these wavelengths.  The integral is
-        #   integral ~ sum_j (w[j]-w[j-1]) (img[j-1] (2b[j-1]+b[j]) + img[j] (b[j-1]+2b[j])) / 6
-        # where indices j go from j=1...N-1
-
-        # Figure out the dwave for each of the wavelengths in the combined wave_list.
-        dw = [wave_list[1]-wave_list[0]]
-        dw.extend(0.5*(wave_list[2:]-wave_list[0:-2]))
-        dw.append(wave_list[-1]-wave_list[-2])
-        # Set up arrays to accumulate the weights for each of the stored images.
-        weight_fac = np.zeros(len(self.waves))
-        for idx, w in enumerate(wave_list):
+        # weights are the weights to use at each of the given wavelengths for the integration.
+        weights = rule.calculateWeights(wave_list, bandpass)
+        # im_weights are the weights for the stored images.
+        im_weights = np.zeros(len(self.waves))
+        for w, wt in zip(wave_list, weights):
             # Find where this is with respect to the wavelengths on which images are stored.
             lower_idx, frac = _findWave(self.waves, w)
-            # Store the weight factors for the two stored images that can contribute at this
-            # wavelength.  Must include the dwave that is part of doing the integral.
-            b = bandpass(w) * dw[idx] * _flux_ratio(w)
+            assert 0 <= lower_idx < len(self.waves)-1
 
             # Rescale to use the exact flux or normalization if requested.
             if self.use_exact_SED:
                 interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
                 exact_norm = self.SED(w)
-                b *= exact_norm/interp_norm
+                wt *= exact_norm/interp_norm
 
-            if (idx > 0 and idx < len(wave_list)-1) or integrator == 'midpoint':
-                weight_fac[lower_idx] += (1.0-frac)*b
-                weight_fac[lower_idx+1] += frac*b
-            else:
-                # We're doing the trapezoidal rule, and we're at the endpoints.
-                weight_fac[lower_idx] += (1.0-frac)*b/2.
-                weight_fac[lower_idx+1] += frac*b/2.
+            im_weights[lower_idx] += (1.-frac) * wt
+            im_weights[lower_idx+1] += frac * wt
 
         # Do the integral as a weighted sum.
-        integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
+        im_factors = _flux_ratio(self.waves)
+        integral = sum(wt*im*f for wt,im,f in zip(im_weights, self.ims, im_factors) if wt!=0)
 
-        # Figure out stepk and maxk using the minimum and maximum (respectively) that have nonzero
-        # weight.  This is the most conservative possible choice, since it's possible that some of
-        # the images that have non-zero weights might have such tiny weights that they don't change
-        # the effective stepk and maxk we should use.
-        stepk = np.min(np.array(self.stepk_vals)[weight_fac>0])
-        maxk = np.max(np.array(self.maxk_vals)[weight_fac>0])
+        # Get the stepk, maxk using the same weights
+        stepk = np.average(self.stepk_vals, weights=im_weights)
+        maxk = np.average(self.maxk_vals, weights=im_weights)
 
         # Instantiate the InterpolatedImage, using these conservative stepk and maxk choices.
         return InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
 
-    def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+    def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Draw an image as seen through a particular bandpass using the stored interpolated
         images at the specified wavelengths.
 
