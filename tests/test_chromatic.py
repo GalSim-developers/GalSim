@@ -550,7 +550,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
-    assert_raises(TypeError, final_int.drawImage, bandpass, integrator=galsim.integ.midpt)
+    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midpt)
     do_pickle(PSF)
 
     # Check option to not use exact SED
@@ -569,7 +569,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
-    assert_raises(TypeError, final_int.drawImage, bandpass, integrator=galsim.integ.midpt)
+    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midpt)
     do_pickle(PSF)
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
@@ -1628,7 +1628,7 @@ def test_interpolated_ChromaticObject():
     # an SED for this to work.
     exact_psf *= bulge_SED
     interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
-    im_exact = exact_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32, integrator='trapezoidal')
+    im_exact = exact_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
     im_interp = interp_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
     np.testing.assert_array_almost_equal(
         im_interp.array, im_exact.array, decimal=3,
@@ -1653,7 +1653,7 @@ def test_interpolated_ChromaticObject():
     interp_psf = exact_psf.interpolate(tricky_waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
     interp_obj = galsim.Convolve(star, interp_psf)
-    im_exact = exact_obj.drawImage(bandpass, scale=atm_scale, integrator='trapezoidal')
+    im_exact = exact_obj.drawImage(bandpass, scale=atm_scale)
     im_interp = im_exact.copy()
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=atm_scale)
     # Note: peak value of array is around 4, so going to 3 decimal places is a reasonably
