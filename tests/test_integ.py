@@ -210,11 +210,47 @@ def test_trapz_basic():
     # This shouldn't be super accurate, but just make sure it's not really broken.
     x = np.linspace(0, 1, 100000)
     func = lambda x: x**2
-    result = galsim.integ.trapzRule(func, np.linspace(0, 1, 100000))
+    result = galsim.integ.trapzRule(func, x)
     expected_val = 1./3.
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=6, verbose=True,
         err_msg='Test of trapzRule() with points failed for f(x)=x^2 from 0 to 1')
+
+    # quadRule with no weight is equivalent.
+    result2 = galsim.integ.quadRule(func, x)
+    np.testing.assert_almost_equal(result2, result)
+
+@timer
+def test_quad_basic():
+    """Test the basic functionality of the quadRule() function.
+    """
+    x = np.linspace(0, 1, 1000)
+    # With func and weight both linear, quad should be exact.
+    func = lambda x: x
+    weight = lambda x: 1+x
+    result1 = galsim.integ.midptRule(func, x, weight)
+    result2 = galsim.integ.trapzRule(func, x, weight)
+    result3 = galsim.integ.quadRule(func, x, weight)
+    expected_val = 5./6.
+    print('int(x^2 (1+x), 0..1) = ')
+    print('midpt: ',result1)
+    print('trapz: ',result2)
+    print('quad:  ',result3)
+    print('true:  ',expected_val)
+    np.testing.assert_allclose(result1, expected_val, rtol=2.e-3)
+    np.testing.assert_allclose(result2, expected_val, rtol=3.e-7)
+    np.testing.assert_allclose(result3, expected_val, rtol=1.e-14)
+
+    # Check only 2 abscissae
+    x = np.linspace(0, 1, 2)
+    func = lambda x: x
+    result1 = galsim.integ.midptRule(func, x, weight)
+    result2 = galsim.integ.trapzRule(func, x, weight)
+    result3 = galsim.integ.quadRule(func, x, weight)
+    np.testing.assert_allclose(result1, expected_val, rtol=2)
+    np.testing.assert_allclose(result2, expected_val, rtol=0.3)
+    np.testing.assert_allclose(result3, expected_val, rtol=1.e-10)
+
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()

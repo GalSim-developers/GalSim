@@ -57,43 +57,87 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     else:
         raise GalSimError(result)
 
-def midptRule(f, xs):
+def midptRule(f, xs, w=None):
     """Midpoint rule for integration.
 
     Parameters:
         f:      Function to integrate.
         xs:     Locations at which to evaluate f.
+        w:      Weight function if desired [default: None]
 
     Returns:
-        Midpoint rule approximation to the integral.
+        Midpoint rule approximation to the integral: int(f(x) w(x) dx)
     """
     if len(xs) < 2:
         raise GalSimValueError("Not enough points for midptRule integration", xs)
-    x, xp = xs[:2]
-    result = f(x)*(xp-x)
-    for x, xp, xpp in zip(xs[0:-2], xs[1:-1], xs[2:]):
-        result += 0.5*f(xp)*(xpp-x)
-    result += f(xpp)*(xpp-xp)
+    xs = np.asarray(xs)
+    gs = np.empty_like(xs)
+    gs[0] = (xs[1] - xs[0])
+    gs[1:-1] = 0.5 * (xs[2:] - xs[:-2])
+    gs[-1] = (xs[-1] - xs[-2])
+    if w is not None:
+        gs *= w(xs)
+    result = f(xs[0]) * gs[0]
+    for x, g in zip(xs[1:], gs[1:]):
+        result += f(x) * g
     return result
 
 
-def trapzRule(f, xs):
+
+def trapzRule(f, xs, w=None):
     """Trapezoidal rule for integration.
 
     Parameters:
         f:      Function to integrate.
         xs:     Locations at which to evaluate f.
+        w:      Weight function if desired [default: None]
 
     Returns:
-        Trapezoidal rule approximation to the integral.
+        Trapezoidal rule approximation to the integral: int(f(x) w(x) dx)
     """
     if len(xs) < 2:
         raise GalSimValueError("Not enough points for trapzRule integration", xs)
-    x, xp = xs[:2]
-    result = 0.5*f(x)*(xp-x)
-    for x, xp, xpp in zip(xs[0:-2], xs[1:-1], xs[2:]):
-        result += 0.5*f(xp)*(xpp-x)
-    result += 0.5*f(xpp)*(xpp-xp)
+    xs = np.asarray(xs)
+    gs = np.empty_like(xs)
+    gs[0] = 0.5 * (xs[1] - xs[0])
+    gs[1:-1] = 0.5 * (xs[2:] - xs[:-2])
+    gs[-1] = 0.5 * (xs[-1] - xs[-2])
+    if w is not None:
+        gs *= w(xs)
+    result = f(xs[0]) * gs[0]
+    for x, g in zip(xs[1:], gs[1:]):
+        result += f(x) * g
+    return result
+
+def quadRule(f, xs, w=None):
+    """Quadratic rule for integration
+
+    This models both f and w as linear between the evaluation points, so the product is
+    quadratic.
+
+    Parameters:
+        f:      Function to integrate.
+        xs:     Locations at which to evaluate f.
+        w:      Weight function if desired [default: None]
+
+    Returns:
+        Quadratic rule approximation to the integral: int(f(x) w(x) dx)
+    """
+    if len(xs) < 2:
+        raise GalSimValueError("Not enough points for quadRule integration", xs)
+    if w is None:
+        return trapzRule(f,xs)
+    xs = np.asarray(xs)
+    ws = w(xs)
+    gs = np.empty_like(xs)
+    gs[0] = (xs[1] - xs[0]) * (2*ws[0] + ws[1])
+    gs[1:-1] = (xs[1:-1] - xs[:-2]) * (ws[:-2] + 2*ws[1:-1])
+    gs[1:-1] += (xs[2:] - xs[1:-1]) * (2*ws[1:-1] + ws[2:])
+    gs[-1] = (xs[-1] - xs[-2]) * (ws[-2] + 2*ws[-1])
+    gs /= 6.
+    result = f(xs[0]) * gs[0]
+    for x, g in zip(xs[1:], gs[1:]):
+        result += f(x) * g
     return result
 
 
@@ -130,12 +174,12 @@ class ImageIntegrator(object):
         drawImageKwargs.pop('add_to_image', None) # Make sure add_to_image isn't in kwargs
 
         def integrand(w):
-            prof = evaluateAtWavelength(w) * bandpass(w)
+            prof = evaluateAtWavelength(w)
             if not doK:
                 return prof.drawImage(image=image.copy(), **drawImageKwargs)
             else:
                 return prof.drawKImage(image=image.copy(), **drawImageKwargs)
-        return self.rule(integrand, waves)
+        return self.rule(integrand, waves, bandpass)
 
 
 class SampleIntegrator(ImageIntegrator):
@@ -152,6 +196,7 @@ class SampleIntegrator(ImageIntegrator):
 
                     - galsim.integ.midptRule: Use the midpoint integration rule
                     - galsim.integ.trapzRule: Use the trapezoidal integration rule
+                    - galsim.integ.quadRule: Use the quadratic integration rule
 
     """
     def __init__(self, rule):
@@ -176,6 +221,7 @@ class ContinuousIntegrator(ImageIntegrator):
 
                         - galsim.integ.midptRule: Use the midpoint integration rule
                         - galsim.integ.trapzRule: Use the trapezoidal integration rule
+                        - galsim.integ.quadRule: Use the quadratic integration rule
 
         N:              Number of equally-wavelength-spaced monochromatic surface brightness
                         samples to evaluate. [default: 250]
