@@ -57,88 +57,118 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     else:
         raise GalSimError(result)
 
-def midptRule(f, xs, w=None):
+class IntegrationRule(object):
+    """A class that can be used to integrate something more complicated than a normal
+    scalar function.
+
+    In GalSim, we use it to do the integration of chromatic images over a bandpass.
+    Typically f is some kind of draw function, xs are the wavelengths, and w is the
+    bandpass throughput.  But this class is abstracted away from all of that and can be used
+    for anything where the function returns something complicated, but which can be added
+    together to compute the quadrature.
+
+    Specifically the return value from f must be closed under both addition and multiplication
+    by a scalar (a float value).
+    """
+    def __init__(self):
+        pass
+
+    def __call__(self, f, xs, w=None):
+        """Calculate the integral int(f(x) w(x) dx) using the appropriate Rule.
+
+        Parameters:
+            f:      Function to integrate.
+            xs:     Locations at which to evaluate f.
+            w:      Weight function if desired [default: None]
+
+        Returns:
+            The approximation to the integral.
+        """
+        gs = self.calculateWeights(xs, w)
+        return sum(g * f(x) for g,x in zip(gs, xs))
+
+class MidptRule(IntegrationRule):
     """Midpoint rule for integration.
-
-    Parameters:
-        f:      Function to integrate.
-        xs:     Locations at which to evaluate f.
-        w:      Weight function if desired [default: None]
-
-    Returns:
-        Midpoint rule approximation to the integral: int(f(x) w(x) dx)
     """
-    if len(xs) < 2:
-        raise GalSimValueError("Not enough points for midptRule integration", xs)
-    xs = np.asarray(xs)
-    gs = np.empty_like(xs)
-    gs[0] = (xs[1] - xs[0])
-    gs[1:-1] = 0.5 * (xs[2:] - xs[:-2])
-    gs[-1] = (xs[-1] - xs[-2])
-    if w is not None:
-        gs *= w(xs)
-    result = f(xs[0]) * gs[0]
-    for x, g in zip(xs[1:], gs[1:]):
-        result += f(x) * g
-    return result
+    def calculateWeights(self, xs, w):
+        """Calculate the apporpriate weights for the midpoint rule integration
 
+        Parameters:
+            xs:     Locations at which to evaluate f.
+            w:      Weight function if desired [default: None]
 
+        Returns:
+            The net weights to use at each location.
+        """
+        if len(xs) < 2:
+            raise GalSimValueError("Not enough points for midptRule integration", xs)
+        xs = np.asarray(xs)
+        gs = np.empty_like(xs)
+        gs[0] = (xs[1] - xs[0])
+        gs[1:-1] = 0.5 * (xs[2:] - xs[:-2])
+        gs[-1] = (xs[-1] - xs[-2])
+        if w is not None:
+            gs *= w(xs)
+        return gs
 
-def trapzRule(f, xs, w=None):
+class TrapzRule(IntegrationRule):
     """Trapezoidal rule for integration.
-
-    Parameters:
-        f:      Function to integrate.
-        xs:     Locations at which to evaluate f.
-        w:      Weight function if desired [default: None]
-
-    Returns:
-        Trapezoidal rule approximation to the integral: int(f(x) w(x) dx)
     """
-    if len(xs) < 2:
-        raise GalSimValueError("Not enough points for trapzRule integration", xs)
-    xs = np.asarray(xs)
-    gs = np.empty_like(xs)
-    gs[0] = 0.5 * (xs[1] - xs[0])
-    gs[1:-1] = 0.5 * (xs[2:] - xs[:-2])
-    gs[-1] = 0.5 * (xs[-1] - xs[-2])
-    if w is not None:
-        gs *= w(xs)
-    result = f(xs[0]) * gs[0]
-    for x, g in zip(xs[1:], gs[1:]):
-        result += f(x) * g
-    return result
+    def calculateWeights(self, xs, w):
+        """Calculate the apporpriate weights for the trapezoidal rule integration
 
-def quadRule(f, xs, w=None):
+        Parameters:
+            xs:     Locations at which to evaluate f.
+            w:      Weight function if desired [default: None]
+
+        Returns:
+            The net weights to use at each location.
+        """
+        if len(xs) < 2:
+            raise GalSimValueError("Not enough points for trapzRule integration", xs)
+        xs = np.asarray(xs)
+        gs = np.empty_like(xs)
+        gs[0] = 0.5 * (xs[1] - xs[0])
+        gs[1:-1] = 0.5 * (xs[2:] - xs[:-2])
+        gs[-1] = 0.5 * (xs[-1] - xs[-2])
+        if w is not None:
+            gs *= w(xs)
+        return gs
+
+class QuadRule(IntegrationRule):
     """Quadratic rule for integration
 
     This models both f and w as linear between the evaluation points, so the product is
     quadratic.
-
-    Parameters:
-        f:      Function to integrate.
-        xs:     Locations at which to evaluate f.
-        w:      Weight function if desired [default: None]
-
-    Returns:
-        Quadratic rule approximation to the integral: int(f(x) w(x) dx)
     """
-    if len(xs) < 2:
-        raise GalSimValueError("Not enough points for quadRule integration", xs)
-    if w is None:
-        return trapzRule(f,xs)
-    xs = np.asarray(xs)
-    ws = w(xs)
-    gs = np.empty_like(xs)
-    gs[0] = (xs[1] - xs[0]) * (2*ws[0] + ws[1])
-    gs[1:-1] = (xs[1:-1] - xs[:-2]) * (ws[:-2] + 2*ws[1:-1])
-    gs[1:-1] += (xs[2:] - xs[1:-1]) * (2*ws[1:-1] + ws[2:])
-    gs[-1] = (xs[-1] - xs[-2]) * (ws[-2] + 2*ws[-1])
-    gs /= 6.
-    result = f(xs[0]) * gs[0]
-    for x, g in zip(xs[1:], gs[1:]):
-        result += f(x) * g
-    return result
+    def calculateWeights(self, xs, w):
+        """Calculate the apporpriate weights for the quadratic rule integration
+
+        Parameters:
+            xs:     Locations at which to evaluate f.
+            w:      Weight function if desired [default: None]
+
+        Returns:
+            The net weights to use at each location.
+        """
+        if len(xs) < 2:
+            raise GalSimValueError("Not enough points for quadRule integration", xs)
+        if w is None:
+            return TrapzRule().calculateWeights(xs,w)
+        xs = np.asarray(xs)
+        ws = w(xs)
+        gs = np.empty_like(xs)
+        gs[0] = (xs[1] - xs[0]) * (2*ws[0] + ws[1])
+        gs[1:-1] = (xs[1:-1] - xs[:-2]) * (ws[:-2] + 2*ws[1:-1])
+        gs[1:-1] += (xs[2:] - xs[1:-1]) * (2*ws[1:-1] + ws[2:])
+        gs[-1] = (xs[-1] - xs[-2]) * (ws[-2] + 2*ws[-1])
+        gs /= 6.
+        return gs
+
+# To ease backwards compatibility, these are an instantiated object of the above classes
+midptRule = MidptRule()
+trapzRule = TrapzRule()
+quadRule = QuadRule()
 
 
 class ImageIntegrator(object):
