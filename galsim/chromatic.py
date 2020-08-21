@@ -1228,7 +1228,6 @@ class InterpolatedChromaticObject(ChromaticObject):
         from .interpolatedimage import InterpolatedImage
         if integrator == 'quadratic':
             rule = integ.quadRule
-            #rule = integ.trapzRule
         elif integrator == 'trapezoidal':
             rule = integ.trapzRule
         elif integrator == 'midpoint':
