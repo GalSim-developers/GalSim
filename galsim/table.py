@@ -555,7 +555,10 @@ def trapz(f, x):
     Returns:
         Estimate of the integral.
     """
-    return _LookupTable(x,f,'linear').integrate()
+    if len(x) >= 2:
+        return _LookupTable(x,f,'linear').integrate()
+    else:
+        return 0.
 
 
 class LookupTable2D(object):

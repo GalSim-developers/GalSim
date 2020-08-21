@@ -359,7 +359,9 @@ def _convertPositions(pos, units, func):
 
 def _lin_approx_err(x, f, i):
     r"""Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
-    approximation."""
+    approximation.
+    """
+    from .table import trapz
     xleft, xright = x[:i+1], x[i:]
     fleft, fright = f[:i+1], f[i:]
     xi, fi = x[i], f[i]
@@ -367,7 +369,7 @@ def _lin_approx_err(x, f, i):
     mright = (f[-1]-fi)/(x[-1]-xi)
     f2left = f[0]+mleft*(xleft-x[0])
     f2right = fi+mright*(xright-xi)
-    return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
+    return trapz(np.abs(fleft-f2left), xleft), trapz(np.abs(fright-f2right), xright)
 
 def _exact_lin_approx_split(x, f):
     r"""Split a tabulated function into a two-part piecewise linear approximation by exactly
@@ -437,6 +439,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
         a tuple of lists (x_new, y_new) with the thinned tabulation.
     """
     from heapq import heappush, heappop
+    from .table import trapz
 
     split_fn = _lin_approx_split if fast_search else _exact_lin_approx_split
 
@@ -456,7 +459,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
         # Nothing to do
         return x,f
 
-    total_integ = np.trapz(abs(f), x)
+    total_integ = trapz(abs(f), x)
     if total_integ == 0:
         return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = total_integ * rel_err
@@ -487,7 +490,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
         # That means k1 is the smallest value we can use that will work as the ending value.
 
         # Subtract the error so far from thresh
-        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+        thresh -= trapz(abs(f[:k0]),x[:k0]) + trapz(abs(f[k1:]),x[k1:])
 
         x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
         f = f[k0:k1+1]
@@ -544,6 +547,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
     Returns:
         a tuple of lists (x_new, y_new) with the thinned tabulation.
     """
+    from .table import trapz
     x = np.asarray(x, dtype=float)
     f = np.asarray(f, dtype=float)
 
@@ -561,7 +565,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
         return x,f
 
     # Start by calculating the complete integral of |f|
-    total_integ = np.trapz(abs(f),x)
+    total_integ = trapz(abs(f),x)
     if total_integ == 0:
         return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = rel_err * total_integ
@@ -587,7 +591,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
         # That means k1 is the smallest value we can use that will work as the ending value.
 
         # Subtract the error so far from thresh
-        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+        thresh -= trapz(abs(f[:k0]),x[:k0]) + trapz(abs(f[k1:]),x[k1:])
 
         x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
         f = f[k0:k1+1]
@@ -606,14 +610,14 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
         # with a linear approxmation based on the points at k0 and k1+1.
         lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
         # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
-        err_integ = np.trapz(np.abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
+        err_integ = trapz(np.abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
         # If the integral of the difference is < thresh * (dx/x_range), we can skip this item.
         if abs(err_integ) < thresh * (x[k1+1]-x[k0]) / x_range:
             # OK to skip item k1
             k1 = k1 + 1
         else:
             # Also ok to keep if its own relative error is less than rel_err
-            true_integ = np.trapz(f[k0:k1+2], x[k0:k1+2])
+            true_integ = trapz(f[k0:k1+2], x[k0:k1+2])
             if abs(err_integ) < rel_err * abs(true_integ):
                 # OK to skip item k1
                 k1 = k1 + 1
