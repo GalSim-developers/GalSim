@@ -123,15 +123,15 @@ before_install:
     - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then sudo -H apt-get install -y libeigen3-dev; fi
     # Shouldn't usually need this, but occasionally might.
     #- if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew update; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw wget; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then brew install eigen; brew link --overwrite eigen; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew install fftw wget || true; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then brew install eigen || true; brew link --overwrite eigen; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew cask install gfortran; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew upgrade wget; fi
     - if [[ $TRAVIS_OS_NAME == "osx" ]]; then brew link --overwrite fftw gcc wget; fi
 
     # Only need this for the mpeg tests, which we don't do on 2.7
     - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION > 3.5 ]]; then sudo -H apt-get install -y libav-tools; fi
-    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.5 ]]; then brew install libav; brew link --overwrite libav; fi
+    - if [[ $TRAVIS_OS_NAME == "osx" && $TRAVIS_PYTHON_VERSION > 3.5 ]]; then brew install libav || true; brew link --overwrite libav; fi
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
