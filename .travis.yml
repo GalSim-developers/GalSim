@@ -113,6 +113,8 @@ before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     # Install the non-python dependencies: fftw, libav, eigen
     - if [[ $TRAVIS_OS_NAME == "linux" ]]; then sudo -H apt-get -qq update; sudo -H apt-get install -y python-dev libfftw3-dev; fi
+    # py3.9 system doesn't seem to have blas, lapack.
+    - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION == 3.9 ]]; then sudo -H apt-get install -y libblas-dev liblapack-dev; fi
     # Don't install eigen on 3.7 so we test the ability of setup.py to install it for us.
     - if [[ $TRAVIS_OS_NAME == "linux" && $TRAVIS_PYTHON_VERSION < 3.7 ]]; then sudo -H apt-get install -y libeigen3-dev; fi
     # Shouldn't usually need this, but occasionally might.
