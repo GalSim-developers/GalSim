@@ -104,8 +104,6 @@ matrix:
     allow_failures:
         - name: Linux clang (Python 3.6)
         - os: osx
-        - python: 3.5  # These work, but let them fail so we get the results we care about sooner.
-        - python: 3.8
         - python: 3.9-dev
         - python: pypy3
     fast_finish: true
