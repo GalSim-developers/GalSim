@@ -363,9 +363,11 @@ class Bandpass(object):
         """
         if not hasattr(self, '_effective_wavelength') or precise:
             if len(self.wave_list) > 0 and not precise:
-                f = self.func(self.wave_list)
-                num = np.trapz(f * self.wave_list, self.wave_list)
-                denom = np.trapz(f, self.wave_list)
+                num = self._tp.integrate_product(lambda w:w,
+                                                 self.blue_limit, self.red_limit,
+                                                 x_factor=self.wave_factor)
+                denom = self._tp.integrate(self.blue_limit*self.wave_factor,
+                                           self.red_limit*self.wave_factor) / self.wave_factor
             else:
                 num = integ.int1d(lambda w: self.func(w) * w,
                                   self.blue_limit, self.red_limit)
