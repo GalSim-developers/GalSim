@@ -374,10 +374,8 @@ def test_dcr_moments():
     image1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     image2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
-    # Need a little bit more wave density than the default to get to 5 d.p.
-    integrator = galsim.integ.ContinuousIntegrator(rule=galsim.integ.trapzRule, N=100)
-    image1 = final1.drawImage(bandpass, image=image1, integrator=integrator)
-    image2 = final2.drawImage(bandpass, image=image2, integrator=integrator)
+    image1 = final1.drawImage(bandpass, image=image1)
+    image2 = final2.drawImage(bandpass, image=image2)
     # plotme(image1)
 
     mom1 = galsim.utilities.unweighted_moments(image1)
@@ -403,7 +401,7 @@ def test_dcr_moments():
     print('analytic delta V: {0}'.format(dV_analytic))
     np.testing.assert_almost_equal(dR_image, dR_analytic, 5,
                                    err_msg="dRbar Shift from DCR doesn't match analytic formula")
-    np.testing.assert_almost_equal(dR_analytic, dR_centroid, 5,
+    np.testing.assert_almost_equal(dR_analytic, dR_centroid, 10,
                                    err_msg="direct dRbar calculation doesn't match"
                                            +" ChromaticObject.calculateCentroid()")
     np.testing.assert_almost_equal(dV_image, dV_analytic, 5,
@@ -433,10 +431,8 @@ def test_chromatic_seeing_moments():
         image1 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         image2 = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
-        # Need a little bit more wave density than the default to get to 5 d.p.
-        integrator = galsim.integ.ContinuousIntegrator(rule=galsim.integ.trapzRule, N=100)
-        image1 = final1.drawImage(bandpass, image=image1, integrator=integrator)
-        image2 = final2.drawImage(bandpass, image=image2, integrator=integrator)
+        image1 = final1.drawImage(bandpass, image=image1)
+        image2 = final2.drawImage(bandpass, image=image2)
 
         shape1 = galsim.utilities.unweighted_shape(image1)
         shape2 = galsim.utilities.unweighted_shape(image2)

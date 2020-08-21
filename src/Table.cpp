@@ -355,7 +355,6 @@ namespace galsim {
             // exactly the same x values.  Not our dominant use case, so it doesn't seem worth
             // trying to optimize for that.
             dbg<<"Start integrateProduct: "<<xmin<<" "<<xmax<<" "<<xfact<<std::endl;
-            set_verbose(2);
             double x1 = xmin;
             double xx1 = x1 * xfact;
             int i = find(xx1);
@@ -409,7 +408,6 @@ namespace galsim {
             xdbg<<"integration step ("<<x1<<" .. "<<x2<<") = "<<step<<std::endl;
             ans += step;
             dbg<<"final ans = "<<ans<<std::endl;
-            set_verbose(1);
             return ans;
         }
 
