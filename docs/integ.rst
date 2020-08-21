@@ -3,13 +3,23 @@ Integration
 
 .. autofunction:: galsim.integ.int1d
 
-.. autofunction:: galsim.integ.midpt
+.. autoclass:: galsim.integ.IntegrationRule
+    :members:
 
-.. autofunction:: galsim.integ.trapz
+.. autoclass:: galsim.integ.MidptRule
+    :members:
 
-.. autofunction:: galsim.integ.midptRule
+.. autoclass:: galsim.integ.TrapzRule
+    :members:
 
-.. autofunction:: galsim.integ.trapzRule
+.. autoclass:: galsim.integ.QuadRule
+    :members:
+
+.. autodata:: galsim.integ.midptRule
+
+.. autodata:: galsim.integ.trapzRule
+
+.. autodata:: galsim.integ.trapzRule
 
 .. autoclass:: galsim.integ.ImageIntegrator
     :members:

@@ -166,9 +166,9 @@ class QuadRule(IntegrationRule):
         return gs
 
 # To ease backwards compatibility, these are an instantiated object of the above classes
-midptRule = MidptRule()
-trapzRule = TrapzRule()
-quadRule = QuadRule()
+midptRule = MidptRule()  #: For convenience, an instance of `MidptRule`
+trapzRule = TrapzRule()  #: For convenience, an instance of `TrapzRule`
+quadRule = QuadRule()    #: For convenience, an instance of `QuadRule`
 
 
 class ImageIntegrator(object):
