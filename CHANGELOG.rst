@@ -1,21 +1,43 @@
 Changes from v2.2 to v2.3
 =========================
 
+This release mostly focuses on improvements needed for LSST Rubin simulations
+for the Dark Energy Science Collaboration and ones needed for Roman Space
+Telescope simulations for the Roman HLS SIT. These mostly involve adding
+features to the config layer processing that are relevant to these two
+telescopes as well as some new features to add additional realism to the
+simulations.
+
+With this release, we are no longer supporting Python 3.5.  And we have
+upgraded Python 3.8 to a primary supported platform, which now include
+2.7, 3.6, 3.7, 3.8.  We encourage any Python 2.7 users to migrate to
+Python 3 as soon as possible, since it is becoming harder to continue to
+support this platform now that it is officially sunsetted, so we may drop
+support for that in the next release or two.
+
+A full list of changes in this release are below.  The numbers in parantheses
+are GalSim issue or pull request numbers where the change was implemented.
+
+cf. https://github.com/GalSim-developers/GalSim/milestone/20?closed=1
+
 
 Dependency Changes
 ------------------
+
+- Removed future as a dependency. (#1082)
+- Removed eigency as an optional way to get eigen dependency.  Now it will
+  download the eigen code directly if it cannot find eigen installed on
+  your system. (#1086)
+
+
+API Changes
+-----------
 
 - Changed the WCS method name withOrigin to shiftOrigin for non-local WCS
   types.  The functionality hasn't changed, but the name withOrigin is
   only really appropriate for LocalWCS types.  When the WCS already has a
   non-zero origin, then the action takes in really to shift the origin, not
   set a new value. (#1073)
-- Removed future as a dependency. (#1082)
-
-
-API Changes
------------
-
 - The numerical details of the Kolmogorov class were updated to use a more
   precise version of a constant from Racine (1996).  Technically this changes
   the definition of the Kolmogorov profile at the 6th decimal place.  So if
@@ -42,12 +64,12 @@ API Changes
   happens at the surface of the sensor. (#1093)
 - Added logger option to some config functions and methods. If you are using
   custom Image or Output types, you may need to add a ``logger=None`` optional
-  parameter to some method signatures.
+  parameter to some method signatures. (#1095)
 - Deprecated ``galsim.integ.trapz``.  You should use ``galsim.integ.int1d``
-  instead, which is almost always more efficient.
+  instead, which is almost always more efficient. (#1098)
 - Deprecated ``galsim.integ.midpt``.  You should use ``np.trapz`` or
   ``galsim.trapz`` instead, which are almost equivalent, but slightly more
-  accurate.
+  accurate. (#1098)
 
 
 Config Updates
@@ -68,7 +90,7 @@ Config Updates
   pattern was useful for a custom input type, you should switch to using lazy
   properties to delay the loading of data other than what is needed for
   determining the number of objects.  See `Catalog` for an example of how
-  to do this.
+  to do this. (#1095)
 
 
 New Features
@@ -79,8 +101,8 @@ New Features
   portion of an AtmosphericScreen be included in the pickle.  This allows
   the pickles to be recovered after writing to disk and reading back in,
   which otherwise would not work. (#1057)
-- Added force_stepk option to VonKarman. (#1060)
-- Added Refraction and FocusDepth photon ops. (#1068, #1069)
+- Added force_stepk option to VonKarman. (#1059)
+- Added Refraction and FocusDepth photon ops. (#1065, #1069)
 - Updated LSST sensor files to match new lab measurements and use improved
   Poisson code calculations. (#1077, #1081)
 - Added makePhot method of GSObject. (#1078)
@@ -95,9 +117,10 @@ New Features
 - Extended GSFitsWCS to support -SIP distortions for non-TAN WCSs. (#1092)
 - Added wcs option to Roman getPSF function to more easily get the right PSF
   in world coordinates for a particular observation. (#1094)
+- Added `Position.shear` method. (#1090)
 - Added `LookupTable.integrate` and `LookupTable.integrate_product`, along
   with `galsim.trapz` as a drop in replacement for ``numpy.trapz``, which
-  is often somewhat faster.
+  is often somewhat faster. (#1098)
 
 
 Performance Improvements
@@ -108,8 +131,10 @@ Performance Improvements
   FFT artifact in the exact pupil plane mode, and significantly speed up all
   PSF renderings. (#1089)
 - Sped up GSFitsWCS.radecToxy for SIP and PV distorted WCSs by ~20x. (#1092)
-- Sped up SED.calculateFlux by switching to `LookupTable.integrate_product`
-  for the implementation of the integral.
+- Various speed improvements in config processing. (#1095, #1098)
+- Sped up `SED.calculateFlux` and a few other SED and Bandpass calculations
+  by switching to `LookupTable.integrate_product` for the implementation of
+  the integrals. (#1098)
 
 
 Bug Fixes
