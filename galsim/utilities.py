@@ -1783,11 +1783,12 @@ class WeakMethod(object):
         self.c = weakref.ref(f.__self__)
     def __call__(self, *args):
         try:
-            c = self.c()
-        except Exception:  # pragma: no cover
+            # If the reference is dead, self.c() will be None, so this will raise an
+            # AttributeError: 'NoneType' object has no attribute ...
+            # Hopefully the method itself won't raise an AttributeError for anything else.
+            return self.f(self.c(), *args)
+        except AttributeError:  # pragma: no cover
             raise RuntimeError('Method called on dead object')
-        else:
-            return self.f(c, *args)
 
 def ensure_dir(target):
     """
