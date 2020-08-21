@@ -1559,6 +1559,21 @@ def test_interpolated_ChromaticObject():
         kim_interp.array, kim_exact.array, rtol=0, atol=1e-4*kim_exact.array.real.max(),
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
 
+    # Also trapezoidal
+    im_interp = interp_obj.drawImage(bandpass, image=im_interp, integrator='trapezoidal',
+                                     scale=scale)
+    np.testing.assert_array_almost_equal(
+        im_interp.array, im_exact.array, decimal=4,
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (trapz)')
+
+    kscale = 2*np.pi/(scale*40)
+    kim_exact = exact_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40, integrator='trapezoidal')
+    kim_interp = interp_obj.drawKImage(bandpass, scale=kscale, nx=40, ny=40,
+                                       integrator='trapezoidal')
+    np.testing.assert_allclose(
+        kim_interp.array, kim_exact.array, rtol=0, atol=1e-4*kim_exact.array.real.max(),
+        err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (trapz)')
+
     # Check that we can turn interpolation off and on at will.
     other_psf = interp_psf.deinterpolated
     other_obj = galsim.Convolve(star, other_psf)

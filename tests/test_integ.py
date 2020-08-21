@@ -196,12 +196,18 @@ def test_midpoint_basic():
     """
     # This shouldn't be super accurate, but just make sure it's not really broken.
     x = 0.01*np.arange(1000)
-    result = galsim.integ.midptRule(lambda x:x**2, x)
+    func = lambda x:x**2
+    result = galsim.integ.midptRule(func, x)
     expected_val = 1.e3/3.
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=2, verbose=True,
         err_msg='Simple test of midptRule() method failed for f(x)=x^2 from 0 to 10')
 
+    # Error with 0 or 1 ascissae
+    with assert_raises(galsim.GalSimValueError):
+        galsim.integ.midptRule(func, [0])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.integ.midptRule(func, [])
 
 @timer
 def test_trapz_basic():
@@ -219,6 +225,12 @@ def test_trapz_basic():
     # quadRule with no weight is equivalent.
     result2 = galsim.integ.quadRule(func, x)
     np.testing.assert_almost_equal(result2, result)
+
+    # Error with 0 or 1 ascissae
+    with assert_raises(galsim.GalSimValueError):
+        galsim.integ.trapzRule(func, [0])
+    with assert_raises(galsim.GalSimValueError):
+        galsim.integ.trapzRule(func, [])
 
 @timer
 def test_quad_basic():
@@ -250,6 +262,16 @@ def test_quad_basic():
     np.testing.assert_allclose(result1, expected_val, rtol=2)
     np.testing.assert_allclose(result2, expected_val, rtol=0.3)
     np.testing.assert_allclose(result3, expected_val, rtol=1.e-10)
+
+    # Error with 0 or 1 abscissae
+    with assert_raises(galsim.GalSimError):
+        galsim.integ.quadRule(func, [0], weight)
+    with assert_raises(galsim.GalSimError):
+        galsim.integ.quadRule(func, [], weight)
+    with assert_raises(galsim.GalSimError):
+        galsim.integ.quadRule(func, [0])
+    with assert_raises(galsim.GalSimError):
+        galsim.integ.quadRule(func, [])
 
 
 if __name__ == "__main__":
