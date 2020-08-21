@@ -324,7 +324,7 @@ def test_knots_hlr():
     # should be within 5 sigma
     nstd=5
 
-    # Use a well-defined rng so we don't randomly fail from an unluck draw.
+    # Use a well-defined rng so we don't randomly fail from an unlucky draw.
     rng = galsim.BaseDeviate(1234)
 
     # number of trials
