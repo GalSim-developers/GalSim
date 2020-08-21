@@ -324,6 +324,9 @@ def test_knots_hlr():
     # should be within 5 sigma
     nstd=5
 
+    # Use a well-defined rng so we don't randomly fail from an unluck draw.
+    rng = galsim.BaseDeviate(1234)
+
     # number of trials
     ntrial_vals=[100]*len(npt_vals)
 
@@ -344,7 +347,7 @@ def test_knots_hlr():
             hlr_calc=np.zeros(ntrial)
             for i in range(ntrial):
                 #rw=galsim.RandomKnots(npoints, hlr)
-                rw=galsim.RandomKnots(npoints, profile=prof)
+                rw=galsim.RandomKnots(npoints, profile=prof, rng=rng)
                 hlr_calc[i] = rw.calculateHLR()
 
             mn=hlr_calc.mean()
