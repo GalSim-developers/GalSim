@@ -1778,9 +1778,12 @@ class WeakMethod(object):
         self.f = f.__func__
         self.c = weakref.ref(f.__self__)
     def __call__(self, *args):
-        if self.c() is None :  # pragma: no cover
-            raise TypeError('Method called on dead object')
-        return self.f(self.c(), *args)
+        try:
+            c = self.c()
+        except Exception:  # pragma: no cover
+            raise RuntimeError('Method called on dead object')
+        else:
+            return self.f(c, *args)
 
 def ensure_dir(target):
     """
