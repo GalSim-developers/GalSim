@@ -232,7 +232,8 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     # Import any modules if requested
     ImportModules(config)
 
-    logger.debug("Final config dict to be processed: \n%s", json.dumps(config, indent=4))
+    logger.debug("Final config dict to be processed: \n%s",
+                 json.dumps(config, default=lambda o: repr(o), indent=4))
 
     # Warn about any unexpected fields.
     unexpected = [ k for k in config if k not in top_level_fields ]
