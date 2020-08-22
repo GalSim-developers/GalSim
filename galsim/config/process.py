@@ -19,6 +19,7 @@
 import os
 import logging
 import copy
+import json
 from collections import OrderedDict
 
 # Lots of function that used to be here are now in util, so import them back here in case users
@@ -211,7 +212,6 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
         the final config dict that was used.
     """
     logger = LoggerWrapper(logger)
-    import pprint
     if njobs < 1:
         raise GalSimValueError("Invalid number of jobs",njobs)
     if job < 1:
@@ -232,7 +232,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     # Import any modules if requested
     ImportModules(config)
 
-    logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
+    logger.debug("Final config dict to be processed: \n%s", json.dumps(config, indent=4))
 
     # Warn about any unexpected fields.
     unexpected = [ k for k in config if k not in top_level_fields ]
