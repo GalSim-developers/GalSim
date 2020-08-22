@@ -74,7 +74,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
         logger.debug('file %d: Start ProcessInput',file_num)
 
         # We'll iterate through this list of keys a few times
-        all_keys = [ k for k in valid_input_types.keys() if k in config['input'] ]
+        all_keys = [k for k in config['input'].keys() if k in valid_input_types]
 
         # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is
         # unwieldy to copy them in the config file for each process.  Instead we use proxy
