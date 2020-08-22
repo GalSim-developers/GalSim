@@ -186,6 +186,11 @@ def test_fits():
     im2 = galsim.fits.read('output_fits/test_fits_0.fits')
     np.testing.assert_array_equal(im2.array, im1_list[0].array)
 
+    # Check invalid input field
+    config['input'] = { 'invalid' : {} }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.ProcessInput(config)
+
     # Not sure if this is possible, but we have a check in case cpu_count fails, so
     # mock this up to make sure we handle it properly (by reverting to nproc = 1.
     if sys.version_info < (3,): return  # mock only available on python 3
