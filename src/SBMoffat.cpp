@@ -29,6 +29,7 @@
 #include "math/Bessel.h"
 #include "math/Gamma.h"
 #include "math/Angle.h"
+#include "math/Hankel.h"
 #include "fmath/fmath.hpp"
 
 // Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
@@ -552,17 +553,16 @@ namespace galsim {
     }
 
     // Integrand class for the Hankel transform of Moffat
-    class MoffatIntegrand : public std::unary_function<double,double>
+    class MoffatIntegrand : public std::function<double(double)>
     {
     public:
-        MoffatIntegrand(double beta, double k, double (*pb)(double, double)) :
-            _beta(beta), _k(k), _pow_mbeta(pb) {}
+        MoffatIntegrand(double beta, double (*pb)(double, double)) :
+            _beta(beta), _pow_mbeta(pb) {}
         double operator()(double r) const
-        { return r*_pow_mbeta(1.+r*r, _beta) * math::j0(_k*r); }
+        { return _pow_mbeta(1.+r*r, _beta); }
 
     private:
         double _beta;
-        double _k;
         double (*_pow_mbeta)(double x, double beta);
     };
 
@@ -590,30 +590,20 @@ namespace galsim {
         double dk = gsparams.table_spacing * sqrt(sqrt(gsparams.kvalue_accuracy / 10.));
         dbg<<"dk = "<<dk<<std::endl;
         int n_below_thresh = 0;
+        MoffatIntegrand I(_beta, _pow_mbeta);
         // Don't go past k = 50
         for(double k=0.; k < 50; k += dk) {
 
-            MoffatIntegrand I(_beta, k, _pow_mbeta);
-
-#ifdef DEBUGLOGGING
-            std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
-            integ::IntRegion<double> reg(0, _maxRrD, integ_dbgout);
-#else
-            integ::IntRegion<double> reg(0, _maxRrD);
-#endif
-
-            // Add explicit splits at first several roots of J0.
-            // This tends to make the integral more accurate.
-            for (int s=1; s<=10; ++s) {
-                double root = math::getBesselRoot0(s);
-                if (root > k * _maxRrD) break;
-                reg.addSplit(root/k);
+            double val;
+            if (trunc > 0) {
+                val = math::hankel(I, k, _maxRrD,
+                                   this->gsparams.integration_relerr,
+                                   this->gsparams.integration_abserr, 10);
+            } else {
+                val = math::hankel_inf(I, k,
+                                       this->gsparams.integration_relerr,
+                                       this->gsparams.integration_abserr, 10);
             }
-
-            double val = integ::int1d(
-                I, reg,
-                this->gsparams.integration_relerr,
-                this->gsparams.integration_abserr);
             val *= prefactor;
 
             xdbg<<"ft("<<k<<") = "<<val<<std::endl;
