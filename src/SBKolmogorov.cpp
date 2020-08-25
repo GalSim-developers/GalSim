@@ -22,6 +22,7 @@
 #include "SBKolmogorov.h"
 #include "SBKolmogorovImpl.h"
 #include "math/Bessel.h"
+#include "math/Hankel.h"
 #include "fmath/fmath.hpp"
 
 // Uncomment this to do the calculation that solves for the conversion between lam_over_r0
@@ -266,31 +267,25 @@ namespace galsim {
     double KolmogorovInfo::kValue(double ksq) const
     { return fmath::expd(-fast_pow(ksq,5./6.)); }
 
-    // Integrand class for the Hankel transform of Kolmogorov
-    class KolmIntegrand : public std::unary_function<double,double>
+    class KolmKValue : public std::function<double(double)>
     {
     public:
-        KolmIntegrand(double r) : _r(r) {}
         double operator()(double k) const
-        { return k*fmath::expd(-fast_pow(k, 5./3.)) * math::j0(k*_r); }
-
-    private:
-        double _r;
+        { return fmath::expd(-fast_pow(k, 5./3.)); }
     };
 
     // Perform the integral
-    class KolmXValue : public std::unary_function<double,double>
+    class KolmXValue : public std::function<double(double)>
     {
     public:
         KolmXValue(const GSParams& gsparams) : _gsparams(gsparams) {}
 
         double operator()(double r) const
         {
-            const double integ_maxK = integ::MOCK_INF;
-            KolmIntegrand I(r);
-            return integ::int1d(I, 0., integ_maxK,
-                                _gsparams.integration_relerr,
-                                _gsparams.integration_abserr);
+            KolmKValue kvalue;
+            return math::hankel_inf(kvalue, r,
+                                    _gsparams.integration_relerr,
+                                    _gsparams.integration_abserr);
         }
     private:
         const GSParams& _gsparams;
@@ -298,7 +293,7 @@ namespace galsim {
 
 #ifdef SOLVE_FWHM_HLR
     // XValue - target  (used for solving for fwhm)
-    class KolmTargetValue : public std::unary_function<double,double>
+    class KolmTargetValue : public std::function<double(double)>
     {
     public:
         KolmTargetValue(double target, const GSParams& gsparams) :
@@ -309,7 +304,7 @@ namespace galsim {
         double _target;
     };
 
-    class KolmXValueTimes2piR : public std::unary_function<double,double>
+    class KolmXValueTimes2piR : public std::function<double(double)>
     {
     public:
         KolmXValueTimes2piR(const GSParams& gsparams) : f(gsparams) {}
@@ -320,7 +315,7 @@ namespace galsim {
         KolmXValue f;
     };
 
-    class KolmEnclosedFlux : public std::unary_function<double,double>
+    class KolmEnclosedFlux : public std::function<double(double)>
     {
     public:
         KolmEnclosedFlux(const GSParams& gsparams) :
@@ -336,7 +331,7 @@ namespace galsim {
         const GSParams& _gsparams;
     };
 
-    class KolmTargetFlux : public std::unary_function<double,double>
+    class KolmTargetFlux : public std::function<double(double)>
     {
     public:
         KolmTargetFlux(double target, const GSParams& gsparams) :
