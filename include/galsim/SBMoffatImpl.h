@@ -124,7 +124,7 @@ namespace galsim {
         mutable double _stepk;
         mutable double _maxk; ///< Maximum k with kValue > 1.e-3
 
-        double (*_pow_beta)(double x, double beta);
+        double (*_pow_mbeta)(double x, double beta);
         double (SBMoffatImpl::*_kV)(double ksq) const;
 
         /// Setup the FT Table.
