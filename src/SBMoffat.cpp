@@ -218,20 +218,20 @@ namespace galsim {
             << " norm " << _norm << " maxR " << _maxR << std::endl;
 
         if (std::abs(_beta-1) < this->gsparams.xvalue_accuracy)
-            _pow_beta = &SBMoffatImpl::pow_1;
+            _pow_mbeta = &SBMoffatImpl::pow_1;
         else if (std::abs(_beta-1.5) < this->gsparams.xvalue_accuracy)
-            _pow_beta = &SBMoffatImpl::pow_15;
+            _pow_mbeta = &SBMoffatImpl::pow_15;
         else if (std::abs(_beta-2) < this->gsparams.xvalue_accuracy)
-            _pow_beta = &SBMoffatImpl::pow_2;
+            _pow_mbeta = &SBMoffatImpl::pow_2;
         else if (std::abs(_beta-2.5) < this->gsparams.xvalue_accuracy)
-            _pow_beta = &SBMoffatImpl::pow_25;
+            _pow_mbeta = &SBMoffatImpl::pow_25;
         else if (std::abs(_beta-3) < this->gsparams.xvalue_accuracy)
-            _pow_beta = &SBMoffatImpl::pow_3;
+            _pow_mbeta = &SBMoffatImpl::pow_3;
         else if (std::abs(_beta-3.5) < this->gsparams.xvalue_accuracy)
-            _pow_beta = &SBMoffatImpl::pow_35;
+            _pow_mbeta = &SBMoffatImpl::pow_35;
         else if (std::abs(_beta-4) < this->gsparams.xvalue_accuracy)
-            _pow_beta = &SBMoffatImpl::pow_4;
-        else _pow_beta = &SBMoffatImpl::pow_gen;
+            _pow_mbeta = &SBMoffatImpl::pow_4;
+        else _pow_mbeta = &SBMoffatImpl::pow_gen;
 
         if (_trunc > 0.) _kV = &SBMoffatImpl::kV_trunc;
         else if (std::abs(_beta-1.5) < this->gsparams.kvalue_accuracy)
@@ -266,17 +266,19 @@ namespace galsim {
     {
         double rsq = (p.x*p.x + p.y*p.y)*_inv_rD_sq;
         if (rsq > _maxRrD_sq) return 0.;
-        else return _norm / _pow_beta(1.+rsq, _beta);
+        else return _norm * _pow_mbeta(1.+rsq, _beta);
     }
 
-    double SBMoffat::SBMoffatImpl::pow_1(double x, double ) { return x; }
-    double SBMoffat::SBMoffatImpl::pow_15(double x, double ) { return x * std::sqrt(x); }
-    double SBMoffat::SBMoffatImpl::pow_2(double x, double ) { return x*x; }
-    double SBMoffat::SBMoffatImpl::pow_25(double x, double ) { return x*x * std::sqrt(x); }
-    double SBMoffat::SBMoffatImpl::pow_3(double x, double ) { return x*x*x; }
-    double SBMoffat::SBMoffatImpl::pow_35(double x, double ) { return x*x*x * std::sqrt(x); }
-    double SBMoffat::SBMoffatImpl::pow_4(double x, double ) { double xsq=x*x; return xsq*xsq; }
-    double SBMoffat::SBMoffatImpl::pow_gen(double x, double beta) { return fast_pow(x,beta); }
+    // Specialized functions for x**-beta for some probably common choices for beta, which
+    // can be done faster than using fast_pow(x,-beta).
+    double SBMoffat::SBMoffatImpl::pow_1(double x, double ) { return 1./x; }
+    double SBMoffat::SBMoffatImpl::pow_15(double x, double ) { return 1./(x * std::sqrt(x)); }
+    double SBMoffat::SBMoffatImpl::pow_2(double x, double ) { return 1./(x*x); }
+    double SBMoffat::SBMoffatImpl::pow_25(double x, double ) { return 1./(x*x * std::sqrt(x)); }
+    double SBMoffat::SBMoffatImpl::pow_3(double x, double ) { return 1./(x*x*x); }
+    double SBMoffat::SBMoffatImpl::pow_35(double x, double ) { return 1./(x*x*x * std::sqrt(x)); }
+    double SBMoffat::SBMoffatImpl::pow_4(double x, double ) { double xsq=x*x; return 1./(xsq*xsq); }
+    double SBMoffat::SBMoffatImpl::pow_gen(double x, double beta) { return fast_pow(x,-beta); }
 
     std::complex<double> SBMoffat::SBMoffatImpl::kValue(const Position<double>& k) const
     {
@@ -375,7 +377,7 @@ namespace galsim {
                 for (int i=0; i<m; ++i,x+=dx) {
                     double rsq = x*x + ysq;
                     if (rsq <= _maxRrD_sq)
-                        *ptr++ = _norm / _pow_beta(1.+rsq, _beta);
+                        *ptr++ = _norm * _pow_mbeta(1.+rsq, _beta);
                     else
                         *ptr++ = T(0);
                 }
@@ -410,7 +412,7 @@ namespace galsim {
             for (int i=0; i<m; ++i,x+=dx,y+=dyx) {
                 double rsq = x*x + y*y;
                 if (rsq <= _maxRrD_sq)
-                    *ptr++ = _norm / _pow_beta(1.+rsq, _beta);
+                    *ptr++ = _norm * _pow_mbeta(1.+rsq, _beta);
                 else
                     *ptr++ = T(0);
             }
@@ -554,14 +556,14 @@ namespace galsim {
     {
     public:
         MoffatIntegrand(double beta, double k, double (*pb)(double, double)) :
-            _beta(beta), _k(k), _pow_beta(pb) {}
+            _beta(beta), _k(k), _pow_mbeta(pb) {}
         double operator()(double r) const
-        { return r/_pow_beta(1.+r*r, _beta) * math::j0(_k*r); }
+        { return r*_pow_mbeta(1.+r*r, _beta) * math::j0(_k*r); }
 
     private:
         double _beta;
         double _k;
-        double (*_pow_beta)(double x, double beta);
+        double (*_pow_mbeta)(double x, double beta);
     };
 
     void SBMoffat::SBMoffatImpl::setupFT() const
@@ -591,7 +593,7 @@ namespace galsim {
         // Don't go past k = 50
         for(double k=0.; k < 50; k += dk) {
 
-            MoffatIntegrand I(_beta, k, _pow_beta);
+            MoffatIntegrand I(_beta, k, _pow_mbeta);
 
 #ifdef DEBUGLOGGING
             std::ostream* integ_dbgout = verbose_level >= 3 ? dbgout : 0;
