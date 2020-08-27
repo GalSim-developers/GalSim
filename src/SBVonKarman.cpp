@@ -25,6 +25,7 @@
 #include "math/Bessel.h"
 #include "math/Gamma.h"
 #include "math/BesselRoots.h"
+#include "math/Hankel.h"
 #include "fmath/fmath.hpp"
 
 namespace galsim {
@@ -204,13 +205,12 @@ namespace galsim {
             return val;
     }
 
-    class VKXIntegrand : public std::unary_function<double,double>
+    class VKXIntegrand : public std::function<double(double)>
     {
     public:
-        VKXIntegrand(double r, const VonKarmanInfo& vki) : _r(r), _vki(vki) {}
-        double operator()(double k) const { return _vki.kValue(k)*j0(k*_r)*k; }
+        VKXIntegrand(const VonKarmanInfo& vki) : _vki(vki) {}
+        double operator()(double k) const { return _vki.kValue(k); }
     private:
-        const double _r;  //arcsec
         const VonKarmanInfo& _vki;
     };
 
@@ -220,23 +220,19 @@ namespace galsim {
     {
         xdbg<<"rawXValue at r = "<<r<<std::endl;
         // r in arcsec
-        VKXIntegrand I(r, *this);
+        VKXIntegrand I(*this);
         integ::IntRegion<double> reg(0, integ::MOCK_INF);
+        int nsplits = 0;
         if (r > 0.) {
             // Add explicit splits at first several roots of J0.
             // This tends to make the integral more accurate.
             // Emplirically, around r/2 is a decent number of oscillations to include explicitly.
             // This is tested by test_vk_r0 in test_vonkarman.py.
-            int nsplits = int(r/2);
-            for (int s=1; s<=nsplits; ++s) {
-                double root = math::getBesselRoot0(s);
-                xdbg<<"Add split at "<<root/r<<std::endl;
-                reg.addSplit(root/r);
-            }
+            nsplits = int(r/2);
         }
         double relerr = _gsparams->integration_relerr;
         double abserr = _gsparams->integration_abserr;
-        double result = integ::int1d(I, reg, relerr, abserr);
+        double result = math::hankel_inf(I, r, relerr, abserr, nsplits);
         // Sometimes this still fails.  The failure mode is always that the result is
         // negative.  If this happens, double the number of split points and try again.
         // Also cut the relerr down by a factor of 10.
@@ -249,15 +245,10 @@ namespace galsim {
             if (max_iter-- == 0)
                 throw SBError("Invalid von Karman XValue unresolved after 10 attempts");
             dbg<<"Bad result: "<<result<<std::endl;
-            int nsplits = reg.getNSplit();
-            for (int s=nsplits+1; s<=2*nsplits; ++s) {
-                double root = math::getBesselRoot0(s);
-                xdbg<<"Add split at "<<root/r<<std::endl;
-                reg.addSplit(root/r);
-            }
+            nsplits *= 2;
             relerr /= 10;
             abserr /= 10;
-            result = integ::int1d(I, reg, relerr, abserr);
+            result = math::hankel_inf(I, r, relerr, abserr, nsplits);
         }
         // We've been ignoring a factor of 2 pi so far.  Apply it here.
         return result / (2.*M_PI);
