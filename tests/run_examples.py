@@ -468,6 +468,7 @@ def test_fft_vs_geom_movie():
 
 
 if __name__ == "__main__":
+    setup()
     test_demo1()
     test_demo2()
     test_demo3()
