@@ -26,6 +26,7 @@
 #include "math/Bessel.h"
 #include "math/BesselRoots.h"
 #include "math/Gamma.h"
+#include "math/Hankel.h"
 #include "fmath/fmath.hpp"
 
 namespace galsim {
@@ -398,17 +399,16 @@ namespace galsim {
     }
 
     // Integrand class for the Hankel transform of Sersic
-    class SersicHankel : public std::unary_function<double,double>
+    class SersicHankel : public std::function<double(double)>
     {
     public:
-        SersicHankel(double invn, double k): _invn(invn), _k(k) {}
+        SersicHankel(double invn): _invn(invn) {}
 
         double operator()(double r) const
-        { return r*fmath::expd(-fast_pow(r, _invn)) * math::j0(_k*r); }
+        { return fmath::expd(-fast_pow(r, _invn)); }
 
     private:
         double _invn;
-        double _k;
     };
 
     void SersicInfo::buildFT() const
@@ -448,17 +448,6 @@ namespace galsim {
         double hankel_norm = getFluxFraction()*_n*_gamma2n;
         dbg<<"hankel_norm = "<<hankel_norm<<std::endl;
 
-        double integ_maxr;
-        if (!_truncated) {
-            //integ_maxr = calculateMissingFluxRadius(_gsparams->kvalue_accuracy);
-            integ_maxr = integ::MOCK_INF;
-        } else {
-            //integ_maxr = calculateMissingFluxRadius(_gsparams->kvalue_accuracy);
-            //if (_trunc < integ_maxr) integ_maxr = _trunc;
-            integ_maxr = _trunc;
-        }
-        dbg<<"integ_maxr = "<<integ_maxr<<std::endl;
-
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
         // The fourth derivative is a bit tough to estimate of course, but doing it numerically
         // for a few different values of n, we find 10 to be a reasonably conservative estimate.
@@ -480,31 +469,22 @@ namespace galsim {
         // Don't go past k = 500
         _ksq_max = -1.;
         _maxk = kmin; // Just in case we break on the first iteration.
+        SersicHankel I(_invn);
         bool found_maxk = false;
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
             double k = fmath::expd(logk);
             double ksq = k*k;
-            SersicHankel I(_invn, k);
 
-#ifdef DEBUGLOGGING
-            std::ostream* integ_dbgout = verbose_level >= 3 ?
-                &Debugger::instance().get_dbgout() : 0;
-            integ::IntRegion<double> reg(0, integ_maxr, integ_dbgout);
-#else
-            integ::IntRegion<double> reg(0, integ_maxr);
-#endif
-
-            // Add explicit splits at first several roots of J0.
-            // This tends to make the integral more accurate.
-            for (int s=1; s<=10; ++s) {
-                double root = math::getBesselRoot0(s);
-                if (root > k * integ_maxr) break;
-                reg.addSplit(root/k);
+            double val;
+            if (_truncated) {
+                val = math::hankel(I, k, _trunc,
+                                   _gsparams->integration_relerr,
+                                   _gsparams->integration_abserr*hankel_norm, 10);
+            } else {
+                val = math::hankel_inf(I, k,
+                                       _gsparams->integration_relerr,
+                                       _gsparams->integration_abserr*hankel_norm, 10);
             }
-
-            double val = integ::int1d(I, reg,
-                                      _gsparams->integration_relerr,
-                                      _gsparams->integration_abserr*hankel_norm);
             val /= hankel_norm;
             xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<"   "<<val*ksq<<std::endl;
 
