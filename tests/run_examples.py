@@ -71,6 +71,12 @@ def check_same(f1, f2):
 
 logging.basicConfig(format="%(message)s", stream=sys.stdout)
 
+@in_examples
+def setup():
+    remove_dir('output')
+    remove_dir('output_yaml')
+    remove_dir('output_json')
+
 @timer
 @in_examples
 def test_demo1():
@@ -462,9 +468,6 @@ def test_fft_vs_geom_movie():
 
 
 if __name__ == "__main__":
-    remove_dir('output')
-    remove_dir('output_yaml')
-    remove_dir('output_json')
     test_demo1()
     test_demo2()
     test_demo3()
