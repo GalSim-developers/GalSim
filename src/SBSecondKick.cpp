@@ -26,6 +26,7 @@
 #include "Solve.h"
 #include "math/Bessel.h"
 #include "math/Gamma.h"
+#include "math/Hankel.h"
 #include "math/BesselRoots.h"
 
 #ifdef DEBUGLOGGING
@@ -241,31 +242,22 @@ namespace galsim {
         return fmath::expd(-0.5*structureFunction(k))-_delta;
     }
 
-    class SKIXIntegrand : public std::unary_function<double,double>
+    class SKIXIntegrand : public std::function<double(double)>
     {
     public:
-        SKIXIntegrand(double r, const SKInfo& ski) : _r(r), _ski(ski) {}
-        double operator()(double k) const { return _ski.kValue(k)*j0(k*_r)*k; }
+        SKIXIntegrand(const SKInfo& ski) : _ski(ski) {}
+        double operator()(double k) const { return _ski.kValue(k); }
     private:
-        const double _r;
         const SKInfo& _ski;
     };
 
     double SKInfo::xValueRaw(double r) const {
         // r in units of 1/k0 = lambda/(2pi r0)
-        SKIXIntegrand I(r, *this);
-        integ::IntRegion<double> reg(0, _maxk);
-        if (r > 0) {
-            // Add BesselJ0 zeros up to _maxk
-            for (int s=1; s<10; ++s) {
-                double zero=math::getBesselRoot0(s)/r;
-                if (zero >= _maxk) break;
-                reg.addSplit(zero);
-            }
-        }
-        double result = integ::int1d(I, reg,
-                                     _gsparams->integration_relerr,
-                                     _gsparams->integration_abserr)/(2.*M_PI);
+        SKIXIntegrand I(*this);
+        double result = math::hankel_inf(I, r,
+                                         _gsparams->integration_relerr,
+                                         _gsparams->integration_abserr,
+                                         r > 0 ? 10 : 0)/(2.*M_PI);
         dbg<<"xValueRaw("<<r<<") = "<<result<<"\n";
         return result;
     }
@@ -275,31 +267,22 @@ namespace galsim {
         return r < _radial.argMax() ? _radial(r) : 0.;
     }
 
-    class SKIExactXIntegrand : public std::unary_function<double,double>
+    class SKIExactXIntegrand : public std::function<double(double)>
     {
     public:
-        SKIExactXIntegrand(double r, const SKInfo& ski) : _r(r), _ski(ski) {}
-        double operator()(double k) const { return _ski.kValueRaw(k)*j0(k*_r)*k; }
+        SKIExactXIntegrand(const SKInfo& ski) : _ski(ski) {}
+        double operator()(double k) const { return _ski.kValueRaw(k); }
     private:
-        const double _r;
         const SKInfo& _ski;
     };
 
     double SKInfo::xValueExact(double r) const {
         // r in units of 1/k0 = lambda/(2pi r0)
-        SKIExactXIntegrand I(r, *this);
-        integ::IntRegion<double> reg(0., integ::MOCK_INF);
-        if (r > 0) {
-            // Add BesselJ0 zeros up to maxk
-            for (int s=1; s<10; ++s) {
-                double zero=math::getBesselRoot0(s)/r;
-                if (zero >= _maxk) break;
-                reg.addSplit(zero);
-            }
-        }
-        double result = integ::int1d(I, reg,
-                            _gsparams->integration_relerr,
-                            _gsparams->integration_abserr)/(2.*M_PI);
+        SKIExactXIntegrand I(*this);
+        double result = math::hankel_inf(I, r,
+                                         _gsparams->integration_relerr,
+                                         _gsparams->integration_abserr,
+                                         r > 0 ? 10 : 0)/(2.*M_PI);
         xdbg<<"xValueExact("<<r<<") = "<<result<<"\n";
         return result;
     }
