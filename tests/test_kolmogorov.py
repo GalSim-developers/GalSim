@@ -137,7 +137,7 @@ def test_kolmogorov_properties():
     np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxk, 8.644067599028375, 9)
-    np.testing.assert_almost_equal(psf.stepk, 0.3698212155333603, 9)
+    np.testing.assert_almost_equal(psf.stepk, 0.3512294667416627, 9)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.lam_over_r0, lor)
     np.testing.assert_almost_equal(psf.half_light_radius, lor * 0.5548101137)
