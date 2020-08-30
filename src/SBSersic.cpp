@@ -483,7 +483,7 @@ namespace galsim {
             } else {
                 val = math::hankel_inf(I, k,
                                        _gsparams->integration_relerr,
-                                       _gsparams->integration_abserr*hankel_norm, 10);
+                                       _gsparams->integration_abserr*hankel_norm);
             }
             val /= hankel_norm;
             xdbg<<"logk = "<<logk<<", ft("<<exp(logk)<<") = "<<val<<"   "<<val*ksq<<std::endl;
