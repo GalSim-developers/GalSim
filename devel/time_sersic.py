@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
+
 import galsim
 import time
 
@@ -32,9 +34,9 @@ for iter in range(2):
         final = galsim.Convolve(psf,gal)
         im = final.drawImage(image=im)
         t1 = time.time()
-        print 'n = %f, time = %f'%(n,t1-t0)
+        print('n = %f, time = %f'%(n,t1-t0))
     tend = time.time()
-    print 'Total time = %f'%(tend-tstart)
+    print('Total time = %f'%(tend-tstart))
 
 gsparams = galsim.GSParams(xvalue_accuracy=1.e-2, kvalue_accuracy=1.e-2,
                            maxk_threshold=1.e-2, folding_threshold=1.e-2)
@@ -47,6 +49,6 @@ for iter in range(2):
         final = galsim.Convolve(psf,gal)
         im = final.drawImage(image=im)
         t1 = time.time()
-        print 'n = %f, time = %f'%(n,t1-t0)
+        print('n = %f, time = %f'%(n,t1-t0))
     tend = time.time()
-    print 'Total time with loose params = %f'%(tend-tstart)
+    print('Total time with loose params = %f'%(tend-tstart))
