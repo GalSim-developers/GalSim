@@ -398,15 +398,11 @@ namespace galsim {
         }
     }
 
-    // Integrand class for the Hankel transform of Sersic
-    class SersicHankel : public std::function<double(double)>
+    class SersicRadialFunction: public FluxDensity
     {
     public:
-        SersicHankel(double invn): _invn(invn) {}
-
-        double operator()(double r) const
-        { return fmath::expd(-fast_pow(r, _invn)); }
-
+        SersicRadialFunction(double invn): _invn(invn) {}
+        double operator()(double r) const { return fmath::expd(-fast_pow(r,_invn)); }
     private:
         double _invn;
     };
@@ -469,7 +465,7 @@ namespace galsim {
         // Don't go past k = 500
         _ksq_max = -1.;
         _maxk = kmin; // Just in case we break on the first iteration.
-        SersicHankel I(_invn);
+        SersicRadialFunction I(_invn);
         bool found_maxk = false;
         for (double logk = std::log(kmin)-0.001; logk < std::log(500.); logk += dlogk) {
             double k = fmath::expd(logk);
@@ -800,15 +796,6 @@ namespace galsim {
         double b = CalculateB(n, invn, math::tgamma(2*n), 1.);
         return hlr * CalculateTruncatedScale(n, invn, b, trunc/hlr);
     }
-
-    class SersicRadialFunction: public FluxDensity
-    {
-    public:
-        SersicRadialFunction(double invn): _invn(invn) {}
-        double operator()(double r) const { return fmath::expd(-fast_pow(r,_invn)); }
-    private:
-        double _invn;
-    };
 
     void SersicInfo::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
