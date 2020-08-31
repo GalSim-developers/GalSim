@@ -196,7 +196,9 @@ namespace math {
             dbg<<"start adaptive integrate for k = "<<k<<std::endl;
 
             double h0 = _h0;
-            while (h0 > k) h0 *= 0.5;
+            // Empirically, for very small k, we'll at least need to drop h down to 100*k,
+            // so do this first before possibly iterating further.
+            while (h0 > 100*k) h0 *= 0.5;
 
             double ans0 = get_integrator(h0)->integrate(f,k);
             double h1 = 0.5 * h0;
@@ -211,6 +213,7 @@ namespace math {
                 err = std::abs(ans1 - ans0);
                 dbg<<"answers = "<<ans0<<", "<<ans1<<"  diff = "<<err<<std::endl;
             }
+            dbg<<"Final: "<<ans1<<"  k,h0 = "<<k<<"  "<<h0<<std::endl;
             return ans1;
         }
     private:
