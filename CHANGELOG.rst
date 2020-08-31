@@ -135,6 +135,8 @@ Performance Improvements
 - Sped up `SED.calculateFlux` and a few other SED and Bandpass calculations
   by switching to `LookupTable.integrate_product` for the implementation of
   the integrals. (#1098)
+- Sped up the Hankel transforms several classes use for computing either the
+  k-space values (e.g. Sersic) or real-space values (e.g. Kolmogorov). (#1099)
 
 
 Bug Fixes
