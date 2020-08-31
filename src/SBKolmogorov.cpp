@@ -370,6 +370,7 @@ namespace galsim {
         // 10 h^4 <= kvalue_accuracy
         // h = (kvalue_accuracy/10)^0.25
         double dlogr = gsparams->table_spacing * sqrt(sqrt(gsparams->xvalue_accuracy / 10.));
+        xdbg<<"dlogr = "<<dlogr<<std::endl;
 
         // Along the way accumulate the flux integral to determine the radius
         // that encloses (1-folding_threshold) of the flux.
@@ -377,6 +378,7 @@ namespace galsim {
         double thresh0 = 0.5 / (2.*M_PI*dlogr);
         double thresh1 = (1.-gsparams->folding_threshold) / (2.*M_PI*dlogr);
         double thresh2 = gsparams->shoot_accuracy / (2.*M_PI*dlogr);
+        xdbg<<"thresh values = "<<thresh0<<"  "<<thresh1<<"  "<<thresh2<<std::endl;
         double R = 0., hlr = 0.;
         KolmXValue xval_func(*gsparams);
 
@@ -404,7 +406,7 @@ namespace galsim {
             // At high r, the profile is well approximated by a power law, F ~ r^-3.68
             // The integral of the missing flux out to infinity is int_r^inf F(r) r dr = F r^2/1.68
             xdbg<<"F r^2/1.68 = "<<val*r*r/1.68<<"  thresh2 = "<<thresh2<<std::endl;
-            if (val * r * r / 1.68 < thresh2) break;
+            if (hlr != 0 && val * r * r / 1.68 < thresh2) break;
         }
         _radial.finalize();
         dbg<<"Done loop to build radial function.\n";
