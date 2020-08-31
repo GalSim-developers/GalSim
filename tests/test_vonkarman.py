@@ -271,6 +271,9 @@ def test_vk_r0():
     Note: the resolution of the bug was to add explicit split points for the first several
     j0 zeros.  Without that, the integral in rawXValue can spuriously fail badly, leading to
     an invalid estimate of the total integrated flux within R=pi/stepk.
+
+    Update: With the new Ogata method for doing the Hankel transform, this seems no longer to
+    be necessary.  However, we continue to test these r values anyway.
     """
     # The first one was issue #957.
     # Aaron Roodman ran across another, which is now included here as well.

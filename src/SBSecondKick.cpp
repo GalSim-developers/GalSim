@@ -256,8 +256,7 @@ namespace galsim {
         SKIXIntegrand I(*this);
         double result = math::hankel_inf(I, r,
                                          _gsparams->integration_relerr,
-                                         _gsparams->integration_abserr,
-                                         r > 0 ? 10 : 0)/(2.*M_PI);
+                                         _gsparams->integration_abserr)/(2.*M_PI);
         dbg<<"xValueRaw("<<r<<") = "<<result<<"\n";
         return result;
     }
@@ -281,8 +280,7 @@ namespace galsim {
         SKIExactXIntegrand I(*this);
         double result = math::hankel_inf(I, r,
                                          _gsparams->integration_relerr,
-                                         _gsparams->integration_abserr,
-                                         r > 0 ? 10 : 0)/(2.*M_PI);
+                                         _gsparams->integration_abserr)/(2.*M_PI);
         xdbg<<"xValueExact("<<r<<") = "<<result<<"\n";
         return result;
     }

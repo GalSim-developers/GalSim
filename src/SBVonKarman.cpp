@@ -222,36 +222,9 @@ namespace galsim {
         // r in arcsec
         VKXIntegrand I(*this);
         integ::IntRegion<double> reg(0, integ::MOCK_INF);
-        int nsplits = 0;
-        if (r > 0.) {
-            // Add explicit splits at first several roots of J0.
-            // This tends to make the integral more accurate.
-            // Emplirically, around r/2 is a decent number of oscillations to include explicitly.
-            // This is tested by test_vk_r0 in test_vonkarman.py.
-            nsplits = int(r/2);
-        }
         double relerr = _gsparams->integration_relerr;
         double abserr = _gsparams->integration_abserr;
-        double result = math::hankel_inf(I, r, relerr, abserr, nsplits);
-        // Sometimes this still fails.  The failure mode is always that the result is
-        // negative.  If this happens, double the number of split points and try again.
-        // Also cut the relerr down by a factor of 10.
-        // TODO: This is probably a sign that we should rethink how we are doing this integral.
-        //       There are a number of more sophisticated techniquest for handling oscillating
-        //       functions that just adding explicit split points.  Might be worth looking into
-        //       whether any of these would be more robust and/or more efficient.
-        int max_iter = 10;  // Don't do this forever!
-        while (result < 0) {
-            if (max_iter-- == 0)
-                throw SBError("Invalid von Karman XValue unresolved after 10 attempts");
-            dbg<<"Bad result: "<<result<<std::endl;
-            nsplits *= 2;
-            relerr /= 10;
-            abserr /= 10;
-            result = math::hankel_inf(I, r, relerr, abserr, nsplits);
-        }
-        // We've been ignoring a factor of 2 pi so far.  Apply it here.
-        return result / (2.*M_PI);
+        return math::hankel_inf(I, r, relerr, abserr) / (2.*M_PI);
     }
 
     double VonKarmanInfo::xValue(double r) const {
