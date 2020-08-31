@@ -175,12 +175,7 @@ namespace math {
     {
     public:
         // Wraps the above HankelIntegrator to get requested rel/abs errors.
-        AdaptiveHankelIntegrator(double h0=1./32.) : _h0(h0)
-        {
-            _integrators[h0] = std::unique_ptr<HankelIntegrator>(new HankelIntegrator(h0));
-            double h1 = 0.5 * h0;
-            _integrators[h1] = std::unique_ptr<HankelIntegrator>(new HankelIntegrator(h1));
-        }
+        AdaptiveHankelIntegrator(double h0=1./32.) : _h0(h0) {}
 
         HankelIntegrator* get_integrator(double h)
         {
