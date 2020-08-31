@@ -602,7 +602,7 @@ namespace galsim {
             } else {
                 val = math::hankel_inf(I, k,
                                        this->gsparams.integration_relerr,
-                                       this->gsparams.integration_abserr, 10);
+                                       this->gsparams.integration_abserr);
             }
             val *= prefactor;
 
