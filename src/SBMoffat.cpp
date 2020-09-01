@@ -595,7 +595,7 @@ namespace galsim {
         for(double k=0.; k < 50; k += dk) {
 
             double val;
-            if (trunc > 0) {
+            if (_trunc > 0) {
                 val = math::hankel(I, k, _maxRrD,
                                    this->gsparams.integration_relerr,
                                    this->gsparams.integration_abserr, 10);
