@@ -229,8 +229,8 @@ namespace math {
         }
     }
 
-    double hankel(const std::function<double(double)> f, double k, double maxr,
-                  double relerr, double abserr, int nzeros)
+    double hankel_trunc(const std::function<double(double)> f, double k, double maxr,
+                        double relerr, double abserr, int nzeros)
     { return hankel_gkp(f, k, maxr, relerr, abserr, nzeros); }
 
 }
