@@ -734,7 +734,7 @@ class PhotonDCR(PhotonOp):
         s = "galsim.PhotonDCR(base_wavelength=%r, scale_unit=%r, alpha=%r, "%(
                 self.base_wavelength, self.scale_unit, self.alpha)
         s += "zenith_angle=%r, parallactic_angle=%r"%(self.zenith_angle, self.parallactic_angle)
-        for k in self.kw:
+        for k in sorted(self.kw):
             s += ", %s=%r"%(k, self.kw[k])
         s += ")"
         return s
