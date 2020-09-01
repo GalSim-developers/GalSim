@@ -178,14 +178,14 @@ namespace integ {
     struct IntFailure : public std::runtime_error
     { IntFailure(const std::string& s) : std::runtime_error(s) {} };
 
-#ifdef NDEBUG
-#define integ_dbg1 if (false) (*dbgout)
-#define integ_dbg2 if (false) (*reg.dbgout)
-#define integ_dbg3 if (false) (*tempreg.dbgout)
-#else
+#ifdef DEBUGLOGGING
 #define integ_dbg1 if (dbgout) (*dbgout)
 #define integ_dbg2 if (reg.dbgout) (*reg.dbgout)
 #define integ_dbg3 if (tempreg.dbgout) (*tempreg.dbgout)
+#else
+#define integ_dbg1 if (false) (*dbgout)
+#define integ_dbg2 if (false) (*reg.dbgout)
+#define integ_dbg3 if (false) (*tempreg.dbgout)
 #endif
 
 #ifdef COUNTFEVAL

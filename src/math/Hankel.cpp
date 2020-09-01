@@ -25,6 +25,7 @@
 #include <map>
 #include <functional>
 #include "integ/Int.h"
+#include "math/Hankel.h"
 #include "math/Bessel.h"
 #include "math/BesselRoots.h"
 #include "Std.h"
