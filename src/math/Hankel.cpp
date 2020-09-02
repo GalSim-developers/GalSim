@@ -53,23 +53,23 @@ namespace math {
     };
 
     // This is the straightforward GKP method for doing the Hankel integral.
-    double hankel_gkp(const std::function<double(double)> f, double k, double maxr,
+    double hankel_gkp(const std::function<double(double)> f, double k, double rmax,
                       double relerr, double abserr, int nzeros)
     {
-        xdbg<<"Start hankel: "<<k<<"  "<<maxr<<std::endl;
+        xdbg<<"Start hankel: "<<k<<"  "<<rmax<<std::endl;
         Integrand I(f, k);
 
 #ifdef DEBUGLOGGING
         std::ostream* integ_dbgout = verbose_level >= 3 ? &Debugger::instance().get_dbgout() : 0;
-        integ::IntRegion<double> reg(0, maxr, integ_dbgout);
+        integ::IntRegion<double> reg(0, rmax, integ_dbgout);
 #else
-        integ::IntRegion<double> reg(0, maxr);
+        integ::IntRegion<double> reg(0, rmax);
 #endif
         // Add explicit splits at first several roots of J0.
         // This tends to make the integral more accurate.
         for (int s=1; s<=nzeros; ++s) {
             double root = math::getBesselRoot0(s);
-            if (root > k * maxr) break;
+            if (root > k * rmax) break;
             reg.addSplit(root/k);
         }
         return integ::int1d(I, reg, relerr, abserr);
@@ -230,9 +230,12 @@ namespace math {
         }
     }
 
-    double hankel_trunc(const std::function<double(double)> f, double k, double maxr,
+    double hankel_trunc(const std::function<double(double)> f, double k, double rmax,
                         double relerr, double abserr, int nzeros)
-    { return hankel_gkp(f, k, maxr, relerr, abserr, nzeros); }
+    {
+        dbg<<"Start hankel_trunc: "<<k<<"  "<<rmax<<std::endl;
+        return hankel_gkp(f, k, rmax, relerr, abserr, nzeros);
+    }
 
 }
 }

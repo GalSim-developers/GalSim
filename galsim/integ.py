@@ -57,6 +57,32 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     else:
         raise GalSimError(result)
 
+def hankel(func, k, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
+    r"""Perform an order 0 Hankel transform of the given function f(r) at a specific k value.
+
+    .. math::
+
+        F(k) = \int_0^\infty f(r) J_0(k r) r dr
+
+    Parameters:
+
+        func:       The function f(r)
+        k:          The value of k for which to calculate F(k)
+        rmax:       An optional truncation radius at which to have f(r) drop to 0. [default: None]
+        rel_err:    The desired relative accuracy [default: 1.e-6]
+        abs_err:    The desired absolute accuracy [default: 1.e-12]
+
+    Returns:
+
+        An estimate of F(k)
+    """
+    rel_err = float(rel_err)
+    abs_err = float(abs_err)
+    k = float(k)
+    rmax = float(rmax) if rmax is not None else 0.
+    with convert_cpp_errors():
+        return _galsim.PyHankel(func, k, rmax, rel_err, abs_err)
+
 class IntegrationRule(object):
     """A class that can be used to integrate something more complicated than a normal
     scalar function.

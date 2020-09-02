@@ -19,6 +19,7 @@
 
 #include "PyBind11Helper.h"
 #include "integ/Int.h"
+#include "math/Hankel.h"
 #include <iostream>
 
 namespace galsim {
@@ -57,10 +58,22 @@ namespace integ {
         }
     }
 
+    // Integrate a python function using int1d.
+    double PyHankel(const py::object& func, double k, double rmax,
+                    double rel_err=DEFRELERR, double abs_err=DEFABSERR)
+    {
+        PyFunc pyfunc(func);
+        if (rmax == 0.) {
+            return math::hankel_inf(pyfunc, k, rel_err, abs_err);
+        } else {
+            return math::hankel_trunc(pyfunc, k, rmax, rel_err, abs_err);
+        }
+    }
+
     void pyExportInteg(PY_MODULE& _galsim)
     {
         GALSIM_DOT def("PyInt1d", &PyInt1d);
-
+        GALSIM_DOT def("PyHankel", &PyHankel);
     }
 
 } // namespace integ

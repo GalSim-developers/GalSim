@@ -273,6 +273,31 @@ def test_quad_basic():
     with assert_raises(galsim.GalSimError):
         galsim.integ.quadRule(func, [])
 
+@timer
+def test_hankel():
+    """Test the hankel_int and hankel_trunc functions
+    """
+    # Most of the use of this function is in C++, but we provide hooks to use it in python
+    # too in case that's useful for people.
+    # (We don't currently use this from python in GalSim proper.)
+
+    f1 = lambda r: np.exp(-r)
+    # The Hankel transform of exp(-r) is (1+k^2)**(-3/2)
+    for k in [1, 1.e-2, 0.234, 23.9]:
+        result = galsim.integ.hankel(f1, k)
+        expected_val = (1+k**2)**-1.5
+        np.testing.assert_allclose(result, expected_val)
+
+    r0 = 1.7
+    f2 = lambda r: 1.-(r/r0)**2
+    # The truncated Hankel transform of (1-(r/r0)^2) up to r0 is
+    # (4 J_1(r0 k) - 2 k r1 J_0(r0 k)/(r0 k^3)
+    for k in [1, 1.e-2, 0.234, 23.9]:
+        result = galsim.integ.hankel(f2, k, rmax=r0)
+        expected_val = (4*galsim.bessel.j1(r0*k) - 2*r0*k*galsim.bessel.j0(r0*k))/(r0*k**3)
+        np.testing.assert_allclose(result, expected_val)
+
+
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()
@@ -283,3 +308,4 @@ if __name__ == "__main__":
     test_invroot_infinite_limits()
     test_midpoint_basic()
     test_trapz_basic()
+    test_hankel()
