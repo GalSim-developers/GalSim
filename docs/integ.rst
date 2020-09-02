@@ -3,6 +3,8 @@ Integration
 
 .. autofunction:: galsim.integ.int1d
 
+.. autofunction:: galsim.integ.hankel
+
 .. autoclass:: galsim.integ.IntegrationRule
     :members:
 

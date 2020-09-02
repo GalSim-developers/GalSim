@@ -121,6 +121,7 @@ New Features
 - Added `LookupTable.integrate` and `LookupTable.integrate_product`, along
   with `galsim.trapz` as a drop in replacement for ``numpy.trapz``, which
   is often somewhat faster. (#1098)
+- Added galsim.integ.hankel function. (#1099)
 
 
 Performance Improvements
