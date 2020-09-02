@@ -201,7 +201,12 @@ namespace math {
             double ans1 = get_integrator(h1)->integrate(f,k);
             double err = std::abs(ans1-ans0);
             dbg<<"first answers = "<<ans0<<", "<<ans1<<"  diff = "<<err<<std::endl;
-            while (err > abserr && err > relerr * ans1) {
+            // Three checks for convergence:
+            // 1. if err < relerr * ans, then we're done
+            // 2. if err < abserr, then we're done
+            // 3. ... unless ans1 is much larger than ans0, then we probably don't have a good
+            //    estimate yet, so keep going.
+            while (err > relerr * ans1 && (err > abserr || ans1 > 2*ans0)) {
                 h0 = h1;
                 ans0 = ans1;
                 h1 *= 0.5;

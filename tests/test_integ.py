@@ -283,19 +283,18 @@ def test_hankel():
 
     f1 = lambda r: np.exp(-r)
     # The Hankel transform of exp(-r) is (1+k^2)**(-3/2)
-    for k in [1, 1.e-2, 0.234, 23.9]:
+    for k in [1, 1.e-2, 0.234, 23.9, 1.e-8]:
         result = galsim.integ.hankel(f1, k)
         expected_val = (1+k**2)**-1.5
         np.testing.assert_allclose(result, expected_val)
 
     r0 = 1.7
     f2 = lambda r: 1.-(r/r0)**2
-    # The truncated Hankel transform of (1-(r/r0)^2) up to r0 is
-    # (4 J_1(r0 k) - 2 k r1 J_0(r0 k)/(r0 k^3)
-    for k in [1, 1.e-2, 0.234, 23.9]:
-        result = galsim.integ.hankel(f2, k, rmax=r0)
-        expected_val = (4*galsim.bessel.j1(r0*k) - 2*r0*k*galsim.bessel.j0(r0*k))/(r0*k**3)
-        np.testing.assert_allclose(result, expected_val)
+    # The truncated Hankel transform of (1-(r/r0)^2) up to r0 is 2 J_2(r0 k)/k^2
+    for k in [1, 1.e-2, 0.234, 23.9, 1.e-8]:
+        result = galsim.integ.hankel(f2, k, rmax=r0, rel_err=1.e-8)
+        expected_val = 2*galsim.bessel.jn(2,r0*k)/k**2
+        np.testing.assert_allclose(result, expected_val, rtol=1.e-6)
 
 
 
