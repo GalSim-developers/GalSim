@@ -475,7 +475,7 @@ namespace galsim {
             if (_truncated) {
                 val = math::hankel_trunc(I, k, _trunc,
                                          _gsparams->integration_relerr,
-                                         _gsparams->integration_abserr*hankel_norm, 10);
+                                         _gsparams->integration_abserr*hankel_norm);
             } else {
                 val = math::hankel_inf(I, k,
                                        _gsparams->integration_relerr,
