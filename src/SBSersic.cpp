@@ -472,11 +472,11 @@ namespace galsim {
 
             double val;
             if (_truncated) {
-                val = math::hankel_trunc(I, k, _trunc,
+                val = math::hankel_trunc(I, k, 0., _trunc,
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr*hankel_norm);
             } else {
-                val = math::hankel_inf(I, k,
+                val = math::hankel_inf(I, k, 0.,
                                        _gsparams->integration_relerr,
                                        _gsparams->integration_abserr*hankel_norm);
             }

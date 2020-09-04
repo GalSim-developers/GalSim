@@ -59,14 +59,14 @@ namespace integ {
     }
 
     // Integrate a python function using int1d.
-    double PyHankel(const py::object& func, double k, double rmax,
+    double PyHankel(const py::object& func, double k, double nu, double rmax,
                     double rel_err=DEFRELERR, double abs_err=DEFABSERR)
     {
         PyFunc pyfunc(func);
         if (rmax == 0.) {
-            return math::hankel_inf(pyfunc, k, rel_err, abs_err);
+            return math::hankel_inf(pyfunc, k, nu, rel_err, abs_err);
         } else {
-            return math::hankel_trunc(pyfunc, k, rmax, rel_err, abs_err);
+            return math::hankel_trunc(pyfunc, k, nu, rmax, rel_err, abs_err);
         }
     }
 

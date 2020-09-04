@@ -57,17 +57,18 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     else:
         raise GalSimError(result)
 
-def hankel(func, k, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
-    r"""Perform an order 0 Hankel transform of the given function f(r) at a specific k value.
+def hankel(func, k, nu=0, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
+    r"""Perform an order nu Hankel transform of the given function f(r) at a specific k value.
 
     .. math::
 
-        F(k) = \int_0^\infty f(r) J_0(k r) r dr
+        F(k) = \int_0^\infty f(r) J_\nu(k r) r dr
 
     Parameters:
 
         func:       The function f(r)
         k:          The value of k for which to calculate F(k)
+        nu:         The order of the Bessel function to use for the transform. [default: 0]
         rmax:       An optional truncation radius at which to have f(r) drop to 0. [default: None]
         rel_err:    The desired relative accuracy [default: 1.e-6]
         abs_err:    The desired absolute accuracy [default: 1.e-12]
@@ -79,9 +80,15 @@ def hankel(func, k, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
     rel_err = float(rel_err)
     abs_err = float(abs_err)
     k = float(k)
+    nu = float(nu)
     rmax = float(rmax) if rmax is not None else 0.
+
+    if k < 0:
+        raise GalSimValueError("k must be >= 0",k)
+    if nu < 0:
+        raise GalSimValueError("nu must be >= 0",k)
     with convert_cpp_errors():
-        return _galsim.PyHankel(func, k, rmax, rel_err, abs_err)
+        return _galsim.PyHankel(func, k, nu, rmax, rel_err, abs_err)
 
 class IntegrationRule(object):
     """A class that can be used to integrate something more complicated than a normal

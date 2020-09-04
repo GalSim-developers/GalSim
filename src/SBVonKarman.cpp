@@ -223,7 +223,7 @@ namespace galsim {
         integ::IntRegion<double> reg(0, integ::MOCK_INF);
         double relerr = _gsparams->integration_relerr;
         double abserr = _gsparams->integration_abserr;
-        return math::hankel_inf(I, r, relerr, abserr) / (2.*M_PI);
+        return math::hankel_inf(I, r, 0., relerr, abserr) / (2.*M_PI);
     }
 
     double VonKarmanInfo::xValue(double r) const {
