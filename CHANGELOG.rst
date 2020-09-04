@@ -122,6 +122,7 @@ New Features
   with `galsim.trapz` as a drop in replacement for ``numpy.trapz``, which
   is often somewhat faster. (#1098)
 - Added galsim.integ.hankel function. (#1099)
+- Added galsim.bessel.jv_root function. (#1099)
 
 
 Performance Improvements

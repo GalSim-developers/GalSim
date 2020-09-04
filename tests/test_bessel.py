@@ -360,8 +360,8 @@ def test_kv():
 
 
 @timer
-def test_j0_root():
-    """Test the bessel.j0_root function"""
+def test_jv_root():
+    """Test the bessel.j0_root and jv_root functions"""
     # Our version uses tabulated values up to 40, so a useful test of the extrapolation
     # requires this to have more than 40 items.
     vals1 = [ galsim.bessel.j0_root(s) for s in range(1,51) ]
@@ -370,32 +370,48 @@ def test_j0_root():
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore",category=RuntimeWarning)
         import scipy.special
+
     vals2 = scipy.special.jn_zeros(0,50)
     print('vals2 = ',vals2)
     np.testing.assert_allclose(
         vals1, vals2, rtol=1.e-10, err_msg="bessel.j0_root disagrees with scipy.special.jn_zeros")
 
-    # These values are what scipy returns.  Check against these, so not require scipy.
-    vals2 = [   2.404825557695773, 5.520078110286311, 8.653727912911013,
-                11.791534439014281, 14.930917708487787, 18.071063967910924,
-                21.21163662987926, 24.352471530749302, 27.493479132040257,
-                30.634606468431976, 33.77582021357357, 36.917098353664045,
-                40.05842576462824, 43.19979171317673, 46.341188371661815,
-                49.482609897397815, 52.624051841115, 55.76551075501998,
-                58.90698392608094, 62.04846919022717, 65.18996480020687,
-                68.3314693298568, 71.47298160359374, 74.61450064370185,
-                77.75602563038805, 80.89755587113763, 84.0390907769382,
-                87.18062984364116, 90.32217263721049, 93.46371878194478,
-                96.60526795099626, 99.7468198586806, 102.8883742541948,
-                106.02993091645162, 109.17148964980538, 112.3130502804949,
-                115.45461265366694, 118.59617663087253, 121.73774208795096,
-                124.87930891323295, 128.02087700600833, 131.1624462752139,
-                134.30401663830546, 137.44558802028428, 140.58716035285428,
-                143.72873357368974, 146.87030762579664, 150.01188245695477,
-                153.15345801922788, 156.29503426853353,
-            ]
+    vals3 = [ galsim.bessel.jv_root(0,s) for s in range(1,51) ]
     np.testing.assert_allclose(
-        vals1, vals2, rtol=1.e-10, err_msg="bessel.j0_root disagrees with reference values")
+        vals1, vals2, rtol=1.e-10,
+        err_msg="bessel.jv_root disagrees with scipy.special.jn_zeros with n=0")
+
+    for v in vals1:
+        np.testing.assert_allclose(galsim.bessel.j0(v), 0., atol=1.e-12)
+        np.testing.assert_allclose(scipy.special.j0(v), 0., atol=1.e-12)
+
+    for nu in [0, 1, 7, 13]:
+        print('nu = ',nu)
+        vals1 = [ galsim.bessel.jv_root(nu,s) for s in range(1,51) ]
+        print('vals1 = ',vals1)
+        vals2 = scipy.special.jn_zeros(nu,50)
+        print('vals2 = ',vals2)
+        np.testing.assert_allclose(
+            vals1, vals2, rtol=1.e-10,
+            err_msg="bessel.jv_root disagrees with scipy.special.jn_zeros with n=%f"%nu)
+        for v in vals1:
+            np.testing.assert_allclose(galsim.bessel.jv(nu,v), 0., atol=1.e-12)
+            np.testing.assert_allclose(scipy.special.jv(nu,v), 0., atol=1.e-12)
+
+    # We can also compute zeros of non-integral order, although scipy cannot.
+    # So we can't compare with scipy's answers here.  Just check that they really are zeros.
+    for nu in [0.5, 0.001, 1.39, 7.3, 13.9, 0.183]:
+        print('nu = ',nu)
+        vals1 = [ galsim.bessel.jv_root(nu,s) for s in range(1,51) ]
+        print('vals1 = ',vals1)
+        for v in vals1:
+            np.testing.assert_allclose(galsim.bessel.jv(nu,v), 0., atol=1.e-12)
+            np.testing.assert_allclose(scipy.special.jv(nu,v), 0., atol=1.e-12)
+
+    with assert_raises(RuntimeError):
+        galsim.bessel.jv_root(-0.3,1)
+    with assert_raises(RuntimeError):
+        galsim.bessel.jv_root(0.3,-1)
 
 
 if __name__ == "__main__":
@@ -409,4 +425,4 @@ if __name__ == "__main__":
     test_iv()
     test_kn()
     test_kv()
-    test_j0_root()
+    test_jv_root()

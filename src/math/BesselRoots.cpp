@@ -17,14 +17,12 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef GalSim_BesselRoots_H
-#define GalSim_BesselRoots_H
-/**
- * @file math/BesselRoots.h
- * @brief Contains a list of the first several roots of J0(x)
- */
+//#define DEBUGLOGGING
 
 #include <cmath>
+#include <stdexcept>
+#include "math/Bessel.h"
+#include "Std.h"
 
 namespace galsim {
 namespace math {
@@ -78,7 +76,7 @@ namespace math {
         124.8793089132329460453,
     };
 
-    inline double getBesselRoot0(int s)
+    double getBesselRoot0(int s)
     {
         if (s <= 0)
             throw std::runtime_error("s must be > 0");
@@ -113,8 +111,62 @@ namespace math {
         }
     }
 
-}
-}
+    double getBesselRoot(double nu, int s)
+    {
+        // For orders other than 0, we follow the method that boost uses, described here:
+        // https://www.boost.org/doc/libs/1_59_0/libs/math/doc/html/math_toolkit/bessel/bessel_root.html
+        // The basic idea is use some fitting formula to get pretty close, and then
+        // refine it with a few steps of Newton's method to get to the zero.
+        // The boost code has a lot more sophisticated intial estimate.  However, the above
+        // Abramowitz and Stegun approximation for large s is actually pretty decent for
+        // all s, at least for nu >= 0.  (Negative nu has other issues...)
+        // Se we just use that and rely on Newton refinement to tune it up.
+        if (nu == 0) {
+            return getBesselRoot0(s);
+        } else {
+            // This doesn't work for negative nu.
+            if (s <= 0)
+                throw std::runtime_error("s must be > 0");
+            if (nu < 0)
+                throw std::runtime_error("nu must be >= 0.");
+            dbg<<"Bessel Root for nu="<<nu<<" s = "<<s<<std::endl;
+            double m = 4.*nu*nu;
+            double b = (s + nu/2. - 0.25)*M_PI;
+            double temp = 0.125/b;
+            double inv8bsq = temp*temp;
+            temp *= (m-1);
 
-#endif
+            // As above, not b is the running total.
+            // We compute the following approximation:
+            // b - (m-1)/8b - 4(m-1)(7m-31)/3(8b)^3 - 32(m-1)(83m^2-982m+3779)/15(8b)^5
+            //   - 64(m-1)(6949m^3-153855m^2+1585743m-6277237)/105(8b)^7
+            b -= temp;
 
+            temp *= (4./3.) * inv8bsq;
+            b -= (7.*m - 31.) * temp;
+
+            temp *= (8./5.) * inv8bsq;
+            b -= ((83.*m - 982)*m + 3779.) * temp;
+
+            temp *= (2./7.) * inv8bsq;
+            b -= (((6949.*m - 153855)*m + 1585743)*m-6277237.) * temp;
+
+            dbg<<"Initial estimate is "<<b<<std::endl;
+            double y = cyl_bessel_j(nu,b);
+            dbg<<"J(nu,b) = "<<y<<std::endl;
+
+            // Now the Newton refinement.  Typically only takes a few iterations at most.
+            while (std::abs(y) > 1.e-14) {
+                double dydb = y*nu/b - cyl_bessel_j(nu+1,b);
+                double db = y/dydb;
+                dbg<<"db = "<<db<<std::endl;
+                b -= db;
+                dbg<<"b -> "<<b<<std::endl;
+                y = cyl_bessel_j(nu,b);
+                dbg<<"J(nu,b) -> "<<y<<std::endl;
+            }
+            return b;
+        }
+    }
+
+}}
