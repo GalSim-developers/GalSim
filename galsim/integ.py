@@ -34,6 +34,15 @@ def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
         >>> galsim.integ.int1d(func, -1, 1)
         0.66666666666666674
 
+    .. note::
+
+        This uses an adaptive Gauss-Kronrod-Patterson method for doing the integration.
+
+        cf. https://www.jstor.org/stable/2004583
+
+        If one or both endpoints are infinite, it will automatically use an appropriate
+        transformation to turn it into a finite integral.
+
     Parameters:
         func:       The function to be integrated.  y = func(x) should be valid.
         min:        The lower end of the integration bounds (anything < -1.e10 is treated as
@@ -63,6 +72,14 @@ def hankel(func, k, nu=0, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
     .. math::
 
         F(k) = \int_0^\infty f(r) J_\nu(k r) r dr
+
+    .. note::
+
+        For non-truncated Hankel integrals, this uses the method outlined in Ogata, 2005:
+        http://www.kurims.kyoto-u.ac.jp/~prims/pdf/41-4/41-4-40.pdf
+
+        For truncated integrals (and k=0), it uses the same adaptive Gauss-Kronrod-Patterson
+        method used for `int1d`.
 
     Parameters:
 
