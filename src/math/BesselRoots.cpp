@@ -125,10 +125,10 @@ namespace math {
             return getBesselRoot0(s);
         } else {
             // This doesn't work for negative nu.
-            if (s <= 0)
-                throw std::runtime_error("s must be > 0");
             if (nu < 0)
                 throw std::runtime_error("nu must be >= 0.");
+            if (s <= 0)
+                throw std::runtime_error("s must be > 0");
             dbg<<"Bessel Root for nu="<<nu<<" s = "<<s<<std::endl;
             double m = 4.*nu*nu;
             double b = (s + nu/2. - 0.25)*M_PI;
@@ -136,7 +136,7 @@ namespace math {
             double inv8bsq = temp*temp;
             temp *= (m-1);
 
-            // As above, not b is the running total.
+            // As above, now b is the running total.
             // We compute the following approximation:
             // b - (m-1)/8b - 4(m-1)(7m-31)/3(8b)^3 - 32(m-1)(83m^2-982m+3779)/15(8b)^5
             //   - 64(m-1)(6949m^3-153855m^2+1585743m-6277237)/105(8b)^7
