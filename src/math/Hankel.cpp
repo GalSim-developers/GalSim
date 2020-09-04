@@ -139,7 +139,7 @@ namespace math {
             long N1 = 0;
             bool done = false;
             do {
-                double step;
+                double step = 0.;
                 for (long i=N1; i<_N; ++i) {
                     step = _w[i] * f(_x[i]/k);
                     ans += step;
