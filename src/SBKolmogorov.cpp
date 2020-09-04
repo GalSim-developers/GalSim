@@ -283,7 +283,7 @@ namespace galsim {
         double operator()(double r) const
         {
             KolmKValue kvalue;
-            return math::hankel_inf(kvalue, r,
+            return math::hankel_inf(kvalue, r, 0,
                                     _gsparams.integration_relerr,
                                     _gsparams.integration_abserr);
         }

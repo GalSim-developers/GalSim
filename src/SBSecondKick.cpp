@@ -253,7 +253,7 @@ namespace galsim {
     double SKInfo::xValueRaw(double r) const {
         // r in units of 1/k0 = lambda/(2pi r0)
         SKIXIntegrand I(*this);
-        double result = math::hankel_inf(I, r,
+        double result = math::hankel_inf(I, r, 0.,
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr)/(2.*M_PI);
         dbg<<"xValueRaw("<<r<<") = "<<result<<"\n";
@@ -277,7 +277,7 @@ namespace galsim {
     double SKInfo::xValueExact(double r) const {
         // r in units of 1/k0 = lambda/(2pi r0)
         SKIExactXIntegrand I(*this);
-        double result = math::hankel_inf(I, r,
+        double result = math::hankel_inf(I, r, 0.,
                                          _gsparams->integration_relerr,
                                          _gsparams->integration_abserr)/(2.*M_PI);
         xdbg<<"xValueExact("<<r<<") = "<<result<<"\n";

@@ -36,27 +36,29 @@ namespace math {
     class Integrand : public std::function<double(double)>
     {
     public:
-        Integrand(const std::function<double(double)> f, double k) : _f(f), _k(k)
+        Integrand(const std::function<double(double)> f, double k, double nu) :
+            _f(f), _k(k), _nu(nu)
         {
             xdbg<<"Make Integrand: "<<k<<std::endl;
         }
         double operator()(double r) const
         {
             xdbg<<"Call integrand: "<<r<<std::endl;
-            return r*_f(r) * math::j0(_k*r);
+            return r*_f(r) * math::cyl_bessel_j(_nu,_k*r);
         }
 
     private:
         const std::function<double(double)> _f;
         double _k;
+        double _nu;
     };
 
     // This is the straightforward GKP method for doing the Hankel integral.
-    double hankel_gkp(const std::function<double(double)> f, double k, double rmax,
+    double hankel_gkp(const std::function<double(double)> f, double k, double nu, double rmax,
                       double relerr, double abserr, int nzeros)
     {
         xdbg<<"Start hankel: "<<k<<"  "<<rmax<<std::endl;
-        Integrand I(f, k);
+        Integrand I(f, k, nu);
 
 #ifdef DEBUGLOGGING
         std::ostream* integ_dbgout = verbose_level >= 3 ? &Debugger::instance().get_dbgout() : 0;
@@ -67,7 +69,7 @@ namespace math {
         // Add explicit splits at first several roots of J0.
         // This tends to make the integral more accurate.
         for (int s=1; s<=nzeros; ++s) {
-            double root = math::getBesselRoot0(s);
+            double root = math::getBesselRoot(nu,s);
             if (root > k * rmax) break;
             reg.addSplit(root/k);
         }
@@ -80,11 +82,11 @@ namespace math {
         // Helper class that can perform a Hankel integral for a specific choice of h
         // using the method of Ogata (2005):
         // http://www.kurims.kyoto-u.ac.jp/~prims/pdf/41-4/41-4-40.pdf
-        HankelIntegrator(double h, double batch=256) :
-            _h(h), _Nmax(long(std::min(M_PI/h,1.e6))), _batch(batch), _N(0)
+        HankelIntegrator(double nu, double h, double batch=256) :
+            _nu(nu), _h(h), _Nmax(long(std::min(M_PI/h,1.e6))), _batch(batch), _N(0)
         {
-            dbg<<"Setup HankelIntegrator for h="<<h<<std::endl;
-            dbg<<"Nmax = "<<_Nmax<<std::endl;
+            xdbg<<"Setup HankelIntegrator for h="<<h<<std::endl;
+            xdbg<<"Nmax = "<<_Nmax<<std::endl;
             // Rarely will we need more than a few hundred values in the sum, even with very
             // small values of h (since when that is needed, usually the function is highly
             // concentrated at small values of x).  So do this in batches of 256.
@@ -94,6 +96,7 @@ namespace math {
 
         void setWeightsBatch()
         {
+            xdbg<<"Start setWeightsBatch: _N = "<<_N<<std::endl;
             // Set up a batch of the weights and kernel values for this choice of h.
             long N1 = _N;  // Number of values already set.
             _N += _batch;
@@ -101,11 +104,11 @@ namespace math {
             _w.resize(_N);
             _x.resize(_N);
             for (long i=N1; i<_N; ++i) {
-                double xi = math::getBesselRoot0(i+1)/M_PI;
+                double xi = math::getBesselRoot(_nu,i+1)/M_PI;
                 double t = _h * xi;
                 _x[i] = M_PI/_h * psi(t);
-                _w[i] = math::cyl_bessel_y(0,M_PI*xi) / math::j1(M_PI*xi);
-                _w[i] *= M_PI * _x[i] * math::j0(_x[i]) * dpsi(t);
+                _w[i] = math::cyl_bessel_y(_nu, M_PI*xi) / math::cyl_bessel_j(_nu+1, M_PI*xi);
+                _w[i] *= M_PI * _x[i] * math::cyl_bessel_j(_nu, _x[i]) * dpsi(t);
                 xdbg<<i<<"  "<<xi<<"  "<<t<<"  "<<_x[i]<<"  "<<_w[i]<<std::endl;
             }
             dbg<<"Done setWeightsBatch: _N = "<<_N<<std::endl;
@@ -140,7 +143,7 @@ namespace math {
                 for (long i=N1; i<_N; ++i) {
                     step = _w[i] * f(_x[i]/k);
                     ans += step;
-                    xdbg<<i<<"  "<<step<<"  "<<ans<<std::endl;
+                    xdbg<<i<<"  "<<_w[i]<<"  "<<_x[i]<<"  "<<_x[i]/k<<"  "<<f(_x[i]/k)<<"  "<<step<<"  "<<ans<<std::endl;
                     if (std::abs(step) < 1.e-15 * std::abs(ans)) {
                         xdbg<<"Break at i = "<<i<<std::endl;
                         xdbg<<"step = "<<step<<", ans = "<<ans<<std::endl;
@@ -150,6 +153,7 @@ namespace math {
                 }
                 N1 = _N;
                 if (_N == _Nmax) done = true;  // Can't go higher than this.
+                if (step == 0) done = true;  // If the steps = 0, we're not going to improve.
                 if (!done) {
                     dbg<<"Didn't converge with current values.  N="<<_N<<std::endl;
                     dbg<<"current ans = "<<ans<<", last step = "<<step<<std::endl;
@@ -163,6 +167,7 @@ namespace math {
             return ans;
         }
     private:
+        double _nu;
         double _h;
         long _Nmax;
         long _batch;
@@ -175,12 +180,12 @@ namespace math {
     {
     public:
         // Wraps the above HankelIntegrator to get requested rel/abs errors.
-        AdaptiveHankelIntegrator(double h0=1./32.) : _h0(h0) {}
+        AdaptiveHankelIntegrator(double nu, double h0=1./32.) : _nu(nu), _h0(h0) {}
 
         HankelIntegrator* get_integrator(double h)
         {
             if (_integrators.count(h) == 0) {
-                _integrators[h] = std::unique_ptr<HankelIntegrator>(new HankelIntegrator(h));
+                _integrators[h] = std::unique_ptr<HankelIntegrator>(new HankelIntegrator(_nu,h));
             }
             return _integrators[h].get();
         }
@@ -205,7 +210,7 @@ namespace math {
             // 2. if err < abserr, then we're done
             // 3. ... unless ans1 is much larger than ans0, then we probably don't have a good
             //    estimate yet, so keep going.
-            while (err > relerr * ans1 && (err > abserr || ans1 > 2*ans0)) {
+            while (err > relerr * ans1 && (err > abserr || std::abs(ans1) > 2*std::abs(ans0))) {
                 h0 = h1;
                 ans0 = ans1;
                 h1 *= 0.5;
@@ -217,28 +222,34 @@ namespace math {
             return ans1;
         }
     private:
+        double _nu;
         double _h0;
         std::map<double, std::unique_ptr<HankelIntegrator> > _integrators;
     };
 
-    double hankel_inf(const std::function<double(double)> f, double k,
+    double hankel_inf(const std::function<double(double)> f, double k, double nu,
                       double relerr, double abserr, int nzeros)
     {
-        static AdaptiveHankelIntegrator H;
-        dbg<<"Start hankel_inf: "<<k<<std::endl;
+        static std::map<double, std::unique_ptr<AdaptiveHankelIntegrator> > integrators;
+        dbg<<"Start hankel_inf: "<<k<<"  "<<nu<<std::endl;
         if (k == 0.) {
             // If k = 0, can't do the Ogata method, since it integrates f(x/k) J(x).
-            return hankel_gkp(f, k, integ::MOCK_INF, relerr, abserr, nzeros);
+            return hankel_gkp(f, k, nu, integ::MOCK_INF, relerr, abserr, nzeros);
         } else {
-            return H.integrate(f, k, relerr, abserr);
+            if (integrators.count(nu) == 0) {
+                integrators[nu] = std::unique_ptr<AdaptiveHankelIntegrator>(
+                    new AdaptiveHankelIntegrator(nu));
+            }
+            AdaptiveHankelIntegrator* H = integrators[nu].get();
+            return H->integrate(f, k, relerr, abserr);
         }
     }
 
-    double hankel_trunc(const std::function<double(double)> f, double k, double rmax,
+    double hankel_trunc(const std::function<double(double)> f, double k, double nu, double rmax,
                         double relerr, double abserr, int nzeros)
     {
-        dbg<<"Start hankel_trunc: "<<k<<"  "<<rmax<<std::endl;
-        return hankel_gkp(f, k, rmax, relerr, abserr, nzeros);
+        dbg<<"Start hankel_trunc: "<<k<<"  "<<nu<<"  "<<rmax<<std::endl;
+        return hankel_gkp(f, k, nu, rmax, relerr, abserr, nzeros);
     }
 
 }

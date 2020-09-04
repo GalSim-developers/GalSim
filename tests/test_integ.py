@@ -275,7 +275,7 @@ def test_quad_basic():
 
 @timer
 def test_hankel():
-    """Test the hankel_int and hankel_trunc functions
+    """Test the galsim.integ.hankel function
     """
     # Most of the use of this function is in C++, but we provide hooks to use it in python
     # too in case that's useful for people.
@@ -299,7 +299,21 @@ def test_hankel():
             expected_val = 2*galsim.bessel.jn(2,r0*k)/k**2
         np.testing.assert_allclose(result, expected_val, rtol=1.e-6)
 
+    # The generalized Hankel transform of exp(-r) is:
+    # (1 + nu (1+k^2)^0.5) k^nu / ( (1+k^2)^1.5 (1 + (1+k^2)^0.5)^nu
+    for nu in [0, 1, 7, 0.5, 0.003, 12.23]:
+        for k in [1, 1.e-2, 0.234, 23.9, 1.e-5, 1.e-8, 0]:
+            result = galsim.integ.hankel(f1, k, nu=nu)
+            expected_val = (1+k**2)**-1.5 * (1+nu*(1+k**2)**0.5) * k**nu / (1+(1+k**2)**0.5)**nu
+            print(nu, k, result, expected_val)
+            np.testing.assert_allclose(result, expected_val, rtol=1.e-6, atol=1.e-12)
 
+    with assert_raises(galsim.GalSimValueError):
+        galsim.integ.hankel(f1, k=-0.3)
+    with assert_raises(galsim.GalSimValueError):
+        galsim.integ.hankel(f1, k=0.3, nu=-1)
+    with assert_raises(galsim.GalSimValueError):
+        galsim.integ.hankel(f1, k=0.3, nu=-0.5)
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()

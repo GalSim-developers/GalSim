@@ -595,11 +595,11 @@ namespace galsim {
 
             double val;
             if (_trunc > 0) {
-                val = math::hankel_trunc(I, k, _maxRrD,
+                val = math::hankel_trunc(I, k, 0., _maxRrD,
                                          this->gsparams.integration_relerr,
                                          this->gsparams.integration_abserr);
             } else {
-                val = math::hankel_inf(I, k,
+                val = math::hankel_inf(I, k, 0.,
                                        this->gsparams.integration_relerr,
                                        this->gsparams.integration_abserr);
             }
