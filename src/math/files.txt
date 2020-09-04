@@ -3,6 +3,7 @@ BesselJ.cpp
 BesselY.cpp
 BesselI.cpp
 BesselK.cpp
+BesselRoots.cpp
 Gamma.cpp
 Sinc.cpp
 Angle.cpp

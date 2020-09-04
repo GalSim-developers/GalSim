@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-from ._galsim import j0, j1, jv, kv, yv, iv, j0_root
+from ._galsim import j0, j1, jv, kv, yv, iv, j0_root, jv_root
 
 # Alias the "n" names, which don't get any advantage from being implemented differently,
 # so we only have the generic nu implementation.  But to match scipy.special, we also

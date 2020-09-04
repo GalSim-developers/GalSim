@@ -24,7 +24,6 @@
 #include "Solve.h"
 #include "math/Bessel.h"
 #include "math/Gamma.h"
-#include "math/BesselRoots.h"
 #include "math/Hankel.h"
 #include "fmath/fmath.hpp"
 

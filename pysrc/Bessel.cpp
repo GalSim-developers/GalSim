@@ -18,7 +18,6 @@
  */
 
 #include "PyBind11Helper.h"
-#include "math/BesselRoots.h"
 #include "math/Bessel.h"
 
 namespace galsim {
@@ -27,6 +26,7 @@ namespace math {
     void pyExportBessel(PY_MODULE& _galsim)
     {
         GALSIM_DOT def("j0_root", &getBesselRoot0);
+        GALSIM_DOT def("jv_root", &getBesselRoot);
         GALSIM_DOT def("j0", &j0);
         GALSIM_DOT def("j1", &j1);
         GALSIM_DOT def("jv", &cyl_bessel_j);

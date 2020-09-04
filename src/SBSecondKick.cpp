@@ -27,7 +27,6 @@
 #include "math/Bessel.h"
 #include "math/Gamma.h"
 #include "math/Hankel.h"
-#include "math/BesselRoots.h"
 
 #ifdef DEBUGLOGGING
 #include <ctime>

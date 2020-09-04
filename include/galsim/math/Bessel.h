@@ -37,6 +37,9 @@ namespace math {
     double j0(double x);
     double j1(double x);
 
+    double getBesselRoot0(int s);
+    double getBesselRoot(double nu, int s);
+
 } }
 
 #endif
