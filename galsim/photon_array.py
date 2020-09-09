@@ -471,13 +471,14 @@ class PhotonOp(object):
     They are typically applied via a ``photon_ops`` argument to the `GSObject.drawImage` method.
     The order typically matters, so the operators are applied in the order they appear in the list.
     """
-    def applyTo(self, photon_array, local_wcs=None):
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Apply the photon operator to a PhotonArray.
 
         Parameters:
             photon_array:   A `PhotonArray` to apply the operator to.
             local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
                             bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
         """
         raise NotImplementedError("Cannot call applyTo on a pure PhotonOp object")
 
@@ -512,16 +513,18 @@ class WavelengthSampler(PhotonOp):
         self.rng = BaseDeviate(rng)
         self.npoints = npoints
 
-    def applyTo(self, photon_array, local_wcs=None):
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Assign wavelengths to the photons sampled from the SED * Bandpass.
 
         Parameters:
             photon_array:   A `PhotonArray` to apply the operator to.
             local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
                             bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
         """
+        rng = rng if rng is not None else self.rng
         photon_array.wavelength = self.sed.sampleWavelength(
-                photon_array.size(), self.bandpass, rng=self.rng, npoints=self.npoints)
+                photon_array.size(), self.bandpass, rng=rng, npoints=self.npoints)
 
     def __str__(self):
         return "galsim.WavelengthSampler(sed=%s, bandpass=%s, rng=%s, npoints=%s)"%(
@@ -556,21 +559,24 @@ class FRatioAngles(PhotonOp):
             raise GalSimRangeError("The f-ratio must be positive.", fratio, 0.)
         if obscuration < 0 or obscuration >= 1:
             raise GalSimRangeError("Invalid obscuration.", obscuration, 0., 1.)
-        ud = UniformDeviate(rng)
 
         self.fratio = fratio
         self.obscuration = obscuration
-        self.ud = ud
+        self.rng = rng
 
 
-    def applyTo(self, photon_array, local_wcs=None):
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Assign directions to the photons in photon_array.
 
         Parameters:
             photon_array:   A `PhotonArray` to apply the operator to.
             local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
                             bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
         """
+        rng = rng if rng is not None else self.rng
+        ud = UniformDeviate(rng)
+
         dxdz = photon_array.dxdz
         dydz = photon_array.dydz
         n_photons = len(dxdz)
@@ -583,13 +589,13 @@ class FRatioAngles(PhotonOp):
 
         # Generate azimuthal angles for the photons
         phi = np.empty(n_photons)
-        self.ud.generate(phi)
+        ud.generate(phi)
         phi *= (2 * np.pi)
 
         # Generate inclination angles for the photons, which are uniform in sin(theta) between
         # the sine of the obscuration angle and the sine of the pupil radius
         sintheta = np.empty(n_photons)
-        self.ud.generate(sintheta)
+        ud.generate(sintheta)
         sintheta = np.sin(obscuration_angle) + (np.sin(pupil_angle) - np.sin(obscuration_angle)) \
             * sintheta
 
@@ -602,11 +608,11 @@ class FRatioAngles(PhotonOp):
 
     def __str__(self):
         return "galsim.FRatioAngles(fratio=%s, obscration=%s, rng=%s)"%(
-            self.fratio, self.obscuration, self.ud)
+            self.fratio, self.obscuration, self.rng)
 
     def __repr__(self):
         return "galsim.FRatioAngles(fratio=%r, obscration=%r, rng=%r)"%(
-            self.fratio, self.obscuration, self.ud)
+            self.fratio, self.obscuration, self.rng)
 
 
 class PhotonDCR(PhotonOp):
@@ -694,13 +700,14 @@ class PhotonDCR(PhotonOp):
         self.base_refraction = dcr.get_refraction(self.base_wavelength, self.zenith_angle,
                                                   **self.kw)
 
-    def applyTo(self, photon_array, local_wcs):
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Apply the DCR effect to the photons
 
         Parameters:
             photon_array:   A `PhotonArray` to apply the operator to.
             local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
                             bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
         """
         from . import dcr
         if not photon_array.hasAllocatedWavelengths():
@@ -759,13 +766,14 @@ class Refraction(PhotonOp):
     def __init__(self, index_ratio):
         self.index_ratio = index_ratio
 
-    def applyTo(self, photon_array, local_wcs=None):
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Refract photons
 
         Parameters:
             photon_array:   A `PhotonArray` to apply the operator to.
             local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
                             bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
         """
         if hasattr(self.index_ratio, '__call__'):
             index_ratio = self.index_ratio(photon_array.wavelength)
@@ -826,13 +834,14 @@ class FocusDepth(PhotonOp):
     def __init__(self, depth):
         self.depth = depth
 
-    def applyTo(self, photon_array, local_wcs=None):
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Adjust a photon bundle to account for the change in focal depth.
 
         Parameters:
             photon_array:   A `PhotonArray` to apply the operator to.
             local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
                             bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
         """
         if not photon_array.hasAllocatedAngles():
             raise GalSimError("FocusDepth requires that angles be set")

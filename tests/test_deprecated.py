@@ -437,13 +437,13 @@ def test_surface_ops():
               save_photons=True)
 
     rng.reset(1234)
-    assigner.ud.reset(rng)
+    assigner.rng.reset(rng)
     sampler.rng.reset(rng)
     photons = check_dep(obj.makePhot, surface_ops=[sampler, assigner], rng=rng)
     assert photons == im.photons
 
     rng.reset(1234)
-    assigner.ud.reset(rng)
+    assigner.rng.reset(rng)
     sampler.rng.reset(rng)
     _, photons2 = check_dep(obj.drawPhot, image=im.copy(), surface_ops=[sampler, assigner], rng=rng)
     assert photons2 == im.photons

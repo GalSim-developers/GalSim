@@ -2956,7 +2956,7 @@ def test_sensor():
     galsim.config.SetupConfigRNG(config, seed_offset=1)
     galsim.config.RemoveCurrent(config)
     rng.reset(1235)
-    frat.ud.reset(rng)
+    frat.rng.reset(rng)
     wave.rng.reset(rng)
     trfunc = galsim.LookupTable.from_file('tree_ring_lookup.dat', amplitude=0.5)
     sensor = galsim.SiliconSensor(name='lsst_e2v_50_8', rng=rng,
