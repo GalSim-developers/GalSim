@@ -515,7 +515,7 @@ def test_sensor_wavelengths_and_angles():
     fratio = 1.2
     obscuration = 0.2
     seed = 12345
-    assigner = galsim.FRatioAngles(fratio, obscuration, seed)
+    assigner = galsim.FRatioAngles(fratio, obscuration)
     obj = galsim.Gaussian(flux=3539, sigma=0.3)
 
     if __name__ == "__main__":
@@ -526,7 +526,7 @@ def test_sensor_wavelengths_and_angles():
     for band in bands:
         bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_%s.dat'%band), 'nm').thin()
         rng3 = galsim.BaseDeviate(1234)
-        sampler = galsim.WavelengthSampler(sed, bandpass, rng3)
+        sampler = galsim.WavelengthSampler(sed, bandpass)
         rng4 = galsim.BaseDeviate(5678)
         silicon = galsim.SiliconSensor(rng=rng4, diffusion_factor=0.0)
 
@@ -808,9 +808,8 @@ def test_resume():
                                    treering_func=treering_func, treering_center=treering_center)
 
     waves = galsim.WavelengthSampler(sed = galsim.SED('1', 'nm', 'fphotons'),
-                                     bandpass = galsim.Bandpass('LSST_r.dat', 'nm'),
-                                     rng=rng)
-    angles = galsim.FRatioAngles(1.2, 0.4, rng)
+                                     bandpass = galsim.Bandpass('LSST_r.dat', 'nm'))
+    angles = galsim.FRatioAngles(1.2, 0.4)
 
     im1 = galsim.ImageF(nx,ny)  # Will not use resume
     im2 = galsim.ImageF(nx,ny)  # Will use resume
@@ -837,8 +836,8 @@ def test_resume():
         photons.y *= ny
         photons.y += 0.5
         photons.flux = flux_per_photon
-        waves.applyTo(photons)
-        angles.applyTo(photons)
+        waves.applyTo(photons, rng=rng)
+        angles.applyTo(photons, rng=rng)
 
         all_photons.x[n_added:n_added+nphot] = photons.x
         all_photons.y[n_added:n_added+nphot] = photons.y

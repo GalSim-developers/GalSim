@@ -2682,7 +2682,11 @@ def test_photon_ops():
                     'type' : 'PhotonDCR',
                     'base_wavelength' : '$bandpass.effective_wavelength',
                     'latitude' : '-30.24463 degrees',
-                    'HA' : '-1.48 hours',
+                    # Give each object a different HA. Could do this better by basing it
+                    # on image_pos and the wcs, etc.  But here I just want to check that
+                    # the photon_ops are different for a different obj_num, so do something
+                    # easy if not particularly realistic.
+                    'HA' : '$-1.48 * galsim.hours + 150 * galsim.arcsec * obj_num',
                 },
                 {
                     'type' : 'FocusDepth',
@@ -2731,8 +2735,8 @@ def test_photon_ops():
     sed = sed.withFluxDensity(1.0, 500).atRedshift(0.8)
     sky_pos = galsim.CelestialCoord(ra=13*galsim.hours, dec=-17*galsim.degrees)
 
-    frat = galsim.FRatioAngles(fratio=1.234, obscuration=0.606, rng=rng)
-    wave = galsim.WavelengthSampler(sed=sed, bandpass=bp, rng=rng)
+    frat = galsim.FRatioAngles(fratio=1.234, obscuration=0.606)
+    wave = galsim.WavelengthSampler(sed=sed, bandpass=bp)
     dcr = galsim.PhotonDCR(base_wavelength=bp.effective_wavelength,
                            latitude=-30.24463 * galsim.degrees,
                            obj_coord=sky_pos, HA=-1.48 * galsim.hours)
@@ -2750,7 +2754,6 @@ def test_photon_ops():
 
     # But not if we are on the next object
     galsim.config.SetupConfigObjNum(config, obj_num=1)
-    galsim.config.SetupConfigRNG(config, seed_offset=1)
     ops3 = galsim.config.BuildPhotonOps(config['stamp'], 'photon_ops', config)
     assert ops3 != photon_ops
 
@@ -2759,12 +2762,11 @@ def test_photon_ops():
     config['stamp']['photon_ops'] = [
         {
             'type' : 'List',
-            'items' : ['$galsim.FRatioAngles(fratio=1.234, obscuration=0.606, rng=rng)']
+            'items' : ['$galsim.FRatioAngles(fratio=1.234, obscuration=0.606)']
         },
         {
             'type' : 'Eval',
-            'str' : 'galsim.WavelengthSampler(sed=@photon_ops_orig.1.sed, bandpass=bandpass, '
-                    'rng=rng)',
+            'str' : 'galsim.WavelengthSampler(sed=@photon_ops_orig.1.sed, bandpass=bandpass)',
         },
         '@photon_ops_orig.2',
         {
@@ -2880,8 +2882,8 @@ def test_sensor():
     sed = sed.withFluxDensity(1.0, 500).atRedshift(0.8)
     sky_pos = galsim.CelestialCoord(ra=13*galsim.hours, dec=-17*galsim.degrees)
 
-    frat = galsim.FRatioAngles(fratio=1.234, obscuration=0.606, rng=rng)
-    wave = galsim.WavelengthSampler(sed=sed, bandpass=bp, rng=rng)
+    frat = galsim.FRatioAngles(fratio=1.234, obscuration=0.606)
+    wave = galsim.WavelengthSampler(sed=sed, bandpass=bp)
     photon_ops = [frat, wave]
     sensor = galsim.SiliconSensor(rng=rng)
 
@@ -2956,8 +2958,6 @@ def test_sensor():
     galsim.config.SetupConfigRNG(config, seed_offset=1)
     galsim.config.RemoveCurrent(config)
     rng.reset(1235)
-    frat.rng.reset(rng)
-    wave.rng.reset(rng)
     trfunc = galsim.LookupTable.from_file('tree_ring_lookup.dat', amplitude=0.5)
     sensor = galsim.SiliconSensor(name='lsst_e2v_50_8', rng=rng,
                                   strength=0.8, diffusion_factor=0.2, qdist=2, nrecalc=3000,

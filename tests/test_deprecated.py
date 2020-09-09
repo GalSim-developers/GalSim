@@ -425,11 +425,11 @@ def test_surface_ops():
 
     fratio = 1.2
     obscuration = 0.2
-    assigner = galsim.FRatioAngles(fratio, obscuration, rng=rng)
+    assigner = check_dep(galsim.FRatioAngles, fratio, obscuration, rng=rng)
 
     sed = galsim.SED('CWW_E_ext.sed', 'nm', 'flambda').thin()
     bandpass = galsim.Bandpass('LSST_i.dat', 'nm').thin()
-    sampler = galsim.WavelengthSampler(sed, bandpass, rng=rng)
+    sampler = check_dep(galsim.WavelengthSampler, sed, bandpass, rng=rng)
 
     obj = galsim.Gaussian(flux=353, sigma=0.3)
     im = galsim.Image(63,63, scale=1)

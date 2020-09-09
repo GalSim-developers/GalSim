@@ -307,8 +307,8 @@ def test_wavelength_sampler():
     sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'A', 'flambda').thin()
     bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm').thin()
 
-    sampler = galsim.WavelengthSampler(sed, bandpass, rng)
-    sampler.applyTo(photon_array)
+    sampler = galsim.WavelengthSampler(sed, bandpass)
+    sampler.applyTo(photon_array, rng=rng)
 
     # Note: the underlying functionality of the sampleWavelengths function is tested
     # in test_sed.py.  So here we are really just testing that the wrapper class is
@@ -333,8 +333,8 @@ def test_wavelength_sampler():
     # match the bandpass effective wavelength.
     photon_array2 = galsim.PhotonArray(100000)
     sed2 = galsim.SED('1', 'nm', 'fphotons')
-    sampler2 = galsim.WavelengthSampler(sed2, bandpass, rng)
-    sampler2.applyTo(photon_array2)
+    sampler2 = galsim.WavelengthSampler(sed2, bandpass)
+    sampler2.applyTo(photon_array2, rng=rng)
     np.testing.assert_allclose(np.mean(photon_array2.wavelength),
                                bandpass.effective_wavelength,
                                rtol=0, atol=0.2,  # 2 Angstrom accuracy is pretty good
@@ -358,7 +358,7 @@ def test_wavelength_sampler():
     im2.setCenter(0,0)
     clip600 = Clip600()
     rng2 = galsim.BaseDeviate(1234)
-    sampler2 = galsim.WavelengthSampler(sed, bandpass, rng2)
+    sampler2 = galsim.WavelengthSampler(sed, bandpass)
     obj.drawImage(im2, method='phot', n_photons=nphotons, use_true_center=False,
                   photon_ops=[sampler2,clip600], rng=rng2, save_photons=True)
     print('sum = ',im1.array.sum(),im2.array.sum())
@@ -395,8 +395,8 @@ def test_photon_angles():
 
     # rng can be None, an existing BaseDeviate, or an integer
     for rng in [ None, ud, 12345 ]:
-        assigner = galsim.FRatioAngles(fratio, obscuration, rng)
-        assigner.applyTo(photon_array)
+        assigner = galsim.FRatioAngles(fratio, obscuration)
+        assigner.applyTo(photon_array, rng=rng)
 
         do_pickle(assigner)
 
@@ -476,12 +476,12 @@ def test_photon_io():
     sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda').thin()
     bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm').thin()
 
-    wave_sampler = galsim.WavelengthSampler(sed, bandpass, rng)
-    angle_sampler = galsim.FRatioAngles(1.3, 0.3, rng)
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass)
+    angle_sampler = galsim.FRatioAngles(1.3, 0.3)
 
     ops = [ wave_sampler, angle_sampler ]
     for op in ops:
-        op.applyTo(photons)
+        op.applyTo(photons, rng=rng)
 
     file_name = 'output/photons2.dat'
     photons.write(file_name)
@@ -541,7 +541,7 @@ def test_dcr():
                            alpha=alpha)
     achrom = base_PSF.withFlux(flux)
     rng = galsim.BaseDeviate(31415)
-    wave_sampler = galsim.WavelengthSampler(sed, bandpass, rng)
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass)
     photon_ops = [wave_sampler, dcr]
     achrom.drawImage(image=im2, method='phot', rng=rng, photon_ops=photon_ops)
 
@@ -560,7 +560,7 @@ def test_dcr():
     thin_sed = sed.thin(thin)
     print('len bp = %d => %d'%(len(bandpass.wave_list), len(thin_bandpass.wave_list)))
     print('len sed = %d => %d'%(len(sed.wave_list), len(thin_sed.wave_list)))
-    wave_sampler = galsim.WavelengthSampler(thin_sed, thin_bandpass, rng)
+    wave_sampler = galsim.WavelengthSampler(thin_sed, thin_bandpass)
     achrom.drawImage(image=im3, method='phot', rng=rng, photon_ops=photon_ops)
 
     im3 /= flux
@@ -773,7 +773,7 @@ def test_dcr_moments():
     # Uniform across the band is fine for this.
     sed = galsim.SED('1', wave_type='nm', flux_type='fphotons')
     rng = galsim.BaseDeviate(31415)
-    wave_sampler = galsim.WavelengthSampler(sed, bandpass, rng)
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass)
 
     star = galsim.Kolmogorov(fwhm=0.3, flux=1.e6)  # 10^6 photons should be enough.
     im = galsim.ImageD(50, 50, scale=0.05)  # Small pixel scale, so shift is many pixels.
@@ -1019,7 +1019,7 @@ def test_focus_depth():
         photon_array.y = 0.0
         photon_array2.x = 0.0
         photon_array2.y = 0.0
-        galsim.FRatioAngles(1.234, obscuration=0.606, rng=bd).applyTo(photon_array)
+        galsim.FRatioAngles(1.234, obscuration=0.606).applyTo(photon_array, rng=bd)
         photon_array2.dxdz[:] = photon_array.dxdz
         photon_array2.dydz[:] = photon_array.dydz
         fd1 = galsim.FocusDepth(1.1)
@@ -1061,7 +1061,7 @@ def test_focus_depth():
         ud.generate(photon_array.y)
         photon_array.x -= 0.5
         photon_array.y -= 0.5
-        galsim.FRatioAngles(1.234, obscuration=0.606, rng=bd).applyTo(photon_array)
+        galsim.FRatioAngles(1.234, obscuration=0.606).applyTo(photon_array, rng=bd)
         photon_array2.x[:] = photon_array.x
         photon_array2.y[:] = photon_array.y
         photon_array2.dxdz[:] = photon_array.dxdz
@@ -1084,8 +1084,8 @@ def test_lsst_y_focus():
     obj = galsim.Gaussian(fwhm=1e-5)
     oversampling = 32
     photon_ops0 = [
-        galsim.WavelengthSampler(sed, bandpass, rng=rng),
-        galsim.FRatioAngles(1.234, 0.606, rng=rng),
+        galsim.WavelengthSampler(sed, bandpass),
+        galsim.FRatioAngles(1.234, 0.606),
         galsim.FocusDepth(0.0),
         galsim.Refraction(3.9)
     ]
@@ -1112,8 +1112,8 @@ def test_lsst_y_focus():
     depth1 = -6.  # microns, negative means surface is intrafocal
     depth1 /= 10  # microns => pixels
     photon_ops1 = [
-        galsim.WavelengthSampler(sed, bandpass, rng=rng),
-        galsim.FRatioAngles(1.234, 0.606, rng=rng),
+        galsim.WavelengthSampler(sed, bandpass),
+        galsim.FRatioAngles(1.234, 0.606),
         galsim.FocusDepth(depth1),
         galsim.Refraction(3.9)
     ]
