@@ -350,7 +350,7 @@ def test_wavelength_sampler():
 
     # Make a dummy surface op that clips any photons with lambda < 600
     class Clip600(object):
-        def applyTo(self, photon_array, local_wcs=None):
+        def applyTo(self, photon_array, local_wcs=None, rng=None):
             photon_array.flux[photon_array.wavelength < 600] = 0.
 
     # Use (a new) sampler and clip600 as photon_ops in drawImage

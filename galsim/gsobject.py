@@ -1786,7 +1786,7 @@ class GSObject(object):
             if sensor is not None:
                 photons = PhotonArray.makeFromImage(draw_image, rng=rng)
                 for op in photon_ops:
-                    op.applyTo(photons, local_wcs)
+                    op.applyTo(photons, local_wcs, rng)
                 if imview.dtype in (np.float32, np.float64):
                     added_photons = sensor.accumulate(photons, imview, orig_center)
                 else:
@@ -2210,7 +2210,7 @@ class GSObject(object):
             photons.scaleFlux(g)
 
         for op in photon_ops:
-            op.applyTo(photons, local_wcs)
+            op.applyTo(photons, local_wcs, rng)
 
         return photons
 
@@ -2353,7 +2353,7 @@ class GSObject(object):
                 photons.scaleXY(1./image.scale)  # Convert x,y to image coords if necessary
 
             for op in photon_ops:
-                op.applyTo(photons, local_wcs)
+                op.applyTo(photons, local_wcs, rng)
 
             if image.dtype in (np.float32, np.float64):
                 added_flux += sensor.accumulate(photons, image, orig_center, resume=resume)
