@@ -33,6 +33,9 @@ Dependency Changes
 API Changes
 -----------
 
+- Deprecated the rng parameter to `WavelengthSampler` and `FRatioAngles`
+  constructors.  Now they will use the rng that you provide to drawImage or
+  whatever else you are using to apply these photon operators. (#540)
 - Changed the WCS method name withOrigin to shiftOrigin for non-local WCS
   types.  The functionality hasn't changed, but the name withOrigin is
   only really appropriate for LocalWCS types.  When the WCS already has a

@@ -201,7 +201,6 @@ class WavelengthSamplerBuilder(PhotonOpBuilder):
     def buildPhotonOp(self, config, base, logger):
         req, opt, single, takes_rng = get_cls_params(WavelengthSampler)
         kwargs, safe = GetAllParams(config, base, req, opt, single, ignore=['sed'])
-        kwargs['rng'] = GetRNG(config, base, logger, 'WavelengthSampler')
         if 'sed' not in config:
             raise GalSimConfigError("sed is required for WavelengthSampler")
         sed = BuildSED(config, 'sed', base, logger)[0]

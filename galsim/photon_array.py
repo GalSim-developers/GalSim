@@ -505,12 +505,15 @@ class WavelengthSampler(PhotonOp):
                     tables. [default: None, which uses the `DistDeviate` default]
     """
     _opt_params = { 'npoints' : int }
-    _takes_rng = True
 
     def __init__(self, sed, bandpass=None, rng=None, npoints=None):
+        if rng is not None:
+            from .deprecated import depr
+            depr('WavelengthSampler(..., rng)', 2.3, '',
+                 'Instead provide rng when calling applyTo, drawImage, etc.')
         self.sed = sed
         self.bandpass = bandpass
-        self.rng = BaseDeviate(rng)
+        self.rng = rng
         self.npoints = npoints
 
     def applyTo(self, photon_array, local_wcs=None, rng=None):
@@ -552,13 +555,16 @@ class FRatioAngles(PhotonOp):
     """
     _req_params = { 'fratio' : float }
     _opt_params = { 'obscuration' : float }
-    _takes_rng = True
 
     def __init__(self, fratio, obscuration=0.0, rng=None):
         if fratio < 0:
             raise GalSimRangeError("The f-ratio must be positive.", fratio, 0.)
         if obscuration < 0 or obscuration >= 1:
             raise GalSimRangeError("Invalid obscuration.", obscuration, 0., 1.)
+        if rng is not None:
+            from .deprecated import depr
+            depr('FRatioAngles(..., rng)', 2.3, '',
+                 'Instead provide rng when calling applyTo, drawImage, etc.')
 
         self.fratio = fratio
         self.obscuration = obscuration
