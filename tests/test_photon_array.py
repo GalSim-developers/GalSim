@@ -562,6 +562,15 @@ def test_dcr():
     np.testing.assert_almost_equal(im2.array, im1.array, decimal=4,
                                    err_msg="PhotonDCR didn't match ChromaticAtmosphere")
 
+    # Use ChromaticAtmosphere in photon_ops
+    im3 = galsim.ImageD(50, 50, scale=pixel_scale)
+    photon_ops = [wave_sampler, chrom_PSF]
+    star.drawImage(bandpass, image=im3, method='phot', rng=rng, photon_ops=photon_ops)
+    im3 /= flux
+    printval(im3, im1, show=False)
+    np.testing.assert_almost_equal(im3.array, im1.array, decimal=4,
+                                   err_msg="ChromaticAtmosphere in photon_ops didn't match")
+
     # Repeat with thinned bandpass and SED to check that thin still works well.
     im3 = galsim.ImageD(50, 50, scale=pixel_scale)
     thin = 0.1  # Even higher also works.  But this is probably enough.
@@ -570,6 +579,7 @@ def test_dcr():
     print('len bp = %d => %d'%(len(bandpass.wave_list), len(thin_bandpass.wave_list)))
     print('len sed = %d => %d'%(len(sed.wave_list), len(thin_sed.wave_list)))
     wave_sampler = galsim.WavelengthSampler(thin_sed, thin_bandpass)
+    photon_ops = [wave_sampler, dcr]
     achrom.drawImage(image=im3, method='phot', rng=rng, photon_ops=photon_ops)
 
     im3 /= flux
@@ -642,6 +652,24 @@ def test_dcr():
     np.testing.assert_almost_equal(im5.array, im6.array, decimal=3,
                                    err_msg="PhotonDCR with alpha=0 didn't match")
 
+    # Use ChromaticAtmosphere in photon_ops
+    im7 = galsim.ImageD(50, 50, wcs=wcs)
+    photon_ops = [wave_sampler, chrom_PSF]
+    star.drawImage(bandpass, image=im7, method='phot', rng=rng, photon_ops=photon_ops)
+    im7 /= flux
+    printval(im7, im6, show=False)
+    np.testing.assert_almost_equal(im7.array, im6.array, decimal=3,
+                                   err_msg="ChromaticAtmosphere in photon_ops didn't match")
+
+    # ChromaticAtmosphere in photon_ops is almost trivially equal to base_psf and dcr in photon_ops.
+    im8 = galsim.ImageD(50, 50, wcs=wcs)
+    photon_ops = [wave_sampler, base_PSF, dcr]
+    star.drawImage(bandpass, image=im8, method='phot', rng=rng, photon_ops=photon_ops)
+    im8 /= flux
+    printval(im8, im6, show=False)
+    np.testing.assert_almost_equal(im8.array, im6.array, decimal=3,
+                                   err_msg="base_psf + dcr in photon_ops didn't match")
+
     # Also check invalid parameters
     zenith_coord = galsim.CelestialCoord(13.54 * galsim.hours, lsst_lat)
     assert_raises(TypeError, galsim.PhotonDCR,
@@ -682,8 +710,10 @@ def test_dcr():
                   scale_unit='inches')                  # invalid scale_unit
     photons = galsim.PhotonArray(2, flux=1)
     assert_raises(galsim.GalSimError, dcr.applyTo, photons) # Requires wavelengths to be set
+    assert_raises(galsim.GalSimError, chrom_PSF.applyTo, photons) # Requires wavelengths to be set
     photons = galsim.PhotonArray(2, flux=1, wavelength=500)
     assert_raises(TypeError, dcr.applyTo, photons)      # Requires local_wcs
+    assert_raises(TypeError, chrom_PSF.applyTo, photons)      # Requires local_wcs
 
     # Invalid to use dcr without some way of setting wavelengths.
     assert_raises(galsim.GalSimError, achrom.drawImage, im2, method='phot', photon_ops=[dcr])
