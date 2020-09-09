@@ -863,9 +863,11 @@ def test_geometric_shoot():
         aberrations = [0]+[u()*0.1 for i in range(jmax)]
         opt_psf = galsim.OpticalPSF(diam=diam, lam=lam, aberrations=aberrations,
                                     geometric_shooting=True)
-
         # Use really good seeing, so that the optics contribution actually matters.
-        psf = galsim.Convolve(opt_psf, galsim.Kolmogorov(fwhm=0.4))
+        atm_psf = galsim.Kolmogorov(fwhm=0.4)
+
+        psf = galsim.Convolve(opt_psf, atm_psf)
+        u1 = u.duplicate()
         im_shoot = psf.drawImage(nx=256, ny=256, scale=0.2, method='phot', n_photons=100000, rng=u)
         im_fft = psf.drawImage(nx=256, ny=256, scale=0.2)
 
@@ -903,6 +905,15 @@ def test_geometric_shoot():
         assert np.isclose(added_flux, psf.flux, rtol=3.e-4)
         assert np.isclose(im_shoot.array.sum(), psf.flux, rtol=3.e-4)
 
+        # Check doing this with photon_ops
+        im_shoot2 = opt_psf.drawImage(nx=256, ny=256, scale=0.2, method='phot',
+                                      n_photons=100000, rng=u1.duplicate(),
+                                      photon_ops=[atm_psf])
+        np.testing.assert_allclose(im_shoot2.array, im_shoot.array)
+        im_shoot3 = galsim.DeltaFunction().drawImage(nx=256, ny=256, scale=0.2, method='phot',
+                                                     n_photons=100000, rng=u1.duplicate(),
+                                                     photon_ops=[opt_psf, atm_psf])
+        np.testing.assert_allclose(im_shoot3.array, im_shoot.array)
 
 
 if __name__ == "__main__":

@@ -784,7 +784,9 @@ def test_phase_gradient_shoot():
     vkMom = galsim.hsm.FindAdaptiveMom(vkImg)
 
     for psf, psf2 in zip(psfs, psfs2):
-        im_shoot = psf.drawImage(nx=256, ny=256, scale=0.05, method='phot', n_photons=100000, rng=rng)
+        rng1 = rng.duplicate()  # Save for later.
+        im_shoot = psf.drawImage(nx=256, ny=256, scale=0.05, method='phot', n_photons=100000,
+                                 rng=rng)
         im_fft = psf2.drawImage(nx=256, ny=256, scale=0.05)
 
         # at this point, the atms should be different.
@@ -854,6 +856,13 @@ def test_phase_gradient_shoot():
         print('psf.flux = ',psf.flux, added_flux, im_shoot.array.sum())
         assert np.isclose(added_flux, psf.flux, rtol=1.e-3)
         assert np.isclose(im_shoot.array.sum(), psf.flux, rtol=1.e-3)
+
+        # Check doing this with photon_ops
+        im_shoot2 = galsim.DeltaFunction().drawImage(nx=256, ny=256, scale=0.05, method='phot',
+                                                     n_photons=100000, rng=rng1.duplicate(),
+                                                     photon_ops=[psf])
+        np.testing.assert_allclose(im_shoot2.array, im_shoot.array)
+
 
     # I cheated.  Here's code to evaluate how small I could potentially set the tolerances above.
     # I think they're all fine, but this is admittedly a tad bit backwards.
