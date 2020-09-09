@@ -235,6 +235,7 @@ def test_convolve():
     obj = galsim.Gaussian(flux=1.7, sigma=2.3)
     rng = galsim.UniformDeviate(1234)
     pa1 = obj.shoot(nphotons, rng)
+    rng2 = rng.duplicate()  # Save this state.
     pa2 = obj.shoot(nphotons, rng)
 
     # If not correlated then convolve is deterministic
@@ -290,6 +291,14 @@ def test_convolve():
     np.testing.assert_allclose(np.sum(pa3.flux), 1.7*1.7)
     np.testing.assert_allclose(np.sum(pa3.x**2)/nphotons, 2*2.3**2, rtol=0.01)
     np.testing.assert_allclose(np.sum(pa3.y**2)/nphotons, 2*2.3**2, rtol=0.01)
+
+    # Can also effect the convolution by treating the psf as a PhotonOp
+    pa3.assignAt(0, pa1)
+    pa3.setCorrelated()
+    obj.applyTo(pa3, rng=rng2)
+    np.testing.assert_allclose(pa3.x, conv_x)
+    np.testing.assert_allclose(pa3.y, conv_y)
+    np.testing.assert_allclose(pa3.flux, conv_flux)
 
     # Error to have different lengths
     pa4 = galsim.PhotonArray(50, pa1.x[:50], pa1.y[:50], pa1.flux[:50])

@@ -2406,6 +2406,25 @@ class GSObject(object):
         """
         raise NotImplementedError("%s does not implement shoot"%self.__class__.__name__)
 
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
+        """Apply this surface brightness profile as a convolution to an existing photon array.
+
+        This method allows a GSObject to duck type as a PhotonOp, so one can apply a PSF
+        in a photon_ops list.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use to effect the convolution.
+                            [default: None]
+        """
+        from .photon_array import PhotonArray
+        p1 = PhotonArray(len(photon_array))
+        obj = local_wcs.toImage(self) if local_wcs is not None else self
+        obj._shoot(p1, rng)
+        photon_array.convolve(p1, rng)
+
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
                    add_to_image=False, recenter=True, bandpass=None, setup_only=False):
         """Draws the k-space (complex) `Image` of the object, with bounds optionally set by input

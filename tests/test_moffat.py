@@ -459,8 +459,14 @@ def test_moffat_shoot():
     print('image flux = ',im.array.sum())
     assert np.isclose(added_flux, obj.flux)
     assert np.isclose(im.array.sum(), obj.flux)
-    photons2 = obj.makePhot(poisson_flux=False, rng=rng)
+    photons2 = obj.makePhot(poisson_flux=False, rng=rng.duplicate())
     assert photons2 == photons, "Moffat makePhot not equivalent to drawPhot"
+
+    # Can treat the profile as a convolution of a delta function and put it in a photon_ops list.
+    delta = galsim.DeltaFunction(flux=1.e4)
+    psf = galsim.Moffat(fwhm=1.5, beta=1.9)
+    photons3 = delta.makePhot(poisson_flux=False, rng=rng.duplicate(), photon_ops=[psf])
+    assert photons3 == photons, "Using Moffat in photon_ops not equivalent to drawPhot"
 
 
 @timer

@@ -357,8 +357,14 @@ def test_gaussian_shoot():
     print('image flux = ',im.array.sum())
     assert np.isclose(added_flux, obj.flux)
     assert np.isclose(im.array.sum(), obj.flux)
-    photons2 = obj.makePhot(poisson_flux=False, rng=rng)
+    photons2 = obj.makePhot(poisson_flux=False, rng=rng.duplicate())
     assert photons2 == photons, "Gaussian makePhot not equivalent to drawPhot"
+
+    # Can treat the profile as a convolution of a delta function and put it in a photon_ops list.
+    delta = galsim.DeltaFunction(flux=1.e4)
+    psf = galsim.Gaussian(fwhm=3.5)
+    photons3 = delta.makePhot(poisson_flux=False, rng=rng.duplicate(), photon_ops=[psf])
+    assert photons3 == photons, "Using Gaussian in photon_ops not equivalent to drawPhot"
 
 
 @timer
