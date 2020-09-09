@@ -671,6 +671,10 @@ def test_dcr():
                   zenith_angle=zenith_angle,
                   parallactic_angle=parallactic_angle,
                   scale_unit='inches')                  # invalid scale_unit
+    photons = galsim.PhotonArray(2, flux=1)
+    assert_raises(galsim.GalSimError, dcr.applyTo, photons) # Requires wavelengths to be set
+    photons = galsim.PhotonArray(2, flux=1, wavelength=500)
+    assert_raises(TypeError, dcr.applyTo, photons)      # Requires local_wcs
 
     # Invalid to use dcr without some way of setting wavelengths.
     assert_raises(galsim.GalSimError, achrom.drawImage, im2, method='phot', photon_ops=[dcr])

@@ -712,6 +712,8 @@ class PhotonDCR(PhotonOp):
         from . import dcr
         if not photon_array.hasAllocatedWavelengths():
             raise GalSimError("PhotonDCR requires that wavelengths be set")
+        if local_wcs is None:
+            raise TypeError("PhotonDCR requires a local_wcs to be provided to applyTo")
 
         w = photon_array.wavelength
         cenx = local_wcs.origin.x
