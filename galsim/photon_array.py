@@ -734,7 +734,7 @@ class PhotonDCR(PhotonOp):
         # Apply DCR
         shift_magnitude = dcr.get_refraction(w, self.zenith_angle, **self.kw)
         shift_magnitude -= self.base_refraction
-        shift_magnitude = shift_magnitude * (radians / self.scale_unit)
+        shift_magnitude *= radians / self.scale_unit
         sinp, cosp = self.parallactic_angle.sincos()
 
         du = -shift_magnitude * sinp
