@@ -516,8 +516,13 @@ class GSObject(object):
         Returns:
             an estimate of the half-light radius in physical units
         """
-        if hasattr(self, 'half_light_radius'):
+        try:
+            # It there is a half_light_radius attribute, use that.
             return self.half_light_radius
+        except (AttributeError, GalSimError):
+            # Otherwise, or (e.g. with Airy where it is only implemented for obscuration=0)
+            # if there is an error trying to use it, then keep going with this calculation.
+            pass
 
         if scale is None:
             scale = self.nyquist_scale * 0.5
