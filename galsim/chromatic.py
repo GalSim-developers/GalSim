@@ -422,6 +422,9 @@ class ChromaticObject(object):
         Returns:
             the drawn `Image`.
         """
+        from .table import LookupTable
+        from .photon_array import WavelengthSampler
+
         # Store the last bandpass used and any extra kwargs.
         self._last_bp = bandpass
         if self.SED.dimensionless:
@@ -434,6 +437,12 @@ class ChromaticObject(object):
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list, _, _ = utilities.combine_wave_list(self, bandpass)
+
+        # If there are photon ops, they'll probably need valid wavelengths, so add
+        # WavelengthSampler as the first op in the list.
+        if 'photon_ops' in kwargs:
+            wave_sampler = WavelengthSampler(self.SED, bandpass)
+            kwargs['photon_ops'] = [wave_sampler] + kwargs['photon_ops']
 
         if self.separable:
             multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))

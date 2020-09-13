@@ -1959,6 +1959,7 @@ def test_ChromaticAiry_phot():
     psf_achrom = galsim.Airy(lam=bandpass.effective_wavelength, diam=diam, obscuration=obscuration)
     psf_achrom.shoot(1)
     t1 = time.time()
+    print('Airy setup time = ',t1-t0)
     print('psf hlr = ',psf_achrom.calculateHLR())
     # hlr = 0.04 arcsec for this combination.  So our galaxy needs to be ~this small for the
     # effects of changing the PSF to be important.  Even smaller is better.
@@ -2004,9 +2005,12 @@ def test_ChromaticAiry_phot():
     print('wave_sampler time = ',t1-t0)
     print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
     np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=3.e-4)
-    return
 
-    # Finally, the chromatic drawImage function show handle the wavelength sampling for us.
+    # Error if wavelengths aren't set.
+    with assert_raises(galsim.GalSimError):
+        gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
+
+    # Finally, the chromatic drawImage function should handle the wavelength sampling for us.
     t0 = time.time()
     im4 = gal.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
     t1 = time.time()
