@@ -2227,8 +2227,11 @@ class ChromaticConvolution(ChromaticObject):
     def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams):
         from .interpolatedimage import InterpolatedImage
         # Find scale at which to draw effective profile
+        # Use smallest nyquist scale among the fiducial profile and at the two limits of the bp.
         _, prof0 = insep_obj._fiducial_profile(bandpass)
-        iiscale = prof0.nyquist_scale
+        prof1 = insep_obj.evaluateAtWavelength(bandpass.red_limit)
+        prof2 = insep_obj.evaluateAtWavelength(bandpass.blue_limit)
+        iiscale = min(prof0.nyquist_scale, prof1.nyquist_scale, prof2.nyquist_scale)
         if iimult is not None:
             iiscale /= iimult
 
@@ -3124,6 +3127,40 @@ class ChromaticAiry(ChromaticObject):
             lam_over_diam=self.lam_over_diam*(wave/self.lam), scale_unit=self.scale_unit,
             gsparams=self.gsparams, **self.kwargs)
         return ret
+
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
+        """Apply the ChromaticAiry profile as a convolution to an existing photon array.
+
+        This method allows instances of this class to duck type as a PhotonOp, so one can apply it
+        in a photon_ops list.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use to effect the convolution.
+                            [default: None]
+        """
+        from .photon_array import PhotonArray
+        from .airy import Airy
+
+        if not photon_array.hasAllocatedWavelengths():
+            raise GalSimError("ChromaticAiry requires that wavelengths be set")
+
+        # Start with the convolution at the reference wavelength
+        obj = Airy(lam_over_diam=self.lam_over_diam, scale_unit=self.scale_unit,
+                   gsparams=self.gsparams, **self.kwargs)
+        p1 = PhotonArray(len(photon_array))
+        obj = local_wcs.toImage(obj) if local_wcs is not None else obj
+        obj._shoot(p1, rng)
+
+        # Now adjust the positions according to the wavelengths
+        factor = photon_array.wavelength / self.lam
+        p1.scaleXY(factor)
+
+        # Finally convolve with the adjusted values.
+        photon_array.convolve(p1, rng)
+
 
 def _findWave(wave_list, wave):
     # Helper routine to search a sorted NumPy array of wavelengths (not necessarily evenly spaced)
