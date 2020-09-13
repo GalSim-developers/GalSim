@@ -1976,9 +1976,14 @@ def test_ChromaticAiry_phot():
     # Now the direct photon shooting method
     rng = galsim.BaseDeviate(1234)
     t0 = time.time()
-    im2 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng)
+    # This is the old way that photon shooting used to work.  The new way will be tested
+    # below.  But since it now uses photon_ops, we'll wait to test that last.
+    effective_psf = galsim.ChromaticConvolution._get_effective_prof(
+            psf*gal.SED, bandpass, iimult=None, integrator='trapezoidal', gsparams=psf.gsparams)
+    temp_obj = galsim.Convolve(gal_achrom/flux,effective_psf)
+    im2 = temp_obj.drawImage(image=im1.copy(), method='phot', rng=rng)
     t1 = time.time()
-    print('normal phot time = ',t1-t0)
+    print('old method phot time = ',t1-t0)
     print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
     np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=3.e-4)
 
@@ -2011,12 +2016,21 @@ def test_ChromaticAiry_phot():
         gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
 
     # Finally, the chromatic drawImage function should handle the wavelength sampling for us.
+    # First do this with just the galaxy as the driver.
     t0 = time.time()
     im4 = gal.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
     t1 = time.time()
     print('auto wave time = ',t1-t0)
     printval(im4, im1)
     np.testing.assert_allclose(im4.array/flux, im1.array/flux, atol=3.e-4)
+
+    # Now let the ChromaticConvolution reorganize this for us.
+    t0 = time.time()
+    im5 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng)
+    t1 = time.time()
+    print('regular phot time = ',t1-t0)
+    print('max diff/flux = ',np.max(np.abs(im1.array-im5.array)/flux))
+    np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=3.e-4)
 
 
 @timer

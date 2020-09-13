@@ -2073,7 +2073,7 @@ class ChromaticSum(ChromaticObject):
         if self.SED.dimensionless:
             raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
         add_to_image = kwargs.pop('add_to_image', False)
-        # Use given add_to_image for the first one, then add_to_image=False for the rest.
+        # Use given add_to_image for the first one, then add_to_image=True for the rest.
         image = self.obj_list[0].drawImage(
                 bandpass, image=image, add_to_image=add_to_image, **kwargs)
         _remove_setup_kwargs(kwargs)
@@ -2419,6 +2419,17 @@ class ChromaticConvolution(ChromaticObject):
         wave0, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
+
+        # If we are photon shooting, then we can move all non-spectral objects to the photon_ops
+        # list and deal with them that way.  This both more accurate and more efficient for most
+        # chromatic PSFs.
+        if kwargs.get('method', 'auto') == 'phot':
+            psfs = [obj for obj in self.obj_list if obj.dimensionless]
+            gals = [obj for obj in self.obj_list if obj.spectral]
+            assert len(gals) == 1  # Should have been checked by constructor.
+            gal = gals[0]
+            kwargs['photon_ops'] = psfs + kwargs.get('photon_ops', [])
+            return gal.drawImage(bandpass, image=image, integrator=integrator, **kwargs)
 
         # Separate convolutants into a Convolution of inseparable profiles multiplied by the
         # wavelength-dependent normalization of separable profiles, and the achromatic part of
