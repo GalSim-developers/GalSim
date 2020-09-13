@@ -250,8 +250,8 @@ class PhotonArray(object):
         Parameter:
             scale:      The factor by which to scale the positions.
         """
-        self._x *= float(scale)
-        self._y *= float(scale)
+        self._x *= scale
+        self._y *= scale
 
     def assignAt(self, istart, rhs):
         """Assign the contents of another `PhotonArray` to this one starting at istart.

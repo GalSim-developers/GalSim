@@ -1760,7 +1760,7 @@ def test_ChromaticOpticalPSF():
     nstruts = 4
     scale = 0.02
     n_interp = 15
-    oversample_fac = 4.0
+    oversample_fac = 5.0
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, n_interp)
 
     # from pylab import *
@@ -1932,6 +1932,87 @@ def test_ChromaticAiry():
     np.testing.assert_almost_equal(
         frac_diff_exact, 0.0, decimal=2,
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticAiry')
+
+@timer
+def test_ChromaticAiry_phot():
+    """Test photon shooting with a ChromaticAiry PSF
+    """
+    import time
+
+    # Use a fairly extreme SED to exaggerate the effect of the wavelength dependence of the
+    # Airy profile.  Otherwise we need a lot of photons to notice the effect.
+    bandpass = galsim.Bandpass(galsim.LookupTable([500,1000], [1,1], 'linear'), wave_type='nm')
+    sed = galsim.SED(galsim.LookupTable([500, 510,515,520, 970,975,980, 1000],
+                                        [0, 0,1,0, 0,1,0, 0], 'linear'),
+                     wave_type='nm', flux_type='fphotons')
+    flux = 1.e6
+    gal_achrom = galsim.Sersic(n=2.8, half_light_radius=0.03, flux=flux)
+    gal = (gal_achrom * sed).withFlux(flux, bandpass=bandpass)
+
+    diam = 3.1 # meters
+    obscuration = 0.11
+    psf = galsim.ChromaticAiry(lam=bandpass.effective_wavelength, diam=diam,
+                               obscuration=obscuration)
+
+    # Do this first so we can see the real timing for photon shooting separate from the setup time.
+    t0 = time.time()
+    psf_achrom = galsim.Airy(lam=bandpass.effective_wavelength, diam=diam, obscuration=obscuration)
+    psf_achrom.shoot(1)
+    t1 = time.time()
+    print('psf hlr = ',psf_achrom.calculateHLR())
+    # hlr = 0.04 arcsec for this combination.  So our galaxy needs to be ~this small for the
+    # effects of changing the PSF to be important.  Even smaller is better.
+
+    # First draw with FFT
+    obj = galsim.Convolve(gal, psf)
+    pixel_scale = 0.01
+    im1 = galsim.ImageD(50, 50, scale=pixel_scale)
+    t0 = time.time()
+    obj.drawImage(bandpass, image=im1)
+    t1 = time.time()
+    print('fft time = ',t1-t0)
+
+    # Now the direct photon shooting method
+    rng = galsim.BaseDeviate(1234)
+    t0 = time.time()
+    im2 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng)
+    t1 = time.time()
+    print('normal phot time = ',t1-t0)
+    print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
+    np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=3.e-4)
+
+    # Make sure we would notice if ChromaticAiry wasn't applying the wavelength scaling properly.
+    # Note: This test is why we're using such a crazy bandpass and sed here.  With a realistic
+    # SED and bandpass, the difference we're looking for is too subtle to see with only 10^6
+    # photons.
+    achrom = galsim.Convolve(gal_achrom, psf_achrom)
+    t0 = time.time()
+    im2b = achrom.drawImage(image=im1.copy(), method='phot', rng=rng)
+    t1 = time.time()
+    print('achrom phot time = ',t1-t0)
+    print('max diff/flux = ',np.max(np.abs(im1.array-im2b.array)/flux))
+    # This is about 1.5e-3.  So ~5x the tolerance we're using for the correct method.
+    with assert_raises(AssertionError):
+        np.testing.assert_allclose(im2b.array/flux, im1.array/flux, atol=3.e-4)
+
+    # Now using photon_ops with both wave_sampler and psf.
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass)
+    t0 = time.time()
+    im3 = gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng,
+                               photon_ops=[wave_sampler, psf])
+    t1 = time.time()
+    print('wave_sampler time = ',t1-t0)
+    print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
+    np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=3.e-4)
+    return
+
+    # Finally, the chromatic drawImage function show handle the wavelength sampling for us.
+    t0 = time.time()
+    im4 = gal.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
+    t1 = time.time()
+    print('auto wave time = ',t1-t0)
+    printval(im4, im1)
+    np.testing.assert_allclose(im4.array/flux, im1.array/flux, atol=3.e-4)
 
 
 @timer
