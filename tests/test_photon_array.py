@@ -713,7 +713,6 @@ def test_dcr():
     assert_raises(galsim.GalSimError, chrom_PSF.applyTo, photons) # Requires wavelengths to be set
     photons = galsim.PhotonArray(2, flux=1, wavelength=500)
     assert_raises(TypeError, dcr.applyTo, photons)      # Requires local_wcs
-    assert_raises(TypeError, chrom_PSF.applyTo, photons)      # Requires local_wcs
 
     # Invalid to use dcr without some way of setting wavelengths.
     assert_raises(galsim.GalSimError, achrom.drawImage, im2, method='phot', photon_ops=[dcr])
