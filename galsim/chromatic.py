@@ -1628,12 +1628,14 @@ class ChromaticTransformation(ChromaticObject):
         # is separable, then the transformation is still separable (for instance, galsim.Chromatic),
         # but we'll ignore that here.
         self.separable = obj.separable and not self.chromatic
-        if not hasattr(flux_ratio, '__call__'):
-            flux_ratio = SED(flux_ratio, 'nm', '1')
 
         self.SED = obj.SED * flux_ratio
+        self.wave_list, _, _ = utilities.combine_wave_list(obj, self.SED)
+
+        self._redshift = redshift
         if redshift is not None:
             self.SED = self.SED.atRedshift(redshift)
+            self.wave_list *= (1.+redshift)
 
         # Need to account for non-unit determinant jacobian in normalization.
         if hasattr(jac, '__call__'):
@@ -1658,26 +1660,9 @@ class ChromaticTransformation(ChromaticObject):
         else:
             self._original = obj
 
-        if isinstance(obj, ChromaticTransformation):
-            self._original = obj.original
-
-            @utilities.functionize
-            def new_jac(jac1, jac2):
-                return jac2.dot(jac1)
-
-            @utilities.functionize
-            def new_offset(jac2, off1, off2):
-                return jac2.dot(off1) + off2
-
-            self._jac = new_jac(obj._jac, jac)
-            self._offset = new_offset(jac, obj._offset, offset)
-            self._flux_ratio = obj._flux_ratio * flux_ratio
-        else:
-            self._jac = jac
-            self._offset = offset
-            self._flux_ratio = flux_ratio
-
-        self.wave_list, _, _ = utilities.combine_wave_list(self.original, self.SED)
+        self._jac = jac
+        self._offset = offset
+        self._flux_ratio = flux_ratio
 
         if self.interpolated:
             self.deinterpolated = ChromaticTransformation(
@@ -1685,7 +1670,7 @@ class ChromaticTransformation(ChromaticObject):
                     jac = self._jac,
                     offset = self._offset,
                     flux_ratio = self._flux_ratio,
-                    redshift = self.redshift,
+                    redshift = self._redshift,
                     gsparams = self._gsparams,
                     propagate_gsparams = self._propagate_gsparams)
         else:
@@ -1748,12 +1733,13 @@ class ChromaticTransformation(ChromaticObject):
             self._hash = hash(("galsim.ChromaticTransformation", self.original, self._gsparams,
                                self._propagate_gsparams))
             # achromatic _jac and _offset are ndarrays, so need to be handled separately.
-            for attr in ('_jac', '_offset', '_flux_ratio'):
+            for attr in ('_jac', '_offset'):
                 selfattr = getattr(self, attr)
                 if hasattr(selfattr, '__call__'):
                     self._hash ^= hash(selfattr)
                 else:
                     self._hash ^= hash(tuple(selfattr.ravel().tolist()))
+            self._hash ^= hash(self._flux_ratio)
         return self._hash
 
     def __repr__(self):
@@ -1767,7 +1753,7 @@ class ChromaticTransformation(ChromaticObject):
             offset = _PositionD(*(self._offset.tolist()))
         return ('galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, '
                 'redshift=%r, gsparams=%r, propagate_gsparams=%r)')%(
-            self.original, jac, offset, self._flux_ratio, self.redshift,
+            self.original, jac, offset, self._flux_ratio, self._redshift,
             self._gsparams, self._propagate_gsparams)
 
     def __str__(self):
@@ -1781,9 +1767,10 @@ class ChromaticTransformation(ChromaticObject):
             s += '.shift(%s)'%self._offset
         elif not np.array_equal(self._offset,(0,0)):
             s += '.shift(%s,%s)'%(self._offset[0],self._offset[1])
-        s += '.withScaledFlux(%s)'%self._flux_ratio
-        if self.redshift != self.original.redshift:
-            s += '.atRedshift(%s)'%(self.redshift)
+        if self._flux_ratio != 1.:
+            s += '.withScaledFlux(%s)'%self._flux_ratio
+        if self._redshift is not None:
+            s += '.atRedshift(%s)'%(self._redshift)
         return s
 
     def _getTransformations(self, wave):
@@ -1795,7 +1782,10 @@ class ChromaticTransformation(ChromaticObject):
             offset = self._offset(wave)
         else:
             offset = self._offset
-        flux_ratio = self._flux_ratio(wave)
+        if hasattr(self._flux_ratio, '__call__'):
+            flux_ratio = self._flux_ratio(wave)
+        else:
+            flux_ratio = self._flux_ratio
         return jac, offset, flux_ratio
 
     def evaluateAtWavelength(self, wave):
@@ -1808,11 +1798,11 @@ class ChromaticTransformation(ChromaticObject):
             the monochromatic object at the given wavelength.
         """
         from .transform import Transformation
-        if hasattr(self._flux_ratio, 'redshift'):
-            wave *= (1.+self._flux_ratio.redshift) / (1.+self.redshift)
+        if self._redshift is not None:
+            wave1 = wave / (1.+self._redshift)
         else:
-            wave *= (1.+self.original.redshift) / (1.+self.redshift)
-        ret = self.original.evaluateAtWavelength(wave)
+            wave1 = wave
+        ret = self.original.evaluateAtWavelength(wave1)
         jac, offset, flux_ratio = self._getTransformations(wave)
         offset = _PositionD(*offset)
         return Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
@@ -1899,11 +1889,11 @@ class ChromaticTransformation(ChromaticObject):
         # 2) This ChromaticTransformation wraps a ChromaticConvolution with a valid noise property.
         if (hasattr(self._jac, '__call__') or
             hasattr(self._offset, '__call__') or
-            not self._flux_ratio._const):
+            hasattr(self._flux_ratio, '__call__')):
             raise GalSimError("Cannot propagate noise through chromatic transformation")
         noise = self.original.noise
         jac = self._jac
-        flux_ratio = self._flux_ratio(42.) # const, so use any wavelength
+        flux_ratio = self._flux_ratio
         return BaseCorrelatedNoise(noise.rng,
                                    _Transform(noise._profile,
                                               (jac[0,0], jac[0,1], jac[1,0], jac[1,1]),
