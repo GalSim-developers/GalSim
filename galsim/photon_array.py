@@ -275,8 +275,7 @@ class PhotonArray(object):
         if rhs.size() != self.size():
             raise GalSimIncompatibleValuesError("PhotonArray.convolve with unequal size arrays",
                                                 self_pa=self, rhs=rhs)
-        if rng is None:
-            rng = BaseDeviate()
+        rng = BaseDeviate(rng)
         self._pa.convolve(rhs._pa, rng._rng)
 
     def __repr__(self):
@@ -388,8 +387,7 @@ class PhotonArray(object):
         N = int(np.prod(image.array.shape) + total_flux / max_flux)
         photons = cls(N)
 
-        if rng is None:
-            rng = BaseDeviate()
+        rng = BaseDeviate(rng)
         N = photons._pa.setFrom(image._image, max_flux, rng._rng)
         photons._x = photons.x[:N]
         photons._y = photons.y[:N]

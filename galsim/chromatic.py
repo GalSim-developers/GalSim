@@ -579,11 +579,13 @@ class ChromaticObject(object):
                             [default: None]
         """
         from .photon_array import PhotonArray
+        from .random import BaseDeviate
         if not photon_array.hasAllocatedWavelengths():
             raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
         p1 = PhotonArray(len(photon_array))
         p1.wavelength = photon_array.wavelength
         obj = local_wcs.toImage(self) if local_wcs is not None else self
+        rng = BaseDeviate(rng)
         obj._shoot(p1, rng)
         photon_array.convolve(p1, rng)
 
@@ -1519,59 +1521,28 @@ class ChromaticAtmosphere(ChromaticObject):
         return ChromaticTransformation(self.base_obj, jac=jac_fn, offset=shift_fn,
                                        flux_ratio=flux_ratio)
 
-    def applyTo(self, photon_array, local_wcs=None, rng=None):
-        """Apply the ChromaticAtmosphere profile as a convolution to an existing photon array.
-
-        This method allows instances of this class to duck type as a PhotonOp, so one can apply it
-        in a photon_ops list.
-
-        Parameters:
-            photon_array:   A `PhotonArray` to apply the operator to.
-            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
-                            bundle in case the operator needs this information.  [default: None]
-            rng:            A random number generator to use to effect the convolution.
-                            [default: None]
-        """
+    def _shoot(self, photons, rng):
         from . import dcr
-        from .photon_array import PhotonArray
         from .angle import radians
 
-        if not photon_array.hasAllocatedWavelengths():
-            raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
-        if local_wcs is None:
-            raise TypeError("ChromaticAtmosphere requires a local_wcs to be provided to applyTo")
+        # Start with the base PSF
+        self.base_obj._shoot(photons, rng)
 
-        # Apply the base PSF
-        p1 = PhotonArray(len(photon_array))
-        obj = local_wcs.toImage(self.base_obj)
-        obj._shoot(p1, rng)
-        photon_array.convolve(p1, rng)
-
-        # XXX: The above block is the noraml applyTo method, and everything below is the
-        #      PhotonDCR applyTo method.  This kind of begs for a refactoring.
-        w = photon_array.wavelength
+        w = photons.wavelength
 
         # Apply the wavelength-dependent scaling
         if self.alpha != 0.:
-            cenx = local_wcs.origin.x
-            ceny = local_wcs.origin.y
             scale = (w/self.base_wavelength)**self.alpha
-            photon_array.x = scale * (photon_array.x - cenx) + cenx
-            photon_array.y = scale * (photon_array.y - ceny) + ceny
+            photons.x *= scale
+            photons.y *= scale
 
         # Apply DCR
         shift_magnitude = dcr.get_refraction(w, self.zenith_angle, **self.kw)
         shift_magnitude -= self.base_refraction
         shift_magnitude *= radians / self.scale_unit
         sinp, cosp = self.parallactic_angle.sincos()
-
-        du = -shift_magnitude * sinp
-        dv = shift_magnitude * cosp
-
-        dx = local_wcs._x(du, dv)
-        dy = local_wcs._y(du, dv)
-        photon_array.x += dx
-        photon_array.y += dy
+        photons.x += -shift_magnitude * sinp
+        photons.y += shift_magnitude * cosp
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
@@ -1808,7 +1779,7 @@ class ChromaticTransformation(ChromaticObject):
         return Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
                               gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
 
-    def _shoot(self, photons, rng=None):
+    def _shoot(self, photons, rng):
         self._original._shoot(photons, rng)
         wave = photons.wavelength
         jac, offset, flux_ratio = self._getTransformations(wave)
