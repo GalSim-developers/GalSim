@@ -2667,6 +2667,9 @@ def test_atredshift():
     image1 = final1.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     image2 = final2.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
     np.testing.assert_allclose(image1.array, image2.array, atol=1.e-6)
+    assert gal1.redshift == 0.
+    assert gal1.atRedshift(1.7).redshift == 1.7
+    assert gal2.redshift == 1.7
 
     # Finally, if we call atRedshift on a regular GSObject, it doesn't do much.
     gal3 = gal.atRedshift(1.7)
