@@ -561,6 +561,32 @@ class ChromaticObject(object):
         # Subclasses all override this.
         return self._obj.evaluateAtWavelength(wave)
 
+    def _shoot(self, photons, rng):
+        self._obj.shoot(photons, rng)
+        photons.wavelength = self.SED.sampleWavelength(photons.size(), rng=rng)
+
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
+        """Apply the chromatic profile as a convolution to an existing photon array.
+
+        This method allows instances of this class to duck type as a PhotonOp, so one can apply it
+        in a photon_ops list.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use to effect the convolution.
+                            [default: None]
+        """
+        from .photon_array import PhotonArray
+        if not photon_array.hasAllocatedWavelengths():
+            raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
+        p1 = PhotonArray(len(photon_array))
+        p1.wavelength = photon_array.wavelength
+        obj = local_wcs.toImage(self) if local_wcs is not None else self
+        obj._shoot(p1, rng)
+        photon_array.convolve(p1, rng)
+
     # Make op* and op*= work to adjust the flux of the object
     def __mul__(self, flux_ratio):
         """Scale the flux of the object by the given flux ratio, which may be an `SED`, a float, or
@@ -1232,6 +1258,9 @@ class InterpolatedChromaticObject(ChromaticObject):
         im, stepk, maxk = self._imageAtWavelength(wave)
         return InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
 
+    def _shoot(self, photons, rng):
+        raise GalSimNotImplementedError("InterpolatedChromaticObject cannot be used as a PhotonOp")
+
     def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
         from .interpolatedimage import InterpolatedImage
@@ -1508,7 +1537,7 @@ class ChromaticAtmosphere(ChromaticObject):
         from .angle import radians
 
         if not photon_array.hasAllocatedWavelengths():
-            raise GalSimError("ChromaticAtmosphere requires that wavelengths be set")
+            raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
         if local_wcs is None:
             raise TypeError("ChromaticAtmosphere requires a local_wcs to be provided to applyTo")
 
@@ -1518,7 +1547,7 @@ class ChromaticAtmosphere(ChromaticObject):
         obj._shoot(p1, rng)
         photon_array.convolve(p1, rng)
 
-        # XXX: The above block is the GSObject applyTo method, and everything below is the
+        # XXX: The above block is the noraml applyTo method, and everything below is the
         #      PhotonDCR applyTo method.  This kind of begs for a refactoring.
         w = photon_array.wavelength
 
@@ -1766,7 +1795,6 @@ class ChromaticTransformation(ChromaticObject):
             offset = self._offset(wave)
         else:
             offset = self._offset
-        offset = _PositionD(*offset)
         flux_ratio = self._flux_ratio(wave)
         return jac, offset, flux_ratio
 
@@ -1786,8 +1814,27 @@ class ChromaticTransformation(ChromaticObject):
             wave *= (1.+self.original.redshift) / (1.+self.redshift)
         ret = self.original.evaluateAtWavelength(wave)
         jac, offset, flux_ratio = self._getTransformations(wave)
+        offset = _PositionD(*offset)
         return Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
                               gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
+
+    def _shoot(self, photons, rng=None):
+        self._original._shoot(photons, rng)
+        wave = photons.wavelength
+        jac, offset, flux_ratio = self._getTransformations(wave)
+
+        # cf. Transformation._fwd_normal
+        temp = jac[0,1] * photons.y
+        photons.y *= jac[1,1]
+        photons.y += jac[1,0] * photons.x
+        photons.x *= jac[0,0]
+        photons.x += temp
+
+        photons.x += offset[0]
+        photons.y += offset[1]
+
+        det = jac[0,0] * jac[1,1] - jac[0,1] * jac[1,0]
+        photons.flux *= flux_ratio * np.abs(det)
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """
@@ -1830,6 +1877,7 @@ class ChromaticTransformation(ChromaticObject):
             # Get shape transformations at bandpass.red_limit (they are achromatic so it doesn't
             # matter where you get them).
             jac, offset, _ = self._getTransformations(bandpass.red_limit)
+            offset = _PositionD(*offset)
             int_im = Transform(int_im, jac=jac, offset=offset, gsparams=self._gsparams,
                                propagate_gsparams=self._propagate_gsparams)
             image = int_im.drawImage(image=image, **kwargs)
@@ -2040,6 +2088,9 @@ class ChromaticSum(ChromaticObject):
         from .sum import Add
         return Add([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
                    gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
+
+    def _shoot(self, photons, rng):
+        raise GalSimNotImplementedError("ChromaticSum cannot be used as a PhotonOp")
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Slightly optimized draw method for `ChromaticSum` instances.
@@ -2300,6 +2351,9 @@ class ChromaticConvolution(ChromaticObject):
         from .convolve import Convolve
         return Convolve([obj.evaluateAtWavelength(wave) for obj in self.obj_list],
                         gsparams=self._gsparams, propagate_gsparams=self._propagate_gsparams)
+
+    def _shoot(self, photons, rng):
+        raise GalSimNotImplementedError("ChromaticConvolution cannot be used as a PhotonOp")
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', iimult=None, **kwargs):
         """Optimized draw method for the `ChromaticConvolution` class.
@@ -2577,6 +2631,9 @@ class ChromaticDeconvolution(ChromaticObject):
         return Deconvolve(self._obj.evaluateAtWavelength(wave), gsparams=self.gsparams,
                           propagate_gsparams=self._propagate_gsparams)
 
+    def _shoot(self, photons, rng):
+        raise GalSimNotImplementedError("ChromaticDeconvolution cannot use method='phot'")
+
 
 class ChromaticAutoConvolution(ChromaticObject):
     """A special class for convolving a `ChromaticObject` with itself.
@@ -2666,6 +2723,9 @@ class ChromaticAutoConvolution(ChromaticObject):
         from .convolve import AutoConvolve
         return AutoConvolve(self._obj.evaluateAtWavelength(wave), self._real_space, self._gsparams,
                             self._propagate_gsparams)
+
+    def _shoot(self, photons, rng):
+        raise GalSimNotImplementedError("ChromaticAutoConvolution cannot be used as a PhotonOp")
 
 
 class ChromaticAutoCorrelation(ChromaticObject):
@@ -2761,6 +2821,9 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return AutoCorrelate(self._obj.evaluateAtWavelength(wave), self._real_space, self.gsparams,
                              self._propagate_gsparams)
 
+    def _shoot(self, photons, rng):
+        raise GalSimNotImplementedError("ChromaticAutoCorrelation cannot be used as a PhotonOp")
+
 
 class ChromaticFourierSqrtProfile(ChromaticObject):
     """A class for computing the Fourier-space square root of a `ChromaticObject`.
@@ -2853,6 +2916,9 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
         from .fouriersqrt import FourierSqrt
         return FourierSqrt(self._obj.evaluateAtWavelength(wave), self.gsparams,
                            self._propagate_gsparams)
+
+    def _shoot(self, photons, rng):
+        raise GalSimNotImplementedError("ChromaticFourierSqrtProfile cannot use method='phot'")
 
 
 class ChromaticOpticalPSF(ChromaticObject):
@@ -3029,6 +3095,10 @@ class ChromaticOpticalPSF(ChromaticObject):
             self._maxk = ret.maxk / wave_factor
             return ret
 
+    def _shoot(self, photons, rng):
+        raise GalSimNotImplementedError("not implemented yet.")
+
+
 class ChromaticAiry(ChromaticObject):
     """A subclass of `ChromaticObject` meant to represent chromatic Airy profiles.
 
@@ -3148,38 +3218,16 @@ class ChromaticAiry(ChromaticObject):
             gsparams=self.gsparams, **self.kwargs)
         return ret
 
-    def applyTo(self, photon_array, local_wcs=None, rng=None):
-        """Apply the ChromaticAiry profile as a convolution to an existing photon array.
-
-        This method allows instances of this class to duck type as a PhotonOp, so one can apply it
-        in a photon_ops list.
-
-        Parameters:
-            photon_array:   A `PhotonArray` to apply the operator to.
-            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
-                            bundle in case the operator needs this information.  [default: None]
-            rng:            A random number generator to use to effect the convolution.
-                            [default: None]
-        """
-        from .photon_array import PhotonArray
+    def _shoot(self, photons, rng):
         from .airy import Airy
-
-        if not photon_array.hasAllocatedWavelengths():
-            raise GalSimError("ChromaticAiry requires that wavelengths be set")
-
         # Start with the convolution at the reference wavelength
         obj = Airy(lam_over_diam=self.lam_over_diam, scale_unit=self.scale_unit,
                    gsparams=self.gsparams, **self.kwargs)
-        p1 = PhotonArray(len(photon_array))
-        obj = local_wcs.toImage(obj) if local_wcs is not None else obj
-        obj._shoot(p1, rng)
+        obj._shoot(photons, rng)
 
         # Now adjust the positions according to the wavelengths
-        factor = photon_array.wavelength / self.lam
-        p1.scaleXY(factor)
-
-        # Finally convolve with the adjusted values.
-        photon_array.convolve(p1, rng)
+        factor = photons.wavelength / self.lam
+        photons.scaleXY(factor)
 
 
 def _findWave(wave_list, wave):
