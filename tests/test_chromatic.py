@@ -2221,6 +2221,9 @@ def test_chromatic_invariant():
     do_pickle(chrom2)
     do_pickle(chrom3)
     do_pickle(galsim.ChromaticObject(gsobj))
+    p1 = galsim.PhotonArray(1)
+    p2 = galsim.PhotonArray(1)
+    p2.wavelength[:] = 500
 
     with assert_raises(TypeError):
         galsim.ChromaticObject(bulge_SED)
@@ -2282,6 +2285,8 @@ def test_chromatic_invariant():
     #do_pickle(chrom_sum_noSED)
     repr(chrom_sum_noSED)
     str(chrom_sum_noSED)
+    assert_raises(galsim.GalSimError, chrom_sum_noSED.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, chrom_sum_noSED.applyTo, p2)
 
     chrom_sum_SED = chrom + chrom  # also separable
     check_chromatic_invariant(chrom_sum_SED)
@@ -2294,6 +2299,8 @@ def test_chromatic_invariant():
     check_chromatic_invariant(chrom_sum_SED2)
     do_pickle(chrom_sum_SED2)
     assert not chrom_sum_SED2.separable
+    assert_raises(galsim.GalSimError, chrom_sum_SED.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, chrom_sum_SED.applyTo, p2)
 
     # ChromaticConvolution
     conv1 = galsim.Convolve(chrom, chrom_airy)  # SEDed
@@ -2306,6 +2313,10 @@ def test_chromatic_invariant():
     conv2 = galsim.Convolve(chrom_airy, chrom_opt)  # Non-SEDed
     check_chromatic_invariant(conv2)
     do_pickle(conv2)
+    assert_raises(galsim.GalSimError, conv1.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, conv1.applyTo, p2)
+    assert_raises(galsim.GalSimError, conv2.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, conv2.applyTo, p2)
 
     # ChromaticDeconvolution
     deconv = galsim.Deconvolve(chrom_airy)
@@ -2313,6 +2324,8 @@ def test_chromatic_invariant():
     #do_pickle(deconv)
     repr(deconv) # gratuitous coverage of repr until do_pickle works.
     str(deconv)
+    assert_raises(galsim.GalSimError, deconv.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, deconv.applyTo, p2)
 
     # ChromaticAutoConvolution
     autoconv1 = galsim.AutoConvolve(chrom_airy)
@@ -2320,6 +2333,8 @@ def test_chromatic_invariant():
     autoconv2 = galsim.AutoConvolve(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(autoconv2)
     do_pickle(autoconv1)
+    assert_raises(galsim.GalSimError, autoconv1.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, autoconv1.applyTo, p2)
 
     # ChromaticAutoCorrelation
     autocorr1 = galsim.AutoCorrelate(chrom_airy)
@@ -2327,6 +2342,8 @@ def test_chromatic_invariant():
     autocorr2 = galsim.AutoCorrelate(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(autocorr2)
     do_pickle(autocorr1)
+    assert_raises(galsim.GalSimError, autocorr1.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, autocorr1.applyTo, p2)
 
     # ChromaticFourierSqrt
     four1 = galsim.FourierSqrt(chrom_airy)
@@ -2336,6 +2353,8 @@ def test_chromatic_invariant():
     #do_pickle(four1)
     repr(four1) # gratuitous coverage of repr until do_pickle works.
     str(four1)
+    assert_raises(galsim.GalSimError, four1.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, four1.applyTo, p2)
 
     # And a few transforms too...
     # ChromaticTransformation
@@ -2372,6 +2391,8 @@ def test_chromatic_invariant():
     chrom_interp = chrom_airy.interpolate(waves=[400.0, 500.0, 600.0])
     check_chromatic_invariant(chrom_interp)
     do_pickle(chrom_interp)
+    assert_raises(galsim.GalSimError, chrom_interp.applyTo, p1)
+    assert_raises(galsim.GalSimNotImplementedError, chrom_interp.applyTo, p2)
 
 
 @timer
