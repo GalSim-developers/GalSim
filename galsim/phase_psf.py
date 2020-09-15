@@ -1482,7 +1482,7 @@ class PhaseScreenPSF(GSObject):
         else:
             return self._ii.negative_flux
 
-    @lazy_property
+    @property
     def _flux_per_photon(self):
         if self._geometric_shooting:
             return 1.
@@ -1971,6 +1971,10 @@ class OpticalPSF(GSObject):
     @property
     def _negative_flux(self):
         return self._psf.negative_flux
+
+    @property
+    def _flux_per_photon(self):
+        return self._psf._flux_per_photon
 
     @property
     def _max_sb(self):
