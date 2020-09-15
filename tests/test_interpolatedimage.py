@@ -1532,8 +1532,17 @@ def test_ii_shoot():
             rtol = 1.e-7
         assert np.isclose(added_flux, obj.flux, rtol=rtol)
         assert np.isclose(im.array.sum(), obj.flux, rtol=rtol)
-        photons2 = obj.makePhot(poisson_flux=False, rng=rng)
+        photons2 = obj.makePhot(poisson_flux=False, rng=rng.duplicate())
         assert photons2 == photons, "InterpolatedImage makePhot not equivalent to drawPhot"
+
+        # Can treat as a convolution of a delta function and put it in a photon_ops list.
+        delta = galsim.DeltaFunction(flux=flux)
+        psf = galsim.InterpolatedImage(image_in, x_interpolant=interp, scale=3.3, flux=1)
+        photons3 = delta.makePhot(poisson_flux=False, rng=rng.duplicate(), photon_ops=[psf],
+                                  n_photons=len(photons))
+        np.testing.assert_allclose(photons3.x, photons.x)
+        np.testing.assert_allclose(photons3.y, photons.y)
+        np.testing.assert_allclose(photons3.flux, photons.flux)
 
 
 @timer

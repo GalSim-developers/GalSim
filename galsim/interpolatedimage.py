@@ -678,6 +678,10 @@ class InterpolatedImage(GSObject):
     def _negative_flux(self):
         return self._sbp.getNegativeFlux()
 
+    @lazy_property
+    def _flux_per_photon(self):
+        return self._calculate_flux_per_photon()
+
     @property
     def _max_sb(self):
         return self._sbp.maxSB()
@@ -694,6 +698,7 @@ class InterpolatedImage(GSObject):
     def _shoot(self, photons, rng):
         with convert_cpp_errors():
             self._sbp.shoot(photons._pa, rng._rng)
+        photons.flux *= self._flux_per_photon
 
     @doc_inherit
     def _drawReal(self, image):
@@ -1030,6 +1035,10 @@ class InterpolatedKImage(GSObject):
     @property
     def _negative_flux(self):
         return self._sbp.getNegativeFlux()
+
+    @lazy_property
+    def _flux_per_photon(self):
+        return self._calculate_flux_per_photon()
 
     @doc_inherit
     def _kValue(self, kpos):

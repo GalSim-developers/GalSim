@@ -282,6 +282,10 @@ class Sum(GSObject):
         return np.sum(nflux_list)
 
     @lazy_property
+    def _flux_per_photon(self):
+        return self._calculate_flux_per_photon()
+
+    @lazy_property
     def _max_sb(self):
         sb_list = [obj.max_sb for obj in self.obj_list]
         return np.sum(sb_list)
