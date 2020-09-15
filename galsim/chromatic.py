@@ -3045,18 +3045,24 @@ class ChromaticOpticalPSF(ChromaticObject):
                     lam=wave, diam=self.diam,
                     aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
                     _force_stepk=self._stepk*wave_factor, _force_maxk=self._maxk*wave_factor,
-                    gsparams=self.gsparams, **self.kwargs)
+                    geometric_shooting=True, gsparams=self.gsparams, **self.kwargs)
         else:
             ret = OpticalPSF(
                     lam=wave, diam=self.diam,
                     aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
-                    gsparams=self.gsparams, **self.kwargs)
+                    geometric_shooting=True, gsparams=self.gsparams, **self.kwargs)
             self._stepk = ret.stepk / wave_factor
             self._maxk = ret.maxk / wave_factor
             return ret
 
     def _shoot(self, photons, rng):
-        raise GalSimNotImplementedError("not implemented yet.")
+        # Use the mean wavelength for the base profile.
+        mean_wave = np.mean(photons.wavelength)
+        obj = self.evaluateAtWavelength(mean_wave)
+        obj._shoot(photons, rng)
+
+        factor = photons.wavelength / mean_wave
+        photons.scaleXY(factor)
 
 
 class ChromaticAiry(ChromaticObject):
