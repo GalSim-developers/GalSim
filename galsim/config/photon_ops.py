@@ -176,7 +176,7 @@ class SimplePhotonOpBuilder(PhotonOpBuilder):
         """
         req, opt, single, takes_rng = get_cls_params(self.init_func)
         kwargs, safe = GetAllParams(config, base, req, opt, single)
-        if takes_rng:
+        if takes_rng:  # pragma: no cover  None of ours have this anymore.  But it's still allowed.
             kwargs['rng'] = GetRNG(config, base, logger, self.init_func.__name__)
         return kwargs
 

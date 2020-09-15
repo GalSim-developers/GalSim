@@ -239,6 +239,8 @@ def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True
     assert isinstance(prof.is_axisymmetric, bool)
     assert isinstance(prof.is_analytic_x, bool)
     assert isinstance(prof.is_analytic_k, bool)
+    assert np.isclose(prof.positive_flux - prof.negative_flux, prof.flux)
+    assert np.isclose(prof._flux_per_photon, prof.flux / (prof.positive_flux + prof.negative_flux))
 
     # When made with the same gsparams, it returns itself
     assert prof.withGSParams(prof.gsparams) is prof
