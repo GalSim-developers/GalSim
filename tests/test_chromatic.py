@@ -1934,8 +1934,8 @@ def test_ChromaticAiry():
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticAiry')
 
 @timer
-def test_ChromaticAiry_phot():
-    """Test photon shooting with a ChromaticAiry PSF
+def test_phot():
+    """Test photon shooting with various chromatic PSFs.
     """
     import time
 
@@ -1949,11 +1949,11 @@ def test_ChromaticAiry_phot():
     gal_achrom = galsim.Sersic(n=2.8, half_light_radius=0.03, flux=flux)
     gal = (gal_achrom * sed).withFlux(flux, bandpass=bandpass)
 
+    # 1. ChromaticAiry
     diam = 3.1 # meters
     obscuration = 0.11
-    psf = galsim.ChromaticAiry(lam=bandpass.effective_wavelength, diam=diam,
+    psf1 = galsim.ChromaticAiry(lam=bandpass.effective_wavelength, diam=diam,
                                obscuration=obscuration)
-
     # Do this first so we can see the real timing for photon shooting separate from the setup time.
     t0 = time.time()
     psf_achrom = galsim.Airy(lam=bandpass.effective_wavelength, diam=diam, obscuration=obscuration)
@@ -1964,73 +1964,88 @@ def test_ChromaticAiry_phot():
     # hlr = 0.04 arcsec for this combination.  So our galaxy needs to be ~this small for the
     # effects of changing the PSF to be important.  Even smaller is better.
 
-    # First draw with FFT
-    obj = galsim.Convolve(gal, psf)
-    pixel_scale = 0.01
-    im1 = galsim.ImageD(50, 50, scale=pixel_scale)
-    t0 = time.time()
-    obj.drawImage(bandpass, image=im1)
-    t1 = time.time()
-    print('fft time = ',t1-t0)
+    # 2. ChromaticAiry with wavelength-dependent transformation
+    psf2 = galsim.Transform(psf1,
+                            jac=lambda w: np.array([[1+0.1*(w/1000)**2, 0.1*(w-1000)/500],
+                                                    [-0.15*(w-1000)/500, 1-0.08*(w/1000)**2]]),
+                            offset=lambda w: np.array([1.e-4*(w-500), 1.e-4*(w-1000)]),
+                            flux_ratio=lambda w: w/1000)
 
-    # Now the direct photon shooting method
-    rng = galsim.BaseDeviate(1234)
-    t0 = time.time()
-    # This is the old way that photon shooting used to work.  The new way will be tested
-    # below.  But since it now uses photon_ops, we'll wait to test that last.
-    effective_psf = galsim.ChromaticConvolution._get_effective_prof(
-            psf*gal.SED, bandpass, iimult=None, integrator='trapezoidal', gsparams=psf.gsparams)
-    temp_obj = galsim.Convolve(gal_achrom/flux,effective_psf)
-    im2 = temp_obj.drawImage(image=im1.copy(), method='phot', rng=rng)
-    t1 = time.time()
-    print('old method phot time = ',t1-t0)
-    print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
-    np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=3.e-4)
+    # 3. Moffat with dimensionless SED
+    psf3 = galsim.Moffat(beta=2.5, fwhm=0.12)
+    psf3 = psf3 * galsim.SED('((wave-700)/700)**2', wave_type='nm', flux_type='1')
 
-    # Make sure we would notice if ChromaticAiry wasn't applying the wavelength scaling properly.
-    # Note: This test is why we're using such a crazy bandpass and sed here.  With a realistic
-    # SED and bandpass, the difference we're looking for is too subtle to see with only 10^6
-    # photons.
-    achrom = galsim.Convolve(gal_achrom, psf_achrom)
-    t0 = time.time()
-    im2b = achrom.drawImage(image=im1.copy(), method='phot', rng=rng)
-    t1 = time.time()
-    print('achrom phot time = ',t1-t0)
-    print('max diff/flux = ',np.max(np.abs(im1.array-im2b.array)/flux))
-    # This is about 1.5e-3.  So ~5x the tolerance we're using for the correct method.
-    with assert_raises(AssertionError):
-        np.testing.assert_allclose(im2b.array/flux, im1.array/flux, atol=3.e-4)
+    # 4. Moffat just pretending to be chromatic
+    psf4 = galsim.ChromaticObject(galsim.Moffat(beta=2.5, fwhm=0.12))
 
-    # Now using photon_ops with both wave_sampler and psf.
-    wave_sampler = galsim.WavelengthSampler(sed, bandpass)
-    t0 = time.time()
-    im3 = gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng,
-                               photon_ops=[wave_sampler, psf])
-    t1 = time.time()
-    print('wave_sampler time = ',t1-t0)
-    print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
-    np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=3.e-4)
+    for psf in [psf1, psf2, psf3, psf4]:
+        # First draw with FFT
+        obj = galsim.Convolve(gal, psf)
+        pixel_scale = 0.01
+        im1 = galsim.ImageD(50, 50, scale=pixel_scale)
+        t0 = time.time()
+        obj.drawImage(bandpass, image=im1)
+        t1 = time.time()
+        print('fft time = ',t1-t0)
 
-    # Error if wavelengths aren't set.
-    with assert_raises(galsim.GalSimError):
-        gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
+        # Now the direct photon shooting method
+        rng = galsim.BaseDeviate(1234)
+        t0 = time.time()
+        # This is the old way that photon shooting used to work.  The new way will be tested
+        # below.  But since it now uses photon_ops, we'll wait to test that last.
+        effective_psf = galsim.ChromaticConvolution._get_effective_prof(
+                psf*gal.SED, bandpass, iimult=None, integrator='trapezoidal', gsparams=psf.gsparams)
+        temp_obj = galsim.Convolve(gal_achrom/flux,effective_psf)
+        im2 = temp_obj.drawImage(image=im1.copy(), method='phot', rng=rng)
+        t1 = time.time()
+        print('old method phot time = ',t1-t0)
+        print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
+        np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=3.e-4)
 
-    # Finally, the chromatic drawImage function should handle the wavelength sampling for us.
-    # First do this with just the galaxy as the driver.
-    t0 = time.time()
-    im4 = gal.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
-    t1 = time.time()
-    print('auto wave time = ',t1-t0)
-    printval(im4, im1)
-    np.testing.assert_allclose(im4.array/flux, im1.array/flux, atol=3.e-4)
+        # Make sure we would notice if ChromaticAiry wasn't applying the wavelength scaling properly.
+        # Note: This test is why we're using such a crazy bandpass and sed here.  With a realistic
+        # SED and bandpass, the difference we're looking for is too subtle to see with only 10^6
+        # photons.
+        achrom = galsim.Convolve(gal_achrom, psf_achrom)
+        t0 = time.time()
+        im2b = achrom.drawImage(image=im1.copy(), method='phot', rng=rng)
+        t1 = time.time()
+        print('achrom phot time = ',t1-t0)
+        print('max diff/flux = ',np.max(np.abs(im1.array-im2b.array)/flux))
+        # This is about 1.5e-3.  So ~5x the tolerance we're using for the correct method.
+        with assert_raises(AssertionError):
+            np.testing.assert_allclose(im2b.array/flux, im1.array/flux, atol=3.e-4)
 
-    # Now let the ChromaticConvolution reorganize this for us.
-    t0 = time.time()
-    im5 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng)
-    t1 = time.time()
-    print('regular phot time = ',t1-t0)
-    print('max diff/flux = ',np.max(np.abs(im1.array-im5.array)/flux))
-    np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=3.e-4)
+        # Now using photon_ops with both wave_sampler and psf.
+        wave_sampler = galsim.WavelengthSampler(sed, bandpass)
+        t0 = time.time()
+        im3 = gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng,
+                                photon_ops=[wave_sampler, psf])
+        t1 = time.time()
+        print('wave_sampler time = ',t1-t0)
+        print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
+        np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=3.e-4)
+
+        # Error if wavelengths aren't set.
+        with assert_raises(galsim.GalSimError):
+            gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
+
+        # Finally, the chromatic drawImage function should handle the wavelength sampling for us.
+        # First do this with just the galaxy as the driver.
+        t0 = time.time()
+        im4 = gal.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
+        t1 = time.time()
+        print('auto wave time = ',t1-t0)
+        print('max diff/flux = ',np.max(np.abs(im1.array-im4.array)/flux))
+        np.testing.assert_allclose(im4.array/flux, im1.array/flux, atol=3.e-4)
+
+        # Now let the ChromaticConvolution reorganize this for us.
+        t0 = time.time()
+        im5 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng)
+        t1 = time.time()
+        print('regular phot time = ',t1-t0)
+        print('max diff/flux = ',np.max(np.abs(im1.array-im5.array)/flux))
+        np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=3.e-4)
 
 
 @timer
@@ -2703,6 +2718,7 @@ if __name__ == "__main__":
     test_interpolated_ChromaticObject()
     test_ChromaticOpticalPSF()
     test_ChromaticAiry()
+    test_phot()
     test_chromatic_fiducial_wavelength()
     test_chromatic_image_setup()
     test_convolution_of_spectral()
