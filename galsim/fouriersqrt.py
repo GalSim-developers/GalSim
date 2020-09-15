@@ -185,6 +185,10 @@ class FourierSqrtProfile(GSObject):
     def _negative_flux(self):
         return np.sqrt(self.orig_obj.negative_flux)
 
+    @lazy_property
+    def _flux_per_photon(self):
+        return self._calculate_flux_per_photon()
+
     @property
     def _max_sb(self):
         # In this case, we want the autoconvolution of this object to get back to the

@@ -482,6 +482,10 @@ class Transformation(GSObject):
     def _negative_flux(self):
         return self._flux_scaling * self._original.negative_flux
 
+    @lazy_property
+    def _flux_per_photon(self):
+        return self._calculate_flux_per_photon()
+
     @property
     def _max_sb(self):
         return self._amp_scaling * self._original.max_sb

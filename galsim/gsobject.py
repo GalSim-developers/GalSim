@@ -353,6 +353,19 @@ class GSObject(object):
         # The usual case.
         return 0.
 
+    @lazy_property
+    def _flux_per_photon(self):
+        # The usual case.
+        return 1.
+
+    def _calculate_flux_per_photon(self):
+        # If negative_flux is overriden, then _flux_per_photon should be overridden as well
+        # to return this calculation.
+        posflux = self.positive_flux
+        negflux = self.negative_flux
+        eta = negflux / (posflux + negflux)
+        return 1.-2.*eta
+
     @property
     def max_sb(self):
         """An estimate of the maximum surface brightness of the object.
@@ -2076,14 +2089,13 @@ class GSObject(object):
         flux = self.flux
         if flux == 0.0:
             return 0, 1.0
-        posflux = self.positive_flux
-        negflux = self.negative_flux
-        eta = negflux / (posflux + negflux)
-        eta_factor = 1.-2.*eta  # This is also the amount to scale each photon.
-        mod_flux = flux/(eta_factor*eta_factor)
 
-        # Use this for the factor by which to scale photon arrays.
-        g = eta_factor
+        # The _flux_per_photon property is (1-2eta)
+        # This factor will already be accounted for by the shoot function, so don't include
+        # that as part of our scaling here.  There may be other adjustments though, so g=1 here.
+        eta_factor = self._flux_per_photon
+        mod_flux = flux / (eta_factor * eta_factor)
+        g = 1.
 
         # If requested, let the target flux value vary as a Poisson deviate
         if poisson_flux:

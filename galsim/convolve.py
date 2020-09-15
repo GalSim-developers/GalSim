@@ -358,6 +358,10 @@ class Convolution(GSObject):
         return n
 
     @lazy_property
+    def _flux_per_photon(self):
+        return self._calculate_flux_per_photon()
+
+    @lazy_property
     def _max_sb(self):
         # This one is probably the least accurate of all the estimates of maxSB.
         # The calculation is based on the exact value for Gaussians.
@@ -590,6 +594,10 @@ class Deconvolution(GSObject):
     @lazy_property
     def _negative_flux(self):
         return 0. if self.orig_obj.negative_flux==0. else 1./self.orig_obj.negative_flux
+
+    @lazy_property
+    def _flux_per_photon(self):
+        return self._calculate_flux_per_photon()
 
     @lazy_property
     def _max_sb(self):
