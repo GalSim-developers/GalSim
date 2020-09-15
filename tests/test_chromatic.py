@@ -1978,7 +1978,23 @@ def test_phot():
     # 4. Moffat just pretending to be chromatic
     psf4 = galsim.ChromaticObject(galsim.Moffat(beta=2.5, fwhm=0.12))
 
-    for psf in [psf1, psf2, psf3, psf4]:
+    # 5. ChromaticOpticalPSF
+    aberrations = np.array([0,0,0,0, 0.008, -0.005, -0.005, -0.002])
+    nstruts = 0     # nstruts != 0 does significantly worse. I guess photon shooting doesn't
+                    # handle the struts all that well.
+    psf5 = galsim.ChromaticOpticalPSF(lam=bandpass.effective_wavelength, diam=diam,
+                                      aberrations=aberrations, obscuration=obscuration,
+                                      nstruts=nstruts)
+
+    for psf in [psf1, psf2, psf3, psf4, psf5]:
+        print('psf = ',psf)
+        atol = 3.e-4
+
+        # OpticalPSF does a little worse, even with only modest aberrations
+        # It improves with more photons though, so I think it's partly just noisier
+        # than the others.
+        if psf is psf5: atol = 5.e-4
+
         # First draw with FFT
         obj = galsim.Convolve(gal, psf)
         pixel_scale = 0.01
@@ -1987,6 +2003,7 @@ def test_phot():
         obj.drawImage(bandpass, image=im1)
         t1 = time.time()
         print('fft time = ',t1-t0)
+        print('im1.max,sum = ', im1.array.max(), im1.array.sum())
 
         # Now the direct photon shooting method
         rng = galsim.BaseDeviate(1234)
@@ -2000,21 +2017,25 @@ def test_phot():
         t1 = time.time()
         print('old method phot time = ',t1-t0)
         print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
-        np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=3.e-4)
+        print('im2.max,sum = ', im2.array.max(), im2.array.sum())
+        np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=atol)
 
-        # Make sure we would notice if ChromaticAiry wasn't applying the wavelength scaling properly.
-        # Note: This test is why we're using such a crazy bandpass and sed here.  With a realistic
-        # SED and bandpass, the difference we're looking for is too subtle to see with only 10^6
-        # photons.
-        achrom = galsim.Convolve(gal_achrom, psf_achrom)
-        t0 = time.time()
-        im2b = achrom.drawImage(image=im1.copy(), method='phot', rng=rng)
-        t1 = time.time()
-        print('achrom phot time = ',t1-t0)
-        print('max diff/flux = ',np.max(np.abs(im1.array-im2b.array)/flux))
-        # This is about 1.5e-3.  So ~5x the tolerance we're using for the correct method.
-        with assert_raises(AssertionError):
-            np.testing.assert_allclose(im2b.array/flux, im1.array/flux, atol=3.e-4)
+        if psf is not psf4:
+            # Make sure we would notice if psf wasn't applying the wavelength scaling properly.
+            # Note: This test is why we're using such a crazy bandpass and sed here.
+            # With a realistic SED and bandpass, the difference we're looking for is too subtle
+            # to see with only 10^6 photons.
+            psf_achrom = psf.evaluateAtWavelength(bandpass.effective_wavelength)
+            achrom = galsim.Convolve(gal_achrom, psf_achrom)
+            t0 = time.time()
+            im2b = achrom.drawImage(image=im1.copy(), method='phot', rng=rng)
+            t1 = time.time()
+            print('achrom phot time = ',t1-t0)
+            print('max diff/flux = ',np.max(np.abs(im1.array-im2b.array)/flux))
+            print('im2b.max,sum = ', im2b.array.max(), im2b.array.sum())
+            # This is about 1.5e-3.  So ~5x the tolerance we're using for the correct method.
+            with assert_raises(AssertionError):
+                np.testing.assert_allclose(im2b.array/flux, im1.array/flux, atol=atol)
 
         # Now using photon_ops with both wave_sampler and psf.
         wave_sampler = galsim.WavelengthSampler(sed, bandpass)
@@ -2024,7 +2045,8 @@ def test_phot():
         t1 = time.time()
         print('wave_sampler time = ',t1-t0)
         print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
-        np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=3.e-4)
+        print('im3.max,sum = ', im3.array.max(), im3.array.sum())
+        np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=atol)
 
         # Error if wavelengths aren't set.
         with assert_raises(galsim.GalSimError):
@@ -2037,7 +2059,8 @@ def test_phot():
         t1 = time.time()
         print('auto wave time = ',t1-t0)
         print('max diff/flux = ',np.max(np.abs(im1.array-im4.array)/flux))
-        np.testing.assert_allclose(im4.array/flux, im1.array/flux, atol=3.e-4)
+        print('im4.max,sum = ', im4.array.max(), im4.array.sum())
+        np.testing.assert_allclose(im4.array/flux, im1.array/flux, atol=atol)
 
         # Now let the ChromaticConvolution reorganize this for us.
         t0 = time.time()
@@ -2045,7 +2068,8 @@ def test_phot():
         t1 = time.time()
         print('regular phot time = ',t1-t0)
         print('max diff/flux = ',np.max(np.abs(im1.array-im5.array)/flux))
-        np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=3.e-4)
+        print('im5.max,sum = ', im5.array.max(), im5.array.sum())
+        np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=atol)
 
 
 @timer
