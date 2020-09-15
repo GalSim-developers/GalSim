@@ -562,8 +562,7 @@ class ChromaticObject(object):
         return self._obj.evaluateAtWavelength(wave)
 
     def _shoot(self, photons, rng):
-        self._obj.shoot(photons, rng)
-        photons.wavelength = self.SED.sampleWavelength(photons.size(), rng=rng)
+        self._obj._shoot(photons, rng)
 
     def applyTo(self, photon_array, local_wcs=None, rng=None):
         """Apply the chromatic profile as a convolution to an existing photon array.
