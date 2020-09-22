@@ -31,13 +31,12 @@ def _str_array(a):
     # Used by both LookupTable.__str__ and LookupTable2D.__str__
     # to write the x, f, etc. numpy arrays in an abbreviated form so they don't fill the
     # screen with numbers.
-    # The short form writes the whole array if it has at most 5 values,
-    # else just the first two and last two values in the array.
-    if len(a) <= 5:
-        return str(a.tolist())
-    else:
-        return "[{}, {}, ..., {}, {}]".format(a[0],a[1],a[-2],a[-1])
-
+    # 1. Write the whole array if it has at most 5 values,
+    # 2. Just write the first two and last two values in the array if longer.
+    # 3. linewidth defaults to 75, which adds annoying linebreaks here.
+    #    1000 should be big enough to mean "never".
+    with np.printoptions(threshold=5, edgeitems=2, linewidth=1000):
+        return repr(a)
 
 class LookupTable(object):
     """
@@ -1048,11 +1047,10 @@ class LookupTable2D(object):
             return dfdx, dfdy
 
     def __str__(self):
-        return ("galsim.LookupTable2D(x=%s, y=%s, "
-                "f=[%s,...,%s], interpolant=%r, edge_mode=%r)"%(
+        return "galsim.LookupTable2D(x=%s, y=%s, f=[%s,...,%s], interpolant=%r, edge_mode=%r)"%(
             _str_array(self.x), _str_array(self.y),
             _str_array(self.f[0]), _str_array(self.f[-1]),
-            self.interpolant, self.edge_mode))
+            self.interpolant, self.edge_mode)
 
     def __repr__(self):
         return ("galsim.LookupTable2D(x=array(%r), y=array(%r), "
