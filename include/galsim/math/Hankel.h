@@ -26,9 +26,9 @@ namespace galsim {
 namespace math {
 
     double hankel_trunc(const std::function<double(double)> f, double k, double nu, double maxr,
-                        double relerr=1.e-8, double abserr=1.e-15, int nzeros=10);
+                        double relerr=1.e-6, double abserr=1.e-12, int nzeros=10);
     double hankel_inf(const std::function<double(double)> f, double k, double nu,
-                      double relerr=1.e-8, double abserr=1.e-15, int nzeros=10);
+                      double relerr=1.e-6, double abserr=1.e-12, int nzeros=10);
 
 }
 }
