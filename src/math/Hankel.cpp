@@ -114,17 +114,17 @@ namespace math {
             dbg<<"Done setWeightsBatch: _N = "<<_N<<std::endl;
         }
 
-        inline double psi(double t)
+        double psi(double t)
         {
             return t * std::tanh(M_PI/2. * std::sinh(t));
         }
 
-        inline double SQR(double x)
+        double SQR(double x)
         {
             return x*x;
         }
 
-        inline double dpsi(double t)
+        double dpsi(double t)
         {
             return t * M_PI/2. * std::cosh(t) / SQR(std::cosh(M_PI/2. * std::sinh(t))) + psi(t)/t;
         }
