@@ -211,9 +211,9 @@ def test_draw_add_commutativity():
     assert_raises(ValueError, chromatic_final.drawKImage, bandpass,
                   integrator='midp') # minor misspelling
     assert_raises(TypeError, chromatic_final.drawImage, bandpass, method='no_pixel',
-                  integrator=galsim.integ.midpt)
+                  integrator=galsim.integ.midptRule)
     assert_raises(TypeError, chromatic_final.drawKImage, bandpass,
-                  integrator=galsim.integ.midpt)
+                  integrator=galsim.integ.midptRule)
 
     # Can't use base class directly.
     assert_raises(NotImplementedError, galsim.integ.ImageIntegrator)
@@ -546,7 +546,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
-    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midpt)
+    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
     do_pickle(PSF)
 
     # Check option to not use exact SED
@@ -565,7 +565,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
-    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midpt)
+    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
     do_pickle(PSF)
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
