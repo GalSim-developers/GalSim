@@ -2748,4 +2748,4 @@ if __name__ == "__main__":
     test_convolution_of_spectral()
     test_chromatic_invariant()
     test_ne()
-    test_atRedshift()
+    test_atredshift()
