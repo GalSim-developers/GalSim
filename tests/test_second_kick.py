@@ -280,7 +280,9 @@ def test_sk_shoot():
     delta = galsim.DeltaFunction(flux=1.e4)
     psf = galsim.SecondKick(lam=500, r0=0.2, diam=4)
     photons3 = delta.makePhot(poisson_flux=False, rng=rng.duplicate(), photon_ops=[psf])
-    assert photons3 == photons, "Using SecondKick in photon_ops not equivalent to drawPhot"
+    np.testing.assert_allclose(photons3.x, photons.x)
+    np.testing.assert_allclose(photons3.y, photons.y)
+    np.testing.assert_allclose(photons3.flux, photons.flux)
 
 
 @timer
