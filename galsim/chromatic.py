@@ -422,7 +422,6 @@ class ChromaticObject(object):
         Returns:
             the drawn `Image`.
         """
-        from .table import LookupTable
         from .photon_array import WavelengthSampler
 
         # Store the last bandpass used and any extra kwargs.
