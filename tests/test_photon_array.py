@@ -349,6 +349,12 @@ def test_wavelength_sampler():
                                rtol=0, atol=0.2,  # 2 Angstrom accuracy is pretty good
                                err_msg="Mean sampled wavelength not close to effective_wavelength")
 
+    # If the photon array already has wavelengths set, then it proceeds, but gives a warning.
+    with assert_warns(galsim.GalSimWarning):
+        sampler2.applyTo(photon_array2, rng=rng)
+    np.testing.assert_allclose(np.mean(photon_array2.wavelength),
+                               bandpass.effective_wavelength, rtol=0, atol=0.2)
+
     # Test that using this as a surface op works properly.
 
     # First do the shooting and clipping manually.
@@ -564,7 +570,7 @@ def test_dcr():
 
     # Use ChromaticAtmosphere in photon_ops
     im3 = galsim.ImageD(50, 50, scale=pixel_scale)
-    photon_ops = [wave_sampler, chrom_PSF]
+    photon_ops = [chrom_PSF]
     star.drawImage(bandpass, image=im3, method='phot', rng=rng, photon_ops=photon_ops)
     im3 /= flux
     printval(im3, im1, show=False)
@@ -654,7 +660,7 @@ def test_dcr():
 
     # Use ChromaticAtmosphere in photon_ops
     im7 = galsim.ImageD(50, 50, wcs=wcs)
-    photon_ops = [wave_sampler, chrom_PSF]
+    photon_ops = [chrom_PSF]
     star.drawImage(bandpass, image=im7, method='phot', rng=rng, photon_ops=photon_ops)
     im7 /= flux
     printval(im7, im6, show=False)
@@ -663,12 +669,22 @@ def test_dcr():
 
     # ChromaticAtmosphere in photon_ops is almost trivially equal to base_psf and dcr in photon_ops.
     im8 = galsim.ImageD(50, 50, wcs=wcs)
-    photon_ops = [wave_sampler, base_PSF, dcr]
+    photon_ops = [base_PSF, dcr]
     star.drawImage(bandpass, image=im8, method='phot', rng=rng, photon_ops=photon_ops)
     im8 /= flux
     printval(im8, im6, show=False)
     np.testing.assert_almost_equal(im8.array, im6.array, decimal=3,
                                    err_msg="base_psf + dcr in photon_ops didn't match")
+
+    # Including the wavelength sampler with chromatic drawing is redundant.
+    # This raises a warning, not an error.
+    photon_ops = [wave_sampler, base_PSF, dcr]
+    with assert_warns(galsim.GalSimWarning):
+        star.drawImage(bandpass, image=im8, method='phot', rng=rng, photon_ops=photon_ops)
+    im8 /= flux
+    printval(im8, im6, show=False)
+    np.testing.assert_almost_equal(im8.array, im6.array, decimal=3,
+                                   err_msg="wave_sampler,base_psf,dcr in photon_ops didn't match")
 
     # Also check invalid parameters
     zenith_coord = galsim.CelestialCoord(13.54 * galsim.hours, lsst_lat)

@@ -26,7 +26,7 @@ from .celestial import CelestialCoord
 from .utilities import lazy_property
 from .angle import radians, arcsec, Angle, AngleUnit
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
-from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
+from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
 
 # Add on more methods in the python layer
 
@@ -524,6 +524,9 @@ class WavelengthSampler(PhotonOp):
             rng:            A random number generator to use if needed. [default: None]
         """
         rng = rng if rng is not None else self.rng
+        if photon_array.hasAllocatedWavelengths():
+            galsim_warn("Wavelengths already set before applying WavelengthSampler. "
+                        "This is most likely an error.")
         photon_array.wavelength = self.sed.sampleWavelength(
                 photon_array.size(), self.bandpass, rng=rng, npoints=self.npoints)
 
