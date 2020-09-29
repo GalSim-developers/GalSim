@@ -2031,26 +2031,28 @@ def test_phot():
 
     # 3. Moffat with dimensionless SED
     psf3 = galsim.Moffat(beta=2.5, fwhm=0.12)
-    psf3 = psf3 * galsim.SED('((wave-700)/700)**2', wave_type='nm', flux_type='1')
+    psf3 = psf3 * galsim.SED('((wave-500)/500)**3', wave_type='nm', flux_type='1')
 
     # 4. Moffat just pretending to be chromatic
     psf4 = galsim.ChromaticObject(galsim.Moffat(beta=2.5, fwhm=0.12))
 
-    # 5. ChromaticOpticalPSF with geometric shooting.
+    # 5. ChromaticOpticalPSF with geometric shooting
     aberrations = np.array([0,0,0,0, 0.008, -0.005, -0.005, -0.002])
-    nstruts = 0     # nstruts != 0 does significantly worse when using geometric_shooting=True
     psf5 = galsim.ChromaticOpticalPSF(lam=bandpass.effective_wavelength, diam=diam,
                                       aberrations=aberrations, obscuration=obscuration,
-                                      geometric_shooting=True, nstruts=nstruts)
+                                      geometric_shooting=True)
 
-    for psf in [psf1, psf2, psf3, psf4, psf5]:
+    # 6. ChromaticOpticalPSF without geometric shooting
+    # Use struts this time.  (geometric_shooting=True doesn't handle struts well.)
+    aberrations = np.array([0,0,0,0, 0.03, -0.05, -0.05, -0.02, 0.04, 0.01, -0.02, -0.03, 0.02])
+    psf6 = galsim.ChromaticOpticalPSF(lam=bandpass.effective_wavelength, diam=diam,
+                                      aberrations=aberrations, obscuration=obscuration,
+                                      nstruts=6, geometric_shooting=False)
+
+    for psf in [psf1, psf2, psf3, psf4, psf5, psf6]:
         print('psf = ',psf)
-        atol = 3.e-4
-
-        # OpticalPSF does a little worse, even with only modest aberrations
-        # It improves with more photons though, so I think it's partly just noisier
-        # than the others.
-        if psf is psf5: atol = 5.e-4
+        atol = 4.e-4
+        rng = galsim.BaseDeviate(1234)
 
         # First draw with FFT
         obj = galsim.Convolve(gal, psf)
@@ -2062,48 +2064,48 @@ def test_phot():
         print('fft time = ',t1-t0)
         print('im1.max,sum = ', im1.array.max(), im1.array.sum())
 
-        # Now the direct photon shooting method
-        rng = galsim.BaseDeviate(1234)
-        t0 = time.time()
-        # This is the old way that photon shooting used to work.  The new way will be tested
-        # below.  But since it now uses photon_ops, we'll wait to test that last.
-        effective_psf = galsim.ChromaticConvolution._get_effective_prof(
-                psf*gal.SED, bandpass, iimult=None, integrator='trapezoidal', gsparams=psf.gsparams)
-        temp_obj = galsim.Convolve(gal_achrom/flux,effective_psf)
-        im2 = temp_obj.drawImage(image=im1.copy(), method='phot', rng=rng)
-        t1 = time.time()
-        print('old method phot time = ',t1-t0)
-        print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
-        print('im2.max,sum = ', im2.array.max(), im2.array.sum())
-        np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=atol)
-
-        if psf is not psf4:
-            # Make sure we would notice if psf wasn't applying the wavelength scaling properly.
-            # Note: This test is why we're using such a crazy bandpass and sed here.
-            # With a realistic SED and bandpass, the difference we're looking for is too subtle
-            # to see with only 10^6 photons.
-            psf_achrom = psf.evaluateAtWavelength(bandpass.effective_wavelength)
-            achrom = galsim.Convolve(gal_achrom, psf_achrom)
+        if __name__ == '__main__':
+            # Now the direct photon shooting method
             t0 = time.time()
-            im2b = achrom.drawImage(image=im1.copy(), method='phot', rng=rng)
+            # This is the old way that photon shooting used to work.  The new way will be tested
+            # below.  But since it now uses photon_ops, we'll wait to test that last.
+            effective_psf = galsim.ChromaticConvolution._get_effective_prof(
+                    psf*gal.SED, bandpass, integrator='trapezoidal', gsparams=psf.gsparams)
+            temp_obj = galsim.Convolve(gal_achrom/flux,effective_psf)
+            im2 = temp_obj.drawImage(image=im1.copy(), method='phot', rng=rng)
             t1 = time.time()
-            print('achrom phot time = ',t1-t0)
-            print('max diff/flux = ',np.max(np.abs(im1.array-im2b.array)/flux))
-            print('im2b.max,sum = ', im2b.array.max(), im2b.array.sum())
-            # This is about 1.5e-3.  So ~5x the tolerance we're using for the correct method.
-            with assert_raises(AssertionError):
-                np.testing.assert_allclose(im2b.array/flux, im1.array/flux, atol=atol)
+            print('old method phot time = ',t1-t0)
+            print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
+            print('im2.max,sum = ', im2.array.max(), im2.array.sum())
+            np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=atol)
 
-        # Now using photon_ops with both wave_sampler and psf.
-        wave_sampler = galsim.WavelengthSampler(sed, bandpass)
-        t0 = time.time()
-        im3 = gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng,
-                                photon_ops=[wave_sampler, psf])
-        t1 = time.time()
-        print('wave_sampler time = ',t1-t0)
-        print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
-        print('im3.max,sum = ', im3.array.max(), im3.array.sum())
-        np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=atol)
+            if psf is not psf4:
+                # Make sure we would notice if psf wasn't applying the wavelength scaling properly.
+                # Note: This test is why we're using such a crazy bandpass and sed here.
+                # With a realistic SED and bandpass, the difference we're looking for is too subtle
+                # to see with only 10^6 photons.
+                psf_achrom = psf.evaluateAtWavelength(bandpass.effective_wavelength)
+                achrom = galsim.Convolve(gal_achrom, psf_achrom)
+                t0 = time.time()
+                im2b = achrom.drawImage(image=im1.copy(), method='phot', rng=rng)
+                t1 = time.time()
+                print('achrom phot time = ',t1-t0)
+                print('max diff/flux = ',np.max(np.abs(im1.array-im2b.array)/flux))
+                print('im2b.max,sum = ', im2b.array.max(), im2b.array.sum())
+                # This is about 1.5e-3.  So ~5x the tolerance we're using for the correct method.
+                with assert_raises(AssertionError):
+                    np.testing.assert_allclose(im2b.array/flux, im1.array/flux, atol=atol)
+
+            # Now using photon_ops with both wave_sampler and psf.
+            wave_sampler = galsim.WavelengthSampler(sed, bandpass)
+            t0 = time.time()
+            im3 = gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng,
+                                    photon_ops=[wave_sampler, psf])
+            t1 = time.time()
+            print('wave_sampler time = ',t1-t0)
+            print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
+            print('im3.max,sum = ', im3.array.max(), im3.array.sum())
+            np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=atol)
 
         # Error if wavelengths aren't set.
         with assert_raises(galsim.GalSimError):
@@ -2127,6 +2129,11 @@ def test_phot():
         print('max diff/flux = ',np.max(np.abs(im1.array-im5.array)/flux))
         print('im5.max,sum = ', im5.array.max(), im5.array.sum())
         np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=atol)
+
+        # Check that n_photons=1 doesn't do something bad, like produce NaNs.
+        im6 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng, n_photons=1)
+        print('im6.sum = ',im6.array.sum())
+        assert im6.array.sum() >= 0
 
 
 @timer
