@@ -3142,14 +3142,14 @@ class ChromaticOpticalPSF(ChromaticObject):
             prof1._shoot(temp1, rng)
             prof2._shoot(temp2, rng)
             prof3._shoot(temp3, rng)
-            photons.x[use_p1] = temp1.x
-            photons.y[use_p1] = temp1.y
+            photons.x[use_p1] = temp1.x * (w[use_p1] / wave1)
+            photons.y[use_p1] = temp1.y * (w[use_p1] / wave1)
             photons.flux[use_p1] = temp1.flux * (len(temp1)/len(photons))
-            photons.x[use_p2] = temp2.x
-            photons.y[use_p2] = temp2.y
+            photons.x[use_p2] = temp2.x * (w[use_p2] / wave2)
+            photons.y[use_p2] = temp2.y * (w[use_p2] / wave2)
             photons.flux[use_p2] = temp2.flux * (len(temp2)/len(photons))
-            photons.x[use_p3] = temp3.x
-            photons.y[use_p3] = temp3.y
+            photons.x[use_p3] = temp3.x * (w[use_p3] / wave3)
+            photons.y[use_p3] = temp3.y * (w[use_p3] / wave3)
             photons.flux[use_p3] = temp3.flux * (len(temp3)/len(photons))
 
 
