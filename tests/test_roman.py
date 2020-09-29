@@ -843,6 +843,7 @@ def test_roman_psf_wcs():
 
     np.testing.assert_allclose(im_wcs.array, im_scale.array)
 
+
 if __name__ == "__main__":
     #import cProfile, pstats
     #pr = cProfile.Profile()
