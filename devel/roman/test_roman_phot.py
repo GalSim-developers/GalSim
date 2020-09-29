@@ -73,5 +73,20 @@ def test_roman_phot():
     print('im2.max,sum = ', im2.array.max(), im2.array.sum())
     np.testing.assert_allclose(im2.array/flux, im1.array/flux, atol=1e-3)
 
+    # And now with interpolation
+    t0 = time.time()
+    psf = galsim.roman.getPSF(SCA=5, bandpass='J129', pupil_bin=8, SCA_pos=image_pos, wcs=wcs,
+                              n_waves=5)
+    t1 = time.time()
+    print('create interpolated psf with 5 waves time = ',t1-t0)
+    obj = galsim.Convolve(gal, psf)
+    t0 = time.time()
+    im3 = obj.drawImage(bandpass, wcs=wcs, method='phot', rng=rng, nx=50, ny=50, center=image_pos)
+    t1 = time.time()
+    im3.write('im3.fits')
+    print('n_waves=5 phot time = ',t1-t0)
+    print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
+    print('im3.max,sum = ', im3.array.max(), im3.array.sum())
+    np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=1e-3)
 
 test_roman_phot()
