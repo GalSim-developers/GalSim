@@ -1149,28 +1149,28 @@ class InterpolatedChromaticObject(ChromaticObject):
     def _build_objs(self):
         # Make the objects between which we are going to interpolate.  Note that these do not have
         # to be saved for later, unlike the images.
-        objs = [ self.deinterpolated.evaluateAtWavelength(wave) for wave in self.waves ]
+        self._objs = [ self.deinterpolated.evaluateAtWavelength(wave) for wave in self.waves ]
 
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
         # array of images that is being stored.
-        nyquist_scale_vals = [ obj.nyquist_scale for obj in objs ]
+        nyquist_scale_vals = [ obj.nyquist_scale for obj in self._objs ]
         scale = np.min(nyquist_scale_vals) / self.oversample
 
         # Find the suggested image size for each object given the choice of scale, and use the
         # maximum just to be safe.
-        possible_im_sizes = [ obj.getGoodImageSize(scale) for obj in objs ]
+        possible_im_sizes = [ obj.getGoodImageSize(scale) for obj in self._objs ]
         im_size = np.max(possible_im_sizes)
 
         # Find the stepk and maxk values for each object.  These will be used later on, so that we
         # can force these values when instantiating InterpolatedImages before drawing.
-        self.stepk_vals = np.array([ obj.stepk for obj in objs ])
-        self.maxk_vals = np.array([ obj.maxk for obj in objs ])
+        self.stepk_vals = np.array([ obj.stepk for obj in self._objs ])
+        self.maxk_vals = np.array([ obj.maxk for obj in self._objs ])
 
         # Finally, now that we have an image scale and size, draw all the images.  Note that
         # `no_pixel` is used (we want the object on its own, without a pixel response).
         self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel')
-                     for obj in objs ]
-        self.fluxes = [ obj.flux for obj in objs ]
+                     for obj in self._objs ]
+        self.fluxes = [ obj.flux for obj in self._objs ]
 
     @property
     def gsparams(self):
@@ -1224,9 +1224,9 @@ class InterpolatedChromaticObject(ChromaticObject):
             an `Image` of the object at the given wavelength.
         """
         # First, some wavelength-related sanity checks.
-        if wave < np.min(self.waves) or wave > np.max(self.waves):
+        if wave < self.waves[0] or wave > self.waves[-1]:
             raise GalSimRangeError("Requested wavelength is outside the allowed range.",
-                                   wave, np.min(self.waves), np.max(self.waves))
+                                   wave, self.waves[0], self.waves[-1])
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
@@ -1260,7 +1260,48 @@ class InterpolatedChromaticObject(ChromaticObject):
         return InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
 
     def _shoot(self, photons, rng):
-        raise GalSimNotImplementedError("InterpolatedChromaticObject cannot be used as a PhotonOp")
+        from .photon_array import PhotonArray
+        from .random import UniformDeviate
+
+        w = photons.wavelength
+        if np.any((w < self.waves[0]) | (w > self.waves[-1])):
+            raise GalSimRangeError("Shooting photons outside the interpolated wave_list",
+                                   wave_list, self.waves[0], self.waves[-1])
+
+        k = np.searchsorted(self.waves, w)
+        k[k==0] = 1  # if k == 0, then w == min(waves). Using k=1 instead is fine for this.
+        assert np.all(k > 0)
+        assert np.all(k < len(self.waves))
+
+        # For each w, these are the wavelengthat that bracket w:
+        w0 = self.waves[k-1]
+        w1 = self.waves[k]
+        assert np.all(w0 < w)
+        assert np.all(w <= w1)
+
+        # If we could get away with averaging photons shot at each wavelength,
+        # these would be relative fractions.  So e.g. x = x0 f0 + x1 f1 would be the
+        # right weighted average to use.
+        f0 = (w1-w) / (w1-w0)
+        #f1 = (w-w0) / (w1-w0)  (We don't need this quantity below.)
+
+        # Instead of averaging these, if the profiles aren't _too_ different from each other,
+        # we can instead always pick one or the other, but probablistically according to the
+        # fraction by which we would have weighted the photon in the average.
+        u = np.empty(len(photons))
+        UniformDeviate(rng).generate(u)
+        use_k = k - (u<f0).astype(int)
+
+        # Draw photons from the saved profiles according to when we have selected to use each one.
+        for kk, ww in enumerate(self.waves):
+            use = use_k == kk
+            temp = PhotonArray(np.sum(use))
+            self._objs[kk]._shoot(temp, rng)
+            photons.x[use] = temp.x
+            photons.y[use] = temp.y
+            # It will have tried to shoot the right total flux.  But that's not correct.
+            # Rescale it down by the fraction of the total flux we actually want in this set.
+            photons.flux[use] = temp.flux * (len(temp)/len(photons))
 
     def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
@@ -1295,12 +1336,11 @@ class InterpolatedChromaticObject(ChromaticObject):
             wave_objs += [_flux_ratio]
         wave_list, _, _ = utilities.combine_wave_list(wave_objs)
 
-        if ( np.min(wave_list) < np.min(self.waves)
-             or np.max(wave_list) > np.max(self.waves) ):  # pragma: no cover
+        if np.any((wave_list < self.waves[0]) | (wave_list > self.waves[-1])):  # pragma: no cover
             # MJ: I'm pretty sure it's impossible to hit this.
             #     But just in case I'm wrong, I'm leaving it here but with pragma: no cover.
             raise GalSimRangeError("Requested wavelength is outside the allowed range.",
-                                   wave_list, np.min(self.waves), np.max(self.waves))
+                                   wave_list, self.waves[0], self.waves[-1])
 
         # weights are the weights to use at each of the given wavelengths for the integration.
         weights = rule.calculateWeights(wave_list, bandpass)

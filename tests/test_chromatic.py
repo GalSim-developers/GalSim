@@ -2045,7 +2045,10 @@ def test_phot():
                                       aberrations=aberrations, obscuration=obscuration,
                                       nstruts=6, geometric_shooting=False)
 
-    for psf in [psf1, psf2, psf3, psf4, psf5, psf6]:
+    # 7. InterpolatedChromaticObject
+    psf7 = psf6.interpolate(waves=[500, 700, 1000])
+
+    for psf in [psf1, psf2, psf3, psf4, psf5, psf6, psf7]:
         print('psf = ',psf)
         atol = 3.e-4
         if psf in [psf5, psf6]:
@@ -2134,9 +2137,10 @@ def test_phot():
         np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=atol)
 
         # Check that n_photons=1 doesn't do something bad, like produce NaNs.
-        im6 = obj.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng, n_photons=1)
-        print('im6.sum = ',im6.array.sum())
-        assert im6.array.sum() >= 0
+        (obj/flux).drawImage(bandpass, image=im5, method='phot', rng=rng, n_photons=1,
+                             add_to_image=True)
+        print('im5.max,sum => ', im5.array.max(), im5.array.sum())
+        np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=atol)
 
 
 @timer
