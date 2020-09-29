@@ -2354,6 +2354,7 @@ class ChromaticConvolution(ChromaticObject):
             the drawn `Image`.
         """
         from .convolve import Convolve
+        from .random import BaseDeviate
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
@@ -2448,7 +2449,18 @@ class ChromaticConvolution(ChromaticObject):
             assert len(gals) == 1  # Should have been checked by constructor.
             gal = gals[0]
             kwargs['photon_ops'] = psfs + kwargs.get('photon_ops', [])
-            return gal.drawImage(bandpass, image=image, integrator=integrator, **kwargs)
+
+            # Need to calculate n_photons now using the fiducial profile, not gal, in case the
+            # PSF has an interpolated image (e.g. OpticalPSF) which needs more photons.
+            flux = self.calculateFlux(bandpass)
+            prof1 = prof0.withFlux(flux)
+            n_photons = kwargs.pop('n_photons', 0)
+            poisson_flux = kwargs.pop('poisson_flux', n_photons == 0.)
+            max_extra_noise = kwargs.pop('max_extra_noise', 0.)
+            rng = BaseDeviate(kwargs.get('rng', None))
+            n_photons, _ = prof1._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, rng)
+            return gal.drawImage(bandpass, image=image, integrator=integrator,
+                                 n_photons=n_photons, **kwargs)
 
         # Separate convolutants into a Convolution of inseparable profiles multiplied by the
         # wavelength-dependent normalization of separable profiles, and the achromatic part of
