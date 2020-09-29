@@ -513,7 +513,11 @@ def test_monochromatic_sed():
     nstruts = 5
     aberrations = np.array([0,0,0,0, 0.02, -0.05, -0.15, -0.02, 0.13, 0.06, -0.09, 0.11])
 
-    for wave in [515, 690, 900]:
+    if __name__ == '__main__':
+        wave_list = [515, 690, 900]
+    else:
+        wave_list = [515]
+    for wave in wave_list:
         # First do the achromatic version at the given wavelength.
         psf_achrom = galsim.OpticalPSF(lam=wave, diam=diam,
                                        aberrations=aberrations, obscuration=obscuration,
@@ -540,6 +544,17 @@ def test_monochromatic_sed():
         print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
         np.testing.assert_allclose(im2.array/flux, im1.array/flux, rtol=1.e-4, atol=1.e-5)
 
+        # Now achromatic with phot
+        im3 = obj_achrom.drawImage(image=im1.copy(), method='phot', rng=rng)
+        print('im3.max,sum = ', im3.array.max(), im3.array.sum())
+        print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
+        np.testing.assert_allclose(im3.array/flux, im1.array/flux, atol=3.e-4)
+
+        # Finally, chromatic with phot
+        im4 = obj_chrom.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng)
+        print('im4.max,sum = ', im4.array.max(), im4.array.sum())
+        print('max diff/flux = ',np.max(np.abs(im1.array-im4.array)/flux))
+        np.testing.assert_allclose(im4.array/flux, im1.array/flux, atol=3.e-4)
 
 @timer
 def test_chromatic_flux():
