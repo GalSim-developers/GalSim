@@ -3080,13 +3080,77 @@ class ChromaticOpticalPSF(ChromaticObject):
             return ret
 
     def _shoot(self, photons, rng):
-        # Use the mean wavelength for the base profile.
-        mean_wave = np.mean(photons.wavelength)
-        obj = self.evaluateAtWavelength(mean_wave)
-        obj._shoot(photons, rng)
+        from .photon_array import PhotonArray
+        from .random import UniformDeviate
 
-        factor = photons.wavelength / mean_wave
-        photons.scaleXY(factor)
+        if self.kwargs.get('geometric_shooting',False):
+            # In the geometric shooting approximation, the lambda factors out, and this
+            # becomes the same kind of calculation we did for ChromaticAiry.
+            # Use the mean wavelength for the base profile.
+            mean_wave = np.mean(photons.wavelength)
+            obj = self.evaluateAtWavelength(mean_wave)
+            obj._shoot(photons, rng)
+            factor = photons.wavelength / mean_wave
+            photons.scaleXY(factor)
+        else:
+            # When not using geometric shooting, the following isn't exact.
+            # The exact method would involve doing the fourier transform for each wavelength
+            # in the photon list.  Obviously, that's not tenable.
+            # So instead, we shoot with the same random seed for 3 different profiles:
+            # The minimum wavelength, the mean, and the maximum.
+            # Then interpolate between the results for each photon.
+            # This should (hopefully!) be good enough for most use cases if the bandpass
+            # isn't extremely wide and the wavelength dependence is modest over the range.
+
+            wave1 = np.min(photons.wavelength)
+            wave2 = np.mean(photons.wavelength)
+            wave3 = np.max(photons.wavelength)
+
+            prof1 = self.evaluateAtWavelength(wave1)
+            if wave1 == wave3:
+                # Interjection at this point -- if min=mean=max, then this is easy.
+                return prof1._shoot(photons, rng)
+            else:
+                # Otherwise we're ok dividing by wave2-wave1 and wave3-wave2 below.
+                assert wave2 != wave1
+                assert wave3 != wave2
+            prof2 = self.evaluateAtWavelength(wave2)
+            prof3 = self.evaluateAtWavelength(wave3)
+            # For each photon, shoot using one of these profiles according to the given
+            # wavelength.
+            # For wavelenghts with w1 < w < w2, select from prof1 or prof2 with probabilities
+            #     P(use prof1) = (w2-w)/(w2-w1)
+            #     P(use prof2) = (w-w1)/(w2-w1)
+            # Likewise when w2 < w < w3:
+            #     P(use prof2) = (w3-w)/(w3-w2)
+            #     P(use prof3) = (w-w2)/(w3-w2)
+            u = np.empty(len(photons))
+            UniformDeviate(rng).generate(u)
+            w = photons.wavelength
+            use_p1 = (wave1 <= w) & (w < wave2) & (u <= (wave2-w)/(wave2-wave1))
+            use_p2 = (wave1 <= w) & (w < wave2) & (u > (wave2-w)/(wave2-wave1))
+            use_p2 |= (wave2 <= w) & (w <= wave3) & (u <= (wave3-w)/(wave3-wave2))
+            use_p3 = (wave2 <= w) & (w <= wave3) & (u > (wave3-w)/(wave3-wave2))
+            assert np.all(use_p1 | use_p2 | use_p3)
+            assert not np.any(use_p1 & use_p2)
+            assert not np.any(use_p2 & use_p3)
+            assert not np.any(use_p1 & use_p3)
+
+            temp1 = PhotonArray(np.sum(use_p1))
+            temp2 = PhotonArray(np.sum(use_p2))
+            temp3 = PhotonArray(np.sum(use_p3))
+            prof1._shoot(temp1, rng)
+            prof2._shoot(temp2, rng)
+            prof3._shoot(temp3, rng)
+            photons.x[use_p1] = temp1.x
+            photons.y[use_p1] = temp1.y
+            photons.flux[use_p1] = temp1.flux * (len(temp1)/len(photons))
+            photons.x[use_p2] = temp2.x
+            photons.y[use_p2] = temp2.y
+            photons.flux[use_p2] = temp2.flux * (len(temp2)/len(photons))
+            photons.x[use_p3] = temp3.x
+            photons.y[use_p3] = temp3.y
+            photons.flux[use_p3] = temp3.flux * (len(temp3)/len(photons))
 
 
 class ChromaticAiry(ChromaticObject):
