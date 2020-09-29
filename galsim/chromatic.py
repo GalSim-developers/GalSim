@@ -2931,6 +2931,13 @@ class ChromaticOpticalPSF(ChromaticObject):
                         [default: galsim.arcsec]
         gsparams:       An optional `GSParams` argument.  See the docstring for `GSParams` for
                         details. [default: None]
+        geometric_shooting: If True, then when drawing using photon shooting, use geometric
+                        optics approximation where the photon angles are derived from the
+                        phase screen gradient.  If False, then first draw using Fourier
+                        optics and then shoot from the derived InterpolatedImage.  Note that when
+                        geometric_shooting is False (the default), the photon shooting
+                        implementation is only approximately correct with respect to the wavelength
+                        dependence.  [default: False]
         **kwargs:       Any other keyword arguments to be passed to OpticalPSF, for example,
                         related to struts, obscuration, oversampling, etc.  See OpticalPSF
                         docstring for a complete list of options.
@@ -3050,12 +3057,12 @@ class ChromaticOpticalPSF(ChromaticObject):
                     lam=wave, diam=self.diam,
                     aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
                     _force_stepk=self._stepk*wave_factor, _force_maxk=self._maxk*wave_factor,
-                    geometric_shooting=True, gsparams=self.gsparams, **self.kwargs)
+                    gsparams=self.gsparams, **self.kwargs)
         else:
             ret = OpticalPSF(
                     lam=wave, diam=self.diam,
                     aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
-                    geometric_shooting=True, gsparams=self.gsparams, **self.kwargs)
+                    gsparams=self.gsparams, **self.kwargs)
             self._stepk = ret.stepk / wave_factor
             self._maxk = ret.maxk / wave_factor
             return ret

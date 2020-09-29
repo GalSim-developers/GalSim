@@ -2021,13 +2021,12 @@ def test_phot():
     # 4. Moffat just pretending to be chromatic
     psf4 = galsim.ChromaticObject(galsim.Moffat(beta=2.5, fwhm=0.12))
 
-    # 5. ChromaticOpticalPSF
+    # 5. ChromaticOpticalPSF with geometric shooting.
     aberrations = np.array([0,0,0,0, 0.008, -0.005, -0.005, -0.002])
-    nstruts = 0     # nstruts != 0 does significantly worse. I guess photon shooting doesn't
-                    # handle the struts all that well.
+    nstruts = 0     # nstruts != 0 does significantly worse when using geometric_shooting=True
     psf5 = galsim.ChromaticOpticalPSF(lam=bandpass.effective_wavelength, diam=diam,
                                       aberrations=aberrations, obscuration=obscuration,
-                                      nstruts=nstruts)
+                                      geometric_shooting=True, nstruts=nstruts)
 
     for psf in [psf1, psf2, psf3, psf4, psf5]:
         print('psf = ',psf)
