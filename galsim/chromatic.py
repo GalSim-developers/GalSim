@@ -1317,12 +1317,11 @@ class InterpolatedChromaticObject(ChromaticObject):
                 exact_norm = self.SED(w)
                 wt *= exact_norm/interp_norm
 
-            im_weights[lower_idx] += (1.-frac) * wt
-            im_weights[lower_idx+1] += frac * wt
+            im_weights[lower_idx] += (1.-frac) * wt * _flux_ratio(w)
+            im_weights[lower_idx+1] += frac * wt * _flux_ratio(w)
 
         # Do the integral as a weighted sum.
-        im_factors = _flux_ratio(self.waves)
-        integral = sum(wt*im*f for wt,im,f in zip(im_weights, self.ims, im_factors) if wt!=0)
+        integral = sum(wt*im for wt,im in zip(im_weights, self.ims) if wt!=0)
 
         # Get the stepk, maxk using the same weights
         stepk = np.average(self.stepk_vals, weights=im_weights)

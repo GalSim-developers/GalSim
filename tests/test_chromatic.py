@@ -1595,14 +1595,14 @@ def test_interpolated_ChromaticObject():
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=scale)
     # Note: peak value of array is around 0.3, so going to 4 decimal places is a reasonably
     # stringent test considering how different the exact vs. interpolated rendering process is.
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=4,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=1.e-4,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated')
 
     # And test with midpoint rule (non-default).
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, integrator='midpoint', scale=scale)
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=4,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=2.e-4,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
 
     # Check kimage with midpoint rule too, also non-default.
@@ -1616,8 +1616,8 @@ def test_interpolated_ChromaticObject():
     # Also trapezoidal
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, integrator='trapezoidal',
                                      scale=scale)
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=4,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=2.e-4,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (trapz)')
 
     kscale = 2*np.pi/(scale*40)
@@ -1634,8 +1634,8 @@ def test_interpolated_ChromaticObject():
     im_other = im_exact.copy()
     im_other = other_obj.drawImage(bandpass, image=im_other, scale=scale)
     # Can test to very high accuracy.
-    np.testing.assert_array_almost_equal(
-        im_other.array, im_exact.array, decimal=8,
+    np.testing.assert_allclose(
+        im_other.array, im_exact.array, atol=1.e-8,
         err_msg='Failure to turn off interpolation in ChromaticObject')
 
     # Check that when an interpolated ChromaticObject is convolved with a ChromaticObject that has a
@@ -1651,18 +1651,16 @@ def test_interpolated_ChromaticObject():
     im_interp = im_exact.copy()
     im_interp = obj_interp.drawImage(bandpass_g, image=im_interp, scale=scale)
     expected_flux = disk_SED.calculateFlux(bandpass_g)
-    frac_diff_exact = abs(im_exact.array.sum()/expected_flux-1.0)
-    frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
-    np.testing.assert_almost_equal(
-        frac_diff_exact, 0.0, decimal=3,
+    np.testing.assert_allclose(
+        im_exact.array.sum(), expected_flux, rtol=1.e-3,
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticObject '
         ' (exact calculation)')
-    np.testing.assert_almost_equal(
-        frac_diff_interp, 0.0, decimal=3,
+    np.testing.assert_allclose(
+        im_interp.array.sum(), expected_flux, rtol=1.e-3,
         err_msg='ChromaticObject (with interpolation) flux is wrong when convolved with '
         ' ChromaticObject')
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=4,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=1.e-4,
         err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticObject')
 
@@ -1677,19 +1675,17 @@ def test_interpolated_ChromaticObject():
     im_interp = im_exact.copy()
     im_interp = obj_interp.drawImage(bandpass, image=im_interp, scale=scale)
     expected_flux = disk_SED.calculateFlux(bandpass) + bulge_SED.calculateFlux(bandpass)
-    frac_diff_exact = abs(im_exact.array.sum()/expected_flux-1.0)
-    frac_diff_interp = abs(im_interp.array.sum()/expected_flux-1.0)
     # Check to 2%
-    np.testing.assert_almost_equal(
-        frac_diff_exact/2, 0.0, decimal=2,
+    np.testing.assert_allclose(
+        im_exact.array.sum(), expected_flux, rtol=0.02,
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticSum'
         ' (exact calculation)')
-    np.testing.assert_almost_equal(
-        frac_diff_interp/2, 0.0, decimal=2,
+    np.testing.assert_allclose(
+        im_interp.array.sum(), expected_flux, rtol=0.02,
         err_msg='ChromaticObject flux is wrong when convolved with ChromaticSum'
         ' (interpolated calculation)')
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=3,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=1.e-3,
         err_msg='ChromaticObject results differ for interpolated vs. exact'
         ' when convolving with ChromaticSum')
 
@@ -1699,8 +1695,8 @@ def test_interpolated_ChromaticObject():
     interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
     im_exact = exact_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
     im_interp = interp_psf.drawImage(bandpass, scale=0.2, nx=32, ny=32)
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=3,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=1.e-3,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated')
 
     # Check that we can render an image with chromatic transformations directly, and with
@@ -1727,8 +1723,8 @@ def test_interpolated_ChromaticObject():
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=atm_scale)
     # Note: peak value of array is around 4, so going to 3 decimal places is a reasonably
     # stringent test considering how different the exact vs. interpolated rendering process is.
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=3,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=1.e-3,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated'+
         ' when including chromatic transformations')
 
@@ -1750,8 +1746,8 @@ def test_interpolated_ChromaticObject():
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=atm_scale)
     # Note: peak value of array is around 4, so going to 3 decimal places is a reasonably
     # stringent test considering how different the exact vs. interpolated rendering process is.
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=3,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=1.e-3,
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated'+
         ' when including achromatic transformations after precomputation')
 
@@ -1783,8 +1779,8 @@ def test_interpolated_ChromaticObject():
     im_interp = interp_obj.drawImage(bandpass, image=im_interp, scale=atm_scale)
     # Note: since the image rendering should have been done in exactly the same way (it should
     # have trashed the interpolation entirely), test to high precision.
-    np.testing.assert_array_almost_equal(
-        im_interp.array, im_exact.array, decimal=9,
+    np.testing.assert_allclose(
+        im_interp.array, im_exact.array, atol=1.e-9,
         err_msg='Did not do exact chromatic transformation by discarding interpolation')
     # Also make sure that it ditched the interpolation.
     assert not hasattr(trans_interp_psf, 'waves')
