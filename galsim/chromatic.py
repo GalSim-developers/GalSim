@@ -2251,6 +2251,12 @@ class ChromaticConvolution(ChromaticObject):
         prof1 = insep_obj.evaluateAtWavelength(bandpass.red_limit)
         prof2 = insep_obj.evaluateAtWavelength(bandpass.blue_limit)
         iiscale = min(prof0.nyquist_scale, prof1.nyquist_scale, prof2.nyquist_scale)
+        iiscale /= 2  # This seems to be required to make test_monochromatic_sed to pass.
+                      # Not sure why, since I thought straight nyquist should be good enough.
+                      # But if it's needed there, it's probably worth always doing, rather than
+                      # having that test use iimult=2.  And definitions of Nyquist are somewhat
+                      # confusing, so it's possible that we should expect to need a factor of
+                      # 2 smaller than nyquist for the pixel scale.  :-S
         if iimult is not None:
             iiscale /= iimult
 

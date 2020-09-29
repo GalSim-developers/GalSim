@@ -497,6 +497,49 @@ def test_monochromatic_filter():
                 err_msg="ChromaticObject.drawImage() with monochromatic filter doesn't match"+
                         "GSObject.drawImage()")
 
+@timer
+def test_monochromatic_sed():
+    # Similar to the above test, but this time with a broad bandpass and a narrow sed.
+
+    bandpass = galsim.Bandpass(galsim.LookupTable([500,1000], [1,1], 'linear'), wave_type='nm')
+    flux = 1.e6
+    rng = galsim.BaseDeviate(1234)
+    pixel_scale = 0.01
+
+    gal_achrom = galsim.Sersic(n=2.8, half_light_radius=0.03, flux=flux)
+
+    diam = 3.1 # meters
+    obscuration = 0.11
+    nstruts = 5
+    aberrations = np.array([0,0,0,0, 0.02, -0.05, -0.15, -0.02, 0.13, 0.06, -0.09, 0.11])
+
+    for wave in [515, 690, 900]:
+        # First do the achromatic version at the given wavelength.
+        psf_achrom = galsim.OpticalPSF(lam=wave, diam=diam,
+                                       aberrations=aberrations, obscuration=obscuration,
+                                       nstruts=nstruts)
+        obj_achrom = galsim.Convolve(gal_achrom, psf_achrom)
+        im1 = galsim.ImageD(50, 50, scale=pixel_scale)
+        print('obj_achrom = ',obj_achrom)
+        print('im1 = ',im1)
+        obj_achrom.drawImage(image=im1)
+        print('im1.max,sum = ', im1.array.max(), im1.array.sum())
+
+        # Next do this chromatically using an SED that is basically a single emission line
+        # at the given wavelength.
+        psf_chrom = galsim.ChromaticOpticalPSF(lam=wave, diam=diam,
+                                               aberrations=aberrations, obscuration=obscuration,
+                                               nstruts=nstruts)
+        sed = galsim.SED(galsim.LookupTable([500, wave-1, wave, wave+1, 1000],
+                                            [0, 0, 1, 0, 0], 'linear'),
+                         wave_type='nm', flux_type='fphotons')
+        gal_chrom = (gal_achrom * sed).withFlux(flux, bandpass=bandpass)
+        obj_chrom = galsim.Convolve(gal_chrom, psf_chrom)
+        im2 = obj_chrom.drawImage(bandpass, image=im1.copy())
+        print('im2.max,sum = ', im2.array.max(), im2.array.sum())
+        print('max diff/flux = ',np.max(np.abs(im1.array-im2.array)/flux))
+        np.testing.assert_allclose(im2.array/flux, im1.array/flux, rtol=1.e-4, atol=1.e-5)
+
 
 @timer
 def test_chromatic_flux():
@@ -2725,6 +2768,7 @@ if __name__ == "__main__":
     test_dcr_moments()
     test_chromatic_seeing_moments()
     test_monochromatic_filter()
+    test_monochromatic_sed()
     test_chromatic_flux()
     test_double_ChromaticSum()
     test_ChromaticConvolution_of_ChromaticConvolution()
