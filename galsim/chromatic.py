@@ -1305,10 +1305,10 @@ class InterpolatedChromaticObject(ChromaticObject):
         use_k = k - (u<f0).astype(int)  # The second term is either 0 or 1.
 
         # Draw photons from the saved profiles according to when we have selected to use each one.
-        for kk, ww in enumerate(self.waves):
-            use = use_k == kk
+        for kk, obj in enumerate(self._objs):
+            use = (use_k == kk)  # True for each photon where this is the object to shoot from
             temp = PhotonArray(np.sum(use))
-            self._objs[kk]._shoot(temp, rng)
+            obj._shoot(temp, rng)
             photons.x[use] = temp.x
             photons.y[use] = temp.y
             # It will have tried to shoot the right total flux.  But that's not correct.
