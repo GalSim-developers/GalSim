@@ -212,7 +212,7 @@ class ChromaticObject(object):
         give the monochromatic profile at any wavelength or the wavelength-integrated profile.
         """
         bpwave = bandpass.effective_wavelength
-        prof0 = self.evaluateAtWavelength(bpwave)
+        bpwave, prof0 = self._approxWavelength(bpwave)
         if prof0.flux != 0:
             return bpwave, prof0
 
@@ -229,6 +229,11 @@ class ChromaticObject(object):
                     return w, prof0
 
         raise GalSimError("Could not locate fiducial wavelength where SED * Bandpass is nonzero.")
+
+    def _approxWavelength(self, wave):
+        # If a class doesn't have any more appropriate choice, just use evaluateAtWavelength
+        # InterpolatedChromaticObject has a better choice when phot=True, so overrides this.
+        return wave, self.evaluateAtWavelength(wave)
 
     def __eq__(self, other):
         return (self is other or
@@ -1245,6 +1250,13 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         return im, stepk, maxk
 
+    def _approxWavelength(self, wave):
+        # More efficient to use one of the original objects, not a new InterpolatedImage.
+        k = np.searchsorted(self.waves, wave)
+        if k >= len(self.waves) or (k > 0 and wave-self.waves[k-1] < self.waves[k]-wave):
+            k = k - 1
+        return self.waves[k], self._objs[k]
+
     def evaluateAtWavelength(self, wave):
         """
         Evaluate this `ChromaticObject` at a particular wavelength using interpolation.
@@ -1817,6 +1829,18 @@ class ChromaticTransformation(ChromaticObject):
             flux_ratio = self._flux_ratio
         return jac, offset, flux_ratio
 
+    def _approxWavelength(self, wave):
+        # Same as evaluateAtWavelength, except the starting point is also _approxWavelength
+        from .transform import Transformation
+        wave1 = wave / (1.+self._redshift) if self._redshift is not None else wave
+        wave2, ret = self.original._approxWavelength(wave1)
+        wave = wave2 * (1.+self._redshift) if self._redshift is not None else wave2
+        jac, offset, flux_ratio = self._getTransformations(wave)
+        offset = _PositionD(*offset)
+        return wave, Transformation(ret, jac=jac, offset=offset, flux_ratio=flux_ratio,
+                                    gsparams=self._gsparams,
+                                    propagate_gsparams=self._propagate_gsparams)
+
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
 
@@ -2363,6 +2387,24 @@ class ChromaticConvolution(ChromaticObject):
     def __str__(self):
         str_list = [ str(obj) for obj in self.obj_list ]
         return 'galsim.ChromaticConvolution([%s])'%', '.join(str_list)
+
+    def _approxWavelength(self, wave):
+        from .convolve import Convolve
+        # If any of the components prefer a different wavelength, use that for all.
+        achrom_objs = []
+        for k, obj in enumerate(self.obj_list):
+            new_wave, aobj = obj._approxWavelength(wave)
+            if new_wave != wave:
+                # Break the loop and use evaluateAtWavelength for everything else.
+                achrom_objs = ([o.evaluateAtWavelength(new_wave) for o in self.obj_list[:k]] +
+                               [aobj] +
+                               [o.evaluateAtWavelength(new_wave) for o in self.obj_list[k+1:]])
+                break
+            else:
+                achrom_objs.append(aobj)
+
+        return new_wave, Convolve(achrom_objs, gsparams=self._gsparams,
+                                  propagate_gsparams=self._propagate_gsparams)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength ``wave``.
