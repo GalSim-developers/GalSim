@@ -157,10 +157,12 @@ def main(argv):
     # Need to make a separate PSF for each filter.  We are, however, ignoring the
     # position-dependence of the PSF within each SCA, just using the PSF at the center of the SCA
     # (default kwargs).
+    # Note: pupil_bin=8 is faster at the expense of lower resolution for the diffraction spikes.
     PSFs = {}
     for filter_name, filter_ in filters.items():
         logger.info('PSF pre-computation for SCA %d, filter %s.'%(use_SCA, filter_name))
-        PSFs[filter_name] = roman.getPSF(use_SCA, filter_name, n_waves=10, wcs=wcs)
+        PSFs[filter_name] = roman.getPSF(use_SCA, filter_name, n_waves=10, wcs=wcs,
+                                         pupil_bin=8)
     t2 = time.time()
     logger.info('Done PSF precomputation in %.1f seconds!'%(t2-t1))
 
