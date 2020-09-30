@@ -1664,14 +1664,23 @@ class ChromaticTransformation(ChromaticObject):
 
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
         self._propagate_gsparams = propagate_gsparams
-        if self._propagate_gsparams:
-            self._original = obj.withGSParams(self._gsparams)
+
+        if isinstance(obj, ChromaticTransformation) and not self.chromatic:
+            # If both transformations are not chromatic, then it is useful to combine them.
+            # Especially if the original object is interpolated, since we have special handling
+            # for that case in drawImage.
+            self._original = obj.original
+            self._jac = jac.dot(obj._jac)
+            self._offset = jac.dot(obj._offset) + offset
+            self._flux_ratio = obj._flux_ratio * flux_ratio
         else:
             self._original = obj
+            self._jac = jac
+            self._offset = offset
+            self._flux_ratio = flux_ratio
 
-        self._jac = jac
-        self._offset = offset
-        self._flux_ratio = flux_ratio
+        if self._propagate_gsparams:
+            self._original = self._original.withGSParams(self._gsparams)
 
         if self.interpolated:
             self.deinterpolated = ChromaticTransformation(
