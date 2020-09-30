@@ -436,9 +436,11 @@ class GSObject(object):
     @property
     def redshift(self): return getattr(self, '_redshift', 0.)
 
-    # Also need this method to duck-type as a ChromaticObject
+    # Also need these methods to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
         return self
+    def _approxWavelength(self, wave):
+        return wave, self
 
     # Make op+ of two GSObjects work to return an Add object
     # Note: we don't define __iadd__ and similar.  Let python handle this automatically
