@@ -2990,6 +2990,18 @@ class ChromaticOpticalPSF(ChromaticObject):
         >>> final_star = galsim.Convolve( [psf, star] )
         >>> final_star.drawImage(bandpass = bp, ...)
 
+    .. note::
+
+        When geometric_shooting is False (the default), the photon shooting implementation is
+        only approximately correct with respect to the wavelength dependence.  It is also
+        not particularly fast, since it generates three optical screens to span the wavelength
+        range and shoots from these (with a subsequent adjustment to improve the accuracy
+        of this approximation).  We expect that most users who want to use photon shooting in
+        conjunction with this class will prefer to make an InterpolatedChromaticObject
+        (by calling ``psf.interpolate(...)``), especially if it is a good approximation to
+        use the same optical PSF for a whole exposure or CCD image, so the setup time for
+        the interpolation is able to be amortized for many objects.
+
     Parameters:
         lam:            Fiducial wavelength for which diffraction limit and aberrations are
                         initially defined, in nanometers.
@@ -3006,10 +3018,7 @@ class ChromaticOpticalPSF(ChromaticObject):
         geometric_shooting: If True, then when drawing using photon shooting, use geometric
                         optics approximation where the photon angles are derived from the
                         phase screen gradient.  If False, then first draw using Fourier
-                        optics and then shoot from the derived InterpolatedImage.  Note that when
-                        geometric_shooting is False (the default), the photon shooting
-                        implementation is only approximately correct with respect to the wavelength
-                        dependence.  [default: False]
+                        optics and then shoot from the derived InterpolatedImage. [default: False]
         **kwargs:       Any other keyword arguments to be passed to OpticalPSF, for example,
                         related to struts, obscuration, oversampling, etc.  See OpticalPSF
                         docstring for a complete list of options.
