@@ -2142,6 +2142,19 @@ def test_phot():
         print('im5.max,sum => ', im5.array.max(), im5.array.sum())
         np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=atol)
 
+    # Invalid to shoot photons outside of InterpolatedChromaticObject's range.
+    # Note: It requires some care to avoid all the other range checks and actually hit the
+    #       one in InterpolatedChromaticObject._shoot.
+    rng = galsim.BaseDeviate(1234)
+    bp2 = galsim.Bandpass(galsim.LookupTable([400,601], [1,1], 'linear'), wave_type='nm')
+    sed2 = galsim.SED(galsim.LookupTable([400, 410,415,420, 510, 515, 520, 1000],
+                                        [0, 0,1,0, 0,2,0, 0], 'linear'),
+                      wave_type='nm', flux_type='fphotons')
+    gal2 = (gal_achrom * sed2).withFlux(flux, bandpass=bp2)
+    obj2 = galsim.Convolve(gal2, psf7)
+    with assert_raises(galsim.GalSimRangeError):
+        obj2.drawImage(bp2, image=im5, method='phot', rng=rng, n_photons=10)
+
 
 @timer
 def test_chromatic_fiducial_wavelength():
