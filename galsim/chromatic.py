@@ -1665,14 +1665,25 @@ class ChromaticTransformation(ChromaticObject):
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
         self._propagate_gsparams = propagate_gsparams
 
-        if isinstance(obj, ChromaticTransformation) and not self.chromatic:
+        if (isinstance(obj, ChromaticTransformation) and not self.chromatic
+                and not obj.chromatic and self._redshift is None and obj._redshift is None):
             # If both transformations are not chromatic, then it is useful to combine them.
             # Especially if the original object is interpolated, since we have special handling
             # for that case in drawImage.
+            # However, if either one is chromatic, then it's hard to combine them in a way that
+            # preserves the ability to call the functions on either numpy arrays or scalars,
+            # so just leave this as two consecutive transformations in that case.
+            # Similarly, if there are redshifts involved, then the flux_ratio function needs to
+            # be called on two different wavelengths, so again just leave it separate.
+            # (I think this last case could be remedied, so if there is a use case where it
+            # is important, we could try to implement it.)
             self._original = obj.original
             self._jac = jac.dot(obj._jac)
             self._offset = jac.dot(obj._offset) + offset
-            self._flux_ratio = obj._flux_ratio * flux_ratio
+            if hasattr(flux_ratio, '__call__') or hasattr(obj._flux_ratio, '__call__'):
+                self._flux_ratio = SED(flux_ratio, 'nm', '1') * obj._flux_ratio
+            else:
+                self._flux_ratio = obj._flux_ratio * flux_ratio
         else:
             self._original = obj
             self._jac = jac
