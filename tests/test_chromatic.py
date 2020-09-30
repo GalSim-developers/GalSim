@@ -2502,7 +2502,6 @@ def test_chromatic_invariant():
     check_chromatic_invariant(chrom_interp)
     do_pickle(chrom_interp)
     assert_raises(galsim.GalSimError, chrom_interp.applyTo, p1)
-    assert_raises(galsim.GalSimNotImplementedError, chrom_interp.applyTo, p2)
 
 
 @timer
