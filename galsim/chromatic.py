@@ -1266,18 +1266,18 @@ class InterpolatedChromaticObject(ChromaticObject):
         w = photons.wavelength
         if np.any((w < self.waves[0]) | (w > self.waves[-1])):
             raise GalSimRangeError("Shooting photons outside the interpolated wave_list",
-                                   wave_list, self.waves[0], self.waves[-1])
+                                   w, self.waves[0], self.waves[-1])
 
         k = np.searchsorted(self.waves, w)
         k[k==0] = 1  # if k == 0, then w == min(waves). Using k=1 instead is fine for this.
-        assert np.all(k > 0)
-        assert np.all(k < len(self.waves))
+        #assert np.all(k > 0)
+        #assert np.all(k < len(self.waves))
 
         # For each w, these are the wavelengthat that bracket w:
         w0 = self.waves[k-1]
         w1 = self.waves[k]
-        assert np.all(w0 < w)
-        assert np.all(w <= w1)
+        #assert np.all(w0 <= w)
+        #assert np.all(w <= w1)
 
         # If we could get away with averaging photons shot at each wavelength,
         # these would be relative fractions.  So e.g. x = x0 f0 + x1 f1 would be the
@@ -1285,12 +1285,12 @@ class InterpolatedChromaticObject(ChromaticObject):
         f0 = (w1-w) / (w1-w0)
         #f1 = (w-w0) / (w1-w0)  (We don't need this quantity below.)
 
-        # Instead of averaging these, if the profiles aren't _too_ different from each other,
-        # we can instead always pick one or the other, but probablistically according to the
-        # fraction by which we would have weighted the photon in the average.
+        # Instead of averaging these, we can do the averaging probabilistically by selecting
+        # each photon with a probability equal to the relative weight we would have used
+        # in the average.
         u = np.empty(len(photons))
         UniformDeviate(rng).generate(u)
-        use_k = k - (u<f0).astype(int)
+        use_k = k - (u<f0).astype(int)  # The second term is either 0 or 1.
 
         # Draw photons from the saved profiles according to when we have selected to use each one.
         for kk, ww in enumerate(self.waves):
