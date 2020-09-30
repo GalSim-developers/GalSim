@@ -1001,6 +1001,7 @@ def test_gc():
     # The below check about this may fail if some other test using PhaseScreenPSFs has failed.
     # To avoid this spurious double error, only do the below check if we start out with
     # nothing in the garbage collector.
+    galsim.ChromaticConvolution._effective_prof_cache.clear()
     gc.collect()
     already_in_gc = any([isinstance(it, galsim.phase_psf.PhaseScreenPSF) for it in gc.get_objects()])
 
