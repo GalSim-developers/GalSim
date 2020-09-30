@@ -1092,6 +1092,7 @@ class LRU_Cache:
         self.root = [None, None, None, None]
         root = self.root
         cache = self.cache
+        cache.clear()
         maxsize = self.maxsize
         last = root
         for i in range(maxsize):
