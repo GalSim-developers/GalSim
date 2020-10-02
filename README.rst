@@ -1,7 +1,7 @@
-.. image:: https://travis-ci.org/GalSim-developers/GalSim.svg?branch=master
+.. image:: https://travis-ci.org/GalSim-developers/GalSim.svg?branch=main
         :target: https://travis-ci.org/GalSim-developers/GalSim
-.. image:: https://coveralls.io/repos/github/GalSim-developers/GalSim/badge.svg?branch=master
-        :target: https://coveralls.io/github/GalSim-developers/GalSim?branch=master
+.. image:: https://coveralls.io/repos/github/GalSim-developers/GalSim/badge.svg?branch=main
+        :target: https://coveralls.io/github/GalSim-developers/GalSim?branch=main
 .. image:: https://img.shields.io/badge/astro--ph.IM-1407.7676-B31B1B.svg
         :target: https://arxiv.org/abs/1407.7676
 .. image:: https://img.shields.io/badge/ADS-Rowe%20et%20al%2C%202015-blue.svg

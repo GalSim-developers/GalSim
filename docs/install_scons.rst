@@ -440,7 +440,7 @@ and ``galsim demo1.yaml`` should run those scripts for you.
 4.  If you want to work with GalSim as a developer, rather than just a user,
 then you cannot use the fink-installed GalSim.  However, the process above will
 have installed all the prerequisites.  So ``fink uninstall galsim`` will leave
-you able to install GalSim using the master branch with::
+you able to install GalSim using the main branch with::
 
     scons TMV_DIR=/sw PYTHON=/sw/bin/python2.7 BOOST_DIR=/sw/opt/boost-1_58
 
@@ -486,7 +486,7 @@ modules::
 Below is a list of steps to take to install GalSim using MacPorts:
 
     i) Take the ``Portfiles`` from the GalSim repository:
-    https://github.com/GalSim-developers/GalSim/blob/master/devel/ports.tar.gz
+    https://github.com/GalSim-developers/GalSim/blob/main/devel/ports.tar.gz
     (If you do not clone the repository, there is a "copy" button on the website
     that you can use to download the file directly.)
     ii) Place the file in your home directory.

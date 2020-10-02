@@ -1,5 +1,5 @@
 codecov:
-  branch: master
+  branch: main
   token: c14be219-3495-4039-8cbf-3f6dc4e76eac
 
 coverage:
