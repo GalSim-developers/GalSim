@@ -70,6 +70,10 @@ namespace galsim
         mutable std::vector<Polygon> _testpoly;
         std::vector<Polygon> _distortions;
         std::vector<Polygon> _imagepolys;
+	std::vector<Point> _horizontalBoundaryPoints;
+	std::vector<Point> _verticalBoundaryPoints;
+	std::vector<Bounds<double> > _pixelInnerBounds;
+	std::vector<Bounds<double> > _pixelOuterBounds;
         int _numVertices, _nx, _ny, _nv, _qDist;
         double _nrecalc, _diffStep, _pixelSize, _sensorThickness;
         Table _tr_radial_table;
