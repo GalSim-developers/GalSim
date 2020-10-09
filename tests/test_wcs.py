@@ -2253,10 +2253,10 @@ def test_wcstools():
 def test_gsfitswcs():
     """Test the GSFitsWCS class
     """
-    # These are all relatively fast (total time for all 7 and the TanWCS stuff below is about
-    # 1.6 seconds), and (relatively) full unit test coverage requires all of them, so we always
-    # do these despite violating my usual upper limit of 1 second per unit test.
-    test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP' ]
+    # These are all relatively fast (total time for all 10 is about 1.1 seconds),
+    # so unlike some of the other WCS types, it's not that slow to do all of them.
+    # And it's required to get (relatively) complete test coverage.
+    test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP', 'ZTF' ]
 
     dir = 'fits_files'
 

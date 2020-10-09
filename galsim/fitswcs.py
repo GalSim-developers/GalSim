@@ -1065,38 +1065,44 @@ class GSFitsWCS(CelestialWCS):
             self.cd[1,:] *= 1. * dec_units / degrees
 
     def _read_tpv(self, header):
+        # See http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html for details about how
+        # the TPV standard is defined.
 
-        # Strangely, the PV values skip k==3.
-        # Well, the reason is that it is for coefficients of r = sqrt(u^2+v^2).
-        # But no one seems to use it, so it is almost always skipped.
-        pv1 = [ float(header['PV1_'+str(k)]) for k in range(11) if k != 3 ]
-        pv2 = [ float(header['PV2_'+str(k)]) for k in range(11) if k != 3 ]
-
-        # In fact, the standard allows up to PVi_39, which is for r^7.  And all
-        # unlisted values have defaults of 0 (except PVi_1, which defaults to 1).
-        # A better implementation would check how high up the numbers go and build
-        # the appropriate matrix, but since it is usually up to PVi_10, so far
-        # we just implement that.
-        # See http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html for details.
-        if ( 'PV1_3' in header and header['PV1_3'] != 0.0 or
-             'PV1_11' in header and header['PV1_11'] != 0.0 or
-             'PV2_3' in header and header['PV1_3'] != 0.0 or
-             'PV2_11' in header and header['PV1_11'] != 0.0 ): # pragma: no cover
+        # The standard includes an option to have odd powers of r, which kind of screws
+        # up the numbering of these coefficients.  We don't implement these terms, so
+        # before going further, check to make sure none are present.
+        odd_indices = [3, 11, 23, 39]
+        if any((header.get('PV%s_%s'%(i,j), 0.) != 0. for i in [1,2] for j in odd_indices)):
             raise GalSimNotImplementedError("TPV not implemented for odd powers of r")
-        if 'PV1_12' in header: # pragma: no cover
-            raise GalSimNotImplementedError("TPV not implemented past 3rd order terms")
+
+        pv1 = [ float(header.get('PV1_%s'%k, 0.)) for k in range(40) if k not in odd_indices ]
+        pv2 = [ float(header.get('PV2_%s'%k, 0.)) for k in range(40) if k not in odd_indices ]
+
+        maxk = max(np.nonzero(pv1)[0][-1], np.nonzero(pv2)[0][-1])
+        # maxk = (order+1) * (order+2) / 2 - 1
+        order = int(np.floor(np.sqrt(2*(maxk+1)))) - 1
+        self.pv = np.zeros((2,order+1,order+1))
 
         # Another strange thing is that the two matrices are defined in the opposite order
-        # with respect to their element ordering.  And remember that we skipped k=3 in the
-        # original reading, so indices 3..9 here were originally called PVi_4..10
-        self.pv = np.array( [ [ [ pv1[0], pv1[2], pv1[5], pv1[9] ],
-                                [ pv1[1], pv1[4], pv1[8],   0.   ],
-                                [ pv1[3], pv1[7],   0.  ,   0.   ],
-                                [ pv1[6],   0.  ,   0.  ,   0.   ] ],
-                              [ [ pv2[0], pv2[1], pv2[3], pv2[6] ],
-                                [ pv2[2], pv2[4], pv2[7],   0.   ],
-                                [ pv2[5], pv2[8],   0.  ,   0.   ],
-                                [ pv2[9],   0.  ,   0.  ,   0.   ] ] ] )
+        # with respect to their element ordering.  But at least now, without the odd terms,
+        # we can just proceed in order in the k indices.  So what we call k=3..9 here were
+        # originally PVi_4..10.
+        # For reference, here is what it would look like for order = 3:
+        # self.pv = np.array( [ [ [ pv1[0], pv1[2], pv1[5], pv1[9] ],
+        #                         [ pv1[1], pv1[4], pv1[8],   0.   ],
+        #                         [ pv1[3], pv1[7],   0.  ,   0.   ],
+        #                         [ pv1[6],   0.  ,   0.  ,   0.   ] ],
+        #                       [ [ pv2[0], pv2[1], pv2[3], pv2[6] ],
+        #                         [ pv2[2], pv2[4], pv2[7],   0.   ],
+        #                         [ pv2[5], pv2[8],   0.  ,   0.   ],
+        #                         [ pv2[9],   0.  ,   0.  ,   0.   ] ] ] )
+        k = 0
+        for N in range(order+1):
+            for j in range(N+1):
+                i = N-j
+                self.pv[0,i,j] = pv1[k]
+                self.pv[1,j,i] = pv2[k]
+                k = k+1
 
     def _read_sip(self, header):
         a_order = int(header['A_ORDER'])
@@ -1448,18 +1454,19 @@ class GSFitsWCS(CelestialWCS):
             # Now we apply the distortion terms
             u = p2[0]
             v = p2[1]
-            usq = u*u
-            vsq = v*v
+            order = len(self.pv[0])-1
 
-            upow = np.array([ 1., u, usq, usq*u ])
-            vpow = np.array([ 1., v, vsq, vsq*v ])
+            upow = u ** np.arange(order+1)
+            vpow = v ** np.arange(order+1)
 
             p2 = np.dot(np.dot(self.pv, vpow), upow)
 
             # The columns of the jacobian for this step are the same function with dupow
             # or dvpow.
-            dupow = np.array([ 0., 1., 2.*u, 3.*usq ])
-            dvpow = np.array([ 0., 1., 2.*v, 3.*vsq ])
+            dupow = np.zeros(order+1)
+            dvpow = np.zeros(order+1)
+            dupow[1:] = (np.arange(order)+1.) * upow[:-1]
+            dvpow[1:] = (np.arange(order)+1.) * vpow[:-1]
             j1 = np.transpose([ np.dot(np.dot(self.pv, vpow), dupow) ,
                                 np.dot(np.dot(self.pv, dvpow), upow) ])
             jac = np.dot(j1,jac)
@@ -1501,14 +1508,16 @@ class GSFitsWCS(CelestialWCS):
         header["CRVAL1"] = self.center.ra / degrees
         header["CRVAL2"] = self.center.dec / degrees
         if self.pv is not None:
+            order = len(self.pv[0])-1
             k = 0
-            for n in range(4):
+            odd_indices = [3, 11, 23, 39]
+            for n in range(order+1):
                 for j in range(n+1):
                     i = n-j
                     header["PV1_" + str(k)] = self.pv[0, i, j]
                     header["PV2_" + str(k)] = self.pv[1, j, i]
                     k = k + 1
-                    if k == 3: k = k + 1
+                    if k in odd_indices: k = k + 1
         if self.ab is not None:
             order = len(self.ab[0])-1
             header["A_ORDER"] = order
