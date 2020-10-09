@@ -332,10 +332,7 @@ def do_wcs_pos(wcs, ufunc, vfunc, name, x0=0, y0=0, color=None):
 
 
 def check_world(pos1, pos2, digits, err_msg):
-    try:
-        x = pos1.x
-        y = pos2.y
-    except AttributeError:
+    if isinstance(pos1, galsim.CelestialCoord):
         np.testing.assert_almost_equal(pos1.distanceTo(pos2) / galsim.arcsec, 0, digits, err_msg)
     else:
         np.testing.assert_almost_equal(pos1.x, pos2.x, digits, err_msg)
@@ -2047,7 +2044,12 @@ def test_astropywcs():
     # These all work, but it is quite slow, so only test one of them for the regular unit tests.
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
-        test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TAN-FLIP', 'REGION' ]
+        test_tags = ['HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'TAN-PV',
+                     'TAN-FLIP', 'REGION']
+        # The ones that still don't work are TNX and ZPX.
+        # In both cases, astropy thinks it reads them successfully, but fails the tests and/or
+        # bombs out with a malloc error:
+        # incorrect checksum for freed object - object was probably modified after being freed
     else:
         test_tags = [ 'TAN', 'SIP' ]
 
@@ -2083,10 +2085,6 @@ def test_astropywcs():
     # Can also use a header.  Again steal it from the wcs above.
     wcs2 = galsim.AstropyWCS(header=wcs.header)
     do_celestial_wcs(wcs2, 'AstropyWCS from header', test_pickle=True)
-
-    # Astropy gives an error when trying to read this one.
-    with assert_raises(OSError):
-        wcs = galsim.AstropyWCS(references['TAN-PV'][0], dir=dir)
 
     # Doesn't support LINEAR WCS types.
     with assert_raises(galsim.GalSimError):
