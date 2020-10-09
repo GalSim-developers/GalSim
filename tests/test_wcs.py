@@ -149,6 +149,11 @@ references = {
     'TNX' : ('tnx.fits',
             [ ('17:46:53.214511', '-30:08:47.895372', 32, 91, 7140),
               ('17:46:58.100741', '-30:07:50.121787', 246, 326, 15022) ] ),
+
+    # Zwicky Transient Facility uses TPV with higher order polynomial than what is in tpv.fits.
+    'ZTF' : ('ztf_20180525484722_000600_zg_c05_o_q1_sciimg.fits',
+            [ ('0:18:42.475844', '+25:45:00.858971', 1040, 1029, 59344.3),
+              ('0:17:03.568150', '+25:32:40.484235', 2340, 1796, 2171.35) ] ),
 }
 all_tags = references.keys()
 
@@ -2018,6 +2023,9 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
         ref_coord = galsim.CelestialCoord(ra,dec)
         coord = wcs.toWorld(galsim.PositionD(x,y))
         dist = ref_coord.distanceTo(coord) / galsim.arcsec
+        print('x, y = ',x,y)
+        print('ref_coord = ', ref_coord.ra.hms(), ref_coord.dec.dms())
+        print('coord = ', coord.ra.hms(), coord.dec.dms())
         np.testing.assert_almost_equal(dist, 0, digits2, 'wcs.toWorld differed from expected value')
 
         # Check world -> image
@@ -2045,13 +2053,13 @@ def test_astropywcs():
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
         test_tags = ['HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'TAN-PV',
-                     'TAN-FLIP', 'REGION']
+                     'TAN-FLIP', 'REGION', 'ZTF']
         # The ones that still don't work are TNX and ZPX.
         # In both cases, astropy thinks it reads them successfully, but fails the tests and/or
         # bombs out with a malloc error:
         # incorrect checksum for freed object - object was probably modified after being freed
     else:
-        test_tags = [ 'TAN', 'SIP' ]
+        test_tags = [ 'TAN', 'SIP', 'ZTF' ]
 
     dir = 'fits_files'
     for tag in test_tags:
@@ -2123,9 +2131,9 @@ def test_pyastwcs():
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX',
-                      'TAN-PV', 'TAN-FLIP', 'REGION', 'TNX' ]
+                      'TAN-PV', 'TAN-FLIP', 'REGION', 'TNX', 'ZTF' ]
     else:
-        test_tags = [ 'TAN', 'ZPX', 'SIP', 'TAN-PV', 'TNX' ]
+        test_tags = [ 'TAN', 'ZPX', 'SIP', 'TAN-PV', 'TNX', 'ZTF' ]
 
     dir = 'fits_files'
     for tag in test_tags:
@@ -2150,7 +2158,7 @@ def test_pyastwcs():
 
         # TAN-FLIP has an error of 4mas after write and read here, which I don't really understand.
         # but it's small enough an error that I don't think it's worth worrying about further.
-        approx = tag in [ 'ZPX', 'TAN-FLIP' ]
+        approx = tag in [ 'ZPX', 'TAN-FLIP', 'ZTF' ]
         do_wcs_image(wcs, 'PyAstWCS_'+tag, approx)
 
     # Can also use an existing startlink.Ast.FrameSet instance to construct.
@@ -2393,7 +2401,7 @@ def test_fitswcs():
             import warnings
             warnings.warn("None of the existing WCS classes were able to read "+file_name)
         else:
-            approx = tag == 'ZPX' and isinstance(wcs, galsim.PyAstWCS)
+            approx = tag in ['ZPX','ZTF'] and isinstance(wcs, galsim.PyAstWCS)
             do_ref(wcs, ref_list, 'FitsWCS '+tag)
             do_celestial_wcs(wcs, 'FitsWCS '+file_name)
             do_wcs_image(wcs, 'FitsWCS_'+tag, approx)
@@ -2465,8 +2473,6 @@ def test_fittedsipwcs():
     """
     import astropy.io.fits as fits
 
-    test_tags = all_tags
-
     tol = {  #(arcsec, pixels)
         'HPX': (5.0, 0.02),
         'TAN': (5.0, 0.02),
@@ -2481,12 +2487,15 @@ def test_fittedsipwcs():
         'TAN-PV': (1e-6, 2e-4),
         'TAN-FLIP': (1e-6, 1e-6),
         'REGION': (1e-6, 1e-6),
-        'TNX': (1e-6, 2e-5)
+        'TNX': (1e-6, 2e-5),
+        'ZTF': (0.1, 0.1),
     }
 
     dir = 'fits_files'
 
-    if __name__ != "__main__":
+    if __name__ == "__main__":
+        test_tags = all_tags
+    else:
         # For pytest runs, don't bother with the crazy ones.  We really only care about
         # testing that the code works correctly.  That can be done with just a couple of these.
         test_tags = ['TAN', 'TPV', 'SIP', 'TNX']
@@ -2510,6 +2519,7 @@ def test_fittedsipwcs():
         x *= header['NAXIS1']  # rough range of reference WCS image coords
         y *= header['NAXIS2']
         ra, dec = wcs.xyToradec(x, y, units='rad')
+        print('pixel scale = ',wcs.pixelArea(galsim.PositionD(1,1))**0.5)
 
         # First check that we can get a fit without distorions, using appropriate
         # Projections.  Should get very high accuracy here.
