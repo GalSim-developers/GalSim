@@ -155,12 +155,15 @@ class AstropyWCS(CelestialWCS):
                     # New kind of error starting in astropy 2.0.5 (I think).  Sometimes, it
                     # gets through the above, but doesn't actually load the right WCS.
                     # E.g. ZPX gets marked as just a ZPN.
-                    if 'CTYPE1' in header and 'CTYPE2' in header:
-                        if (header['CTYPE1'] != wcs.wcs.ctype[0] or
-                            header['CTYPE2'] != wcs.wcs.ctype[1]):
-                            raise OSError("Astropy failed to read WCS from %s. Converted %s->%s"%(
-                                          file_name, (header['CTYPE1'], header['CTYPE2']),
-                                          wcs.wcs.ctype))
+                    # As of version 4.0, ZPX is now the only one known to not work.  TPV has
+                    # a similar behavior, but we can make it work by an adjustment to the header
+                    # in _load_from_header.
+                    if 'ZPX' in header.get('CTYPE1','') and 'ZPX' not in wcs.wcs.ctype[0]:
+                        raise OSError(
+                            "Cannot read WCS in %s with astropy. "%(file_name) +
+                            "As of astropy version 4.0.1, ZPX WCS's were still not being " +
+                            "correctly read by astropy.wcs. If you believe this has been " +
+                            "fixed, please open a GalSim issue to remove this check.")
             else:
                 self.header = None
 
@@ -179,6 +182,9 @@ class AstropyWCS(CelestialWCS):
 
     def _load_from_header(self, header):
         import astropy.wcs
+        if 'TAN' in header.get('CTYPE1','') and 'PV1_1' in header:
+            header['CTYPE1'] = header['CTYPE1'].replace('TAN','TPV')
+            header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
         with warnings.catch_warnings():
             # The constructor might emit warnings if it wants to fix the header
             # information (e.g. RADECSYS -> RADESYSa).  We'd rather ignore these
@@ -458,7 +464,7 @@ class PyAstWCS(CelestialWCS):
         # PyAst understands.  All we need to do is change the names of the CTYPE values.
         if ( 'CTYPE1' in header and header['CTYPE1'].endswith('TAN') and
              'CTYPE2' in header and header['CTYPE2'].endswith('TAN') and
-             'PV1_10' in header ):
+             'PV1_1' in header ):
             header['CTYPE1'] = header['CTYPE1'].replace('TAN','TPV')
             header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
 
@@ -1034,7 +1040,7 @@ class GSFitsWCS(CelestialWCS):
         # There was an older proposed standard that used TAN with PV values, which is used by
         # SCamp, so we want to support it if possible.  The standard is now called TPV, so
         # use that for our wcs_type if we see the PV values with TAN.
-        if self.wcs_type == 'TAN' and 'PV1_10' in header:
+        if self.wcs_type == 'TAN' and 'PV1_1' in header:
             self.wcs_type = 'TPV'
 
         self.pv = None
