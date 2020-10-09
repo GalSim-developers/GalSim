@@ -2280,6 +2280,10 @@ def test_gsfitswcs():
 
         do_wcs_image(wcs, 'GSFitsWCS_'+tag)
 
+    # tpv_odd.fits is a modified version to have (unsupported) odd powers of r.
+    with assert_raises(galsim.GalSimNotImplementedError):
+        galsim.GSFitsWCS('tpv_odd.fits', dir=dir)
+
     # TSC is one of the ones that GSFitsWCS doesn't support.
     with assert_raises(galsim.GalSimValueError):
         galsim.GSFitsWCS(references['TSC'][0], dir=dir)
