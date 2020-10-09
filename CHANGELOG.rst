@@ -126,6 +126,7 @@ New Features
   is often somewhat faster. (#1098)
 - Added galsim.integ.hankel function. (#1099)
 - Added galsim.bessel.jv_root function. (#1099)
+- Added support for TPV WCS files with order > 3. (#1101)
 
 
 Performance Improvements
