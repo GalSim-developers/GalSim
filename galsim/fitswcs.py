@@ -145,10 +145,11 @@ class AstropyWCS(CelestialWCS):
                 self.header = fits.FitsHeader(header)
                 try:
                     wcs = self._load_from_header(self.header)
-                except (TypeError, AttributeError, ValueError, RuntimeError) as e:
-                    # When parsing ZPX files, astropy raises a very unhelpful error message.
-                    # Ignore that (ValueError in that case, but ignore any similarly mundane error)
-                    # and turn it into a more appropriate OSError.
+                except Exception as e:  # pragma: no cover
+                    # Not sure if this can still trigger.  There used to be input files that
+                    # caused various errors in astropy, but that no longer seems to be true
+                    # with astropy 4.x.  Leave this check here though, so the user can potentially
+                    # get a more comprehensible error message if astropy fails.
                     raise OSError("Astropy failed to read WCS from %s. Original error: %s"%(
                                   file_name, e))
                 else:
