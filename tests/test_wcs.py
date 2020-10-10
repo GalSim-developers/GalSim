@@ -2059,7 +2059,7 @@ def test_astropywcs():
         # bombs out with a malloc error:
         # incorrect checksum for freed object - object was probably modified after being freed
     else:
-        test_tags = [ 'TAN', 'SIP', 'ZTF' ]
+        test_tags = [ 'TAN', 'SIP', 'ZTF', 'TAN-PV' ]
 
     dir = 'fits_files'
     for tag in test_tags:
