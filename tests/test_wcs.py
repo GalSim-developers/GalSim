@@ -2049,7 +2049,8 @@ def test_astropywcs():
         import astropy.wcs
         import scipy  # AstropyWCS constructor will do this, so check now.
 
-    # These all work, but it is quite slow, so only test one of them for the regular unit tests.
+    # These all work, but it is quite slow, so only test a few of them for the regular unit tests.
+    # (1.8 seconds for 4 tags.)
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
         test_tags = ['HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'TAN-PV',
@@ -2127,7 +2128,8 @@ def test_pyastwcs():
         print('Unable to import starlink.Ast.  Skipping PyAstWCS tests.')
         return
 
-    # These all work, but it is quite slow, so only test one of them for the regular unit tests.
+    # These all work, but it is quite slow, so only test a few of them for the regular unit tests.
+    # (2.4 seconds for 6 tags.)
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
         test_tags = [ 'HPX', 'TAN', 'TSC', 'STG', 'ZEA', 'ARC', 'ZPN', 'SIP', 'TPV', 'ZPX',
@@ -2194,7 +2196,8 @@ def test_pyastwcs():
 def test_wcstools():
     """Test the WcsToolsWCS class
     """
-    # These all work, but it is quite slow, so only test one of them for the regular unit tests.
+    # These all work, but it is very slow, so only test one of them for the regular unit tests.
+    # (1.5 seconds for just the one tag.)
     # Test all of them when running python test_wcs.py.
     if __name__ == "__main__":
         # Note: TPV seems to work, but on one machine, repeated calls to xy2sky with the same
