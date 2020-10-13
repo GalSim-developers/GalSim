@@ -1435,13 +1435,20 @@ def test_table_screen():
                 sc,
                 galsim.PhaseScreenPSF(sc, 750.0, diam=4.0).drawImage(),
                 galsim.PhaseScreenPSF(sc, 750.0, diam=4.0).drawImage(
-                    method='phot', rng=rng.duplicate()
+                    method='phot', rng=rng.duplicate(), n_photons=100
                 ),
                 galsim.PhaseScreenPSF(sc, 750.0, diam=4.0, geometric_shooting=False).drawImage(
-                    method='phot', rng=rng.duplicate()
+                    method='phot', rng=rng.duplicate(), n_photons=100
                 ),
             )
     )
+    ts2 = galsim.TableScreen(table, diam=2)
+    ts3 = galsim.TableScreen(table, diam=2, obscuration=0.5)
+    do_pickle(ts2)
+    do_pickle(ts3)
+    all_obj_diff([tscreen, ts2, ts3])
+
+
 
 
 if __name__ == "__main__":
