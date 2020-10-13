@@ -1422,8 +1422,8 @@ def test_table_screen():
         np.testing.assert_allclose(dwfdy, dtwfdy, rtol=1e-11, atol=1e-11)
 
         # PSFs should be nearly identical
-        Zpsf = galsim.PhaseScreenPSF(galsim.PhaseScreenList([Zscreen]), lam=750, diam=4.0)
-        tpsf = galsim.PhaseScreenPSF(galsim.PhaseScreenList([tscreen]), lam=750, diam=4.0)
+        Zpsf = galsim.PhaseScreenPSF(Zscreen, lam=750, diam=4.0)
+        tpsf = galsim.PhaseScreenPSF(tscreen, lam=750, diam=4.0)
         Zimg = Zpsf.drawImage(scale=0.01, nx=100, ny=100)
         timg = tpsf.drawImage(scale=0.01, nx=100, ny=100)
         np.testing.assert_allclose(Zimg.array, timg.array, rtol=0, atol=1e-10)
@@ -1434,14 +1434,12 @@ def test_table_screen():
         lambda sc:
             (
                 sc,
-                galsim.PhaseScreenPSF(galsim.PhaseScreenList(sc), 750.0, diam=4.0).drawImage(),
-                galsim.PhaseScreenPSF(galsim.PhaseScreenList(sc), 750.0, diam=4.0).drawImage(
+                galsim.PhaseScreenPSF(sc, 750.0, diam=4.0).drawImage(),
+                galsim.PhaseScreenPSF(sc, 750.0, diam=4.0).drawImage(
                     method='phot', rng=rng.duplicate()
                 ),
-                galsim.PhaseScreenPSF(galsim.PhaseScreenList(sc), 750.0, diam=4.0).drawImage(),
-                galsim.PhaseScreenPSF(
-                    galsim.PhaseScreenList(sc), 750.0, diam=4.0, geometric_shooting=False
-                ).drawImage(
+                galsim.PhaseScreenPSF(sc, 750.0, diam=4.0).drawImage(),
+                galsim.PhaseScreenPSF(sc, 750.0, diam=4.0, geometric_shooting=False).drawImage(
                     method='phot', rng=rng.duplicate()
                 ),
             )
