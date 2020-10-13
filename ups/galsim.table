@@ -1,12 +1,3 @@
-setupRequired(scons)
-setupRequired(numpy)
-setupRequired(python_future)
-setupRequired(fftw)
-setupRequired(astropy)
-setupRequired(pybind11)
-setupRequired(eigen)
-setupRequired(coord)
-
 envPrepend(PYTHONPATH, ${PRODUCT_DIR})
 envPrepend(LD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
 envPrepend(DYLD_LIBRARY_PATH, ${PRODUCT_DIR}/lib)
