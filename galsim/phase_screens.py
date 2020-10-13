@@ -961,6 +961,9 @@ class OpticalScreen(object):
         lam_0:              Reference wavelength in nanometers at which Zernike aberrations are
                             being specified.  [default: 500]
     """
+    dynamic = False
+    reversible = True
+
     def __init__(self, diam, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0,
                  coma2=0.0, trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None,
                  annular_zernike=False, obscuration=0.0, lam_0=500.0):
@@ -1009,9 +1012,6 @@ class OpticalScreen(object):
                                             R_inner=R_outer*self.obscuration)
         else:
             self._zernike = zernike.Zernike(self.aberrations, R_outer=R_outer)
-
-        self.dynamic = False
-        self.reversible = True
 
     def __str__(self):
         return "galsim.OpticalScreen(diam=%s, lam_0=%s)" % (self.diam, self.lam_0)
@@ -1137,28 +1137,28 @@ class TableScreen(object):
         obscuration:  Optional fractional circular obscuration of pupil.  Like ``diam``, only used
                       for computing a value for stepk.
     """
+    dynamic = False
+    reversible = True
     def __init__(self, table, diam=None, obscuration=0.0):
         self.table = table
         self.diam = diam
         self.obscuration = obscuration
-        self.dynamic = False
-        self.reversible = True
 
     def __str__(self):
         out = "galsim.TableScreen({}".format(self.table)
         if self.diam:
-            out += "diam={}".format(self.diam)
+            out += ", diam={}".format(self.diam)
         if self.obscuration != 0:
-            out += "obscuration={}".format(self.obscuration)
+            out += ", obscuration={}".format(self.obscuration)
         out += ")"
         return out
 
     def __repr__(self):
         out = "galsim.TableScreen({!r}".format(self.table)
         if self.diam:
-            out += "diam={}".format(self.diam)
+            out += ", diam={}".format(self.diam)
         if self.obscuration != 0:
-            out += "obscuration={}".format(self.obscuration)
+            out += ", obscuration={}".format(self.obscuration)
         out += ")"
         return out
 
