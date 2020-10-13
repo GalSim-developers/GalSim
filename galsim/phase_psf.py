@@ -1213,6 +1213,9 @@ class PhaseScreenPSF(GSObject):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
+        if not isinstance(screen_list, PhaseScreenList):
+            screen_list = PhaseScreenList(screen_list)
+
         self._screen_list = screen_list
         self.t0 = float(t0)
         self.lam = float(lam)
