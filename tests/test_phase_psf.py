@@ -18,7 +18,6 @@
 
 from __future__ import print_function
 import os
-from posix import times_result
 import numpy as np
 
 import galsim
