@@ -35,14 +35,14 @@ from .errors import (GalSimRangeError, GalSimValueError, GalSimIncompatibleValue
 # Two helper functions to cache the calculation required for _getStepK
 def __calcAtmStepK(lam, r0_500, gsparams):
     from .kolmogorov import Kolmogorov
-    # Use an Airy for get appropriate stepk.
+    # Use a Kolmogorov to get appropriate stepk.
     obj = Kolmogorov(lam=lam, r0_500=r0_500, gsparams=gsparams)
     return obj.stepk
 _calcAtmStepK = LRU_Cache(__calcAtmStepK)
 
 def __calcOptStepK(lam, diam, obscuration, gsparams):
     from .airy import Airy
-    # Use an Airy for get appropriate stepk.
+    # Use an Airy to get appropriate stepk.
     obj = Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
     return obj.stepk
 _calcOptStepK = LRU_Cache(__calcOptStepK)
@@ -1122,3 +1122,113 @@ class OpticalScreen(object):
 class _DummyScreen(OpticalScreen):
     def _wavefront(self, *args):
         raise RuntimeError("Shouldn't reach this")
+
+
+class TableScreen(object):
+    """ Create a phase screen from a LookupTable2D.
+
+    Parameters:
+        table:        LookupTable2D instance representing the wavefront as a function on the
+                      entrance pupil.  Units are (meters, meters) -> nanometers.
+        diam:         Diameter of entrance pupil in meters.  If None, then use the length of the
+                      larger side of the LookupTable2D rectangle in ``table``.  This keyword is only
+                      used to compute a value for stepk, and thus has no effect on the
+                      ``wavefront()`` or ``wavefront_gradient()`` methods.
+        obscuration:  Optional fractional circular obscuration of pupil.  Like ``diam``, only used
+                      for computing a value for stepk.
+    """
+    def __init__(self, table, diam=None, obscuration=0.0):
+        self.table = table
+        self.diam = diam
+        self.obscuration = obscuration
+        self.dynamic = False
+        self.reversible = True
+
+    def __str__(self):
+        out = "galsim.TableScreen({}".format(self.table)
+        if self.diam:
+            out += "diam={}".format(self.diam)
+        if self.obscuration != 0:
+            out += "obscuration={}".format(self.obscuration)
+        out += ")"
+        return out
+
+    def __repr__(self):
+        out = "galsim.TableScreen({!r}".format(self.table)
+        if self.diam:
+            out += "diam={}".format(self.diam)
+        if self.obscuration != 0:
+            out += "obscuration={}".format(self.obscuration)
+        out += ")"
+        return out
+
+    def __eq__(self, rhs):
+        if isinstance(rhs, TableScreen):
+            return (
+                self.table == rhs.table
+                and self.diam == rhs.diam
+                and self.obscuration == rhs.obscuration
+            )
+        return False
+
+    def __ne__(self, rhs):
+        return not self == rhs
+
+    def __hash__(self):
+        return hash(("TableScreen", self.table, self.diam, self.obscuration))
+
+    def _getStepK(self, **kwargs):
+        """Return an appropriate stepk for this phase screen.
+
+        Parameters:
+            lam:            Wavelength in nanometers.
+            gsparams:       An optional `GSParams` argument. [default: None]
+
+        Returns:
+            stepk in inverse arcsec.
+        """
+        lam = kwargs['lam']
+        gsparams = kwargs.get('gsparams', None)
+        diam = self.diam if self.diam else max(np.ptp(self.table.x), np.ptp(self.table.y))
+        return _calcOptStepK(lam, diam, self.obscuration, gsparams)
+
+    def wavefront(self, u, v, t=None, theta=None):
+        """ Evaluate wavefront from lookup table.
+
+        Wavefront here indicates the distance by which the physical wavefront lags or leads the
+        ideal plane wave.
+
+        Parameters:
+            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            t:      Ignored for `TableScreen`.
+            theta:  Ignored for `TableScreen`.
+
+        Returns:
+            Array of wavefront lag or lead in nanometers.
+        """
+        return self.table(u, v)
+
+    def _wavefront(self, u, v, t, theta):
+        return self.table(u, v)
+
+    def wavefront_gradient(self, u, v, t=None, theta=None):
+        """ Evaluate gradient of wavefront from lookup table.
+
+        Parameters:
+            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+                    be a scalar or an iterable.  The shapes of u and v must match.
+            t:      Ignored for `TableScreen`.
+            theta:  Ignored for `TableScreen`.
+
+        Returns:
+            Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.
+        """
+        return self.table.gradient(u, v)
+
+    def _wavefront_gradient(self, u, v, t, theta):
+        return self.table.gradient(u, v)
