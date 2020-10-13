@@ -1437,7 +1437,6 @@ def test_table_screen():
                 galsim.PhaseScreenPSF(sc, 750.0, diam=4.0).drawImage(
                     method='phot', rng=rng.duplicate()
                 ),
-                galsim.PhaseScreenPSF(sc, 750.0, diam=4.0).drawImage(),
                 galsim.PhaseScreenPSF(sc, 750.0, diam=4.0, geometric_shooting=False).drawImage(
                     method='phot', rng=rng.duplicate()
                 ),
