@@ -567,8 +567,8 @@ class LookupTable2D(object):
     LookupTable2D is also useful for evaluating periodic 2-d functions given samples from a single
     period.
 
-    A LookupTable2D representing the function f(x, y) may be constructed from a list or array of ``x``
-    values, a list or array of ``y`` values, and a 2D array of function evaluations at all
+    A LookupTable2D representing the function f(x, y) may be constructed from a list or array of
+    ``x`` values, a list or array of ``y`` values, and a 2D array of function evaluations at all
     combinations of x and y values.  For instance::
 
         >>> x = np.arange(5)

@@ -155,7 +155,7 @@ from .spergel import Spergel
 from .deltafunction import DeltaFunction
 from .real import RealGalaxy, RealGalaxyCatalog, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
-from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
+from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen, TableScreen
 from .shapelet import Shapelet
 from .inclined import InclinedExponential, InclinedSersic
 from .interpolant import Interpolant

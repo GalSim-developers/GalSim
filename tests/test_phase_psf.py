@@ -18,10 +18,10 @@
 
 from __future__ import print_function
 import os
+from posix import times_result
 import numpy as np
 
 import galsim
-import unittest
 from galsim_test_helpers import *
 
 try:
@@ -1378,6 +1378,76 @@ def test_pickle():
         np.testing.assert_equal(wf, wf3)
 
 
+@timer
+def test_table_screen():
+    # Mimic an OpticalScreen using a TableScreen.
+    rng = galsim.UniformDeviate(57721)
+    for _ in range(10):
+        aberrations = np.empty(7)
+        rng.generate(aberrations)
+        aberrations -= 0.5
+        aberrations *= 0.1
+        aberrations[0:2] = 0.0
+        Zscreen = galsim.OpticalScreen(
+            diam=4.0,
+            aberrations=aberrations,
+            lam_0=750.0
+        )
+
+        u1 = np.linspace(-2, 2, 200)
+        u, v = np.meshgrid(u1, u1)
+        wf = Zscreen.wavefront(u, v)
+
+        table = galsim.LookupTable2D(u1, u1, wf.T, interpolant='spline')
+        tscreen = galsim.TableScreen(table)
+
+        rr = np.empty(1000)
+        th = np.empty(1000)
+        rng.generate(rr)
+        rng.generate(th)
+        rr = np.sqrt(rr)
+        rr *= 1.95  # Stay a bit away from the edges
+        th *= 2*np.pi
+        uu = rr*np.cos(th)
+        vv = rr*np.sin(th)
+
+        wf = Zscreen.wavefront(uu, vv)
+        twf = tscreen.wavefront(uu, vv)
+        np.testing.assert_allclose(wf, twf, rtol=1e-12, atol=1e-12)
+
+        dwfdx, dwfdy = Zscreen.wavefront_gradient(uu, vv)
+        dtwfdx, dtwfdy = tscreen.wavefront_gradient(uu, vv)
+
+        np.testing.assert_allclose(dwfdx, dtwfdx, rtol=1e-11, atol=1e-11)
+        np.testing.assert_allclose(dwfdy, dtwfdy, rtol=1e-11, atol=1e-11)
+
+        # PSFs should be nearly identical
+        Zpsf = galsim.PhaseScreenPSF(galsim.PhaseScreenList([Zscreen]), lam=750, diam=4.0)
+        tpsf = galsim.PhaseScreenPSF(galsim.PhaseScreenList([tscreen]), lam=750, diam=4.0)
+        Zimg = Zpsf.drawImage(scale=0.01, nx=100, ny=100)
+        timg = tpsf.drawImage(scale=0.01, nx=100, ny=100)
+        np.testing.assert_allclose(Zimg.array, timg.array, rtol=0, atol=1e-10)
+        print(np.max(Zimg.array))
+
+    do_pickle(
+        tscreen,
+        lambda sc:
+            (
+                sc,
+                galsim.PhaseScreenPSF(galsim.PhaseScreenList(sc), 750.0, diam=4.0).drawImage(),
+                galsim.PhaseScreenPSF(galsim.PhaseScreenList(sc), 750.0, diam=4.0).drawImage(
+                    method='phot', rng=rng.duplicate()
+                ),
+                galsim.PhaseScreenPSF(galsim.PhaseScreenList(sc), 750.0, diam=4.0).drawImage(),
+                galsim.PhaseScreenPSF(
+                    galsim.PhaseScreenList(sc), 750.0, diam=4.0, geometric_shooting=False
+                ).drawImage(
+                    method='phot', rng=rng.duplicate()
+                ),
+            )
+    )
+
+
 if __name__ == "__main__":
     test_aperture()
     test_atm_screen_size()
@@ -1399,3 +1469,4 @@ if __name__ == "__main__":
     test_withGSP()
     test_shared_memory()
     test_pickle()
+    test_table_screen()
