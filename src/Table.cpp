@@ -1217,7 +1217,6 @@ namespace galsim {
         }
 
     private:
-        const int _nx;
         const Interpolant* _gsinterp;
 
         void _clearCache() const {
