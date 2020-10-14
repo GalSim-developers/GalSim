@@ -66,6 +66,62 @@ namespace galsim
         void fillWithPixelAreas(ImageView<T> target, Position<int> orig_center, bool use_flux);
 
     private:
+	int horizontalPixelStride() {
+	    return _numVertices + 1;
+	}
+
+	int verticalPixelStride() {
+	    return _numVertices;
+	}
+
+	int horizontalRowStride() {
+	    return ((_numVertices + 1) * _nx) + 1;
+	}
+
+	int verticalColumnStride() {
+	    return _numVertices * _ny;
+	}
+	
+	// Converts pixel co-ordinates (x, y) and index n within pixel boundary
+	// polygon into an index within the new horizontal or vertical boundary
+	// arrays. horizontal is set to true if the point is in the horizontal
+	// array, false if vertical
+	int getBoundaryIndex(int x, int y, int n, bool& horizontal) {
+	    int nv2 = _numVertices / 2;
+	    horizontal = false;
+	    int idx;
+	    
+	    if (n < nv2) {
+		// left hand side, lower
+		idx = n + nv2;
+	    }
+	    else if (n <= ((nv2*3)+1)) {
+		// bottom row including corners
+		horizontal = true;
+		idx = n - nv2;
+	    }
+	    else if (n <= ((nv2*5)+1)) {
+		// right hand side
+		idx = (_numVertices - 1) - (n - ((nv2*3)+2)) + verticalColumnStride();
+	    }
+	    else if (n <= ((nv2*7)+3)) {
+		// top row including corners
+		horizontal = true;
+		idx = (_numVertices + 1) - (n - ((nv2*5)+2)) + horizontalRowStride();
+	    }
+	    else {
+		// left hand side, upper
+		idx = n - ((nv2*7)+4);
+	    }
+
+	    if (horizontal) {
+		return (y * horizontalRowStride()) + (x * horizontalPixelStride()) + idx;
+	    }
+	    return (x * verticalColumnStride()) + (y * verticalPixelStride()) + idx;
+	}
+
+	void initializeBoundaryPoints();
+	
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
         std::vector<Polygon> _distortions;
@@ -74,6 +130,8 @@ namespace galsim
 	std::vector<Point> _verticalBoundaryPoints;
 	std::vector<Bounds<double> > _pixelInnerBounds;
 	std::vector<Bounds<double> > _pixelOuterBounds;
+	std::vector<Point> _horizontalDistortions;
+	std::vector<Point> _verticalDistortions;
         int _numVertices, _nx, _ny, _nv, _qDist;
         double _nrecalc, _diffStep, _pixelSize, _sensorThickness;
         Table _tr_radial_table;
