@@ -1304,7 +1304,7 @@ def structure_function(image):
     """
     from .table import LookupTable2D
     array = image.array
-    nx, ny = array.shape
+    ny, nx = array.shape
     scale = image.scale
 
     # The structure function can be derived from the correlation function B(r) as:

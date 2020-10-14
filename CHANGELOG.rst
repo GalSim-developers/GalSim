@@ -73,6 +73,12 @@ API Changes
 - Deprecated ``galsim.integ.midpt``.  You should use ``np.trapz`` or
   ``galsim.trapz`` instead, which are almost equivalent, but slightly more
   accurate. (#1098)
+- Changed the convention for the ``f`` array passed to the `LookupTable2D`
+  constructor to be the transpose of what it was.  This is arguably a bug
+  fix, since the old convention was the opposite of every other array used
+  in GalSim that reprented (x,y) positions.  But if you have been using
+  `LookupTable2D`, you will need to add ``.T`` (or remove it) from the
+  ``f`` argument you are passing to the class. (#1103)
 
 
 Config Updates

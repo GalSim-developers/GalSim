@@ -1397,7 +1397,7 @@ def test_table_screen():
         u, v = np.meshgrid(u1, u1)
         wf = Zscreen.wavefront(u, v)
 
-        table = galsim.LookupTable2D(u1, u1, wf.T, interpolant='spline')
+        table = galsim.LookupTable2D(u1, u1, wf, interpolant='spline')
         tscreen = galsim.TableScreen(table)
 
         rr = np.empty(1000)

@@ -840,7 +840,7 @@ namespace galsim {
     class Table2D::Table2DImpl {
     public:
         Table2DImpl(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny) :
-            _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _ny(Ny) {}
+            _xargs(xargs, Nx), _yargs(yargs, Ny), _vals(vals), _nx(Nx), _ny(Ny) {}
 
         virtual double lookup(double x, double y) const = 0;
         virtual void interpMany(const double* xvec, const double* yvec, double* valvec,
@@ -857,6 +857,7 @@ namespace galsim {
         const ArgVec _xargs;
         const ArgVec _yargs;
         const double* _vals;
+        const int _nx;
         const int _ny;
     };
 
@@ -891,8 +892,8 @@ namespace galsim {
             _xargs.upperIndexMany(xvec, xindices.data(), Nx);
             _yargs.upperIndexMany(yvec, yindices.data(), Ny);
 
-            for (int kx=0, k=0; kx<Nx; kx++) {
-                for (int ky=0; ky<Ny; ky++, k++) {
+            for (int ky=0, k=0; ky<Ny; ky++) {
+                for (int kx=0; kx<Nx; kx++, k++) {
                     valvec[k] = static_cast<const T*>(this)->interp(
                         xvec[kx], yvec[ky], xindices[kx], yindices[ky]
                     );
@@ -927,8 +928,8 @@ namespace galsim {
             _xargs.upperIndexMany(xvec, xindices.data(), Nx);
             _yargs.upperIndexMany(yvec, yindices.data(), Ny);
 
-            for (int kx=0, k=0; kx<Nx; kx++) {
-                for (int ky=0; ky<Ny; ky++, k++) {
+            for (int ky=0, k=0; ky<Ny; ky++) {
+                for (int kx=0; kx<Nx; kx++, k++) {
                     static_cast<const T*>(this)->grad(
                         xvec[kx], yvec[ky], xindices[kx], yindices[ky], dfdxvec[k], dfdyvec[k]
                     );
@@ -949,7 +950,7 @@ namespace galsim {
             // check to see if we should choose the opposite bound.
             if (x == _xargs[i]) i++;
             if (y == _yargs[j]) j++;
-            return _vals[(i-1)*_ny+j-1];
+            return _vals[(j-1)*_nx+i-1];
         }
 
         void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
@@ -965,7 +966,7 @@ namespace galsim {
         double interp(double x, double y, int i, int j) const {
             if (x == _xargs[i-1]) i--;
             if (y == _yargs[j-1]) j--;
-            return _vals[i*_ny+j];
+            return _vals[j*_nx+i];
         }
 
         void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
@@ -981,7 +982,7 @@ namespace galsim {
         double interp(double x, double y, int i, int j) const {
             if ((x - _xargs[i-1]) < (_xargs[i] - x)) i--;
             if ((y - _yargs[j-1]) < (_yargs[j] - y)) j--;
-            return _vals[i*_ny+j];
+            return _vals[j*_nx+i];
         }
 
         void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
@@ -1000,19 +1001,19 @@ namespace galsim {
             double bx = 1.0 - ax;
             double by = 1.0 - ay;
 
-            return (_vals[(i-1)*_ny+j-1] * ax * ay
-                    + _vals[i*_ny+j-1] * bx * ay
-                    + _vals[(i-1)*_ny+j] * ax * by
-                    + _vals[i*_ny+j] * bx * by);
+            return (_vals[(j-1)*_nx+i-1] * ax * ay
+                    + _vals[(j-1)*_nx+i] * bx * ay
+                    + _vals[j*_nx+i-1] * ax * by
+                    + _vals[j*_nx+i] * bx * by);
         }
 
         void grad(double x, double y, int i, int j, double& dfdx, double& dfdy) const {
             double dx = _xargs[i] - _xargs[i-1];
             double dy = _yargs[j] - _yargs[j-1];
-            double f00 = _vals[(i-1)*_ny+j-1];
-            double f01 = _vals[(i-1)*_ny+j];
-            double f10 = _vals[i*_ny+j-1];
-            double f11 = _vals[i*_ny+j];
+            double f00 = _vals[(j-1)*_nx+i-1];
+            double f01 = _vals[j*_nx+i-1];
+            double f10 = _vals[(j-1)*_nx+i];
+            double f11 = _vals[j*_nx+i];
             double ax = (_xargs[i] - x) / (_xargs[i] - _xargs[i-1]);
             double bx = 1.0 - ax;
             double ay = (_yargs[j] - y) / (_yargs[j] - _yargs[j-1]);
@@ -1036,14 +1037,14 @@ namespace galsim {
             double dy = (y - _yargs[j-1])/dygrid;
 
             // Need to first interpolate the y-values and the y-derivatives in the x direction.
-            double val0 = oneDSpline(dx, _vals[(i-1)*_ny+j-1], _vals[i*_ny+j-1],
-                                     _dfdx[(i-1)*_ny+j-1]*dxgrid, _dfdx[i*_ny+j-1]*dxgrid);
-            double val1 = oneDSpline(dx, _vals[(i-1)*_ny+j], _vals[i*_ny+j],
-                                     _dfdx[(i-1)*_ny+j]*dxgrid, _dfdx[i*_ny+j]*dxgrid);
-            double der0 = oneDSpline(dx, _dfdy[(i-1)*_ny+j-1], _dfdy[i*_ny+j-1],
-                                     _d2fdxdy[(i-1)*_ny+j-1]*dxgrid, _d2fdxdy[i*_ny+j-1]*dxgrid);
-            double der1 = oneDSpline(dx, _dfdy[(i-1)*_ny+j], _dfdy[i*_ny+j],
-                                     _d2fdxdy[(i-1)*_ny+j]*dxgrid, _d2fdxdy[i*_ny+j]*dxgrid);
+            double val0 = oneDSpline(dx, _vals[(j-1)*_nx+i-1], _vals[(j-1)*_nx+i],
+                                     _dfdx[(j-1)*_nx+i-1]*dxgrid, _dfdx[(j-1)*_nx+i]*dxgrid);
+            double val1 = oneDSpline(dx, _vals[j*_nx+i-1], _vals[j*_nx+i],
+                                     _dfdx[j*_nx+i-1]*dxgrid, _dfdx[j*_nx+i]*dxgrid);
+            double der0 = oneDSpline(dx, _dfdy[(j-1)*_nx+i-1], _dfdy[(j-1)*_nx+i],
+                                     _d2fdxdy[(j-1)*_nx+i-1]*dxgrid, _d2fdxdy[(j-1)*_nx+i]*dxgrid);
+            double der1 = oneDSpline(dx, _dfdy[j*_nx+i-1], _dfdy[j*_nx+i],
+                                     _d2fdxdy[j*_nx+i-1]*dxgrid, _d2fdxdy[j*_nx+i]*dxgrid);
 
             return oneDSpline(dy, val0, val1, der0*dygrid, der1*dygrid);
         }
@@ -1055,25 +1056,25 @@ namespace galsim {
             double dy = (y - _yargs[j-1])/dygrid;
 
             // xgradient;
-            double val0 = oneDGrad(dx, _vals[(i-1)*_ny+j-1], _vals[i*_ny+j-1],
-                                   _dfdx[(i-1)*_ny+j-1]*dxgrid, _dfdx[i*_ny+j-1]*dxgrid);
-            double val1 = oneDGrad(dx, _vals[(i-1)*_ny+j], _vals[i*_ny+j],
-                                   _dfdx[(i-1)*_ny+j]*dxgrid, _dfdx[i*_ny+j]*dxgrid);
-            double der0 = oneDGrad(dx, _dfdy[(i-1)*_ny+j-1], _dfdy[i*_ny+j-1],
-                                   _d2fdxdy[(i-1)*_ny+j-1]*dxgrid, _d2fdxdy[i*_ny+j-1]*dxgrid);
-            double der1 = oneDGrad(dx, _dfdy[(i-1)*_ny+j], _dfdy[i*_ny+j],
-                                   _d2fdxdy[(i-1)*_ny+j]*dxgrid, _d2fdxdy[i*_ny+j]*dxgrid);
+            double val0 = oneDGrad(dx, _vals[(j-1)*_nx+i-1], _vals[(j-1)*_nx+i],
+                                   _dfdx[(j-1)*_nx+i-1]*dxgrid, _dfdx[(j-1)*_nx+i]*dxgrid);
+            double val1 = oneDGrad(dx, _vals[j*_nx+i-1], _vals[j*_nx+i],
+                                   _dfdx[j*_nx+i-1]*dxgrid, _dfdx[j*_nx+i]*dxgrid);
+            double der0 = oneDGrad(dx, _dfdy[(j-1)*_nx+i-1], _dfdy[(j-1)*_nx+i],
+                                   _d2fdxdy[(j-1)*_nx+i-1]*dxgrid, _d2fdxdy[(j-1)*_nx+i]*dxgrid);
+            double der1 = oneDGrad(dx, _dfdy[j*_nx+i-1], _dfdy[j*_nx+i],
+                                   _d2fdxdy[j*_nx+i-1]*dxgrid, _d2fdxdy[j*_nx+i]*dxgrid);
             dfdx = oneDSpline(dy, val0, val1, der0*dygrid, der1*dygrid)/dxgrid;
 
             // ygradient
-            val0 = oneDGrad(dy, _vals[(i-1)*_ny+j-1], _vals[(i-1)*_ny+j],
-                            _dfdy[(i-1)*_ny+j-1]*dygrid, _dfdy[(i-1)*_ny+j]*dygrid);
-            val1 = oneDGrad(dy, _vals[i*_ny+j-1], _vals[i*_ny+j],
-                            _dfdy[i*_ny+j-1]*dygrid, _dfdy[i*_ny+j]*dygrid);
-            der0 = oneDGrad(dy, _dfdx[(i-1)*_ny+j-1], _dfdx[(i-1)*_ny+j],
-                            _d2fdxdy[(i-1)*_ny+j-1]*dygrid, _d2fdxdy[(i-1)*_ny+j]*dygrid);
-            der1 = oneDGrad(dy, _dfdx[i*_ny+j-1], _dfdx[i*_ny+j],
-                            _d2fdxdy[i*_ny+j-1]*dygrid, _d2fdxdy[i*_ny+j]*dygrid);
+            val0 = oneDGrad(dy, _vals[(j-1)*_nx+i-1], _vals[j*_nx+i-1],
+                            _dfdy[(j-1)*_nx+i-1]*dygrid, _dfdy[j*_nx+i-1]*dygrid);
+            val1 = oneDGrad(dy, _vals[(j-1)*_nx+i], _vals[j*_nx+i],
+                            _dfdy[(j-1)*_nx+i]*dygrid, _dfdy[j*_nx+i]*dygrid);
+            der0 = oneDGrad(dy, _dfdx[(j-1)*_nx+i-1], _dfdx[j*_nx+i-1],
+                            _d2fdxdy[(j-1)*_nx+i-1]*dygrid, _d2fdxdy[j*_nx+i-1]*dygrid);
+            der1 = oneDGrad(dy, _dfdx[(j-1)*_nx+i], _dfdx[j*_nx+i],
+                            _d2fdxdy[(j-1)*_nx+i]*dygrid, _d2fdxdy[j*_nx+i]*dygrid);
             dfdy = oneDSpline(dx, val0, val1, der0*dxgrid, der1*dxgrid)/dygrid;
         }
     private:
@@ -1113,7 +1114,7 @@ namespace galsim {
     public:
         T2DGSInterpolant(const double* xargs, const double* yargs, const double* vals, int Nx, int Ny,
                          const Interpolant* gsinterp) :
-            T2DCRTP<T2DGSInterpolant>(xargs, yargs, vals, Nx, Ny), _nx(Nx), _gsinterp(*gsinterp) {}
+            T2DCRTP<T2DGSInterpolant>(xargs, yargs, vals, Nx, Ny), _gsinterp(gsinterp) {}
 
         double interp(double x, double y, int i, int j) const {
             double dxgrid = _xargs[i] - _xargs[i-1];
@@ -1123,96 +1124,90 @@ namespace galsim {
 
             // Stealing from XTable::interpolate
             int ixMin, ixMax, iyMin, iyMax;
-            if (_gsinterp.isExactAtNodes()
+            if (_gsinterp->isExactAtNodes()
                 && std::abs(dx) < 10.*std::numeric_limits<double>::epsilon()) {
                     ixMin = ixMax = i-1;
             } else {
-                ixMin = i-1 + int(std::ceil(dx-_gsinterp.xrange()));
-                ixMax = i-1 + int(std::floor(dx+_gsinterp.xrange()));
+                ixMin = i-1 + int(std::ceil(dx-_gsinterp->xrange()));
+                ixMax = i-1 + int(std::floor(dx+_gsinterp->xrange()));
             }
             ixMin = std::max(ixMin, 0);
             ixMax = std::min(ixMax, _nx-1);
             if (ixMin > ixMax) return 0.0;
-            if (_gsinterp.isExactAtNodes()
+            if (_gsinterp->isExactAtNodes()
                 && std::abs(dy) < 10.*std::numeric_limits<double>::epsilon()) {
                     iyMin = iyMax = j-1;
             } else {
-                iyMin = j-1 + int(std::ceil(dy-_gsinterp.xrange()));
-                iyMax = j-1 + int(std::floor(dy+_gsinterp.xrange()));
+                iyMin = j-1 + int(std::ceil(dy-_gsinterp->xrange()));
+                iyMax = j-1 + int(std::floor(dy+_gsinterp->xrange()));
             }
             iyMin = std::max(iyMin, 0);
             iyMax = std::min(iyMax, _ny-1);
             if (iyMin > iyMax) return 0.0;
 
+            // The interpolated value is the sum of
+            //      I(x'-x) * I(y'-y) * vals(x',y')
+            // where I is the interpolant function, summed from ixMin..ixMax and iyMin..iyMax.
+            // The one trick we use to speed this up is to recognize that successive calls to this
+            // function tend to have the same value for y.  (for(x=...) is typically an inner loop.)
+            // So we cache the sums in the y direction, many of which we will need again for
+            // the next call.
+
             double sum = 0.0;
-            const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&_gsinterp);
-            if (ixy) {
-                // Interpolant is seperable
-                // We have the opportunity to speed up the calculation by
-                // re-using the sums over rows.  So we will keep a
-                // cache of them.
-                if (y != _cacheY || ixy != _cacheInterp) {
-                    _clearCache();
-                    _cacheY = y;
-                    _cacheInterp = ixy;
-                } else if (ixMax == ixMin && !_cache.empty()) {
-                    // Special case for interpolation on a single ix value:
-                    // See if we already have this row in cache:
-                    int index = ixMin - _cacheStartX;
-                    // if (index < 0) index += _N;  // JM: I don't understand this line...
-                    if (index >= 0 && index < int(_cache.size()))
-                        // We have it!
-                        return _cache[index];
-                    else
-                        // Desired row not in cache - kill cache, continue as normal.
-                        // (But don't clear ywt, since that's still good.)
-                        _cache.clear();
-                }
-                // Build y factors for interpolant
-                int ny = iyMax - iyMin + 1;
-                // This is also cached if possible.  It gets cleared with y!=cacheY above.
-                if (_ywt.empty()) {
-                    _ywt.resize(ny);
-                    for (int ii=0; ii<ny; ii++) {
-                        _ywt[ii] = ixy->xval1d(j-1+dy-(ii+iyMin));
-                    }
-                } else {
-                    assert(int(_ywt.size()) == ny);
-                }
-                // cache always holds sequential x values (no wrap).  Throw away
-                // elements until we get to the one we need first
-                std::deque<double>::iterator nextSaved = _cache.begin();
-                while (nextSaved != _cache.end() && _cacheStartX != ixMin) {
-                    _cache.pop_front();
-                    ++_cacheStartX;
-                    nextSaved = _cache.begin();
-                }
-                for (int ix=ixMin; ix<=ixMax; ix++) {
-                    double sumx = 0.0;
-                    if (nextSaved != _cache.end()) {
-                        // This row is cached
-                        sumx = *nextSaved;
-                        ++nextSaved;
-                    } else {
-                        // Need to compute a new row's sum
-                        const double* dptr = &_vals[ix*_ny+iyMin];
-                        std::vector<double>::const_iterator ywt_it = _ywt.begin();
-                        int count = ny;
-                        for(; count; --count) sumx += (*ywt_it++) * (*dptr++);
-                        xassert(ywt_it == _ywt.end());
-                        // Add to back of cache
-                        if (_cache.empty()) _cacheStartX = ix;
-                        _cache.push_back(sumx);
-                        nextSaved = _cache.end();
-                    }
-                    sum += sumx * ixy->xval1d(i-1+dx-ix);
+            if (y != _cacheY) {
+                _clearCache();
+                _cacheY = y;
+            } else if (ixMax == ixMin && !_cache.empty()) {
+                // Special case for interpolation on a single ix value:
+                // See if we already have this row in cache:
+                int index = ixMin - _cacheStartX;
+                // if (index < 0) index += _N;  // JM: I don't understand this line...
+                if (index >= 0 && index < int(_cache.size()))
+                    // We have it!
+                    return _cache[index];
+                else
+                    // Desired row not in cache - kill cache, continue as normal.
+                    // (But don't clear ywt, since that's still good.)
+                    _cache.clear();
+            }
+            // Build y factors for interpolant
+            int ny = iyMax - iyMin + 1;
+            // This is also cached if possible.  It gets cleared with y!=cacheY above.
+            if (_ywt.empty()) {
+                _ywt.resize(ny);
+                for (int ii=0; ii<ny; ii++) {
+                    _ywt[ii] = _gsinterp->xval(j-1+dy-(ii+iyMin));
                 }
             } else {
-                for(int iy=iyMin; iy<=iyMax; iy++) {
-                    for(int ix=ixMin; ix<=ixMax; ix++) {
-                        sum += _vals[ix*_ny+iy] * _gsinterp.xval(i-1+dx-ix, j-1+dy-iy);
-                    }
+                assert(int(_ywt.size()) == ny);
+            }
+            // cache always holds sequential x values (no wrap).  Throw away
+            // elements until we get to the one we need first
+            std::deque<double>::iterator nextSaved = _cache.begin();
+            while (nextSaved != _cache.end() && _cacheStartX != ixMin) {
+                _cache.pop_front();
+                ++_cacheStartX;
+                nextSaved = _cache.begin();
+            }
+            for (int ix=ixMin; ix<=ixMax; ix++) {
+                double sumx = 0.0;
+                if (nextSaved != _cache.end()) {
+                    // This sumx is cached
+                    sumx = *nextSaved;
+                    ++nextSaved;
+                } else {
+                    // Need to compute a new sumx
+                    const double* dptr = &_vals[iyMin*_nx+ix];
+                    std::vector<double>::const_iterator ywt_it = _ywt.begin();
+                    int count = ny;
+                    for(; count; --count, dptr+=_nx) sumx += (*ywt_it++) * (*dptr);
+                    xassert(ywt_it == _ywt.end());
+                    // Add to back of cache
+                    if (_cache.empty()) _cacheStartX = ix;
+                    _cache.push_back(sumx);
+                    nextSaved = _cache.end();
                 }
+                sum += sumx * _gsinterp->xval(i-1+dx-ix);
             }
             return sum;
         }
@@ -1223,7 +1218,7 @@ namespace galsim {
 
     private:
         const int _nx;
-        const InterpolantXY _gsinterp;
+        const Interpolant* _gsinterp;
 
         void _clearCache() const {
             _cache.clear();
@@ -1234,7 +1229,6 @@ namespace galsim {
         mutable std::vector<double> _ywt;
         mutable double _cacheY;
         mutable int _cacheStartX;
-        mutable const InterpolantXY* _cacheInterp;
     };
 
 
