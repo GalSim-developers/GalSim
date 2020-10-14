@@ -120,6 +120,10 @@ namespace galsim {
         // Next, we read in the pixel distortions from the Poisson_CCD simulations
         if (_transpose) std::swap(_nx,_ny);
 
+	// FIXME: above or below the transpose??
+	_horizontalDistortions.resize(horizontalRowStride() * (_ny + 1));
+	_verticalDistortions.resize(verticalColumnStride() * (_nx + 1));
+	
         for (int index=0; index < _nv*_nx*_ny; index++) {
             xdbg<<"index = "<<index<<std::endl;
             int n = index % _nv;
@@ -475,6 +479,7 @@ namespace galsim {
             _imagepolys.resize(nxny);
             for (int i=0; i<nxny; ++i)
                 _imagepolys[i] = _emptypoly;
+	    initializeBoundaryPoints();
 
             // Set up the pixel information according to the current flux in the image.
             addTreeRingDistortions(target, orig_center);
@@ -525,6 +530,40 @@ namespace galsim {
         }
     }
 
+    void Silicon::initializeBoundaryPoints()
+    {
+	int nv2 = _numVertices / 2;
+	
+	_horizontalBoundaryPoints.resize(horizontalRowStride() * (_ny+1));
+	_verticalBoundaryPoints.resize(verticalColumnStride() * (_nx+1));
+
+	// fill in horizontal boundary points from emptypoly
+	int i = 0;
+	// loop over rows
+	for (int y = 0; y < (_ny + 1); y++) {
+	    // loop over pixels within a row
+	    for (int x = 0; x < _nx; x++) {
+		for (int n = nv2; n <= (3*nv2); n++) {
+		    _horizontalBoundaryPoints[i++] = _emptypoly[n];
+		}
+	    }
+	    // add final corner point
+	    _horizontalBoundaryPoints[i++] = _emptypoly[nv2];
+	}
+
+	// fill in vertical boundary points from emptypoly
+	i = 0;
+	// loop over columns
+	for (int x = 0; x < (_nx + 1); x++) {
+	    // loop over pixels within a column
+	    for (int y = 0; y < _ny; y++) {
+		for (int n = ((3*nv2)+2); n <= ((5*nv2)+1); n++) {
+		    _verticalBoundaryPoints[i++] = _emptypoly[n];
+		}
+	    }
+	}
+    }
+    
     template <typename T>
     double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
                                Position<int> orig_center, bool resume)
@@ -600,6 +639,7 @@ namespace galsim {
             _imagepolys.resize(nxny);
             for (int i=0; i<nxny; ++i)
                 _imagepolys[i] = _emptypoly;
+	    initializeBoundaryPoints();
             dbg<<"Built poly list\n";
             // Now we add in the tree ring distortions
             addTreeRingDistortions(target, orig_center);
