@@ -365,14 +365,14 @@ def test_table_GSInterp():
 
     x = np.linspace(0.1, 3.3, 25)
     y = np.arange(20) # Need something big enough to avoid having the interpolant fall off the edge
-    yy, xx = np.meshgrid(y, x)
+    xx, yy = np.meshgrid(x, y)
 
     interpolants = ['lanczos3', 'lanczos3F', 'lanczos7', 'sinc', 'quintic']
 
     for interpolant in interpolants:
         z = f(xx)
 
-        tab = galsim.LookupTable(x, z[:,0], interpolant=interpolant)
+        tab = galsim.LookupTable(x, z[0,:], interpolant=interpolant)
         do_pickle(tab)
 
         # Use InterpolatedImage to validate
@@ -381,7 +381,7 @@ def test_table_GSInterp():
             0, 0,
             (max(y) - min(y))/(len(y)-1),
         )
-        img = galsim.Image(z.T, wcs=wcs)
+        img = galsim.Image(z, wcs=wcs)
         ii = galsim.InterpolatedImage(
             img,
             use_true_center=True,
@@ -403,7 +403,7 @@ def test_table_GSInterp():
             atol=1e-10, rtol=0
         )
 
-        tab2 = galsim._LookupTable(x, z[:,0], interpolant=interpolant)
+        tab2 = galsim._LookupTable(x, z[0,:], interpolant=interpolant)
         assert tab2 == tab
 
 
@@ -418,7 +418,7 @@ def test_table2d():
 
     x = np.linspace(0.1, 3.3, 25)
     y = np.linspace(0.2, 10.4, 75)
-    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+    xx, yy = np.meshgrid(x, y)
     z = f(xx, yy)
 
     tab2d = galsim.LookupTable2D(x, y, z)
@@ -432,17 +432,17 @@ def test_table2d():
 
     newx = np.linspace(0.2, 3.1, 45)
     newy = np.linspace(0.3, 10.1, 85)
-    newyy, newxx = np.meshgrid(newy, newx)
+    newxx, newyy = np.meshgrid(newx, newy)
 
     # Compare different ways of evaluating Table2D
     ref = tab2d(newxx, newyy)
     np.testing.assert_array_almost_equal(ref, tab2d(newx, newy, grid=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
-                                                         for y0 in newy]
-                                                        for x0 in newx]))
+                                                         for x0 in newx]
+                                                        for y0 in newy]))
 
-    scitab2d = interp2d(x, y, np.transpose(z))
-    np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
+    scitab2d = interp2d(x, y, z)
+    np.testing.assert_array_almost_equal(ref, scitab2d(newx, newy))
 
     # Try using linear GSInterp
     tab2d2 = galsim.LookupTable2D(x, y, z, interpolant=galsim.Linear())
@@ -462,16 +462,16 @@ def test_table2d():
     # Test non-equally-spaced table.
     x = np.delete(x, 10)
     y = np.delete(y, 10)
-    yy, xx = np.meshgrid(y, x)
+    xx, yy = np.meshgrid(x, y)
     z = f(xx, yy)
     tab2d = galsim.LookupTable2D(x, y, z)
     ref = tab2d(newxx, newyy)
     np.testing.assert_array_almost_equal(ref, tab2d(newx, newy, grid=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
-                                                         for y0 in newy]
-                                                        for x0 in newx]))
-    scitab2d = interp2d(x, y, np.transpose(z))
-    np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
+                                                         for x0 in newx]
+                                                        for y0 in newy]))
+    scitab2d = interp2d(x, y, z)
+    np.testing.assert_array_almost_equal(ref, scitab2d(newx, newy))
 
     # Using a galsim.Interpolant should raise an exception if x/y are not equal spaced.
     with assert_raises(galsim.GalSimIncompatibleValuesError):
@@ -487,8 +487,8 @@ def test_table2d():
 
     np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newxx, newyy))
     np.testing.assert_array_almost_equal(f(newxx, newyy), np.array([[tab2d(x0, y0)
-                                                                     for y0 in newy]
-                                                                    for x0 in newx]))
+                                                                     for x0 in newx]
+                                                                    for y0 in newy]))
 
     # Test edge exception
     with assert_raises(ValueError):
@@ -640,14 +640,14 @@ def test_table2d_gradient():
 
     x = np.linspace(0.1, 3.3, 250)
     y = np.linspace(0.2, 10.4, 750)
-    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+    xx, yy = np.meshgrid(x, y)
     z = f(xx, yy)
 
     tab2d = galsim.LookupTable2D(x, y, z)
 
     newx = np.linspace(0.2, 3.1, 45)
     newy = np.linspace(0.3, 10.1, 85)
-    newyy, newxx = np.meshgrid(newy, newx)
+    newxx, newyy = np.meshgrid(newx, newy)
 
     # Check single value functionality.
     x1,y1 = 1.1, 4.9
@@ -823,7 +823,7 @@ def test_table2d_cubic():
 
     x = np.linspace(0.1, 3.3, 250)
     y = np.linspace(0.2, 10.4, 750)
-    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+    xx, yy = np.meshgrid(x, y)
 
     for f, dfdx, dfdy in zip(fs, dfdxs, dfdys):
         z = f(xx, yy)
@@ -841,7 +841,7 @@ def test_table2d_cubic():
         # Check vectorized output
         newx = np.linspace(0.2, 3.1, 45)
         newy = np.linspace(0.3, 10.1, 85)
-        newyy, newxx = np.meshgrid(newy, newx)
+        newxx, newyy = np.meshgrid(newx, newy)
 
         np.testing.assert_allclose(tab2d(newxx, newyy), f(newxx, newyy), atol=1e-11, rtol=0)
         ref_dfdx = dfdx(newxx, newyy)
@@ -893,7 +893,7 @@ def test_table2d_cubic():
         # Check vectorized output
         newx = np.linspace(0.2, 3.1, 45)
         newy = np.linspace(0.3, 10.1, 85)
-        newyy, newxx = np.meshgrid(newy, newx)
+        newxx, newyy = np.meshgrid(newx, newy)
 
         np.testing.assert_allclose(tab2d(newxx, newyy), f(newxx, newyy), atol=1e-10, rtol=0)
         ref_dfdx = dfdx(newxx, newyy)
@@ -910,7 +910,7 @@ def test_table2d_GSInterp():
 
     x = np.linspace(0.1, 3.3, 25)
     y = np.linspace(0.2, 10.4, 75)
-    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+    xx, yy = np.meshgrid(x, y)
 
     interpolants = ['lanczos3', 'lanczos3F', 'lanczos7', 'sinc', 'quintic']
 
@@ -927,7 +927,7 @@ def test_table2d_GSInterp():
             0, 0,
             (max(y) - min(y))/(len(y)-1),
         )
-        img = galsim.Image(z.T, wcs=wcs)
+        img = galsim.Image(z, wcs=wcs)
         ii = galsim.InterpolatedImage(
             img,
             use_true_center=True,
@@ -944,7 +944,7 @@ def test_table2d_GSInterp():
         # Check vectorized output
         newx = np.linspace(0.2, 3.1, 15)
         newy = np.linspace(0.3, 10.1, 25)
-        newyy, newxx = np.meshgrid(newy, newx)
+        newxx, newyy = np.meshgrid(newx, newy)
         np.testing.assert_allclose(
             tab2d(newxx, newyy).ravel(),
             np.array([ii.xValue(x_, y_)

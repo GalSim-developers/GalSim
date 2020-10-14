@@ -573,7 +573,7 @@ class LookupTable2D(object):
 
         >>> x = np.arange(5)
         >>> y = np.arange(8)
-        >>> z = x[:, np.newaxis] + y  # function is x + y, dimensions of z are (5, 8)
+        >>> z = x + y[:, np.newaxis]  # function is x + y, dimensions of z are (8, 5)
         >>> tab2d = galsim.LookupTable2D(x, y, z)
 
     To evaluate new function values with the lookup table, use the () operator::
@@ -640,7 +640,7 @@ class LookupTable2D(object):
 
         >>> x = np.arange(5)
         >>> y = np.arange(8)
-        >>> z = x[:, np.newaxis] + y  # function is x + y, dimensions of z is (5, 8)
+        >>> z = x + y[:, np.newaxis]  # function is x + y, dimensions of z are (8, 5)
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='raise')
         >>> tab2d(7, 7)
         ValueError: Extrapolating beyond input range.
@@ -704,7 +704,7 @@ class LookupTable2D(object):
             raise GalSimValueError("y input grids is not strictly increasing.", y)
 
         fshape = f.shape
-        if fshape != (len(x), len(y)):
+        if fshape != (len(y), len(x)):
             raise GalSimIncompatibleValuesError(
                 "Shape of f incompatible with lengths of x,y", f=f, x=x, y=y)
 
@@ -773,20 +773,20 @@ class LookupTable2D(object):
                 # Use finite differences if derivatives not provided
                 dfdx = np.empty_like(f)
                 diffx = self.x[2:] - self.x[:-2]
-                dfdx[1:-1, :] = (f[2:, :] - f[:-2, :])/diffx[:,None]
-                dfdx[0, :] = (f[1, :] - f[0, :])/dx[0]
-                dfdx[-1, :] = (f[-1, :] - f[-2, :])/dx[-1]
+                dfdx[:, 1:-1] = (f[:, 2:] - f[:, :-2])/diffx
+                dfdx[:, 0] = (f[:, 1] - f[:, 0])/dx[0]
+                dfdx[:, -1] = (f[:, -1] - f[:, -2])/dx[-1]
 
                 dfdy = np.empty_like(f)
                 diffy = self.y[2:] - self.y[:-2]
-                dfdy[:, 1:-1] = (f[:, 2:] - f[:, :-2])/diffy
-                dfdy[:, 0] = (f[:, 1] - f[:, 0])/dy[0]
-                dfdy[:, -1] = (f[:, -1] - f[:, -2])/dy[-1]
+                dfdy[1:-1, :] = (f[2:, :] - f[:-2, :])/diffy[:,None]
+                dfdy[0, :] = (f[1, :] - f[0, :])/dy[0]
+                dfdy[-1, :] = (f[-1, :] - f[-2, :])/dy[-1]
 
                 d2fdxdy = np.empty_like(f)
-                d2fdxdy[1:-1, :] = (dfdy[2:, :] - dfdy[:-2, :])/diffx[:,None]
-                d2fdxdy[0, :] = (dfdy[1, :] - dfdy[0, :])/dx[0]
-                d2fdxdy[-1, :] = (dfdy[-1, :] - dfdy[-2, :])/dx[-1]
+                d2fdxdy[1:-1, :] = (dfdx[2:, :] - dfdx[:-2, :])/diffy[:,None]
+                d2fdxdy[0, :] = (dfdx[1, :] - dfdx[0, :])/dy[0]
+                d2fdxdy[-1, :] = (dfdx[-1, :] - dfdx[-2, :])/dy[-1]
         else:
             if any(der_exist):
                 raise GalSimIncompatibleValuesError(
@@ -857,7 +857,7 @@ class LookupTable2D(object):
 
     def _call_inbounds(self, x, y, grid=False):
         if grid:
-            f = np.empty((len(x), len(y)), dtype=float)
+            f = np.empty((len(y), len(x)), dtype=float)
             self._tab.interpGrid(x.ctypes.data, y.ctypes.data, f.ctypes.data, len(x), len(y))
             return f
         else:
@@ -869,14 +869,14 @@ class LookupTable2D(object):
         x = np.array(x, dtype=float, copy=False)
         y = np.array(y, dtype=float, copy=False)
         if grid:
-            f = np.empty((len(x), len(y)), dtype=float)
+            f = np.empty((len(y), len(x)), dtype=float)
             # Fill in interpolated values first, then go back and fill in
             # constants
             self._tab.interpGrid(x.ctypes.data, y.ctypes.data, f.ctypes.data, len(x), len(y))
             badx = (x < self.x[0]) | (x > self.x[-1])
             bady = (y < self.y[0]) | (y > self.y[-1])
-            f[badx, :] = self.constant
-            f[:, bady] = self.constant
+            f[bady, :] = self.constant
+            f[:, badx] = self.constant
             return f
         else:
             # Start with constant array, then interpolate good positions
@@ -945,8 +945,8 @@ class LookupTable2D(object):
 
     def _gradient_inbounds(self, x, y, grid=False):
         if grid:
-            dfdx = np.empty((len(x), len(y)), dtype=float)
-            dfdy = np.empty((len(x), len(y)), dtype=float)
+            dfdx = np.empty((len(y), len(x)), dtype=float)
+            dfdy = np.empty((len(y), len(x)), dtype=float)
             self._tab.gradientGrid(x.ctypes.data, y.ctypes.data,
                                    dfdx.ctypes.data, dfdy.ctypes.data,
                                    len(x), len(y))
@@ -980,16 +980,16 @@ class LookupTable2D(object):
         x = np.array(x, dtype=float, copy=False)
         y = np.array(y, dtype=float, copy=False)
         if grid:
-            dfdx = np.empty((len(x), len(y)), dtype=float)
-            dfdy = np.empty((len(x), len(y)), dtype=float)
+            dfdx = np.empty((len(y), len(x)), dtype=float)
+            dfdy = np.empty((len(y), len(x)), dtype=float)
             self._tab.gradientGrid(x.ctypes.data, y.ctypes.data,
                 dfdx.ctypes.data, dfdy.ctypes.data, len(x), len(y))
             badx = (x < self.x[0]) | (x > self.x[-1])
             bady = (y < self.y[0]) | (y > self.y[-1])
-            dfdx[badx,:] = 0.0
-            dfdx[:, bady] = 0.0
-            dfdy[badx,:] = 0.0
-            dfdy[:, bady] = 0.0
+            dfdx[bady,:] = 0.0
+            dfdx[:, badx] = 0.0
+            dfdy[bady,:] = 0.0
+            dfdy[:, badx] = 0.0
             return dfdx, dfdy
         else:
             dfdx = np.empty_like(x, dtype=float)

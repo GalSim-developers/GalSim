@@ -883,10 +883,10 @@ class PowerSpectrum(object):
             # get reduced shear (just discard magnification)
             g1_grid, g2_grid, _ = theoryToObserved(g1_grid, g2_grid, self.im_kappa.array)
 
-        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid.T,
+        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
-        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid.T,
+        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
 
@@ -954,7 +954,7 @@ class PowerSpectrum(object):
         """
         kappa_grid = self.im_kappa.array
 
-        lut_kappa = LookupTable2D(self.x_grid, self.y_grid, kappa_grid.T,
+        lut_kappa = LookupTable2D(self.x_grid, self.y_grid, kappa_grid,
                                   edge_mode='wrap' if periodic else 'warn',
                                   interpolant=self.interpolant)
 
@@ -1021,7 +1021,7 @@ class PowerSpectrum(object):
             the magnification, mu (either a scalar or a numpy array)
         """
         _, _, mu_grid = theoryToObserved(self.im_g1.array, self.im_g2.array, self.im_kappa.array)
-        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid.T - 1,
+        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid - 1,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
 
@@ -1093,13 +1093,13 @@ class PowerSpectrum(object):
         g1_grid, g2_grid, mu_grid = theoryToObserved(
             self.im_g1.array, self.im_g2.array, self.im_kappa.array)
 
-        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid.T,
+        lut_g1 = LookupTable2D(self.x_grid, self.y_grid, g1_grid,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
-        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid.T,
+        lut_g2 = LookupTable2D(self.x_grid, self.y_grid, g2_grid,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
-        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid.T-1,
+        lut_mu = LookupTable2D(self.x_grid, self.y_grid, mu_grid-1,
                                edge_mode='wrap' if periodic else 'warn',
                                interpolant=self.interpolant)
 
