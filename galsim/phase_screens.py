@@ -1124,8 +1124,8 @@ class _DummyScreen(OpticalScreen):
         raise RuntimeError("Shouldn't reach this")
 
 
-class TableScreen(object):
-    """ Create a phase screen from a LookupTable2D.
+class UserScreen(object):
+    """ Create a (static) user-defined phase screen.
 
     Parameters:
         table:        LookupTable2D instance representing the wavefront as a function on the
@@ -1145,7 +1145,7 @@ class TableScreen(object):
         self.obscuration = obscuration
 
     def __str__(self):
-        out = "galsim.TableScreen({}".format(self.table)
+        out = "galsim.UserScreen({}".format(self.table)
         if self.diam:
             out += ", diam={}".format(self.diam)
         if self.obscuration != 0:
@@ -1154,7 +1154,7 @@ class TableScreen(object):
         return out
 
     def __repr__(self):
-        out = "galsim.TableScreen({!r}".format(self.table)
+        out = "galsim.UserScreen({!r}".format(self.table)
         if self.diam:
             out += ", diam={}".format(self.diam)
         if self.obscuration != 0:
@@ -1163,7 +1163,7 @@ class TableScreen(object):
         return out
 
     def __eq__(self, rhs):
-        if isinstance(rhs, TableScreen):
+        if isinstance(rhs, UserScreen):
             return (
                 self.table == rhs.table
                 and self.diam == rhs.diam
@@ -1175,7 +1175,7 @@ class TableScreen(object):
         return not self == rhs
 
     def __hash__(self):
-        return hash(("TableScreen", self.table, self.diam, self.obscuration))
+        return hash(("UserScreen", self.table, self.diam, self.obscuration))
 
     def _getStepK(self, **kwargs):
         """Return an appropriate stepk for this phase screen.
@@ -1203,8 +1203,8 @@ class TableScreen(object):
                     be a scalar or an iterable.  The shapes of u and v must match.
             v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                     be a scalar or an iterable.  The shapes of u and v must match.
-            t:      Ignored for `TableScreen`.
-            theta:  Ignored for `TableScreen`.
+            t:      Ignored for `UserScreen`.
+            theta:  Ignored for `UserScreen`.
 
         Returns:
             Array of wavefront lag or lead in nanometers.
@@ -1222,8 +1222,8 @@ class TableScreen(object):
                     be a scalar or an iterable.  The shapes of u and v must match.
             v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
                     be a scalar or an iterable.  The shapes of u and v must match.
-            t:      Ignored for `TableScreen`.
-            theta:  Ignored for `TableScreen`.
+            t:      Ignored for `UserScreen`.
+            theta:  Ignored for `UserScreen`.
 
         Returns:
             Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.

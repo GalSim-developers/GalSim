@@ -1378,8 +1378,8 @@ def test_pickle():
 
 
 @timer
-def test_table_screen():
-    # Mimic an OpticalScreen using a TableScreen.
+def test_user_screen():
+    # Mimic an OpticalScreen using a UserScreen.
     rng = galsim.UniformDeviate(57721)
     for _ in range(10):
         aberrations = np.empty(7)
@@ -1398,7 +1398,7 @@ def test_table_screen():
         wf = Zscreen.wavefront(u, v)
 
         table = galsim.LookupTable2D(u1, u1, wf, interpolant='spline')
-        tscreen = galsim.TableScreen(table)
+        uscreen = galsim.UserScreen(table)
 
         rr = np.empty(1000)
         th = np.empty(1000)
@@ -1411,25 +1411,25 @@ def test_table_screen():
         vv = rr*np.sin(th)
 
         wf = Zscreen.wavefront(uu, vv)
-        twf = tscreen.wavefront(uu, vv)
+        twf = uscreen.wavefront(uu, vv)
         np.testing.assert_allclose(wf, twf, rtol=1e-12, atol=1e-12)
 
         dwfdx, dwfdy = Zscreen.wavefront_gradient(uu, vv)
-        dtwfdx, dtwfdy = tscreen.wavefront_gradient(uu, vv)
+        dtwfdx, dtwfdy = uscreen.wavefront_gradient(uu, vv)
 
         np.testing.assert_allclose(dwfdx, dtwfdx, rtol=1e-11, atol=1e-11)
         np.testing.assert_allclose(dwfdy, dtwfdy, rtol=1e-11, atol=1e-11)
 
         # PSFs should be nearly identical
         Zpsf = galsim.PhaseScreenPSF(Zscreen, lam=750, diam=4.0)
-        tpsf = galsim.PhaseScreenPSF(tscreen, lam=750, diam=4.0)
+        tpsf = galsim.PhaseScreenPSF(uscreen, lam=750, diam=4.0)
         Zimg = Zpsf.drawImage(scale=0.01, nx=100, ny=100)
         timg = tpsf.drawImage(scale=0.01, nx=100, ny=100)
         np.testing.assert_allclose(Zimg.array, timg.array, rtol=0, atol=1e-10)
         print(np.max(Zimg.array))
 
     do_pickle(
-        tscreen,
+        uscreen,
         lambda sc:
             (
                 sc,
@@ -1442,13 +1442,11 @@ def test_table_screen():
                 ),
             )
     )
-    ts2 = galsim.TableScreen(table, diam=2)
-    ts3 = galsim.TableScreen(table, diam=2, obscuration=0.5)
-    do_pickle(ts2)
-    do_pickle(ts3)
-    all_obj_diff([tscreen, ts2, ts3])
-
-
+    uscreen2 = galsim.UserScreen(table, diam=2)
+    uscreen3 = galsim.UserScreen(table, diam=2, obscuration=0.5)
+    do_pickle(uscreen2)
+    do_pickle(uscreen3)
+    all_obj_diff([uscreen, uscreen2, uscreen3])
 
 
 if __name__ == "__main__":
@@ -1472,4 +1470,4 @@ if __name__ == "__main__":
     test_withGSP()
     test_shared_memory()
     test_pickle()
-    test_table_screen()
+    test_user_screen()
