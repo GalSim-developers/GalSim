@@ -53,7 +53,7 @@ namespace galsim
         void updatePixelDistortions(ImageView<T> target);
 
         void calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
-                                         Polygon& poly) const;
+                                         Polygon& poly);
 
         template <typename T>
         void addTreeRingDistortions(ImageView<T> target, Position<int> orig_center);
