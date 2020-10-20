@@ -120,10 +120,9 @@ namespace galsim {
         // Next, we read in the pixel distortions from the Poisson_CCD simulations
         if (_transpose) std::swap(_nx,_ny);
 
-	// FIXME: above or below the transpose??
 	_horizontalDistortions.resize(horizontalRowStride() * (_ny + 1));
 	_verticalDistortions.resize(verticalColumnStride() * (_nx + 1));
-	
+
         for (int index=0; index < _nv*_nx*_ny; index++) {
             xdbg<<"index = "<<index<<std::endl;
             int n = index % _nv;
@@ -146,11 +145,29 @@ namespace galsim {
             // The following captures the pixel displacement. These are translated into
             // coordinates compatible with (x,y). These are per electron.
             double x = _distortions[i * _ny + j][n].x;
+	    double origx = x;
             x = ((x1 - x0) / _pixelSize + 0.5 - x) / numElec;
             _distortions[i * _ny + j][n].x = x;
             double y = _distortions[i * _ny + j][n].y;
+	    double origy = y;
             y = ((y1 - y0) / _pixelSize + 0.5 - y) / numElec;
             _distortions[i * _ny + j][n].y = y;
+
+	    // populate the linear distortions arrays
+            x = ((x1 - x0) / _pixelSize + 0.5 - origx) / numElec;
+            y = ((y1 - y0) / _pixelSize + 0.5 - origy) / numElec;
+
+	    bool horiz = false;
+	    int bidx = getBoundaryIndex(i, j, n, horiz);
+	    if (horiz) {
+		_horizontalDistortions[bidx].x = x;
+		_horizontalDistortions[bidx].y = y;
+	    }
+	    else {
+		_verticalDistortions[bidx].x = x;
+		_verticalDistortions[bidx].y = y;
+	    }
+	    
 #if 0
             if (index == 73) { // Test print out of read in
                 dbg<<"Successfully reading the Pixel vertex file\n";
@@ -170,6 +187,50 @@ namespace galsim {
                 <<", y = "<<_distortions[i * _ny + j][n].y * numElec<<std::endl;
         }
 #endif
+    }
+
+    void Silicon::updatePixelBounds(size_t k)
+    {
+	// update the bounding rectangles for pixel k
+	// get pixel co-ordinates
+	int x = k / _ny;
+	int y = k % _ny;
+
+	// compute outer bounds first
+	_pixelOuterBounds[k] = Bounds<double>();
+	// lower and upper rows
+	for (int i = 0; i < (_numVertices + 2); i++) {
+	    _pixelOuterBounds[k] += _horizontalBoundaryPoints[(y * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    _pixelOuterBounds[k] += _horizontalBoundaryPoints[((y + 1) * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	}
+	// sides
+	for (int i = 0; i < _numVertices; i++) {
+	    _pixelOuterBounds[k] += _verticalBoundaryPoints[(x * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    _pixelOuterBounds[k] += _verticalBoundaryPoints[((x + 1) * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	}
+
+	Position<double> center = _pixelOuterBounds[k].center();
+
+	// now compute inner bounds manually
+	_pixelInnerBounds[k] = _pixelOuterBounds[k];
+
+	auto updateInnerBounds = [](Position<double>& p, Position<double>& center, Bounds<double>& inner) {
+            if (p.x-center.x >= std::abs(p.y-center.y) && p.x < inner.getXMax()) inner.setXMax(p.x);
+            if (p.x-center.x <= -std::abs(p.y-center.y) && p.x > inner.getXMin()) inner.setXMin(p.x);
+            if (p.y-center.y >= std::abs(p.x-center.x) && p.y < inner.getYMax()) inner.setYMax(p.y);
+            if (p.y-center.y <= -std::abs(p.x-center.x) && p.y > inner.getYMin()) inner.setYMin(p.y);
+	};
+	
+	// lower and upper rows
+	for (int i = 0; i < (_numVertices + 2); i++) {
+	    updateInnerBounds(_horizontalBoundaryPoints[(y * horizontalRowStride()) + (x * horizontalPixelStride()) + i], center, _pixelInnerBounds[k]);
+	    updateInnerBounds(_horizontalBoundaryPoints[((y + 1) * horizontalRowStride()) + (x * horizontalPixelStride()) + i], center, _pixelInnerBounds[k]);
+	}
+	// sides
+	for (int i = 0; i < _numVertices; i++) {
+	    updateInnerBounds(_verticalBoundaryPoints[(x * verticalColumnStride()) + (y * verticalPixelStride()) + i], center, _pixelInnerBounds[k]);
+	    updateInnerBounds(_verticalBoundaryPoints[((x + 1) * verticalColumnStride()) + (y * verticalPixelStride()) + i], center, _pixelInnerBounds[k]);
+	}
     }
 
     template <typename T>
