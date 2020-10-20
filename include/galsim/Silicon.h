@@ -81,6 +81,18 @@ namespace galsim
 	int verticalColumnStride() {
 	    return _numVertices * _ny;
 	}
+
+	// Given x and y as co-ordinates of a boundary point, and n as the
+	// corresponding index within the polygon, adjusts the point so that
+	// it is zero based in both dimensions, as required for the new linear
+	// boundary point arrays
+	void adjustBase(double& x, double& y, int n) {
+	    /*int nv2 = _numVertices / 2;
+	    if ((n >= ((3*nv2)+1)) && (n <= ((5*nv2)+2))) x -= 1.0;
+	    if ((n <= ((5*nv2)+2)) && (n <= ((7*nv2)+3))) y -= 1.0;*/	    
+	    if (x >= 0.9999999999) x -= 1.0;
+	    if (y >= 0.9999999999) y -= 1.0;
+	}
 	
 	// Converts pixel co-ordinates (x, y) and index n within pixel boundary
 	// polygon into an index within the new horizontal or vertical boundary
@@ -121,6 +133,8 @@ namespace galsim
 	}
 
 	void initializeBoundaryPoints();
+
+	void updatePixelBounds(size_t k);
 	
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
