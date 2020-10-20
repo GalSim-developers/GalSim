@@ -191,6 +191,8 @@ namespace galsim {
 
     void Silicon::updatePixelBounds(size_t k)
     {
+	// FIXME: this is causing segmentation faults, need to debug
+#if 0
 	// update the bounding rectangles for pixel k
 	// get pixel co-ordinates
 	int x = k / _ny;
@@ -200,13 +202,23 @@ namespace galsim {
 	_pixelOuterBounds[k] = Bounds<double>();
 	// lower and upper rows
 	for (int i = 0; i < (_numVertices + 2); i++) {
-	    _pixelOuterBounds[k] += _horizontalBoundaryPoints[(y * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
-	    _pixelOuterBounds[k] += _horizontalBoundaryPoints[((y + 1) * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    Position<double> p = _horizontalBoundaryPoints[(y * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    if (i == (_numVertices + 1)) p.x += 1.0;
+	    _pixelOuterBounds[k] += p;
+	    
+	    p = _horizontalBoundaryPoints[((y + 1) * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    if (i == (_numVertices + 1)) p.x += 1.0;
+	    p.y += 1.0;
+	    _pixelOuterBounds[k] += p;
 	}
 	// sides
 	for (int i = 0; i < _numVertices; i++) {
-	    _pixelOuterBounds[k] += _verticalBoundaryPoints[(x * verticalColumnStride()) + (y * verticalPixelStride()) + i];
-	    _pixelOuterBounds[k] += _verticalBoundaryPoints[((x + 1) * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    Position<double> p = _verticalBoundaryPoints[(x * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    _pixelOuterBounds[k] += p;
+
+	    p = _verticalBoundaryPoints[((x + 1) * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    p.x += 1.0;
+	    _pixelOuterBounds[k] += p;
 	}
 
 	Position<double> center = _pixelOuterBounds[k].center();
@@ -214,7 +226,7 @@ namespace galsim {
 	// now compute inner bounds manually
 	_pixelInnerBounds[k] = _pixelOuterBounds[k];
 
-	auto updateInnerBounds = [](Position<double>& p, Position<double>& center, Bounds<double>& inner) {
+	auto updateInnerBounds = [](Position<double> p, Position<double> center, Bounds<double>& inner) {
             if (p.x-center.x >= std::abs(p.y-center.y) && p.x < inner.getXMax()) inner.setXMax(p.x);
             if (p.x-center.x <= -std::abs(p.y-center.y) && p.x > inner.getXMin()) inner.setXMin(p.x);
             if (p.y-center.y >= std::abs(p.x-center.x) && p.y < inner.getYMax()) inner.setYMax(p.y);
@@ -223,14 +235,25 @@ namespace galsim {
 	
 	// lower and upper rows
 	for (int i = 0; i < (_numVertices + 2); i++) {
-	    updateInnerBounds(_horizontalBoundaryPoints[(y * horizontalRowStride()) + (x * horizontalPixelStride()) + i], center, _pixelInnerBounds[k]);
-	    updateInnerBounds(_horizontalBoundaryPoints[((y + 1) * horizontalRowStride()) + (x * horizontalPixelStride()) + i], center, _pixelInnerBounds[k]);
+	    Position<double> p = _horizontalBoundaryPoints[(y * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    if (i == (_numVertices + 1)) p.x += 1.0;
+	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
+
+	    p = _horizontalBoundaryPoints[((y + 1) * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    if (i == (_numVertices + 1)) p.x += 1.0;
+	    p.y += 1.0;
+	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
 	}
 	// sides
 	for (int i = 0; i < _numVertices; i++) {
-	    updateInnerBounds(_verticalBoundaryPoints[(x * verticalColumnStride()) + (y * verticalPixelStride()) + i], center, _pixelInnerBounds[k]);
-	    updateInnerBounds(_verticalBoundaryPoints[((x + 1) * verticalColumnStride()) + (y * verticalPixelStride()) + i], center, _pixelInnerBounds[k]);
+	    Position<double> p = _verticalBoundaryPoints[(x * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
+
+	    p = _verticalBoundaryPoints[((x + 1) * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    p.x += 1.0;
+	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
 	}
+#endif
     }
 
     template <typename T>
@@ -291,12 +314,15 @@ namespace galsim {
 #pragma omp parallel for
 #endif
         for (size_t k=0; k<_imagepolys.size(); ++k) {
-            if (changed[k]) _imagepolys[k].updateBounds();
+            if (changed[k]) {
+		_imagepolys[k].updateBounds();
+		updatePixelBounds(k);
+	    }
         }
     }
 
     void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
-                                              Polygon& poly) const
+                                              Polygon& poly)
     {
         double shift = 0.0;
         for (int n=0; n<_nv; n++) {
@@ -316,6 +342,34 @@ namespace galsim {
             poly[n].y += dy;
             xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
         }
+
+	// FIXME: this code appears to be causing memory corruption
+	// update new boundary points arrays
+	auto doUpdate = [this](int i, int j, Position<double>& p, Position<int> orig_center, double adjustX, double adjustY) {
+            double tx = (double)i + p.x + adjustX - _treeRingCenter.x + (double)orig_center.x;
+            double ty = (double)j + p.y + adjustY - _treeRingCenter.y + (double)orig_center.y;
+            //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
+            double r = sqrt(tx * tx + ty * ty);
+            double shift = _tr_radial_table.lookup(r);
+            //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+            // Shifts are along the radial vector in direction of the doping gradient
+            double dx = shift * tx / r;
+            double dy = shift * ty / r;
+            //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+            p.x += dx;
+            p.y += dy;	    
+	};
+	
+	// lower and upper rows
+	for (int k = 0; k < (_numVertices + 2); k++) {
+	    doUpdate(i, j, _horizontalBoundaryPoints[(j * horizontalRowStride()) + (i * horizontalPixelStride()) + k], orig_center, k == (_numVertices + 1) ? 1.0 : 0.0, 0.0);
+	    doUpdate(i, j, _horizontalBoundaryPoints[((j + 1) * horizontalRowStride()) + (i * horizontalPixelStride()) + k], orig_center, k == (_numVertices + 1) ? 1.0 : 0.0, 1.0);
+	}
+	// sides
+	for (int k = 0; k < _numVertices; k++) {
+	    doUpdate(i, j, _verticalBoundaryPoints[(i * verticalColumnStride()) + (j * verticalPixelStride()) + k], orig_center, 0.0, 0.0);
+	    doUpdate(i, j, _verticalBoundaryPoints[((i + 1) * verticalColumnStride()) + (j * verticalPixelStride()) + k], orig_center, 0.0, 1.0);
+	}
     }
 
     template <typename T>
@@ -350,7 +404,10 @@ namespace galsim {
             }
         }
         for (size_t k=0; k<_imagepolys.size(); ++k) {
-            if (changed[k]) _imagepolys[k].updateBounds();
+            if (changed[k]) {
+		_imagepolys[k].updateBounds();
+		updatePixelBounds(k);
+	    }
         }
     }
 
