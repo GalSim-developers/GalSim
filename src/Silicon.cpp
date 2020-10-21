@@ -253,6 +253,59 @@ namespace galsim {
 	}
     }
 
+    void Silicon::applyPixelDistortion(int i, int j, int disti, int distj, int nx, int ny, double charge)
+    {
+	// top and bottom rows
+	for (int k = 0; k < (_numVertices + 2); k++) {
+	    Position<double>& pt = _horizontalBoundaryPoints[(j * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + k];
+	    Position<double>& distpt = _horizontalDistortions[(distj * horizontalRowStride(_nx)) + (disti * horizontalPixelStride()) + k];
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+	    pt.x += distpt.x * charge;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+	    pt.y += distpt.y * charge;
+
+	    Position<double>& pt2 = _horizontalBoundaryPoints[((j + 1) * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + k];
+	    Position<double>& distpt2 = _horizontalDistortions[((distj + 1) * horizontalRowStride(_nx)) + (disti * horizontalPixelStride()) + k];
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+	    pt2.x += distpt2.x * charge;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+	    pt2.y += distpt2.y * charge;
+	}
+
+	// sides
+	for (int k = 0; k < _numVertices; k++) {
+	    Position<double>& pt = _verticalBoundaryPoints[(i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + k];
+	    Position<double>& distpt = _verticalDistortions[(disti * verticalColumnStride(_ny)) + (distj * verticalPixelStride()) + k];
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+	    pt.x += distpt.x * charge;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+	    pt.y += distpt.y * charge;
+
+	    Position<double>& pt2 = _verticalBoundaryPoints[((i + 1) * verticalColumnStride(ny)) + (j * verticalPixelStride()) + k];
+	    Position<double>& distpt2 = _verticalDistortions[((disti + 1) * verticalColumnStride(_ny)) + (distj * verticalPixelStride()) + k];
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+	    pt2.x += distpt2.x * charge;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+	    pt2.y += distpt2.y * charge;
+	}
+    }
+    
     template <typename T>
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
@@ -303,6 +356,9 @@ namespace galsim {
                         Polygon& distortion = _distortions[dist_index];
                         Polygon& imagepoly = _imagepolys[index];
                         imagepoly.distort(distortion, charge);
+
+			applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge);
+
                         changed[index] = true;
                     }
                 }
