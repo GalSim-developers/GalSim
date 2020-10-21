@@ -53,7 +53,10 @@ namespace galsim
         void updatePixelDistortions(ImageView<T> target);
 
         void calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
-                                         Polygon& poly);
+                                         Polygon& poly) const;
+        void calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
+                                         Polygon& poly, int nx, int ny, int i1,
+					 int j1);
 
         template <typename T>
         void addTreeRingDistortions(ImageView<T> target, Position<int> orig_center);
@@ -74,12 +77,12 @@ namespace galsim
 	    return _numVertices;
 	}
 
-	int horizontalRowStride() {
-	    return ((_numVertices + 1) * _nx) + 1;
+	int horizontalRowStride(int nx) {
+	    return ((_numVertices + 1) * nx) + 1;
 	}
 
-	int verticalColumnStride() {
-	    return _numVertices * _ny;
+	int verticalColumnStride(int ny) {
+	    return _numVertices * ny;
 	}
 
 	// Given x and y as co-ordinates of a boundary point, and n as the
@@ -98,6 +101,7 @@ namespace galsim
 	// polygon into an index within the new horizontal or vertical boundary
 	// arrays. horizontal is set to true if the point is in the horizontal
 	// array, false if vertical
+	// NOTE: will only work for distortion array due to using _nx and _ny!
 	int getBoundaryIndex(int x, int y, int n, bool& horizontal) {
 	    int nv2 = _numVertices / 2;
 	    horizontal = false;
@@ -114,12 +118,12 @@ namespace galsim
 	    }
 	    else if (n <= ((nv2*5)+1)) {
 		// right hand side
-		idx = (_numVertices - 1) - (n - ((nv2*3)+2)) + verticalColumnStride();
+		idx = (_numVertices - 1) - (n - ((nv2*3)+2)) + verticalColumnStride(_ny);
 	    }
 	    else if (n <= ((nv2*7)+3)) {
 		// top row including corners
 		horizontal = true;
-		idx = (_numVertices + 1) - (n - ((nv2*5)+2)) + horizontalRowStride();
+		idx = (_numVertices + 1) - (n - ((nv2*5)+2)) + horizontalRowStride(_nx);
 	    }
 	    else {
 		// left hand side, upper
@@ -127,14 +131,14 @@ namespace galsim
 	    }
 
 	    if (horizontal) {
-		return (y * horizontalRowStride()) + (x * horizontalPixelStride()) + idx;
+		return (y * horizontalRowStride(_nx)) + (x * horizontalPixelStride()) + idx;
 	    }
-	    return (x * verticalColumnStride()) + (y * verticalPixelStride()) + idx;
+	    return (x * verticalColumnStride(_ny)) + (y * verticalPixelStride()) + idx;
 	}
 
-	void initializeBoundaryPoints();
+	void initializeBoundaryPoints(int nx, int ny);
 
-	void updatePixelBounds(size_t k);
+	void updatePixelBounds(int nx, int ny, size_t k);
 	
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;

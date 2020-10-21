@@ -120,8 +120,8 @@ namespace galsim {
         // Next, we read in the pixel distortions from the Poisson_CCD simulations
         if (_transpose) std::swap(_nx,_ny);
 
-	_horizontalDistortions.resize(horizontalRowStride() * (_ny + 1));
-	_verticalDistortions.resize(verticalColumnStride() * (_nx + 1));
+	_horizontalDistortions.resize(horizontalRowStride(_nx) * (_ny + 1));
+	_verticalDistortions.resize(verticalColumnStride(_ny) * (_nx + 1));
 
         for (int index=0; index < _nv*_nx*_ny; index++) {
             xdbg<<"index = "<<index<<std::endl;
@@ -189,34 +189,32 @@ namespace galsim {
 #endif
     }
 
-    void Silicon::updatePixelBounds(size_t k)
+    void Silicon::updatePixelBounds(int nx, int ny, size_t k)
     {
-	// FIXME: this is causing segmentation faults, need to debug
-#if 0
 	// update the bounding rectangles for pixel k
 	// get pixel co-ordinates
-	int x = k / _ny;
-	int y = k % _ny;
+	int x = k / ny;
+	int y = k % ny;
 
 	// compute outer bounds first
 	_pixelOuterBounds[k] = Bounds<double>();
 	// lower and upper rows
 	for (int i = 0; i < (_numVertices + 2); i++) {
-	    Position<double> p = _horizontalBoundaryPoints[(y * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    Position<double> p = _horizontalBoundaryPoints[(y * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + i];
 	    if (i == (_numVertices + 1)) p.x += 1.0;
 	    _pixelOuterBounds[k] += p;
 	    
-	    p = _horizontalBoundaryPoints[((y + 1) * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    p = _horizontalBoundaryPoints[((y + 1) * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + i];
 	    if (i == (_numVertices + 1)) p.x += 1.0;
 	    p.y += 1.0;
 	    _pixelOuterBounds[k] += p;
 	}
 	// sides
 	for (int i = 0; i < _numVertices; i++) {
-	    Position<double> p = _verticalBoundaryPoints[(x * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    Position<double> p = _verticalBoundaryPoints[(x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + i];
 	    _pixelOuterBounds[k] += p;
 
-	    p = _verticalBoundaryPoints[((x + 1) * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    p = _verticalBoundaryPoints[((x + 1) * verticalColumnStride(ny)) + (y * verticalPixelStride()) + i];
 	    p.x += 1.0;
 	    _pixelOuterBounds[k] += p;
 	}
@@ -235,25 +233,24 @@ namespace galsim {
 	
 	// lower and upper rows
 	for (int i = 0; i < (_numVertices + 2); i++) {
-	    Position<double> p = _horizontalBoundaryPoints[(y * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    Position<double> p = _horizontalBoundaryPoints[(y * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + i];
 	    if (i == (_numVertices + 1)) p.x += 1.0;
 	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
 
-	    p = _horizontalBoundaryPoints[((y + 1) * horizontalRowStride()) + (x * horizontalPixelStride()) + i];
+	    p = _horizontalBoundaryPoints[((y + 1) * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + i];
 	    if (i == (_numVertices + 1)) p.x += 1.0;
 	    p.y += 1.0;
 	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
 	}
 	// sides
 	for (int i = 0; i < _numVertices; i++) {
-	    Position<double> p = _verticalBoundaryPoints[(x * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    Position<double> p = _verticalBoundaryPoints[(x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + i];
 	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
 
-	    p = _verticalBoundaryPoints[((x + 1) * verticalColumnStride()) + (y * verticalPixelStride()) + i];
+	    p = _verticalBoundaryPoints[((x + 1) * verticalColumnStride(ny)) + (y * verticalPixelStride()) + i];
 	    p.x += 1.0;
 	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
 	}
-#endif
     }
 
     template <typename T>
@@ -274,6 +271,7 @@ namespace galsim {
         const int i2 = target.getXMax();
         const int j1 = target.getYMin();
         const int j2 = target.getYMax();
+	const int nx = i2-i1+1;
         const int ny = j2-j1+1;
         const int step = target.getStep();
 
@@ -316,13 +314,36 @@ namespace galsim {
         for (size_t k=0; k<_imagepolys.size(); ++k) {
             if (changed[k]) {
 		_imagepolys[k].updateBounds();
-		updatePixelBounds(k);
+		updatePixelBounds(nx, ny, k);
 	    }
         }
     }
 
     void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
-                                              Polygon& poly)
+                                              Polygon& poly) const
+    {
+        double shift = 0.0;
+        for (int n=0; n<_nv; n++) {
+            xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
+                poly[n].x <<"  "<< poly[n].y<<std::endl;
+            double tx = (double)i + poly[n].x - _treeRingCenter.x + (double)orig_center.x;
+            double ty = (double)j + poly[n].y - _treeRingCenter.y + (double)orig_center.y;
+            xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
+            double r = sqrt(tx * tx + ty * ty);
+            shift = _tr_radial_table.lookup(r);
+            xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+            // Shifts are along the radial vector in direction of the doping gradient
+            double dx = shift * tx / r;
+            double dy = shift * ty / r;
+            xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+            poly[n].x += dx;
+            poly[n].y += dy;
+            xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
+        }
+    }
+
+    void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
+                                              Polygon& poly, int nx, int ny, int i1, int j1)
     {
         double shift = 0.0;
         for (int n=0; n<_nv; n++) {
@@ -343,7 +364,6 @@ namespace galsim {
             xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
         }
 
-	// FIXME: this code appears to be causing memory corruption
 	// update new boundary points arrays
 	auto doUpdate = [this](int i, int j, Position<double>& p, Position<int> orig_center, double adjustX, double adjustY) {
             double tx = (double)i + p.x + adjustX - _treeRingCenter.x + (double)orig_center.x;
@@ -359,16 +379,18 @@ namespace galsim {
             p.x += dx;
             p.y += dy;	    
 	};
-	
+
+	int x = i - i1;
+	int y = j - j1;
 	// lower and upper rows
 	for (int k = 0; k < (_numVertices + 2); k++) {
-	    doUpdate(i, j, _horizontalBoundaryPoints[(j * horizontalRowStride()) + (i * horizontalPixelStride()) + k], orig_center, k == (_numVertices + 1) ? 1.0 : 0.0, 0.0);
-	    doUpdate(i, j, _horizontalBoundaryPoints[((j + 1) * horizontalRowStride()) + (i * horizontalPixelStride()) + k], orig_center, k == (_numVertices + 1) ? 1.0 : 0.0, 1.0);
+	    doUpdate(i, j, _horizontalBoundaryPoints[(y * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + k], orig_center, k == (_numVertices + 1) ? 1.0 : 0.0, 0.0);
+	    doUpdate(i, j, _horizontalBoundaryPoints[((y + 1) * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + k], orig_center, k == (_numVertices + 1) ? 1.0 : 0.0, 1.0);
 	}
 	// sides
 	for (int k = 0; k < _numVertices; k++) {
-	    doUpdate(i, j, _verticalBoundaryPoints[(i * verticalColumnStride()) + (j * verticalPixelStride()) + k], orig_center, 0.0, 0.0);
-	    doUpdate(i, j, _verticalBoundaryPoints[((i + 1) * verticalColumnStride()) + (j * verticalPixelStride()) + k], orig_center, 0.0, 1.0);
+	    doUpdate(i, j, _verticalBoundaryPoints[(x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + k], orig_center, 0.0, 0.0);
+	    doUpdate(i, j, _verticalBoundaryPoints[((x + 1) * verticalColumnStride(ny)) + (y * verticalPixelStride()) + k], orig_center, 0.0, 1.0);
 	}
     }
 
@@ -392,6 +414,7 @@ namespace galsim {
         const int i2 = b.getXMax();
         const int j1 = b.getYMin();
         const int j2 = b.getYMax();
+	const int nx = i2-i1+1;
         const int ny = j2-j1+1;
         // Now we cycle through the pixels in the target image and add
         // the (small) distortions due to tree rings
@@ -399,14 +422,14 @@ namespace galsim {
         for (int i=i1; i<=i2; ++i) {
             for (int j=j1; j<=j2; ++j) {
                 int index = (i - i1) * ny + (j - j1);
-                calculateTreeRingDistortion(i, j, orig_center, _imagepolys[index]);
+                calculateTreeRingDistortion(i, j, orig_center, _imagepolys[index], nx, ny, i1, j1);
                 changed[index] = true;
             }
         }
         for (size_t k=0; k<_imagepolys.size(); ++k) {
             if (changed[k]) {
 		_imagepolys[k].updateBounds();
-		updatePixelBounds(k);
+		updatePixelBounds(nx, ny, k);
 	    }
         }
     }
@@ -597,7 +620,7 @@ namespace galsim {
             _imagepolys.resize(nxny);
             for (int i=0; i<nxny; ++i)
                 _imagepolys[i] = _emptypoly;
-	    initializeBoundaryPoints();
+	    initializeBoundaryPoints(nx, ny);
 
             // Set up the pixel information according to the current flux in the image.
             addTreeRingDistortions(target, orig_center);
@@ -648,19 +671,19 @@ namespace galsim {
         }
     }
 
-    void Silicon::initializeBoundaryPoints()
+    void Silicon::initializeBoundaryPoints(int nx, int ny)
     {
 	int nv2 = _numVertices / 2;
 	
-	_horizontalBoundaryPoints.resize(horizontalRowStride() * (_ny+1));
-	_verticalBoundaryPoints.resize(verticalColumnStride() * (_nx+1));
+	_horizontalBoundaryPoints.resize(horizontalRowStride(nx) * (ny+1));
+	_verticalBoundaryPoints.resize(verticalColumnStride(ny) * (nx+1));
 
 	// fill in horizontal boundary points from emptypoly
 	int i = 0;
 	// loop over rows
-	for (int y = 0; y < (_ny + 1); y++) {
+	for (int y = 0; y < (ny + 1); y++) {
 	    // loop over pixels within a row
-	    for (int x = 0; x < _nx; x++) {
+	    for (int x = 0; x < nx; x++) {
 		for (int n = nv2; n <= (3*nv2); n++) {
 		    _horizontalBoundaryPoints[i++] = _emptypoly[n];
 		}
@@ -672,14 +695,17 @@ namespace galsim {
 	// fill in vertical boundary points from emptypoly
 	i = 0;
 	// loop over columns
-	for (int x = 0; x < (_nx + 1); x++) {
+	for (int x = 0; x < (nx + 1); x++) {
 	    // loop over pixels within a column
-	    for (int y = 0; y < _ny; y++) {
+	    for (int y = 0; y < ny; y++) {
 		for (int n = ((3*nv2)+2); n <= ((5*nv2)+1); n++) {
 		    _verticalBoundaryPoints[i++] = _emptypoly[n];
 		}
 	    }
 	}
+
+	_pixelInnerBounds.resize(nx * ny);
+	_pixelOuterBounds.resize(nx * ny);
     }
     
     template <typename T>
@@ -757,7 +783,7 @@ namespace galsim {
             _imagepolys.resize(nxny);
             for (int i=0; i<nxny; ++i)
                 _imagepolys[i] = _emptypoly;
-	    initializeBoundaryPoints();
+	    initializeBoundaryPoints(nx, ny);
             dbg<<"Built poly list\n";
             // Now we add in the tree ring distortions
             addTreeRingDistortions(target, orig_center);
