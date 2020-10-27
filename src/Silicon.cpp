@@ -570,6 +570,102 @@ namespace galsim {
         return inside;
     }
 
+    void Silicon::scaleBoundsToPoly(int i, int j, int nx, int ny, const Polygon& emptypoly, Polygon& result, double factor) const
+    {
+	result = emptypoly;
+	for (int n = 0; n < _nv; n++) {
+	    bool horizontal;
+	    int pi = getBoundaryIndex(i, j, n, horizontal, nx, ny);
+	    const Point& p = horizontal ? _horizontalBoundaryPoints[pi] :
+		_verticalBoundaryPoints[pi];
+	    result[n].x += (p.x - emptypoly[n].x) * factor;
+	    result[n].y += (p.y - emptypoly[n].y) * factor;
+	}
+	result.updateBounds();
+    }
+    
+    template <typename T>
+    bool Silicon::insidePixelNew(int ix, int iy, double x, double y, double zconv,
+				 ImageView<T> target, bool* off_edge) const
+    {
+        // This scales the pixel distortion based on the zconv, which is the depth
+        // at which the electron is created, and then tests to see if the delivered
+        // point is inside the pixel.
+        // (ix,iy) is the pixel being tested, and (x,y) is the coordinate of the
+        // photon within the pixel, with (0,0) in the lower left
+
+        // If test pixel is off the image, return false.  (Avoids seg faults!)
+        if (!target.getBounds().includes(Position<int>(ix,iy))) {
+            if (off_edge) *off_edge = true;
+            return false;
+        }
+        xdbg<<"insidePixel: "<<ix<<','<<iy<<','<<x<<','<<y<<','<<off_edge<<std::endl;
+
+        const int i1 = target.getXMin();
+        const int i2 = target.getXMax();
+        const int j1 = target.getYMin();
+        const int j2 = target.getYMax();
+	const int nx = i2-i1+1;
+	const int ny = j2-j1+1;
+
+        int index = (ix - i1) * ny + (iy - j1);
+        xdbg<<"index = "<<index<<std::endl;
+        xdbg<<"p = "<<x<<','<<y<<std::endl;
+        xdbg<<"inner = "<<_pixelInnerBounds[index]<<std::endl;
+        xdbg<<"outer = "<<_pixelOuterBounds[index]<<std::endl;
+
+        // First do some easy checks if the point isn't terribly close to the boundary.
+#ifdef _OPENMP
+        int t = omp_get_thread_num();
+#else
+        int t  = 0;
+#endif
+        Point p(x,y);
+        bool inside;
+	if (_pixelInnerBounds[index].includes(p)) {
+            xdbg<<"trivial\n";
+            inside = true;
+	} else if (!_pixelOuterBounds[index].includes(p)) {
+            xdbg<<"trivially not\n";
+            inside = false;
+        } else {
+            xdbg<<"maybe\n";
+            // OK, it must be near the boundary, so now be careful.
+            // The term zfactor decreases the pixel shifts as we get closer to the bottom
+            // It is an empirical fit to the Poisson solver simulations, and only matters
+            // when we get quite close to the bottom.  This could be more accurate by making
+            // the Vertices files have an additional look-up variable (z), but this doesn't
+            // seem necessary at this point
+            const double zfit = 12.0;
+            const double zfactor = std::tanh(zconv / zfit);
+
+            // Scale the testpoly vertices by zfactor
+	    scaleBoundsToPoly(ix - i1, iy - j1, nx, ny, _emptypoly, _testpoly[t],
+			      zfactor);
+
+            // Now test to see if the point is inside
+            inside = _testpoly[t].contains(p);
+        }
+
+        // If the nominal pixel is on the edge of the image and the photon misses in the
+        // direction of falling off the image, (possibly) report that in off_edge.
+        if (!inside && off_edge) {
+            xdbg<<"Check for off_edge\n";
+            xdbg<<"inner = "<<_pixelInnerBounds[index]<<std::endl;
+            xdbg<<"ix,i1,i2 = "<<ix<<','<<i1<<','<<i2<<std::endl;
+            xdbg<<"iy,j1,j2 = "<<iy<<','<<j1<<','<<j2<<std::endl;
+            *off_edge = false;
+            xdbg<<"ix == i1 ? "<<(ix == i1)<<std::endl;
+            xdbg<<"x < inner.xmin? "<<(x < _pixelInnerBounds[index].getXMin())<<std::endl;
+            if ((ix == i1) && (x < _pixelInnerBounds[index].getXMin())) *off_edge = true;
+            if ((ix == i2) && (x > _pixelInnerBounds[index].getXMax())) *off_edge = true;
+            if ((iy == j1) && (y < _pixelInnerBounds[index].getYMin())) *off_edge = true;
+            if ((iy == j2) && (y > _pixelInnerBounds[index].getYMax())) *off_edge = true;
+            xdbg<<"off_edge = "<<*off_edge<<std::endl;
+        }
+        return inside;
+    }
+
     // Helper function to calculate how far down into the silicon the photon converts into
     // an electron.
 
@@ -949,6 +1045,7 @@ namespace galsim {
                 // First check the obvious choice, since this will usually work.
                 bool off_edge;
                 bool foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
+		bool fpn = insidePixelNew(ix, iy, x, y, zconv, target, &off_edge);
 #ifdef DEBUGLOGGING
                 if (foundPixel) ++zerocount;
 #endif

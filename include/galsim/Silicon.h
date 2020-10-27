@@ -47,6 +47,14 @@ namespace galsim
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target, bool* off_edge=0) const;
 
+	void scaleBoundsToPoly(int i, int j, int nx, int ny,
+			       const Polygon& emptypoly, Polygon& result,
+			       double factor) const;
+
+        template <typename T>
+        bool insidePixelNew(int ix, int iy, double x, double y, double zconv,
+			    ImageView<T> target, bool* off_edge=0) const;
+
         double calculateConversionDepth(const PhotonArray& photons, int i, double randomNumber) const;
 
 	void applyPixelDistortion(int i, int j, int disti, int distj, int nx, int ny, double charge);
