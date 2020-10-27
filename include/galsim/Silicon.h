@@ -119,6 +119,7 @@ namespace galsim
 	    horizontal = false;
 	    int idx;
 
+	    // FIXME: I think the direction of the vertical points might be wrong
 	    if (nx < 0) {
 		nx = _nx;
 		ny = _ny;
@@ -153,6 +154,75 @@ namespace galsim
 	    return (x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + idx;
 	}
 
+	// iterates over all the points in the given pixel's boundary and calls a
+	// callback for each one. callback should take an index and a point
+	// reference, then two bools (RHS point and top point)
+	template<typename T>
+	void iteratePixelBoundary(int i, int j, int nx, int ny, T callback)
+	{
+	    int n;
+	    int nv2 = _numVertices / 2;
+	    int idx;
+	    // LHS lower half
+	    for (n = 0; n < nv2; n++) {
+		idx = (i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + ((nv2 - 1) - n);
+		callback(n, _verticalBoundaryPoints[idx], false, false);
+	    }
+	    // bottom row including corners
+	    for (; n < ((nv2*3)+2); n++) {
+		idx = (j * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + (n - nv2);
+		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*3), false);
+	    }
+	    // RHS
+	    for (; n < ((nv2*5)+2); n++) {
+		idx = ((i+1) * verticalColumnStride(ny)) + (j * verticalPixelStride()) + (n - ((nv2*3)+2));
+		callback(n, _verticalBoundaryPoints[idx], true, false);
+	    }
+	    // top row including corners
+	    for (; n < ((nv2*7)+4); n++) {
+		idx = ((j+1) * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + (_numVertices + 1) - (n - ((nv2*5)+2));
+		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+1, true);
+	    }
+	    // LHS upper half
+	    for (; n < _nv; n++) {
+		idx = (i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + (_numVertices - 1) - (n - ((nv2*7)+4));
+		callback(n, _verticalBoundaryPoints[idx], false, false);
+	    }
+	}
+	
+	template<typename T>
+	void iteratePixelBoundary(int i, int j, int nx, int ny, T callback) const
+	{
+	    int n;
+	    int nv2 = _numVertices / 2;
+	    int idx;
+	    // LHS lower half
+	    for (n = 0; n < nv2; n++) {
+		idx = (i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + ((nv2 - 1) - n);
+		callback(n, _verticalBoundaryPoints[idx], false, false);
+	    }
+	    // bottom row including corners
+	    for (; n < ((nv2*3)+2); n++) {
+		idx = (j * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + (n - nv2);
+		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*3), false);
+	    }
+	    // RHS
+	    for (; n < ((nv2*5)+2); n++) {
+		idx = ((i+1) * verticalColumnStride(ny)) + (j * verticalPixelStride()) + (n - ((nv2*3)+2));
+		callback(n, _verticalBoundaryPoints[idx], true, false);
+	    }
+	    // top row including corners
+	    for (; n < ((nv2*7)+4); n++) {
+		idx = ((j+1) * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + (_numVertices + 1) - (n - ((nv2*5)+2));
+		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+1, true);
+	    }
+	    // LHS upper half
+	    for (; n < _nv; n++) {
+		idx = (i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + (_numVertices - 1) - (n - ((nv2*7)+4));
+		callback(n, _verticalBoundaryPoints[idx], false, false);
+	    }
+	}
+	
 	void initializeBoundaryPoints(int nx, int ny);
 
 	void updatePixelBounds(int nx, int ny, size_t k);
