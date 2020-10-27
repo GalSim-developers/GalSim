@@ -67,23 +67,25 @@ namespace galsim
         double accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
                           Position<int> orig_center, bool resume);
 
+	double pixelArea(int i, int j, int nx, int ny) const;
+
         template <typename T>
         void fillWithPixelAreas(ImageView<T> target, Position<int> orig_center, bool use_flux);
 
     private:
-	int horizontalPixelStride() {
+	int horizontalPixelStride() const {
 	    return _numVertices + 1;
 	}
 
-	int verticalPixelStride() {
+	int verticalPixelStride() const {
 	    return _numVertices;
 	}
 
-	int horizontalRowStride(int nx) {
+	int horizontalRowStride(int nx) const {
 	    return ((_numVertices + 1) * nx) + 1;
 	}
 
-	int verticalColumnStride(int ny) {
+	int verticalColumnStride(int ny) const {
 	    return _numVertices * ny;
 	}
 
@@ -103,11 +105,16 @@ namespace galsim
 	// polygon into an index within the new horizontal or vertical boundary
 	// arrays. horizontal is set to true if the point is in the horizontal
 	// array, false if vertical
-	// NOTE: will only work for distortion array due to using _nx and _ny!
-	int getBoundaryIndex(int x, int y, int n, bool& horizontal) {
+	int getBoundaryIndex(int x, int y, int n, bool& horizontal, int nx = -1,
+			     int ny = -1) const {
 	    int nv2 = _numVertices / 2;
 	    horizontal = false;
 	    int idx;
+
+	    if (nx < 0) {
+		nx = _nx;
+		ny = _ny;
+	    }
 	    
 	    if (n < nv2) {
 		// left hand side, lower
@@ -133,9 +140,9 @@ namespace galsim
 	    }
 
 	    if (horizontal) {
-		return (y * horizontalRowStride(_nx)) + (x * horizontalPixelStride()) + idx;
+		return (y * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + idx;
 	    }
-	    return (x * verticalColumnStride(_ny)) + (y * verticalPixelStride()) + idx;
+	    return (x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + idx;
 	}
 
 	void initializeBoundaryPoints(int nx, int ny);

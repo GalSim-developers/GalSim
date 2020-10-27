@@ -651,6 +651,25 @@ namespace galsim {
         return false;
     }
 
+    double Silicon::pixelArea(int i, int j, int nx, int ny) const
+    {
+	double area = 0.0;
+	bool horizontal1, horizontal2;
+
+	for (int n = 0; n < _nv; n++) {
+	    int pi1 = getBoundaryIndex(i, j, n, horizontal1, nx, ny);
+	    int pi2 = getBoundaryIndex(i, j, (n + 1) % _nv, horizontal2, nx, ny);
+	    const Position<double>& p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
+		_verticalBoundaryPoints[pi1];
+	    const Position<double>& p2 = horizontal2 ? _horizontalBoundaryPoints[pi2] :
+		_verticalBoundaryPoints[pi2];
+	    area += p1.x * p2.y;
+	    area -= p2.x * p1.y;
+	}
+
+	return area / 2.0;
+    }
+    
     template <typename T>
     void Silicon::fillWithPixelAreas(ImageView<T> target, Position<int> orig_center,
                                      bool use_flux)
@@ -689,6 +708,8 @@ namespace galsim {
 
             for (int j=j1; j<=j2; ++j, ptr+=skip) {
                 for (int i=i1; i<=i2; ++i, ptr+=step) {
+		    *ptr = pixelArea(i - i1, j - j1, nx, ny);
+		    
                     int index = (i - i1) * ny + (j - j1);
                     *ptr = _imagepolys[index].area();
                 }
