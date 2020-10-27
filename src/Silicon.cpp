@@ -198,59 +198,30 @@ namespace galsim {
 
 	// compute outer bounds first
 	_pixelOuterBounds[k] = Bounds<double>();
-	// lower and upper rows
-	for (int i = 0; i < (_numVertices + 2); i++) {
-	    Position<double> p = _horizontalBoundaryPoints[(y * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + i];
-	    if (i == (_numVertices + 1)) p.x += 1.0;
-	    _pixelOuterBounds[k] += p;
-	    
-	    p = _horizontalBoundaryPoints[((y + 1) * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + i];
-	    if (i == (_numVertices + 1)) p.x += 1.0;
-	    p.y += 1.0;
-	    _pixelOuterBounds[k] += p;
-	}
-	// sides
-	for (int i = 0; i < _numVertices; i++) {
-	    Position<double> p = _verticalBoundaryPoints[(x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + i];
-	    _pixelOuterBounds[k] += p;
 
-	    p = _verticalBoundaryPoints[((x + 1) * verticalColumnStride(ny)) + (y * verticalPixelStride()) + i];
-	    p.x += 1.0;
-	    _pixelOuterBounds[k] += p;
-	}
+	iteratePixelBoundary(x, y, nx, ny, [this, k](int n, Point& pt, bool rhs, bool top) {
+		Point p = pt;
+		if (rhs) p.x += 1.0;
+		if (top) p.y += 1.0;
+		_pixelOuterBounds[k] += p;
+	    });
 
 	Position<double> center = _pixelOuterBounds[k].center();
 
 	// now compute inner bounds manually
 	_pixelInnerBounds[k] = _pixelOuterBounds[k];
+	Bounds<double>& inner = _pixelInnerBounds[k];
 
-	auto updateInnerBounds = [](Position<double> p, Position<double> center, Bounds<double>& inner) {
-            if (p.x-center.x >= std::abs(p.y-center.y) && p.x < inner.getXMax()) inner.setXMax(p.x);
-            if (p.x-center.x <= -std::abs(p.y-center.y) && p.x > inner.getXMin()) inner.setXMin(p.x);
-            if (p.y-center.y >= std::abs(p.x-center.x) && p.y < inner.getYMax()) inner.setYMax(p.y);
-            if (p.y-center.y <= -std::abs(p.x-center.x) && p.y > inner.getYMin()) inner.setYMin(p.y);
-	};
-	
-	// lower and upper rows
-	for (int i = 0; i < (_numVertices + 2); i++) {
-	    Position<double> p = _horizontalBoundaryPoints[(y * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + i];
-	    if (i == (_numVertices + 1)) p.x += 1.0;
-	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
-
-	    p = _horizontalBoundaryPoints[((y + 1) * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + i];
-	    if (i == (_numVertices + 1)) p.x += 1.0;
-	    p.y += 1.0;
-	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
-	}
-	// sides
-	for (int i = 0; i < _numVertices; i++) {
-	    Position<double> p = _verticalBoundaryPoints[(x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + i];
-	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
-
-	    p = _verticalBoundaryPoints[((x + 1) * verticalColumnStride(ny)) + (y * verticalPixelStride()) + i];
-	    p.x += 1.0;
-	    updateInnerBounds(p, center, _pixelInnerBounds[k]);
-	}
+	iteratePixelBoundary(x, y, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
+		Point p = pt;
+		if (rhs) p.x += 1.0;
+		if (top) p.y += 1.0;
+		
+		if (p.x-center.x >= std::abs(p.y-center.y) && p.x < inner.getXMax()) inner.setXMax(p.x);
+		if (p.x-center.x <= -std::abs(p.y-center.y) && p.x > inner.getXMin()) inner.setXMin(p.x);
+		if (p.y-center.y >= std::abs(p.x-center.x) && p.y < inner.getYMax()) inner.setYMax(p.y);
+		if (p.y-center.y <= -std::abs(p.x-center.x) && p.y > inner.getYMin()) inner.setYMin(p.y);
+	    });
     }
 
     void Silicon::applyPixelDistortion(int i, int j, int disti, int distj, int nx, int ny, double charge)
@@ -420,34 +391,24 @@ namespace galsim {
             xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
         }
 
-	// update new boundary points arrays
-	auto doUpdate = [this](int i, int j, Position<double>& p, Position<int> orig_center, double adjustX, double adjustY) {
-            double tx = (double)i + p.x + adjustX - _treeRingCenter.x + (double)orig_center.x;
-            double ty = (double)j + p.y + adjustY - _treeRingCenter.y + (double)orig_center.y;
-            //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
-            double r = sqrt(tx * tx + ty * ty);
-            double shift = _tr_radial_table.lookup(r);
-            //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
-            // Shifts are along the radial vector in direction of the doping gradient
-            double dx = shift * tx / r;
-            double dy = shift * ty / r;
-            //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
-            p.x += dx;
-            p.y += dy;	    
-	};
-
-	int x = i - i1;
-	int y = j - j1;
-	// lower and upper rows
-	for (int k = 0; k < (_numVertices + 2); k++) {
-	    doUpdate(i, j, _horizontalBoundaryPoints[(y * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + k], orig_center, k == (_numVertices + 1) ? 1.0 : 0.0, 0.0);
-	    doUpdate(i, j, _horizontalBoundaryPoints[((y + 1) * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + k], orig_center, k == (_numVertices + 1) ? 1.0 : 0.0, 1.0);
-	}
-	// sides
-	for (int k = 0; k < _numVertices; k++) {
-	    doUpdate(i, j, _verticalBoundaryPoints[(x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + k], orig_center, 0.0, 0.0);
-	    doUpdate(i, j, _verticalBoundaryPoints[((x + 1) * verticalColumnStride(ny)) + (y * verticalPixelStride()) + k], orig_center, 0.0, 1.0);
-	}
+	iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
+		Point p = pt;
+		if (rhs) p.x += 1.0;
+		if (top) p.y += 1.0;
+		
+		double tx = (double)i + p.x - _treeRingCenter.x + (double)orig_center.x;
+		double ty = (double)j + p.y - _treeRingCenter.y + (double)orig_center.y;
+		//xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
+		double r = sqrt(tx * tx + ty * ty);
+		double shift = _tr_radial_table.lookup(r);
+		//xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+		// Shifts are along the radial vector in direction of the doping gradient
+		double dx = shift * tx / r;
+		double dy = shift * ty / r;
+		//xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+		pt.x += dx;
+		pt.y += dy;
+	    });
     }
 
     template <typename T>
@@ -573,14 +534,15 @@ namespace galsim {
     void Silicon::scaleBoundsToPoly(int i, int j, int nx, int ny, const Polygon& emptypoly, Polygon& result, double factor) const
     {
 	result = emptypoly;
-	for (int n = 0; n < _nv; n++) {
-	    bool horizontal;
-	    int pi = getBoundaryIndex(i, j, n, horizontal, nx, ny);
-	    const Point& p = horizontal ? _horizontalBoundaryPoints[pi] :
-		_verticalBoundaryPoints[pi];
-	    result[n].x += (p.x - emptypoly[n].x) * factor;
-	    result[n].y += (p.y - emptypoly[n].y) * factor;
-	}
+
+	iteratePixelBoundary(i, j, nx, ny, [&](int n, const Point& pt, bool rhs, bool top) {
+		Point p = pt;
+		if (rhs) p.x += 1.0;
+		if (top) p.y += 1.0;
+		result[n].x += (pt.x - emptypoly[n].x) * factor;
+		result[n].y += (pt.y - emptypoly[n].y) * factor;
+	    });
+
 	result.updateBounds();
     }
     
@@ -866,6 +828,7 @@ namespace galsim {
 	}
 
 	// fill in vertical boundary points from emptypoly
+	// FIXME: double check ordering here!
 	i = 0;
 	// loop over columns
 	for (int x = 0; x < (nx + 1); x++) {
