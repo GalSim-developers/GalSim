@@ -97,16 +97,12 @@ namespace galsim
 	    return _numVertices * ny;
 	}
 
-	// Given x and y as co-ordinates of a boundary point, and n as the
-	// corresponding index within the polygon, adjusts the point so that
-	// it is zero based in both dimensions, as required for the new linear
-	// boundary point arrays
-	void adjustBase(double& x, double& y, int n) {
-	    /*int nv2 = _numVertices / 2;
-	    if ((n >= ((3*nv2)+1)) && (n <= ((5*nv2)+2))) x -= 1.0;
-	    if ((n <= ((5*nv2)+2)) && (n <= ((7*nv2)+3))) y -= 1.0;*/	    
-	    if (x >= 0.9999999999) x -= 1.0;
-	    if (y >= 0.9999999999) y -= 1.0;
+	int horizontalPixelIndex(int x, int y, int nx) const {
+	    return (y * horizontalRowStride(nx)) + (x * horizontalPixelStride());
+	}
+	
+	int verticalPixelIndex(int x, int y, int ny) const {
+	    return (x * verticalColumnStride(ny)) + (((ny-1)-y) * verticalPixelStride());
 	}
 	
 	// Converts pixel co-ordinates (x, y) and index n within pixel boundary
@@ -119,7 +115,6 @@ namespace galsim
 	    horizontal = false;
 	    int idx;
 
-	    // FIXME: I think the direction of the vertical points might be wrong
 	    if (nx < 0) {
 		nx = _nx;
 		ny = _ny;
@@ -149,9 +144,9 @@ namespace galsim
 	    }
 
 	    if (horizontal) {
-		return (y * horizontalRowStride(nx)) + (x * horizontalPixelStride()) + idx;
+		return horizontalPixelIndex(x, y, nx) + idx;
 	    }
-	    return (x * verticalColumnStride(ny)) + (y * verticalPixelStride()) + idx;
+	    return verticalPixelIndex(x, y, ny) + idx;
 	}
 
 	// iterates over all the points in the given pixel's boundary and calls a
@@ -165,27 +160,27 @@ namespace galsim
 	    int idx;
 	    // LHS lower half
 	    for (n = 0; n < nv2; n++) {
-		idx = (i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + ((nv2 - 1) - n);
+		idx = verticalPixelIndex(i, j, ny) + n + nv2;
 		callback(n, _verticalBoundaryPoints[idx], false, false);
 	    }
 	    // bottom row including corners
 	    for (; n < ((nv2*3)+2); n++) {
-		idx = (j * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + (n - nv2);
+		idx = horizontalPixelIndex(i, j, nx) + (n - nv2);
 		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*3), false);
 	    }
 	    // RHS
 	    for (; n < ((nv2*5)+2); n++) {
-		idx = ((i+1) * verticalColumnStride(ny)) + (j * verticalPixelStride()) + (n - ((nv2*3)+2));
+		idx = verticalPixelIndex(i + 1, j, ny) + (_numVertices - 1) - (n - ((nv2*3)+2));
 		callback(n, _verticalBoundaryPoints[idx], true, false);
 	    }
 	    // top row including corners
 	    for (; n < ((nv2*7)+4); n++) {
-		idx = ((j+1) * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + (_numVertices + 1) - (n - ((nv2*5)+2));
+		idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - ((nv2*5)+2));
 		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+1, true);
 	    }
 	    // LHS upper half
 	    for (; n < _nv; n++) {
-		idx = (i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + (_numVertices - 1) - (n - ((nv2*7)+4));
+		idx = verticalPixelIndex(i, j, ny) + (n - ((nv2*7)+4));
 		callback(n, _verticalBoundaryPoints[idx], false, false);
 	    }
 	}
@@ -198,27 +193,27 @@ namespace galsim
 	    int idx;
 	    // LHS lower half
 	    for (n = 0; n < nv2; n++) {
-		idx = (i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + ((nv2 - 1) - n);
+		idx = verticalPixelIndex(i, j, ny) + n + nv2;
 		callback(n, _verticalBoundaryPoints[idx], false, false);
 	    }
 	    // bottom row including corners
 	    for (; n < ((nv2*3)+2); n++) {
-		idx = (j * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + (n - nv2);
+		idx = horizontalPixelIndex(i, j, nx) + (n - nv2);
 		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*3), false);
 	    }
 	    // RHS
 	    for (; n < ((nv2*5)+2); n++) {
-		idx = ((i+1) * verticalColumnStride(ny)) + (j * verticalPixelStride()) + (n - ((nv2*3)+2));
+		idx = verticalPixelIndex(i + 1, j, ny) + (_numVertices - 1) - (n - ((nv2*3)+2));
 		callback(n, _verticalBoundaryPoints[idx], true, false);
 	    }
 	    // top row including corners
 	    for (; n < ((nv2*7)+4); n++) {
-		idx = ((j+1) * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + (_numVertices + 1) - (n - ((nv2*5)+2));
+		idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - ((nv2*5)+2));
 		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+1, true);
 	    }
 	    // LHS upper half
 	    for (; n < _nv; n++) {
-		idx = (i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + (_numVertices - 1) - (n - ((nv2*7)+4));
+		idx = verticalPixelIndex(i, j, ny) + (n - ((nv2*7)+4));
 		callback(n, _verticalBoundaryPoints[idx], false, false);
 	    }
 	}

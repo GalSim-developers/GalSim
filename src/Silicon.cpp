@@ -228,8 +228,8 @@ namespace galsim {
     {
 	// top and bottom rows
 	for (int k = 0; k < (_numVertices + 2); k++) {
-	    Position<double>& pt = _horizontalBoundaryPoints[(j * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + k];
-	    Position<double>& distpt = _horizontalDistortions[(distj * horizontalRowStride(_nx)) + (disti * horizontalPixelStride()) + k];
+	    Position<double>& pt = _horizontalBoundaryPoints[horizontalPixelIndex(i, j, nx) + k];
+	    Position<double>& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) + k];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -239,8 +239,8 @@ namespace galsim {
 #endif
 	    pt.y += distpt.y * charge;
 
-	    Position<double>& pt2 = _horizontalBoundaryPoints[((j + 1) * horizontalRowStride(nx)) + (i * horizontalPixelStride()) + k];
-	    Position<double>& distpt2 = _horizontalDistortions[((distj + 1) * horizontalRowStride(_nx)) + (disti * horizontalPixelStride()) + k];
+	    Position<double>& pt2 = _horizontalBoundaryPoints[horizontalPixelIndex(i, j+1, nx) + k];
+	    Position<double>& distpt2 = _horizontalDistortions[horizontalPixelIndex(disti, distj+1, _nx) + k];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -253,8 +253,8 @@ namespace galsim {
 
 	// sides
 	for (int k = 0; k < _numVertices; k++) {
-	    Position<double>& pt = _verticalBoundaryPoints[(i * verticalColumnStride(ny)) + (j * verticalPixelStride()) + k];
-	    Position<double>& distpt = _verticalDistortions[(disti * verticalColumnStride(_ny)) + (distj * verticalPixelStride()) + k];
+	    Position<double>& pt = _verticalBoundaryPoints[verticalPixelIndex(i, j, ny) + k];
+	    Position<double>& distpt = _verticalDistortions[verticalPixelIndex(disti, distj, _ny) + k];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -264,8 +264,8 @@ namespace galsim {
 #endif
 	    pt.y += distpt.y * charge;
 
-	    Position<double>& pt2 = _verticalBoundaryPoints[((i + 1) * verticalColumnStride(ny)) + (j * verticalPixelStride()) + k];
-	    Position<double>& distpt2 = _verticalDistortions[((disti + 1) * verticalColumnStride(_ny)) + (distj * verticalPixelStride()) + k];
+	    Position<double>& pt2 = _verticalBoundaryPoints[verticalPixelIndex(i+1, j, ny) + k];
+	    Position<double>& distpt2 = _verticalDistortions[verticalPixelIndex(disti+1, distj, _ny) + k];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -828,13 +828,12 @@ namespace galsim {
 	}
 
 	// fill in vertical boundary points from emptypoly
-	// FIXME: double check ordering here!
 	i = 0;
 	// loop over columns
 	for (int x = 0; x < (nx + 1); x++) {
 	    // loop over pixels within a column
 	    for (int y = 0; y < ny; y++) {
-		for (int n = ((3*nv2)+2); n <= ((5*nv2)+1); n++) {
+		for (int n = ((5*nv2)+1); n >= ((3*nv2)+2); n--) {
 		    _verticalBoundaryPoints[i++] = _emptypoly[n];
 		}
 	    }
