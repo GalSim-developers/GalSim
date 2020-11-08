@@ -224,10 +224,14 @@ namespace galsim {
                     double dy = -(-dvdx[m] * du[m] + dudx[m] * dv[m]) / det;
                     if (m == 0) {
                         xdbg<<"dx,dy = "<<dx<<", "<<dy<<std::endl;
+                        xdbg<<"x,y = "<<x[m]<<", "<<y[m]<<std::endl;
                     }
                     x[m] += dx;
                     y[m] += dy;
-                    double abs_step = std::max(std::abs(dx), std::abs(dy));
+                    // Note: if |x| or |y| > 1, then the relevant test is a fractional step, not
+                    //       the absolute step.  So divide by max(1,|x|) and max(1,|y|).
+                    double abs_step = std::max(std::abs(dx/std::max(1.,std::abs(x[m]))),
+                                               std::abs(dy/std::max(1.,std::abs(y[m]))));
                     if (abs_step > max_step) {
                         dbg<<"abs_step at m = "<<m<<" = "<<abs_step<<std::endl;
                         max_step = abs_step;
