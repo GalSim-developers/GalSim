@@ -2948,6 +2948,7 @@ def test_coadd():
     np.testing.assert_almost_equal(mom.moments_centroid.x, 24.5, decimal=2)
     np.testing.assert_almost_equal(mom.moments_centroid.y, 24.5, decimal=2)
 
+@timer
 def test_lowercase():
     # The WCS parsing should be insensitive to the case of the header key values.
     # Matt Becker ran into a problem when his wcs dict had lowercase keys.
@@ -2981,6 +2982,7 @@ def test_lowercase():
                                [0.26298, 0.00071,
                                 -0.00072, 0.26298], atol=1.e-4)
 
+@timer
 def test_int_args():
     """Test that integer arguments for various things work correctly.
     """
@@ -3114,6 +3116,7 @@ if __name__ == "__main__":
     test_pyastwcs()
     test_wcstools()
     test_gsfitswcs()
+    test_inverseab_convergence()
     test_tanwcs()
     test_fitswcs()
     test_fittedsipwcs()
