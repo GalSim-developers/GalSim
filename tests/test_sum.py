@@ -351,10 +351,6 @@ def test_gsparams():
 
 
 if __name__ == "__main__":
-    test_add()
-    test_sub_neg()
-    test_add_flux_scaling()
-    test_ne()
-    test_sum_transform()
-    test_sum_noise()
-    test_gsparams()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

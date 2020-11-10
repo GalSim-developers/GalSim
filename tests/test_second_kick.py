@@ -313,13 +313,9 @@ if __name__ == '__main__':
         pr = cProfile.Profile()
         pr.enable()
 
-    test_init()
-    test_structure_function()
-    test_limiting_cases()
-    test_sk_phase_psf()
-    test_sk_scale()
-    test_sk_shoot()
-    test_sk_ne()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()
 
     if args.profile:
         pr.disable()

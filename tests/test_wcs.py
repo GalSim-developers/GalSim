@@ -3136,22 +3136,6 @@ def test_razero():
 
 
 if __name__ == "__main__":
-    test_pixelscale()
-    test_shearwcs()
-    test_affinetransform()
-    test_uvfunction()
-    test_radecfunction()
-    test_astropywcs()
-    test_pyastwcs()
-    test_wcstools()
-    test_gsfitswcs()
-    test_inverseab_convergence()
-    test_tanwcs()
-    test_fitswcs()
-    test_fittedsipwcs()
-    test_scamp()
-    test_compateq()
-    test_coadd()
-    test_lowercase()
-    test_int_args()
-    test_razero()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

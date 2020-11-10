@@ -320,7 +320,6 @@ def test_ne():
     all_obj_diff(gals)
 
 if __name__ == "__main__":
-    test_box()
-    test_tophat()
-    test_box_shoot()
-    test_ne()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

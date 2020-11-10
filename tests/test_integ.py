@@ -316,12 +316,6 @@ def test_hankel():
         galsim.integ.hankel(f1, k=0.3, nu=-0.5)
 
 if __name__ == "__main__":
-    test_gaussian_finite_limits()
-    test_gaussian_infinite_limits()
-    test_sinxsqexpabsx_finite_limits()
-    test_sinxsqexpabsx_infinite_limits()
-    test_invroot_finite_limits()
-    test_invroot_infinite_limits()
-    test_midpoint_basic()
-    test_trapz_basic()
-    test_hankel()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

@@ -356,9 +356,6 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_shapelet_gaussian()
-    test_shapelet_drawImage()
-    test_shapelet_properties()
-    test_shapelet_fit()
-    test_shapelet_adjustments()
-    test_ne()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

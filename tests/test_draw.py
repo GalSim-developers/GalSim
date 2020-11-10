@@ -1654,15 +1654,6 @@ def test_direct_scale():
     assert_raises(ValueError, obj.makePhot, n_photons=-20)
 
 if __name__ == "__main__":
-    test_drawImage()
-    test_draw_methods()
-    test_drawKImage()
-    test_drawKImage_Gaussian()
-    test_drawKImage_Exponential_Moffat()
-    test_offset()
-    test_drawImage_area_exptime()
-    test_fft()
-    test_np_fft()
-    test_shoot()
-    test_types()
-    test_direct_scale()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

@@ -1091,13 +1091,6 @@ def test_omp():
 
 
 if __name__ == "__main__":
-    test_simple()
-    test_silicon()
-    test_silicon_fft()
-    test_silicon_area()
-    test_sensor_wavelengths_and_angles()
-    test_bf_slopes()
-    test_treerings()
-    test_resume()
-    test_flat()
-    test_omp()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

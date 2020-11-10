@@ -1014,16 +1014,6 @@ def test_gsparams():
 
 
 if __name__ == "__main__":
-    test_smallshear()
-    test_largeshear()
-    test_rotate()
-    test_mag()
-    test_lens()
-    test_shift()
-    test_rescale()
-    test_integer_shift_fft()
-    test_integer_shift_photon()
-    test_flip()
-    test_ne()
-    test_compound()
-    test_gsparams()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

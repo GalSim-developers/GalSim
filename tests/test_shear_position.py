@@ -126,6 +126,6 @@ def test_shear_position_image_integration_offsetwcs():
 
 
 if __name__ == "__main__":
-    test_shear_position()
-    test_shear_position_image_integration_pixelwcs()
-    test_shear_position_image_integration_offsetwcs()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

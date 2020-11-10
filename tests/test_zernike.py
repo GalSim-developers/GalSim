@@ -661,15 +661,6 @@ def test_hessian():
 
 
 if __name__ == "__main__":
-    test_Zernike_orthonormality()
-    test_annular_Zernike_limit()
-    test_noll()
-    test_Zernike_rotate()
-    test_ne()
-    test_Zernike_basis()
-    test_fit()
-    test_gradient()
-    test_sum()
-    test_product()
-    test_laplacian()
-    test_hessian()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

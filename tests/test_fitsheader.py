@@ -295,8 +295,6 @@ def test_comments():
 
 
 if __name__ == "__main__":
-    test_read()
-    test_scamp()
-    test_dict()
-    test_lowercase()
-    test_comments()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

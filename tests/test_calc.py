@@ -371,6 +371,6 @@ def test_fwhm():
 
 
 if __name__ == "__main__":
-    test_hlr()
-    test_sigma()
-    test_fwhm()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

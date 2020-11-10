@@ -209,7 +209,6 @@ def test_deltaFunction_convolution():
 
 
 if __name__ == "__main__":
-    test_deltaFunction()
-    test_deltaFunction_properties()
-    test_deltaFunction_flux_scaling()
-    test_deltaFunction_convolution()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

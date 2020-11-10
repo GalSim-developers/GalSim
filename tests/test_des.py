@@ -757,8 +757,6 @@ def test_psf_config():
 
 
 if __name__ == "__main__":
-    test_meds()
-    test_meds_config()
-    test_nan_fits()
-    test_psf()
-    test_psf_config()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

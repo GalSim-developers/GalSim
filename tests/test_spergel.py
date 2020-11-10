@@ -342,10 +342,6 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_spergel()
-    test_spergel_properties()
-    test_spergel_radii()
-    test_spergel_flux_scaling()
-    test_spergel_05()
-    test_spergel_shoot()
-    test_ne()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

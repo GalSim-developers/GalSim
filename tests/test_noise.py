@@ -843,9 +843,6 @@ def test_addnoisesnr():
 
 
 if __name__ == "__main__":
-    test_deviate_noise()
-    test_gaussian_noise()
-    test_variable_gaussian_noise()
-    test_poisson_noise()
-    test_ccdnoise()
-    test_addnoisesnr()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

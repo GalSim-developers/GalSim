@@ -300,20 +300,6 @@ def test_galsim_deprecation_warning():
 
 
 if __name__ == "__main__":
-    test_galsim_error()
-    test_galsim_value_error()
-    test_galsim_key_error()
-    test_galsim_index_error()
-    test_galsim_range_error()
-    test_galsim_bounds_error()
-    test_galsim_undefined_bounds_error()
-    test_galsim_immutable_error()
-    test_galsim_incompatible_values_error()
-    test_galsim_sed_error()
-    test_galsim_hsm_error()
-    test_galsim_fft_size_error()
-    test_galsim_config_error()
-    test_galsim_config_value_error()
-    test_galsim_notimplemented_error()
-    test_galsim_warning()
-    test_galsim_deprecation_warning()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

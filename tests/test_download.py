@@ -676,12 +676,6 @@ def test_full():
 
 
 if __name__ == "__main__":
-    test_args()
-    test_query()
-    test_names()
-    test_check()
-    test_download()
-    test_unpack()
-    test_remove()
-    test_link()
-    test_full()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

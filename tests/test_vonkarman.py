@@ -359,16 +359,9 @@ if __name__ == "__main__":
         pr = cProfile.Profile()
         pr.enable()
 
-    test_vk(args.slow)
-    test_vk_delta()
-    test_vk_scale()
-    test_vk_shoot()
-    test_vk_ne()
-    test_vk_eq_kolm()
-    test_vk_fitting_formulae()
-    test_vk_gsp()
-    test_vk_r0()
-    test_vk_force_stepk()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()
     if args.benchmark:
         vk_benchmark()
 

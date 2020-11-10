@@ -388,9 +388,6 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_gaussian()
-    test_gaussian_properties()
-    test_gaussian_radii()
-    test_gaussian_flux_scaling()
-    test_gaussian_shoot()
-    test_ne()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

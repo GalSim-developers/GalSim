@@ -1351,22 +1351,6 @@ def test_horner_complex():
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
 
 if __name__ == "__main__":
-    test_pos()
-    test_bounds()
-    test_roll2d_circularity()
-    test_roll2d_fwdbck()
-    test_roll2d_join()
-    test_kxky()
-    test_kxky_plusone()
-    test_check_all_contiguous()
-    test_deInterleaveImage()
-    test_interleaveImages()
-    test_python_LRU_Cache()
-    test_rand_with_replacement()
-    test_position_type_promotion()
-    test_unweighted_moments()
-    test_dol_to_lod()
-    test_nCr()
-    test_horner()
-    test_horner2d()
-    test_horner_complex()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()
