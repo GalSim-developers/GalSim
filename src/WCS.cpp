@@ -19,6 +19,7 @@
 
 //#define DEBUGLOGGING
 
+#include <vector>
 #include "Std.h"
 #include "WCS.h"
 #include "math/Horner.h"
@@ -125,6 +126,13 @@ namespace galsim {
         dbg<<"n = "<<n<<std::endl;
         dbg<<"nab = "<<nab<<std::endl;
 
+        // Save these for error message or if we use abp.
+        const double* u0 = u;
+        const double* v0 = v;
+        double* x0 = x;
+        double* y0 = y;
+        int n0 = n;
+
         // Do the iteration in batches of at most 256, so we can allocate on the stack
         // and we can keep everything in L1 cache.
         int nblock = std::min(n, 256);
@@ -135,29 +143,29 @@ namespace galsim {
             dbg<<"Using abp\n";
             const double* Ap = abp;
             const double* Bp = abp + nabp*nabp;
-            int nn = n;
-            const double* uu = u;   // Need copies here, so we have the originals for later.
-            const double* vv = v;
-            double* xx = x;
-            double* yy = y;
-            while (nn) {
-                int n1 = std::min(nn, 256);
-                xdbg<<"nn = "<<nn<<"  "<<n1<<std::endl;
-                xdbg<<"uu = "<<uu[0]<<std::endl;
-                xdbg<<"vv = "<<vv[0]<<std::endl;
-                xdbg<<"xx = "<<xx[0]<<std::endl;
-                xdbg<<"yy = "<<yy[0]<<std::endl;
-                Horner2D(uu, vv, n1, Ap, nabp, nabp, xx, temp);  // x = Horner2D(u, v, Ap)
-                Horner2D(uu, vv, n1, Bp, nabp, nabp, yy, temp);  // y = Horner2D(u, v, Bp)
-                xdbg<<"xx => "<<xx[0]<<std::endl;
-                xdbg<<"yy => "<<yy[0]<<std::endl;
-                xx += n1;
-                yy += n1;
-                uu += n1;
-                vv += n1;
-                nn -= n1;
+            while (n) {
+                int n1 = std::min(n, 256);
+                xdbg<<"n = "<<n<<"  "<<n1<<std::endl;
+                xdbg<<"u = "<<u[0]<<std::endl;
+                xdbg<<"v = "<<v[0]<<std::endl;
+                xdbg<<"x = "<<x[0]<<std::endl;
+                xdbg<<"y = "<<y[0]<<std::endl;
+                Horner2D(u, v, n1, Ap, nabp, nabp, x, temp);  // x = Horner2D(u, v, Ap)
+                Horner2D(u, v, n1, Bp, nabp, nabp, y, temp);  // y = Horner2D(u, v, Bp)
+                xdbg<<"x => "<<x[0]<<std::endl;
+                xdbg<<"y => "<<y[0]<<std::endl;
+                x += n1;
+                y += n1;
+                u += n1;
+                v += n1;
+                n -= n1;
             }
             if (!doiter) return;
+            u = u0;  // Reset back to the original values.
+            v = v0;
+            x = x0;
+            y = y0;
+            n = n0;
         }
 
         const double* A = ab;
@@ -196,6 +204,7 @@ namespace galsim {
         double dvdy[nblock];
 
         const int MAX_ITER = 10;
+        bool not_converged = false;
 
         while (n) {
             dbg<<"n = "<<n<<std::endl;
@@ -241,7 +250,7 @@ namespace galsim {
                 if (max_step < 1.e-12) break;
 
                 if (iter == MAX_ITER-1) {
-                    throw std::runtime_error("Unable to solve for image_pos (max iter reached)");
+                    not_converged = true;
                 }
             }
             x += n1;
@@ -249,6 +258,45 @@ namespace galsim {
             u += n1;
             v += n1;
             n -= n1;
+        }
+        if (not_converged) {
+            // Check which solutions are not close to the right answer.
+            // Note: this is different than the max_step test above, but it shouldn't matter
+            //       much since dudx, dvdy are near unity, so du,dv are nearly equal to dx,dy.
+            std::vector<int> bad_indices;
+            u = u0;  // Reset back to the original values.
+            v = v0;
+            x = x0;
+            y = y0;
+            n = n0;
+            int m0 = 0;
+            while (n) {
+                dbg<<"n = "<<n<<std::endl;
+                int n1 = std::min(n, 256);
+                Horner2D(x, y, n1, A, nab, nab, du, temp);  // u' = Horner2D(x, y, A)
+                Horner2D(x, y, n1, B, nab, nab, dv, temp);  // v' = Horner2D(x, y, B)
+                for(int m=0; m<n1; ++m) {
+                    du[m] -= u[m];
+                    dv[m] -= v[m];
+                    double abs_err = std::max(std::abs(du[m])/std::max(1.,std::abs(u[m])),
+                                              std::abs(dv[m])/std::max(1.,std::abs(v[m])));
+                    if (abs_err > 1.e-12) bad_indices.push_back(m + m0);
+                }
+                x += n1;
+                y += n1;
+                u += n1;
+                v += n1;
+                n -= n1;
+                m0 += n1;
+            }
+            if (bad_indices.size() > 0) {
+                std::ostringstream oss;
+                oss << "Unable to solve for image_pos (max iter reached) ";
+                oss << "for the following indices: [";
+                for (size_t i=0; i<bad_indices.size(); ++i) oss << bad_indices[i] << ",";
+                oss << "]";
+                throw std::runtime_error(oss.str());
+            }
         }
     }
 

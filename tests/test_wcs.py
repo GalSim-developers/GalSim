@@ -2347,6 +2347,35 @@ def test_inverseab_convergence():
     assert np.isclose(ra1, ra)
     assert np.isclose(dec1, dec)
 
+    # Now one that should fail, since it's well outside the applicable area for the SIP polynomials.
+    ra = 2.1
+    dec = -0.45
+    with assert_raises(galsim.GalSimError):
+        x, y = wcs.radecToxy(ra, dec, units="radians")
+    try:
+        x, y = wcs.radecToxy(ra, dec, units="radians")
+    except galsim.GalSimError as e:
+        print('Error message is\n',e)
+        assert "[0,]" in str(e)
+
+    # Check as part of a longer list (longer than 256 is important)
+    ra = np.random.uniform(2.185, 2.186, 1000)
+    dec = np.random.uniform(-0.501, -0.499, 1000)
+    ra = np.append(ra, [2.1, 2.9])
+    dec = np.append(dec, [-0.45, 0.2])
+    print('ra = ',ra)
+    print('dec = ',dec)
+    with assert_raises(galsim.GalSimError):
+        x, y = wcs.radecToxy(ra, dec, units="radians")
+    try:
+        x, y = wcs.radecToxy(ra, dec, units="radians")
+    except galsim.GalSimError as e:
+        print('Error message is\n',e)
+        assert "[1000,1001,]" in str(e)
+        # We don't currently do this for the user, but it's not too hard to get a python list
+        # of the bad indices.  Included here as an example for users who may need this.
+        bad = eval(str(e)[str(e).rfind('['):])
+        print('as a python list: ',bad)
 
 @timer
 def test_tanwcs():
