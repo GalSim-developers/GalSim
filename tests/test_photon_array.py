@@ -1187,15 +1187,9 @@ def test_lsst_y_focus():
 
 
 if __name__ == '__main__':
-    test_photon_array()
-    test_convolve()
-    test_wavelength_sampler()
-    test_photon_angles()
-    test_photon_io()
-    test_dcr()
-    if not no_astroplan:
-        test_dcr_angles()
-    test_dcr_moments()
-    test_refract()
-    test_focus_depth()
-    test_lsst_y_focus()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    if no_astroplan:
+        print('Skipping test_dcr_angles, since astroplan not installed.')
+        testfns.remove(test_dcr_angles)
+    for testfn in testfns:
+        testfn()

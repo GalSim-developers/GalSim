@@ -976,18 +976,6 @@ def test_sys_share_dir():
 
 
 if __name__ == "__main__":
-    test_real_galaxy_catalog()
-    test_real_galaxy_ideal()
-    test_real_galaxy_saved()
-    test_real_galaxy_makeFromImage()
-    test_pickle_crg()
-    test_crg_roundtrip()
-    test_crg_roundtrip_larger_target_psf()
-    test_ne()
-    test_flux()
-    test_noise()
-    test_area_norm()
-    test_crg_noise_draw_transform_commutativity()
-    test_crg_noise()
-    test_crg_noise_pad()
-    test_sys_share_dir()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

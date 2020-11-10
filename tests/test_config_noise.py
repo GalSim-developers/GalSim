@@ -837,9 +837,6 @@ def test_whiten():
 
 
 if __name__ == "__main__":
-    test_gaussian()
-    test_poisson()
-    test_ccdnoise()
-    test_ccdnoise_phot()
-    test_cosmosnoise()
-    test_whiten()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

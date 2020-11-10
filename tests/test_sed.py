@@ -1033,22 +1033,6 @@ def test_thin():
 
 
 if __name__ == "__main__":
-    test_SED_basic()
-    test_SED_add()
-    test_SED_sub()
-    test_SED_mul()
-    test_SED_div()
-    test_SED_atRedshift()
-    test_combine_wave_list()
-    test_SED_roundoff_guard()
-    test_SED_init()
-    test_SED_withFlux()
-    test_SED_withFluxDensity()
-    test_SED_calculateMagnitude()
-    test_redshift_calculateFlux()
-    test_SED_calculateDCRMomentShifts()
-    test_SED_calculateSeeingMomentRatio()
-    test_SED_sampleWavelength()
-    test_fnu_vs_flambda()
-    test_ne()
-    test_thin()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

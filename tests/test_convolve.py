@@ -1003,15 +1003,6 @@ def test_gsparams():
 
 
 if __name__ == "__main__":
-    test_convolve()
-    test_convolve_flux_scaling()
-    test_shearconvolve()
-    test_realspace_convolve()
-    test_realspace_distorted_convolve()
-    test_realspace_shearconvolve()
-    test_deconvolve()
-    test_autoconvolve()
-    test_autocorrelate()
-    test_ne()
-    test_convolve_noise()
-    test_gsparams()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

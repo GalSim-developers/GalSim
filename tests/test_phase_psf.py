@@ -1450,24 +1450,6 @@ def test_user_screen():
 
 
 if __name__ == "__main__":
-    test_aperture()
-    test_atm_screen_size()
-    test_structure_function()
-    test_phase_screen_list()
-    test_frozen_flow()
-    test_phase_psf_reset()
-    test_phase_psf_batch()
-    test_opt_indiv_aberrations()
-    test_scale_unit()
-    test_stepk_maxk()
-    test_ne()
-    test_phase_gradient_shoot()
-    test_input()
-    test_r0_weights()
-    test_speedup()
-    test_instantiation_check()
-    test_gc()
-    test_withGSP()
-    test_shared_memory()
-    test_pickle()
-    test_user_screen()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

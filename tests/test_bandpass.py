@@ -390,11 +390,6 @@ def test_truncate_inputs():
 
 
 if __name__ == "__main__":
-    test_Bandpass_basic()
-    test_Bandpass_mul()
-    test_Bandpass_div()
-    test_Bandpass_wave_type()
-    test_ne()
-    test_thin()
-    test_zp()
-    test_truncate_inputs()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

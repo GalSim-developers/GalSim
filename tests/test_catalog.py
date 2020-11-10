@@ -333,8 +333,6 @@ def test_output_catalog():
 
 
 if __name__ == "__main__":
-    test_ascii_catalog()
-    test_fits_catalog()
-    test_basic_dict()
-    test_single_row()
-    test_output_catalog()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

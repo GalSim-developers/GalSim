@@ -748,11 +748,6 @@ def test_ecliptic():
 
 
 if __name__ == '__main__':
-    test_angle()
-    test_celestialcoord_basic()
-    test_celestialcoord_distance()
-    test_celestialcoord_angleBetween()
-    test_projection()
-    test_precess()
-    test_galactic()
-    test_ecliptic()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

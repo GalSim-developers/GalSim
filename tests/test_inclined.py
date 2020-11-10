@@ -674,13 +674,6 @@ def test_value_retrieval():
 
 
 if __name__ == "__main__":
-    test_regression()
-    test_exponential()
-    test_sersic()
-    test_edge_on()
-    test_sanity()
-    test_k_limits()
-    test_eq_ne()
-    test_pickle()
-    test_exceptions()
-    test_value_retrieval()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

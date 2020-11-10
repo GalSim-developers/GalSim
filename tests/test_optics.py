@@ -917,16 +917,6 @@ def test_geometric_shoot():
 
 
 if __name__ == "__main__":
-    test_OpticalPSF_flux()
-    test_OpticalPSF_vs_Airy()
-    test_OpticalPSF_vs_Airy_with_obs()
-    test_OpticalPSF_aberrations_struts()
-    test_OpticalPSF_aberrations_kwargs()
-    test_OpticalPSF_flux_scaling()
-    test_OpticalPSF_pupil_plane()
-    test_OpticalPSF_lamdiam()
-    test_OpticalPSF_pupil_plane_size()
-    test_OpticalPSF_aper()
-    test_stepk_maxk_iipad()
-    test_ne()
-    test_geometric_shoot()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

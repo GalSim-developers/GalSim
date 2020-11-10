@@ -1718,18 +1718,6 @@ def test_int64():
 
 
 if __name__ == "__main__":
-    test_uniform()
-    test_gaussian()
-    test_binomial()
-    test_poisson()
-    test_poisson_highmean()
-    test_poisson_zeromean()
-    test_weibull()
-    test_gamma()
-    test_chi2()
-    test_distfunction()
-    test_distLookupTable()
-    test_multiprocess()
-    test_permute()
-    test_ne()
-    test_int64()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

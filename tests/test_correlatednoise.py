@@ -1332,26 +1332,6 @@ def test_gsparams():
 
 
 if __name__ == "__main__":
-    test_uncorrelated_noise_zero_lag()
-    test_uncorrelated_noise_nonzero_lag()
-    test_uncorrelated_noise_output()
-    test_uncorrelated_noise_symmetry_90degree_rotation()
-    test_xcorr_noise_basics_symmetry_90degree_rotation()
-    test_ycorr_noise_basics_symmetry_90degree_rotation()
-    test_arbitrary_rotation()
-    test_scaling()
-    test_jacobian()
-    test_drawImage()
-    test_output_generation_basic()
-    test_output_generation_rotated()
-    test_output_generation_magnified()
-    test_copy()
-    test_add()
-    test_cosmos_and_whitening()
-    test_symmetrizing()
-    test_convolve_cosmos()
-    test_uncorrelated_noise_tracking()
-    test_variance_changes()
-    test_cosmos_wcs()
-    test_covariance_spectrum()
-    test_gsparams()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

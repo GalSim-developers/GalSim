@@ -582,11 +582,6 @@ def test_near_05():
 
 
 if __name__ == "__main__":
-    test_sersic()
-    test_sersic_radii()
-    test_sersic_flux_scaling()
-    test_sersic_05()
-    test_sersic_1()
-    test_sersic_shoot()
-    test_ne()
-    test_near_05()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

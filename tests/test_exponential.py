@@ -248,9 +248,6 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_exponential()
-    test_exponential_properties()
-    test_exponential_radii()
-    test_exponential_flux_scaling()
-    test_exponential_shoot()
-    test_ne()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

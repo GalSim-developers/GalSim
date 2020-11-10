@@ -369,9 +369,6 @@ def test_exampleimage():
 
 
 if __name__ == "__main__":
-    test_simplegeometry()
-    test_cdmodel_errors()
-    test_fluxconservation()
-    test_forwardbackward()
-    test_gainratio()
-    test_exampleimage()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

@@ -515,8 +515,6 @@ def test_Persistence_basic():
 
 
 if __name__ == "__main__":
-    test_nonlinearity_basic()
-    test_recipfail_basic()
-    test_quantize()
-    test_IPC_basic()
-    test_Persistence_basic()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

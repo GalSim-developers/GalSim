@@ -436,11 +436,6 @@ def test_knots_sed():
 
 
 if __name__ == "__main__":
-    test_knots_defaults()
-    test_knots_valid_inputs()
-    test_knots_invalid_inputs()
-    test_knots_repr()
-    test_knots_config()
-    test_knots_hlr()
-    test_knots_transform()
-    test_knots_sed()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

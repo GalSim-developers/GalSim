@@ -1222,16 +1222,6 @@ def test_integrate_product():
 
 
 if __name__ == "__main__":
-    test_table()
-    test_init()
-    test_log()
-    test_from_func()
-    test_roundoff()
-    test_table_GSInterp()
-    test_table2d()
-    test_table2d_gradient()
-    test_table2d_cubic()
-    test_table2d_GSInterp()
-    test_ne()
-    test_integrate()
-    test_integrate_product()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

@@ -1877,12 +1877,6 @@ def test_eval():
 
 
 if __name__ == "__main__":
-    test_float_value()
-    test_int_value()
-    test_bool_value()
-    test_str_value()
-    test_angle_value()
-    test_shear_value()
-    test_pos_value()
-    test_table_value()
-    test_eval()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

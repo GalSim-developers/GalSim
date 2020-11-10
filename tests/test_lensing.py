@@ -1515,21 +1515,6 @@ def test_constant():
 
 
 if __name__ == "__main__":
-    test_nfwhalo()
-    test_halo_pos()
-    test_cosmology()
-    test_shear_variance()
-    test_shear_seeds()
-    test_shear_reference()
-    test_shear_units()
-    test_delta2()
-    test_shear_get()
-    test_tabulated()
-    test_kappa_gauss()
-    test_power_spectrum_with_kappa()
-    test_corr_func()
-    test_periodic()
-    test_bandlimit()
-    test_psr()
-    test_normalization()
-    test_constant()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

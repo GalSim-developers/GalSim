@@ -273,6 +273,6 @@ def test_shear_matrix():
 
 
 if __name__ == "__main__":
-    test_shear_initialization()
-    test_shear_methods()
-    test_shear_matrix()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

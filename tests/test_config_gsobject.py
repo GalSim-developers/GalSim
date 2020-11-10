@@ -1951,24 +1951,6 @@ def test_sed():
 
 
 if __name__ == "__main__":
-    test_gaussian()
-    test_moffat()
-    test_airy()
-    test_kolmogorov()
-    test_opticalpsf()
-    test_exponential()
-    test_sersic()
-    test_devaucouleurs()
-    test_inclined_exponential()
-    test_inclined_sersic()
-    test_pixel()
-    test_realgalaxy()
-    test_cosmosgalaxy()
-    test_cosmos_redshift()
-    test_interpolated_image()
-    test_add()
-    test_convolve()
-    test_list()
-    test_repeat()
-    test_usertype()
-    test_sed()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

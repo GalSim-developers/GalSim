@@ -380,7 +380,6 @@ def test_cosmos_deep():
 
 
 if __name__ == "__main__":
-    test_cosmos_basic()
-    test_cosmos_fluxnorm()
-    test_cosmos_random()
-    test_cosmos_deep()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

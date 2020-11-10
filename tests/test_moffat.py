@@ -489,9 +489,6 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_moffat()
-    test_moffat_properties()
-    test_moffat_radii()
-    test_moffat_flux_scaling()
-    test_moffat_shoot()
-    test_ne()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

@@ -1644,24 +1644,6 @@ def test_quintic_glagn():
 
 if __name__ == "__main__":
     setup()
-    test_roundtrip()
-    test_interpolant()
-    test_fluxnorm()
-    test_exceptions()
-    test_operations_simple()
-    test_operations()
-    test_uncorr_padding()
-    test_pad_image()
-    test_corr_padding()
-    test_realspace_conv()
-    test_Cubic_ref()
-    test_Quintic_ref()
-    test_Lanczos5_ref()
-    test_Lanczos7_ref()
-    test_conserve_dc()
-    test_stepk_maxk()
-    test_kroundtrip()
-    test_multihdu_readin()
-    test_ii_shoot()
-    test_ne()
-    test_quintic_glagn()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

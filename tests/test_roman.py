@@ -848,13 +848,9 @@ if __name__ == "__main__":
     #import cProfile, pstats
     #pr = cProfile.Profile()
     #pr.enable()
-    test_roman_wcs()
-    test_roman_backgrounds()
-    test_roman_bandpass()
-    test_roman_detectors()
-    test_roman_psfs()
-    test_roman_basic_numbers()
-    test_roman_psf_wcs()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()
     #pr.disable()
     #ps = pstats.Stats(pr).sort_stats('tottime')
     #ps.print_stats(30)

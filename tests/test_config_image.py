@@ -2991,24 +2991,6 @@ def test_sensor():
 
 
 if __name__ == "__main__":
-    test_single()
-    test_positions()
-    test_phot()
-    test_reject()
-    test_snr()
-    test_ring()
-    test_scattered()
-    test_scattered_noskip()
-    test_scattered_whiten()
-    test_tiled()
-    test_njobs()
-    test_wcs()
-    test_bandpass()
-    test_index_key()
-    test_multirng()
-    test_template()
-    test_variable_cat_size()
-    test_blend()
-    test_chromatic()
-    test_photon_ops()
-    test_sensor()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

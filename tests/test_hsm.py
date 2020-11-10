@@ -888,16 +888,6 @@ def test_headers():
 
 
 if __name__ == "__main__":
-    test_moments_basic()
-    test_shearest_basic()
-    test_shearest_precomputed()
-    test_masks()
-    test_shearest_shape()
-    test_hsmparams()
-    test_hsmparams_nodefault()
-    test_shapedata()
-    test_strict()
-    test_bounds_centroid()
-    test_ksb_sig()
-    test_noncontiguous()
-    test_headers()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

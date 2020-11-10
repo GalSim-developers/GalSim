@@ -303,8 +303,6 @@ def test_process():
         assert os.path.exists(file_name)
 
 if __name__ == "__main__":
-    test_args()
-    test_logger()
-    test_parse_variables()
-    test_modules()
-    test_process()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

@@ -490,16 +490,6 @@ def test_trapz_basic():
 
 
 if __name__ == "__main__":
-    test_gsparams()
-    test_phase_psf()
-    test_interpolant()
-    test_noise()
-    test_randwalk_defaults()
-    test_randwalk_repr()
-    test_randwalk_config()
-    test_withOrigin()
-    test_wfirst()
-    test_roman_psfs()
-    test_surface_ops()
-    test_midpoint_basic()
-    test_trapz_basic()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

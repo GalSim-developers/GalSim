@@ -1613,15 +1613,6 @@ def test_eval_full_word():
 
 
 if __name__ == "__main__":
-    test_fits()
-    test_multifits()
-    test_datacube()
-    test_skip()
-    test_extra_wt()
-    test_extra_psf()
-    test_extra_psf_sn()
-    test_extra_truth()
-    test_retry_io()
-    test_config()
-    test_no_output()
-    test_eval_full_word()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()

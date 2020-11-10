@@ -415,14 +415,6 @@ def test_jv_root():
 
 
 if __name__ == "__main__":
-    test_j0()
-    test_j1()
-    test_jn()
-    test_jv()
-    test_yn()
-    test_yv()
-    test_in()
-    test_iv()
-    test_kn()
-    test_kv()
-    test_jv_root()
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    for testfn in testfns:
+        testfn()
