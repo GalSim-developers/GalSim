@@ -221,6 +221,8 @@ namespace galsim
 	void initializeBoundaryPoints(int nx, int ny);
 
 	void updatePixelBounds(int nx, int ny, size_t k);
+
+	bool checkPixel(int i, int j, int nx, int ny);
 	
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
