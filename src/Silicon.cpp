@@ -32,6 +32,9 @@
 #include <algorithm>
 #include <climits>
 
+// JTP
+#include <iostream>
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -189,6 +192,30 @@ namespace galsim {
 #endif
     }
 
+    // check whether the original polygon pixel bounds matches the new linear
+    // version or not
+    bool Silicon::checkPixel(int i, int j, int nx, int ny)
+    {
+	bool success = true;
+	bool horizontal;
+	Polygon& poly = _imagepolys[(i * ny) + j];
+	for (int n=0; n < _nv; n++) {
+	    int idx = getBoundaryIndex(i, j, n, horizontal, nx, ny);
+	    Point& pt = horizontal ? _horizontalDistortions[idx] :
+		_verticalDistortions[idx];
+	    Point& pt2 = poly[n];
+	    double dist = ((pt.x - pt2.x) * (pt.x - pt2.x)) +
+		((pt.y - pt2.y) * (pt.y - pt2.y));
+	    if (dist > 1e-5) {
+		success = false;
+		std::cout << "Mismatch pixel (" << i << "," << j << ") n=" << n
+			  << ", polygon=(" << pt2.x << "," << pt2.y <<"), "
+			  << "linear=(" << pt.x << "," << pt.y << ")" << std::endl;
+	    }
+	}
+	return success;
+    }
+    
     void Silicon::updatePixelBounds(int nx, int ny, size_t k)
     {
 	// update the bounding rectangles for pixel k
