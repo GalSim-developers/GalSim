@@ -215,6 +215,42 @@ namespace galsim {
 	}
 	return success;
     }
+
+    template <typename T>
+    void Silicon::saveBoundaries(std::string name, ImageView<T> target)
+    {
+	std::ofstream out(name + "_boundaries.txt");
+
+	const int i1 = target.getXMin();
+	const int i2 = target.getXMax();
+	const int j1 = target.getYMin();
+	const int j2 = target.getYMax();
+	const int nx = i2-i1+1;
+	const int ny = j2-j1+1;
+
+	// iterate over all pixels
+	for (int j=j1; j<=j2; j++) {
+	    for (int i=i1; i<=i2; i++) {
+		int x = i - i1;
+		int y = j - j1;
+		
+		bool horizontal;
+		Polygon& poly = _imagepolys[(x * ny) + y];
+		for (int n=0; n < _nv; n++) {
+		    int idx = getBoundaryIndex(x, y, n, horizontal, nx, ny);
+		    Point& pt = horizontal ? _horizontalDistortions[idx] :
+			_verticalDistortions[idx];
+		    Point& pt2 = poly[n];
+
+		    out << "(" << x << "," << y << "," << n << "): poly "
+			<< "(" << pt2.x << "," << pt2.y << "), linear "
+			<< "(" << pt.x << "," << pt.y << ")" << std::endl;
+		}
+	    }
+	}
+	
+	out.close();
+    }
     
     void Silicon::updatePixelBounds(int nx, int ny, size_t k)
     {
@@ -966,6 +1002,12 @@ namespace galsim {
         double addedFlux = 0.;
         int startPhoton = 0;
 
+	static bool firstTime = true;
+	if (firstTime) {
+	    firstTime = false;
+	    saveBoundaries("startup", target);
+	}
+	
         while (startPhoton < nphotons) {
             // new parallel version of code
 
@@ -1173,5 +1215,9 @@ namespace galsim {
                                               bool);
     template void Silicon::fillWithPixelAreas(ImageView<float> target, Position<int> orig_center,
                                               bool);
+
+    template void Silicon::saveBoundaries(std::string name, ImageView<double> target);
+    template void Silicon::saveBoundaries(std::string name, ImageView<float> target);
+
 
 } // namespace galsim

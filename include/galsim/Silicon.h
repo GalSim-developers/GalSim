@@ -224,6 +224,9 @@ namespace galsim
 
 	bool checkPixel(int i, int j, int nx, int ny);
 	
+	template <typename T>
+	void saveBoundaries(std::string name, ImageView<T> target);
+
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
         std::vector<Polygon> _distortions;
