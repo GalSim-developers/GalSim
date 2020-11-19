@@ -227,7 +227,11 @@ namespace galsim {
 	const int j2 = target.getYMax();
 	const int nx = i2-i1+1;
 	const int ny = j2-j1+1;
+	const int nv2 = _numVertices / 2;
 
+	out << "nx=" << nx << ", ny=" << ny << std::endl;
+	out << "HRS=" << horizontalRowStride(nx) << std::endl;
+	
 	// iterate over all pixels
 	for (int j=j1; j<=j2; j++) {
 	    for (int i=i1; i<=i2; i++) {
@@ -238,13 +242,16 @@ namespace galsim {
 		Polygon& poly = _imagepolys[(x * ny) + y];
 		for (int n=0; n < _nv; n++) {
 		    int idx = getBoundaryIndex(x, y, n, horizontal, nx, ny);
-		    Point& pt = horizontal ? _horizontalDistortions[idx] :
-			_verticalDistortions[idx];
+		    Point pt = horizontal ? _horizontalBoundaryPoints[idx] :
+			_verticalBoundaryPoints[idx];
+		    if ((n >= ((nv2*3)+1)) && (n <= ((nv2*5)+2))) pt.x += 1.0;
+		    if ((n > ((nv2*5)+1)) && (n <= ((nv2*7)+3))) pt.y += 1.0;
 		    Point& pt2 = poly[n];
 
 		    out << "(" << x << "," << y << "," << n << "): poly "
-			<< "(" << pt2.x << "," << pt2.y << "), linear "
-			<< "(" << pt.x << "," << pt.y << ")" << std::endl;
+			<< "(" << pt2.x << "," << pt2.y << "), linear[" << idx
+			<< "] (" << pt.x << "," << pt.y << "), horizontal="
+			<< horizontal << std::endl;
 		}
 	    }
 	}
@@ -897,7 +904,8 @@ namespace galsim {
 	    // loop over pixels within a column
 	    for (int y = 0; y < ny; y++) {
 		for (int n = ((5*nv2)+1); n >= ((3*nv2)+2); n--) {
-		    _verticalBoundaryPoints[i++] = _emptypoly[n];
+		    _verticalBoundaryPoints[i] = _emptypoly[n];
+		    _verticalBoundaryPoints[i++].x -= 1.0;
 		}
 	    }
 	}
@@ -982,7 +990,14 @@ namespace galsim {
             for (int i=0; i<nxny; ++i)
                 _imagepolys[i] = _emptypoly;
 	    initializeBoundaryPoints(nx, ny);
-            dbg<<"Built poly list\n";
+
+	    static bool firstTime = true;
+	    if (firstTime) {
+		firstTime = false;
+		saveBoundaries("startup", target);
+	    }
+
+	    dbg<<"Built poly list\n";
             // Now we add in the tree ring distortions
             addTreeRingDistortions(target, orig_center);
 
@@ -1002,12 +1017,6 @@ namespace galsim {
         double addedFlux = 0.;
         int startPhoton = 0;
 
-	static bool firstTime = true;
-	if (firstTime) {
-	    firstTime = false;
-	    saveBoundaries("startup", target);
-	}
-	
         while (startPhoton < nphotons) {
             // new parallel version of code
 
