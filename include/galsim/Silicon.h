@@ -131,12 +131,12 @@ namespace galsim
 	    }
 	    else if (n <= ((nv2*5)+1)) {
 		// right hand side
-		idx = (_numVertices - 1) - (n - ((nv2*3)+2)) + verticalColumnStride(_ny);
+		idx = (_numVertices - 1) - (n - ((nv2*3)+2)) + verticalColumnStride(ny);
 	    }
 	    else if (n <= ((nv2*7)+3)) {
 		// top row including corners
 		horizontal = true;
-		idx = (_numVertices + 1) - (n - ((nv2*5)+2)) + horizontalRowStride(_nx);
+		idx = (_numVertices + 1) - (n - ((nv2*5)+2)) + horizontalRowStride(nx);
 	    }
 	    else {
 		// left hand side, upper
