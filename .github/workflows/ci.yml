@@ -96,18 +96,21 @@ jobs:
             - name: Install fftw, etc. on MacOS
               if: matrix.os == 'macos-latest'
               # brew sometimes exits with 1 if things are already installed.
-              # continue-on-error means that this still counds as success for this step.
+              # continue-on-error should mean that this still counds as success for this step.
+              # but it doesn't seem to work right.  Still counts as an error, it just moves
+              # on and finishes everything else before calling the whole job a failure.  :(
+              # So we still need the || true bits below.
               continue-on-error: true
               run: |
                 echo ${{ matrix.os }}
                 # brew update takes forever to run.  Hopefully won't need to enable this too often.
-                #brew update
-                brew install fftw wget
-                brew upgrade wget
-                brew link --overwrite fftw gcc wget
-                if ${{ matrix.py != 3.7 }}; then brew install eigen; brew link --overwrite eigen; fi
-                brew cask install gfortran
-                if ${{ matrix.py > 3.5 }}; then brew install libav; brew link --overwrite libav; fi
+                #brew update || true
+                brew install fftw wget || true
+                brew upgrade wget || true
+                brew link --overwrite fftw gcc wget || true
+                if ${{ matrix.py != 3.7 }}; then brew install eigen || true; brew link --overwrite eigen || true; fi
+                brew cask install gfortran || true
+                if ${{ matrix.py > 3.5 }}; then brew install libav || true; brew link --overwrite libav || true; fi
 
             - name: Download des_data
               run: |
@@ -168,4 +171,4 @@ jobs:
                 # This was helpful in Travis.  Not sure how important it is in GHA.
                 rm -rfv $HOME/.cache/pip/log
                 rm -rfv $HOME/.cache/pip/http
-                if ${{ runner.os == 'macOS' }}; then brew cleanup; fi
+                if ${{ runner.os == 'macOS' }}; then brew cleanup || true; fi
