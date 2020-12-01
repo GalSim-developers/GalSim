@@ -126,6 +126,7 @@ jobs:
                 pip install -U -r requirements.txt
 
                 # Extra packages needed for testing
+                pip install -U -r test_requirements.txt
                 pip install -U nose codecov coverage
 
             - name: Install a few extra for python >= 3.7
