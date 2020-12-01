@@ -100,11 +100,14 @@ jobs:
               continue-on-error: true
               run: |
                 echo ${{ matrix.os }}
-                brew update
+                # brew update takes forever to run.  Hopefully won't need to enable this too often.
+                #brew update
                 brew install fftw wget
+                brew upgrade wget
+                brew link --overwrite fftw gcc wget
+                if ${{ matrix.py != 3.7 }}; then brew install eigen; brew link --overwrite eigen; fi
                 brew cask install gfortran
-                if ${{ matrix.py != 3.7 }}; then brew install eigen; fi
-                if ${{ matrix.py > 3.5 }}; then brew install libav; fi
+                if ${{ matrix.py > 3.5 }}; then brew install libav; brew link --overwrite libav; fi
 
             - name: Download des_data
               run: |
