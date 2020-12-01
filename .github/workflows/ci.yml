@@ -90,7 +90,8 @@ jobs:
                 if ${{ matrix.py != 3.7 }}; then sudo -H apt-get install -y libeigen3-dev; fi
 
                 # Only need this for the mpeg tests, which we don't do on 2.7
-                if ${{ matrix.py > 3.5 }}; then sudo -H apt-get install -y libav-tools; fi
+                # apt-get on GHA doesn't seem to have this.  Skip for now.
+                #if ${{ matrix.py > 3.5 }}; then sudo -H apt-get install -y libav-tools; fi
 
             - name: Install fftw, etc. on MacOS
               if: matrix.os == 'macos-latest'
