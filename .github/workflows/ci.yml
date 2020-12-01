@@ -86,10 +86,10 @@ jobs:
 
                 # Easier if eigen is installed with apt-get, but on at least one system, check that
                 # it gets downloaded and installed properly if it isn't installed.
-                if [[ ${{ matrix.py != 3.7 }} ]]; then sudo -H apt-get install -y libeigen3-dev; fi
+                if ${{ matrix.py != 3.7 }}; then sudo -H apt-get install -y libeigen3-dev; fi
 
                 # Only need this for the mpeg tests, which we don't do on 2.7
-                if [[ ${{ matrix.py > 3.5 }} ]]; then sudo -H apt-get install -y libav-tools; fi
+                if ${{ matrix.py > 3.5 }}; then sudo -H apt-get install -y libav-tools; fi
 
             - name: Install fftw, etc. on MacOS
               if: matrix.os == 'macos-latest'
@@ -101,8 +101,8 @@ jobs:
                 brew update
                 brew install fftw wget
                 brew cask install gfortran
-                if [[ ${{ matrix.py != 3.7 }} ]]; then brew install eigen; fi
-                if [[ ${{ matrix.py > 3.5 }} ]]; then brew install libav; fi
+                if ${{ matrix.py != 3.7 }}; then brew install eigen; fi
+                if ${{ matrix.py > 3.5 }}; then brew install libav; fi
 
             - name: Download des_data
               run: |
@@ -163,4 +163,4 @@ jobs:
                 # This was helpful in Travis.  Not sure how important it is in GHA.
                 rm -rfv $HOME/.cache/pip/log
                 rm -rfv $HOME/.cache/pip/http
-                if [[ ${{ runner.os == 'macOS' }} ]]; then brew cleanup; fi
+                if ${{ runner.os == 'macOS' }}; then brew cleanup; fi
