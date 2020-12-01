@@ -22,7 +22,7 @@ jobs:
             matrix:
                 # First all python versions in basic linux
                 os: [ ubuntu-latest ]
-                py: [ 2.7, 3.6, 3.7, 3.8, 3.9, pypy3 ]
+                py: [ 2.7, 3.6, 3.7, 3.8, 3.9 ]
                 CC: [ gcc ]
                 CXX: [ g++ ]
                 experimental: [ false ]
