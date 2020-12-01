@@ -16,7 +16,9 @@ jobs:
         runs-on: ${{ matrix.os }}
 
         # Runs marked experimental don't count as failures if they fail.
-        continue-on-error: ${{ matrix.experimental }}
+        # Unfortunately, this still marks the run as a failure, unlike Travis's allow_failures
+        # option.  So for now, we have to just disable the pypy experimental run.
+        #continue-on-error: ${{ matrix.experimental }}
 
         strategy:
             matrix:
@@ -50,11 +52,11 @@ jobs:
                       experimental: false
 
                     # Try pypy, but this will fail until astropy starts being pypy compatible.
-                    - os: ubuntu-latest
-                      py: pypy3
-                      CC: cc
-                      CXX: c++
-                      experimental: true
+                    #- os: ubuntu-latest
+                    #  py: pypy3
+                    #  CC: cc
+                    #  CXX: c++
+                    #  experimental: true
 
         steps:
             - uses: actions/checkout@v2
