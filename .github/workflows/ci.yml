@@ -81,7 +81,8 @@ jobs:
               if: matrix.os == 'ubuntu-latest'
               run: |
                 echo ${{ matrix.os }}
-                sudo -H apt-get -qq update
+                sudo -H apt-get upgrade -y
+                sudo -H apt-get dist-upgrade -y
                 sudo -H apt-get install -y libfftw3-dev
 
                 # Easier if eigen is installed with apt-get, but on at least one system, check that
