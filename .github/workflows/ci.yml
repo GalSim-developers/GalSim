@@ -1,0 +1,166 @@
+name: GalSim CI
+
+on:
+    push:
+        branches:
+            - main
+            - releases/*
+
+    pull_request:
+        branches:
+            - main
+            - releases/*
+
+jobs:
+    build:
+        runs-on: ${{ matrix.os }}
+
+        # Runs marked experimental don't count as failures if they fail.
+        continue-on-error: ${{ matrix.experimental }}
+
+        strategy:
+            matrix:
+                # First all python versions in basic linux
+                os: [ ubuntu-latest ]
+                py: [ 2.7, 3.6, 3.7, 3.8, 3.9, pypy3 ]
+                CC: [ gcc ]
+                CXX: [ g++ ]
+                experimental: [ false ]
+
+                # Add some other particular combinations to test
+                include:
+                    # A couple in MacOS
+                    - os: macos-latest
+                      py: 2.7
+                      CC: cc
+                      CXX: c++
+                      experimental: false
+
+                    - os: macos-latest
+                      py: 3.7
+                      CC: cc
+                      CXX: c++
+                      experimental: false
+
+                    # Check one with clang compiler
+                    - os: ubuntu-latest
+                      py: 3.7
+                      CC: clang
+                      CXX: clang++
+                      experimental: false
+
+                    # Try pypy, but this will fail until astropy starts being pypy compatible.
+                    - os: ubuntu-latest
+                      py: pypy3
+                      CC: cc
+                      CXX: c++
+                      experimental: true
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Set up Python ${{ matrix.py }}
+              uses: actions/setup-python@v2
+              with:
+                python-version: ${{ matrix.py }}
+
+            - name: Cache pip
+              uses: actions/cache@v2
+              with:
+                path: |
+                  ~/.cache/pip
+                  $HOME/des_data
+                  $HOME/Library/Caches/Homebrew
+                  /usr/local/Cellar
+                key: ${{ runner.os }}-${{ matrix.py }}-pip-${{ hashFiles('requirements.txt') }}
+                restore-keys: |
+                    ${{ runner.os }}-${{ matrix.py }}-pip-
+                    ${{ runner.os }}-
+
+            - name: Install fftw, etc. on linux
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                echo ${{ matrix.os }}
+                sudo -H apt-get -qq update
+                sudo -H apt-get install -y libfftw3-dev
+
+                # Easier if eigen is installed with apt-get, but on at least one system, check that
+                # it gets downloaded and installed properly if it isn't installed.
+                if [[ {{ matrix.py != 3.7 }} ]]; then sudo -H apt-get install -y libeigen3-dev; fi
+
+                # Only need this for the mpeg tests, which we don't do on 2.7
+                if [[ {{ matrix.py > 3.5 }} ]]; then sudo -H apt-get install -y libav-tools; fi
+
+            - name: Install fftw, etc. on MacOS
+              if: matrix.os == 'macos-latest'
+              # brew sometimes exits with 1 if things are already installed.
+              # continue-on-error means that this still counds as success for this step.
+              continue-on-error: true
+              run: |
+                echo ${{ matrix.os }}
+                brew update
+                brew install fftw wget
+                brew cask install gfortran
+                if [[ {{ matrix.py != 3.7 }} ]]; then brew install eigen; fi
+                if [[ {{ matrix.py > 3.5 }} ]]; then brew install libav; fi
+
+            - name: Download des_data
+              run: |
+                ls -l $HOME
+                if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
+                # Note: --wildcards is invalid on Mac, but allowing wildcards is the default.
+                __WILDCARDS=$([[ {{ runner.os == "Linux" }} ]] && echo "--wildcards" || echo "")
+                if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget --no-check-certificate http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME $__WILDCARDS *_01*; fi
+                ln -s $HOME/des_data examples/des/
+
+            - name: Install basic dependencies
+              run: |
+                python -m pip install -U pip
+
+                # Do these three first to clarify potential conflicts
+                pip install -U numpy
+                pip install -U setuptools
+                pip install -U wheel
+
+                # Standard dependencies
+                pip install -U -r requirements.txt
+
+                # Extra packages needed for testing
+                pip install -U nose codecov coverage
+
+            - name: Install a few extra for python >= 3.7
+              if: matrix.py >= 3.7
+              run: |
+                pip install -U pandas starlink-pyast matplotlib astroplan
+
+            - name: List all installed packages for reference
+              run: pip list
+
+            - name: Build GalSim
+              run: pip install -vvv .
+
+            - name: Check download_cosmos only if it changed. (And only on 1 runner)
+              if: false  # I haven't figured out the replacement for TRAVIS_COMMIT_RANGE yet.
+              run: |
+                if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
+
+            - name: Run unit tests
+              run: |
+                cd tests
+                nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase
+                nosetests run_examples.py
+                cd ..  # N.B. This seems to happen automatically if omitted.
+                       # Less confusing to include it explicitly.
+
+            - name: Upload coverage to codecov
+              run: |
+                cd tests
+                codecov
+                cd ..
+
+            - name: Pre-cache cleanup
+              run: |
+                # This was helpful in Travis.  Not sure how important it is in GHA.
+                rm -rfv $HOME/.cache/pip/log
+                rm -rfv $HOME/.cache/pip/http
+                if [[ ${{ runner.os == 'macOS' }} ]]; then brew cleanup; fi
