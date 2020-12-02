@@ -521,6 +521,8 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         logger.debug('obj %d: drawImage kwargs = %s',base.get('obj_num',0), alt_kwargs)
         logger.debug('obj %d: prof = %s',base.get('obj_num',0),prof)
     try:
+        print(repr(prof))
+        print(repr(kwargs))
         image = prof.drawImage(**kwargs)
     except Exception as e:
         logger.debug('obj %d: prof = %r', base.get('obj_num',0), prof)

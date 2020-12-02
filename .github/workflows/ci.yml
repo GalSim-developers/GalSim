@@ -97,7 +97,8 @@ jobs:
                     ${{ runner.os }}-
 
             - name: Install fftw, etc. on linux
-              if: matrix.os == 'ubuntu-latest'
+              if: matrix.py == 3.9
+              #if: matrix.os == 'ubuntu-latest'
               run: |
                 echo ${{ matrix.os }}
                 sudo -H apt update -y
@@ -113,7 +114,8 @@ jobs:
                 if ${{ matrix.py > 3.5 }}; then sudo -H apt install -y ffmpeg; fi
 
             - name: Install fftw, etc. on MacOS
-              if: matrix.os == 'macos-latest'
+              if: false
+              #if: matrix.os == 'macos-latest'
               # brew sometimes exits with 1 if things are already installed.
               # continue-on-error should mean that this still counds as success for this step.
               # but it doesn't seem to work right.  Still counts as an error, it just moves
@@ -132,6 +134,7 @@ jobs:
                 if ${{ matrix.py > 3.5 }}; then brew install libav || true; brew link --overwrite libav || true; fi
 
             - name: Download des_data
+              if: false
               run: |
                 ls -l $HOME
                 if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
@@ -139,6 +142,7 @@ jobs:
                 ln -s $HOME/des_data examples/des/
 
             - name: Install basic dependencies
+              if: matrix.py == 3.9
               run: |
                 python -m pip install -U pip
 
@@ -155,18 +159,22 @@ jobs:
                 pip install -U nose codecov coverage
 
             - name: Install a few extra for python >= 3.7
-              if: matrix.py >= 3.7
+              if: matrix.py == 3.9
+              #if: matrix.py >= 3.7
               run: |
                 pip install -U pandas starlink-pyast matplotlib astroplan
 
             - name: List all installed packages for reference
+              if: false
               run: pip list
 
             - name: Build GalSim
+              if: matrix.py == 3.9
               run: pip install -vvv .
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
-              if: matrix.py == 3.6
+              if: false
+              #if: matrix.py == 3.6
               run: |
                 git status
                 git --no-pager log --graph --pretty=oneline --abbrev-commit | head -50
@@ -175,14 +183,16 @@ jobs:
                 if git --no-pager diff origin/${{ github.base_ref }}...${{ github.event.after }} --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
 
             - name: Run unit tests
+              if: matrix.py == 3.9
               run: |
                 cd tests
-                nosetests -v test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase
-                nosetests -v run_examples.py
+                #nosetests -v test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase
+                nosetests -vs run_examples.py:test_demo11
                 cd ..  # N.B. This seems to happen automatically if omitted.
                        # Less confusing to include it explicitly.
 
             - name: Upload coverage to codecov
+              if: false
               run: |
                 cd tests
                 coverage combine
@@ -191,6 +201,7 @@ jobs:
                 cd ..
 
             - name: Pre-cache cleanup
+              if: false
               continue-on-error: true
               run: |
                 # This was helpful in Travis.  Not sure how important it is in GHA.

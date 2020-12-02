@@ -327,6 +327,8 @@ def main(argv):
 
         # We use method='no_pixel' here because the SDSS PSF image that we are using includes the
         # pixel response already.
+        print(repr(final))
+        print(repr(dict(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')))
         stamp = final.drawImage(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
 
         # Recenter the stamp at the desired position:
