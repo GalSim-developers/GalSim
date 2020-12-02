@@ -93,7 +93,7 @@ jobs:
                 # Only need this for the mpeg tests, which we don't do on 2.7
                 # Travis needed libav-tools, but that doesn't exist on GHA's system.
                 # GHA needs ffmpeg instead.
-                if ${{ matrix.py > 3.5 }}; then sudo -H apt install -y libav-tools; fi
+                if ${{ matrix.py > 3.5 }}; then sudo -H apt install -y ffmpeg; fi
 
             - name: Install fftw, etc. on MacOS
               if: matrix.os == 'macos-latest'
