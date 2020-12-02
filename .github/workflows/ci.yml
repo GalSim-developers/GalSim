@@ -61,6 +61,16 @@ jobs:
         steps:
             - uses: actions/checkout@v2
 
+            - name: Print github context properties
+              run: |
+                  echo 'event: ${{ github.event_name }}'
+                  echo 'sha: ${{ github.sha }}'
+                  echo 'ref: ${{ github.ref }}'
+                  echo 'head_ref: ${{ github.head_ref }}'
+                  echo 'base_ref: ${{ github.base_ref }}'
+                  echo 'event.before: ${{ github.event.before }}'
+                  echo 'event.after: ${{ github.event.after }}'
+
             - name: Set up Python ${{ matrix.py }}
               uses: actions/setup-python@v2
               with:
@@ -149,9 +159,10 @@ jobs:
               run: pip install -vvv .
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
-              if: false  # I haven't figured out the replacement for TRAVIS_COMMIT_RANGE yet.
+              if: matrix.py == 3.6
               run: |
-                if git --no-pager diff $TRAVIS_COMMIT_RANGE --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
+                echo git --no-pager diff ${{ github.head_ref }}..${{ github.base_ref }}
+                if git --no-pager diff ${{ github.head_ref }}..${{ github.base_ref }} --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
 
             - name: Run unit tests
               run: |
