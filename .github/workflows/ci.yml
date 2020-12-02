@@ -71,7 +71,8 @@ jobs:
                   echo 'event.before: ${{ github.event.before }}'
                   echo 'event.after: ${{ github.event.after }}'
 
-            # Need this for git commands to work right.  Only need it for 3.6 currently.
+            # Need this for git commands to work right.
+            # Which we only need for 3.6 currently.
             - uses: actions/checkout@v2
               if: matrix.py == 3.6
               with:
@@ -170,9 +171,9 @@ jobs:
                 git status
                 #git show
                 git --no-pager log --graph --pretty=oneline --abbrev-commit | head -100
-                echo git --no-pager diff origin/${{ github.base_ref }}..${{ github.event.after }} --name-only
-                git --no-pager diff origin/${{ github.base_ref }}..${{ github.event.after }} --name-only
-                if git --no-pager diff origin/${{ github.base_ref }}..${{ github.event.after }} --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
+                echo git --no-pager diff ${{ github.base_ref }}..${{ github.head_ref }} --name-only
+                git --no-pager diff ${{ github.base_ref }}..${{ github.head_ref }} --name-only
+                if git --no-pager diff ${{ github.base_ref }}..${{ github.head_ref }} --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
 
             - name: Run unit tests
               run: |
