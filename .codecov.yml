@@ -4,7 +4,7 @@ codecov:
 
 fixes:
   # Fix the file names:
-  - "/opt/hostedtoolcache/Python/*/site-packages/galsim/::"
+  - "*/site-packages/::"
 
 coverage:
   precision: 2
