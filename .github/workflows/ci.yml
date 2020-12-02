@@ -71,6 +71,12 @@ jobs:
                   echo 'event.before: ${{ github.event.before }}'
                   echo 'event.after: ${{ github.event.after }}'
 
+            # Need this for git commands to work right.  Only need it for 3.6 currently.
+            - uses: actions/checkout@v2
+              if: matrix.py == 3.6
+              with:
+                fetch-depth: 0
+
             - name: Set up Python ${{ matrix.py }}
               uses: actions/setup-python@v2
               with:
@@ -157,12 +163,6 @@ jobs:
 
             - name: Build GalSim
               run: pip install -vvv .
-
-            # Need this for the next step to work.
-            - uses: actions/checkout@v2
-              if: matrix.py == 3.6
-              with:
-                fetch-depth: 0
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
               if: matrix.py == 3.6
