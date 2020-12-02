@@ -161,6 +161,9 @@ jobs:
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
               if: matrix.py == 3.6
               run: |
+                git status
+                git show
+                git --no-pager log --graph --pretty=oneline --abbrev-commit | head -100
                 echo git --no-pager diff origin/${{ github.base_ref }}..${{ github.event.after }} --name-only
                 git --no-pager diff origin/${{ github.base_ref }}..${{ github.event.after }} --name-only
                 if git --no-pager diff origin/${{ github.base_ref }}..${{ github.event.after }} --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
