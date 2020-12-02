@@ -264,9 +264,11 @@ class _WriteFile:
         self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
+        from .utilities import ensure_dir
         if dir:
             file = os.path.join(dir,file)
 
+        ensure_dir(file)
         if os.path.isfile(file):
             if clobber:
                 os.remove(file)
