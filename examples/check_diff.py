@@ -20,6 +20,7 @@
 from __future__ import print_function
 import sys
 import subprocess
+import numpy as np
 
 def same(file_name1, file_name2):
     cmd = "diff -q %s %s"%(file_name1, file_name2)
