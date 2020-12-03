@@ -246,6 +246,8 @@ def main(argv):
 
         # We will need the image position as well, so use the wcs to get that
         image_pos = wcs.toImage(world_pos)
+        if k==170:
+            print(image_pos)
 
         # We also need this in the tangent plane, which we call "world coordinates" here,
         # since the PowerSpectrum class is really defined on that plane, not in (ra,dec).
@@ -328,6 +330,11 @@ def main(argv):
         # We use method='no_pixel' here because the SDSS PSF image that we are using includes the
         # pixel response already.
         stamp = final.drawImage(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
+        if k==170:
+            print(repr(final))
+            print(repr(wcs.local(image_pos)))
+            print(repr(offset))
+            print(stamp)
 
         # Recenter the stamp at the desired position:
         stamp.setCenter(ix_nominal,iy_nominal)
@@ -372,8 +379,8 @@ def main(argv):
         logger.info('Galaxy %d: position relative to center = %s, t=%f s',
                     k, str(uv_pos), tot_time)
 
-    print('Done galaxies. row 1020 = ')
-    print(repr(full_image.array[1020,:]))
+    print('Done galaxies. near 885,1023 = ')
+    print(repr(full_image.array[1021:1027,883:889]))
 
     # We already have some noise in the image, but it isn't uniform.  So the first thing to do is
     # to make the Gaussian noise uniform across the whole image.  We have a special noise class
@@ -387,7 +394,7 @@ def main(argv):
     full_image.addNoise(vn)
 
     print('After variable gaussian noise')
-    print(repr(full_image.array[1020,:]))
+    print(repr(full_image.array[1021:1027,883:889]))
 
     # Now max_current_variance is the noise level across the full image.  We don't want to add that
     # twice, so subtract off this much from the intended noise that we want to end up in the image.
@@ -399,7 +406,7 @@ def main(argv):
     noise = galsim.GaussianNoise(rng, sigma=math.sqrt(noise_variance))
     full_image.addNoise(noise)
     print('After gaussian read noise')
-    print(repr(full_image.array[1020,:]))
+    print(repr(full_image.array[1021:1027,883:889]))
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,

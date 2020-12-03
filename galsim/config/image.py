@@ -367,10 +367,10 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         noise_image = max_current_var - noise_image
         # Add it.
         print('Add variable gaussian noise.  Before addNoise:')
-        print(repr(full_image.array[1020,:]))
+        print(full_image.array[1021:1027,883:889])
         full_image.addNoise(VariableGaussianNoise(rng,noise_image))
         print('After addNoise:')
-        print(repr(full_image.array[1020,:]))
+        print(full_image.array[1021:1027,883:889])
     # Now max_current_var is how much noise is in each pixel.
     return max_current_var
 

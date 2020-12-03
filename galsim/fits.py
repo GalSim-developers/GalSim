@@ -278,9 +278,6 @@ class _WriteFile:
 
         if not file_compress:
             hdu_list.writeto(file, **self.kw)
-            #hdu_list2 = pyfits.open(file, 'readonly')
-            #print('after writeto')
-            #print('hdu1.data = ',hdu_list2[1].data[1020,:20].tolist())
         elif file_compress == 'gzip':
             while self.gz_index < len(self.gz_methods):
                 try:
@@ -316,9 +313,8 @@ def _add_hdu(hdu_list, data, pyfits_compress):
         if len(hdu_list) == 0:
             hdu_list.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
         hdu = pyfits.CompImageHDU(data, compression_type=pyfits_compress)
-        print('compression = ',pyfits_compress)
-        print('data = ',data[1020,:20].tolist())
-        print('hdu.data = ',hdu.data[1020,:20].tolist())
+        print('data = ',data[1021:1027,883:889])
+        print('aslist = ',data[1021:1027,883:889].tolist())
     else:
         if len(hdu_list) == 0:
             hdu = pyfits.PrimaryHDU(data)
