@@ -313,13 +313,12 @@ def _add_hdu(hdu_list, data, pyfits_compress):
         if len(hdu_list) == 0:
             hdu_list.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
         hdu = pyfits.CompImageHDU(data, compression_type=pyfits_compress)
-        print('data = ',data[1021:1027,883:889])
-        print('aslist = ',data[1021:1027,883:889].tolist())
     else:
         if len(hdu_list) == 0:
             hdu = pyfits.PrimaryHDU(data)
         else:
             hdu = pyfits.ImageHDU(data)
+    print('data to write 1042,851 = ',data[1042,851])
     hdu_list.append(hdu)
     return hdu
 

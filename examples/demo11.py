@@ -373,14 +373,15 @@ def main(argv):
 
         # Finally, add the stamp to the full image.
         full_image[bounds] += stamp[bounds]
+        print('k=',k,full_image.array[1042,851])
 
         time2 = time.time()
         tot_time = time2-time1
         logger.info('Galaxy %d: position relative to center = %s, t=%f s',
                     k, str(uv_pos), tot_time)
 
-    print('Done galaxies. near 885,1023 = ')
-    print(repr(full_image.array[1021:1027,883:889]))
+    print('Done galaxies. pixel 1042,851 = ')
+    print(full_image.array[1042,851])
 
     # We already have some noise in the image, but it isn't uniform.  So the first thing to do is
     # to make the Gaussian noise uniform across the whole image.  We have a special noise class
@@ -394,7 +395,7 @@ def main(argv):
     full_image.addNoise(vn)
 
     print('After variable gaussian noise')
-    print(repr(full_image.array[1021:1027,883:889]))
+    print(full_image.array[1042,851])
 
     # Now max_current_variance is the noise level across the full image.  We don't want to add that
     # twice, so subtract off this much from the intended noise that we want to end up in the image.
@@ -406,7 +407,7 @@ def main(argv):
     noise = galsim.GaussianNoise(rng, sigma=math.sqrt(noise_variance))
     full_image.addNoise(noise)
     print('After gaussian read noise')
-    print(repr(full_image.array[1021:1027,883:889]))
+    print(full_image.array[1042,851])
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,
