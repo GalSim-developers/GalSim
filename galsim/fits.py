@@ -278,9 +278,9 @@ class _WriteFile:
 
         if not file_compress:
             hdu_list.writeto(file, **self.kw)
-            hdu_list2 = pyfits.open(file, 'readonly')
-            print('after writeto')
-            print('hdu1.data = ',hdu_list2[1].data[1020,:20].tolist())
+            #hdu_list2 = pyfits.open(file, 'readonly')
+            #print('after writeto')
+            #print('hdu1.data = ',hdu_list2[1].data[1020,:20].tolist())
         elif file_compress == 'gzip':
             while self.gz_index < len(self.gz_methods):
                 try:
