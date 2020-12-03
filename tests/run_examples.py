@@ -281,8 +281,8 @@ def test_demo11():
     print('Running demo11.yaml')
     galsim.config.Process(config, logger=logger, except_abort=True)
     print('\n\n\n')
-    assert check_same('output/tabulated_power_spectrum.fits.fz',
-                      'output_yaml/tabulated_power_spectrum.fits.fz')
+    assert check_same('output/tabulated_power_spectrum.fits',
+                      'output_yaml/tabulated_power_spectrum.fits')
 
 @timer
 @in_examples
