@@ -313,7 +313,7 @@ def main(argv):
         gal = gal.lens(g1, g2, mu)
 
         # Convolve with the PSF.
-        final = galsim.Convolve(psf, gal)
+        final = galsim.Convolve(gal, psf)
 
         # Account for the fractional part of the position
         # cf. demo9.py for an explanation of this nominal position stuff.
