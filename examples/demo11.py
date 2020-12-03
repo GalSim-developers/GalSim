@@ -327,8 +327,6 @@ def main(argv):
 
         # We use method='no_pixel' here because the SDSS PSF image that we are using includes the
         # pixel response already.
-        print(repr(final))
-        print(repr(dict(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')))
         stamp = final.drawImage(wcs=wcs.local(image_pos), offset=offset, method='no_pixel')
 
         # Recenter the stamp at the desired position:
@@ -374,6 +372,9 @@ def main(argv):
         logger.info('Galaxy %d: position relative to center = %s, t=%f s',
                     k, str(uv_pos), tot_time)
 
+    print('Done galaxies. row 1020 = ')
+    print(repr(full_image.array[1020,:]))
+
     # We already have some noise in the image, but it isn't uniform.  So the first thing to do is
     # to make the Gaussian noise uniform across the whole image.  We have a special noise class
     # that can do this.  VariableGaussianNoise takes an image of variance values and applies
@@ -385,6 +386,9 @@ def main(argv):
     vn = galsim.VariableGaussianNoise(rng, noise_image)
     full_image.addNoise(vn)
 
+    print('After variable gaussian noise')
+    print(repr(full_image.array[1020,:]))
+
     # Now max_current_variance is the noise level across the full image.  We don't want to add that
     # twice, so subtract off this much from the intended noise that we want to end up in the image.
     noise_variance -= max_current_variance
@@ -394,6 +398,8 @@ def main(argv):
     # level right in the overlap regions between postage stamps.
     noise = galsim.GaussianNoise(rng, sigma=math.sqrt(noise_variance))
     full_image.addNoise(noise)
+    print('After gaussian read noise')
+    print(repr(full_image.array[1020,:]))
     logger.info('Added noise to final large image')
 
     # Now write the image to disk.  It is automatically compressed with Rice compression,

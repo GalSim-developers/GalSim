@@ -265,6 +265,7 @@ class _WriteFile:
 
     def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
         from .utilities import ensure_dir
+        from ._pyfits import pyfits
         if dir:
             file = os.path.join(dir,file)
 
@@ -277,6 +278,9 @@ class _WriteFile:
 
         if not file_compress:
             hdu_list.writeto(file, **self.kw)
+            hdu_list2 = pyfits.open(file, 'readonly')
+            print('after writeto')
+            print('hdu1.data = ',hdu_list2[1].data[1020,:20].tolist())
         elif file_compress == 'gzip':
             while self.gz_index < len(self.gz_methods):
                 try:
@@ -312,6 +316,9 @@ def _add_hdu(hdu_list, data, pyfits_compress):
         if len(hdu_list) == 0:
             hdu_list.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
         hdu = pyfits.CompImageHDU(data, compression_type=pyfits_compress)
+        print('compression = ',pyfits_compress)
+        print('data = ',data[1020,:20].tolist())
+        print('hdu.data = ',hdu.data[1020,:20].tolist())
     else:
         if len(hdu_list) == 0:
             hdu = pyfits.PrimaryHDU(data)

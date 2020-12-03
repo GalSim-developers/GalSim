@@ -277,10 +277,10 @@ def test_demo11():
     logger = logging.getLogger('galsim')
     logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo11.yaml', logger=logger)[0]
-    print('\n\n\n\n\n\n\n\n\n\n\n\n\n')
+    print('\n\n\n')
     print('Running demo11.yaml')
     galsim.config.Process(config, logger=logger, except_abort=True)
-    print('\n\n\n\n\n\n\n\n\n\n\n\n\n')
+    print('\n\n\n')
     assert check_same('output/tabulated_power_spectrum.fits.fz',
                       'output_yaml/tabulated_power_spectrum.fits.fz')
 
