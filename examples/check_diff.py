@@ -39,6 +39,7 @@ def report_txt(file_name1, file_name2):
 
 
 def report(file_name1, file_name2):
+    print('start report for ',file_name1,file_name2)
     try:
         try:
             import astropy.io.fits as pyfits
@@ -53,8 +54,11 @@ def report(file_name1, file_name2):
     # Now give more information for fits files
     try:
         f1 = pyfits.open(file_name1)
+        print('f1 = ',f1)
         f2 = pyfits.open(file_name2)
+        print('f2 = ',f2)
     except (IOError, OSError) as e:
+        print('caught error: ',e)
         # Then either at least one of the files doesn't exist, which diff can report for us,
         # or the files are txt files, which diff can also do.
         return report_txt(file_name1, file_name2)
@@ -63,6 +67,7 @@ def report(file_name1, file_name2):
         d0 = f1[hdu].data
         d1 = f2[hdu].data
         if d0 is None and d1 is None:
+            print('    No data in hdu ',hdu)
             pass
         elif hasattr(d0,'names'):
             if d0.names != d1.names:
@@ -81,6 +86,9 @@ def report(file_name1, file_name2):
             print('    HDU %d shows differences in %d pixels'%(hdu, (d0!=d1).sum()))
             print('    The maximum absolute difference is %e.'%(abs(d0-d1).max()))
             print('    The maximum relative difference is %e.'%(abs((d0-d1)/(d0+1.e-10)).max()))
+            print('    Pixels with difference = ',np.where(d0!=d1))
+            print('    d0 = ',d0[np.where(d0!=d1)])
+            print('    d1 = ',d1[np.where(d0!=d1)])
 
 
 if __name__ == "__main__":
