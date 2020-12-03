@@ -113,7 +113,7 @@ def main(argv):
     # of the galaxies.
     random_seed = 24783923
 
-    file_name = os.path.join('output','tabulated_power_spectrum.fits.fz')
+    file_name = os.path.join('output','tabulated_power_spectrum.fits')
 
     logger.info('Starting demo script 11')
 
