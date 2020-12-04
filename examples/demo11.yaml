@@ -369,5 +369,5 @@ output :
     # Note that the filename ends in .fz.  This is the standard ending for a Rice-compressed
     # fits file.  When GalSim sees that, it automatically applies Rice compression to the
     # output image.
-    file_name : tabulated_power_spectrum.fits
+    file_name : tabulated_power_spectrum.fits.fz
 

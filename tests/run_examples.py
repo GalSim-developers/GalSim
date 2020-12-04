@@ -65,9 +65,7 @@ def in_examples(f):
 def check_same(f1, f2):
     import check_diff
     same = check_diff.same(f1,f2)
-    print('same = ',same)
     if not same:
-        print('report...')
         check_diff.report(f1,f2)
     return same
 
@@ -277,12 +275,10 @@ def test_demo11():
     logger = logging.getLogger('galsim')
     logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo11.yaml', logger=logger)[0]
-    print('\n\n\n')
     print('Running demo11.yaml')
     galsim.config.Process(config, logger=logger, except_abort=True)
-    print('\n\n\n')
-    assert check_same('output/tabulated_power_spectrum.fits',
-                      'output_yaml/tabulated_power_spectrum.fits')
+    assert check_same('output/tabulated_power_spectrum.fits.fz',
+                      'output_yaml/tabulated_power_spectrum.fits.fz')
 
 @timer
 @in_examples

@@ -265,7 +265,6 @@ class _WriteFile:
 
     def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
         from .utilities import ensure_dir
-        from ._pyfits import pyfits
         if dir:
             file = os.path.join(dir,file)
 
@@ -318,7 +317,6 @@ def _add_hdu(hdu_list, data, pyfits_compress):
             hdu = pyfits.PrimaryHDU(data)
         else:
             hdu = pyfits.ImageHDU(data)
-    print('data to write 1042,851 = ',data[1042,851])
     hdu_list.append(hdu)
     return hdu
 

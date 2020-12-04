@@ -131,7 +131,6 @@ class ScatteredImageBuilder(ImageBuilder):
             logger.debug('image %d: Overlap = %s',image_num,str(bounds))
             if bounds.isDefined():
                 full_image[bounds] += stamps[k][bounds]
-                print('k = ',k,full_image.array[1042,851])
             else:
                 logger.info(
                     "Object centered at (%d,%d) is entirely off the main image, "

@@ -95,12 +95,7 @@ def AddNoise(config, im, current_var=0., logger=None):
 
     builder = valid_noise_types[noise_type]
     config['index_key'] = 'image_num'
-    print('builder = ',builder)
-    print('Before addNoise:')
-    print(im.array[1042,851])
     var = builder.addNoise(noise, config, im, rng, current_var, draw_method, logger)
-    print('After addNoise:')
-    print(im.array[1042,851])
     config['index_key'] = orig_index_key
 
     return var
