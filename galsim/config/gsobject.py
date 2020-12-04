@@ -130,7 +130,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # Set up the initial default list of attributes to ignore while building the object:
     ignore = [
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
-        'magnify', 'magnification', 'shear', 'shift', 'sed',
+        'magnify', 'magnification', 'shear', 'lens', 'shift', 'sed',
         'gsparams', 'skip',
         'current', 'index_key', 'repeat'
     ]
@@ -503,6 +503,7 @@ def TransformObject(gsobject, config, base, logger):
         ('rotate', _Rotate),
         ('rotation', _Rotate),
         ('scale_flux', _ScaleFlux),
+        ('lens', _Lens),
         ('shear', _Shear),
         ('magnify', _Magnify),
         ('magnification', _Magnify),
@@ -519,7 +520,7 @@ def TransformObject(gsobject, config, base, logger):
 def _Shear(gsobject, config, key, base, logger):
     shear, safe = ParseValue(config, key, base, Shear)
     logger.debug('obj %d: shear = %f,%f',base.get('obj_num',0),shear.g1,shear.g2)
-    gsobject = gsobject.shear(shear)
+    gsobject = gsobject._shear(shear)
     return gsobject, safe
 
 def _Rotate(gsobject, config, key, base, logger):
@@ -540,6 +541,15 @@ def _Dilate(gsobject, config, key, base, logger):
     gsobject = gsobject.dilate(scale)
     return gsobject, safe
 
+def _Lens(gsobject, config, key, base, logger):
+    shear, safe = ParseValue(config[key], 'shear', base, Shear)
+    mu, safe1 = ParseValue(config[key], 'mu', base, float)
+    safe = safe and safe1
+    logger.debug('obj %d: shear = %f,%f',base.get('obj_num',0),shear.g1,shear.g2)
+    logger.debug('obj %d: mu  = %f',base.get('obj_num',0),mu)
+    gsobject = gsobject._lens(shear.g1, shear.g2, mu)
+    return gsobject, safe
+
 def _Magnify(gsobject, config, key, base, logger):
     mu, safe = ParseValue(config, key, base, float)
     logger.debug('obj %d: mu  = %f',base.get('obj_num',0),mu)
@@ -549,7 +559,7 @@ def _Magnify(gsobject, config, key, base, logger):
 def _Shift(gsobject, config, key, base, logger):
     shift, safe = ParseValue(config, key, base, PositionD)
     logger.debug('obj %d: shift  = %f,%f',base.get('obj_num',0),shift.x,shift.y)
-    gsobject = gsobject.shift(shift.x,shift.y)
+    gsobject = gsobject._shift(shift.x,shift.y)
     return gsobject, safe
 
 def RegisterObjectType(type_name, build_func, input_type=None):

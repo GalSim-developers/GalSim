@@ -174,14 +174,15 @@ gal :
     # catalog.  We employ this random selection by simply failing to specify an index or identifier
     # for a galaxy, in which case it chooses a random one.
 
-    shear :
-        # We again use PowerSpectrumShear, which is set up below using input : power_spectrum.
-        type : PowerSpectrumShear
-
-    magnification :
-        # We use PowerSpectrumMagnification for this, which is set up below using input :
-        # power_spectrum.
-        type : PowerSpectrumMagnification
+    lens:
+        # Here we have combine the shear and magnification into a single step, which is slightly
+        # more efficient to apply.
+        # The PowerSpectrumShear and PowerSpectrumMagnification types require the power_spectrum
+        # input type, which is set up below using input : power_spectrum.
+        shear :
+            type : PowerSpectrumShear
+        mu:
+            type : PowerSpectrumMagnification
 
     rotation :
         type : Random
