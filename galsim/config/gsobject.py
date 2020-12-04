@@ -559,7 +559,7 @@ def _Magnify(gsobject, config, key, base, logger):
 def _Shift(gsobject, config, key, base, logger):
     shift, safe = ParseValue(config, key, base, PositionD)
     logger.debug('obj %d: shift  = %f,%f',base.get('obj_num',0),shift.x,shift.y)
-    gsobject = gsobject._shift(shift.x,shift.y)
+    gsobject = gsobject._shift(shift)
     return gsobject, safe
 
 def RegisterObjectType(type_name, build_func, input_type=None):
