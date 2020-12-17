@@ -185,9 +185,12 @@ jobs:
             - name: Upload coverage to codecov
               run: |
                 cd tests
-                coverage combine
+                pwd -P
+                ls -la
+                coverage combine || true  # (Not necessary I think, but just in case.)
                 coverage report
-                codecov  # This didn't work.
+                ls -la
+                #codecov  # This didn't work.
                 # cf. https://community.codecov.io/t/github-not-getting-codecov-report-after-switching-from-travis-to-github-actions-for-ci/
                 # The solution was to switch to the bash uploader line instead.
                 bash <(curl -s https://codecov.io/bash)
