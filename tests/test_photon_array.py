@@ -1186,6 +1186,132 @@ def test_lsst_y_focus():
     np.testing.assert_array_less(T1, T0)
 
 
+@timer
+def test_fromArrays():
+    """Check that fromArrays constructor catches errors and never copies."""
+
+    rng = galsim.BaseDeviate(123)
+
+    x = np.empty(1000)
+    y = np.empty(1000)
+    flux = np.empty(1000)
+
+    Nsplit = 444
+
+    pa_batch = galsim.PhotonArray.fromArrays(x, y, flux)
+    pa_1 = galsim.PhotonArray.fromArrays(
+        x[:Nsplit],
+        y[:Nsplit],
+        flux[:Nsplit]
+    )
+    pa_2 = galsim.PhotonArray.fromArrays(
+        x[Nsplit:],
+        y[Nsplit:],
+        flux[Nsplit:]
+    )
+
+    assert pa_batch.x is x
+    assert pa_batch.y is y
+    assert pa_batch.flux is flux
+    np.testing.assert_array_equal(pa_batch.x, x)
+    np.testing.assert_array_equal(pa_batch.y, y)
+    np.testing.assert_array_equal(pa_batch.flux, flux)
+    np.testing.assert_array_equal(pa_1.x, pa_batch.x[:Nsplit])
+    np.testing.assert_array_equal(pa_1.y, pa_batch.y[:Nsplit])
+    np.testing.assert_array_equal(pa_1.flux, pa_batch.flux[:Nsplit])
+    np.testing.assert_array_equal(pa_2.x, pa_batch.x[Nsplit:])
+    np.testing.assert_array_equal(pa_2.y, pa_batch.y[Nsplit:])
+    np.testing.assert_array_equal(pa_2.flux, pa_batch.flux[Nsplit:])
+
+    # Do some manipulation and check views are still equivalent
+    obj1 = galsim.Gaussian(fwhm=0.1)*64
+    obj2 = galsim.Kolmogorov(fwhm=0.2)*23
+
+    obj1._shoot(pa_1, rng)
+    obj2._shoot(pa_2, rng)
+
+    assert pa_batch.x is x
+    assert pa_batch.y is y
+    assert pa_batch.flux is flux
+    np.testing.assert_array_equal(pa_batch.x, x)
+    np.testing.assert_array_equal(pa_batch.y, y)
+    np.testing.assert_array_equal(pa_batch.flux, flux)
+    np.testing.assert_array_equal(pa_1.x, pa_batch.x[:Nsplit])
+    np.testing.assert_array_equal(pa_1.y, pa_batch.y[:Nsplit])
+    np.testing.assert_array_equal(pa_1.flux, pa_batch.flux[:Nsplit])
+    np.testing.assert_array_equal(pa_2.x, pa_batch.x[Nsplit:])
+    np.testing.assert_array_equal(pa_2.y, pa_batch.y[Nsplit:])
+    np.testing.assert_array_equal(pa_2.flux, pa_batch.flux[Nsplit:])
+
+    # Add some optional args and apply PhotonOps to the batch this time.
+    dxdz = np.empty(1000)
+    dydz = np.empty(1000)
+    wavelength = np.empty(1000)
+    pa_batch = galsim.PhotonArray.fromArrays(x, y, flux, dxdz, dydz, wavelength)
+    pa_1 = galsim.PhotonArray.fromArrays(
+        x[:Nsplit],
+        y[:Nsplit],
+        flux[:Nsplit],
+        dxdz[:Nsplit],
+        dydz[:Nsplit],
+        wavelength[:Nsplit]
+    )
+    pa_2 = galsim.PhotonArray.fromArrays(
+        x[Nsplit:],
+        y[Nsplit:],
+        flux[Nsplit:],
+        dxdz[Nsplit:],
+        dydz[Nsplit:],
+        wavelength[Nsplit:]
+    )
+
+    sed = galsim.SED("vega.txt", wave_type='nm', flux_type='flambda')
+    bp = galsim.Bandpass("LSST_r.dat", wave_type='nm')
+    ops = [galsim.WavelengthSampler(sed, bp), galsim.FRatioAngles(1.2, 0.61)]
+    for op in ops:
+        op.applyTo(pa_batch, rng=rng)
+
+    assert pa_batch.x is x
+    assert pa_batch.y is y
+    assert pa_batch.flux is flux
+    assert pa_batch.dxdz is dxdz
+    assert pa_batch.dydz is dydz
+    assert pa_batch.wavelength is wavelength
+    np.testing.assert_array_equal(pa_batch.x, x)
+    np.testing.assert_array_equal(pa_batch.y, y)
+    np.testing.assert_array_equal(pa_batch.flux, flux)
+    np.testing.assert_array_equal(pa_batch.dxdz, dxdz)
+    np.testing.assert_array_equal(pa_batch.dydz, dydz)
+    np.testing.assert_array_equal(pa_batch.wavelength, wavelength)
+    np.testing.assert_array_equal(pa_1.x, pa_batch.x[:Nsplit])
+    np.testing.assert_array_equal(pa_1.y, pa_batch.y[:Nsplit])
+    np.testing.assert_array_equal(pa_1.flux, pa_batch.flux[:Nsplit])
+    np.testing.assert_array_equal(pa_1.dxdz, pa_batch.dxdz[:Nsplit])
+    np.testing.assert_array_equal(pa_1.dydz, pa_batch.dydz[:Nsplit])
+    np.testing.assert_array_equal(pa_1.wavelength, pa_batch.wavelength[:Nsplit])
+    np.testing.assert_array_equal(pa_2.x, pa_batch.x[Nsplit:])
+    np.testing.assert_array_equal(pa_2.y, pa_batch.y[Nsplit:])
+    np.testing.assert_array_equal(pa_2.flux, pa_batch.flux[Nsplit:])
+    np.testing.assert_array_equal(pa_2.dxdz, pa_batch.dxdz[Nsplit:])
+    np.testing.assert_array_equal(pa_2.dydz, pa_batch.dydz[Nsplit:])
+    np.testing.assert_array_equal(pa_2.wavelength, pa_batch.wavelength[Nsplit:])
+
+    # Check the is_corr flag gets set
+    assert not pa_batch.isCorrelated()
+    pa_batch = galsim.PhotonArray.fromArrays(x, y, flux, dxdz, dydz, wavelength, is_corr=True)
+    assert pa_batch.isCorrelated()
+
+    # Check some invalid inputs are caught
+    with np.testing.assert_raises(TypeError):
+        galsim.PhotonArray.fromArrays(list(x), y, flux, dxdz, dydz, wavelength)
+    with np.testing.assert_raises(TypeError):
+        galsim.PhotonArray.fromArrays(np.empty(1000, dtype=int), y, flux, dxdz, dydz, wavelength)
+    with np.testing.assert_raises(ValueError):
+        galsim.PhotonArray.fromArrays(x[:10], y, flux, dxdz, dydz, wavelength)
+    with np.testing.assert_raises(ValueError):
+        galsim.PhotonArray.fromArrays(np.empty(2000)[::2], y, flux, dxdz, dydz, wavelength)
+
+
 if __name__ == '__main__':
     testfns = [v for k, v in vars().items() if k[:5] == 'test_']
     if no_astroplan:
