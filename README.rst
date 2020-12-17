@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.org/GalSim-developers/GalSim.svg?branch=main
-        :target: https://travis-ci.org/GalSim-developers/GalSim
+.. image:: https://github.com/GalSim-developers/GalSim/workflows/GalSim%20CI/badge.svg
+        :target: https://github.com/GalSim-developers/GalSim
 .. image:: https://coveralls.io/repos/github/GalSim-developers/GalSim/badge.svg?branch=main
         :target: https://coveralls.io/github/GalSim-developers/GalSim?branch=main
 .. image:: https://img.shields.io/badge/astro--ph.IM-1407.7676-B31B1B.svg
