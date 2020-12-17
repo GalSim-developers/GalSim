@@ -108,13 +108,69 @@ class PhotonArray(object):
         self._wave = None
         self._is_corr = False
 
-        # These give reasonable errors in x,y,flux are the wrong size/type
+        # These give reasonable errors if x,y,flux are the wrong size/type
         if x is not None: self.x = x
         if y is not None: self.y = y
         if flux is not None: self.flux = flux
         if dxdz is not None: self.dxdz = dxdz
         if dydz is not None: self.dydz = dydz
         if wavelength is not None: self.wavelength = wavelength
+
+    @classmethod
+    def fromArrays(cls, x, y, flux, dxdz=None, dydz=None, wavelength=None, is_corr=False):
+        """Create a PhotonArray from pre-allocated numpy arrays without any copying.
+
+        The normal PhotonArray constructor always allocates new arrays and copies any provided
+        initial values into those new arrays.  This class method, by constrast, constructs a
+        PhotonArray that references existing numpy arrays, so that any PhotonOps or photon shooting
+        of GSObjects applied to the resulting PhotonArray will also be reflected in the original
+        arrays.
+
+        Note that the input arrays must all be the same length, have dtype float64 and be
+        c_contiguous.
+
+        Parameters:
+            x:          X values.
+            y:          X values.
+            flux:       Flux values.
+            dxdz:       Optionally, the initial dxdz values. [default: None]
+            dydz:       Optionally, the initial dydz values. [default: None]
+            wavelength: Optionally, the initial wavelength values (in nm). [default: None]
+            is_corr:    Whether or not the photons are correlated. [default: False]
+        """
+        args = [x, y, flux]
+        argnames = ['x', 'y', 'flux']
+        for a, aname in zip([dxdz, dydz, wavelength], ['dxdz', 'dydz', 'wavelength']):
+            if a is not None:  # don't check optional args that are None
+                args.append(a)
+                argnames.append(aname)
+
+        N = len(x)
+        for a, aname in zip(args, argnames):
+            if not isinstance(a, np.ndarray):
+                raise TypeError("Argument {} must be an ndarray".format(aname))
+            if not a.dtype == np.float64:
+                raise TypeError("Array {} dtype must be np.float64".format(aname))
+            if not len(a) == N:
+                raise ValueError("Arrays must all be the same length")
+            if not a.flags.c_contiguous:
+                raise ValueError("Array {} must be c_contiguous".format(aname))
+
+        return cls._fromArrays(x, y, flux, dxdz, dydz, wavelength, is_corr)
+
+    @classmethod
+    def _fromArrays(cls, x, y, flux, dxdz=None, dydz=None, wavelength=None, is_corr=False):
+        """Same as `fromArrays`, but no sanity checking of inputs.
+        """
+        ret = PhotonArray.__new__(PhotonArray)
+        ret._x = x
+        ret._y = y
+        ret._flux = flux
+        ret._dxdz = dxdz
+        ret._dydz = dydz
+        ret._wave = wavelength
+        ret._is_corr = is_corr
+        return ret
 
     def size(self):
         """Return the size of the photon array.  Equivalent to ``len(self)``.
