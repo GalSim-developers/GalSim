@@ -1267,9 +1267,9 @@ def test_fromArrays():
 
     sed = galsim.SED("vega.txt", wave_type='nm', flux_type='flambda')
     bp = galsim.Bandpass("LSST_r.dat", wave_type='nm')
-    ops = [galsim.WavelengthSampler(sed, bp), galsim.FRatioAngles(1.2, 0.61)]
-    for op in ops:
-        op.applyTo(pa_batch, rng=rng)
+    with assert_warns(galsim.GalSimWarning):
+        galsim.WavelengthSampler(sed, bp).applyTo(pa_batch, rng=rng)
+    galsim.FRatioAngles(1.2, 0.61).applyTo(pa_batch, rng=rng)
 
     assert pa_batch.x is x
     assert pa_batch.y is y
