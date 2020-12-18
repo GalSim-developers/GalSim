@@ -44,8 +44,10 @@ def test_gaussian():
                  },
         'gal5' : { 'type' : 'Gaussian' , 'sigma' : 1.5, 'flux' : 72.5,
                    'rotate' : -34. * galsim.degrees,
-                   'magnify' : 0.93,
-                   'shear' : galsim.Shear(g1=-0.15, g2=0.2)
+                   'lens' : {
+                       'mu' : 0.93,
+                       'shear' : galsim.Shear(g1=-0.15, g2=0.2),
+                    },
                  },
         'gal6' : { 'type' : 'DeltaFunction' , 'flux' : 72.5 },
         'bad1' : { 'type' : 'Gaussian' , 'fwhm' : 2, 'sigma' : 3, 'flux' : 100 },
@@ -277,8 +279,11 @@ def test_kolmogorov():
         'gal4' : { 'type' : 'Kolmogorov' , 'lam' : 400, 'r0_500' : 0.15, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees,
-                   'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
-                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }
+                   'lens' : {
+                       'shear' : galsim.Shear(g1=0.03, g2=-0.05),
+                       'mu' : 1.03,
+                   },
+                   'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 },
                  },
         'gal5' : { 'type' : 'Kolmogorov' , 'lam_over_r0' : 1, 'flux' : 50,
                    'gsparams' : { 'integration_relerr' : 1.e-2, 'integration_abserr' : 1.e-4 }
@@ -487,7 +492,10 @@ def test_sersic():
         'gal4' : { 'type' : 'Sersic' , 'n' : 0.7,  'half_light_radius' : 1, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees,
-                   'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
+                   'lens' : {
+                       'mu' : 1.03,
+                       'shear' : galsim.Shear(g1=0.03, g2=-0.05),
+                   },
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }
                  },
         'gal5' : { 'type' : 'Sersic' , 'n' : 0.7,  'half_light_radius' : 1, 'flux' : 50,
@@ -635,6 +643,8 @@ def test_inclined_exponential():
                    'half_light_radius' : 1, 'scale_h_over_r' : 0.2, 'flux' : 50,
                    'dilate' : 3, 'ellip' : galsim.Shear(e1=0.3),
                    'rotate' : 12 * galsim.degrees,
+                   # Note: Unlike some others, here we use magnification and shear, just to
+                   # show that this is also equivalent to using lens.
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' :-1.2 }
                  },

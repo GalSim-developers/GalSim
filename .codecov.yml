@@ -2,6 +2,11 @@ codecov:
   branch: main
   token: c14be219-3495-4039-8cbf-3f6dc4e76eac
 
+fixes:
+  # Fix the file names:
+  - "/opt/hostedtoolcache/Python/*/x64/lib/python*/site-packages/::"
+  - "/Users/runner/hostedtoolcache/Python/*/x64/lib/python*/site-packages/::"
+
 coverage:
   precision: 2
   round: down

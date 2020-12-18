@@ -1,0 +1,205 @@
+name: GalSim CI
+
+on:
+    push:
+        branches:
+            - main
+            - releases/*
+
+    pull_request:
+        branches:
+            - main
+            - releases/*
+
+jobs:
+    build:
+        runs-on: ${{ matrix.os }}
+
+        # Runs marked experimental don't count as failures if they fail.
+        # Unfortunately, this still marks the run as a failure, unlike Travis's allow_failures
+        # option.  So for now, we have to just disable the pypy experimental run.
+        #continue-on-error: ${{ matrix.experimental }}
+
+        strategy:
+            matrix:
+                # First all python versions in basic linux
+                os: [ ubuntu-latest ]
+                py: [ 2.7, 3.6, 3.7, 3.8, 3.9 ]
+                CC: [ gcc ]
+                CXX: [ g++ ]
+                experimental: [ false ]
+
+                # Add some other particular combinations to test
+                include:
+                    # A couple in MacOS
+                    - os: macos-latest
+                      py: 2.7
+                      CC: cc
+                      CXX: c++
+                      experimental: false
+
+                    - os: macos-latest
+                      py: 3.7
+                      CC: cc
+                      CXX: c++
+                      experimental: false
+
+                    # Check one with clang compiler
+                    - os: ubuntu-latest
+                      py: 3.7
+                      CC: clang
+                      CXX: clang++
+                      experimental: false
+
+                    # Try pypy, but this will fail until astropy starts being pypy compatible.
+                    #- os: ubuntu-latest
+                    #  py: pypy3
+                    #  CC: cc
+                    #  CXX: c++
+                    #  experimental: true
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Print github context properties
+              run: |
+                  echo 'event: ${{ github.event_name }}'
+                  echo 'sha: ${{ github.sha }}'
+                  echo 'ref: ${{ github.ref }}'
+                  echo 'head_ref: ${{ github.head_ref }}'
+                  echo 'base_ref: ${{ github.base_ref }}'
+                  echo 'event.before: ${{ github.event.before }}'
+                  echo 'event.after: ${{ github.event.after }}'
+
+            # Need this for git commands to work right.
+            # Which we only need for 3.6 currently.
+            - uses: actions/checkout@v2
+              if: matrix.py == 3.6
+              with:
+                fetch-depth: 0
+
+            - name: Set up Python ${{ matrix.py }}
+              uses: actions/setup-python@v2
+              with:
+                python-version: ${{ matrix.py }}
+
+            - name: Cache pip
+              uses: actions/cache@v2
+              with:
+                path: |
+                  ~/.cache/pip
+                  $HOME/des_data
+                  $HOME/Library/Caches/Homebrew
+                  /usr/local/Cellar
+                key: ${{ runner.os }}-${{ matrix.py }}-pip-${{ hashFiles('requirements.txt') }}
+                restore-keys: |
+                    ${{ runner.os }}-${{ matrix.py }}-pip-
+                    ${{ runner.os }}-
+
+            - name: Install fftw, etc. on linux
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                echo ${{ matrix.os }}
+                sudo -H apt update -y
+                sudo -H apt install -y libfftw3-dev
+
+                # Easier if eigen is installed with apt-get, but on at least one system, check that
+                # it gets downloaded and installed properly if it isn't installed.
+                if ${{ matrix.py != 3.7 }}; then sudo -H apt install -y libeigen3-dev; fi
+
+                # Only need this for the mpeg tests, which we don't do on 2.7
+                # Travis needed libav-tools, but that doesn't exist on GHA's system.
+                # GHA needs ffmpeg instead.
+                if ${{ matrix.py > 3.5 }}; then sudo -H apt install -y ffmpeg; fi
+
+            - name: Install fftw, etc. on MacOS
+              if: matrix.os == 'macos-latest'
+              # brew sometimes exits with 1 if things are already installed.
+              # continue-on-error should mean that this still counds as success for this step.
+              # but it doesn't seem to work right.  Still counts as an error, it just moves
+              # on and finishes everything else before calling the whole job a failure.  :(
+              # So we still need the || true bits below.
+              continue-on-error: true
+              run: |
+                echo ${{ matrix.os }}
+                # brew update takes forever to run.  Hopefully won't need to enable this too often.
+                #brew update || true
+                brew install fftw wget || true
+                brew upgrade wget || true
+                brew link --overwrite fftw gcc wget || true
+                if ${{ matrix.py != 3.7 }}; then brew install eigen || true; brew link --overwrite eigen || true; fi
+                brew cask install gfortran || true
+                if ${{ matrix.py > 3.5 }}; then brew install libav || true; brew link --overwrite libav || true; fi
+
+            - name: Download des_data
+              run: |
+                ls -l $HOME
+                if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
+                if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget --no-check-certificate http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz; tar xfz des_data.tar.gz -C $HOME; fi
+                ln -s $HOME/des_data examples/des/
+
+            - name: Install basic dependencies
+              run: |
+                python -m pip install -U pip
+
+                # Do these three first to clarify potential conflicts
+                pip install -U numpy
+                pip install -U setuptools
+                pip install -U wheel
+
+                # Standard dependencies
+                pip install -U -r requirements.txt
+
+                # Extra packages needed for testing
+                pip install -U -r test_requirements.txt
+                pip install -U nose codecov coverage
+
+            - name: Install a few extra for python >= 3.7
+              if: matrix.py >= 3.7
+              run: |
+                pip install -U pandas starlink-pyast matplotlib astroplan
+
+            - name: List all installed packages for reference
+              run: pip list
+
+            - name: Build GalSim
+              run: pip install -vvv .
+
+            - name: Check download_cosmos only if it changed. (And only on 1 runner)
+              if: matrix.py == 3.6
+              run: |
+                git status
+                git --no-pager log --graph --pretty=oneline --abbrev-commit | head -50
+                echo git --no-pager diff origin/${{ github.base_ref }}...${{ github.event.after }} --name-only
+                git --no-pager diff origin/${{ github.base_ref }}...${{ github.event.after }} --name-only
+                if git --no-pager diff origin/${{ github.base_ref }}...${{ github.event.after }} --name-only | grep -Fxq 'galsim/download_cosmos.py'; then galsim_download_cosmos -s 23.5 -v1; fi
+
+            - name: Run unit tests
+              run: |
+                cd tests
+                nosetests -v test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase
+                nosetests -v run_examples.py
+                cd ..  # N.B. This seems to happen automatically if omitted.
+                       # Less confusing to include it explicitly.
+
+            - name: Upload coverage to codecov
+              run: |
+                cd tests
+                pwd -P
+                ls -la
+                coverage combine || true  # (Not necessary I think, but just in case.)
+                coverage report
+                ls -la
+                #codecov  # This didn't work.
+                # cf. https://community.codecov.io/t/github-not-getting-codecov-report-after-switching-from-travis-to-github-actions-for-ci/
+                # The solution was to switch to the bash uploader line instead.
+                bash <(curl -s https://codecov.io/bash)
+                cd ..
+
+            - name: Pre-cache cleanup
+              continue-on-error: true
+              run: |
+                # This was helpful in Travis.  Not sure how important it is in GHA.
+                rm -rfv $HOME/.cache/pip/log
+                rm -rfv $HOME/.cache/pip/http
+                if ${{ runner.os == 'macOS' }}; then brew cleanup || true; fi
