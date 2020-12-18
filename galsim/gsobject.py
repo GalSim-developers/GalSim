@@ -915,7 +915,7 @@ class GSObject(object):
             raise TypeError("Error, shear argument is required")
         else:
             shear = Shear(**kwargs)
-        return Transform(self, jac=shear.getMatrix().ravel().tolist())
+        return Transform(self, shear.getMatrix())
 
     def _shear(self, shear):
         """Equivalent to `GSObject.shear`, but without the overhead of sanity checks or other

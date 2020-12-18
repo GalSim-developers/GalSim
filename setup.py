@@ -313,6 +313,7 @@ def find_eigen_dir(output=False):
 
     if output: print("Looking for Eigen:")
     for dir in try_dirs:
+        if dir is None: continue
         if not os.path.isdir(dir): continue
         if output: print("  ", dir, end='')
         if os.path.isfile(os.path.join(dir, 'Eigen/Core')):
