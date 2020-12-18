@@ -166,7 +166,7 @@ jobs:
               run: pip install -vvv .
 
             - name: Check download_cosmos only if it changed. (And only on 1 runner)
-              if: matrix.py == 3.6
+              if: matrix.py == 3.6 && github.base_ref != ''
               run: |
                 git status
                 git --no-pager log --graph --pretty=oneline --abbrev-commit | head -50
