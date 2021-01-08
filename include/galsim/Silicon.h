@@ -41,7 +41,7 @@ namespace galsim
         Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                 double diffStep, double pixelSize, double sensorThickness, double* vertex_data,
                 const Table& tr_radial_table, Position<double> treeRingCenter,
-                const Table& abs_length_table, bool transpose);
+                const Table& abs_length_table, bool transpose, bool useNewBoundaries = false);
 
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
@@ -226,7 +226,9 @@ namespace galsim
 	
 	template <typename T>
 	void saveBoundaries(std::string name, ImageView<T> target);
+	void saveDistortions();
 
+	bool _useNewBoundaries;
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
         std::vector<Polygon> _distortions;
