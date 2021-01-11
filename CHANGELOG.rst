@@ -161,3 +161,5 @@ Bug Fixes
 - Fixed bug in RandomKnots when multiplied by an SED. (#1064)
 - Fixed bug that galsim.fits.writeMulti didn't properly write the header
   information in each hdu. (#1091)
+- Improved the accuracy of stepk for Kolmogorov profiles, especially when
+  folding_threshold is very small. (#1110)
