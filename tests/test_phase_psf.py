@@ -534,7 +534,7 @@ def test_stepk_maxk():
     print('goodImageSize = ',psf.getGoodImageSize(0.2))
     print('t2 = ',t2-t1)
 
-    np.testing.assert_allclose(stepk1, stepk2, rtol=0.05)
+    np.testing.assert_allclose(stepk1, stepk2, rtol=0.06)
     np.testing.assert_allclose(maxk1, maxk2, rtol=0.05)
 
     # Also make sure that prepareDraw wasn't called to calculate the first one.
