@@ -367,19 +367,14 @@ namespace galsim {
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
         // As with Sersic (since Kolmogorov is just a Sersic with n=0.6 in reverse), we use
         // max(f'''') ~= 10.  So:
-        // 10 h^4 <= kvalue_accuracy
-        // h = (kvalue_accuracy/10)^0.25
+        // 10 h^4 <= xvalue_accuracy
+        // h = (xvalue_accuracy/10)^0.25
         double dlogr = gsparams->table_spacing * sqrt(sqrt(gsparams->xvalue_accuracy / 10.));
         xdbg<<"dlogr = "<<dlogr<<std::endl;
 
-        // Along the way accumulate the flux integral to determine the radius
-        // that encloses (1-folding_threshold) of the flux.
-        double sum = 0.;
-        double thresh0 = 0.5 / (2.*M_PI*dlogr);
-        double thresh1 = (1.-gsparams->folding_threshold) / (2.*M_PI*dlogr);
-        double thresh2 = gsparams->shoot_accuracy / (2.*M_PI*dlogr);
-        xdbg<<"thresh values = "<<thresh0<<"  "<<thresh1<<"  "<<thresh2<<std::endl;
-        double R = 0., hlr = 0.;
+        // Continue until the missing flux is less than shoot_accuracy.
+        double thresh = gsparams->shoot_accuracy / (2.*M_PI*dlogr);
+        xdbg<<"thresh  = "<<thresh<<std::endl;
         KolmXValue xval_func(*gsparams);
 
         // Don't go over r=1.e4.  F(1.e4) ~ 1.e-14, so if we haven't stopped by then,
@@ -390,33 +385,33 @@ namespace galsim {
             dbg<<"f("<<r<<") = "<<val<<std::endl;
             _radial.addEntry(r,val);
 
-            // Accumulate int(r*f(r)) / dr  (i.e. don't include 2*pi*dr factor as part of sum)
-            // We are stepping by dlogr = dr/r, so accumulate r*r*f(r).
-            if (sum == 0.) {
-                // At small r, f(r) is very close to constant. So first sum = pi r^2 f(r).
-                sum = M_PI * r*r*val;
-            } else {
-                sum += r*r * val;
-            }
-            xdbg<<"sum = "<<sum<<"  thresh1 = "<<thresh1<<std::endl;
-            xdbg<<"sum*2*pi*dlogr "<<sum*2.*M_PI*dlogr<<std::endl;
-            if (R == 0. && sum > thresh1) R = r;
-            if (hlr == 0. && sum > thresh0) hlr = r;
-
             // At high r, the profile is well approximated by a power law, F ~ r^-3.68
             // The integral of the missing flux out to infinity is int_r^inf F(r) r dr = F r^2/1.68
-            xdbg<<"F r^2/1.68 = "<<val*r*r/1.68<<"  thresh2 = "<<thresh2<<std::endl;
-            if (hlr != 0 && val * r * r / 1.68 < thresh2) break;
+            xdbg<<"F r^2/1.68 = "<<val*r*r/1.68<<"  thresh = "<<thresh<<std::endl;
+            if (val * r * r / 1.68 < thresh) break;
         }
         _radial.finalize();
         dbg<<"Done loop to build radial function.\n";
+
+        // The large r behavior of F(r) is well approximated by a power law, F ~ r^-3.68
+        // This affords an easier calculation of R for stepk than numerically accumulating
+        // the integral.
+        // F(r) = F1 (r/r1)^-3.68
+        // int_r^inf F(r) 2pi r dr = folding_threshold
+        // 2pi F1 r1^3.68 / 1.68 f_t = R^1.68
+        double r1 = _radial.argMax();
+        double F1 = _radial.lookup(r1);
+        dbg<<"r1,F1 = "<<r1<<','<<F1<<std::endl;
+        double R = fast_pow(2.*M_PI*F1*fast_pow(r1,3.68)/(1.68*gsparams->folding_threshold),
+                            1./1.68);
         dbg<<"R = "<<R<<std::endl;
-        dbg<<"hlr = "<<hlr<<std::endl;
+
         // Make sure it is at least 5 hlr
+        double hlr = K0_FACTOR * 0.5548101137;  // (k0_factor * hlr_factor)
+        dbg<<"hlr = "<<hlr<<std::endl;
         R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
-        dbg<<"sum*2*pi*dlogr = "<<sum*2.*M_PI*dlogr<<"   (should ~= 0.999)\n";
 
         // Next, set up the sampler for photon shooting
         std::vector<double> range(2,0.);

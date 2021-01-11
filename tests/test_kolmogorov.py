@@ -137,7 +137,7 @@ def test_kolmogorov_properties():
     np.testing.assert_equal(psf.centroid, cen)
     # Check Fourier properties
     np.testing.assert_almost_equal(psf.maxk, 8.644067599028375, 9)
-    np.testing.assert_almost_equal(psf.stepk, 0.3512294667416627, 9)
+    np.testing.assert_almost_equal(psf.stepk, 0.3750302010950857, 9)
     np.testing.assert_almost_equal(psf.kValue(cen), test_flux+0j)
     np.testing.assert_almost_equal(psf.lam_over_r0, lor)
     np.testing.assert_almost_equal(psf.half_light_radius, lor * 0.5548101137)
@@ -369,6 +369,37 @@ def test_ne():
             galsim.Kolmogorov(lam=1.0, r0=1.0, flux=1.1),
             galsim.Kolmogorov(lam=1.0, r0=1.0, flux=1.1, gsparams=gsp)]
     all_obj_diff(gals)
+
+@timer
+def test_low_folding_threshold():
+    """Test Kolmogorov with a very low folding_threshold.
+    """
+    # Jim Chiang identified a bug introduced in commit 56003a938963ba4bef875c2
+    # where stepk was much too large for Kolmogorov profiles with very low folding_threshold.
+    # This test checks that we have in fact fixed the bug.
+    folding_threshold = 1e-6
+    pixel_scale = 0.2
+
+    gsparams = galsim.GSParams(folding_threshold=folding_threshold)
+
+    fwhm = 0.7313  # This was the particular fwhm from Jim's test showing the failure.
+    psf = galsim.Kolmogorov(fwhm=fwhm, gsparams=gsparams)
+    image_size = psf.getGoodImageSize(pixel_scale)
+    print('ft = 1.e-6: psf.getGoodImageSize:', image_size)
+    # Note: Older versions gave 574 for this choice, which was actually too small due to
+    # numerical rounding errors. Then it was wrongly zero for a while (only on main, not on
+    # a release branch), and now I think this is correct.
+    assert image_size == 6660
+
+    # I think going forward, 1.e-6 is much too small a folding_threshold for the desired
+    # effect Jim wants in imSim.  I think 1.e-4 is more appropriate to get a stamp that will
+    # include most of the visible photons from a bright star.
+    folding_threshold = 1e-4
+    gsparams = galsim.GSParams(folding_threshold=folding_threshold)
+    psf = galsim.Kolmogorov(fwhm=fwhm, gsparams=gsparams)
+    image_size = psf.getGoodImageSize(pixel_scale)
+    print('ft = 1.e-4: psf.getGoodImageSize:', image_size)
+    assert image_size == 430
 
 
 if __name__ == "__main__":
