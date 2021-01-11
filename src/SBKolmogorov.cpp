@@ -385,25 +385,31 @@ namespace galsim {
             dbg<<"f("<<r<<") = "<<val<<std::endl;
             _radial.addEntry(r,val);
 
-            // At high r, the profile is well approximated by a power law, F ~ r^-3.68
-            // The integral of the missing flux out to infinity is int_r^inf F(r) r dr = F r^2/1.68
-            xdbg<<"F r^2/1.68 = "<<val*r*r/1.68<<"  thresh = "<<thresh<<std::endl;
-            if (val * r * r / 1.68 < thresh) break;
+            // At high r, the profile is well approximated by a power law, F ~ r^-3.67
+            // The integral of the missing flux out to infinity is int_r^inf F(r) r dr = F r^2/1.67
+            xdbg<<"F r^2/1.67 = "<<val*r*r/1.67<<"  thresh = "<<thresh<<std::endl;
+            if (val * r * r / 1.67 < thresh) break;
         }
         _radial.finalize();
         dbg<<"Done loop to build radial function.\n";
 
-        // The large r behavior of F(r) is well approximated by a power law, F ~ r^-3.68
+        // The large r behavior of F(r) is well approximated by a power law, F ~ r^-3.67
         // This affords an easier calculation of R for stepk than numerically accumulating
         // the integral.
-        // F(r) = F1 (r/r1)^-3.68
+        // F(r) = F1 (r/r1)^-n
         // int_r^inf F(r) 2pi r dr = folding_threshold
-        // 2pi F1 r1^3.68 / 1.68 f_t = R^1.68
+        // 2pi F1 r1^n / (n-2) f_t = R^(n-2)
         double r1 = _radial.argMax();
         double F1 = _radial.lookup(r1);
+        double r2 = r1 * (1-dlogr);
+        double F2 = _radial.lookup(r2);
         dbg<<"r1,F1 = "<<r1<<','<<F1<<std::endl;
-        double R = fast_pow(2.*M_PI*F1*fast_pow(r1,3.68)/(1.68*gsparams->folding_threshold),
-                            1./1.68);
+        dbg<<"r2,F2 = "<<r2<<','<<F2<<std::endl;
+        // power law index = dlog(F)/dlog(r)
+        double n = -(std::log(F2)-std::log(F1)) / (std::log(r2)-std::log(r1));
+        dbg<<"n = "<<n<<std::endl;
+        double R = fast_pow(2.*M_PI*F1*fast_pow(r1,n)/((n-2)*gsparams->folding_threshold),
+                            1./(n-2));
         dbg<<"R = "<<R<<std::endl;
 
         // Make sure it is at least 5 hlr
