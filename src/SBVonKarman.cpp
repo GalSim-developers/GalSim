@@ -273,10 +273,8 @@ namespace galsim {
         // We accumulate the sum without the 2 pi dlogr factors for efficiency.
         // So the relevant thresholds we want are:
         double thresh0 = 0.5 / (2.*M_PI*dlogr);
-        double thresh1 = (1.-_gsparams->folding_threshold) / (2.*M_PI*dlogr);
         double thresh2 = (1.-_gsparams->shoot_accuracy) / (2.*M_PI*dlogr);
-        dbg<<"thresh = "<<thresh0<<"  "<<thresh1<<"  "<<thresh2<<std::endl;
-        double R = 0.;
+        dbg<<"thresh = "<<thresh0<<"  "<<thresh2<<std::endl;
         _hlr = 0.;
         const double maxR = 60.0; // hard cut at 1 arcminute.
         for(double logr=log(r0); logr<log(maxR) && sum < thresh2; logr+=dlogr) {
@@ -292,23 +290,37 @@ namespace galsim {
             dbg<<"sum = "<<sum<<'\n';
 
             if (_hlr == 0. && sum > thresh0) _hlr = r;
-            if (R == 0. && sum > thresh1) R = r;
         }
         _radial.finalize();
         if (_hlr == 0.)
             throw SBError("Cannot find von Karman half-light-radius.");
-        if (R == 0.) R = maxR;
         dbg<<"Finished building radial function.\n";
-        dbg<<"R = "<<R<<" arcsec\n";
         dbg<<"HLR = "<<_hlr<<" arcsec\n";
+
+        // The large r behavior of F(r) is well approximated by a power law, F ~ r^-n
+        // This affords an easier calculation of R for stepk than numerically accumulating
+        // the integral.
+        // F(r) = F1 (r/r1)^-n
+        // int_r^inf F(r) 2pi r dr = folding_threshold
+        // 2pi F1 r1^n / (n-2) f_t = R^(n-2)
+        double r1 = _radial.argMax();
+        double F1 = _radial.lookup(r1);
+        double r2 = r1 * (1-dlogr);
+        double F2 = _radial.lookup(r2);
+        dbg<<"r1,F1 = "<<r1<<','<<F1<<std::endl;
+        dbg<<"r2,F2 = "<<r2<<','<<F2<<std::endl;
+        // power law index = dlog(F)/dlog(r)
+        double n = -(std::log(F2)-std::log(F1)) / (std::log(r2)-std::log(r1));
+        dbg<<"n = "<<n<<std::endl;
+        double R = fast_pow(2.*M_PI*F1*fast_pow(r1,n)/((n-2)*_gsparams->folding_threshold),
+                            1./(n-2));
+        dbg<<"R = "<<R<<" arcsec\n";
+        if (R > maxR) R = maxR;
+
+        // Make sure it is at least 5 hlr
         R = std::max(R, _gsparams->stepk_minimum_hlr*_hlr);
         if (_stepk == 0.0)
             _stepk = M_PI / R;
-        dbg<<"stepk = "<<_stepk<<" arcsec^-1\n";
-        sum *= 2.*M_PI * dlogr;
-        dbg<<"sum = "<<sum<<"   (should be > 0.995)\n";
-        if (sum < 1-_gsparams->folding_threshold)
-            throw SBError("Could not determine appropriate stepk, given folding_threshold");
 
         std::vector<double> range(2, 0.);
         range[1] = _radial.argMax();

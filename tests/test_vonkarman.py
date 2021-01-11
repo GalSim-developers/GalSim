@@ -345,6 +345,26 @@ def test_vk_force_stepk():
     assert vk4.flux == 11.0
     assert vk3.force_stepk == vk4.force_stepk
 
+@timer
+def test_low_folding_threshold():
+    """Test VonKarman with a very low folding_threshold.
+    """
+    folding_threshold = 1e-4
+    pixel_scale = 0.2
+    kwargs = {'lam':500, 'r0':0.2, 'L0':25.0, 'flux':2.2}
+    gsparams = galsim.GSParams(folding_threshold=folding_threshold)
+    psf = galsim.VonKarman(gsparams=gsparams, **kwargs)
+    image_size = psf.getGoodImageSize(pixel_scale)
+    print('ft = 1.e-4: psf.getGoodImageSize:', image_size)
+    assert image_size == 298
+
+    folding_threshold = 1e-6
+    gsparams = galsim.GSParams(folding_threshold=folding_threshold)
+    psf = galsim.VonKarman(gsparams=gsparams, **kwargs)
+    image_size = psf.getGoodImageSize(pixel_scale)
+    print('ft = 1.e-6: psf.getGoodImageSize:', image_size)
+    assert image_size == 600
+
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
