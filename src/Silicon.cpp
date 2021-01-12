@@ -207,7 +207,7 @@ namespace galsim {
                 <<", y = "<<_distortions[i * _ny + j][n].y * numElec<<std::endl;
         }
 #endif
-	saveDistortions();
+	//saveDistortions();
     }
 
     // check whether the original polygon pixel bounds matches the new linear
@@ -1107,7 +1107,7 @@ namespace galsim {
 	    initializeBoundaryPoints(nx, ny);
 
 	    if (firstTime) {
-		saveBoundaries("startup", target);
+		//saveBoundaries("startup", target);
 	    }
 
 	    dbg<<"Built poly list\n";
@@ -1115,7 +1115,7 @@ namespace galsim {
             addTreeRingDistortions(target, orig_center);
 
 	    if (firstTime) {
-		saveBoundaries("treering", target);
+		//saveBoundaries("treering", target);
 	    }
 	    
             // Start with the correct distortions for the initial image as it is already
@@ -1286,7 +1286,7 @@ namespace galsim {
                 next_recalc = addedFlux + _nrecalc;
 
 		if (firstTimeUPD) {
-		    saveBoundaries("distortions", target);
+		    //saveBoundaries("distortions", target);
 		    firstTimeUPD = false;
 		}
             }
@@ -1311,7 +1311,7 @@ namespace galsim {
 	// JTP: remove!
 	firstTime = false;
 	
-	saveBoundaries("end", target);
+	//saveBoundaries("end", target);
 
 	return addedFlux;
     }
