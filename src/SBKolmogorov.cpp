@@ -407,6 +407,9 @@ namespace galsim {
         dbg<<"r2,F2 = "<<r2<<','<<F2<<std::endl;
         // power law index = dlog(F)/dlog(r)
         double n = -(std::log(F2)-std::log(F1)) / (std::log(r2)-std::log(r1));
+        // For high folding_threshold, n can come out too low (e.g. < 2), which is bad.
+        // We know the right answer is close to 3.67, so just use that if n < 3.6.
+        if (n < 3.6) n = std::max(n, 3.67);
         dbg<<"n = "<<n<<std::endl;
         double R = fast_pow(2.*M_PI*F1*fast_pow(r1,n)/((n-2)*gsparams->folding_threshold),
                             1./(n-2));
