@@ -721,8 +721,8 @@ namespace galsim {
 		Point p = pt;
 		if (rhs) p.x += 1.0;
 		if (top) p.y += 1.0;
-		result[n].x += (pt.x - emptypoly[n].x) * factor;
-		result[n].y += (pt.y - emptypoly[n].y) * factor;
+		result[n].x += (p.x - emptypoly[n].x) * factor;
+		result[n].y += (p.y - emptypoly[n].y) * factor;
 	    });
 
 	result.updateBounds();
