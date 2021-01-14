@@ -772,7 +772,7 @@ namespace galsim {
 	} else if (!_pixelOuterBounds[index].includes(p)) {
             xdbg<<"trivially not\n";
             inside = false;
-        } else {
+	    } else {
             xdbg<<"maybe\n";
             // OK, it must be near the boundary, so now be careful.
             // The term zfactor decreases the pixel shifts as we get closer to the bottom
@@ -1024,6 +1024,9 @@ namespace galsim {
 
 	_pixelInnerBounds.resize(nx * ny);
 	_pixelOuterBounds.resize(nx * ny);
+	for (int k = 0; k < (nx * ny); k++) {
+	    updatePixelBounds(nx, ny, k);
+	}
     }
     
     template <typename T>
@@ -1120,7 +1123,7 @@ namespace galsim {
 	    
             // Start with the correct distortions for the initial image as it is already
             dbg<<"Initial updatePixelDistortions\n";
-            updatePixelDistortions(target);
+            //updatePixelDistortions(target);
             next_recalc = _nrecalc;
 	    
             // Keep track of the charge we are accumulating on a separate image for efficiency
@@ -1276,7 +1279,7 @@ namespace galsim {
             }
 
             // Update shapes every _nrecalc electrons
-            if (addedFlux > next_recalc) {
+            /*if (addedFlux > next_recalc) {
 		static bool firstTimeUPD = true;
 		
                 dbg<<"updatePixelDistortions because "<<addedFlux<<" > "<<next_recalc<<std::endl;
@@ -1289,7 +1292,7 @@ namespace galsim {
 		    //saveBoundaries("distortions", target);
 		    firstTimeUPD = false;
 		}
-            }
+		}*/
 
             startPhoton = photonsUntilRecalc;
         }
