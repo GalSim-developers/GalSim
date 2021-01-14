@@ -1123,7 +1123,7 @@ namespace galsim {
 	    
             // Start with the correct distortions for the initial image as it is already
             dbg<<"Initial updatePixelDistortions\n";
-            //updatePixelDistortions(target);
+            updatePixelDistortions(target);
             next_recalc = _nrecalc;
 	    
             // Keep track of the charge we are accumulating on a separate image for efficiency
@@ -1279,7 +1279,7 @@ namespace galsim {
             }
 
             // Update shapes every _nrecalc electrons
-            /*if (addedFlux > next_recalc) {
+            if (addedFlux > next_recalc) {
 		static bool firstTimeUPD = true;
 		
                 dbg<<"updatePixelDistortions because "<<addedFlux<<" > "<<next_recalc<<std::endl;
@@ -1292,7 +1292,7 @@ namespace galsim {
 		    //saveBoundaries("distortions", target);
 		    firstTimeUPD = false;
 		}
-		}*/
+	    }
 
             startPhoton = photonsUntilRecalc;
         }
