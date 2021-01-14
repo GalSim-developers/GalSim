@@ -166,7 +166,7 @@ namespace galsim
 	    // bottom row including corners
 	    for (; n < ((nv2*3)+2); n++) {
 		idx = horizontalPixelIndex(i, j, nx) + (n - nv2);
-		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*3), false);
+		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*3)+1, false);
 	    }
 	    // RHS
 	    for (; n < ((nv2*5)+2); n++) {
@@ -176,7 +176,7 @@ namespace galsim
 	    // top row including corners
 	    for (; n < ((nv2*7)+4); n++) {
 		idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - ((nv2*5)+2));
-		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+1, true);
+		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+2, true);
 	    }
 	    // LHS upper half
 	    for (; n < _nv; n++) {
@@ -199,7 +199,7 @@ namespace galsim
 	    // bottom row including corners
 	    for (; n < ((nv2*3)+2); n++) {
 		idx = horizontalPixelIndex(i, j, nx) + (n - nv2);
-		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*3), false);
+		callback(n, _horizontalBoundaryPoints[idx], n ==  (nv2*3)+1, false);
 	    }
 	    // RHS
 	    for (; n < ((nv2*5)+2); n++) {
@@ -209,7 +209,7 @@ namespace galsim
 	    // top row including corners
 	    for (; n < ((nv2*7)+4); n++) {
 		idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - ((nv2*5)+2));
-		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+1, true);
+		callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+2, true);
 	    }
 	    // LHS upper half
 	    for (; n < _nv; n++) {
