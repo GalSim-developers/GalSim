@@ -33,6 +33,11 @@
 #include <stdlib.h>
 #include <float.h>
 #include <string.h> // for memcpy
+
+#ifdef __x86_64__
+// Optimized fmath required intel cpus
+#define HAS_FMATH
+
 #if defined(_WIN32) && !defined(__GNUC__)
 	#include <intrin.h>
 	#ifndef MIE_ALIGN
@@ -849,3 +854,26 @@ __m128 (*const exp_ps)(__m128) = local::C<>::getInstance().exp_ps_;
 inline float exp2(float x) { return fmath::exp(x * 0.6931472f); }
 
 } // fmath
+
+#else // __x86_64__
+
+namespace fmath {
+
+inline float exp(float x)
+{
+  return expf(x);
+}
+
+inline double expd(double x)
+{
+  return exp(x);
+}
+
+inline float log(float x)
+{
+  return logf(x);
+}
+
+} // fmath
+
+#endif
