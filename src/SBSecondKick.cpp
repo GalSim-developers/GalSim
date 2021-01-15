@@ -200,7 +200,7 @@ namespace galsim {
         for (k=dk; k<1.; k+=dk) {
             double val = structureFunction(k);
             xdbg<<"sf("<<k<<") "<<val<<std::endl;
-            double kv = fmath::exp(-0.5*val)-_delta;
+            double kv = fmath::expd(-0.5*val)-_delta;
             dbg<<"kv("<<k<<") "<<kv<<std::endl;
             _kvLUT.addEntry(k, kv);
             if (val > limit) { k += dk; break; }
@@ -211,7 +211,7 @@ namespace galsim {
         for (; k<_maxk; k*=expdlogk) {
             double val = structureFunction(k);
             xdbg<<"sf("<<k<<") "<<val<<std::endl;
-            double kv = fmath::exp(-0.5*val)-_delta;
+            double kv = fmath::expd(-0.5*val)-_delta;
             dbg<<"kv("<<k<<") "<<kv<<std::endl;
             _kvLUT.addEntry(k, kv);
             if (std::abs(kv) < _gsparams->kvalue_accuracy) {
