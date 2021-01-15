@@ -34,8 +34,8 @@
 #include <float.h>
 #include <string.h> // for memcpy
 
-#ifdef __x86_64__
-// Optimized fmath required intel cpus
+#ifdef __SSE__
+// Optimized fmath required intel cpus and SSE instructions
 #define HAS_FMATH
 
 #if defined(_WIN32) && !defined(__GNUC__)
@@ -855,23 +855,25 @@ inline float exp2(float x) { return fmath::exp(x * 0.6931472f); }
 
 } // fmath
 
-#else // __x86_64__
+#else // __SSE__
+
+#include <cmath>
 
 namespace fmath {
 
 inline float exp(float x)
 {
-  return expf(x);
+  return std::exp(x);
 }
 
 inline double expd(double x)
 {
-  return exp(x);
+  return std::exp(x);
 }
 
 inline float log(float x)
 {
-  return logf(x);
+  return std::log(x);
 }
 
 } // fmath
