@@ -373,7 +373,7 @@ namespace galsim {
         xdbg<<"dlogr = "<<dlogr<<std::endl;
 
         // Continue until the missing flux is less than shoot_accuracy.
-        double thresh = gsparams->shoot_accuracy / (2.*M_PI*dlogr);
+        double thresh = gsparams->shoot_accuracy / (2.*M_PI);
         xdbg<<"thresh  = "<<thresh<<std::endl;
         KolmXValue xval_func(*gsparams);
 
