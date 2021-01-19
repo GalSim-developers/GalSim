@@ -1,3 +1,4 @@
+# -*- python -*-
 from __future__ import print_function
 # vim: set filetype=python et ts=4 sw=4:
 
@@ -139,6 +140,8 @@ opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV
 #opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
             'Allow other parameters besides the ones listed here.',False))
+opts.Add(BoolVariable('CROSS_COMPILING',
+            'This build is being performed in a cross-compiling environment.',False))
 
 # This helps us determine of openmp is available
 openmp_mingcc_vers = 4.1
@@ -860,6 +863,10 @@ def AltTryRun(config, text, extension):
     # on the command line.
     ok = config.TryLink(text, '.cpp')
     if ok:
+        # If we are cross-compiling, a successful link is sufficient.
+        if config.sconf.env['CROSS_COMPILING']:
+            return 1, '23'
+
         prog = config.lastTarget
         try:
             pname = prog.get_internal_path()
@@ -1264,6 +1271,11 @@ def TryModule(config,text,name,pyscript=""):
         pyscript = "import sys\nsys.path.append('%s')\nimport %s\nprint(%s.run())"%(dir,name,name)
     else:
         pyscript = "import sys\nsys.path.append('%s')\n"%dir + pyscript
+
+    if config.sconf.env['CROSS_COMPILING']:
+        # Assume okay at this point since we can't cross-load python modules.
+        return True
+
     ok, out = TryScript(config,pyscript,python)
 
     config.sconf.env['SPAWN'] = save_spawn
