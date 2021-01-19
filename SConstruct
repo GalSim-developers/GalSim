@@ -1212,8 +1212,15 @@ def TryScript(config,text,pname):
     # is basically taken from parts of the code for TryBuild and TryRun.
 
     # First make the file name using the same counter as TryBuild uses:
-    f = "conftest_" + str(SCons.SConf._ac_build_counter)
-    SCons.SConf._ac_build_counter = SCons.SConf._ac_build_counter + 1
+    if isinstance(SCons.SConf._ac_build_counter, int):
+        # scons version < 4
+        f = "conftest_" + str(SCons.SConf._ac_build_counter)
+        SCons.SConf._ac_build_counter += 1
+    else:
+        # scons version == 4
+        testSig = SCons.Util.MD5signature(pname)
+        f = "conftest_" + str(SCons.SConf._ac_build_counter[testSig])
+        SCons.SConf._ac_build_counter[testSig] += 1
 
     config.sconf.pspawn = config.sconf.env['PSPAWN']
     save_spawn = config.sconf.env['SPAWN']
