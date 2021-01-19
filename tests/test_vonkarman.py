@@ -365,6 +365,15 @@ def test_low_folding_threshold():
     print('ft = 1.e-6: psf.getGoodImageSize:', image_size)
     assert image_size == 600
 
+    # Check an extremely small L0
+    kwargs['L0'] = 1.0
+    with assert_warns(galsim.GalSimWarning):
+        # This low an L0 has a non-negligible delta function, hence a warning.
+        psf = galsim.VonKarman(gsparams=gsparams, **kwargs)
+    image_size = psf.getGoodImageSize(pixel_scale)
+    print('L0=1.0, ft = 1.e-6: psf.getGoodImageSize:', image_size)
+    assert image_size == 600
+
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
