@@ -208,8 +208,105 @@ namespace galsim {
         }
 #endif
 	//saveDistortions();
+	addHalo();
     }
 
+    // adds an extra ring of polygons around the _distortions array to fix
+    // discrepancies at the boundary
+    void Silicon::addHalo()
+    {
+	// start with an array of emptypolys
+	std::vector<Polygon> newDistortions;
+	newDistortions.resize((_nx+2) * (_ny+2));
+	for (int i = 0; i < ((_nx+2) * (_ny+2)); i++) {
+	    newDistortions[i] = _emptypoly;
+	}
+
+	// copy the existing distortions to the center
+	for (int i = 0; i < _nx; i++) {
+	    for (int j = 0; j < _ny; j++) {
+		newDistortions[((i+1) * (_ny+2)) + (j+1)] =
+		    _distortions[(i * _ny) + j];
+	    }
+	}
+
+	// add the correct boundaries in the halo
+	int nv2 = _numVertices / 2;
+	
+	// top left corner
+	newDistortions[_ny + 1][(3*nv2)+1].x =
+	    newDistortions[2*_ny + 2][(7*nv2)+3].x + 1.0;
+	newDistortions[_ny + 1][(3*nv2)+1].y =
+	    newDistortions[2*_ny + 2][(7*nv2)+3].y - 1.0;
+	
+	// top right corner
+	newDistortions[(_ny+2) * (_nx+1) + (_ny+1)][nv2].x =
+	    newDistortions[(_ny+2) * _nx + _ny][(5*nv2)+2].x - 1.0;
+	newDistortions[(_ny+2) * (_nx+1) + (_ny+1)][nv2].y =
+	    newDistortions[(_ny+2) * _nx + _ny][(5*nv2)+2].y - 1.0;
+	
+	// bottom left corner
+	newDistortions[0][5*nv2+2].x =
+	    newDistortions[_ny + 3][nv2].x + 1.0;
+	newDistortions[0][5*nv2+2].y =
+	    newDistortions[_ny + 3][nv2].y + 1.0;
+	
+	// bottom right corner
+	newDistortions[(_ny+2) * (_nx+1)][7*nv2+3].x =
+	    newDistortions[(_ny+2) * _nx + 1][3*nv2+1].x - 1.0;
+	newDistortions[(_ny+2) * (_nx+1)][7*nv2+3].y =
+	    newDistortions[(_ny+2) * _nx + 1][3*nv2+1].y + 1.0;
+	
+	// top row
+	for (int i = 1; i < (_nx + 1); i++) {
+	    for (int n = 0; n < (_numVertices + 2); n++) {
+		int idx1 = nv2 + n;
+		int idx2 = 7*nv2 + 3 - n;
+		newDistortions[(_ny + 2) * i + (_ny + 1)][idx1].x =
+		    newDistortions[(_ny + 2) * i + _ny][idx2].x;
+		newDistortions[(_ny + 2) * i + (_ny + 1)][idx1].y =
+		    newDistortions[(_ny + 2) * i + _ny][idx2].y - 1.0;
+	    }
+	}
+	
+	// bottom row
+	for (int i = 1; i < (_nx + 1); i++) {
+	    for (int n = 0; n < (_numVertices + 2); n++) {
+		int idx1 = 7*nv2 + 3 - n;
+		int idx2 = nv2 + n;
+		newDistortions[(_ny + 2) * i][idx1].x =
+		    newDistortions[(_ny + 2) * i + 1][idx2].x;
+		newDistortions[(_ny + 2) * i][idx1].y =
+		    newDistortions[(_ny + 2) * i + 1][idx2].y + 1.0;
+	    }
+	}
+	
+	// left hand side
+	for (int j = 1; j < (_ny + 1); j++) {
+	    for (int n = 0; n < (_numVertices + 2); n++) {
+		int idx1 = 3 * nv2 + 1 + n;
+		int idx2 = n < (nv2 + 1) ? nv2 - n : ((8 * nv2) + 3 - (n - (nv2+1)));
+		newDistortions[j][idx1].x = newDistortions[j + _ny + 2][idx2].x + 1.0;
+		newDistortions[j][idx1].y = newDistortions[j + _ny + 2][idx2].y;
+	    }
+	}
+	
+	// right hand side
+	for (int j = 1; j < (_ny + 1); j++) {
+	    for (int n = 0; n < (_numVertices + 2); n++) {
+		int idx1 = n < (nv2 + 1) ? nv2 - n : ((8 * nv2) + 3 - (n - (nv2+1)));
+		int idx2 = 3 * nv2 + 1 + n;		
+		newDistortions[(_ny + 2) * (_nx + 1) + j][idx1].x =
+			       newDistortions[(_ny + 2) * _nx + j][idx2].x - 1.0;
+		newDistortions[(_ny + 2) * (_nx + 1) + j][idx1].y =
+			       newDistortions[(_ny + 2) * _nx + j][idx2].y;
+	    }
+	}
+	
+	// overwrite the original distortions array
+	_distortions = newDistortions;
+    }
+    
     // check whether the original polygon pixel bounds matches the new linear
     // version or not
     bool Silicon::checkPixel(int i, int j, int nx, int ny)
@@ -467,8 +564,8 @@ namespace galsim {
         // top of the silicon.  It mus be scaled based on the conversion depth
         // This is handled in insidePixel.
 
-        int nxCenter = (_nx - 1) / 2;
-        int nyCenter = (_ny - 1) / 2;
+        int nxCenter = ((_nx + 2) - 1) / 2;
+        int nyCenter = ((_ny + 2) - 1) / 2;
 
         // Now add in the displacements
         const int i1 = target.getXMin();
@@ -492,16 +589,16 @@ namespace galsim {
                 double charge = *ptr;
                 if (charge == 0.0) continue;
 
-                int polyi1 = std::max(i - _qDist, i1);
-                int polyi2 = std::min(i + _qDist, i2);
-                int polyj1 = std::max(j - _qDist, j1);
-                int polyj2 = std::min(j + _qDist, j2);
+                int polyi1 = std::max(i - (_qDist+1), i1);
+                int polyi2 = std::min(i + (_qDist+1), i2);
+                int polyj1 = std::max(j - (_qDist+1), j1);
+                int polyj2 = std::min(j + (_qDist+1), j2);
                 int disti = nxCenter + polyi1 - i;
 
                 for (int polyi=polyi1; polyi<=polyi2; ++polyi, ++disti) {
                     int distj = nyCenter + polyj1 - j;
                     int index = (polyi - i1) * ny + (polyj1 - j1);
-                    int dist_index = disti * _ny + distj;
+                    int dist_index = disti * (_ny + 2) + distj;
 
                     for (int polyj=polyj1; polyj<=polyj2; ++polyj, ++distj, ++index, ++dist_index) {
                         Polygon& distortion = _distortions[dist_index];

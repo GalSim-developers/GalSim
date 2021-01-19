@@ -223,6 +223,8 @@ namespace galsim
 	void updatePixelBounds(int nx, int ny, size_t k);
 
 	bool checkPixel(int i, int j, int nx, int ny);
+
+	void addHalo();
 	
 	template <typename T>
 	void saveBoundaries(std::string name, ImageView<T> target);
