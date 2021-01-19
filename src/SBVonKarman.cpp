@@ -305,16 +305,22 @@ namespace galsim {
         // 2pi F1 r1^n / (n-2) f_t = R^(n-2)
         double r1 = _radial.argMax();
         double F1 = _radial.lookup(r1);
+#ifdef DEBUGLOGGING
         double r2 = r1 * (1-dlogr);
         double F2 = _radial.lookup(r2);
         dbg<<"r1,F1 = "<<r1<<','<<F1<<std::endl;
         dbg<<"r2,F2 = "<<r2<<','<<F2<<std::endl;
         // power law index = dlog(F)/dlog(r)
-        double n = -(std::log(F2)-std::log(F1)) / (std::log(r2)-std::log(r1));
-        // For high folding_threshold, n can come out too low (e.g. < 2), which is bad.
-        // We know the right answer when L0=inf is close to 3.67, so just use that if n < 3.
-        if (n < 3.) n = std::max(n, 3.67);
-        dbg<<"n = "<<n<<std::endl;
+        double n_emp = -(std::log(F2)-std::log(F1)) / (std::log(r2)-std::log(r1));
+        dbg<<"Empirical n = "<<n_emp<<std::endl;
+#endif
+        // Emprically n is very close to 11/3, independent of L0.  This is probably exact
+        // for L0 -> infinity (i.e. -> Kolmogorov), and there is probably some good reason
+        // that L0 doesn't affect this for reasonable values of L0/r0.  But I (MJ) haven't
+        // actually proven this to be true.
+        // Regardless, let's just always use this for the purpose of estimating stepk,
+        // since any deviations from the exactly correct answer don't matter much.
+        double n = 11./3.;
         double R = fast_pow(2.*M_PI*F1*fast_pow(r1,n)/((n-2)*_gsparams->folding_threshold),
                             1./(n-2));
         dbg<<"R = "<<R<<" arcsec\n";
