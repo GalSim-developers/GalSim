@@ -864,7 +864,7 @@ def test_geometric_shoot():
         opt_psf = galsim.OpticalPSF(diam=diam, lam=lam, aberrations=aberrations,
                                     geometric_shooting=True)
         # Use really good seeing, so that the optics contribution actually matters.
-        atm_psf = galsim.Kolmogorov(fwhm=0.4)
+        atm_psf = galsim.Kolmogorov(fwhm=0.3)
 
         psf = galsim.Convolve(opt_psf, atm_psf)
         u1 = u.duplicate()
