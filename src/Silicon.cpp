@@ -34,6 +34,7 @@
 
 // JTP
 #include <iostream>
+#include <cstdlib>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -95,6 +96,7 @@ namespace galsim {
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
         _abs_length_table(abs_length_table), _transpose(transpose), _resume_next_recalc(-999), _useNewBoundaries(useNewBoundaries)
     {
+	std::cout.precision(15);
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
         // and builds an array of polygons for calculating the distorted pixel shapes
@@ -165,7 +167,7 @@ namespace galsim {
             y = ((y1 - y0) / _pixelSize + 0.5 - origy) / numElec;
 
 	    bool horiz = false;
-	    int bidx = getBoundaryIndex(i, j, n, horiz);
+	    int bidx = getBoundaryIndex(i, j, n, horiz);	    
 	    if (horiz) {
 		_horizontalDistortions[bidx].x += x;
 		_horizontalDistortions[bidx].y += y;
@@ -208,124 +210,162 @@ namespace galsim {
         }
 #endif
 	//saveDistortions();
+	averageDistortions();
 	addHalo();
     }
 
-    // adds an extra ring of polygons around the _distortions array to fix
-    // discrepancies at the boundary
-    void Silicon::addHalo()
+    // Reading from the sensor file results in slightly different boundary points
+    // for neighbouring pixels. This function corrects them by taking the average
+    // in these cases.
+    void Silicon::averageDistortions()
     {
-	// start with an array of emptypolys
-	std::vector<Polygon> newDistortions;
-	newDistortions.resize((_nx+2) * (_ny+2));
-	for (int i = 0; i < ((_nx+2) * (_ny+2)); i++) {
-	    newDistortions[i] = _emptypoly;
-	}
-
-	// copy the existing distortions to the center
-	for (int i = 0; i < _nx; i++) {
-	    for (int j = 0; j < _ny; j++) {
-		newDistortions[((i+1) * (_ny+2)) + (j+1)] =
-		    _distortions[(i * _ny) + j];
-	    }
-	}
-
-	// add the correct boundaries in the halo
 	int nv2 = _numVertices / 2;
 	
-	// top left corner
-	newDistortions[_ny + 1][(3*nv2)+1].x =
-	    newDistortions[2*_ny + 2][(7*nv2)+3].x + 1.0;
-	newDistortions[_ny + 1][(3*nv2)+1].y =
-	    newDistortions[2*_ny + 2][(7*nv2)+3].y - 1.0;
-	
-	// top right corner
-	newDistortions[(_ny+2) * (_nx+1) + (_ny+1)][nv2].x =
-	    newDistortions[(_ny+2) * _nx + _ny][(5*nv2)+2].x - 1.0;
-	newDistortions[(_ny+2) * (_nx+1) + (_ny+1)][nv2].y =
-	    newDistortions[(_ny+2) * _nx + _ny][(5*nv2)+2].y - 1.0;
-	
-	// bottom left corner
-	newDistortions[0][5*nv2+2].x =
-	    newDistortions[_ny + 3][nv2].x + 1.0;
-	newDistortions[0][5*nv2+2].y =
-	    newDistortions[_ny + 3][nv2].y + 1.0;
-	
-	// bottom right corner
-	newDistortions[(_ny+2) * (_nx+1)][7*nv2+3].x =
-	    newDistortions[(_ny+2) * _nx + 1][3*nv2+1].x - 1.0;
-	newDistortions[(_ny+2) * (_nx+1)][7*nv2+3].y =
-	    newDistortions[(_ny+2) * _nx + 1][3*nv2+1].y + 1.0;
-	
-	// top row
-	for (int i = 1; i < (_nx + 1); i++) {
-	    for (int n = 0; n < (_numVertices + 2); n++) {
-		int idx1 = nv2 + n;
-		int idx2 = 7*nv2 + 3 - n;
-		newDistortions[(_ny + 2) * i + (_ny + 1)][idx1].x =
-		    newDistortions[(_ny + 2) * i + _ny][idx2].x;
-		newDistortions[(_ny + 2) * i + (_ny + 1)][idx1].y =
-		    newDistortions[(_ny + 2) * i + _ny][idx2].y - 1.0;
+	// loop over all rows of distortion polygons
+	for (int j = 0; j < (_ny - 1); j++) {
+	    // loop across each row
+	    for (int i = 0; i < _nx; i++) {
+		Polygon& pl = _distortions[i * _ny + j];
+		Polygon& pu = _distortions[i * _ny + j + 1];
+
+		for (int n = 0; n < (_numVertices + 2); n++) {
+		    // average values in adjacent pixels (including corners)
+		    Point& ptl = pl[7*nv2 + 3 - n];
+		    Point& ptu = pu[nv2 + n];
+		    Point avg = (ptl + ptu) * 0.5;
+		    ptl = avg;
+		    ptu = avg;
+		}
 	    }
 	}
 	
-	// bottom row
-	for (int i = 1; i < (_nx + 1); i++) {
-	    for (int n = 0; n < (_numVertices + 2); n++) {
-		int idx1 = 7*nv2 + 3 - n;
-		int idx2 = nv2 + n;
-		newDistortions[(_ny + 2) * i][idx1].x =
-		    newDistortions[(_ny + 2) * i + 1][idx2].x;
-		newDistortions[(_ny + 2) * i][idx1].y =
-		    newDistortions[(_ny + 2) * i + 1][idx2].y + 1.0;
+	// loop over all columns of distortion polygons
+	for (int i = 0; i < (_nx - 1); i++) {
+	    // loop up each column
+	    for (int j = 0; j < _ny; j++) {
+		Polygon& pl = _distortions[i * _ny + j];
+		Polygon& pr = _distortions[(i + 1) * _ny + j];
+		
+		for (int n = 0; n < (_numVertices + 2); n++) {
+		    // average values in adjacent pixels (including corners)
+		    Point& ptl = pl[3*nv2 + 1 + n];
+		    Point& ptr = n < (nv2 + 1) ? pr[nv2 - n] : pr[((8 * nv2) + 3 - (n - (nv2+1)))];
+		    Point avg = (ptl + ptr) * 0.5;
+		    ptl = avg;
+		    ptr = avg;
+		}
 	    }
 	}
+    }
+    
+    // updates the outer ring of distortions so that they only affect their inner
+    // boundary
+    void Silicon::addHalo()
+    {
+	int nv2 = _numVertices / 2;
 	
-	// left hand side
-	for (int j = 1; j < (_ny + 1); j++) {
-	    for (int n = 0; n < (_numVertices + 2); n++) {
-		int idx1 = 3 * nv2 + 1 + n;
-		int idx2 = n < (nv2 + 1) ? nv2 - n : ((8 * nv2) + 3 - (n - (nv2+1)));
-		newDistortions[j][idx1].x = newDistortions[j + _ny + 2][idx2].x + 1.0;
-		newDistortions[j][idx1].y = newDistortions[j + _ny + 2][idx2].y;
+	// handle corner pixels first
+	for (int n = 0; n < _nv; n++) {
+	    // bottom left pixel
+	    if (n != (5*nv2+2)) {
+		// zero out everything except top right corner
+		_distortions[0][n].x = 0.0;
+		_distortions[0][n].y = 0.0;
+	    }
+
+	    // bottom right pixel
+	    if (n != (7*nv2+3)) {
+		// zero out everything except top left corner
+		_distortions[(_nx - 1) * _ny][n].x = 0.0;
+		_distortions[(_nx - 1) * _ny][n].y = 0.0;
+	    }
+
+	    // top left pixel
+	    if (n != (3*nv2+1)) {
+		// zero out everything except bottom right corner
+		_distortions[_ny - 1][n].x = 0.0;
+		_distortions[_ny - 1][n].y = 0.0;
+	    }
+
+	    // top right pixel
+	    if (n != nv2) {
+		// zero out everything except bottom left corner
+		_distortions[(_nx * _ny) - 1][n].x = 0.0;
+		_distortions[(_nx * _ny) - 1][n].y = 0.0;
 	    }
 	}
-	
-	// right hand side
-	for (int j = 1; j < (_ny + 1); j++) {
-	    for (int n = 0; n < (_numVertices + 2); n++) {
-		int idx1 = n < (nv2 + 1) ? nv2 - n : ((8 * nv2) + 3 - (n - (nv2+1)));
-		int idx2 = 3 * nv2 + 1 + n;		
-		newDistortions[(_ny + 2) * (_nx + 1) + j][idx1].x =
-			       newDistortions[(_ny + 2) * _nx + j][idx2].x - 1.0;
-		newDistortions[(_ny + 2) * (_nx + 1) + j][idx1].y =
-			       newDistortions[(_ny + 2) * _nx + j][idx2].y;
+
+	// loop over bottom and top row of pixels excluding corners
+	for (int i = 1; i < (_nx - 1); i++) {
+	    // zero out everything in bottom pixels except top boundary
+	    for (int n = 0; n < (5*nv2+2); n++) {
+		_distortions[i * _ny][n].x = 0.0;
+		_distortions[i * _ny][n].y = 0.0;
+	    }
+	    for (int n = (7*nv2+4); n < _nv; n++) {
+		_distortions[i * _ny][n].x = 0.0;
+		_distortions[i * _ny][n].y = 0.0;
+	    }
+
+	    // zero out everything in top pixels except bottom boundary
+	    for (int n = 0; n < nv2; n++) {
+		_distortions[i * _ny + _ny - 1][n].x = 0.0;
+		_distortions[i * _ny + _ny - 1][n].y = 0.0;
+	    }
+	    for (int n = (3*nv2+2); n < _nv; n++) {
+		_distortions[i * _ny + _ny - 1][n].x = 0.0;
+		_distortions[i * _ny + _ny - 1][n].y = 0.0;
 	    }
 	}
-	
-	// overwrite the original distortions array
-	_distortions = newDistortions;
+
+	// loop over left and right columns of pixels excluding corners
+	for (int j = 1; j < (_ny - 1); j++) {
+	    // zero out everything in left pixels except right boundary
+	    for (int n = 0; n < (3*nv2+1); n++) {
+		_distortions[j][n].x = 0.0;
+		_distortions[j][n].y = 0.0;
+	    }
+	    for (int n = (5*nv2+3); n < _nv; n++) {
+		_distortions[j][n].x = 0.0;
+		_distortions[j][n].y = 0.0;
+	    }
+
+	    // zero out everything in right pixels except left boundary
+	    for (int n = (nv2+1); n < (7*nv2+3); n++) {
+		_distortions[(_nx - 1) * _ny + j][n].x = 0.0;
+		_distortions[(_nx - 1) * _ny + j][n].y = 0.0;
+	    }
+	}
     }
     
     // check whether the original polygon pixel bounds matches the new linear
     // version or not
     bool Silicon::checkPixel(int i, int j, int nx, int ny)
     {
+	int nv2 = _numVertices / 2;
 	bool success = true;
 	bool horizontal;
 	Polygon& poly = _imagepolys[(i * ny) + j];
 	for (int n=0; n < _nv; n++) {
 	    int idx = getBoundaryIndex(i, j, n, horizontal, nx, ny);
-	    Point& pt = horizontal ? _horizontalDistortions[idx] :
-		_verticalDistortions[idx];
+	    Point pt = horizontal ? _horizontalBoundaryPoints[idx] :
+		_verticalBoundaryPoints[idx];
+	    if ((n >= (3*nv2+1)) && (n <= (5*nv2+2))) pt.x += 1.0;
+	    if ((n >= (5*nv2+2)) && (n <= (7*nv2+3))) pt.y += 1.0;
 	    Point& pt2 = poly[n];
 	    double dist = ((pt.x - pt2.x) * (pt.x - pt2.x)) +
 		((pt.y - pt2.y) * (pt.y - pt2.y));
-	    if (dist > 1e-5) {
+	    if (dist > 1e-10) {
 		success = false;
 		std::cout << "Mismatch pixel (" << i << "," << j << ") n=" << n
 			  << ", polygon=(" << pt2.x << "," << pt2.y <<"), "
-			  << "linear=(" << pt.x << "," << pt.y << ")" << std::endl;
+			  << "linear=(" << pt.x << "," << pt.y << ")";
+		if (horizontal) {
+		    std::cout << ", horizontal idx " << idx << std::endl;
+		}
+		else {
+		    std::cout << ", vertical idx " << idx << std::endl;
+		}
 	    }
 	}
 	return success;
@@ -486,28 +526,41 @@ namespace galsim {
 	    });
     }
 
-    void Silicon::applyPixelDistortion(int i, int j, int disti, int distj, int nx, int ny, double charge)
+    void Silicon::applyPixelDistortion(int i, int j, int disti, int distj, int nx, int ny, double charge, bool rhs, bool bottom)
     {
+	// all pixels update their top left corner, top and left boundaries
+	// only the pixels on the right hand side of the update region update
+	// their right hand boundaries, and only the pixels along the bottom of the
+	// update region update their bottom boundaries
 	if (charge != 0.0) {
 	    //std::cout << "Updating pixel (" << i << "," << j << ") from distortion point (" << disti << "," << distj << ") with charge " << charge << std::endl;
 	}
-	// top and bottom rows
-	for (int k = 0; k < (_numVertices + 2); k++) {
-	    Position<double>& pt = _horizontalBoundaryPoints[horizontalPixelIndex(i, j, nx) + k];
-	    Position<double>& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) + k];
-	    if (charge != 0.0) {
-		//std::cout << "  l(" << pt.x << "," << pt.y << ") + c*(" << distpt.x << "," << distpt.y << ")" << std::endl;
-	    }
+	
+	// top (and optionally bottom rows)
+	for (int k = 0; k < (_numVertices + 1 + (int)rhs); k++) {
+	    if (bottom) {
+		int idxb = horizontalPixelIndex(i, j, nx) + k;
+		Position<double>& pt = _horizontalBoundaryPoints[idxb];
+		Position<double>& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) + k];
+		if (charge != 0.0) {
+		    //std::cout << "  l(" << pt.x << "," << pt.y << ") + c*(" << distpt.x << "," << distpt.y << ")" << std::endl;
+		}
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-	    pt.x += distpt.x * charge;
+		pt.x += distpt.x * charge;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-	    pt.y += distpt.y * charge;
+		pt.y += distpt.y * charge;
 
-	    Position<double>& pt2 = _horizontalBoundaryPoints[horizontalPixelIndex(i, j+1, nx) + k];
+		/*if (idxb == 17561) {
+		    std::cout << "Index " << idxb << " updated for " << i << "," << j << "," << k << " (bottom), charge=" << charge << ", dist[" << disti << "," << distj << "]=(" << distpt.x << "," << distpt.y << "), rhs=" << rhs << std::endl;
+		    }*/
+	    }
+
+	    int idxt = horizontalPixelIndex(i, j+1, nx) + k;
+	    Position<double>& pt2 = _horizontalBoundaryPoints[idxt];
 	    Position<double>& distpt2 = _horizontalDistortions[horizontalPixelIndex(disti, distj+1, _nx) + k];
 	    if (charge != 0.0) {
 		//std::cout << "  l(" << pt2.x << "," << pt2.y << ") + c*(" << distpt2.x << "," << distpt2.y << ")" << std::endl;
@@ -520,6 +573,10 @@ namespace galsim {
 #pragma omp atomic
 #endif
 	    pt2.y += distpt2.y * charge;
+
+	    /*if (idxt == 17561) {
+		std::cout << "Index " << idxt << " updated for " << i << "," << j << "," << k << " (top), charge=" << charge << ", dist[" << disti << "," << distj << "]=(" << distpt2.x << "," << distpt2.y << "), rhs=" << rhs << std::endl;
+		}*/
 	}
 
 	// sides
@@ -537,20 +594,22 @@ namespace galsim {
 #pragma omp atomic
 #endif
 	    pt.y += distpt.y * charge;
-
-	    Position<double>& pt2 = _verticalBoundaryPoints[verticalPixelIndex(i+1, j, ny) + k];
-	    Position<double>& distpt2 = _verticalDistortions[verticalPixelIndex(disti+1, distj, _ny) + k];
-	    if (charge != 0.0) {
-		//std::cout << "  l(" << pt2.x << "," << pt2.y << ") + c*(" << distpt2.x << "," << distpt2.y << ")" << std::endl;
+	    
+	    if (rhs) {
+		Position<double>& pt2 = _verticalBoundaryPoints[verticalPixelIndex(i+1, j, ny) + k];
+		Position<double>& distpt2 = _verticalDistortions[verticalPixelIndex(disti+1, distj, _ny) + k];
+		if (charge != 0.0) {
+		    //std::cout << "  l(" << pt2.x << "," << pt2.y << ") + c*(" << distpt2.x << "," << distpt2.y << ")" << std::endl;
+		}
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+		pt2.x += distpt2.x * charge;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+		pt2.y += distpt2.y * charge;
 	    }
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-	    pt2.x += distpt2.x * charge;
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-	    pt2.y += distpt2.y * charge;
 	}
     }
     
@@ -564,8 +623,8 @@ namespace galsim {
         // top of the silicon.  It mus be scaled based on the conversion depth
         // This is handled in insidePixel.
 
-        int nxCenter = ((_nx + 2) - 1) / 2;
-        int nyCenter = ((_ny + 2) - 1) / 2;
+        int nxCenter = (_nx - 1) / 2;
+        int nyCenter = (_ny - 1) / 2;
 
         // Now add in the displacements
         const int i1 = target.getXMin();
@@ -576,6 +635,8 @@ namespace galsim {
         const int ny = j2-j1+1;
         const int step = target.getStep();
 
+	//std::cout << "qdist=" << _qDist << ", i1=" << i1 << ", i2=" << i2 << ", j1=" << j1 << ", j2=" << j2 << ", nxcentre=" << nxCenter << ", nycentre=" << nyCenter << std::endl;
+	
         // Now we cycle through the pixels in the target image and update any affected
         // pixel shapes.
         std::vector<bool> changed(_imagepolys.size(), false);
@@ -595,19 +656,27 @@ namespace galsim {
                 int polyj2 = std::min(j + (_qDist+1), j2);
                 int disti = nxCenter + polyi1 - i;
 
+		//std::cout << "Updating region " << polyi1 << "," << polyi2 << "," << polyj1 << "," << polyj2 << " for pixel " << i << "," << j << std::endl;
+		
                 for (int polyi=polyi1; polyi<=polyi2; ++polyi, ++disti) {
                     int distj = nyCenter + polyj1 - j;
                     int index = (polyi - i1) * ny + (polyj1 - j1);
-                    int dist_index = disti * (_ny + 2) + distj;
+                    int dist_index = disti * _ny + distj;
 
                     for (int polyj=polyj1; polyj<=polyj2; ++polyj, ++distj, ++index, ++dist_index) {
                         Polygon& distortion = _distortions[dist_index];
                         Polygon& imagepoly = _imagepolys[index];
 
-			applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge);
-
+			//std::cout << "polyi=" << polyi << ", polyj=" << polyj << ", disti=" << disti << ", distj=" << distj << ", " << "index=" << index << std::endl;
+			
+			if ((disti > 0) && (distj > 0) && (disti < (_nx-1)) &&
+			    (distj < (_ny-1))) {
+			    applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge, (polyi == (polyi2-1)) || (disti == (_nx-2)), (polyj == (polyj1+1)) || (distj == 1));
+			}
                         imagepoly.distort(distortion, charge);
-
+			/*if (((polyi - i1) == 27) && ((polyj - j1) == 29)) {
+			    std::cout << "Polygonal distortion updated for 27,28, distortion for point 23=(" << distortion[23].x << "," << distortion[23].y << ")" << std::endl;
+			    }*/
 
                         changed[index] = true;
                     }
@@ -621,6 +690,9 @@ namespace galsim {
             if (changed[k]) {
 		_imagepolys[k].updateBounds();
 		updatePixelBounds(nx, ny, k);
+
+		if (!checkPixel(k / ny, k % ny, nx, ny)) std::exit(1);
+		//checkPixel(k / ny, k % ny, nx, ny);
 	    }
         }
     }
