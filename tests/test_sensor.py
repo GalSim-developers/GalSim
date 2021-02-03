@@ -136,6 +136,18 @@ def test_new_boundaries():
     # compare the results
     np.testing.assert_array_equal(im1.array, im2.array)
 
+    # more photons to get brighter-fatter effect
+    obj *= 100
+    rng1 = galsim.BaseDeviate(5678)
+    rng2 = galsim.BaseDeviate(5678)
+
+    obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon_ob, rng=rng1)
+    obj.drawImage(im2, method='phot', poisson_flux=False, sensor=silicon_nb, rng=rng2)
+
+    # should still match
+    np.testing.assert_array_equal(im1.array, im2.array)
+    
+    
 
 @timer
 def test_silicon():

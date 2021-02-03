@@ -57,7 +57,7 @@ namespace galsim
 
         double calculateConversionDepth(const PhotonArray& photons, int i, double randomNumber) const;
 
-	void applyPixelDistortion(int i, int j, int disti, int distj, int nx, int ny, double charge);
+	void applyPixelDistortion(int i, int j, int disti, int distj, int nx, int ny, double charge, bool rhs, bool bottom);
 
         template <typename T>
         void updatePixelDistortions(ImageView<T> target);
@@ -224,6 +224,7 @@ namespace galsim
 
 	bool checkPixel(int i, int j, int nx, int ny);
 
+	void averageDistortions();
 	void addHalo();
 	
 	template <typename T>
