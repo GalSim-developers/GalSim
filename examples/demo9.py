@@ -72,7 +72,24 @@ def main(argv):
 
     And we build the multiple files in parallel.
     """
-    from multiprocessing import Process, Queue, current_process, cpu_count
+    from multiprocessing import current_process, cpu_count
+    if sys.version_info < (3,0):
+        from multiprocessing import Process, Queue
+    else:
+        # Python 3 has different contexts for doing multiprocessing.
+        # The "spawn" context is supposedly the safest context, since it pickles pretty much
+        # everything to communicate across processes.  However, this can be highly inefficient
+        # in some cases, and some things aren't picklable, so they can break when using
+        # the spawn context.
+        # The "fork" context doesn't pickle as much (especially some of those unpicklable things),
+        # so it is generally more efficient and works in a wider variety of cases.
+        # Starting in Python 3.8, some systems (e.g. MacOS) started making the spawn context the
+        # default, so things can break using the default context.  This bit forces Python
+        # to use the fork context here.
+        from multiprocessing import get_context
+        ctx = get_context('fork')
+        Process = ctx.Process
+        Queue = ctx.Queue
 
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo9")

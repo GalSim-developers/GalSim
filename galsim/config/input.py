@@ -23,6 +23,7 @@ import logging
 
 from .value import RegisterValueType
 from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
+from .util import SafeManager
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..catalog import Catalog, Dict
@@ -104,8 +105,7 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                    ParseValue(config['output'], 'nproc', config, int)[0] != 1) ) )
 
         if use_manager and '_input_manager' not in config:
-            from multiprocessing.managers import BaseManager
-            class InputManager(BaseManager): pass
+            class InputManager(SafeManager): pass
 
             # Register each input field with the InputManager class
             for key in all_keys:
