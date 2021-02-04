@@ -18,7 +18,9 @@
 
 import logging
 import copy
+import sys
 from collections import OrderedDict
+from multiprocessing.managers import BaseManager
 
 from ..utilities import SimpleGenerator
 from ..random import BaseDeviate
@@ -221,6 +223,21 @@ def CopyConfig(config):
 
     return config1
 
+class SafeManager(BaseManager):
+    """There are a few places we need a Manager object.  This one uses the 'fork' context,
+    rather than whatever the default is on your system (which may be fork or may be spawn).
+
+    Starting in python 3.8, the spawn context started becoming more popular.  It's supposed to
+    be safer, but it wants to pickle a lot of things that aren't picklable, so it doesn't work.
+    Using this as the base class instead, should work.  And doing it it one place means that we
+    only have one place to change this is there is a different strategy that works better.
+    """
+    def __init__(self):
+        if sys.version_info >= (3,8):
+            from multiprocessing import get_context
+            super(SafeManager, self).__init__(ctx=get_context('fork'))
+
+
 def GetLoggerProxy(logger):
     """Make a proxy for the given logger that can be passed into multiprocessing Processes
     and used safely.
@@ -231,9 +248,8 @@ def GetLoggerProxy(logger):
     Returns:
         a proxy for the given logger
     """
-    from multiprocessing.managers import BaseManager
     if logger:
-        class LoggerManager(BaseManager): pass
+        class LoggerManager(SafeManager): pass
         logger_generator = SimpleGenerator(logger)
         LoggerManager.register('logger', callable = logger_generator)
         logger_manager = LoggerManager()
@@ -706,8 +722,14 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
     if nproc > 1:
         logger.warning("Using %d processes for %s processing",nproc,item)
 
-        from multiprocessing import Process, Queue, current_process
-        from multiprocessing.managers import BaseManager
+        from multiprocessing import current_process
+        if sys.version_info < (3,8):
+            from multiprocessing import Process, Queue
+        else:
+            from multiprocessing import get_context
+            ctx = get_context('fork')
+            Process = ctx.Process
+            Queue = ctx.Queue
 
         # Send the tasks to the task_queue.
         task_queue = Queue()
