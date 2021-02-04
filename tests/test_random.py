@@ -1580,7 +1580,14 @@ def test_distLookupTable():
 def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
-    from multiprocessing import Process, Queue, current_process
+    from multiprocessing import current_process
+    if sys.version_info < (3,8):
+        from multiprocessing import Process, Queue
+    else:
+        from multiprocessing import get_context
+        ctx = get_context('fork')
+        Process = ctx.Process
+        Queue = ctx.Queue
 
     def generate_list(seed):
         """Given a particular seed value, generate a list of random numbers.
