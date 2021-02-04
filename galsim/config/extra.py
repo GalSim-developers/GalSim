@@ -20,7 +20,7 @@ import os
 import logging
 import inspect
 
-from .util import LoggerWrapper, SetDefaultExt, RetryIO
+from .util import LoggerWrapper, SetDefaultExt, RetryIO, SafeManager
 from .value import ParseValue
 from ..utilities import ensure_dir
 from ..errors import GalSimConfigValueError, GalSimConfigError
@@ -61,8 +61,8 @@ def SetupExtraOutput(config, logger=None):
             ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
 
     if use_manager and 'output_manager' not in config:
-        from multiprocessing.managers import BaseManager, ListProxy, DictProxy
-        class OutputManager(BaseManager): pass
+        from multiprocessing.managers import ListProxy, DictProxy
+        class OutputManager(SafeManager): pass
 
         # We'll use a list and a dict as work space to do the extra output processing.
         OutputManager.register('dict', dict, DictProxy)
