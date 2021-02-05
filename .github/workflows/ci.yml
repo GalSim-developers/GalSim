@@ -60,6 +60,10 @@ jobs:
 
         steps:
             - uses: actions/checkout@v2
+              with:
+                # Need this for git commands to work right.
+                # Also for codecov upload apparently.
+                fetch-depth: 0
 
             - name: Print github context properties
               run: |
@@ -70,13 +74,6 @@ jobs:
                   echo 'base_ref: ${{ github.base_ref }}'
                   echo 'event.before: ${{ github.event.before }}'
                   echo 'event.after: ${{ github.event.after }}'
-
-            # Need this for git commands to work right.
-            # Which we only need for 3.6 currently.
-            - uses: actions/checkout@v2
-              if: matrix.py == 3.6
-              with:
-                fetch-depth: 0
 
             - name: Set up Python ${{ matrix.py }}
               uses: actions/setup-python@v2
