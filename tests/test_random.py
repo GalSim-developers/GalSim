@@ -1581,7 +1581,7 @@ def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
     from multiprocessing import current_process
-    if sys.version_info < (3,8):
+    if sys.version_info < (3,0):
         from multiprocessing import Process, Queue
     else:
         from multiprocessing import get_context
