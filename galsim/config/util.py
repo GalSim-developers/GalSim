@@ -236,6 +236,8 @@ class SafeManager(BaseManager):
         if sys.version_info >= (3,8):
             from multiprocessing import get_context
             super(SafeManager, self).__init__(ctx=get_context('fork'))
+        else:
+            super(SafeManager, self).__init__()
 
 
 def GetLoggerProxy(logger):
