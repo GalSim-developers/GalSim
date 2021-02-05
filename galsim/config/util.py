@@ -233,7 +233,7 @@ class SafeManager(BaseManager):
     only have one place to change this is there is a different strategy that works better.
     """
     def __init__(self):
-        if sys.version_info >= (3,8):
+        if sys.version_info >= (3,0):
             from multiprocessing import get_context
             super(SafeManager, self).__init__(ctx=get_context('fork'))
         else:
@@ -725,7 +725,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         logger.warning("Using %d processes for %s processing",nproc,item)
 
         from multiprocessing import current_process
-        if sys.version_info < (3,8):
+        if sys.version_info < (3,0):
             from multiprocessing import Process, Queue
         else:
             from multiprocessing import get_context
