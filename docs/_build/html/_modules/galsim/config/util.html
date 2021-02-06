@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.config.util &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.config.util &mdash; GalSim 2.2.5 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -186,7 +193,9 @@
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">BaseManager</span>
 
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">SimpleGenerator</span>
 <span class="kn">from</span> <span class="nn">..random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
@@ -389,6 +398,23 @@
 
     <span class="k">return</span> <span class="n">config1</span></div>
 
+<span class="k">class</span> <span class="nc">SafeManager</span><span class="p">(</span><span class="n">BaseManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;There are a few places we need a Manager object.  This one uses the &#39;fork&#39; context,</span>
+<span class="sd">    rather than whatever the default is on your system (which may be fork or may be spawn).</span>
+
+<span class="sd">    Starting in python 3.8, the spawn context started becoming more popular.  It&#39;s supposed to</span>
+<span class="sd">    be safer, but it wants to pickle a lot of things that aren&#39;t picklable, so it doesn&#39;t work.</span>
+<span class="sd">    Using this as the base class instead, should work.  And doing it it one place means that we</span>
+<span class="sd">    only have one place to change this is there is a different strategy that works better.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">get_context</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ctx</span><span class="o">=</span><span class="n">get_context</span><span class="p">(</span><span class="s1">&#39;fork&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+
 <div class="viewcode-block" id="GetLoggerProxy"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetLoggerProxy">[docs]</a><span class="k">def</span> <span class="nf">GetLoggerProxy</span><span class="p">(</span><span class="n">logger</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Make a proxy for the given logger that can be passed into multiprocessing Processes</span>
 <span class="sd">    and used safely.</span>
@@ -399,9 +425,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        a proxy for the given logger</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">BaseManager</span>
     <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
-        <span class="k">class</span> <span class="nc">LoggerManager</span><span class="p">(</span><span class="n">BaseManager</span><span class="p">):</span> <span class="k">pass</span>
+        <span class="k">class</span> <span class="nc">LoggerManager</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">):</span> <span class="k">pass</span>
         <span class="n">logger_generator</span> <span class="o">=</span> <span class="n">SimpleGenerator</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
         <span class="n">LoggerManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;logger&#39;</span><span class="p">,</span> <span class="n">callable</span> <span class="o">=</span> <span class="n">logger_generator</span><span class="p">)</span>
         <span class="n">logger_manager</span> <span class="o">=</span> <span class="n">LoggerManager</span><span class="p">()</span>
@@ -874,8 +899,14 @@
     <span class="k">if</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using </span><span class="si">%d</span><span class="s2"> processes for </span><span class="si">%s</span><span class="s2"> processing&quot;</span><span class="p">,</span><span class="n">nproc</span><span class="p">,</span><span class="n">item</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">current_process</span>
-        <span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">BaseManager</span>
+        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">current_process</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">get_context</span>
+            <span class="n">ctx</span> <span class="o">=</span> <span class="n">get_context</span><span class="p">(</span><span class="s1">&#39;fork&#39;</span><span class="p">)</span>
+            <span class="n">Process</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Process</span>
+            <span class="n">Queue</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Queue</span>
 
         <span class="c1"># Send the tasks to the task_queue.</span>
         <span class="n">task_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
@@ -1136,20 +1167,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1157,7 +1193,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.config.input &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.config.input &mdash; GalSim 2.2.5 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -191,6 +198,7 @@
 
 <span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">RegisterValueType</span>
 <span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">RemoveCurrent</span><span class="p">,</span> <span class="n">GetRNG</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">SafeManager</span>
 <span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">CheckAllParams</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span><span class="p">,</span> <span class="n">_GetBoolValue</span>
 <span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
 <span class="kn">from</span> <span class="nn">..catalog</span> <span class="kn">import</span> <span class="n">Catalog</span><span class="p">,</span> <span class="n">Dict</span>
@@ -272,8 +280,7 @@
                    <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span> <span class="s1">&#39;nproc&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">use_manager</span> <span class="ow">and</span> <span class="s1">&#39;_input_manager&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">BaseManager</span>
-            <span class="k">class</span> <span class="nc">InputManager</span><span class="p">(</span><span class="n">BaseManager</span><span class="p">):</span> <span class="k">pass</span>
+            <span class="k">class</span> <span class="nc">InputManager</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">):</span> <span class="k">pass</span>
 
             <span class="c1"># Register each input field with the InputManager class</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">all_keys</span><span class="p">:</span>
@@ -670,20 +677,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -691,7 +703,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
