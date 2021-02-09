@@ -586,7 +586,7 @@ def test_laplacian():
         )
 
     # Do a couple by hand
-    # Z4 = 2 sqrt(3) (x^2 + y^2 - 1)
+    # Z4 = sqrt(3) (2x^2 + 2y^2 - 1)
     # implies laplacian = 4 sqrt(3) + 4 sqrt(3) = 8 sqrt(3)
     # which is 8 sqrt(3) Z1
     np.testing.assert_allclose(
@@ -638,7 +638,7 @@ def test_hessian():
         )
 
     # Do a couple by hand
-    # Z4 = 2 sqrt(3) (x^2 + y^2)
+    # Z4 = sqrt(3) (2x^2 + 2y^2 - 1)
     # implies hessian = 4 sqrt(3) * 4 sqrt(3) - 0 * 0 = 16*3 = 48
     # which is 48 Z1
     np.testing.assert_allclose(
@@ -658,6 +658,33 @@ def test_hessian():
         galsim.zernike.Zernike([0,0,0,0,0,0,0,1]).hessian(x, y),
         864*y*y - 288*x*x
     )
+
+
+@timer
+def test_describe_zernike():
+    """Test that Zernike descriptions make sense."""
+    # Just do a few by hand
+    # These can be looked up in Lakshminarayanan & Fleck (2011), Journal of Modern Optics
+    # Table 1 there has algebraic expressions for Zernikes through j=36
+    # Note, their definition is slightly different than ours: x and y are swapped.  (See their
+    # figure 2 in which the azimuthal angle is defined +ve CW from +y.  We use +ve CCW from +x to be
+    # consistent with Zemax.)
+    assert galsim.zernike.describe_zernike(1) == "sqrt(1) * (1)"
+    assert galsim.zernike.describe_zernike(2) == "sqrt(4) * (x)"
+    assert galsim.zernike.describe_zernike(3) == "sqrt(4) * (y)"
+    assert galsim.zernike.describe_zernike(4) == "sqrt(3) * (-1 + 2y^2 + 2x^2)"
+    assert galsim.zernike.describe_zernike(10) == "sqrt(8) * (-3xy^2 + x^3)"
+
+    Z22str = (
+        "sqrt(7) * (-1 + 12y^2 - 30y^4 + 20y^6 + 12x^2"
+        " - 60x^2y^2 + 60x^2y^4 - 30x^4 + 60x^4y^2 + 20x^6)"
+    )
+    assert galsim.zernike.describe_zernike(22) == Z22str
+
+    Z36str = (
+        "sqrt(16) * (-7xy^6 + 35x^3y^4 - 21x^5y^2 + x^7)"
+    )
+    assert galsim.zernike.describe_zernike(36) == Z36str
 
 
 if __name__ == "__main__":

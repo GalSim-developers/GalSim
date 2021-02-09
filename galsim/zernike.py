@@ -393,6 +393,49 @@ def __annular_zern_rho_coefs(n, m, eps):
 _annular_zern_rho_coefs = LRU_Cache(__annular_zern_rho_coefs)
 
 
+def describe_zernike(j):
+    """Create a human-readable string describing the jth (unit circle) Zernike mode as a bivariate
+    polynomial in x and y.
+
+    Parameters:
+        j:      Zernike mode Noll index
+
+    Returns:
+        string description of jth mode.
+    """
+    Z = Zernike([0]*j+[1])
+    n, m = noll_to_zern(j)
+    var = (1 if m==0 else 2)*(n+1)
+    arr = Z._coef_array_xy/np.sqrt(var)
+    first = True
+    out = "sqrt({}) * (".format(var)
+
+    for (i, k), val in np.ndenumerate(arr):
+        if val != 0:
+            if not first:
+                out += " + "
+            first = False
+            ival = int(np.round(val))
+            if ival != 1:
+                out += str(int(np.round(val)))
+            if i >= 1:
+                out += "x"
+            if i >= 2:
+                out += "^"+str(i)
+            if k >= 1:
+                out += "y"
+            if k >= 2:
+                out += "^"+str(k)
+    out += ")"
+    # Clean up some special cases
+    out = out.replace("(-1x", "(-x")
+    out = out.replace("(-1y", "(-y")
+    out = out.replace("+ -", "- ")
+    if out == "sqrt(1) * ()":
+        out = "sqrt(1) * (1)"
+    return out
+
+
 class Zernike(object):
     r"""A class to represent a Zernike polynomial series
     (http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials).
