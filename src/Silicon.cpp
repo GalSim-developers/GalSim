@@ -671,7 +671,7 @@ namespace galsim {
 			
 			if ((disti > 0) && (distj > 0) && (disti < (_nx-1)) &&
 			    (distj < (_ny-1))) {
-			    applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge, (polyi == (polyi2-1)) || (disti == (_nx-2)), (polyj == (polyj1+1)) || (distj == 1));
+			    applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge, (polyi == polyi2) || (disti == (_nx-2)), (polyj == polyj1) || (distj == 1));
 			}
                         imagepoly.distort(distortion, charge);
 			/*if (((polyi - i1) == 27) && ((polyj - j1) == 29)) {
@@ -691,9 +691,9 @@ namespace galsim {
 		_imagepolys[k].updateBounds();
 		updatePixelBounds(nx, ny, k);
 
-		if (!checkPixel(k / ny, k % ny, nx, ny)) std::exit(1);
 		//checkPixel(k / ny, k % ny, nx, ny);
 	    }
+	    if (!checkPixel(k / ny, k % ny, nx, ny)) std::exit(1);
         }
     }
 
@@ -1064,19 +1064,27 @@ namespace galsim {
     {
 	double area = 0.0;
 	bool horizontal1, horizontal2;
-
+	int nv2 = _numVertices / 2;
+	
 	for (int n = 0; n < _nv; n++) {
 	    int pi1 = getBoundaryIndex(i, j, n, horizontal1, nx, ny);
-	    int pi2 = getBoundaryIndex(i, j, (n + 1) % _nv, horizontal2, nx, ny);
-	    const Position<double>& p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
+	    Point p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
 		_verticalBoundaryPoints[pi1];
-	    const Position<double>& p2 = horizontal2 ? _horizontalBoundaryPoints[pi2] :
+	    if ((n >= (3*nv2+1)) && (n <= (5*nv2+2))) p1.x += 1.0;
+	    if ((n >= (5*nv2+2)) && (n <= (7*nv2+3))) p1.y += 1.0;
+
+	    int n2 = (n + 1) % _nv;
+	    int pi2 = getBoundaryIndex(i, j, n2, horizontal2, nx, ny);
+	    Point p2 = horizontal2 ? _horizontalBoundaryPoints[pi2] :
 		_verticalBoundaryPoints[pi2];
+	    if ((n2 >= (3*nv2+1)) && (n2 <= (5*nv2+2))) p2.x += 1.0;
+	    if ((n2 >= (5*nv2+2)) && (n2 <= (7*nv2+3))) p2.y += 1.0;
+	    
 	    area += p1.x * p2.y;
 	    area -= p2.x * p1.y;
 	}
 
-	return area / 2.0;
+	return std::abs(area) / 2.0;
     }
     
     template <typename T>
@@ -1117,10 +1125,14 @@ namespace galsim {
 
             for (int j=j1; j<=j2; ++j, ptr+=skip) {
                 for (int i=i1; i<=i2; ++i, ptr+=step) {
-		    *ptr = pixelArea(i - i1, j - j1, nx, ny);
+		    double newArea = pixelArea(i - i1, j - j1, nx, ny);
 		    
                     int index = (i - i1) * ny + (j - j1);
-                    *ptr = _imagepolys[index].area();
+                    double oldArea = _imagepolys[index].area();
+
+		    std::cout << i << "," << j << " old=" << oldArea << ", new=" << newArea << std::endl;
+		    
+		    *ptr = newArea;
                 }
             }
         } else {

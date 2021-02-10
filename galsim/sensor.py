@@ -187,7 +187,7 @@ class SiliconSensor(Sensor):
 
     def __init__(self, name='lsst_itl_50_8', strength=1.0, rng=None, diffusion_factor=1.0, qdist=3,
                  nrecalc=10000, treering_func=None, treering_center=PositionD(0,0),
-                 transpose=False, use_new_boundaries=False):
+                 transpose=False, use_new_boundaries=True):
         self.name = name
         self.strength = float(strength)
         self.rng = UniformDeviate(rng)
