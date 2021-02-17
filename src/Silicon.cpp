@@ -554,7 +554,7 @@ namespace galsim {
 #endif
 		pt.y += distpt.y * charge;
 
-		/*if (idxb == 17561) {
+		/*if (idxb == 9) {
 		    std::cout << "Index " << idxb << " updated for " << i << "," << j << "," << k << " (bottom), charge=" << charge << ", dist[" << disti << "," << distj << "]=(" << distpt.x << "," << distpt.y << "), rhs=" << rhs << std::endl;
 		    }*/
 	    }
@@ -574,7 +574,7 @@ namespace galsim {
 #endif
 	    pt2.y += distpt2.y * charge;
 
-	    /*if (idxt == 17561) {
+	    /*if (idxt == 9) {
 		std::cout << "Index " << idxt << " updated for " << i << "," << j << "," << k << " (top), charge=" << charge << ", dist[" << disti << "," << distj << "]=(" << distpt2.x << "," << distpt2.y << "), rhs=" << rhs << std::endl;
 		}*/
 	}
@@ -674,8 +674,8 @@ namespace galsim {
 			    applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge, (polyi == polyi2) || (disti == (_nx-2)), (polyj == polyj1) || (distj == 1));
 			}
                         imagepoly.distort(distortion, charge);
-			/*if (((polyi - i1) == 27) && ((polyj - j1) == 29)) {
-			    std::cout << "Polygonal distortion updated for 27,28, distortion for point 23=(" << distortion[23].x << "," << distortion[23].y << ")" << std::endl;
+			/*if (((polyi - i1) == 0) && ((polyj - j1) == 0)) {
+			    std::cout << "Polygonal distortion updated for 0,0, distortion for point 13=(" << distortion[13].x << "," << distortion[13].y << ")" << std::endl;
 			    }*/
 
                         changed[index] = true;
@@ -744,6 +744,11 @@ namespace galsim {
 
 	iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
 		Point p = pt;
+
+		// only do bottom and left points unless we're on top/right edge
+		if ((rhs) && ((i - i1) < (nx - 1))) return;
+		if ((top) && ((j - j1) < (ny - 1))) return;
+		
 		if (rhs) p.x += 1.0;
 		if (top) p.y += 1.0;
 		
@@ -1130,7 +1135,7 @@ namespace galsim {
                     int index = (i - i1) * ny + (j - j1);
                     double oldArea = _imagepolys[index].area();
 
-		    std::cout << i << "," << j << " old=" << oldArea << ", new=" << newArea << std::endl;
+		    //std::cout << i << "," << j << " old=" << oldArea << ", new=" << newArea << std::endl;
 		    
 		    *ptr = newArea;
                 }
