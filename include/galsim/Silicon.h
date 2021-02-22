@@ -57,7 +57,8 @@ namespace galsim
 
         double calculateConversionDepth(const PhotonArray& photons, int i, double randomNumber) const;
 
-	void applyPixelDistortion(int i, int j, int disti, int distj, int nx, int ny, double charge, bool rhs, bool bottom);
+	void applyPixelDistortion(int i, int j, int disti, int distj, int nx,
+				  int ny, double charge, bool rhs, bool bottom);
 
         template <typename T>
         void updatePixelDistortions(ImageView<T> target);
@@ -81,6 +82,7 @@ namespace galsim
         void fillWithPixelAreas(ImageView<T> target, Position<int> orig_center, bool use_flux);
 
     private:
+	// Convenience inline methods for access to linear boundary arrays.
 	int horizontalPixelStride() const {
 	    return _numVertices + 1;
 	}
@@ -108,7 +110,8 @@ namespace galsim
 	// Converts pixel co-ordinates (x, y) and index n within pixel boundary
 	// polygon into an index within the new horizontal or vertical boundary
 	// arrays. horizontal is set to true if the point is in the horizontal
-	// array, false if vertical
+	// array, false if vertical.
+	// If nx and ny are not given, _nx and _ny are used.
 	int getBoundaryIndex(int x, int y, int n, bool& horizontal, int nx = -1,
 			     int ny = -1) const {
 	    int nv2 = _numVertices / 2;
@@ -149,7 +152,7 @@ namespace galsim
 	    return verticalPixelIndex(x, y, ny) + idx;
 	}
 
-	// iterates over all the points in the given pixel's boundary and calls a
+	// Iterates over all the points in the given pixel's boundary and calls a
 	// callback for each one. callback should take an index and a point
 	// reference, then two bools (RHS point and top point)
 	template<typename T>
@@ -184,7 +187,8 @@ namespace galsim
 		callback(n, _verticalBoundaryPoints[idx], false, false);
 	    }
 	}
-	
+
+	// Const version of method above.
 	template<typename T>
 	void iteratePixelBoundary(int i, int j, int nx, int ny, T callback) const
 	{
@@ -227,10 +231,6 @@ namespace galsim
 	void averageDistortions();
 	void addHalo();
 	
-	template <typename T>
-	void saveBoundaries(std::string name, ImageView<T> target);
-	void saveDistortions();
-
 	bool _useNewBoundaries;
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
