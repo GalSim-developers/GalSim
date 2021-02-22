@@ -474,9 +474,7 @@ def test_silicon_area():
     print('area(0,0) = ',area_image(0,0))
     assert area_image(0,0) == area_image.array.min()
     # Regression test based on values current for GalSim version 1.6.
-    #np.testing.assert_almost_equal(area_image(0,0), 0.8962292034379046)
     np.testing.assert_almost_equal(area_image(0,0), 0.8981566220339346)
-    #np.testing.assert_almost_equal(area_image.array.max(), 1.0112006254350212)
     np.testing.assert_almost_equal(area_image.array.max(), 1.0112842594824378)
 
     # The Silicon code is asymmetric.  Charge flows more easily along columns than rows.
@@ -485,8 +483,6 @@ def test_silicon_area():
     # are slightly larger than the ones to the left and right.
     print('+- 1 along column: ',area_image(0,1),area_image(0,-1))
     print('+- 1 along row:    ',area_image(1,0),area_image(-1,0))
-    #np.testing.assert_almost_equal((area_image(0,1) + area_image(0,-1))/2., 0.9789158236482416)
-    #np.testing.assert_almost_equal((area_image(1,0) + area_image(-1,0))/2., 0.9686605382489861)
     np.testing.assert_almost_equal((area_image(0,1) + area_image(0,-1))/2., 0.9794515311629188)
     np.testing.assert_almost_equal((area_image(1,0) + area_image(-1,0))/2., 0.9691684802012333)
 
@@ -501,10 +497,7 @@ def test_silicon_area():
     print('+- 1 along row:    ',im2(1,0),im2(-1,0))
     assert im2(0,0) == im2.array.max()
     assert im2(0,1) + im2(0,-1) > im2(1,0) + im2(-1,0)
-    #np.testing.assert_almost_equal(im2(0,0), 143340)
     np.testing.assert_almost_equal(im2(0,0), 143346)
-    #np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 59307.0)
-    #np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59031.0)
     np.testing.assert_almost_equal((im2(0,1) + im2(0,-1))/2., 59288.0)
     np.testing.assert_almost_equal((im2(1,0) + im2(-1,0))/2., 59050.0)
 
@@ -517,9 +510,6 @@ def test_silicon_area():
     print('area(0,0) = ',area_imageT(0,0))
     print('+- 1 along column: ',area_imageT(0,1),area_imageT(0,-1))
     print('+- 1 along row:    ',area_imageT(1,0),area_imageT(-1,0))
-    #np.testing.assert_almost_equal(area_imageT(0,0), 0.8962292034379046)
-    #np.testing.assert_almost_equal((area_imageT(0,1) + area_imageT(0,-1))/2., 0.9686605382489861)
-    #np.testing.assert_almost_equal((area_imageT(1,0) + area_imageT(-1,0))/2., 0.9789158236482416)
     np.testing.assert_almost_equal(area_imageT(0,0), 0.8981566220339342)
     np.testing.assert_almost_equal((area_imageT(0,1) + area_imageT(0,-1))/2., 0.9691684802012333)
     np.testing.assert_almost_equal((area_imageT(1,0) + area_imageT(-1,0))/2., 0.9794515311629195)
@@ -535,9 +525,6 @@ def test_silicon_area():
     assert im2T(0,0) == im2T.array.max()
     assert im2T(0,1) + im2T(0,-1) < im2T(1,0) + im2T(-1,0)
     # Actual values are different, since rng is in different state. But qualitatively transposed.
-    #np.testing.assert_almost_equal(im2T(0,0), 142604)
-    #np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 59185.5)
-    #np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59375.0)
     np.testing.assert_almost_equal(im2T(0,0), 142607)
     np.testing.assert_almost_equal((im2T(0,1) + im2T(0,-1))/2., 59204.0)
     np.testing.assert_almost_equal((im2T(1,0) + im2T(-1,0))/2., 59360.0)
