@@ -494,7 +494,7 @@ namespace galsim {
         const int nx = i2-i1+1;
         const int ny = j2-j1+1;
         const int step = target.getStep();
-        
+
         // Now we cycle through the pixels in the target image and update any affected
         // pixel shapes.
         std::vector<bool> changed(_imagepolys.size(), false);
@@ -1161,7 +1161,7 @@ namespace galsim {
             dbg<<"Initial updatePixelDistortions\n";
             updatePixelDistortions(target);
             next_recalc = _nrecalc;
-            
+
             // Keep track of the charge we are accumulating on a separate image for efficiency
             // of the distortion updates.
             _delta.resize(b);
@@ -1390,4 +1390,5 @@ namespace galsim {
                                               bool);
     template void Silicon::fillWithPixelAreas(ImageView<float> target, Position<int> orig_center,
                                               bool);
+
 } // namespace galsim
