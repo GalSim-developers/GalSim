@@ -389,7 +389,7 @@ namespace galsim {
                 _pixelOuterBounds[k] += p;
             });
 
-        Position<double> center = _pixelOuterBounds[k].center();
+        Point center = _pixelOuterBounds[k].center();
 
         // now compute inner bounds manually
         _pixelInnerBounds[k] = _pixelOuterBounds[k];
@@ -420,8 +420,8 @@ namespace galsim {
         for (int k = 0; k < (_numVertices + 1 + (int)rhs); k++) {
             if (bottom) {
                 int idxb = horizontalPixelIndex(i, j, nx) + k;
-                Position<double>& pt = _horizontalBoundaryPoints[idxb];
-                Position<double>& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) + k];
+                Point& pt = _horizontalBoundaryPoints[idxb];
+                Point& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) + k];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -433,8 +433,8 @@ namespace galsim {
             }
 
             int idxt = horizontalPixelIndex(i, j+1, nx) + k;
-            Position<double>& pt2 = _horizontalBoundaryPoints[idxt];
-            Position<double>& distpt2 = _horizontalDistortions[horizontalPixelIndex(disti, distj+1, _nx) + k];
+            Point& pt2 = _horizontalBoundaryPoints[idxt];
+            Point& distpt2 = _horizontalDistortions[horizontalPixelIndex(disti, distj+1, _nx) + k];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -447,8 +447,8 @@ namespace galsim {
 
         // sides
         for (int k = 0; k < _numVertices; k++) {
-            Position<double>& pt = _verticalBoundaryPoints[verticalPixelIndex(i, j, ny) + k];
-            Position<double>& distpt = _verticalDistortions[verticalPixelIndex(disti, distj, _ny) + k];
+            Point& pt = _verticalBoundaryPoints[verticalPixelIndex(i, j, ny) + k];
+            Point& distpt = _verticalDistortions[verticalPixelIndex(disti, distj, _ny) + k];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -459,8 +459,8 @@ namespace galsim {
             pt.y += distpt.y * charge;
             
             if (rhs) {
-                Position<double>& pt2 = _verticalBoundaryPoints[verticalPixelIndex(i+1, j, ny) + k];
-                Position<double>& distpt2 = _verticalDistortions[verticalPixelIndex(disti+1, distj, _ny) + k];
+                Point& pt2 = _verticalBoundaryPoints[verticalPixelIndex(i+1, j, ny) + k];
+                Point& distpt2 = _verticalDistortions[verticalPixelIndex(disti+1, distj, _ny) + k];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
