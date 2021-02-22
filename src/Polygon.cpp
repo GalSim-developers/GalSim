@@ -32,8 +32,6 @@
 #include "Std.h"
 #include "Polygon.h"
 
-#include <iostream>
-
 namespace galsim {
 
     void Polygon::add(const Point& point)
@@ -142,9 +140,6 @@ namespace galsim {
         std::vector<Point>::iterator it = _points.begin();
         std::vector<Point>::const_iterator ref = refpoly._points.begin();
         for (int n=_npoints; n; --n) {
-	    if (factor != 0.0) {
-		//std::cout << "  p(" << (*it).x << "," << (*it).y << ") + c*(" << (*ref).x << "," << (*ref).y << ")" << std::endl;
-	    }
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
