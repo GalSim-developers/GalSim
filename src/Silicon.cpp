@@ -217,8 +217,6 @@ namespace galsim {
     // in these cases.
     void Silicon::averageDistortions()
     {
-        int nv2 = _numVertices / 2;
-        
         // loop over all rows of distortion polygons
         for (int j = 0; j < (_ny - 1); j++) {
             // loop across each row
@@ -228,8 +226,8 @@ namespace galsim {
 
                 for (int n = 0; n < (_numVertices + 2); n++) {
                     // average values in adjacent pixels (including corners)
-                    Point& ptl = pl[7*nv2 + 3 - n];
-                    Point& ptu = pu[nv2 + n];
+                    Point& ptl = pl[cornerIndexTopLeft() - n];
+                    Point& ptu = pu[cornerIndexBottomLeft() + n];
                     Point avg = (ptl + ptu) * 0.5;
                     ptl = avg;
                     ptu = avg;
@@ -246,8 +244,9 @@ namespace galsim {
                 
                 for (int n = 0; n < (_numVertices + 2); n++) {
                     // average values in adjacent pixels (including corners)
-                    Point& ptl = pl[3*nv2 + 1 + n];
-                    Point& ptr = n < (nv2 + 1) ? pr[nv2 - n] : pr[((8 * nv2) + 3 - (n - (nv2+1)))];
+                    Point& ptl = pl[cornerIndexBottomRight() + n];
+                    Point& ptr = n < (cornerIndexBottomLeft() + 1) ?
+                                     pr[cornerIndexBottomLeft() - n] : pr[((4 * _numVertices) + 3 - (n - (cornerIndexBottomLeft()+1)))];
                     Point avg = (ptl + ptr) * 0.5;
                     ptl = avg;
                     ptr = avg;
@@ -262,33 +261,31 @@ namespace galsim {
     // that is actually used, so it will not work for some values of qDist.
     void Silicon::addHalo()
     {
-        int nv2 = _numVertices / 2;
-        
         // handle corner pixels first
         for (int n = 0; n < _nv; n++) {
             // bottom left pixel
-            if (n != (5*nv2+2)) {
+            if (n != cornerIndexTopRight()) {
                 // zero out everything except top right corner
                 _distortions[0][n].x = 0.0;
                 _distortions[0][n].y = 0.0;
             }
 
             // bottom right pixel
-            if (n != (7*nv2+3)) {
+            if (n != cornerIndexTopLeft()) {
                 // zero out everything except top left corner
                 _distortions[(_nx - 1) * _ny][n].x = 0.0;
                 _distortions[(_nx - 1) * _ny][n].y = 0.0;
             }
 
             // top left pixel
-            if (n != (3*nv2+1)) {
+            if (n != cornerIndexBottomRight()) {
                 // zero out everything except bottom right corner
                 _distortions[_ny - 1][n].x = 0.0;
                 _distortions[_ny - 1][n].y = 0.0;
             }
 
             // top right pixel
-            if (n != nv2) {
+            if (n != cornerIndexBottomLeft()) {
                 // zero out everything except bottom left corner
                 _distortions[(_nx * _ny) - 1][n].x = 0.0;
                 _distortions[(_nx * _ny) - 1][n].y = 0.0;
@@ -298,21 +295,21 @@ namespace galsim {
         // loop over bottom and top row of pixels excluding corners
         for (int i = 1; i < (_nx - 1); i++) {
             // zero out everything in bottom pixels except top boundary
-            for (int n = 0; n < (5*nv2+2); n++) {
+            for (int n = 0; n < cornerIndexTopRight(); n++) {
                 _distortions[i * _ny][n].x = 0.0;
                 _distortions[i * _ny][n].y = 0.0;
             }
-            for (int n = (7*nv2+4); n < _nv; n++) {
+            for (int n = (cornerIndexTopLeft()+1); n < _nv; n++) {
                 _distortions[i * _ny][n].x = 0.0;
                 _distortions[i * _ny][n].y = 0.0;
             }
 
             // zero out everything in top pixels except bottom boundary
-            for (int n = 0; n < nv2; n++) {
+            for (int n = 0; n < cornerIndexBottomLeft(); n++) {
                 _distortions[i * _ny + _ny - 1][n].x = 0.0;
                 _distortions[i * _ny + _ny - 1][n].y = 0.0;
             }
-            for (int n = (3*nv2+2); n < _nv; n++) {
+            for (int n = (cornerIndexBottomRight()+1); n < _nv; n++) {
                 _distortions[i * _ny + _ny - 1][n].x = 0.0;
                 _distortions[i * _ny + _ny - 1][n].y = 0.0;
             }
@@ -321,17 +318,17 @@ namespace galsim {
         // loop over left and right columns of pixels excluding corners
         for (int j = 1; j < (_ny - 1); j++) {
             // zero out everything in left pixels except right boundary
-            for (int n = 0; n < (3*nv2+1); n++) {
+            for (int n = 0; n < cornerIndexBottomRight(); n++) {
                 _distortions[j][n].x = 0.0;
                 _distortions[j][n].y = 0.0;
             }
-            for (int n = (5*nv2+3); n < _nv; n++) {
+            for (int n = (cornerIndexTopRight()+1); n < _nv; n++) {
                 _distortions[j][n].x = 0.0;
                 _distortions[j][n].y = 0.0;
             }
 
             // zero out everything in right pixels except left boundary
-            for (int n = (nv2+1); n < (7*nv2+3); n++) {
+            for (int n = (cornerIndexBottomLeft()+1); n < cornerIndexTopLeft(); n++) {
                 _distortions[(_nx - 1) * _ny + j][n].x = 0.0;
                 _distortions[(_nx - 1) * _ny + j][n].y = 0.0;
             }
@@ -343,7 +340,6 @@ namespace galsim {
     // Returns true if it matches closely, false if not
     bool Silicon::checkPixel(int i, int j, int nx, int ny)
     {
-        int nv2 = _numVertices / 2;
         bool success = true;
         bool horizontal;
         Polygon& poly = _imagepolys[(i * ny) + j];
@@ -351,8 +347,8 @@ namespace galsim {
             int idx = getBoundaryIndex(i, j, n, horizontal, nx, ny);
             Point pt = horizontal ? _horizontalBoundaryPoints[idx] :
                 _verticalBoundaryPoints[idx];
-            if ((n >= (3*nv2+1)) && (n <= (5*nv2+2))) pt.x += 1.0;
-            if ((n >= (5*nv2+2)) && (n <= (7*nv2+3))) pt.y += 1.0;
+            if ((n >= cornerIndexBottomRight()) && (n <= cornerIndexTopRight())) pt.x += 1.0;
+            if ((n >= cornerIndexTopRight()) && (n <= cornerIndexTopLeft())) pt.y += 1.0;
             Point& pt2 = poly[n];
             double dist = ((pt.x - pt2.x) * (pt.x - pt2.x)) +
                 ((pt.y - pt2.y) * (pt.y - pt2.y));
@@ -931,21 +927,20 @@ namespace galsim {
     {
         double area = 0.0;
         bool horizontal1, horizontal2;
-        int nv2 = _numVertices / 2;
         
         for (int n = 0; n < _nv; n++) {
             int pi1 = getBoundaryIndex(i, j, n, horizontal1, nx, ny);
             Point p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
                 _verticalBoundaryPoints[pi1];
-            if ((n >= (3*nv2+1)) && (n <= (5*nv2+2))) p1.x += 1.0;
-            if ((n >= (5*nv2+2)) && (n <= (7*nv2+3))) p1.y += 1.0;
+            if ((n >= cornerIndexBottomRight()) && (n <= cornerIndexTopRight())) p1.x += 1.0;
+            if ((n >= cornerIndexTopRight()) && (n <= cornerIndexTopLeft())) p1.y += 1.0;
 
             int n2 = (n + 1) % _nv;
             int pi2 = getBoundaryIndex(i, j, n2, horizontal2, nx, ny);
             Point p2 = horizontal2 ? _horizontalBoundaryPoints[pi2] :
                 _verticalBoundaryPoints[pi2];
-            if ((n2 >= (3*nv2+1)) && (n2 <= (5*nv2+2))) p2.x += 1.0;
-            if ((n2 >= (5*nv2+2)) && (n2 <= (7*nv2+3))) p2.y += 1.0;
+            if ((n2 >= cornerIndexBottomRight()) && (n2 <= cornerIndexTopRight())) p2.x += 1.0;
+            if ((n2 >= cornerIndexTopRight()) && (n2 <= cornerIndexTopLeft())) p2.y += 1.0;
             
             area += p1.x * p2.y;
             area -= p2.x * p1.y;
@@ -1037,8 +1032,6 @@ namespace galsim {
     // Initializes the linear boundary arrays by copying points from _emptypoly.
     void Silicon::initializeBoundaryPoints(int nx, int ny)
     {
-        int nv2 = _numVertices / 2;
-        
         _horizontalBoundaryPoints.resize(horizontalRowStride(nx) * (ny+1));
         _verticalBoundaryPoints.resize(verticalColumnStride(ny) * (nx+1));
 
@@ -1048,12 +1041,12 @@ namespace galsim {
         for (int y = 0; y < (ny + 1); y++) {
             // loop over pixels within a row
             for (int x = 0; x < nx; x++) {
-                for (int n = nv2; n <= (3*nv2); n++) {
+                for (int n = cornerIndexBottomLeft(); n < cornerIndexBottomRight(); n++) {
                     _horizontalBoundaryPoints[i++] = _emptypoly[n];
                 }
             }
             // add final corner point
-            _horizontalBoundaryPoints[i++] = _emptypoly[nv2];
+            _horizontalBoundaryPoints[i++] = _emptypoly[cornerIndexBottomLeft()];
         }
 
         // fill in vertical boundary points from emptypoly
@@ -1062,7 +1055,7 @@ namespace galsim {
         for (int x = 0; x < (nx + 1); x++) {
             // loop over pixels within a column
             for (int y = 0; y < ny; y++) {
-                for (int n = ((5*nv2)+1); n >= ((3*nv2)+2); n--) {
+                for (int n = (cornerIndexTopRight()-1); n > cornerIndexBottomRight(); n--) {
                     _verticalBoundaryPoints[i] = _emptypoly[n];
                     _verticalBoundaryPoints[i++].x -= 1.0;
                 }
