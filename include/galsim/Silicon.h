@@ -106,7 +106,24 @@ namespace galsim
         int verticalPixelIndex(int x, int y, int ny) const {
             return (x * verticalColumnStride(ny)) + (((ny-1)-y) * verticalPixelStride());
         }
+
+        // Returns the indices of the corner vertices within each pixel polygon
+        int cornerIndexBottomLeft() const {
+            return _numVertices / 2;
+        }
+
+        int cornerIndexBottomRight() const {
+            return 3 * (_numVertices / 2) + 1;
+        }
+
+        int cornerIndexTopLeft() const {
+            return 7 * (_numVertices / 2) + 3;
+        }
         
+        int cornerIndexTopRight() const {
+            return 5 * (_numVertices / 2) + 2;
+        }
+
         // Converts pixel co-ordinates (x, y) and index n within pixel boundary
         // polygon into an index within the new horizontal or vertical boundary
         // arrays. horizontal is set to true if the point is in the horizontal
@@ -114,7 +131,6 @@ namespace galsim
         // If nx and ny are not given, _nx and _ny are used.
         int getBoundaryIndex(int x, int y, int n, bool& horizontal, int nx = -1,
                              int ny = -1) const {
-            int nv2 = _numVertices / 2;
             horizontal = false;
             int idx;
 
@@ -123,27 +139,27 @@ namespace galsim
                 ny = _ny;
             }
             
-            if (n < nv2) {
+            if (n < cornerIndexBottomLeft()) {
                 // left hand side, lower
-                idx = n + nv2;
+                idx = n + cornerIndexBottomLeft();
             }
-            else if (n <= ((nv2*3)+1)) {
+            else if (n <= cornerIndexBottomRight()) {
                 // bottom row including corners
                 horizontal = true;
-                idx = n - nv2;
+                idx = n - cornerIndexBottomLeft();
             }
-            else if (n <= ((nv2*5)+1)) {
+            else if (n < cornerIndexTopRight()) {
                 // right hand side
-                idx = (_numVertices - 1) - (n - ((nv2*3)+2)) + verticalColumnStride(ny);
+                idx = (_numVertices - 1) - (n - (cornerIndexBottomRight()+1)) + verticalColumnStride(ny);
             }
-            else if (n <= ((nv2*7)+3)) {
+            else if (n <= cornerIndexTopLeft()) {
                 // top row including corners
                 horizontal = true;
-                idx = (_numVertices + 1) - (n - ((nv2*5)+2)) + horizontalRowStride(nx);
+                idx = (_numVertices + 1) - (n - cornerIndexTopRight()) + horizontalRowStride(nx);
             }
             else {
                 // left hand side, upper
-                idx = n - ((nv2*7)+4);
+                idx = n - (cornerIndexTopLeft()+1);
             }
 
             if (horizontal) {
@@ -159,31 +175,30 @@ namespace galsim
         void iteratePixelBoundary(int i, int j, int nx, int ny, T callback)
         {
             int n;
-            int nv2 = _numVertices / 2;
             int idx;
             // LHS lower half
-            for (n = 0; n < nv2; n++) {
-                idx = verticalPixelIndex(i, j, ny) + n + nv2;
+            for (n = 0; n < cornerIndexBottomLeft(); n++) {
+                idx = verticalPixelIndex(i, j, ny) + n + cornerIndexBottomLeft();
                 callback(n, _verticalBoundaryPoints[idx], false, false);
             }
             // bottom row including corners
-            for (; n < ((nv2*3)+2); n++) {
-                idx = horizontalPixelIndex(i, j, nx) + (n - nv2);
-                callback(n, _horizontalBoundaryPoints[idx], n == (nv2*3)+1, false);
+            for (; n <= cornerIndexBottomRight(); n++) {
+                idx = horizontalPixelIndex(i, j, nx) + (n - cornerIndexBottomLeft());
+                callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexBottomRight(), false);
             }
             // RHS
-            for (; n < ((nv2*5)+2); n++) {
-                idx = verticalPixelIndex(i + 1, j, ny) + (_numVertices - 1) - (n - ((nv2*3)+2));
+            for (; n < cornerIndexTopRight(); n++) {
+                idx = verticalPixelIndex(i + 1, j, ny) + (_numVertices - 1) - (n - (cornerIndexBottomRight()+1));
                 callback(n, _verticalBoundaryPoints[idx], true, false);
             }
             // top row including corners
-            for (; n < ((nv2*7)+4); n++) {
-                idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - ((nv2*5)+2));
-                callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+2, true);
+            for (; n <= cornerIndexTopLeft(); n++) {
+                idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - cornerIndexTopRight());
+                callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexTopRight(), true);
             }
             // LHS upper half
             for (; n < _nv; n++) {
-                idx = verticalPixelIndex(i, j, ny) + (n - ((nv2*7)+4));
+                idx = verticalPixelIndex(i, j, ny) + (n - (cornerIndexTopLeft()+1));
                 callback(n, _verticalBoundaryPoints[idx], false, false);
             }
         }
@@ -193,31 +208,30 @@ namespace galsim
         void iteratePixelBoundary(int i, int j, int nx, int ny, T callback) const
         {
             int n;
-            int nv2 = _numVertices / 2;
             int idx;
             // LHS lower half
-            for (n = 0; n < nv2; n++) {
-                idx = verticalPixelIndex(i, j, ny) + n + nv2;
+            for (n = 0; n < cornerIndexBottomLeft(); n++) {
+                idx = verticalPixelIndex(i, j, ny) + n + cornerIndexBottomLeft();
                 callback(n, _verticalBoundaryPoints[idx], false, false);
             }
             // bottom row including corners
-            for (; n < ((nv2*3)+2); n++) {
-                idx = horizontalPixelIndex(i, j, nx) + (n - nv2);
-                callback(n, _horizontalBoundaryPoints[idx], n ==  (nv2*3)+1, false);
+            for (; n <= cornerIndexBottomRight(); n++) {
+                idx = horizontalPixelIndex(i, j, nx) + (n - cornerIndexBottomLeft());
+                callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexBottomRight(), false);
             }
             // RHS
-            for (; n < ((nv2*5)+2); n++) {
-                idx = verticalPixelIndex(i + 1, j, ny) + (_numVertices - 1) - (n - ((nv2*3)+2));
+            for (; n < cornerIndexTopRight(); n++) {
+                idx = verticalPixelIndex(i + 1, j, ny) + (_numVertices - 1) - (n - (cornerIndexBottomRight()+1));
                 callback(n, _verticalBoundaryPoints[idx], true, false);
             }
             // top row including corners
-            for (; n < ((nv2*7)+4); n++) {
-                idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - ((nv2*5)+2));
-                callback(n, _horizontalBoundaryPoints[idx], n == (nv2*5)+2, true);
+            for (; n <= cornerIndexTopLeft(); n++) {
+                idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - cornerIndexTopRight());
+                callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexTopRight(), true);
             }
             // LHS upper half
             for (; n < _nv; n++) {
-                idx = verticalPixelIndex(i, j, ny) + (n - ((nv2*7)+4));
+                idx = verticalPixelIndex(i, j, ny) + (n - (cornerIndexTopLeft()+1));
                 callback(n, _verticalBoundaryPoints[idx], false, false);
             }
         }
