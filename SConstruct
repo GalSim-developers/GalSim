@@ -953,7 +953,11 @@ def AddRPATH(env, rpath, prepend=False):
         env.AppendUnique(RPATH=rpath)
     major , minor , junk = SCons.__version__.split('.',2)
     if int(major) < 2 or (int(major) == 2 and int(minor) == 0):
-        env.Append( LINKFLAGS = ["$__RPATH"] )
+        env.Append(LINKFLAGS=["$__RPATH"])
+    elif sys.platform.find('darwin') != -1:
+        # SCons doesn't always add rpath properly on Mac.
+        if not isinstance(rpath, list) and len(rpath) > 0 and rpath[0] != '#':
+            env.Append(LINKFLAGS=' -rpath '+rpath)
 
 
 def CheckLibsFull(config,try_libs,source_file,prepend=True):

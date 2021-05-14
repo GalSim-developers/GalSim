@@ -24,4 +24,4 @@ in a configuration file.
 import galsim.main
 
 if __name__ == '__main__':
-    galsim.main.main()
+    galsim.main.run_main()

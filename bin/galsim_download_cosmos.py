@@ -22,4 +22,4 @@ A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 import galsim
 
 if __name__ == '__main__':
-    galsim.download_cosmos.main()
+    galsim.download_cosmos.run_main()
