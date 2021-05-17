@@ -209,6 +209,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     gsobject, safe1 = TransformObject(gsobject, param, base, logger)
     safe = safe and safe1
 
+    # Re-get index and index_key in case something changed when building the object.
+    # (cf. Roman PSF for an example of why this might be useful.)
+    index, index_key = GetIndex(param, base)
     param['current'] = gsobject, safe, None, index, index_key
 
     return gsobject, safe
