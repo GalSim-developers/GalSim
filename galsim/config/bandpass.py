@@ -114,7 +114,7 @@ class FileBandpassBuilder(BandpassBuilder):
 
         file_name (str)     The file to load (required)
         wave_type(str)      The units (nm or Ang) of the wavelengths in the file (required)
-        thin (floatl)       A relative error to use for thinning the file (default: None)
+        thin (float)        A relative error to use for thinning the file (default: None)
         blue_limit (float)  A cutoff wavelength on the blue side (default: None)
         red_limit (float)   A cutoff wavelength on the red side (default: None)
         zeropoint (float)   A zeropoint to use (default: None)
