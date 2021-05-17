@@ -1,0 +1,234 @@
+# Copyright (c) 2012-2021 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+#
+# Demo #13
+#
+# The thirteenth YAML configuration file in our tutorial about using Galsim config files.
+# (This file is designed to be viewed in a window 100 characters wide.)
+#
+# This script introduces non-idealities arising from NIR detectors, in particular those that will
+# be observed and accounted for in the Roman Space Telescope.  In the python layer, these are
+# implemented directly using various functions and values in the galsim.roman sub-module.
+#
+# In the config file, these are all automatically incorporated by using a special image type
+# called RomanSCA.  There are options to turn off any of the Roman detector effects, but the
+# default behavior is to include all effects that are currently known about:
+#
+# - Estimated sky background, including an estimate of the scattered light level.
+# - Estimated thermal backgrounds
+# - Reciprocity failure (aka Count-rate nonlinearity)
+# - Dark current
+# - Classical nonlinearity
+# - Inter-pixel capacitance (IPC)
+# - Read noise
+#
+# Persistence is not currently implemented, but is planned to be included in a future update.
+# It is currently implemented in the python layer, but it is not currently clear how best to
+# incorporate it into the config layer.
+#
+# This example also uses chromatic photon shooting, which is generally a more efficient way to
+# simulate scenes with many faint galaxies.  The default FFT method for drawing chromatically is
+# fairly slow, since it needs to integrate the image over the bandpass.  With photon shooting, the
+# photons are assigned wavelengths according to the SED of the galaxy, and then each photon has
+# the appropriate application of the chromatic PSF according to the wavelength.
+#
+# This demo will by default produce 3 output images, one for each of the filters:
+#     Y106, J129, H158
+# and only a single SCA (7).
+#
+# Options for changing this to simulate more or different filters and/or SCAs are given below.
+#
+
+# New features introduced in this demo:
+#
+# - modules top-level field
+# - obj type: RomanPSF
+# - image type: RomanSCA
+# - draw_method=phot in conjunction with chromatic objects
+# - multiple random seeds (particular so one can repeat the same values for multiple images)
+# - rng_num specification in various fields
+
+modules:
+    # Including galsim.roman in the list of modules to import will add a number of Roman-specific
+    # functions and classes that we will use here.
+    - galsim.roman
+
+    # We need this for one of our Eval items.  GalSim does not by default import datetime into
+    # the globals dict it uses when evaluating Eval items, so we can tell it to import it here.
+    - datetime
+
+# Define some other information about the images
+image:
+    # A special Image type that knows all the Roman SCA geometry, WCS, gain, etc.
+    # It also by default applies a number of detector effects, but these can be turned
+    # off if desired by setting some parameters (given below) to False.
+    type: RomanSCA
+
+    # When you want to have multiple images generate the same random galaxies, then
+    # you can set up multiple random number generators with different update cadences
+    # by making random_seed a list.
+    # The default behavior is just to have the random seeds for each object go in order by
+    # object number across all images, but this shows how to set it up so we use two separate
+    # cadences.
+    # The first one behaves normally, which will be used for things like noise on the image.
+    # The second one sets the initial seed for each object to repeat to the same starting value
+    # at the start of each filter.  If we were doing more than 3 total files, it would then
+    # move on to another sequence for the next 3 and so on.
+    random_seed:
+        # Used for noise and nobjects.
+        - 12345
+
+        # Used for objects.  Repeats sequence for each filter
+        - '$12345 + obj_num % @image.nobjects + 10**6 * (1 + image_num // len(@image.filter.items))'
+
+    # We're just doing one SCA here.
+    # If you wanted to do all of them in each of three filters (given below), you could use:
+    #
+    # SCA:
+    #     type: Sequence
+    #     first: 1
+    #     last: 18
+    #     repeat: 3  # repeat each SCA num 3 times before moving on, for the 3 filters.
+    #
+    SCA: 7
+
+    filter:
+        type: List
+        items: ['Y106', 'J129', 'H158']
+
+    nobjects: 400
+
+    # A plausible commemerative pointing for Nancy Grace Roman's 100th birthday.  (AG Draconis.)
+    # Although, now it doesn't look like it will launch in time...  Too bad.
+    ra: "16:01:41.01257 hours"
+    dec: "66:48:10.1312 degrees"
+
+    # Date should be a Python datetime.datetime object.
+    # We don't have any automatic converters, so you pretty much have to use the Eval type
+    # (implicitly here using the $ specifier).
+    # May 16, 2025
+    date: $datetime.datetime(2025, 5, 16)
+
+    # exptime defaults to galsim.roman.exptime, but you could set it to something else if desired.
+    # Omitting it would have the same effect as this line.
+    exptime: $galsim.roman.exptime
+
+    # These are all by default turned on, but you can turn any of them off if desired:
+    stray_light: True
+    thermal_background: True
+    reciprocity_failure: True
+    dark_current: True
+    nonlinearity: True
+    ipc: True
+    read_noise: True
+    sky_subtract: True
+
+stamp:
+    image_pos:
+        type: XY
+        x: { 'type' : 'Random' , 'min' : 0, 'max' : '$galsim.roman.n_pix' }
+        y: { 'type' : 'Random' , 'min' : 0, 'max' : '$galsim.roman.n_pix' }
+
+        # Similar to index_key (cf. demos 7,12), you can set the rng_num in any field
+        # that may need a random number generator, and it will use that rng_num for all
+        # items in that field, including sub-items.
+        # So in this case, setting rng_num here means image_pos.x and image_pos.y will both
+        # use the second rng, which repeats for each filter.
+        rng_num: 1
+
+    # The photon shooting also uses an rng.  However, this will use rng_num=0 (the default),
+    # which is what we want, so each observation of the galaxy has an independent noise
+    # realization.  (We only want true facts about the galaxies like position and profile
+    # parameters to be the same for each filter.)
+    draw_method: 'phot'
+
+output:
+
+    nfiles: 3
+    dir: output_yaml
+    file_name:
+        type: FormattedStr
+        format: "demo13_%s.fits"
+        items:
+            - '@image.filter'
+
+gal:
+
+    type: COSMOSGalaxy
+    gal_type: 'parametric'
+
+    # rng_num = 1 means that the same random values will be used for each band, which
+    # means the same underlying galaxy will be generated each time.
+    rng_num: 1
+
+    # Use chromatic galaxies with SEDs appropriate for their fitted galaxy profiles.
+    chromatic: True
+
+    # These are necessary to get the flux scaling correct for COSMOS galaxies.
+    area: $galsim.roman.collecting_area
+    exptime: $galsim.roman.exptime
+
+    # Randomly rotate the galaxies for a more varied selection of galaxy profiles.
+    rotate:
+        type: Random
+
+psf:
+    type: RomanPSF
+
+    # If omitted, it would figure this out automatically, because we are using the RomanSCA image
+    # type.  But if we weren't, you'd have to tell it which SCA to build the PSF for.
+    SCA: '@image.SCA'
+
+    # n_waves defines how finely to sample the PSF profile over the bandpass.
+    # Using 10 wavelengths usually gives decent accuracy.
+    n_waves: 10
+
+    # The native pupil plane image for the PSF is extremely detailed.  Much higher resolution
+    # than is typically necessary to get good image rendering.  This option specifies the factor
+    # by which to bin that pupil plane image.
+    # The default pupil_bin=4 generally gives good results without much noticeable loss of
+    # realism in the rendered object profiles except for the brightest objects.
+    # This choice of pupil_bin=8 is faster at the expense of a little realism.
+    pupil_bin: 8
+
+
+input:
+    # The COSMOS catalog uses the same input file as we have been using for the real galaxy
+    # catalogs plus another file called real_galaxy_catalog_23.5_example_fits.fits, which stores
+    # the information about the parametric fits.  There is no need to specify the second file
+    # name, since the name is derivable from the name of the main catalog.
+    cosmos_catalog:
+
+        # You should download the full m<23.5 COSMOS catalog if you haven't yet.
+        #
+        # We recommend specifying the directory for the download, rather than let it use the
+        # default directory, since that will be in the GalSim python share directory, which will
+        # be overwritten whenever you reinstall GalSim.  This command sets up a symlink from that
+        # location to a directory in your home directory.  (Feel free to use any other convenient
+        # directory of course, depending on your situation.)
+        #
+        #     galsim_download_cosmos -s 23.5 -d ~/cosmos
+
+        sample: 23.5
+
+        # If you'd rather use the small catalog we distribute with the GalSim code, you may comment
+        # out the above sample directive and use the following lines instead.
+        # However, note that this small catalog only has 100 galaxies, which means that this
+        # image will reuse each galaxy a few time.
+        #dir: "data"
+        #file_name: real_galaxy_catalog_23.5_example.fits
