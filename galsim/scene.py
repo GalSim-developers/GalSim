@@ -28,6 +28,7 @@ from .utilities import lazy_property
 # Below is a number that is needed to relate the COSMOS parametric galaxy fits to quantities that
 # GalSim needs to make a GSObject representing that fit.  It is simply the pixel scale, in arcsec,
 # in the COSMOS weak lensing reductions used for the fits.
+# Note: This isn't used anywhere.  This is just informational, really.
 cosmos_pix_scale = 0.03
 
 class COSMOSCatalog(object):
@@ -141,6 +142,11 @@ class COSMOSCatalog(object):
                             [default: 0, meaning no limit]
         max_flux:           Exclude galaxies whose fitted flux is larger than this value.
                             [default: 0, meaning no limit]
+        exptime:            The exposure time (in seconds) to assume when creating galaxies.
+                            [default: 1]
+        area:               The effective collecting area (in cm^2) to assume when creating
+                            galaxies. [default: None, which means to use the original HST
+                            collecting area = pi/4 * 240**2 * (1.-0.33**2)]
 
     After construction, the following attributes are available:
 
@@ -153,9 +159,11 @@ class COSMOSCatalog(object):
                     'min_flux' : float, 'max_flux' : float
                   }
 
+    hst_eff_area = math.pi * 120**2 * (1-0.33**2)
+
     def __init__(self, file_name=None, sample=None, dir=None, preload=False,
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
-                 min_flux=0., max_flux=0.):
+                 min_flux=0., max_flux=0., exptime=1., area=None):
         if sample is not None and file_name is not None:
             raise GalSimIncompatibleValuesError(
                 "Cannot specify both the sample and file_name.",
@@ -166,6 +174,8 @@ class COSMOSCatalog(object):
 
         self.use_real = use_real
         self.preload = preload
+        self.exptime = exptime
+        self.area = area
 
         # We'll set these up if and when we need them.
         self._bandpass = None
@@ -409,11 +419,13 @@ class COSMOSCatalog(object):
             or a list of them if ``index`` is an iterable.
         """
         return self._makeGalaxy(self, index, gal_type, chromatic, noise_pad_size,
-                                deep, sersic_prec, rng, n_random, gsparams)
+                                deep, sersic_prec, self.exptime, self.area,
+                                rng, n_random, gsparams)
 
     @staticmethod
     def _makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
-                    deep=False, sersic_prec=0.05, rng=None, n_random=None, gsparams=None):
+                    deep=False, sersic_prec=0.05, exptime=1., area=None,
+                    rng=None, n_random=None, gsparams=None):
         from .random import BaseDeviate
         if not self.canMakeReal():
             if gal_type is None:
@@ -475,6 +487,12 @@ class COSMOSCatalog(object):
                 gal = COSMOSCatalog._buildParametric(record, sersic_prec, gsparams,
                                                      chromatic, bandpass, sed)
                 gal_list.append(gal)
+
+        flux_scaling = exptime
+        if area is not None:
+            flux_scaling *= area/self.hst_eff_area
+        if flux_scaling != 1.:
+            gal_list = [gal * flux_scaling for gal in gal_list]
 
         # If trying to use the 23.5 sample and "fake" a deep sample, rescale the size and flux as
         # suggested in the GREAT3 handbook.
