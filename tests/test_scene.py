@@ -198,6 +198,17 @@ def test_cosmos_fluxnorm():
     assert_raises(ValueError, galsim.COSMOSCatalog, 'real_galaxy_catalog_23.5_example.fits',
                   dir=datapath, exclusion_level='invalid')
 
+    # Check scaling with area and exptime
+    print('hst area = ',galsim.COSMOSCatalog.hst_eff_area)
+    assert np.isclose(galsim.COSMOSCatalog.hst_eff_area,
+                      np.pi * 2.4**2 / 4 * (1-0.33**2) * 100**2)
+    cat2 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
+                                dir=datapath, exclusion_level='none', area=3456, exptime=2.3)
+    flux_scaling = 2.3 * (3456/galsim.COSMOSCatalog.hst_eff_area)
+    gal1 = cat.makeGalaxy(test_ind, gal_type='parametric')
+    gal2 = cat2.makeGalaxy(test_ind, gal_type='parametric')
+    assert np.isclose(gal2.flux, gal1.flux * flux_scaling)
+
 @timer
 def test_cosmos_random():
     """Check the random object functionality of the COSMOS catalog."""
