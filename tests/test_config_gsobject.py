@@ -1783,7 +1783,7 @@ def test_modules():
     image_pos = galsim.PositionD(123.45, 543.21)
 
     config = {
-        'modules' : ['galsim.des'],
+        'modules' : ['galsim.des', 'datetime'],
         'input' : {
             'des_shapelet' : { 'dir' : data_dir, 'file_name' : fitpsf_file },
             'des_psfex' : [
@@ -1797,7 +1797,9 @@ def test_modules():
         'psf3' : { 'type' : 'DES_PSFEx', 'num' : 1 },
         'psf4' : { 'type' : 'DES_Shapelet', 'image_pos' : galsim.PositionD(567,789), 'flux' : 179,
                    'gsparams' : { 'folding_threshold' : 1.e-4 } },
-        'psf5' : { 'type' : 'DES_PSFEx', 'image_pos' : galsim.PositionD(789,567), 'flux' : 388,
+        'psf5' : { 'type' : 'DES_PSFEx', 'image_pos' : galsim.PositionD(789,567),
+                   # Check that imported modules can be used in an eval.
+                   'flux' : '$datetime.datetime(2021, 5, 17).day',
                    'gsparams' : { 'folding_threshold' : 1.e-4 } },
 
         # This would normally be set by the config processing.  Set it manually here.
@@ -1805,12 +1807,6 @@ def test_modules():
     }
 
     galsim.config.ImportModules(config)
-    galsim.config.ProcessInput(config)
-
-    # Can also use des as a shorthand for galsim.des
-    config['modules'] = ['des']
-    galsim.config.ImportModules(config)
-    del config['_input_objs']
     galsim.config.ProcessInput(config)
 
     psf1a = galsim.config.BuildGSObject(config, 'psf1')[0]
@@ -1839,7 +1835,7 @@ def test_modules():
     galsim.config.ProcessInput(config)
     psfex2 = galsim.des.DES_PSFEx(psfex_file, dir=data_dir, wcs=config['wcs'])
     psf5a = galsim.config.BuildGSObject(config, 'psf5')[0]
-    psf5b = psfex2.getPSF(galsim.PositionD(789,567),gsparams=gsparams).withFlux(388)
+    psf5b = psfex2.getPSF(galsim.PositionD(789,567),gsparams=gsparams).withFlux(17)
     gsobject_compare(psf5a, psf5b)
 
     # The first item in sys.path is the current directory.
