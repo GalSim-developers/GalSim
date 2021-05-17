@@ -82,7 +82,9 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
             "noise_pad_size" : float,
             "deep" : bool,
             "sersic_prec": float,
-            "n_random": int
+            "chromatic": bool,
+            "area": float,
+            "exptime": float,
     }
 
     kwargs, safe = GetAllParams(config, base, opt=opt, ignore=ignore)
