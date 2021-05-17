@@ -162,8 +162,11 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
                            except_abort = except_abort)
     t2 = time.time()
 
-    fnames, times = zip(*results)
-    nfiles_written = sum([ t!=0 for t in times])
+    if len(results) == 0:
+        nfiles_written = 0
+    else:
+        fnames, times = zip(*results)
+        nfiles_written = sum([ t!=0 for t in times])
 
     if nfiles_written == 0:
         logger.error('No files were written.  All were either skipped or had errors.')
