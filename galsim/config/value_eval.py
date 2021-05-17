@@ -22,6 +22,7 @@ import re
 
 from .util import PropagateIndexKeyRNGNum
 from .value import GetCurrentValue, GetAllParams, RegisterValueType
+from .process import ImportModules
 from ..errors import GalSimConfigError
 from ..angle import Angle
 from ..position import PositionD
@@ -95,6 +96,7 @@ def _GenerateFromEval(config, base, value_type):
             exec('import numpy', gdict)
             exec('import numpy as np', gdict)
             exec('import os', gdict)
+            ImportModules(base, gdict)
             base['eval_gdict'] = gdict
         else:
             gdict = base['eval_gdict']

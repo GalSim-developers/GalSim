@@ -652,9 +652,11 @@ Variables that GalSim will provide for you to use:
 Python modules that GalSim will import for you to use:
 
 * ``math``
-* ``numpy``
+* ``numpy`` or ``np``
 * ``os``
 * ``galsim`` (obviously)
+* Anything in the ``modules`` field of your configuration file.
+
 
 User-defined variables
 ^^^^^^^^^^^^^^^^^^^^^^

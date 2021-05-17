@@ -100,7 +100,7 @@ def ReadConfig(config_file, file_type=None, logger=None):
 
     return config
 
-def ImportModules(config):
+def ImportModules(config, gdict=None):
     """Import any modules listed in config['modules'].
 
     These won't be brought into the running scope of the config processing, but any side
@@ -111,21 +111,20 @@ def ImportModules(config):
         config:     The configuration dict.
     """
     import sys
+    from importlib import import_module
+    if gdict is None:
+        gdict = globals()
     if 'modules' in config:
         for module in config['modules']:
             try:
-                # Do this first to let user modules take precedence
-                __import__(module)
+                gdict[module] = import_module(module)
             except ImportError:
-                try:
-                    __import__('galsim.' + module)
-                except ImportError:
-                    # But do it again if everything fails to give a better error message.
-                    # Also make sure '.' in the path to load local modules.
-                    if '.' not in sys.path:
-                        sys.path.append('.')
-                    __import__(module)
-
+                # Try adding '.' to path, in case loading a local module and '.' not present.
+                if '.' not in sys.path:
+                    sys.path.append('.')
+                    gdict[module] = import_module(module)
+                else:
+                    raise
 
 def ProcessTemplate(config, base, logger=None):
     """If the config dict has a 'template' item, read in the appropriate file and
