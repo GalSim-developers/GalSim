@@ -718,6 +718,24 @@ def fix_compiler(compiler, njobs):
               (cc, ' '.join(extra_cflags)))
         raise OSError("Compiler is not C++-11 compatible")
 
+    # If doing develop installation, it's important for the build directory to be before any
+    # other directories.  Particularly ones that might have another version of GalSim installed.
+    # Otherwise the wrong library can be linked, which leads to errors.
+    # So, make sure that the -Lbuild/... directive happens first among any -L directives in
+    # the link flags.
+    linker_so = compiler.linker_so
+    # Find the first -L flag among the current flags (if any)
+    for i, flag in enumerate(linker_so):
+        if flag.startswith('-L'):
+            print('Found link: ',i,flag)
+            break
+    else:
+        i = len(linker_so)
+    # Insert -Llib for any libs that are in build directory, to make sure they are first.
+    linker_so[i:i] = ['-L' + l for l in compiler.library_dirs if l.startswith('build')]
+    # Copy this list back to the compiler object
+    compiler.set_executable('linker_so', linker_so)
+
     # Return the extra cflags, since those will be added to the build step in a different place.
     print('Using extra flags ',extra_cflags)
     return extra_cflags, extra_lflags
