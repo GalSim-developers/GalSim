@@ -407,23 +407,39 @@ def _BuildList(config, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
+def ParseAberrations(key, config, base, name):
+    """Parse a possible aberrations list in config dict.
+
+    Parameters:
+        key:        The key name with the aberrations list.
+        config:     A dict with the tranformation information for this object.
+        base:       The base dict of the configuration.
+        name:       The name of the source object being parsed (only used for error reporting).
+
+    Returns:
+        aberrations list or None
+    """
+    if key in config:
+        aber_list = [0.0] * 4  # Initial 4 values are ignored.
+        aberrations = config[key]
+        if not isinstance(aberrations,list):
+            raise GalSimConfigError(
+                "aberrations entry for config.%s entry is not a list."%(name))
+        safe = True
+        for i in range(len(aberrations)):
+            value, safe1 = ParseValue(aberrations, i, base, float)
+            aber_list.append(value)
+            safe = safe and safe1
+        return aber_list
+    else:
+        return None
+
 def _BuildJointOpticalPSF(cls, config, base, ignore, gsparams, logger):
     req, opt, single, _ = get_cls_params(cls)
 
     kwargs, safe = GetAllParams(config, base, req, opt, single, ignore = ['aberrations'] + ignore)
     if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
-
-    if 'aberrations' in config:
-        aber_list = [0.0] * 4  # Initial 4 values are ignored.
-        aberrations = config['aberrations']
-        if not isinstance(aberrations,list):
-            raise GalSimConfigError(
-                "aberrations entry for config.%s entry is not a list."%(cls.__name__))
-        for i in range(len(aberrations)):
-            value, safe1 = ParseValue(aberrations, i, base, float)
-            aber_list.append(value)
-            safe = safe and safe1
-        kwargs['aberrations'] = aber_list
+    kwargs['aberrations'] = ParseAberrations('aberrations', config, base, cls.__name__)
 
     return cls(**kwargs), safe
 
