@@ -160,6 +160,7 @@ def ParseValue(config, key, base, value_type):
             val = value_type(val)
 
         # Save the current value for possible use by the Current type
+        index, index_key = GetIndex(param, base, is_sequence=(type_name=='Sequence'))
         param['current'] = (val, safe, value_type, index, index_key)
         #print(key,' = ',val)
 
