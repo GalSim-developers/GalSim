@@ -526,8 +526,16 @@ def test_reject():
     #print(cl.output)
     assert "No files were written.  All were either skipped or had errors." in cl.output
 
+    # There is a different path if all files raise an exception, rather than are rejected.
+    config['stamp']['type'] = 'hello'
+    config = galsim.config.CleanConfig(config)
+    with CaptureLog() as cl:
+        galsim.config.BuildFiles(nimages, config, logger=cl.logger)
+    assert "No files were written.  All were either skipped or had errors." in cl.output
+
     # If we skip all objects, and don't have a definite size for them, then we get to a message
     # that no stamps were built.
+    config['stamp']['type'] = 'Basic'
     config['gal']['skip'] = True
     galsim.config.RemoveCurrent(config)
     im_list3 = galsim.config.BuildStamps(nimages, config, do_noise=False)[0]
