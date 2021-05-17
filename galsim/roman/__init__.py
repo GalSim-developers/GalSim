@@ -87,5 +87,4 @@ from .roman_backgrounds import getSkyLevel
 from .roman_psfs import getPSF
 from .roman_wcs import getWCS, findSCA, allowedPos, bestPA, convertCenter
 from .roman_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects, NLfunc
-
-
+from . import roman_config
