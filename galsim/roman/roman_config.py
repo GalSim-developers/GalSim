@@ -26,6 +26,7 @@ from .roman_backgrounds import getSkyLevel
 from ..config import ParseAberrations, BandpassBuilder, GetAllParams, GetRNG
 from ..config.image_scattered import ScatteredImageBuilder
 from ..config import RegisterObjectType, RegisterBandpassType, RegisterImageType
+from ..gsparams import GSParams
 from ..angle import Angle
 from ..celestial import CelestialCoord
 from ..random import PoissonDeviate
@@ -47,21 +48,25 @@ def _BuildRomanPSF(config, base, ignore, gsparams, logger):
     # If SCA is in base, then don't require it in the config file.
     # (Presumably because using Roman image type, which sets it there for convenience.)
     if 'SCA' in base:
-        req = {}
         opt['SCA'] = int
     else:
         req['SCA'] = int
 
+    # If bandpass is in base, and it's a Roman bandpass, then we can use its name.
+    # Otherwise the bandpass parameter is required.
+    if 'bandpass' in base and hasattr(base['bandpass'],'name'):
+        opt['bandpass'] = str
+    else:
+        req['bandpass'] = str
+
     kwargs, safe = GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
-    if gsparams: kwargs['gsparams'] = GSParams(**gsparams)
+    if gsparams:
+        kwargs['gsparams'] = GSParams(**gsparams)
 
     # If not given in kwargs, then it must have been in base, so this is ok.
     if 'SCA' not in kwargs:
         kwargs['SCA'] = base['SCA']
 
-    # Slightly confusing here is that the bandpass to give to getPSF is a string, not an actual
-    # bandpass.  If possible, get it from the bandpass stored in base.  Else, just use 'short',
-    # since that's usually the right one to use.
     if 'bandpass' not in kwargs:
         kwargs['bandpass'] = base['bandpass'].name
 
@@ -75,8 +80,7 @@ def _BuildRomanPSF(config, base, ignore, gsparams, logger):
 
     kwargs['extra_aberrations'] = ParseAberrations('extra_aberrations', config, base, 'RomanPSF')
 
-    psf = getPSF(wcs=base['wcs'], logger=logger, **kwargs)
-
+    psf = getPSF(wcs=base.get('wcs',None), logger=logger, **kwargs)
     return psf, False
 
 RegisterObjectType('RomanPSF', _BuildRomanPSF)
@@ -105,7 +109,6 @@ class RomanBandpassBuilder(BandpassBuilder):
 
         name = kwargs['name']
         bandpass = getBandpasses()[name]
-        bandpass.name = name
 
         return bandpass, safe
 

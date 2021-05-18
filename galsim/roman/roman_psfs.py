@@ -328,7 +328,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     use_aberrations = _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos)
 
     if extra_aberrations is not None:
-        use_aberrations += extra_aberrations
+        use_aberrations[:len(extra_aberrations)] += extra_aberrations
     # We don't want to use piston, tip, or tilt aberrations.  The former doesn't affect the
     # appearance of the PSF, and the latter cause centroid shifts.  So, we set the first 4
     # numbers (corresponding to a place-holder, piston, tip, and tilt) to zero.
