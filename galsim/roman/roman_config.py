@@ -177,18 +177,10 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         self.ipc = params.get('ipc', True)
         self.read_noise = params.get('read_noise', True)
         self.sky_subtract = params.get('sky_subtract', True)
-        self.draw_method = params.get('draw_method', 'phot')
 
         # If draw_method isn't in image field, it may be in stamp.  Check.
-        if 'draw_method' in base['stamp']:
-            self.draw_method = base['stamp']['draw_method']
-
-        # Put the draw method in a stamp field if it's not already there.
-        # Mostly because we want to switch the default to phot.
-        if 'stamp' not in base:
-            base['stamp'] = {}
-        if 'draw_method' not in base['stamp']:
-            base['draw_method'] = self.draw_method
+        self.draw_method = params.get('draw_method',
+                                      base.get('stamp',{}).get('draw_method','auto'))
 
         pointing = CelestialCoord(ra=params['ra'], dec=params['dec'])
         wcs = getWCS(world_pos=pointing, SCAs=self.sca, date=params['date'])[self.sca]
@@ -197,10 +189,11 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         config['wcs'] = wcs
 
         # It will also make the bandpass if this is here.
-        config['bandpass'] = {
-            'type' : 'RomanBandpass',
-            'name' : self.filter,
-        }
+        if 'bandpass' not in config:
+            config['bandpass'] = {
+                'type' : 'RomanBandpass',
+                'name' : self.filter,
+            }
 
         return n_pix, n_pix
 
@@ -220,35 +213,37 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         wcs = base['wcs']
         bp = base['bandpass']
         rng = GetRNG(config, base)
-        logger.info('Start addNoise: rng = %r',rng)
-        logger.info('At this point image.sum = %s',image.array.sum())
+        logger.info('image %d: Start RomanSCA detector effects',base.get('image_num',0))
 
         # Things that will eventually be subtracted (if sky_subtract) will have their expectation
         # value added to sky_image.  So technically, this includes things that aren't just sky.
         # E.g. includes dark_current and thermal backgrounds.
         sky_image = image.copy()
         sky_level = getSkyLevel(bp, world_pos=wcs.toWorld(image.true_center))
+        logger.debug('Adding sky_level = %s',sky_level)
         if self.stray_light:
+            logger.debug('Stray light fraction = %s',stray_light_fraction)
             sky_level *= (1.0 + stray_light_fraction)
         wcs.makeSkyImage(sky_image, sky_level)
 
         # The other background is the expected thermal backgrounds in this band.
         # These are provided in e-/pix/s, so we have to multiply by the exposure time.
         if self.thermal_background:
+            tb = thermal_backgrounds[self.filter] * self.exptime
+            logger.debug('Adding thermal background: %s',tb)
             sky_image += thermal_backgrounds[self.filter] * self.exptime
 
         # The image up to here is an expectation value.  Realize it as an integer/m
-        logger.info('poisson rng = %r',rng)
-        logger.info('image.sum = %s',image.array.sum())
         poisson_noise = PoissonNoise(rng)
         if self.draw_method == 'phot':
+            logger.debug("Adding poisson noise to sky photons")
             sky_image1 = sky_image.copy()
             sky_image1.addNoise(poisson_noise)
             image += sky_image1
         else:
+            logger.debug("Adding poisson noise")
             image += sky_image
             image.addNoise(poisson_noise)
-        logger.info('after poisson: %r',rng)
 
         # Apply the detector effects here.  Not all of these are "noise" per se, but they
         # happen interspersed with various noise effects, so apply them all in this step.
@@ -263,35 +258,40 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         # TODO: Add burn-in and persistence here.
 
         if self.reciprocity_failure:
+            logger.debug("Applying reciprocity failure")
             addReciprocityFailure(image)
 
         if self.dark_current:
             dc = dark_current * self.exptime
+            logger.debug("Adding dark current: %s",dc)
             sky_image += dc
-            logger.info('dark current rng = %r',rng)
             dark_noise = DeviateNoise(PoissonDeviate(rng, dc))
             image.addNoise(dark_noise)
 
         if self.nonlinearity:
+            logger.debug("Applying classical nonlinearity")
             applyNonlinearity(image)
 
         # Mosby and Rauscher say there are two read noises.  One happens before IPC, the other
         # one after.
         # TODO: Add read_noise1
         if self.ipc:
+            logger.debug("Applying IPC")
             applyIPC(image)
 
         if self.read_noise:
-            logger.info('readnoise rng = %r',rng)
+            logger.debug("Adding read noise %s",read_noise)
             image.addNoise(GaussianNoise(rng, sigma=read_noise))
 
+        logger.debug("Applying gain %s",gain)
         image /= gain
-        sky_image /= gain
 
         # Make integer ADU now.
         image.quantize()
 
         if self.sky_subtract:
+            logger.debug("Subtracting sky image")
+            sky_image /= gain
             sky_image.quantize()
             image -= sky_image
 
