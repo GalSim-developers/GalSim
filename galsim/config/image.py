@@ -268,10 +268,14 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     SetupExtraOutputsForImage(config, logger)
 
     # If there is a bandpass field, load it into config['bandpass']
-    config['bandpass'] = builder.buildBandpass(cfg_image, config, image_num, obj_num, logger)
+    bp = builder.buildBandpass(cfg_image, config, image_num, obj_num, logger)
+    if bp is not None:
+        config['bandpass'] = bp
 
     # If there is a sensor, build it now.
-    config['sensor'] = builder.buildSensor(cfg_image, config, image_num, obj_num, logger)
+    sensor = builder.buildSensor(cfg_image, config, image_num, obj_num, logger)
+    if sensor is not None:
+        config['sensor'] = sensor
 
     # Actually build the image now.  This is the main working part of this function.
     # It calls out to the appropriate build function for this image type.

@@ -1016,6 +1016,8 @@ def test_config_sca():
 
         # If photon shooting, objects already have Poisson noise.
         # Also, all detector effects on is the default, so can remove these items from config.
+        # And use explicit Bandpass, which is allowed (possibly to override the default bp's),
+        # but in this case is equivalent to the default behavior.
         config = galsim.config.CleanConfig(config)
         del config['image']['stray_light']
         del config['image']['thermal_background']
@@ -1026,6 +1028,7 @@ def test_config_sca():
         del config['image']['read_noise']
         del config['image']['sky_subtract']
         config['stamp'] = { 'draw_method' : 'phot' }
+        config['image']['bandpass'] = { 'type' : 'RomanBandpass', 'name' : 'H158' }
         im1 = galsim.config.BuildImage(config, obj_num=0, logger=logger)
         wcs.makeSkyImage(im2, sky_level)
         im2 += galsim.roman.thermal_backgrounds['H158'] * galsim.roman.exptime

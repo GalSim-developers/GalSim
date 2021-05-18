@@ -188,14 +188,16 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
         # GalSim expects a wcs in the image field.
         config['wcs'] = wcs
 
-        # It will also make the bandpass if this is here.
+        # If user hasn't overridden the bandpass to use, get the standard one.
         if 'bandpass' not in config:
-            config['bandpass'] = {
-                'type' : 'RomanBandpass',
-                'name' : self.filter,
-            }
+            base['bandpass'] = self.getBandpass(self.filter)
 
         return n_pix, n_pix
+
+    def getBandpass(self, filter_name):
+        if not hasattr(self, 'all_roman_bp'):
+            self.all_roman_bp = getBandpasses()
+        return self.all_roman_bp[filter_name]
 
     def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
         """Add the final noise to a Scattered image
