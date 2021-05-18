@@ -67,16 +67,18 @@ import datetime
 
 def parse_args(argv):
     parser = argparse.ArgumentParser(prog='demo13', add_help=True)
-    parser.add_argument('-filters', type=str, default='YJH', action='store',
+    parser.add_argument('-f', '--filters', type=str, default='YJH', action='store',
                         help='Which filters to simulate (default = "YJH")')
-    parser.add_argument('-outpath', type=str, default='output',
+    parser.add_argument('-o', '--outpath', type=str, default='output',
                         help='Which directory to put the output files')
-    parser.add_argument('-ngal', type=int, default=400,
+    parser.add_argument('-n', '--ngal', type=int, default=400,
                         help='How many galaxies to draw')
-    parser.add_argument('-seed', type=int, default=12345,
+    parser.add_argument('--seed', type=int, default=12345,
                         help='Initial seed for random numbers')
-    parser.add_argument('-sca', type=int, default=7, choices=range(1,19),
+    parser.add_argument('-s', '--sca', type=int, default=7, choices=range(1,19),
                         help='Which SCA to simulate (default is arbitrarily SCA 7)')
+    parser.add_argument('-v', '--verbosity', type=int, default=2, choices=range(0,4),
+                        help='Verbosity level')
 
     args = parser.parse_args(argv)
     return args
@@ -95,8 +97,14 @@ def main(argv):
         os.mkdir(outpath)
 
     # Use a logger to output some information about the run.
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", stream=sys.stdout)
     logger = logging.getLogger("demo13")
+    logging_levels = { 0: logging.CRITICAL,
+                       1: logging.WARNING,
+                       2: logging.INFO,
+                       3: logging.DEBUG }
+    level = logging_levels[args.verbosity]
+    logger.setLevel(level)
 
     # Read in the Roman filters, setting an AB zeropoint appropriate for this telescope given its
     # diameter and (since we didn't use any keyword arguments to modify this) using the typical
