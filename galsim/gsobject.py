@@ -921,9 +921,6 @@ class GSObject(object):
         """Equivalent to `GSObject.shear`, but without the overhead of sanity checks or other
         ways to input the ``shear`` value.
 
-        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular
-        `GSObject.shear` method.
-
         Also, it won't propagate any noise attribute.
 
         Parameters:
@@ -963,9 +960,6 @@ class GSObject(object):
 
     def _lens(self, g1, g2, mu):
         """Equivalent to `GSObject.lens`, but without the overhead of some of the sanity checks.
-
-        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular
-        `GSObject.lens` method.
 
         Also, it won't propagate any noise attribute.
 
@@ -1077,9 +1071,6 @@ class GSObject(object):
     def _shift(self, offset):
         """Equivalent to `shift`, but without the overhead of sanity checks or option
         to give the shift as (dx,dy).
-
-        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular
-        `shift` method.
 
         Also, it won't propagate any noise attribute.
 

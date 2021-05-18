@@ -936,6 +936,19 @@ class ChromaticObject(object):
             jac = shear.getMatrix()
         return Transform(self, jac=jac)
 
+    def _shear(self, shear):
+        """Equivalent to `ChromaticObject.shear`, but only valid for a galsim.Shear object,
+        not any of the possible wavelength-dependent options.
+
+        Parameters:
+            shear:      The `Shear` to be applied.
+
+        Returns:
+            the sheared object.
+        """
+        from .transform import Transform
+        return Transform(self, shear.getMatrix())
+
     def lens(self, g1, g2, mu):
         """Apply a lensing shear and magnification to this object.
 
@@ -972,6 +985,26 @@ class ChromaticObject(object):
         else:
             sheared = self.shear(g1=g1,g2=g2)
         return sheared.magnify(mu)
+
+    def _lens(self, g1, g2, mu):
+        """Equivalent to `ChromaticObject.lens`, but without the overhead of some of the sanity
+        checks or any of the possible wavelength-dependent options.
+
+        Parameters:
+            g1:         First component of lensing (reduced) shear to apply to the object.
+            g2:         Second component of lensing (reduced) shear to apply to the object.
+            mu:         Lensing magnification to apply to the object.  This is the factor by which
+                        the solid angle subtended by the object is magnified, preserving surface
+                        brightness.
+
+        Returns:
+            the lensed object.
+        """
+        from .shear import _Shear
+        from .transform import Transform
+        import math
+        shear = _Shear(g1 + 1j*g2)
+        return Transform(self, shear.getMatrix() * math.sqrt(mu))
 
     def rotate(self, theta):
         """Rotate this object by an `Angle` ``theta``.
@@ -1042,8 +1075,8 @@ class ChromaticObject(object):
         tuple, or as a PositionD or PositionI object.
 
         For a wavelength-dependent shift, you may supply two functions of wavelength in nanometers
-        which will be interpreted as ``dx(wave)`` and ``dy(wave)``, or a single function of wavelength
-        in nanometers that returns either a 2-tuple, PositionD, or PositionI.
+        which will be interpreted as ``dx(wave)`` and ``dy(wave)``, or a single function of
+        wavelength in nanometers that returns either a 2-tuple, PositionD, or PositionI.
 
         Parameters:
             dx:     Horizontal shift to apply (float or function).
@@ -1097,6 +1130,19 @@ class ChromaticObject(object):
         if offset is None:
             offset = utilities.functionize(lambda x,y:(x,y))(dx, dy)
 
+        return Transform(self, offset=offset)
+
+    def _shift(self, offset):
+        """Equivalent to `ChromaticObject.shift`, but only valid for a galsim.PositionD object,
+        not any of the possible wavelength-dependent options.
+
+        Parameters:
+            offset:     The shift to apply, given as a `PositionD`
+
+        Returns:
+            the shifted object.
+        """
+        from .transform import Transform
         return Transform(self, offset=offset)
 
 ChromaticObject._multiplier_cache = utilities.LRU_Cache(
