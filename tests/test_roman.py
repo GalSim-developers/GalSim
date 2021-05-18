@@ -742,7 +742,7 @@ def test_roman_psfs():
     # (1) Include optional aberrations in an unacceptable form.
     # (2) Invalid SCA numbers.
     # (3) Invalid kwarg combination.
-    assert_raises(ValueError, galsim.roman.getPSF, 3, None, extra_aberrations=[0.03, -0.06])
+    assert_raises(ValueError, galsim.roman.getPSF, 3, None, extra_aberrations=[0.03, -0.06]*20)
     assert_raises(ValueError, galsim.roman.getPSF, 30, None)
     assert_raises(ValueError, galsim.roman.getPSF, 0, None)
     assert_raises(ValueError, galsim.roman.getPSF, 3, 'short', n_waves=10)
@@ -842,6 +842,72 @@ def test_roman_psf_wcs():
     im_wcs = psf.drawImage(bounds=im_scale.bounds, wcs=wcs, center=image_pos)
 
     np.testing.assert_allclose(im_wcs.array, im_scale.array)
+
+
+@timer
+def test_config_psf():
+    """Test RomanPSF config type"""
+
+    # Start with default everything
+    config = {
+        'modules' : ['galsim.roman'],
+        'psf' : { 'type' : 'RomanPSF', 'SCA': 4, 'bandpass': 'H158' }
+    }
+
+    galsim.config.ImportModules(config)
+    psf1 = galsim.config.BuildGSObject(config, 'psf')[0]
+    psf2 = galsim.roman.getPSF(SCA=4, bandpass='H158')
+    print('psf1 = ',str(psf1))
+    print('psf2 = ',str(psf2))
+    assert psf1 == psf2
+
+    # Now check some non-default options
+    config = galsim.config.CleanConfig(config)
+    config['psf']['pupil_bin'] = 8
+    config['psf']['n_waves'] = 4
+    config['psf']['extra_aberrations'] = [0.01, 0, 0, 0.03, -0.05]
+    config['psf']['gsparams'] = {'folding_threshold' : 1.e-2}
+    psf1 = galsim.config.BuildGSObject(config, 'psf')[0]
+    psf2 = galsim.roman.getPSF(SCA=4, bandpass='H158', pupil_bin=8, n_waves=4,
+                               extra_aberrations=[0,0,0,0, 0.01, 0, 0, 0.03, -0.05],
+                               gsparams=galsim.GSParams(folding_threshold=1.e-2))
+    print('psf1 = ',str(psf1))
+    print('psf2 = ',str(psf2))
+    assert psf1 == psf2
+
+    # Check using some values that are may already loaded into base config dict.
+    config = galsim.config.CleanConfig(config)
+    del config['psf']['SCA']
+    del config['psf']['bandpass']
+    del config['psf']['n_waves']
+    config['bandpass'] = galsim.roman.getBandpasses(AB_zeropoint=True)['Z087']
+    config['SCA'] = 9
+    config['image_pos'] = galsim.PositionD(123,456)
+    config['psf']['use_SCA_pos'] = True
+    config['psf']['wavelength'] = 985.
+    psf1 = galsim.config.BuildGSObject(config, 'psf')[0]
+    psf2 = galsim.roman.getPSF(SCA=9, bandpass='Z087', pupil_bin=8, wavelength=985.,
+                               SCA_pos=galsim.PositionD(123,456),
+                               extra_aberrations=[0,0,0,0, 0.01, 0, 0, 0.03, -0.05],
+                               gsparams=galsim.GSParams(folding_threshold=1.e-2))
+    print('psf1 = ',str(psf1))
+    print('psf2 = ',str(psf2))
+    assert psf1 == psf2
+
+    # Let bandpass be built by RomanBandpass type
+    config = galsim.config.CleanConfig(config)
+    config['image'] = {
+        'bandpass' : { 'type' : 'RomanBandpass', 'name' : 'J129' }
+    }
+    config['bandpass'] = galsim.config.BuildBandpass(config['image'], 'bandpass', config)[0]
+    psf1 = galsim.config.BuildGSObject(config, 'psf')[0]
+    psf2 = galsim.roman.getPSF(SCA=9, bandpass='J129', pupil_bin=8, wavelength=985.,
+                               SCA_pos=galsim.PositionD(123,456),
+                               extra_aberrations=[0,0,0,0, 0.01, 0, 0, 0.03, -0.05],
+                               gsparams=galsim.GSParams(folding_threshold=1.e-2))
+    print('psf1 = ',str(psf1))
+    print('psf2 = ',str(psf2))
+    assert psf1 == psf2
 
 
 if __name__ == "__main__":
