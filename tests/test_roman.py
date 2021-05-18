@@ -909,6 +909,146 @@ def test_config_psf():
     print('psf2 = ',str(psf2))
     assert psf1 == psf2
 
+@timer
+def test_config_sca():
+    """Test RomanSCA config type"""
+
+    # The standard size of a Roman SCA is a bit large for an efficient unit test,
+    # so we use mock to reduce the size of the image being constructed here.
+
+    logger = logging.getLogger('test_config_sca')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
+    if sys.version_info < (3,): return  # mock only available on python 3
+    from unittest import mock
+    with mock.patch('galsim.roman.roman_config.n_pix', 64):
+
+        config = {
+            'modules': ['galsim.roman'],
+            'image': {
+                'type': 'RomanSCA',
+
+                # These are required:
+                'nobjects' : 1,
+                'SCA': 5,
+                'ra': '16 hours',
+                'dec': '66 degrees',
+                'filter': 'H158',
+                'date': datetime.datetime(2025, 5, 16),
+
+                # Set the rng seed:
+                'random_seed': 1234,
+
+                # Start with all the extra effects turned off.
+                'stray_light': False,
+                'thermal_background': False,
+                'reciprocity_failure': False,
+                'dark_current': False,
+                'nonlinearity': False,
+                'ipc': False,
+                'read_noise': False,
+                'sky_subtract': False,
+
+                # image_pos can be either here or in stamp.
+                'image_pos': (23,17),
+            },
+
+            # Nothing complicated for the object to draw.
+            'gal': {
+                'type': 'Exponential',
+                'half_light_radius': 1.2,
+                'flux': 177,
+            },
+        }
+
+        galsim.config.ImportModules(config)
+        im1 = galsim.config.BuildImage(config, obj_num=0)
+
+        # Compare to manually constructed image
+        pointing = galsim.CelestialCoord(ra=16*galsim.hours, dec=66*galsim.degrees)
+        date = datetime.datetime(2025, 5, 16)
+        wcs = galsim.roman.getWCS(world_pos=pointing, SCAs=[5], date=date)[5]
+        im2 = galsim.Image(64,64, wcs=wcs)
+        bp = galsim.roman.getBandpasses()['H158']
+        sky_level = galsim.roman.getSkyLevel(bp, world_pos=wcs.toWorld(im2.true_center))
+        wcs.makeSkyImage(im2, sky_level)
+        gal = galsim.Exponential(half_light_radius=1.2, flux=177)
+        gal.drawImage(im2, center=(23,17), add_to_image=True)
+        poisson_noise = galsim.PoissonNoise(galsim.BaseDeviate(1234))
+        im2.addNoise(poisson_noise)
+        im2 /= galsim.roman.gain
+        im2.quantize()
+        assert im1 == im2
+
+        # Repeat with all of the detector effects
+        config = galsim.config.CleanConfig(config)
+        config['image']['stray_light'] = True
+        config['image']['thermal_background'] = True
+        config['image']['reciprocity_failure'] = True
+        config['image']['dark_current'] = True
+        config['image']['nonlinearity'] = True
+        config['image']['ipc'] = True
+        config['image']['read_noise'] = True
+        config['image']['sky_subtract'] = True
+        im1 = galsim.config.BuildImage(config, obj_num=0, logger=logger)
+        sky_level *= (1.0 + galsim.roman.stray_light_fraction)
+        wcs.makeSkyImage(im2, sky_level)
+        im2 += galsim.roman.thermal_backgrounds['H158'] * galsim.roman.exptime
+        sky_image = im2.copy()
+        gal.drawImage(im2, center=(23,17), add_to_image=True)
+        rng = galsim.BaseDeviate(1234)
+        poisson_noise = galsim.PoissonNoise(rng)
+        im2.addNoise(poisson_noise)
+        galsim.roman.addReciprocityFailure(im2)
+        dc = galsim.roman.dark_current * galsim.roman.exptime
+        sky_image += dc
+        im2.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, dc)))
+        galsim.roman.applyNonlinearity(im2)
+        galsim.roman.applyIPC(im2)
+        im2.addNoise(galsim.GaussianNoise(rng, sigma=galsim.roman.read_noise))
+        im2 /= galsim.roman.gain
+        im2.quantize()
+        sky_image /= galsim.roman.gain
+        sky_image.quantize()
+        im2 -= sky_image
+        assert im1 == im2
+
+        # If photon shooting, objects already have Poisson noise.
+        # Also, all detector effects on is the default, so can remove these items from config.
+        config = galsim.config.CleanConfig(config)
+        del config['image']['stray_light']
+        del config['image']['thermal_background']
+        del config['image']['reciprocity_failure']
+        del config['image']['dark_current']
+        del config['image']['nonlinearity']
+        del config['image']['ipc']
+        del config['image']['read_noise']
+        del config['image']['sky_subtract']
+        config['stamp'] = { 'draw_method' : 'phot' }
+        im1 = galsim.config.BuildImage(config, obj_num=0, logger=logger)
+        wcs.makeSkyImage(im2, sky_level)
+        im2 += galsim.roman.thermal_backgrounds['H158'] * galsim.roman.exptime
+        sky_image = im2.copy()
+        rng = galsim.BaseDeviate(1234)
+        poisson_noise = galsim.PoissonNoise(rng)
+        im2.addNoise(poisson_noise)
+        gal_rng = galsim.BaseDeviate(1235)
+        gal.drawImage(im2, center=(23,17), add_to_image=True, method='phot', rng=gal_rng)
+        galsim.roman.addReciprocityFailure(im2)
+        dc = galsim.roman.dark_current * galsim.roman.exptime
+        sky_image += dc
+        im2.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, dc)))
+        galsim.roman.applyNonlinearity(im2)
+        galsim.roman.applyIPC(im2)
+        im2.addNoise(galsim.GaussianNoise(rng, sigma=galsim.roman.read_noise))
+        im2 /= galsim.roman.gain
+        im2.quantize()
+        sky_image /= galsim.roman.gain
+        sky_image.quantize()
+        im2 -= sky_image
+        assert im1 == im2
+
 
 if __name__ == "__main__":
     #import cProfile, pstats
