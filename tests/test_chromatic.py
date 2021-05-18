@@ -1196,14 +1196,14 @@ def test_ChromaticObject_compound_affine_transformation():
 
     a = galsim.Gaussian(fwhm=1.0)
     a = a.shear(shear).shift(shift).rotate(theta).dilate(scale)
-    a = a.shear(shear).shift(shift).rotate(theta).expand(scale)
-    a = a.lens(g1=0.1, g2=0.1, mu=1.1).shift(shift).rotate(theta).magnify(scale)
+    a = a._shear(shear)._shift(galsim.PositionD(*shift)).rotate(theta).expand(scale)
+    a = a._lens(g1=0.1, g2=0.1, mu=1.1).shift(shift).rotate(theta).magnify(scale)
     a = a * sed
 
     b = galsim.Gaussian(fwhm=1.0) * sed
     b = b.shear(shear).shift(shift).rotate(theta).dilate(scale)
-    b = b.shear(shear).shift(shift).rotate(theta).expand(scale)
-    b = b.lens(g1=0.1, g2=0.1, mu=1.1).shift(shift).rotate(theta).magnify(scale)
+    b = b._shear(shear)._shift(galsim.PositionD(*shift)).rotate(theta).expand(scale)
+    b = b._lens(g1=0.1, g2=0.1, mu=1.1).shift(shift).rotate(theta).magnify(scale)
 
     # Include a few gratuitous combinations of functional and static values.
     pshift = galsim.PositionD(*shift)
