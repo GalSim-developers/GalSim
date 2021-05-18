@@ -61,6 +61,9 @@ time galsim -v2 demo11.yaml || exit
 time $python demo12.py || exit
 time galsim -v2 demo12.yaml || exit
 
+time $python demo13.py || exit
+time galsim -v2 demo13.yaml || exit
+
 echo 'Checking diffs: (No output means success)'
 
 # demo1:
@@ -125,4 +128,11 @@ do
         file_name=demo12${part}_${band}.fits
         $python check_diff.py output/$file_name output_yaml/$file_name
     done
+done
+
+# demo13:
+for band in Y106 J129 H158
+do
+    file_name=demo13_${band}.fits
+    $python check_diff.py output/$file_name output_yaml/$file_name
 done
