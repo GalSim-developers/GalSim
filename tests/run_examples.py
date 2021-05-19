@@ -288,7 +288,19 @@ def test_demo12():
     import demo12
     print('Running demo12.py')
     demo12.main([])
-    # There is no demo12.yaml yet, so all this does is check for syntax errors in demo12.py.
+    logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
+    configs = galsim.config.ReadConfig('demo12.yaml', logger=logger)
+    print('Running demo12.yaml pass #1')
+    galsim.config.Process(configs[0], logger=logger, except_abort=True)
+    print('Running demo12.yaml pass #2')
+    galsim.config.Process(configs[1], logger=logger, except_abort=True)
+    print('Running demo12.yaml pass #3')
+    galsim.config.Process(configs[2], logger=logger, except_abort=True)
+    for part in 'abc':
+        for band in 'ugrizy':
+            assert check_same('output/demo12%s_%s.fits'%(part,band),
+                              'output_yaml/demo12%s_%s.fits'%(part,band))
 
 @timer
 @in_examples
@@ -297,8 +309,19 @@ def test_demo13():
     """
     import demo13
     print('Running demo13.py')
-    demo13.main(['nuse=3','ntot=100','filters=YJH'])
-    # There is no demo13.yaml yet, so all this does is check for syntax errors in demo13.py.
+    demo13.main(['--ngal=5', '--filters=Y', '--sample=test'])
+    logger = logging.getLogger('galsim')
+    logger.setLevel(logging.WARNING)
+    config = galsim.config.ReadConfig('demo13.yaml', logger=logger)[0]
+    del config['input']['cosmos_catalog']['sample']
+    config['image']['nobjects'] = 5
+    config['output']['nfiles'] = 1
+    config['input']['cosmos_catalog']['dir'] = 'data'
+    config['input']['cosmos_catalog']['file_name'] = 'real_galaxy_catalog_23.5_example.fits'
+    print('Running demo13.yaml')
+    galsim.config.Process(config, logger=logger, except_abort=True)
+    assert check_same('output/demo13_Y106.fits', 'output_yaml/demo13_Y106.fits')
+
 
 @timer
 @in_examples
