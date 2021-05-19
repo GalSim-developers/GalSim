@@ -77,6 +77,8 @@ def parse_args(argv):
                         help='Initial seed for random numbers')
     parser.add_argument('-s', '--sca', type=int, default=7, choices=range(1,19),
                         help='Which SCA to simulate (default is arbitrarily SCA 7)')
+    parser.add_argument('--sample', type=str, default='23.5', choices=('23.5', '25.2', 'test'),
+                        help='Which COSMOS sample to use')
     parser.add_argument('-v', '--verbosity', type=int, default=2, choices=range(0,4),
                         help='Verbosity level')
 
@@ -91,6 +93,7 @@ def main(argv):
     ngal = args.ngal
     seed = args.seed
     use_SCA = args.sca
+    sample = args.sample
 
     # Make output directory if not already present.
     if not os.path.isdir(outpath):
@@ -117,7 +120,7 @@ def main(argv):
     filters = [filter_name for filter_name in roman_filters if filter_name[0] in use_filters]
     logger.debug('Using filters: %s',filters)
 
-    # Note: This example requires the use of the full m<23.5 COSMOS sample, rather than the smaller
+    # Note: This example by default uses the full m<23.5 COSMOS sample, rather than the smaller
     #       sample that demo 11 used.
     #       You can use the galsim_download_cosmos script to download it.
     #       We recommend specifying the directory for the download, rather than let it use the
@@ -130,7 +133,15 @@ def main(argv):
     #
     # The area and exposure time here rescale the fluxes to be appropriate for the Roman collecting
     # area and exposure time, rather than the default HST collecting area and 1 second exposures.
-    cat = galsim.COSMOSCatalog(sample='23.5', area=roman.collecting_area, exptime=roman.exptime)
+    #
+    # If you really want to use the smaller test sample, you can use --sample test, but there
+    # are only 100 galaxies there, so most galaxies will be repeated several times.
+
+    if sample == 'test':
+        cat = galsim.COSMOSCatalog('real_galaxy_catalog_23.5_example.fits', dir='data',
+                                   area=roman.collecting_area, exptime=roman.exptime)
+    else:
+        cat = galsim.COSMOSCatalog(sample=sample, area=roman.collecting_area, exptime=roman.exptime)
     logger.info('Read in %d galaxies from catalog'%cat.nobjects)
 
     # Pick a plausible observation that might be made to celebrate Nancy Grace Roman's 100th
