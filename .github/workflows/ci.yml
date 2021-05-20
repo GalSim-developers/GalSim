@@ -171,7 +171,6 @@ jobs:
             - name: Run unit tests
               run: |
                 cd tests
-                nosetests -vs test_config_image.py:test_reject
                 nosetests -v test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase
                 nosetests -v run_examples.py
                 cd ..  # N.B. This seems to happen automatically if omitted.
