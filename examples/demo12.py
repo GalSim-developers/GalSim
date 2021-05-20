@@ -139,7 +139,7 @@ def main(argv):
     logger.debug('Created final profile')
 
     # draw profile through LSST filters
-    for i, filter_name in enumerate(filters):
+    for i, filter_name in enumerate(filter_names):
         filter_ = filters[filter_name]
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
@@ -184,7 +184,7 @@ def main(argv):
     logger.debug('Created bulge+disk galaxy final profile')
 
     # draw profile through LSST filters
-    for i, filter_name in enumerate(filters):
+    for i, filter_name in enumerate(filter_names):
         filter_ = filters[filter_name]
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         bdfinal.drawImage(filter_, image=img)
@@ -261,7 +261,7 @@ def main(argv):
     logger.debug('Created chromatic PSF final profile')
 
     # Draw profile through LSST filters
-    for i, filter_name in enumerate(filters):
+    for i, filter_name in enumerate(filter_names):
         filter_ = filters[filter_name]
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
