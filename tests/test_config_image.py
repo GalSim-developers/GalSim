@@ -523,19 +523,15 @@ def test_reject():
     config = galsim.config.CleanConfig(config)
     with CaptureLog() as cl:
         galsim.config.BuildFiles(nimages, config, logger=cl.logger)
-    print(cl.output)
+    #print(cl.output)
     assert "No files were written.  All were either skipped or had errors." in cl.output
 
     # There is a different path if all files raise an exception, rather than are rejected.
     config['stamp']['type'] = 'hello'
     config = galsim.config.CleanConfig(config)
-    print('Before problem run')
-    galsim.config.BuildFiles(nimages, config, logger=logger)
-    print('Before problem run ith cl.logger')
     with CaptureLog() as cl:
         galsim.config.BuildFiles(nimages, config, logger=cl.logger)
-    print('cl.output:')
-    print(cl.output)
+    #print(cl.output)
     assert "No files were written.  All were either skipped or had errors." in cl.output
 
     # If we skip all objects, and don't have a definite size for them, then we get to a message
