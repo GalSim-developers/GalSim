@@ -33,20 +33,20 @@ jobs:
                 include:
                     # A couple in MacOS
                     - os: macos-latest
-                      py: 2.7
+                      py: 3.8
                       CC: cc
                       CXX: c++
                       experimental: false
 
                     - os: macos-latest
-                      py: 3.7
+                      py: 3.9
                       CC: cc
                       CXX: c++
                       experimental: false
 
                     # Check one with clang compiler
                     - os: ubuntu-latest
-                      py: 3.7
+                      py: 3.9
                       CC: clang
                       CXX: clang++
                       experimental: false
