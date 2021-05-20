@@ -31,22 +31,19 @@ jobs:
 
                 # Add some other particular combinations to test
                 include:
-                    # A couple in MacOS
+                    # Just one in MacOS, since GitHub actions seems to have some kind of
+                    # system problem where seg faults happen randomly on their Mac machines.
+                    # Usually just restarting will fix it, but that's annoying, so minimize
+                    # that by only having one of these to fight with.
                     - os: macos-latest
                       py: 3.8
                       CC: cc
                       CXX: c++
                       experimental: false
 
-                    - os: macos-latest
-                      py: 3.9
-                      CC: cc
-                      CXX: c++
-                      experimental: false
-
                     # Check one with clang compiler
                     - os: ubuntu-latest
-                      py: 3.9
+                      py: 3.8
                       CC: clang
                       CXX: clang++
                       experimental: false
@@ -174,6 +171,7 @@ jobs:
             - name: Run unit tests
               run: |
                 cd tests
+                nosetests -vs test_config_image.py:test_reject
                 nosetests -v test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase
                 nosetests -v run_examples.py
                 cd ..  # N.B. This seems to happen automatically if omitted.
