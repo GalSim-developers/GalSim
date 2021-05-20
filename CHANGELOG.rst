@@ -85,6 +85,7 @@ Config Updates
 --------------
 
 - Added ability to draw chromatic objects with config files. (#510)
+- Added demo12.yaml and demo13.yaml to the demo suite. (#510, #1121)
 - Fixed a few issues with parsing truth catalog items and, in general, places
   where a Current item might be used before it was parsed. (#1083)
 - Added value-type-specific type names like Random_float, Random_Angle, etc.
@@ -100,6 +101,9 @@ Config Updates
   properties to delay the loading of data other than what is needed for
   determining the number of objects.  See `Catalog` for an example of how
   to do this. (#1095)
+- Allowed Eval fields to use any modules that are listed in the top-level
+  modules field. (#1121)
+- Added Roman config types: RomanSCA, RomanBandpass, and RomanPSF. (#1121)
 
 
 New Features
@@ -134,6 +138,8 @@ New Features
 - Added galsim.bessel.jv_root function. (#1099)
 - Added support for TPV WCS files with order > 3. (#1101)
 - Added galsim.UserScreen for arbitrary user-supplied phase screens (#1102)
+- Added area and exptime parameters to COSMOSCatalog constructor to make it
+  easier to rescale the fluxes to a different telescope than HST. (#1121)
 
 Performance Improvements
 ------------------------
