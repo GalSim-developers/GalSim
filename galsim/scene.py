@@ -341,8 +341,7 @@ class COSMOSCatalog(object):
     def __len__(self): return self.nobjects
 
     def makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
-                   deep=False, sersic_prec=0.05, rng=None, n_random=None, gsparams=None,
-                   weight=True):
+                   deep=False, sersic_prec=0.05, rng=None, n_random=None, gsparams=None):
         """
         Routine to construct one or more `GSObject` instances corresponding to the catalog entry
         with a particular index or indices.
@@ -414,7 +413,6 @@ class COSMOSCatalog(object):
             n_random:       The number of random galaxies to build, if 'index' is None.
                             [default: 1]
             gsparams:       An optional `GSParams` argument. [default: None]
-            weight:         Whether to use weights (highly recommended) [default: True]
 
         Returns:
             Either a `GSObject` or a `ChromaticObject` depending on the value of ``chromatic``,
@@ -422,13 +420,12 @@ class COSMOSCatalog(object):
         """
         return self._makeGalaxy(self, index, gal_type, chromatic, noise_pad_size,
                                 deep, sersic_prec, self.exptime, self.area,
-                                rng, n_random, gsparams, weight)
+                                rng, n_random, gsparams)
 
     @staticmethod
     def _makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
                     deep=False, sersic_prec=0.05, exptime=1., area=None,
-                    rng=None, n_random=None, gsparams=None,
-                    weight=True):
+                    rng=None, n_random=None, gsparams=None):
         from .random import BaseDeviate
         if not self.canMakeReal():
             if gal_type is None:
@@ -454,7 +451,7 @@ class COSMOSCatalog(object):
         # Select random indices if necessary (no index given).
         if index is None:
             if n_random is None: n_random = 1
-            index = self.selectRandomIndex(n_random, rng=rng, weight=weight)
+            index = self.selectRandomIndex(n_random, rng=rng)
         else:
             if n_random is not None:
                 raise GalSimIncompatibleValuesError(
@@ -527,7 +524,7 @@ class COSMOSCatalog(object):
         else:
             return gal_list[0]
 
-    def selectRandomIndex(self, n_random=1, rng=None, weight=True, _n_rng_calls=False):
+    def selectRandomIndex(self, n_random=1, rng=None, _n_rng_calls=False):
         """
         Routine to select random indices out of the catalog.  This routine does a weighted random
         selection with replacement (i.e., there is no guarantee of uniqueness of the selected
@@ -538,7 +535,6 @@ class COSMOSCatalog(object):
             n_random:   Number of random indices to return. [default: 1]
             rng:        A random number generator to use for selecting a random galaxy
                         (may be any kind of `BaseDeviate` or None). [default: None]
-            weight:     Whether to use weights (highly recommended) [default: True]
 
         Returns:
             A single index if n_random==1 or a NumPy array containing the randomly-selected
@@ -550,15 +546,13 @@ class COSMOSCatalog(object):
         if rng is None:
             rng = BaseDeviate()
 
-        if not weight:
-            use_weights = None
-        elif self.real_cat is not None:
+        if self.real_cat is not None:
             use_weights = self.real_cat.weight[self.orig_index]
         else:
             galsim_warn("Selecting random object without correcting for catalog-level "
                         "selection effects.  This correction requires the existence of "
                         "real catalog with valid weights in addition to parametric one. "
-                        "Set weight=False to avoid this warning.")
+                        "Create the COSMOSCatalog with use_real=True to avoid this warning.")
             use_weights = None
 
         # By default, get the number of RNG calls.  We then decide whether or not to return them

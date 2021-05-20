@@ -279,9 +279,6 @@ def main(argv):
                 logger.debug('Faint galaxy')
 
                 # Select a random galaxy from the catalog.
-                # If using the full COSMOS catalog downloaded via galsim_download_cosmos, you should
-                # remove the weight=False option to enable the weighted selection available in the
-                # full catalogs.
                 obj = cat1.makeGalaxy(chromatic=True, gal_type='parametric', rng=obj_rng)
                 logger.debug('galaxy index = %s',obj.index)
 
