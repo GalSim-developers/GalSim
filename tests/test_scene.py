@@ -268,14 +268,15 @@ def test_cosmos_random():
     ind2 = cat.selectRandomIndex(10, rng=rng2)
     np.testing.assert_array_equal(ind1,ind2,
                                   err_msg='Different random indices selected with same seed!')
-    # If set weight=False, avoid the warning.
-    ind1p = cat_param.selectRandomIndex(10, rng=rng1, weight=False)
-    ind2p = cat_param.selectRandomIndex(10, rng=rng2, weight=False)
+    with assert_warns(galsim.GalSimWarning):
+        ind1p = cat_param.selectRandomIndex(10, rng=rng1)
+    with assert_warns(galsim.GalSimWarning):
+        ind2p = cat_param.selectRandomIndex(10, rng=rng2)
     np.testing.assert_array_equal(ind1p,ind2p,
                                   err_msg='Different random indices selected with same seed!')
     rng3 = galsim.BaseDeviate(5678)
     ind3 = cat.selectRandomIndex(10, rng=rng3)
-    ind3p = cat_param.selectRandomIndex(10, weight=False) # initialize RNG based on time
+    ind3p = cat.selectRandomIndex(10) # initialize RNG based on time
     assert_raises(AssertionError, np.testing.assert_array_equal, ind1, ind1p)
     assert_raises(AssertionError, np.testing.assert_array_equal, ind1, ind3)
     assert_raises(AssertionError, np.testing.assert_array_equal, ind1p, ind3p)
@@ -294,8 +295,9 @@ def test_cosmos_random():
     assert obj.index==obj_2.index,'makeGalaxy selects random objects inconsistently'
 
     n_random = 3
-    objs = cat_param.makeGalaxy(rng=galsim.BaseDeviate(use_seed), n_random=n_random, weight=False)
-    inds = cat_param.selectRandomIndex(n_random, rng=galsim.BaseDeviate(use_seed), weight=False)
+    objs = cat.makeGalaxy(rng=galsim.BaseDeviate(use_seed), gal_type='parametric',
+                          n_random=n_random)
+    inds = cat.selectRandomIndex(n_random, rng=galsim.BaseDeviate(use_seed))
     objs_2 = cat_param.makeGalaxy(inds)
     for i in range(n_random):
         # With parametric objects there is no noise padding, so we can require completely identical
@@ -315,23 +317,28 @@ def test_cosmos_random():
     assert ind_cc==ind_rgc,\
         'Different weighted random index selected from COSMOSCatalog and RealGalaxyCatalog'
 
-    # Also check for the unweighted case.
-    ind_cc = cat.selectRandomIndex(1, rng=galsim.BaseDeviate(use_seed), weight=False)
-    rgc.weight = None  # Setting rgc.weight=None forces unweighted for this path.
+    # Also check for the unweighted case.  Just remove that info from the catalogs and redo the
+    # test.
+    cat.real_cat = None
+    rgc.weight = None
+    with assert_warns(galsim.GalSimWarning):
+        ind_cc = cat.selectRandomIndex(1, rng=galsim.BaseDeviate(use_seed))
     foo = galsim.RealGalaxy(rgc, random=True, rng=galsim.BaseDeviate(use_seed))
     ind_rgc = foo.index
     assert ind_cc==ind_rgc,\
         'Different unweighted random index selected from COSMOSCatalog and RealGalaxyCatalog'
 
     # Check that setting _n_rng_calls properly tracks the RNG calls for n_random=1 and >1.
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
+                               dir=datapath, exclusion_level='none')
     test_seed = 123456
     ud = galsim.UniformDeviate(test_seed)
-    obj, n_rng_calls = cat.selectRandomIndex(1, rng=ud, _n_rng_calls=True, weight=False)
+    obj, n_rng_calls = cat.selectRandomIndex(1, rng=ud, _n_rng_calls=True)
     ud2 = galsim.UniformDeviate(test_seed)
     ud2.discard(n_rng_calls)
     assert ud()==ud2(), '_n_rng_calls kwarg did not give proper tracking of RNG calls'
     ud = galsim.UniformDeviate(test_seed)
-    obj, n_rng_calls = cat.selectRandomIndex(17, rng=ud, _n_rng_calls=True, weight=False)
+    obj, n_rng_calls = cat.selectRandomIndex(17, rng=ud, _n_rng_calls=True)
     ud2 = galsim.UniformDeviate(test_seed)
     ud2.discard(n_rng_calls)
     assert ud()==ud2(), '_n_rng_calls kwarg did not give proper tracking of RNG calls'
