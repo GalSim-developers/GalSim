@@ -61,7 +61,7 @@ import sys, os
 import math
 import logging
 import time
-import galsim as galsim
+import galsim
 import galsim.roman as roman
 import datetime
 
@@ -71,14 +71,14 @@ def parse_args(argv):
                         help='Which filters to simulate (default = "YJH")')
     parser.add_argument('-o', '--outpath', type=str, default='output',
                         help='Which directory to put the output files')
-    parser.add_argument('-n', '--ngal', type=int, default=400,
-                        help='How many galaxies to draw')
+    parser.add_argument('-n', '--nobj', type=int, default=1000,
+                        help='How many objects to draw')
     parser.add_argument('--seed', type=int, default=12345,
                         help='Initial seed for random numbers')
     parser.add_argument('-s', '--sca', type=int, default=7, choices=range(1,19),
                         help='Which SCA to simulate (default is arbitrarily SCA 7)')
-    parser.add_argument('--sample', type=str, default='23.5', choices=('23.5', '25.2', 'test'),
-                        help='Which COSMOS sample to use')
+    parser.add_argument('-t', '--test', action='store_const', default=False, const=True,
+                        help='Whether to use the smaller test sample, rather than the full COSMOS samples')
     parser.add_argument('-v', '--verbosity', type=int, default=2, choices=range(0,4),
                         help='Verbosity level')
 
@@ -90,10 +90,9 @@ def main(argv):
     args = parse_args(argv)
     use_filters = args.filters
     outpath = args.outpath
-    ngal = args.ngal
+    nobj = args.nobj
     seed = args.seed
     use_SCA = args.sca
-    sample = args.sample
 
     # Make output directory if not already present.
     if not os.path.isdir(outpath):
@@ -120,16 +119,22 @@ def main(argv):
     filters = [filter_name for filter_name in roman_filters if filter_name[0] in use_filters]
     logger.debug('Using filters: %s',filters)
 
-    # Note: This example by default uses the full m<23.5 COSMOS sample, rather than the smaller
-    #       sample that demo 11 used.
-    #       You can use the galsim_download_cosmos script to download it.
+    # Note: This example uses both the I<23.5 and I<25.2 COSMOS catalogs to try to better span
+    #       a range from bigger, bright galaxies to fainter ones.  We also dilate and magnify
+    #       the bright galaxies to make them a bit more visually compelling in this example.
+    #
+    #       You should download both of these COSMOS catalogs if you haven't yet.
+    #
     #       We recommend specifying the directory for the download, rather than let it use the
     #       default directory, since that will be in the GalSim python share directory, which will
     #       be overwritten whenever you reinstall GalSim.  This command sets up a symlink from that
     #       location to a directory in your home directory.  (Feel free to use any other convenient
-    #       directory of course, depending on your situation.)
+    #       directory of course, depending on your situation.)  You still need to rerun this command
+    #       after reinstalls of GalSim, but it will just need to update the link, not actually
+    #       re-download anything.
     #
-    #           galsim_download_cosmos -s 23.5 -d ~/cosmos
+    #           galsim_download_cosmos -s 23.5 -d ~/share
+    #           galsim_download_cosmos -s 25.2 -d ~/share
     #
     # The area and exposure time here rescale the fluxes to be appropriate for the Roman collecting
     # area and exposure time, rather than the default HST collecting area and 1 second exposures.
@@ -137,12 +142,20 @@ def main(argv):
     # If you really want to use the smaller test sample, you can use --sample test, but there
     # are only 100 galaxies there, so most galaxies will be repeated several times.
 
-    if sample == 'test':
-        cat = galsim.COSMOSCatalog('real_galaxy_catalog_23.5_example.fits', dir='data',
-                                   area=roman.collecting_area, exptime=roman.exptime)
+    if args.test:
+        cat1 = galsim.COSMOSCatalog('real_galaxy_catalog_23.5_example.fits', dir='data',
+                                    area=roman.collecting_area, exptime=roman.exptime)
+        cat2 = cat1
     else:
-        cat = galsim.COSMOSCatalog(sample=sample, area=roman.collecting_area, exptime=roman.exptime)
-    logger.info('Read in %d galaxies from catalog'%cat.nobjects)
+        cat1 = galsim.COSMOSCatalog(sample='25.2', area=roman.collecting_area, exptime=roman.exptime)
+        cat2 = galsim.COSMOSCatalog(sample='23.5', area=roman.collecting_area, exptime=roman.exptime)
+
+    logger.info('Read in %d galaxies from I<25.2 catalog'%cat1.nobjects)
+    logger.info('Read in %d galaxies from I<23.5 catalog'%cat2.nobjects)
+
+    # For the stars, we'll use the vega SED, since that's the only stellar SED we have in the
+    # GalSim share directory.  Which means all the stars will be pretty blue.
+    vega_sed = galsim.SED('vega.txt', 'nm', 'flambda')
 
     # Pick a plausible observation that might be made to celebrate Nancy Grace Roman's 100th
     # birthday.  (AG Draconis)
@@ -173,6 +186,7 @@ def main(argv):
         # filter bandpass, partly because "filter" is a reserved word in python.  So we follow
         # that convention here as well.
         bandpass = roman_filters[filter_name]
+        y_bandpass = roman_filters['Y106']
 
         # Create the PSF
         # We are ignoring the position-dependence of the PSF within each SCA, just using the PSF
@@ -182,51 +196,22 @@ def main(argv):
         # which we can interpolate between when drawing the galaxies.  For more accuracy w.r.t.
         # the chromaticity, you can increase this value of `n_waves`.
         # Note: Removing n_waves parameter would actually be both slower and less accurate, since
-        # the OpticalPSF model would redo the wavefront calculation for each galaxy, and then
+        # the OpticalPSF model would redo the wavefront calculation for each object, and then
         # would still make an approximation that would be similar to n_waves=3.
         logger.info('Building PSF for SCA %d, filter %s.'%(use_SCA, filter_name))
         psf = roman.getPSF(use_SCA, filter_name, n_waves=10, wcs=wcs, pupil_bin=8)
 
-        # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we convolve it
-        # with a galaxy, it will properly take on the SED of the galaxy.  For the sake of this demo,
-        # we will simply convolve with a 'star' that has a flat SED and unit flux in this band, so
-        # that the PSF image will be normalized to unit flux. This does mean that the PSF image
-        # being drawn here is not quite the right PSF for the galaxy.  Indeed, the PSF for the
-        # galaxy effectively varies within it, since it differs for the bulge and the disk.  To make
-        # a real image, one would have to choose SEDs for stars and convolve with a star that has a
-        # reasonable SED, but we just draw with a flat SED for this demo.
-        psf_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
-
-        # Generate a point source.
-        point = galsim.DeltaFunction(flux=1.)
-
-        # Use a flat SED here, but could use something else.  A stellar SED for instance.
-        # Or a typical galaxy SED.  Depending on your purpose for drawing the PSF.
-        star_sed = galsim.SED(lambda x:1, 'nm', 'flambda')
-
-        # Give it unit flux in this filter.
-        star_sed = star_sed.withFlux(1.,bandpass)
-
-        # Convolve with the PSF
-        star = galsim.Convolve(point*star_sed, psf)
-
-        # Draw it.
-        img_psf = galsim.ImageF(64,64)
-        star.drawImage(bandpass=bandpass, image=img_psf, scale=roman.pixel_scale)
-        img_psf.write(psf_filename)
-        logger.debug('Wrote PSF {0}-band to {1}'.format(filter_name, psf_filename))
-
         # Set up the full image for the galaxies
         full_image = galsim.ImageF(roman.n_pix, roman.n_pix, wcs=wcs)
 
-        # We have one rng for image-level stuff, and two others for the galaxies.
+        # We have one rng for image-level stuff, and two others for the stars and galaxies.
         # There are simpler ways to do this in a python script (e.g. probably only need 2
         # rngs, not 3), but this way of setting it up matches the way the config file initializes
         # the random number generators.
-        image_rng = galsim.UniformDeviate(seed + ifilter * ngal)
+        image_rng = galsim.UniformDeviate(seed + ifilter * nobj)
 
         # Start with the flux from the sky. This is a little easier to do first before adding
-        # the light from the galaxies, since we will have to apply Poisson noise to the sky flux
+        # the light from the objects, since we will have to apply Poisson noise to the sky flux
         # manually, but the photon shooting will automatically include Poisson noise for the
         # objects.
 
@@ -258,40 +243,92 @@ def main(argv):
         poisson_noise = galsim.PoissonNoise(image_rng)
         full_image.addNoise(poisson_noise)
 
-        # Draw the galaxies into the image.
-        # We want (most of) the galaxy properties to be the same for all the filters.
+        # Draw the galaxies and stars into the image.
+        # We want (most of) the object properties to be the same for all the filters.
         # E.g. the position, orintation, etc. should match up for all the observations.
         # To make this happen, we start an rng from the same seed each time.
-        for i_gal in range(ngal):
-            logger.info('Drawing image for object {} for band {}'.format(i_gal, filter_name))
+        for i_obj in range(nobj):
+            logger.info('Drawing image for object {} in band {}'.format(i_obj, filter_name))
 
-            # The rng for galaxy parameters should be the same for each filter to make sure
+            # The rng for object parameters should be the same for each filter to make sure
             # we get the same parameters, position, rotation in each color.
-            gal_rng = galsim.UniformDeviate(seed + 1 + 10**6 + i_gal)
+            obj_rng = galsim.UniformDeviate(seed + 1 + 10**6 + i_obj)
             # The rng for photon shooting should be different for each filter.
-            phot_rng = galsim.UniformDeviate(seed + 1 + i_gal + ifilter*ngal)
+            phot_rng = galsim.UniformDeviate(seed + 1 + i_obj + ifilter*nobj)
+
+            # We'll deal with this below.  The config processing calculates this before the
+            # position, so to get the same answers, we need to do the same here.
+            p = obj_rng()
 
             # Pick a random position in the image to draw it.
             # If we had a real galaxy catalog with positions in terms of RA, Dec we could use
             # wcs.toImage() to find where those objects should be in terms of (x, y).
             # Note that we could use wcs.toWorld() to get the (RA, Dec) for these (x, y) positions
             # if we wanted that information, but we don't need it.
-            x = gal_rng() * roman.n_pix
-            y = gal_rng() * roman.n_pix
+            x = obj_rng() * roman.n_pix
+            y = obj_rng() * roman.n_pix
             image_pos = galsim.PositionD(x,y)
+            logger.debug('Position = %s',image_pos)
 
-            # Select a random galaxy from the catalog.
-            # If using the full COSMOS catalog downloaded via galsim_download_cosmos, you should
-            # remove the weight=False option to enable the weighted selection available in the
-            # full catalogs.
-            gal = cat.makeGalaxy(chromatic=True, gal_type='parametric', rng=gal_rng)
+            # Now decide which of our three kinds of objects we want to draw:
+            # 80% faint galaxy
+            # 10% star
+            # 10% bright galaxy
+            if p < 0.8:
+                # Faint galaxy
+                logger.debug('Faint galaxy')
 
-            # Rotate the galaxy randomly
-            theta = gal_rng() * 2 * np.pi * galsim.radians
-            gal = gal.rotate(theta)
+                # Select a random galaxy from the catalog.
+                # If using the full COSMOS catalog downloaded via galsim_download_cosmos, you should
+                # remove the weight=False option to enable the weighted selection available in the
+                # full catalogs.
+                obj = cat1.makeGalaxy(chromatic=True, gal_type='parametric', rng=obj_rng)
+                logger.debug('galaxy index = %s',obj.index)
 
-            # Convolve the (chromatic) galaxy with the (chromatic) PSF.
-            final = galsim.Convolve(gal, psf)
+                # Rotate the galaxy randomly
+                theta = obj_rng() * 2 * np.pi * galsim.radians
+                logger.debug('theta = %s',theta)
+                obj = obj.rotate(theta)
+
+            elif p < 0.9:
+                # Star
+                logger.debug('Star')
+
+                # Use a log-normal distribution for the stellar fluxes.  This gives a few very
+                # bright stars, but not too many.
+                # cf. https://en.wikipedia.org/wiki/Log-normal_distribution
+                # mu_x, sigma_x are the target mean, std.dev.
+                # mu,sigma are the parameters of the function.
+                mu_x = 1.e5
+                sigma_x = 2.e5
+                mu = np.log(mu_x**2 / (mu_x**2+sigma_x**2)**0.5)
+                sigma = (np.log(1 + sigma_x**2/mu_x**2))**0.5
+                gd = galsim.GaussianDeviate(obj_rng, mean=mu, sigma=sigma)
+                flux = np.exp(gd())
+                logger.debug('flux = %s',flux)
+
+                # Normalize the SED to have this flux in the Y band.
+                sed = vega_sed.withFlux(flux, y_bandpass)
+
+                obj = galsim.DeltaFunction() * sed
+
+            else:
+                # Bright galaxy
+                logger.debug('Bright galaxy')
+
+                obj = cat2.makeGalaxy(chromatic=True, gal_type='parametric', rng=obj_rng)
+                logger.debug('galaxy index = %s',obj.index)
+
+                # Scale up the area by a factor of 2, and the flux by a factor of 4.
+                obj = obj.dilate(2) * 4
+
+                # Rotate the galaxy randomly
+                theta = obj_rng() * 2 * np.pi * galsim.radians
+                logger.debug('theta = %s',theta)
+                obj = obj.rotate(theta)
+
+            # Convolve the (chromatic) object with the (chromatic) PSF.
+            final = galsim.Convolve(obj, psf)
             stamp = final.drawImage(bandpass, center=image_pos, wcs=wcs.local(image_pos),
                                     method='phot', rng=phot_rng)
 
@@ -301,9 +338,9 @@ def main(argv):
             # Add this to the corresponding location in the large image.
             full_image[bounds] += stamp[bounds]
 
-        # Now we're done with the per-galaxy drawing for this image.  The rest will be done for the
+        # Now we're done with the per-object drawing for this image.  The rest will be done for the
         # entire image at once.
-        logger.info('Postage stamps of all galaxies drawn on a single big image for this filter.')
+        logger.info('All objects have been drawn for filter %s.',filter_name)
         logger.info('Adding the noise and detector non-idealities.')
 
         # Now that all sources of signal (from astronomical objects and background) have been added
@@ -412,7 +449,7 @@ def main(argv):
         logger.info('Completed {0}-band image.'.format(filter_name))
 
     logger.info('You can display the output in ds9 with a command line that looks something like:')
-    logger.info('ds9 -zoom 0.3 -scale limits -10 100 -rgb '+
+    logger.info('ds9 -zoom 0.6 -scale limits -10 100 -rgb '+
                 '-red output/demo13_H158.fits '+
                 '-green output/demo13_J129.fits '+
                 '-blue output/demo13_Y106.fits')
