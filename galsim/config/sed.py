@@ -24,7 +24,7 @@ from .input import RegisterInputConnectedType
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..sed import SED
 from ..bandpass import Bandpass
-from ..utilities import basestring
+from ..utilities import basestring, LRU_Cache
 
 # This module-level dict will store all the registered SED types.
 # See the RegisterSEDType function at the end of this file.
@@ -106,6 +106,10 @@ class SEDBuilder(object):
         raise NotImplementedError("The %s class has not overridden buildSED"%self.__class__)
 
 
+def _read_sed_file(file_name, wave_type, flux_type):
+    return SED(file_name, wave_type, flux_type)
+read_sed_file = LRU_Cache(_read_sed_file)
+
 class FileSEDBuilder(SEDBuilder):
     """A class for loading an SED from a file
 
@@ -143,9 +147,11 @@ class FileSEDBuilder(SEDBuilder):
         norm_wavelength = kwargs.pop('norm_wavelength', None)
         norm_flux = kwargs.pop('norm_flux', None)
         redshift = kwargs.pop('redshift', 0.)
+        wave_type = kwargs.pop('wave_type')
+        flux_type = kwargs.pop('flux_type')
 
-        logger.info("Reading SED file: %s",file_name)
-        sed = SED(file_name, **kwargs)
+        logger.info("Using SED file: %s",file_name)
+        sed = read_sed_file(file_name, wave_type, flux_type)
         if norm_flux_density:
             sed = sed.withFluxDensity(norm_flux_density, wavelength=norm_wavelength)
         elif norm_flux:
