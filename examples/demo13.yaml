@@ -56,14 +56,16 @@
 
 # New features introduced in this demo:
 #
-# - modules top-level field
+# - Top-level field modules
 # - obj type: RomanPSF
 # - image type: RomanSCA
 # - draw_method=phot in conjunction with chromatic objects
 # - multiple random seeds (particular so one can repeat the same values for multiple images)
 # - rng_num specification in various fields
+# - Multiple inputs of the same type.  Use num to specify which item in the list to use each time.
 
 modules:
+
     # Including galsim.roman in the list of modules to import will add a number of Roman-specific
     # functions and classes that we will use here.
     - galsim.roman
@@ -72,8 +74,27 @@ modules:
     # the globals dict it uses when evaluating Eval items, so we can tell it to import it here.
     - datetime
 
+    # You can define your own object types, stamp types, image types, value types, etc.
+    #
+    # There are instructions about how to do so in the documentation:
+    #   http://galsim-developers.github.io/GalSim/_build/html/config.html
+    #
+    # If a local file has the appropriate Register commands, then importing it will enable
+    # whatever extra types you have defined.  Here we use two user-defined types:
+    #
+    # - A stamp type, MixedScene, defined in the file mixed_scene.py.
+    # - A value type, LogNormal, defined in the file log_normal.py.
+    #
+    # Note: Both of these types are also available in the python repository called galsim_extra.
+    #       cf. https://github.com/esheldon/galsim_extra
+    #       So if that is installed, you could instead put galsim_extra in the modules list
+    #       and both of these (as well as numerous other user-defined types) would be availble.
+    - mixed_scene
+    - log_normal
+
 # Define some other information about the images
 image:
+
     # A special Image type that knows all the Roman SCA geometry, WCS, gain, etc.
     # It also by default applies a number of detector effects, but these can be turned
     # off if desired by setting some parameters (given below) to False.
@@ -111,7 +132,7 @@ image:
         type: List
         items: ['Y106', 'J129', 'H158']
 
-    nobjects: 400
+    nobjects: 1000
 
     # A plausible commemerative pointing for Nancy Grace Roman's 100th birthday.  (AG Draconis.)
     # Although, now it doesn't look like it will launch in time...  Too bad.
@@ -128,6 +149,14 @@ image:
     # Omitting it would have the same effect as this line.
     exptime: $galsim.roman.exptime
 
+    # Photon shooting is way faster for chromatic objects than fft, especially when most of them
+    # are fairly faint.  The cross-over point for achromatic objects is generally of order
+    # flux=1.e6 or so (depending on the profile).  Most of our objects here are much fainter than
+    # that.  The fft rendering for chromatic is a factor of 10 or so slower still, whereas
+    # chromatic photon shooting is only slighly slower than achromatic, so the difference
+    # is even more pronounced in this case.
+    draw_method: 'phot'
+
     # These are all by default turned on, but you can turn any of them off if desired:
     stray_light: True
     thermal_background: True
@@ -139,6 +168,24 @@ image:
     sky_subtract: True
 
 stamp:
+
+    # Defined in mixed_scene.py.
+    # This stamp type lets you select from a number of potential object types at a given
+    # probability rate.
+    # Here, we have some stars, some faint galaxies, and a few bright galaxies.
+    # This stamp type is also available from galsim_extra.
+    type: MixedScene
+
+    # rng_num = 1 means that the same random values will be used for each band, which
+    # means the same underlying galaxy will be generated each time.
+    rng_num: 1
+
+    objects:
+        # Give the fractional chance of picking each kind of object.
+        faint_gal: 0.8
+        star: 0.1
+        bright_gal: 0.1
+
     image_pos:
         type: XY
         x: { 'type' : 'Random' , 'min' : 0, 'max' : '$galsim.roman.n_pix' }
@@ -151,30 +198,11 @@ stamp:
         # use the second rng, which repeats for each filter.
         rng_num: 1
 
-    # The photon shooting also uses an rng.  However, this will use rng_num=0 (the default),
-    # which is what we want, so each observation of the galaxy has an independent noise
-    # realization.  (We only want true facts about the galaxies like position and profile
-    # parameters to be the same for each filter.)
-    draw_method: 'phot'
-
-output:
-
-    nfiles: 3
-    dir: output_yaml
-    file_name:
-        type: FormattedStr
-        format: "demo13_%s.fits"
-        items:
-            - '@image.filter'
-
-gal:
+faint_gal:
 
     type: COSMOSGalaxy
-    gal_type: 'parametric'
-
-    # rng_num = 1 means that the same random values will be used for each band, which
-    # means the same underlying galaxy will be generated each time.
-    rng_num: 1
+    gal_type: parametric
+    num: 0   # Use the first of the two cosmos_cat input specifications.  (I < 25.2)
 
     # Use chromatic galaxies with SEDs appropriate for their fitted galaxy profiles.
     chromatic: True
@@ -184,6 +212,50 @@ gal:
     exptime: $galsim.roman.exptime
 
     # Randomly rotate the galaxies for a more varied selection of galaxy profiles.
+    rotate:
+        type: Random
+
+star:
+
+    type: DeltaFunction
+
+    sed:
+        # The only stellar spectrum we have in the GalSim standard SEDs is Vega.
+        file_name: vega.txt
+        wave_type: nm
+        flux_type: flambda
+
+        # Log normal flux distribution.  Normalized to Y band.
+        norm_flux:
+            # This value type is defined in log_normal.py.
+            # The mean and sigma here are just set up so the stars are pretty obvious
+            # in the final image, so you can see some objects with the Roman diffraction spikes.
+            # Probably they are both too common and too bright for a realistic scene.
+            type: LogNormal
+            mean: 1.e5
+            sigma: 2.e5
+
+        norm_bandpass:
+            type: RomanBandpass
+            name: Y106
+
+bright_gal:
+
+    type: COSMOSGalaxy
+    gal_type: parametric
+    num: 1   # Use the second of the two cosmos_cat input specifications.  (I < 23.5)
+
+    # Use chromatic galaxies with SEDs appropriate for their fitted galaxy profiles.
+    chromatic: True
+
+    # These are necessary to get the flux scaling correct for COSMOS galaxies.
+    area: $galsim.roman.collecting_area
+    exptime: $galsim.roman.exptime
+
+    # Scale them up to a bit bigger and brighter than the regular I<23.5 galaxies
+    dilate: 2
+    scale_flux: 4
+
     rotate:
         type: Random
 
@@ -206,29 +278,55 @@ psf:
     # This choice of pupil_bin=8 is faster at the expense of a little realism.
     pupil_bin: 8
 
-
 input:
-    # The COSMOS catalog uses the same input file as we have been using for the real galaxy
-    # catalogs plus another file called real_galaxy_catalog_23.5_example_fits.fits, which stores
-    # the information about the parametric fits.  There is no need to specify the second file
-    # name, since the name is derivable from the name of the main catalog.
+
     cosmos_catalog:
 
-        # You should download the full m<23.5 COSMOS catalog if you haven't yet.
+        # This example uses both the I<23.5 and I<25.2 COSMOS catalogs to try to better span
+        # a range from bigger, bright galaxies to fainter ones.  We also dilate and magnify
+        # the bright galaxies to make them a bit more visually compelling in this example.
+        #
+        # You should download both of these COSMOS catalogs if you haven't yet.
         #
         # We recommend specifying the directory for the download, rather than let it use the
         # default directory, since that will be in the GalSim python share directory, which will
         # be overwritten whenever you reinstall GalSim.  This command sets up a symlink from that
         # location to a directory in your home directory.  (Feel free to use any other convenient
-        # directory of course, depending on your situation.)
+        # directory of course, depending on your situation.)  You still need to rerun this command
+        # after reinstalls of GalSim, but it will just need to update the link, not actually
+        # re-download anything.
         #
-        #     galsim_download_cosmos -s 23.5 -d ~/cosmos
+        #     galsim_download_cosmos -s 23.5 -d ~/share
+        #     galsim_download_cosmos -s 25.2 -d ~/share
+        #
+        # Note: This introduces the feature that an input field can be a list.  Here we actually
+        #       have two cosmos_catalog input objects.  One for the 25.2 sample and one for the
+        #       23.5 sample.  The COSMOSGalaxy types that use this input should specify which one
+        #       to use by setting `num` to either 0 or 1, indicating which item in the list to use.
+        #       Here num=0 is the 25.2 sample and num=1 is the 23.5 sample.
 
-        sample: 23.5
+        -
+            sample: 25.2
+        -
+            sample: 23.5
 
         # If you'd rather use the small catalog we distribute with the GalSim code, you may comment
-        # out the above sample directive and use the following lines instead.
+        # out the above lines and use the following instead.
         # However, note that this small catalog only has 100 galaxies, which means that this
         # image will reuse each galaxy a few time.
-        #dir: "data"
-        #file_name: real_galaxy_catalog_23.5_example.fits
+        #-
+        #    dir: "data"
+        #    file_name: real_galaxy_catalog_23.5_example.fits
+        #-
+        #    dir: "data"
+        #    file_name: real_galaxy_catalog_23.5_example.fits
+
+output:
+
+    nfiles: 3
+    dir: output_yaml
+    file_name:
+        type: FormattedStr
+        format: "demo13_%s.fits"
+        items:
+            - '@image.filter'

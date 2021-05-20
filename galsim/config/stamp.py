@@ -465,7 +465,11 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
     sensor = base.get('sensor',None)
     if (method == 'phot' or sensor is not None) and 'rng' not in kwargs:
-        rng = GetRNG(config, base, logger, "method='phot'")
+        # Note: use the image.noise rng_num, in case stamp is doing a non-standard cadence.
+        # The cadence specified in the noise field is what to use for photon shooting.
+        noise = base.get('image',{}).get('noise',{})
+        noise = noise if isinstance(noise, dict) else {}
+        rng = GetRNG(noise, base, logger, "method='phot'")
         kwargs['rng'] = rng
 
     # Check validity of extra phot options:

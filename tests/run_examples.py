@@ -309,15 +309,18 @@ def test_demo13():
     """
     import demo13
     print('Running demo13.py')
-    demo13.main(['--ngal=5', '--filters=Y', '--sample=test'])
+    demo13.main(['--nobj=5', '--filters=Y', '--test'])
     logger = logging.getLogger('galsim')
     logger.setLevel(logging.WARNING)
     config = galsim.config.ReadConfig('demo13.yaml', logger=logger)[0]
-    del config['input']['cosmos_catalog']['sample']
+    del config['input']['cosmos_catalog'][0]['sample']
+    del config['input']['cosmos_catalog'][1]['sample']
     config['image']['nobjects'] = 5
     config['output']['nfiles'] = 1
-    config['input']['cosmos_catalog']['dir'] = 'data'
-    config['input']['cosmos_catalog']['file_name'] = 'real_galaxy_catalog_23.5_example.fits'
+    config['input']['cosmos_catalog'][0]['dir'] = 'data'
+    config['input']['cosmos_catalog'][0]['file_name'] = 'real_galaxy_catalog_23.5_example.fits'
+    config['input']['cosmos_catalog'][1]['dir'] = 'data'
+    config['input']['cosmos_catalog'][1]['file_name'] = 'real_galaxy_catalog_23.5_example.fits'
     print('Running demo13.yaml')
     galsim.config.Process(config, logger=logger, except_abort=True)
     assert check_same('output/demo13_Y106.fits', 'output_yaml/demo13_Y106.fits')
