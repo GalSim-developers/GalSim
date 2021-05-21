@@ -1,4 +1,4 @@
-; Copyright (c) 2012-2020 by the GalSim developers team on GitHub
+; Copyright (c) 2012-2021 by the GalSim developers team on GitHub
 ; https://github.com/GalSim-developers
 ;
 ; This file is part of GalSim: The modular galaxy image simulation toolkit.
