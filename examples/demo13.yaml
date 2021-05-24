@@ -21,7 +21,11 @@
 # The thirteenth YAML configuration file in our tutorial about using Galsim config files.
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
-# This script introduces non-idealities arising from NIR detectors, in particular those that will
+# This script is intended to produce a relatively realistic scene of galaxies and stars as will
+# be observed by the Roman Space Telescope, including the Roman PSF, WCS, and various NIR detector
+# effects.
+#
+# It introduces several non-idealities arising from NIR detectors, in particular those that will
 # be observed and accounted for in the Roman Space Telescope.  In the python layer, these are
 # implemented directly using various functions and values in the galsim.roman sub-module.
 #

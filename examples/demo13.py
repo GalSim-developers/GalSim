@@ -21,8 +21,12 @@ Demo #13
 The thirteenth script in our tutorial about using Galsim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script introduces non-idealities arising from NIR detectors, in particular those that will be
-observed and accounted for in the Roman Space Telescope. Three such non-ideal effects are
+This script is intended to produce a relatively realistic scene of galaxies and stars as will
+be observed by the Roman Space Telescope, including the Roman PSF, WCS, and various NIR detector
+effects.
+
+It introduces several non-idealities arising from NIR detectors, in particular those that will
+be observed and accounted for in the Roman Space Telescope. Three such non-ideal effects are
 demonstrated, in the order in which they are introduced in the detectors:
 
 1) Reciprocity failure: Flux-dependent sensitivity of the detector.
@@ -119,6 +123,10 @@ def main(argv):
     filters = [filter_name for filter_name in roman_filters if filter_name[0] in use_filters]
     logger.debug('Using filters: %s',filters)
 
+    # We'll use this one for our flux normalization of stars, so we'll need this regardless of
+    # which bandpass we are simulating.
+    y_bandpass = roman_filters['Y106']
+
     # Note: This example uses both the I<23.5 and I<25.2 COSMOS catalogs to try to better span
     #       a range from bigger, bright galaxies to fainter ones.  We also dilate and magnify
     #       the bright galaxies to make them a bit more visually compelling in this example.
@@ -186,7 +194,6 @@ def main(argv):
         # filter bandpass, partly because "filter" is a reserved word in python.  So we follow
         # that convention here as well.
         bandpass = roman_filters[filter_name]
-        y_bandpass = roman_filters['Y106']
 
         # Create the PSF
         # We are ignoring the position-dependence of the PSF within each SCA, just using the PSF
@@ -317,6 +324,8 @@ def main(argv):
                 logger.debug('galaxy index = %s',obj.index)
 
                 # Scale up the area by a factor of 2, and the flux by a factor of 4.
+                # This is not necessarily physical, but it is intended to add some more big,
+                # bright galaxies to the scene to make the final image a bit more interesting.
                 obj = obj.dilate(2) * 4
 
                 # Rotate the galaxy randomly
