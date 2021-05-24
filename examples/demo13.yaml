@@ -88,7 +88,7 @@ modules:
     # Note: Both of these types are also available in the python repository called galsim_extra.
     #       cf. https://github.com/esheldon/galsim_extra
     #       So if that is installed, you could instead put galsim_extra in the modules list
-    #       and both of these (as well as numerous other user-defined types) would be availble.
+    #       and both of these (as well as numerous other user-defined types) would be available.
     - mixed_scene
     - log_normal
 
