@@ -143,6 +143,14 @@ class COSMOSCatalog(object):
         max_flux:           Exclude galaxies whose fitted flux is larger than this value.
                             [default: 0, meaning no limit]
         exptime:            The exposure time (in seconds) to assume when creating galaxies.
+                            .. note::
+
+                                The processed COSMOS ACS/HST science images have units of
+                                counts/second; i.e. they have an effective exposure time of 1
+                                second in terms of their flux levels. The default value
+                                corresponds to a 1 second exposure on HST, which will match
+                                these processed images.
+
                             [default: 1]
         area:               The effective collecting area (in cm^2) to assume when creating
                             galaxies. [default: None, which means to use the original HST
