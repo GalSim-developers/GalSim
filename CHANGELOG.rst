@@ -138,6 +138,9 @@ New Features
 - Added galsim.bessel.jv_root function. (#1099)
 - Added support for TPV WCS files with order > 3. (#1101)
 - Added galsim.UserScreen for arbitrary user-supplied phase screens (#1102)
+- Added option to emit WCS warnings when reading a file via `galsim.fits.read`
+  e.g. if the WCS defaulted to a PixelScale, or it reverted to an approximate
+  AffineTransformation rather than the correct WCS. (#1120)
 - Added area and exptime parameters to COSMOSCatalog constructor to make it
   easier to rescale the fluxes to a different telescope than HST. (#1121)
 
