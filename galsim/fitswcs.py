@@ -1704,11 +1704,11 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                           text file with the header information (like the .head file output from
                           SCamp).  In this case you should set ``text_file = True`` to tell GalSim
                           to parse the file this way.  [default: False]
-        suppress_warning: Should a warning be emitted if none of the real FITS WCS classes
-                          are able to successfully read the file, and we have to reset to
-                          an `AffineTransform` instead?  [default: False]
-                          (Note: this is set to True when this function is implicitly called from
-                          one of the galsim.fits.read* functions.)
+        suppress_warning: Whether to suppress a warning that none of the real FITS WCS classes
+                          are able to successfully read the file, and we have defaulted to an
+                          `AffineTransform` instead?  [default: False]
+                          (Note: this is (by default) set to True when this function is implicitly
+                          called from one of the galsim.fits.read* functions.)
     """
     from .wcs import AffineTransform, PixelScale, OffsetWCS
 
@@ -1727,7 +1727,13 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     if not isinstance(header, fits.FitsHeader):
         header = fits.FitsHeader(header)
 
+    if 'CTYPE1' not in header and 'CDELT1' not in header:
+        if not suppress_warning:
+            galsim_warn("No WCS information found in %r. Defaulting to PixelScale(1.0)"%(file_name))
+        return PixelScale(1.0)
+
     # For linear WCS specifications, AffineTransformation should work.
+    # Note: Most files will have CTYPE1,2, but old style with only CDELT1,2 sometimes omits it.
     if header.get('CTYPE1', 'LINEAR') == 'LINEAR':
         wcs = AffineTransform._readHeader(header)
         # Convert to PixelScale if possible.

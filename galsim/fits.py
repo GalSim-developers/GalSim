@@ -724,7 +724,8 @@ def writeFile(file_name, hdu_list, dir=None, clobber=True, compression='auto'):
 ##############################################################################################
 
 
-def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto', read_header=False):
+def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto',
+         read_header=False, suppress_warning=True):
     """Construct an `Image` from a FITS file or HDUList.
 
     The normal usage for this function is to read a fits file and return the image contained
@@ -735,9 +736,11 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto', 
     Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,
     ``unsigned int``, ``float``, and ``double``.
 
-    If the FITS header has keywords that start with ``GS_`` keywords, these will be used to
-    initialize the bounding box and WCS.  If not, the bounding box will have ``(xmin,ymin)`` at
-    ``(1,1)`` and the scale will be set to 1.0.
+    If the FITS header has keywords that start with ``GS_``, these will be used to initialize the
+    bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+    in the FITS header.  cf. `galsim.wcs.readFromFitsHeader`.  The default bounding box will have
+    ``(xmin,ymin)`` at ``(1,1)``.  The default WCS, if there is no WCS information in the FITS
+    file, will be PixelScale(1.0).
 
     This function is called as ``im = galsim.fits.read(...)``
 
@@ -773,6 +776,9 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto', 
 
                         [default: 'auto']
         read_header:    Whether to read the header and store it as image.header.[default: False]
+        suppress_warning: Whether to suppress a warning that the WCS could not be read from the
+                          FITS header, so the WCS defaulted to either a `PixelScale` or
+                          `AffineTransform`. [default: True]
 
     Returns:
         the image as an `Image` instance.
@@ -796,7 +802,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto', 
         if hdu.data is None:
             raise OSError("HDU is empty.  (data is None)")
 
-        wcs, origin = wcs.readFromFitsHeader(hdu.header)
+        wcs, origin = wcs.readFromFitsHeader(hdu.header, suppress_warning)
         dt = hdu.data.dtype.type
         if dt in Image.valid_dtypes:
             data = hdu.data
@@ -819,7 +825,8 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto', 
 
     return image
 
-def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto', read_headers=False):
+def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto',
+              read_headers=False, suppress_warning=True):
     """Construct a list of `Image` instances from a FITS file or HDUList.
 
     The normal usage for this function is to read a fits file and return a list of all the images
@@ -830,8 +837,10 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto', read_
     ``unsigned int``, ``float``, and ``double``.
 
     If the FITS header has keywords that start with ``GS_``, these will be used to initialize the
-    bounding box and WCS.  If not, the bounding box will have ``(xmin,ymin)`` at ``(1,1)`` and the
-    scale will be set to 1.0.
+    bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+    in the FITS header.  cf. `galsim.wcs.readFromFitsHeader`.  The default bounding box will have
+    ``(xmin,ymin)`` at ``(1,1)``.  The default WCS, if there is no WCS information in the FITS
+    file, will be PixelScale(1.0).
 
     This function is called as ``im = galsim.fits.readMulti(...)``
 
@@ -874,6 +883,9 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto', read_
 
                         [default: 'auto']
         read_headers:   Whether to read the headers and store them as image.header.[default: False]
+        suppress_warning: Whether to suppress a warning that the WCS could not be read from the
+                          FITS header, so the WCS defaulted to either a `PixelScale` or
+                          `AffineTransform`. [default: True]
 
     Returns:
         a Python list of `Image` instances.
@@ -906,7 +918,7 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto', read_
                 raise OSError('Expecting at least one HDU in galsim.readMulti')
         for hdu in range(first,len(hdu_list)):
             image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress,
-                                   read_header=read_headers))
+                                   read_header=read_headers, suppress_warning=suppress_warning))
 
     finally:
         # If we opened a file, don't forget to close it.
@@ -915,15 +927,18 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto', read_
 
     return image_list
 
-def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
+def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto',
+             suppress_warning=True):
     """Construct a Python list of `Image` instances from a FITS data cube.
 
     Not all FITS pixel types are supported -- only ``short``, ``int``, ``unsigned short``,
     ``unsigned int``, ``float``, and ``double``.
 
     If the FITS header has keywords that start with ``GS_``, these will be used to initialize the
-    bounding boxes and WCS's.  If not, the bounding boxes will have ``(xmin,ymin)`` at ``(1,1)``
-    and the scale will be set to 1.0.
+    bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+    in the FITS header.  cf. `galsim.wcs.readFromFitsHeader`.  The default bounding box will have
+    ``(xmin,ymin)`` at ``(1,1)``.  The default WCS, if there is no WCS information in the FITS
+    file, will be PixelScale(1.0).
 
     This function is called as ``image_list = galsim.fits.readCube(...)``
 
@@ -958,6 +973,9 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
                           - otherwise None
 
                         [default: 'auto']
+        suppress_warning: Whether to suppress a warning that the WCS could not be read from the
+                          FITS header, so the WCS defaulted to either a `PixelScale` or
+                          `AffineTransform`. [default: True]
 
     Returns:
         a Python list of `Image` instances.
@@ -981,7 +999,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
         if hdu.data is None:
             raise OSError("HDU is empty.  (data is None)")
 
-        wcs, origin = wcs.readFromFitsHeader(hdu.header)
+        wcs, origin = wcs.readFromFitsHeader(hdu.header, suppress_warning)
         dt = hdu.data.dtype.type
         if dt in Image.valid_dtypes:
             data = hdu.data
@@ -989,6 +1007,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
             galsim_warn("No C++ Image template instantiation for data type %s. "
                         "Using numpy.float64 instead."%(dt))
             data = hdu.data.astype(np.float64)
+        data = np.atleast_3d(data)
 
         nimages = data.shape[0]
         image_list = []
