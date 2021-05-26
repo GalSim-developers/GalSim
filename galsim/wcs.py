@@ -718,7 +718,7 @@ class BaseWCS(object):
             self._world_origin = world_origin
 
 
-def readFromFitsHeader(header):
+def readFromFitsHeader(header, suppress_warning=True):
     """Read a WCS function from a FITS header.
 
     This is normally called automatically from within the `galsim.fits.read` function, but
@@ -757,7 +757,10 @@ def readFromFitsHeader(header):
     correspond to the original image origin.  If not, it will default to (1,1).
 
     Parameters:
-        header:     The fits header to write the data to.
+        header:             The fits header with the WCS information.
+        suppress_warning:   Whether to suppress a warning that the WCS could not be read from the
+                            FITS header, so the WCS defaulted to either a `PixelScale` or
+                            `AffineTransform`. [default: True]
 
     Returns:
         a tuple (wcs, origin) of the wcs from the header and the image origin.
@@ -777,7 +780,7 @@ def readFromFitsHeader(header):
         wcs = wcs_type._readHeader(header)
     else:
         # If we aren't told which type to use, this should find something appropriate
-        wcs = FitsWCS(header=header, suppress_warning=True)
+        wcs = FitsWCS(header=header, suppress_warning=suppress_warning)
 
     if xmin != 1 or ymin != 1:
         # ds9 always assumes the image has an origin at (1,1), so convert back to actual

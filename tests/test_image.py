@@ -683,6 +683,15 @@ def test_Image_FITS_IO():
         assert_raises(OSError, galsim.fits.read, test_file0, compression='plio')
         assert_raises(OSError, galsim.fits.read, test_file, compression='none')
 
+    # Check a file with no WCS information
+    nowcs_file = 'fits_files/blankimg.fits'
+    im = galsim.fits.read(nowcs_file)
+    assert im.wcs == galsim.PixelScale(1.0)
+
+    # If desired, can get a warning about this
+    with assert_warns(galsim.GalSimWarning):
+        im = galsim.fits.read(nowcs_file, suppress_warning=False)
+    assert im.wcs == galsim.PixelScale(1.0)
 
 @timer
 def test_Image_MultiFITS_IO():
@@ -994,6 +1003,16 @@ def test_Image_MultiFITS_IO():
 
         assert_raises(OSError, galsim.fits.readMulti, test_multi_file0, compression='plio')
         assert_raises(OSError, galsim.fits.readMulti, test_multi_file, compression='none')
+
+    # Check a file with no WCS information
+    nowcs_file = 'fits_files/blankimg.fits'
+    ims = galsim.fits.readMulti(nowcs_file)
+    assert ims[0].wcs == galsim.PixelScale(1.0)
+
+    # If desired, can get a warning about this
+    with assert_warns(galsim.GalSimWarning):
+        ims = galsim.fits.readMulti(nowcs_file, suppress_warning=False)
+    assert ims[0].wcs == galsim.PixelScale(1.0)
 
 
 @timer
@@ -1316,6 +1335,16 @@ def test_Image_CubeFITS_IO():
 
         assert_raises(OSError, galsim.fits.readCube, test_cube_file0, compression='plio')
         assert_raises(OSError, galsim.fits.readCube, test_cube_file, compression='none')
+
+    # Check a file with no WCS information
+    nowcs_file = 'fits_files/blankimg.fits'
+    ims = galsim.fits.readCube(nowcs_file)
+    assert ims[0].wcs == galsim.PixelScale(1.0)
+
+    # If desired, can get a warning about this
+    with assert_warns(galsim.GalSimWarning):
+        ims = galsim.fits.readCube(nowcs_file, suppress_warning=False)
+    assert ims[0].wcs == galsim.PixelScale(1.0)
 
 
 @timer

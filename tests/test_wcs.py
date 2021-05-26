@@ -2504,7 +2504,12 @@ def test_fitswcs():
     assert isinstance(linear, galsim.OffsetWCS)
 
     # This file does not have any WCS information in it.
-    pixel = galsim.FitsWCS('fits_files/blankimg.fits')
+    with assert_warns(galsim.GalSimWarning):
+        pixel = galsim.FitsWCS('fits_files/blankimg.fits')
+    assert pixel == galsim.PixelScale(1.0)
+
+    # Can suppress the warning if desired
+    pixel = galsim.FitsWCS('fits_files/blankimg.fits', suppress_warning=True)
     assert pixel == galsim.PixelScale(1.0)
 
     assert_raises(TypeError, galsim.FitsWCS)
