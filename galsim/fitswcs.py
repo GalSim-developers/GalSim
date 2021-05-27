@@ -1704,9 +1704,9 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                           text file with the header information (like the .head file output from
                           SCamp).  In this case you should set ``text_file = True`` to tell GalSim
                           to parse the file this way.  [default: False]
-        suppress_warning: Whether to suppress a warning that none of the real FITS WCS classes
-                          are able to successfully read the file, and we have defaulted to an
-                          `AffineTransform` instead?  [default: False]
+        suppress_warning: Whether to suppress a warning that the WCS could not be read from the
+                          FITS header, so the WCS defaulted to either a `PixelScale` or
+                          `AffineTransform`. [default: False]
                           (Note: this is (by default) set to True when this function is implicitly
                           called from one of the galsim.fits.read* functions.)
     """
