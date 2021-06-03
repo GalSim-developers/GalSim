@@ -605,14 +605,20 @@ Variables that GalSim will provide for you to use:
     * Available if ``world_pos`` is defined (as per above) and the WCS is a CelestialWCS.
     * A `galsim.CelestialCoord` instance
 
-* ``uv_pos`` = the position of the object in a tangent plane projection relative to the center of the image, or ``world_center`` if that is defined.
+* ``uv_pos`` = the position of the object in a tangent plane projection relative to ``world_center``, if that is defined, or the image center if not.
 
     * Available if either image_pos or world_pos is defined and the wcs is defined.
     * A `galsim.PositionD` instance
 
-* ``image_center`` = the center of the image in pixels.  This is the position on the image that corresponds to ``world_pos = (0,0)``.
+* ``image_center`` = the center of the image in pixels.
 
     * A `galsim.PositionD` instance
+
+* ``world_center`` = the world position of ``image_center``.
+
+    * Computed automatically from ``image_center`` and the wcs.
+    * A `galsim.PositionD` instance if the wcs is a `galsim.wcs.EuclideanWCS` or a `galsim.CelestialCoord` if the wcs is a `galsim.wcs.CelestialWCS`.
+    * May also be provided directly if you want something different for this, by specifically including a ``world_center`` item in the ``image`` field.  In this case, it should be a `galsim.CelestialCoord` value.
 
 * ``image_origin`` = the origin of the image in pixels.  This is the position on the image that corresponds to the lower-leftmost pixel
 
