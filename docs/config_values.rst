@@ -593,7 +593,7 @@ Variables that GalSim will provide for you to use:
     * Available if ``image_pos`` or ``world_pos`` is explicitly given in the ``stamp`` field.
     * A `galsim.PositionD` instance
 
-* ``world_pos`` = the position of the object in world coordinates relative to the center of the image.
+* ``world_pos`` = the position of the object in world coordinates.
 
     * Available if image ``type`` is 'Tiled' or 'Scattered'
     * Available if ``image_pos`` or ``world_pos`` is explicitly given in the ``stamp`` field.
