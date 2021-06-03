@@ -352,10 +352,10 @@ def test_float_value():
 
     # Test NFWHaloMagnification
     galsim.config.SetupInputsForImage(config, None)
-    # Raise an error because no world_pos
+    # Raise an error because no uv_pos
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'nfw',config, float)
-    config['world_pos'] = galsim.PositionD(6,8)
+    config['uv_pos'] = galsim.PositionD(6,8)
     # Still raise an error because no redshift
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config,'nfw',config, float)
@@ -368,7 +368,7 @@ def test_float_value():
 
     # Too large magnification should max out at 25
     galsim.config.RemoveCurrent(config)
-    config['world_pos'] = galsim.PositionD(0.1,0.3)
+    config['uv_pos'] = galsim.PositionD(0.1,0.3)
     print("strong lensing mag = ",nfw_halo.getMagnification((0.1,0.3), gal_z))
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
@@ -382,13 +382,13 @@ def test_float_value():
     galsim.config.RemoveCurrent(config)
     config['nfw']['max_mu'] = 3000.
     del config['nfw']['_get']
-    config['world_pos'] = galsim.PositionD(0.1,0.3)
+    config['uv_pos'] = galsim.PositionD(0.1,0.3)
     nfw3 = galsim.config.ParseValue(config,'nfw',config, float)[0]
     np.testing.assert_almost_equal(nfw3, nfw_halo.getMagnification((0.1,0.3), gal_z))
 
     # Also, if it goes negative, it should report the max_mu value.
     galsim.config.RemoveCurrent(config)
-    config['world_pos'] = galsim.PositionD(0.1,0.2)
+    config['uv_pos'] = galsim.PositionD(0.1,0.2)
     print("very strong lensing mag = ",nfw_halo.getMagnification((0.1,0.2), gal_z))
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
@@ -430,7 +430,7 @@ def test_float_value():
     np.testing.assert_almost_equal(ps2a, 25.)
 
     # Need a different point that happens to have strong lensing, since the PS realization changed.
-    config['world_pos'] = galsim.PositionD(-60, -60)
+    config['uv_pos'] = galsim.PositionD(-60, -60)
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, logger=cl.logger)
@@ -456,7 +456,7 @@ def test_float_value():
 
     # Out of bounds results in shear = 0, and a warning.
     galsim.config.RemoveCurrent(config)
-    config['world_pos'] = galsim.PositionD(1000,2000)
+    config['uv_pos'] = galsim.PositionD(1000,2000)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
         ps2c = galsim.config.ParseValue(config, 'ps', config, float)[0]
@@ -465,8 +465,8 @@ def test_float_value():
             "galsim.BoundsD") in cl.output
     np.testing.assert_almost_equal(ps2c, 1.)
 
-    # Error if no world_pos
-    del config['world_pos']
+    # Error if no uv_pos
+    del config['uv_pos']
     galsim.config.RemoveCurrent(config)
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config, 'ps', config, float)
@@ -1329,10 +1329,10 @@ def test_shear_value():
     # Test NFWHaloShear
     galsim.config.ProcessInput(config)
     galsim.config.SetupInputsForImage(config, None)
-    # Raise an error because no world_pos
+    # Raise an error because no uv_pos
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config, 'nfw', config, galsim.Shear)
-    config['world_pos'] = galsim.PositionD(6,8)
+    config['uv_pos'] = galsim.PositionD(6,8)
     # Still raise an error because no redshift
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config, 'nfw', config, galsim.Shear)
@@ -1348,7 +1348,7 @@ def test_shear_value():
 
     # If shear is larger than 1, it raises a warning and returns 0,0
     galsim.config.RemoveCurrent(config)
-    config['world_pos'] = galsim.PositionD(0.1,0.2)
+    config['uv_pos'] = galsim.PositionD(0.1,0.2)
     print("strong lensing shear = ",nfw_halo.getShear((0.1,0.2), gal_z))
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
@@ -1391,7 +1391,7 @@ def test_shear_value():
 
     # Out of bounds results in shear = 0, and a warning.
     galsim.config.RemoveCurrent(config)
-    config['world_pos'] = galsim.PositionD(1000,2000)
+    config['uv_pos'] = galsim.PositionD(1000,2000)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, cl.logger)
         ps2c = galsim.config.ParseValue(config, 'ps', config, galsim.Shear)[0]
@@ -1401,8 +1401,8 @@ def test_shear_value():
             "ymin=-190.00000000000023, ymax=200.00000000000023)") in cl.output
     np.testing.assert_almost_equal((ps2c.g1, ps2c.g2), (0,0))
 
-    # Error if no world_pos
-    del config['world_pos']
+    # Error if no uv_pos
+    del config['uv_pos']
     galsim.config.RemoveCurrent(config)
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.ParseValue(config, 'ps', config, galsim.Shear)
@@ -1703,6 +1703,7 @@ def test_eval():
         # These would be set by config in real runs, but just add them here for the tests.
         'image_pos' : galsim.PositionD(1.8,13),
         'world_pos' : galsim.PositionD(7.2,1.8),
+        'uv_pos' : galsim.PositionD(7.2,1.8),
         'pixel_scale' : 1.8,
         'image_xsize' : 180,
         'image_ysize' : 360,

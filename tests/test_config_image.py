@@ -1761,7 +1761,49 @@ def test_wcs():
     wcs = galsim.config.BuildWCS(config['image'], 'list', config)
     assert wcs == galsim.PixelScale(0.34)
 
+    # Check the various positions that get calculated and stored in the base config.
+    for key in sorted(reference.keys()):
+        wcs = galsim.config.BuildWCS(config['image'], key, config)
+        image_pos = galsim.PositionD(23,12)
+        world_pos = wcs.toWorld(image_pos)
+        config['wcs'] = wcs
+        world_center = wcs.toWorld(config['image_center'])
+
+        # Test providing image_pos
+        config['sky_pos'] = None
+        galsim.config.SetupConfigStampSize(config, 0, 0, image_pos, None)
+        assert config['image_pos'] == image_pos
+        assert config['world_pos'] == world_pos
+        if isinstance(wcs, galsim.wcs.CelestialWCS):
+            assert config['sky_pos'] == world_pos
+            print('uv_pos = ',config['uv_pos'])
+            print('calculated uv_pos = ',world_center.project(world_pos, projection='gnomonic'))
+            u,v = world_center.project(world_pos, projection='gnomonic')
+            np.testing.assert_allclose((config['uv_pos'].x, config['uv_pos'].y),
+                                       (u/galsim.arcsec, v/galsim.arcsec))
+        else:
+            assert config['sky_pos'] is None
+            assert config['uv_pos'] == world_pos
+
+        if key == 'radec': continue  # Can't do world->image for radec
+
+        # Test providing world_pos
+        config['sky_pos'] = None
+        galsim.config.SetupConfigStampSize(config, 0, 0, None, world_pos)
+        np.testing.assert_allclose((config['image_pos'].x, config['image_pos'].y),
+                                    (image_pos.x, image_pos.y))
+        assert config['world_pos'] == world_pos
+        if isinstance(wcs, galsim.wcs.CelestialWCS):
+            assert config['sky_pos'] == world_pos
+            u,v = world_center.project(world_pos, projection='gnomonic')
+            np.testing.assert_allclose((config['uv_pos'].x, config['uv_pos'].y),
+                                       (u/galsim.arcsec, v/galsim.arcsec))
+        else:
+            assert config['sky_pos'] is None
+            assert config['uv_pos'] == world_pos
+
     # Finally, check the default if there is no wcs or pixel_scale item
+    del config['wcs']
     wcs = galsim.config.BuildWCS(config, 'wcs', config)
     assert wcs == galsim.PixelScale(1.0)
 

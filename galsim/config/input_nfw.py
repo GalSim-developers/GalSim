@@ -41,9 +41,9 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
     nfw_halo = GetInputObj('nfw_halo', config, base, 'NFWHaloShear')
     logger = nfw_halo.logger
 
-    if 'world_pos' not in base:
+    if 'uv_pos' not in base:
         raise GalSimConfigError("NFWHaloShear requested, but no position defined.")
-    pos = base['world_pos']
+    pos = base['uv_pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise GalSimConfigError("NFWHaloShear requested, but no gal.redshift defined.")
@@ -74,9 +74,9 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
     nfw_halo = GetInputObj('nfw_halo', config, base, 'NFWHaloMagnification')
     logger = nfw_halo.logger
 
-    if 'world_pos' not in base:
+    if 'uv_pos' not in base:
         raise GalSimConfigError("NFWHaloMagnification requested, but no position defined.")
-    pos = base['world_pos']
+    pos = base['uv_pos']
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise GalSimConfigError("NFWHaloMagnification requested, but no gal.redshift defined.")
