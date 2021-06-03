@@ -130,7 +130,7 @@ def query_yes_no(question, default="yes"):
 
 def get_names(args, logger):
     if args.dir is not None:
-        target_dir = args.dir
+        target_dir = os.path.expanduser(args.dir)
         do_link = not args.nolink
     else:
         target_dir = share_dir
