@@ -654,6 +654,9 @@ Variables that GalSim will provide for you to use:
     * A `galsim.BaseDeviate` instance
     * You can convert it to whatever deviate you need.  e.g. ``galsim.GaussianDeviate(rng,1.0,0.2)()``
 
+Available Modules
+^^^^^^^^^^^^^^^^^^
+
 Python modules that GalSim will import for you to use:
 
 * ``math``
@@ -709,6 +712,7 @@ Initial letters of user-defined variables for 'Eval':
 * 'd' = ``dict``  (This takes a dict as a literal, rather than evaluating it.)
 * 'l' = ``list``  (Similarly, this allows for a literal list in the config file.)
 
+
 The eval-variables field
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -741,6 +745,34 @@ or as part of an ``Eval`` item:
         type : RTheta
         r : { type : Eval , str : 'pixel_scale * 0.5' }
         theta : { type : Random }
+
+
+Module-defined variables
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you are using any user-defined modules (loaded in the ``modules`` field), then they are
+allowed to add to the list of `Preset variables`. The mechanism for this is to append items
+to the list ``galsim.config.eval_base_variables``.  This list includes all of the variables
+that an Eval type will load into the local namespace before evaluating.  For instance,
+if a user-defined module wants to make available a variable called, say, ``coadd_wcs``,
+then the module could add this name to the list of avilable variables as folllows:
+
+.. code-block:: python
+
+    galsim.config.eval_base_variables.append('coadd_wcs')
+
+This should be done at module scope, since you only want to add it once.  So probably best
+to add it when your module is imported.
+
+Then in some processing step, you could set this variable as
+
+.. code-block:: python
+
+    base['coadd_wcs'] = coadd_wcs
+
+Then any subsequent Eval field could use this variable as a local variable, just like the
+ones listed in `Preset variables`.
+
 
 Shorthand notation
 ^^^^^^^^^^^^^^^^^^
