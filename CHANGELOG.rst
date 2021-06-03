@@ -169,3 +169,6 @@ Bug Fixes
   information in each hdu. (#1091)
 - Improved the accuracy of stepk for Kolmogorov profiles, especially when
   folding_threshold is very small. (#1110)
+- Fixed the configurate base['world_pos'] to be the actual world_pos, if
+  defined, and added base['uv_pos'] to serve the role of what base['world_pos']
+  used to be if the WCS is a CelestialWCS. (#1123)
