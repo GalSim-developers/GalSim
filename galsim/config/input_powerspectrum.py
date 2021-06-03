@@ -192,9 +192,9 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
     power_spectrum = GetInputObj('power_spectrum', config, base, 'PowerSpectrumShear')
     logger = power_spectrum.logger
 
-    if 'world_pos' not in base:
+    if 'uv_pos' not in base:
         raise GalSimConfigError("PowerSpectrumShear requested, but no position defined.")
-    pos = base['world_pos']
+    pos = base['uv_pos']
 
     # There aren't any parameters for this, so just make sure num is the only (optional)
     # one present.
@@ -231,10 +231,10 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     power_spectrum = GetInputObj('power_spectrum', config, base, 'PowerSpectrumMagnification')
     logger = power_spectrum.logger
 
-    if 'world_pos' not in base:
+    if 'uv_pos' not in base:
         raise GalSimConfigError(
             "PowerSpectrumMagnification requested, but no position defined.")
-    pos = base['world_pos']
+    pos = base['uv_pos']
 
     opt = { 'max_mu' : float, 'num' : int }
     kwargs = GetAllParams(config, base, opt=opt)[0]

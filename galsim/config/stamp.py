@@ -213,8 +213,8 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 
     Parameters:
         config:         A configuration dict.
-        xsize:          The size of the stamp in the x-dimension. [may be None]
-        ysize:          The size of the stamp in the y-dimension. [may be None]
+        xsize:          The size of the stamp in the x-dimension. [may be 0 if unknown]
+        ysize:          The size of the stamp in the y-dimension. [may be 0 if unknown]
         image_pos:      The position of the stamp in image coordinates. [may be None]
         world_pos:      The position of the stamp in world coordinates. [may be None]
         logger:         If given, a logger object to log progress. [default: None]
@@ -364,7 +364,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             current_var = builder.whiten(prof, im, stamp, config, logger)
             if current_var != 0.:
                 logger.debug('obj %d: whitening noise brought current var to %f',
-                                config['obj_num'],current_var)
+                                config.get('obj_num',0),current_var)
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
@@ -674,7 +674,7 @@ class StampBuilder(object):
 
         # Add 1 to the seed here so the first object has a different rng than the file or image.
         seed = SetupConfigRNG(base, seed_offset=1, logger=logger)
-        logger.debug('obj %d: seed = %d',base['obj_num'],seed)
+        logger.debug('obj %d: seed = %d',base.get('obj_num',0),seed)
 
     def locateStamp(self, config, base, xsize, ysize, image_pos, world_pos, logger):
         """Determine where and how large the stamp should be.
@@ -695,8 +695,8 @@ class StampBuilder(object):
 
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
-        @param xsize        The size of the stamp in the x-dimension. [may be None]
-        @param ysize        The size of the stamp in the y-dimension. [may be None]
+        @param xsize        The size of the stamp in the x-dimension. [may be 0 if unknown]
+        @param ysize        The size of the stamp in the y-dimension. [may be 0 if unknown]
         @param image_pos    The position of the stamp in image coordinates. [may be None]
         @param world_pos    The position of the stamp in world coordinates. [may be None]
         @param logger       A logger object to log progress.
@@ -717,19 +717,26 @@ class StampBuilder(object):
         elif world_pos is not None and image_pos is None:
             image_pos = wcs.toImage(world_pos)
 
+        # If the world_pos is a CelestialCoord, then we also call it sky_pos.
+        # If the world_pos is not celestial, then the user may optionally define a sky_pos
+        # value, which gets saved as base['sky_pos'].  This may be useful for things that need
+        # to know where in the sky the pointing is, even if the WCS is not a CelestialWCS.
         if 'sky_pos' in config:
             base['sky_pos'] = ParseValue(config, 'sky_pos', base, CelestialCoord)[0]
         elif isinstance(world_pos, CelestialCoord):
             base['sky_pos'] = world_pos
 
-        # Wherever we use the world position, we expect a Euclidean position, not a
-        # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
-        # image center. (sky_pos is available as a CelestialCoord when we need that.)
+        # Sometimes we need a "world" position as flat position, rather than a CelestialCoord.
+        # This is called uv_pos.  If the WCS is a EuclideanWCS, then uv_pos = world_pos.
+        # If the WCS is a CelestialWCS, then sky_pos = world_pos, and we calculate uv_pos as
+        # the tangent-plane projection.
         if isinstance(world_pos, CelestialCoord):
             # Then project this position relative to the image center.
             world_center = base.get('world_center', wcs.toWorld(base['image_center']))
             u, v = world_center.project(world_pos, projection='gnomonic')
-            world_pos = PositionD(u/arcsec, v/arcsec)
+            base['uv_pos'] = PositionD(u/arcsec, v/arcsec)
+        else:
+            base['uv_pos'] = world_pos
 
         if image_pos is not None:
             # The image_pos refers to the location of the true center of the image, which is
@@ -761,12 +768,12 @@ class StampBuilder(object):
         base['world_pos'] = world_pos
 
         if xsize:
-            logger.debug('obj %d: xsize,ysize = %s,%s',base['obj_num'],xsize,ysize)
-        logger.debug('obj %d: image_pos = %s',base['obj_num'],image_pos)
+            logger.debug('obj %d: xsize,ysize = %s,%s',base.get('obj_num',0),xsize,ysize)
+        logger.debug('obj %d: image_pos = %s',base.get('obj_num',0),image_pos)
         if world_pos:
-            logger.debug('obj %d: world_pos = %s',base['obj_num'],world_pos)
+            logger.debug('obj %d: world_pos = %s',base.get('obj_num',0),world_pos)
         if stamp_center:
-            logger.debug('obj %d: stamp_center = %s',base['obj_num'],stamp_center)
+            logger.debug('obj %d: stamp_center = %s',base.get('obj_num',0),stamp_center)
 
     def getSkip(self, config, base, logger):
         """Initial check of whether to skip this object based on the stamp.skip field.
@@ -780,7 +787,7 @@ class StampBuilder(object):
         if 'skip' in config:
             skip = ParseValue(config, 'skip', base, bool)[0]
             if skip:
-                logger.debug("obj %d: stamp.skip = True",base['obj_num'])
+                logger.debug("obj %d: stamp.skip = True",base.get('obj_num',0))
         else:
             skip = False
         return skip
@@ -890,7 +897,7 @@ class StampBuilder(object):
         offset = base['stamp_offset']
         if 'offset' in config:
             offset += ParseValue(config, 'offset', base, PositionD)[0]
-        logger.debug('obj %d: stamp_offset = %s, offset = %s',base['obj_num'],
+        logger.debug('obj %d: stamp_offset = %s, offset = %s',base.get('obj_num',0),
                      base['stamp_offset'], offset)
         return offset
 
@@ -933,7 +940,7 @@ class StampBuilder(object):
             overlap = bounds & base['current_image'].bounds
             if not overlap.isDefined():
                 logger.info('obj %d: skip drawing object because its image will be entirely off '
-                            'the main image.', base['obj_num'])
+                            'the main image.', base.get('obj_num',0))
                 return True
 
         return False
@@ -1102,7 +1109,7 @@ class StampBuilder(object):
 
         if 'reject' in config:
             if ParseValue(config, 'reject', base, bool)[0]:
-                logger.info('obj %d: reject evaluated to True',base['obj_num'])
+                logger.info('obj %d: reject evaluated to True',base.get('obj_num',0))
                 return True
         if 'min_flux_frac' in config:
             if not isinstance(prof, GSObject):
@@ -1116,7 +1123,7 @@ class StampBuilder(object):
                          measured_flux / expected_flux)
             if measured_flux < min_flux_frac * expected_flux:
                 logger.warning('Object %d: Measured flux = %f < %s * %f.',
-                               base['obj_num'], measured_flux, min_flux_frac, expected_flux)
+                               base.get('obj_num',0), measured_flux, min_flux_frac, expected_flux)
                 return True
         if 'min_snr' in config or 'max_snr' in config:
             if not isinstance(prof, GSObject):
@@ -1131,13 +1138,13 @@ class StampBuilder(object):
                 min_snr = ParseValue(config, 'min_snr', base, float)[0]
                 if snr < min_snr:
                     logger.warning('Object %d: Measured snr = %f < %s.',
-                                   base['obj_num'], snr, min_snr)
+                                   base.get('obj_num',0), snr, min_snr)
                     return True
             if 'max_snr' in config:
                 max_snr = ParseValue(config, 'max_snr', base, float)[0]
                 if snr > max_snr:
                     logger.warning('Object %d: Measured snr = %f > %s.',
-                                   base['obj_num'], snr, max_snr)
+                                   base.get('obj_num',0), snr, max_snr)
                     return True
         return False
 
