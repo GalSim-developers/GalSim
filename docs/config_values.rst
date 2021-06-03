@@ -605,7 +605,7 @@ Variables that GalSim will provide for you to use:
     * Available if ``world_pos`` is defined (as per above) and the WCS is a CelestialWCS.
     * A `galsim.CelestialCoord` instance
 
-* ``uv_pos`` = the position of the object in a tangent plane projection relative to ``world_center``, if that is defined, or the image center if not.
+* ``uv_pos`` = the position of the object in a tangent plane projection relative to ``world_center``.
 
     * Available if either image_pos or world_pos is defined and the wcs is defined.
     * A `galsim.PositionD` instance
