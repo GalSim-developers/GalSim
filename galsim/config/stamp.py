@@ -718,9 +718,10 @@ class StampBuilder(object):
             image_pos = wcs.toImage(world_pos)
 
         # If the world_pos is a CelestialCoord, then we also call it sky_pos.
-        # If the world_pos is not celestial, then the user may optionally define a sky_pos
-        # value, which gets saved as base['sky_pos'].  This may be useful for things that need
-        # to know where in the sky the pointing is, even if the WCS is not a CelestialWCS.
+        # If the world_pos is not celestial, or the user wants to override it for some reason,
+        # then the user may optionally define a sky_pos value, which gets saved as base['sky_pos'].
+        # This may be useful for things that need to know where in the sky the pointing is,
+        # even if the WCS is not a CelestialWCS.
         if 'sky_pos' in config:
             base['sky_pos'] = ParseValue(config, 'sky_pos', base, CelestialCoord)[0]
         elif isinstance(world_pos, CelestialCoord):
