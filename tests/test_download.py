@@ -190,16 +190,16 @@ def test_names():
     args = galsim.download_cosmos.parse_args(['-d','~/share','-s','23.5'])
     url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
     assert url == 'https://zenodo.org/record/3242143/files/COSMOS_23.5_training_sample.tar.gz'
-    assert target_dir == '~/share'
+    assert target_dir == os.path.expanduser('~/share')
     assert do_link is True
     assert target == os.path.join(target_dir, 'COSMOS_23.5_training_sample.tar.gz')
     assert unpack_dir == os.path.join(target_dir, 'COSMOS_23.5_training_sample')
     assert link_dir == os.path.join(galsim.meta_data.share_dir, 'COSMOS_23.5_training_sample')
 
-    args = galsim.download_cosmos.parse_args(['-d','~/share','--nolink'])
+    args = galsim.download_cosmos.parse_args(['-d','share','--nolink'])
     url, target, target_dir, link_dir, unpack_dir, do_link = get_names(args, logger)
     assert url == 'https://zenodo.org/record/3242143/files/COSMOS_25.2_training_sample.tar.gz'
-    assert target_dir == '~/share'
+    assert target_dir == 'share'
     assert do_link is False
     assert target == os.path.join(target_dir, 'COSMOS_25.2_training_sample.tar.gz')
     assert unpack_dir == os.path.join(target_dir, 'COSMOS_25.2_training_sample')
