@@ -32,8 +32,8 @@
 #include <algorithm>
 #include <climits>
 
-// added for debugging, should be removed before code is merged
-#include <iostream>
+// only needed for std::exit when checking boundaries at each step
+// should be removed before code is merged
 #include <cstdlib>
 
 #ifdef _OPENMP
@@ -153,20 +153,15 @@ namespace galsim {
             // The following captures the pixel displacement. These are translated into
             // coordinates compatible with (x,y). These are per electron.
             double x = _distortions[i * _ny + j][n].x;
-            double origx = x;
             x = ((x1 - x0) / _pixelSize + 0.5 - x) / numElec;
             _distortions[i * _ny + j][n].x = x;
             double y = _distortions[i * _ny + j][n].y;
-            double origy = y;
             y = ((y1 - y0) / _pixelSize + 0.5 - y) / numElec;
             _distortions[i * _ny + j][n].y = y;
 
             // populate the linear distortions arrays
-            x = ((x1 - x0) / _pixelSize + 0.5 - origx) / numElec;
-            y = ((y1 - y0) / _pixelSize + 0.5 - origy) / numElec;
-
             bool horiz = false;
-            int bidx = getBoundaryIndex(i, j, n, horiz);            
+            int bidx = getBoundaryIndex(i, j, n, &horiz);
             if (horiz) {
                 _horizontalDistortions[bidx].x += x;
                 _horizontalDistortions[bidx].y += y;
@@ -344,7 +339,7 @@ namespace galsim {
         bool horizontal;
         Polygon& poly = _imagepolys[(i * ny) + j];
         for (int n=0; n < _nv; n++) {
-            int idx = getBoundaryIndex(i, j, n, horizontal, nx, ny);
+            int idx = getBoundaryIndex(i, j, n, &horizontal, nx, ny);
             Point pt = horizontal ? _horizontalBoundaryPoints[idx] :
                 _verticalBoundaryPoints[idx];
             if ((n >= cornerIndexBottomRight()) && (n <= cornerIndexTopRight())) pt.x += 1.0;
@@ -354,14 +349,14 @@ namespace galsim {
                 ((pt.y - pt2.y) * (pt.y - pt2.y));
             if (dist > 1e-10) {
                 success = false;
-                std::cout << "Mismatch pixel (" << i << "," << j << ") n=" << n
-                          << ", polygon=(" << pt2.x << "," << pt2.y <<"), "
-                          << "linear=(" << pt.x << "," << pt.y << ")";
+                xdbg << "Mismatch pixel (" << i << "," << j << ") n=" << n
+		    << ", polygon=(" << pt2.x << "," << pt2.y <<"), "
+		    << "linear=(" << pt.x << "," << pt.y << ")";
                 if (horizontal) {
-                    std::cout << ", horizontal idx " << idx << std::endl;
+                    xdbg << ", horizontal idx " << idx << "\n";
                 }
                 else {
-                    std::cout << ", vertical idx " << idx << std::endl;
+                    xdbg << ", vertical idx " << idx << "\n";
                 }
             }
         }
@@ -413,7 +408,7 @@ namespace galsim {
         // update region update their bottom boundaries
 
         // top (and optionally bottom rows)
-        for (int k = 0; k < (_numVertices + 1 + (int)rhs); k++) {
+        for (int k = 0; k < (_numVertices + 1 + int(rhs)); k++) {
             if (bottom) {
                 int idxb = horizontalPixelIndex(i, j, nx) + k;
                 Point& pt = _horizontalBoundaryPoints[idxb];
@@ -803,7 +798,7 @@ namespace galsim {
         } else if (!_pixelOuterBounds[index].includes(p)) {
             xdbg<<"trivially not\n";
             inside = false;
-            } else {
+        } else {
             xdbg<<"maybe\n";
             // OK, it must be near the boundary, so now be careful.
             // The term zfactor decreases the pixel shifts as we get closer to the bottom
@@ -927,16 +922,17 @@ namespace galsim {
     {
         double area = 0.0;
         bool horizontal1, horizontal2;
-        
+
+	// compute sum of triangle areas using cross-product rule (shoelace formula)
         for (int n = 0; n < _nv; n++) {
-            int pi1 = getBoundaryIndex(i, j, n, horizontal1, nx, ny);
+            int pi1 = getBoundaryIndex(i, j, n, &horizontal1, nx, ny);
             Point p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
                 _verticalBoundaryPoints[pi1];
             if ((n >= cornerIndexBottomRight()) && (n <= cornerIndexTopRight())) p1.x += 1.0;
             if ((n >= cornerIndexTopRight()) && (n <= cornerIndexTopLeft())) p1.y += 1.0;
 
             int n2 = (n + 1) % _nv;
-            int pi2 = getBoundaryIndex(i, j, n2, horizontal2, nx, ny);
+            int pi2 = getBoundaryIndex(i, j, n2, &horizontal2, nx, ny);
             Point p2 = horizontal2 ? _horizontalBoundaryPoints[pi2] :
                 _verticalBoundaryPoints[pi2];
             if ((n2 >= cornerIndexBottomRight()) && (n2 <= cornerIndexTopRight())) p2.x += 1.0;

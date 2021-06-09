@@ -129,9 +129,9 @@ namespace galsim
         // arrays. horizontal is set to true if the point is in the horizontal
         // array, false if vertical.
         // If nx and ny are not given, _nx and _ny are used.
-        int getBoundaryIndex(int x, int y, int n, bool& horizontal, int nx = -1,
+        int getBoundaryIndex(int x, int y, int n, bool* horizontal, int nx = -1,
                              int ny = -1) const {
-            horizontal = false;
+            *horizontal = false;
             int idx;
 
             if (nx < 0) {
@@ -145,7 +145,7 @@ namespace galsim
             }
             else if (n <= cornerIndexBottomRight()) {
                 // bottom row including corners
-                horizontal = true;
+                *horizontal = true;
                 idx = n - cornerIndexBottomLeft();
             }
             else if (n < cornerIndexTopRight()) {
@@ -154,7 +154,7 @@ namespace galsim
             }
             else if (n <= cornerIndexTopLeft()) {
                 // top row including corners
-                horizontal = true;
+                *horizontal = true;
                 idx = (_numVertices + 1) - (n - cornerIndexTopRight()) + horizontalRowStride(nx);
             }
             else {
@@ -162,7 +162,7 @@ namespace galsim
                 idx = n - (cornerIndexTopLeft()+1);
             }
 
-            if (horizontal) {
+            if (*horizontal) {
                 return horizontalPixelIndex(x, y, nx) + idx;
             }
             return verticalPixelIndex(x, y, ny) + idx;
