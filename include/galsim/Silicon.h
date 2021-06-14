@@ -43,6 +43,7 @@ namespace galsim
                 const Table& tr_radial_table, Position<double> treeRingCenter,
                 const Table& abs_length_table, bool transpose, bool useNewBoundaries = false);
 
+	// TO BE REMOVED (replaced by insidePixelNew)
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target, bool* off_edge=0) const;
@@ -240,9 +241,12 @@ namespace galsim
 
         void updatePixelBounds(int nx, int ny, size_t k);
 
+	// TO BE REMOVED
         bool checkPixel(int i, int j, int nx, int ny);
 
+	// TO BE REMOVED
         void averageDistortions();
+	// TO BE REMOVED
         void addHalo();
         
         bool _useNewBoundaries;
