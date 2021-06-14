@@ -378,7 +378,7 @@ def test_jv_root():
 
     vals3 = [ galsim.bessel.jv_root(0,s) for s in range(1,51) ]
     np.testing.assert_allclose(
-        vals1, vals2, rtol=1.e-10,
+        vals3, vals2, rtol=1.e-10,
         err_msg="bessel.jv_root disagrees with scipy.special.jn_zeros with n=0")
 
     for v in vals1:
