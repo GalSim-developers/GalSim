@@ -210,7 +210,8 @@ namespace math {
             // 2. if err < abserr, then we're done
             // 3. ... unless ans1 is much larger than ans0, then we probably don't have a good
             //    estimate yet, so keep going.
-            while (err > relerr * ans1 && (err > abserr || std::abs(ans1) > 2*std::abs(ans0))) {
+            while ((err > relerr * ans1 && (err > abserr || std::abs(ans1) > 2*std::abs(ans0)))
+                      || ans1 == 0.) {
                 h0 = h1;
                 ans0 = ans1;
                 h1 *= 0.5;

@@ -96,16 +96,20 @@ def hankel(func, k, nu=0, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
     """
     rel_err = float(rel_err)
     abs_err = float(abs_err)
-    k = float(k)
     nu = float(nu)
     rmax = float(rmax) if rmax is not None else 0.
 
-    if k < 0:
+    k = np.ascontiguousarray(k, dtype=float)
+    res = np.empty_like(k, dtype=float)
+    N = 1 if k.shape == () else len(k)
+
+    if np.any(k < 0):
         raise GalSimValueError("k must be >= 0",k)
     if nu < 0:
         raise GalSimValueError("nu must be >= 0",k)
     with convert_cpp_errors():
-        return _galsim.PyHankel(func, k, nu, rmax, rel_err, abs_err)
+        _galsim.PyHankel(func, k.ctypes.data, res.ctypes.data, N, nu, rmax, rel_err, abs_err)
+    return res
 
 class IntegrationRule(object):
     """A class that can be used to integrate something more complicated than a normal

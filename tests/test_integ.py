@@ -308,6 +308,13 @@ def test_hankel():
             print(nu, k, result, expected_val)
             np.testing.assert_allclose(result, expected_val, rtol=1.e-6, atol=1.e-12)
 
+    # Test doing multiple k values at once.
+    k = np.array([1, 1.e-2, 0.234, 23.9, 1.e-5, 1.e-8, 0])
+    for nu in [0, 1, 7, 0.5, 0.003, 12.23]:
+        result = galsim.integ.hankel(f1, k, nu=nu)
+        expected_val = (1+k**2)**-1.5 * (1+nu*(1+k**2)**0.5) * k**nu / (1+(1+k**2)**0.5)**nu
+        np.testing.assert_allclose(result, expected_val, rtol=1.e-6, atol=1.e-12)
+
     with assert_raises(galsim.GalSimValueError):
         galsim.integ.hankel(f1, k=-0.3)
     with assert_raises(galsim.GalSimValueError):
