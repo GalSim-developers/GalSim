@@ -210,6 +210,7 @@ namespace galsim {
     // Reading from the sensor file results in slightly different boundary points
     // for neighbouring pixels. This function corrects them by taking the average
     // in these cases.
+    // TO BE REMOVED
     void Silicon::averageDistortions()
     {
         // loop over all rows of distortion polygons
@@ -254,6 +255,7 @@ namespace galsim {
     // boundary.
     // This relies on there being an extra "ring" of pixels around the rectangle
     // that is actually used, so it will not work for some values of qDist.
+    // TO BE REMOVED
     void Silicon::addHalo()
     {
         // handle corner pixels first
@@ -333,6 +335,7 @@ namespace galsim {
     // Check whether the original polygon pixel bounds matches the new linear
     // version or not.
     // Returns true if it matches closely, false if not
+    // TO BE REMOVED
     bool Silicon::checkPixel(int i, int j, int nx, int ny)
     {
         bool success = true;
@@ -655,6 +658,7 @@ namespace galsim {
     }
 
     // Checks if a point is inside a pixel based on the old polygonal boundaries.
+    // TO BE REMOVED (replaced by insidePixelNew)
     template <typename T>
     bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                               ImageView<T> target, bool* off_edge) const
