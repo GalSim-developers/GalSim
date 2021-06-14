@@ -148,7 +148,7 @@ class Interpolant(object):
         """Calculate the value of the interpolant kernel at one or more x values
 
         Parameters:
-            x:      The value (as a flost) or values (as a np.array) at which to compute the
+            x:      The value (as a float) or values (as a np.array) at which to compute the
                     amplitude of the Interpolant kernel.
 
         Returns:
@@ -169,7 +169,7 @@ class Interpolant(object):
         """Calculate the value of the interpolant kernel in Fourier space at one or more k values.
 
         Parameters:
-            k:      The value (as a flost) or values (as a np.array) at which to compute the
+            k:      The value (as a float) or values (as a np.array) at which to compute the
                     amplitude of the Interpolant kernel in Fourier space.
 
         Returns:
