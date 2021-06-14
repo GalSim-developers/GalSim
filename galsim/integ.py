@@ -84,7 +84,7 @@ def hankel(func, k, nu=0, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
     Parameters:
 
         func:       The function f(r)
-        k:          The value of k for which to calculate F(k)
+        k:          (float or numpy array) The value(s) of k for which to calculate F(k).
         nu:         The order of the Bessel function to use for the transform. [default: 0]
         rmax:       An optional truncation radius at which to have f(r) drop to 0. [default: None]
         rel_err:    The desired relative accuracy [default: 1.e-6]
