@@ -32,6 +32,11 @@
 #include <algorithm>
 #include <climits>
 
+// for performance timing
+// should be removed before code is merged
+#include <iostream>
+#include <chrono>
+
 // only needed for std::exit when checking boundaries at each step
 // should be removed before code is merged
 #include <cstdlib>
@@ -128,9 +133,6 @@ namespace galsim {
         _horizontalDistortions.resize(horizontalRowStride(_nx) * (_ny + 1));
         _verticalDistortions.resize(verticalColumnStride(_ny) * (_nx + 1));
 
-        std::vector<int> horizontalDistortionCount(horizontalRowStride(_nx) * (_ny + 1), 0);
-        std::vector<int> verticalDistortionCount(verticalColumnStride(_ny) * (_nx + 1), 0);
-        
         for (int index=0; index < _nv*_nx*_ny; index++) {
             xdbg<<"index = "<<index<<std::endl;
             int n = index % _nv;
@@ -160,19 +162,27 @@ namespace galsim {
             _distortions[i * _ny + j][n].y = y;
 
             // populate the linear distortions arrays
-            bool horiz = false;
-            int bidx = getBoundaryIndex(i, j, n, &horiz);
-            if (horiz) {
-                _horizontalDistortions[bidx].x += x;
-                _horizontalDistortions[bidx].y += y;
-                horizontalDistortionCount[bidx]++;
-            }
-            else {
-                _verticalDistortions[bidx].x += x;
-                _verticalDistortions[bidx].y += y;
-                verticalDistortionCount[bidx]++;
-            }
-            
+	    // make sure to always use values from closest to center pixel
+	    if ((((n < cornerIndexBottomLeft()) || (n > cornerIndexTopLeft())) && (i <= (_nx / 2))) ||  // LHS
+		(((n > cornerIndexBottomRight()) && (n < cornerIndexTopRight())) && (i >= (_nx / 2))) || // RHS
+		(((n > cornerIndexBottomLeft()) && (n < cornerIndexBottomRight())) && (j <= (_ny / 2))) || // bottom
+		(((n > cornerIndexTopRight()) && (n < cornerIndexTopLeft())) && (j >= (_ny / 2))) || // top
+		((n == cornerIndexBottomLeft()) && (i <= (_nx / 2)) && (j <= (_ny / 2))) ||
+		((n == cornerIndexBottomRight()) && (i >= (_nx / 2)) && (j <= (_ny / 2))) ||
+		((n == cornerIndexTopLeft()) && (i <= (_nx / 2)) && (j >= (_ny / 2))) ||
+		((n == cornerIndexTopRight()) && (i >= (_nx / 2)) && (j >= (_ny / 2)))) {
+		bool horiz = false;
+		int bidx = getBoundaryIndex(i, j, n, &horiz);
+		if (horiz) {
+		    _horizontalDistortions[bidx].x = x;
+		    _horizontalDistortions[bidx].y = y;
+		}
+		else {
+		    _verticalDistortions[bidx].x = x;
+		    _verticalDistortions[bidx].y = y;
+		}
+	    }
+	    
 #if 0
             if (index == 73) { // Test print out of read in
                 dbg<<"Successfully reading the Pixel vertex file\n";
@@ -184,16 +194,6 @@ namespace galsim {
 #endif
         }
 
-        // average the distortions in the linear arrays
-        for (int index = 0; index < (horizontalRowStride(_nx) * (_ny + 1)); index++) {
-            _horizontalDistortions[index].x /= (double)horizontalDistortionCount[index];
-            _horizontalDistortions[index].y /= (double)horizontalDistortionCount[index];
-        }
-        for (int index = 0; index < (verticalColumnStride(_ny) * (_nx + 1)); index++) {
-            _verticalDistortions[index].x /= (double)verticalDistortionCount[index];
-            _verticalDistortions[index].y /= (double)verticalDistortionCount[index];
-        }
-        
 #ifdef DEBUGLOGGING
         //Test print out of distortion for central pixel
         int i = 4;
@@ -203,52 +203,91 @@ namespace galsim {
                 <<", y = "<<_distortions[i * _ny + j][n].y * numElec<<std::endl;
         }
 #endif
-        averageDistortions();
+        makeDistortionsConsistent();
         addHalo();
     }
 
     // Reading from the sensor file results in slightly different boundary points
-    // for neighbouring pixels. This function corrects them by taking the average
-    // in these cases.
+    // for neighbouring pixels. This function corrects this by using the values closest
+    // to the center pixel in all cases.
     // TO BE REMOVED
-    void Silicon::averageDistortions()
+    void Silicon::makeDistortionsConsistent()
     {
-        // loop over all rows of distortion polygons
-        for (int j = 0; j < (_ny - 1); j++) {
-            // loop across each row
-            for (int i = 0; i < _nx; i++) {
-                Polygon& pl = _distortions[i * _ny + j];
-                Polygon& pu = _distortions[i * _ny + j + 1];
+	// loop over all distortion polygons
+	for (int j = 0; j < _ny; j++) {
+	    for (int i = 0; i < _nx; i++) {
+		// if above center, copy bottom values from pixel below, including corners
+		if (j > (_ny / 2)) {
+		    Polygon& pl = _distortions[i * _ny + j - 1];
+		    Polygon& pu = _distortions[i * _ny + j];
 
-                for (int n = 0; n < (_numVertices + 2); n++) {
-                    // average values in adjacent pixels (including corners)
-                    Point& ptl = pl[cornerIndexTopLeft() - n];
-                    Point& ptu = pu[cornerIndexBottomLeft() + n];
-                    Point avg = (ptl + ptu) * 0.5;
-                    ptl = avg;
-                    ptu = avg;
-                }
-            }
-        }
-        
-        // loop over all columns of distortion polygons
-        for (int i = 0; i < (_nx - 1); i++) {
-            // loop up each column
-            for (int j = 0; j < _ny; j++) {
-                Polygon& pl = _distortions[i * _ny + j];
-                Polygon& pr = _distortions[(i + 1) * _ny + j];
-                
-                for (int n = 0; n < (_numVertices + 2); n++) {
-                    // average values in adjacent pixels (including corners)
-                    Point& ptl = pl[cornerIndexBottomRight() + n];
-                    Point& ptr = n < (cornerIndexBottomLeft() + 1) ?
-                                     pr[cornerIndexBottomLeft() - n] : pr[((4 * _numVertices) + 3 - (n - (cornerIndexBottomLeft()+1)))];
-                    Point avg = (ptl + ptr) * 0.5;
-                    ptl = avg;
-                    ptr = avg;
-                }
-            }
-        }
+		    for (int n = 0; n < (_numVertices + 2); n++) {
+			Point& ptl = pl[cornerIndexTopLeft() - n];
+			Point& ptu = pu[cornerIndexBottomLeft() + n];
+			ptu = ptl;
+		    }
+		}
+
+		// if below center, copy top values from pixel above, including corners
+		if (j < (_ny / 2)) {
+		    Polygon& pl = _distortions[i * _ny + j];
+		    Polygon& pu = _distortions[i * _ny + j + 1];
+
+		    for (int n = 0; n < (_numVertices + 2); n++) {
+			Point& ptl = pl[cornerIndexTopLeft() - n];
+			Point& ptu = pu[cornerIndexBottomLeft() + n];
+			ptl = ptu;
+		    }
+		}
+
+
+		// if left of center, copy right hand side values from pixel on right, including corners
+		if (i < (_nx / 2)) {
+		    Polygon& pl = _distortions[i * _ny + j];
+		    Polygon& pr = _distortions[(i + 1) * _ny + j];
+		    for (int n = 0; n < (_numVertices + 2); n++) {
+			Point& ptl = pl[cornerIndexBottomRight() + n];
+			Point& ptr = n < (cornerIndexBottomLeft() + 1) ?
+					 pr[cornerIndexBottomLeft() - n] : pr[((4 * _numVertices) + 3 - (n - (cornerIndexBottomLeft()+1)))];
+			ptl = ptr;
+		    }
+
+		    if (j < (_ny / 2)) {
+			// lower left quadrant, copy top right corner
+			_distortions[i * _ny + j][cornerIndexTopRight()] =
+			    _distortions[(i + 1) * _ny + j + 1][cornerIndexBottomLeft()];
+		    }
+		    if (j > (_ny / 2)) {
+			// upper left quadrant, copy bottom right corner
+			_distortions[i * _ny + j][cornerIndexBottomRight()] =
+			    _distortions[(i + 1) * _ny + j - 1][cornerIndexTopLeft()];
+		    }
+		}
+
+		// if right of center, copy left hand side values from pixel on left, including corners
+		if (i > (_nx / 2)) {
+		    Polygon& pl = _distortions[(i - 1) * _ny + j];
+		    Polygon& pr = _distortions[i * _ny + j];
+		    for (int n = 0; n < (_numVertices + 2); n++) {
+			Point& ptl = pl[cornerIndexBottomRight() + n];
+			Point& ptr = n < (cornerIndexBottomLeft() + 1) ?
+					 pr[cornerIndexBottomLeft() - n] : pr[((4 * _numVertices) + 3 - (n - (cornerIndexBottomLeft()+1)))];
+			ptr = ptl;
+		    }
+
+		    if (j < (_ny / 2)) {
+			// lower right quadrant, copy top left corner
+			_distortions[i * _ny + j][cornerIndexTopLeft()] =
+			    _distortions[(i - 1) * _ny + j + 1][cornerIndexBottomRight()];
+		    }
+		    if (j > (_ny / 2)) {
+			// upper right quadrant, copy bottom left corner
+			_distortions[i * _ny + j][cornerIndexBottomLeft()] =
+			    _distortions[(i - 1) * _ny + j - 1][cornerIndexTopRight()];
+		    }
+		}
+	    }
+	}
     }
     
     // Updates the outer ring of distortions so that they only affect their inner
@@ -528,18 +567,33 @@ namespace galsim {
                 }
             }
         }
+	auto start = std::chrono::steady_clock::now();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
         for (size_t k=0; k<_imagepolys.size(); ++k) {
             if (changed[k]) {
                 _imagepolys[k].updateBounds();
-                updatePixelBounds(nx, ny, k);
+                //updatePixelBounds(nx, ny, k);
             }
             // uncomment this to verify the polygonal and linear boundaries on every
             // change
             //if (!checkPixel(k / ny, k % ny, nx, ny)) std::exit(1);
         }
+	auto middle = std::chrono::steady_clock::now();
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+        for (size_t k=0; k<_imagepolys.size(); ++k) {
+            if (changed[k]) {
+                //_imagepolys[k].updateBounds();
+                updatePixelBounds(nx, ny, k);
+            }
+        }
+	auto end = std::chrono::steady_clock::now();
+
+	//std::cout << "poly update: " << std::chrono::duration_cast<std::chrono::microseconds>(middle - start).count() << "us" << std::endl;
+	//std::cout << "linear update: " << std::chrono::duration_cast<std::chrono::microseconds>(end - middle).count() << "us" << std::endl;
     }
 
     // This version of calculateTreeRingDistortion only distorts a polygon.
@@ -573,24 +627,26 @@ namespace galsim {
                                               Polygon& poly, int nx, int ny, int i1, int j1)
     {
         double shift = 0.0;
+	auto start = std::chrono::steady_clock::now();
         for (int n=0; n<_nv; n++) {
-            xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
-                poly[n].x <<"  "<< poly[n].y<<std::endl;
+            //xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
+            //    poly[n].x <<"  "<< poly[n].y<<std::endl;
             double tx = (double)i + poly[n].x - _treeRingCenter.x + (double)orig_center.x;
             double ty = (double)j + poly[n].y - _treeRingCenter.y + (double)orig_center.y;
-            xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
+            //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
             double r = sqrt(tx * tx + ty * ty);
             shift = _tr_radial_table.lookup(r);
-            xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+            //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
             // Shifts are along the radial vector in direction of the doping gradient
             double dx = shift * tx / r;
             double dy = shift * ty / r;
-            xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+            //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
             poly[n].x += dx;
             poly[n].y += dy;
-            xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
+            //xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
         }
 
+	auto middle = std::chrono::steady_clock::now();
         iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
                 Point p = pt;
 
@@ -614,6 +670,9 @@ namespace galsim {
                 pt.x += dx;
                 pt.y += dy;
             });
+	auto end = std::chrono::steady_clock::now();
+	//std::cout << "poly update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(middle - start).count() << "ns" << std::endl;
+	//std::cout << "linear update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - middle).count() << "ns" << std::endl;
     }
 
     template <typename T>

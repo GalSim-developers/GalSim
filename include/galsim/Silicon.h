@@ -245,7 +245,7 @@ namespace galsim
         bool checkPixel(int i, int j, int nx, int ny);
 
 	// TO BE REMOVED
-        void averageDistortions();
+	void makeDistortionsConsistent();
 	// TO BE REMOVED
         void addHalo();
         
