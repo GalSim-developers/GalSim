@@ -1018,7 +1018,7 @@ class Image(object):
                 "Trying to copy images that are not the same shape", self_image=self, rhs=rhs)
         self._array[:,:] = rhs.array[:,:]
 
-    def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False):
+    def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False, dtype=None):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
         but view the same underlying data as the original image.
 
@@ -1028,11 +1028,13 @@ class Image(object):
         Parameters:
             scale:      If provided, use this as the pixel scale for the image. [default: None]
             wcs:        If provided, use this as the wcs for the image. [default: None]
-            origin:     If profided, use this as the origin position of the view.
+            origin:     If provided, use this as the origin position of the view.
                         [default: None]
-            center:     If profided, use this as the center position of the view.
+            center:     If provided, use this as the center position of the view.
                         [default: None]
             make_const: Make the view's data array immutable. [default: False]
+            dtype:      If provided, ensure that the output has this dtype.  If the original
+                        Image is a different dtype, then a copy will be made. [default: None]
         """
         if origin is not None and center is not None:
             raise GalSimIncompatibleValuesError(
@@ -1049,16 +1051,28 @@ class Image(object):
         else:
             wcs = self.wcs
 
+        # Figure out the dtype for the return Image
+        dtype = dtype if dtype else self.dtype
+
+        # If currently empty, just return a new empty image.
         if not self.bounds.isDefined():
-            return Image(wcs=wcs, dtype=self.dtype)
+            return Image(wcs=wcs, dtype=dtype)
 
-        if make_const:
-            array = self.array.view()
-            array.flags.writeable = False
-            ret = _Image(array, self.bounds, wcs)
+        # Recast the array type if necessary
+        if dtype != self.array.dtype:
+            array = self.array.astype(float)
         else:
-            ret = _Image(self.array, self.bounds, wcs)
+            array = self.array
 
+        # Make the array const if requested
+        if make_const:
+            array = array.view()
+            array.flags.writeable = False
+
+        # Make the return Image
+        ret = _Image(array, self.bounds, wcs)
+
+        # Update the origin if requested
         if origin is not None:
             ret.setOrigin(origin)
         elif center is not None:

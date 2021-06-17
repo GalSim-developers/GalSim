@@ -329,6 +329,7 @@ def test_Image_basic():
         im5_view = galsim.Image(ref_array.astype(np_array_type).tolist(), dtype=array_type)
         im6_view = galsim.Image(ref_array.astype(np_array_type), xmin=4, ymin=7)
         im7_view = galsim.Image(ref_array.astype(np_array_type), xmin=0, ymin=0)
+        im8_view = galsim.Image(ref_array).view(dtype=np_array_type)
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
                 value3 = 10*x+y
@@ -337,6 +338,7 @@ def test_Image_basic():
                 assert im5_view(x,y) == value3
                 assert im6_view(x+3,y+6) == value3
                 assert im7_view(x-1,y-1) == value3
+                assert im8_view(x,y) == value3
 
         # Check shift ops
         im1_view = im1.view() # View with old bounds
