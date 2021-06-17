@@ -479,7 +479,6 @@ def test_exceptions():
     assert_raises(ValueError, galsim.InterpolatedImage, im, normalization='invalid')
     assert_raises(ValueError, galsim.InterpolatedImage, im, x_interpolant='invalid')
     assert_raises(ValueError, galsim.InterpolatedImage, im, k_interpolant='invalid')
-    assert_raises(ValueError, galsim.InterpolatedImage, im, pad_image=galsim.ImageI(25,25))
     assert_raises(ValueError, galsim.InterpolatedImage, im, pad_factor=0.)
     assert_raises(ValueError, galsim.InterpolatedImage, im, pad_factor=-1.)
     assert_raises(ValueError, galsim.InterpolatedImage, im, noise_pad_size=33, noise_pad=im.wcs)
