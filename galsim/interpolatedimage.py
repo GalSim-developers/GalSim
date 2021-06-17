@@ -280,11 +280,6 @@ class InterpolatedImage(GSObject):
         elif not isinstance(image, Image):
             raise TypeError("Supplied image must be an Image or file name")
 
-        # make sure image is really an image and has a float type
-        if image.dtype != np.float32 and image.dtype != np.float64:
-            raise GalSimValueError("Supplied image must have dtype = float32 or float64.",
-                                   image.dtype)
-
         # it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor
         if not image.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Supplied image does not have bounds defined.")
@@ -297,7 +292,7 @@ class InterpolatedImage(GSObject):
 
         # Store the image as an attribute and make sure we don't change the original image
         # in anything we do here.  (e.g. set scale, etc.)
-        self._image = image._view()
+        self._image = image.view(dtype=np.float64)
         self._image.setCenter(0,0)
         self._gsparams = GSParams.check(gsparams)
 
@@ -337,7 +332,7 @@ class InterpolatedImage(GSObject):
 
         # Build the fully padded real-space image according to the various pad options.
         self._buildRealImage(pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache)
-        self._image_flux = np.sum(self._image.array, dtype=float)
+        self._image_flux = np.sum(self._image.array, dtype=np.float64)
 
         # I think the only things that will mess up if flux == 0 are the
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
@@ -413,14 +408,11 @@ class InterpolatedImage(GSObject):
         # Check that given pad_image is valid:
         if pad_image is not None:
             if isinstance(pad_image, basestring):
-                pad_image = fits.read(pad_image)
+                pad_image = fits.read(pad_image).view(dtype=np.float64)
             elif isinstance(pad_image, Image):
-                pad_image = pad_image._view()
+                pad_image = pad_image.view(dtype=np.float64)
             else:
                 raise TypeError("Supplied pad_image must be an Image.", pad_image)
-            if pad_image.dtype != np.float32 and pad_image.dtype != np.float64:
-                raise GalSimValueError("Invalid dtype for Supplied pad_image.", pad_image.dtype,
-                                       (np.float32, np.float64))
 
         if pad_factor <= 0.:
             raise GalSimRangeError("Invalid pad_factor <= 0 in InterpolatedImage", pad_factor, 0.)
@@ -455,7 +447,7 @@ class InterpolatedImage(GSObject):
         # And round up to a good fft size
         pad_size = Image.good_fft_size(pad_size)
 
-        self._xim = Image(pad_size, pad_size, dtype=self._image.dtype, wcs=self._wcs)
+        self._xim = Image(pad_size, pad_size, dtype=np.float64, wcs=self._wcs)
         self._xim.setCenter(0,0)
 
         # If requested, fill (some of) this image with noise padding.
@@ -662,7 +654,7 @@ class InterpolatedImage(GSObject):
         if self._pad_image.bounds == xim_bounds:
             self._xim = self._pad_image
         else:
-            self._xim = Image(xim_bounds, wcs=self._wcs, dtype=self._pad_image.dtype)
+            self._xim = Image(xim_bounds, wcs=self._wcs, dtype=np.float64)
             self._xim[self._pad_image.bounds] = self._pad_image
         self._image = self._xim[image_bounds]
 
@@ -742,7 +734,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     ret = InterpolatedImage.__new__(InterpolatedImage)
 
     # We need to set all the various attributes that are expected to be in an InterpolatedImage:
-    ret._image = image._view()
+    ret._image = image.view(dtype=np.float64)
     ret._gsparams = GSParams.check(gsparams)
     ret._x_interpolant = x_interpolant.withGSParams(ret._gsparams)
     ret._k_interpolant = k_interpolant.withGSParams(ret._gsparams)
@@ -752,7 +744,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     im_cen = ret._image.true_center if use_true_center else ret._image.center
     ret._wcs = ret._image.wcs.local(image_pos = im_cen)
     ret._pad_factor = 1.
-    ret._image_flux = np.sum(ret._image.array, dtype=float)
+    ret._image_flux = np.sum(ret._image.array, dtype=np.float64)
     ret._flux = ret._image_flux
 
     # If image isn't a good fft size, we may still need to pad it out.
@@ -761,7 +753,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     if size == pad_size:
         ret._xim = ret._image
     else:
-        ret._xim = Image(pad_size, pad_size, dtype=ret._image.dtype)
+        ret._xim = Image(pad_size, pad_size, dtype=np.float64)
         ret._xim.setCenter(ret._image.center)
         ret._xim[ret._image.bounds] = ret._image
         ret._xim.wcs = ret._wcs
