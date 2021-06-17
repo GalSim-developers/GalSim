@@ -84,29 +84,20 @@
 
 namespace galsim {
 
-    //
-    // Generic InterpolantXY class methods
-    //
-
     double InterpolantFunction::operator()(double x) const  { return _interp.xval(x); }
 
-    double InterpolantXY::getPositiveFlux() const
+    double Interpolant::getPositiveFlux2d() const
     {
-        return _i1d.getPositiveFlux()*_i1d.getPositiveFlux()
-            + _i1d.getNegativeFlux()*_i1d.getNegativeFlux();
+        double p = getPositiveFlux();
+        double n = getNegativeFlux();
+        return p*p + n*n;
     }
 
-    double InterpolantXY::getNegativeFlux() const
-    { return 2.*_i1d.getPositiveFlux()*_i1d.getNegativeFlux(); }
-
-    void InterpolantXY::shoot(PhotonArray& photons, UniformDeviate ud) const
+    double Interpolant::getNegativeFlux2d() const
     {
-        dbg<<"InterpolantXY shoot: N = "<<photons.size()<<std::endl;
-        dbg<<"Target flux = 1.\n";
-        // Going to assume here that there is not a need to randomize any Interpolant
-        // The 1d interpolants will populate x and y values separately.
-        _i1d.shoot(photons, ud);
-        dbg<<"InterpolantXY Realized flux = "<<photons.getTotalFlux()<<std::endl;
+        double p = getPositiveFlux();
+        double n = getNegativeFlux();
+        return 2*p*n;
     }
 
     double Interpolant::xvalWrapped(double x, int N) const
@@ -187,7 +178,7 @@ namespace galsim {
     void Nearest::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         const int N = photons.size();
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        dbg<<"Nearest shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++)  {
@@ -266,7 +257,7 @@ namespace galsim {
     void Linear::shoot(PhotonArray& photons, UniformDeviate ud) const
     {
         const int N = photons.size();
-        dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
+        dbg<<"Linear shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
         double fluxPerPhoton = 1./N;
         for (int i=0; i<N; i++) {

@@ -302,7 +302,7 @@ namespace galsim {
     // Interpolate table to some specific k.  We WILL wrap the KTable to cover
     // entire interpolation kernel:
     std::complex<double> KTable::interpolate(
-        double kx, double ky, const Interpolant2d& interp) const
+        double kx, double ky, const Interpolant& interp) const
     {
         dbg<<"Start KTable interpolate at "<<kx<<','<<ky<<std::endl;
         dbg<<"N = "<<_N<<std::endl;
@@ -351,177 +351,159 @@ namespace galsim {
         xdbg<<"iy range = "<<iyMin<<"..."<<iyMax<<std::endl;
 
         std::complex<double> sum = 0.;
-        const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&interp);
-        if (ixy) {
-            // Interpolant is seperable
-            // We have the opportunity to speed up the calculation by
-            // re-using the sums over rows.  So we will keep a
-            // cache of them.
-            if (kx != _cacheX || ixy != _cacheInterp) {
-                clearCache();
-                _cacheX = kx;
-                _cacheInterp = ixy;
-            } else if (iyMax==iyMin+1 && !_cache.empty()) {
-                // Special case for interpolation on a single iy value:
-                // See if we already have this row in cache:
-                int index = iyMin - _cacheStartY;
-                if (index < 0) index += _N;
-                if (index < int(_cache.size()))
-                    // We have it!
-                    return _cache[index];
-                else
-                    // Desired row not in cache - kill cache, continue as normal.
-                    // (But don't clear xwt, since that's still good.)
-                    _cache.clear();
-            }
 
-            const bool simple_xval = ixy->xrange() <= _Nd;
+        // We have the opportunity to speed up the calculation by
+        // re-using the sums over rows.  So we will keep a
+        // cache of them.
+        if (kx != _cacheX || &interp != _cacheInterp) {
+            clearCache();
+            _cacheX = kx;
+            _cacheInterp = &interp;
+        } else if (iyMax==iyMin+1 && !_cache.empty()) {
+            // Special case for interpolation on a single iy value:
+            // See if we already have this row in cache:
+            int index = iyMin - _cacheStartY;
+            if (index < 0) index += _N;
+            if (index < int(_cache.size()))
+                // We have it!
+                return _cache[index];
+            else
+                // Desired row not in cache - kill cache, continue as normal.
+                // (But don't clear xwt, since that's still good.)
+                _cache.clear();
+        }
 
-            // Build the x component of interpolant
-            int nx = ixMax - ixMin;
-            if (nx<=0) nx += _N;
-            xdbg<<"nx = "<<nx<<std::endl;
-            // This is also cached if possible.  It gets cleared when kx != cacheX above.
-            if (_xwt.empty()) {
-                _xwt.resize(nx);
-                int ix = ixMin;
-                if (simple_xval) {
-                    // Then simple xval is fine (and faster)
-                    // Just need to keep ix-kx to [-N/2,N/2)
-                    double arg = ix-kx;
-                    if (std::abs(arg) >= _halfNd) arg -= _Nd*std::floor(arg*_invNd+0.5);
-                    for (int i=0; i<nx; ++i, ++ix, ++arg) {
-                        xdbg<<"Call xval for arg = "<<arg<<std::endl;
-                        if (arg > _halfNd) arg -= _Nd;
-                        _xwt[i] = ixy->xval1d(arg);
-                        xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
-                    }
-                } else {
-                    // Then might need to wrap to do the sum that's in xvalWrapped...
-                    for (int i=0; i<nx; ++i, ++ix) {
-                        xdbg<<"Call xvalWrapped1d for ix-kx = "<<ix<<" - "<<kx<<" = "<<
-                            ix-kx<<std::endl;
-                        _xwt[i] = ixy->xvalWrapped1d(ix-kx, _N);
-                        xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
-                    }
+        const bool simple_xval = interp.xrange() <= _Nd;
+
+        // Build the x component of interpolant
+        int nx = ixMax - ixMin;
+        if (nx<=0) nx += _N;
+        xdbg<<"nx = "<<nx<<std::endl;
+        // This is also cached if possible.  It gets cleared when kx != cacheX above.
+        if (_xwt.empty()) {
+            _xwt.resize(nx);
+            int ix = ixMin;
+            if (simple_xval) {
+                // Then simple xval is fine (and faster)
+                // Just need to keep ix-kx to [-N/2,N/2)
+                double arg = ix-kx;
+                if (std::abs(arg) >= _halfNd) arg -= _Nd*std::floor(arg*_invNd+0.5);
+                for (int i=0; i<nx; ++i, ++ix, ++arg) {
+                    xdbg<<"Call xval for arg = "<<arg<<std::endl;
+                    if (arg > _halfNd) arg -= _Nd;
+                    _xwt[i] = interp.xval(arg);
+                    xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
                 }
             } else {
-                assert(int(_xwt.size()) == nx);
-            }
-
-            // cache always holds sequential y values (with wrap).  Throw away
-            // elements until we get to the one we need first
-            std::deque<std::complex<double> >::iterator nextSaved = _cache.begin();
-            while (nextSaved != _cache.end() && _cacheStartY != iyMin) {
-                _cache.pop_front();
-                ++_cacheStartY;
-                if (_cacheStartY >= _No2) _cacheStartY -= _N;
-                nextSaved = _cache.begin();
-            }
-
-            // Accumulate sum of
-            //    interp.xvalWrapped(ix-kx, iy-ky, N)*kval(ix,iy);
-            // Which separates into
-            //    ixy->xvalWrapped(ix-kx) * ixy->xvalWrapped(iy-ky) * kval(ix,iy)
-            // The first factor is saved in xwt
-            // The second factor is constant for a given iy, so do that at the end of the loop.
-            // The third factor is the only one that needs to be computed for each ix,iy.
-            int ny = iyMax - iyMin;
-            if (ny<=0) ny += _N;
-            int iy = iyMin;
-            double arg = iy-ky;
-            if (simple_xval && std::abs(arg) > _halfNd) {
-                arg -= _Nd*std::floor(arg*_invNd+0.5);
-            }
-            for (; ny; --ny, ++iy, ++arg) {
-                if (iy >= _No2) iy -= _N;   // wrap iy if needed
-                xdbg<<"ny = "<<ny<<", iy = "<<iy<<std::endl;
-                std::complex<double> sumy = 0.;
-                if (nextSaved != _cache.end()) {
-                    // This row is cached
-                    sumy = *nextSaved;
-                    ++nextSaved;
-                } else {
-                    // Need to compute a new row's sum
-                    int ix = ixMin;
-#if 0
-                    // Simple loop preserved for comparison.
-                    for (int i=0; i<nx; ++i, ++ix) {
-                        if (ix > N/2) ix -= N; //check for wrap
-                        sumy += _xwt[i]*kval(ix,iy);
-                    }
-#else
-
-                    // Faster way using ptrs, which doesn't need to do index(ix,iy) every time.
-                    int count = nx;
-                    const double* xwt_it = &_xwt[0];
-                    // First do any initial negative ix values:
-                    if (ix < 0) {
-                        xdbg<<"Some initial negative ix: ix = "<<ix<<std::endl;
-                        int count1 = std::min(count, -ix);
-                        xdbg<<"count1 = "<<count1<<std::endl;
-                        count -= count1;
-                        const std::complex<double>* ptr = _array.get() + index(ix,iy);
-                        sumy += ZDot<true>(count1, xwt_it, ptr);
-                        xwt_it += count1;
-                        ix = 0;
-                    }
-
-                    // Next do positive ix values:
-                    if (count) {
-                        xdbg<<"Positive ix: ix = "<<ix<<std::endl;
-                        const std::complex<double>* ptr = _array.get() + index(ix,iy);
-                        int count1 = std::min(count, _No2+1-ix);
-                        xdbg<<"count1 = "<<count1<<std::endl;
-                        count -= count1;
-                        sumy += ZDot<false>(count1, xwt_it, ptr);
-                        xwt_it += count1;
-
-                        // Finally if we've wrapped around again, do more negative ix values:
-                        if (count) {
-                            xdbg<<"More negative ix: ix = "<<ix<<std::endl;
-                            xdbg<<"count = "<<count<<std::endl;
-                            ix = -_No2 + 1;
-                            const std::complex<double>* ptr = _array.get() + index(ix,iy);
-                            xassert(count < _No2-1);
-                            sumy += ZDot<true>(count, xwt_it, ptr);
-                            //xwt_it += count;
-                        }
-                    }
-                    //xassert(xwt_it == &_xwt[0] + _xwt.size());
-#endif
-                    // Add to back of cache
-                    if (_cache.empty()) _cacheStartY = iy;
-                    _cache.push_back(sumy);
-                    nextSaved = _cache.end();
+                // Then might need to wrap to do the sum that's in xvalWrapped...
+                for (int i=0; i<nx; ++i, ++ix) {
+                    xdbg<<"Call xvalWrapped1d for ix-kx = "<<ix<<" - "<<kx<<" = "<<
+                        ix-kx<<std::endl;
+                    _xwt[i] = interp.xvalWrapped(ix-kx, _N);
+                    xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
                 }
-                if (simple_xval) {
-                    if (arg > _halfNd) arg -= _Nd;
-                    xdbg<<"Call xval for arg = "<<arg<<std::endl;
-                    sum += sumy * ixy->xval1d(arg);
-                } else {
-                    xdbg<<"Call xvalWrapped1d for iy-ky = "<<iy<<" - "<<ky<<" = "<<iy-ky<<std::endl;
-                    sum += sumy * ixy->xvalWrapped1d(arg, _N);
-                }
-                xdbg<<"After multiply by column xvalWrapped: sum = "<<sum<<std::endl;
             }
         } else {
-            // Interpolant is not seperable, calculate weight at each point
-            int ny = iyMax - iyMin;
-            if (ny<=0) ny += _N;
-            int nx = ixMax - ixMin;
-            if (nx<=0) nx += _N;
-            int iy = iyMin;
-            for (; ny; --ny, ++iy) {
-                if (iy >= _No2) iy -= _N;   // wrap iy if needed
-                int ix = ixMin;
-                for (int i=nx; i; --i, ++ix) {
-                    if (ix > _No2) ix -= _N; //check for wrap
-                    // use kval to keep track of conjugations
-                    sum += interp.xvalWrapped(ix-kx, iy-ky, _N)*kval(ix,iy);
-                }
-            }
+            assert(int(_xwt.size()) == nx);
         }
+
+        // cache always holds sequential y values (with wrap).  Throw away
+        // elements until we get to the one we need first
+        std::deque<std::complex<double> >::iterator nextSaved = _cache.begin();
+        while (nextSaved != _cache.end() && _cacheStartY != iyMin) {
+            _cache.pop_front();
+            ++_cacheStartY;
+            if (_cacheStartY >= _No2) _cacheStartY -= _N;
+            nextSaved = _cache.begin();
+        }
+
+        // Accumulate sum of
+        //    interp.xvalWrapped(ix-kx, iy-ky, N)*kval(ix,iy);
+        // Which separates into
+        //    interp.xvalWrapped(ix-kx) * interp.xvalWrapped(iy-ky) * kval(ix,iy)
+        // The first factor is saved in xwt
+        // The second factor is constant for a given iy, so do that at the end of the loop.
+        // The third factor is the only one that needs to be computed for each ix,iy.
+        int ny = iyMax - iyMin;
+        if (ny<=0) ny += _N;
+        int iy = iyMin;
+        double arg = iy-ky;
+        if (simple_xval && std::abs(arg) > _halfNd) {
+            arg -= _Nd*std::floor(arg*_invNd+0.5);
+        }
+        for (; ny; --ny, ++iy, ++arg) {
+            if (iy >= _No2) iy -= _N;   // wrap iy if needed
+            xdbg<<"ny = "<<ny<<", iy = "<<iy<<std::endl;
+            std::complex<double> sumy = 0.;
+            if (nextSaved != _cache.end()) {
+                // This row is cached
+                sumy = *nextSaved;
+                ++nextSaved;
+            } else {
+                // Need to compute a new row's sum
+                int ix = ixMin;
+#if 0
+                // Simple loop preserved for comparison.
+                for (int i=0; i<nx; ++i, ++ix) {
+                    if (ix > N/2) ix -= N; //check for wrap
+                    sumy += _xwt[i]*kval(ix,iy);
+                }
+#else
+
+                // Faster way using ptrs, which doesn't need to do index(ix,iy) every time.
+                int count = nx;
+                const double* xwt_it = &_xwt[0];
+                // First do any initial negative ix values:
+                if (ix < 0) {
+                    xdbg<<"Some initial negative ix: ix = "<<ix<<std::endl;
+                    int count1 = std::min(count, -ix);
+                    xdbg<<"count1 = "<<count1<<std::endl;
+                    count -= count1;
+                    const std::complex<double>* ptr = _array.get() + index(ix,iy);
+                    sumy += ZDot<true>(count1, xwt_it, ptr);
+                    xwt_it += count1;
+                    ix = 0;
+                }
+
+                // Next do positive ix values:
+                if (count) {
+                    xdbg<<"Positive ix: ix = "<<ix<<std::endl;
+                    const std::complex<double>* ptr = _array.get() + index(ix,iy);
+                    int count1 = std::min(count, _No2+1-ix);
+                    xdbg<<"count1 = "<<count1<<std::endl;
+                    count -= count1;
+                    sumy += ZDot<false>(count1, xwt_it, ptr);
+                    xwt_it += count1;
+
+                    // Finally if we've wrapped around again, do more negative ix values:
+                    if (count) {
+                        xdbg<<"More negative ix: ix = "<<ix<<std::endl;
+                        xdbg<<"count = "<<count<<std::endl;
+                        ix = -_No2 + 1;
+                        const std::complex<double>* ptr = _array.get() + index(ix,iy);
+                        xassert(count < _No2-1);
+                        sumy += ZDot<true>(count, xwt_it, ptr);
+                        //xwt_it += count;
+                    }
+                }
+                //xassert(xwt_it == &_xwt[0] + _xwt.size());
+#endif
+                // Add to back of cache
+                if (_cache.empty()) _cacheStartY = iy;
+                _cache.push_back(sumy);
+                nextSaved = _cache.end();
+            }
+            if (simple_xval) {
+                if (arg > _halfNd) arg -= _Nd;
+                xdbg<<"Call xval for arg = "<<arg<<std::endl;
+                sum += sumy * interp.xval(arg);
+            } else {
+                xdbg<<"Call xvalWrapped1d for iy-ky = "<<iy<<" - "<<ky<<" = "<<iy-ky<<std::endl;
+                sum += sumy * interp.xvalWrapped(arg, _N);
+            }
+            xdbg<<"After multiply by column xvalWrapped: sum = "<<sum<<std::endl;
+        }
+
         xdbg<<"Done: sum = "<<sum<<std::endl;
         return sum;
     }
@@ -819,7 +801,7 @@ namespace galsim {
 
     // Interpolate table (linearly) to some specific k:
     // x any y in physical units (to be divided by dx for indices)
-    double XTable::interpolate(double x, double y, const Interpolant2d& interp) const
+    double XTable::interpolate(double x, double y, const Interpolant& interp) const
     {
         xdbg << "interpolating " << x << " " << y << " " << std::endl;
         x *= _invdx;
@@ -850,78 +832,69 @@ namespace galsim {
         if (iyMin > iyMax) return 0.;
 
         double sum = 0.;
-        const InterpolantXY* ixy = dynamic_cast<const InterpolantXY*> (&interp);
-        if (ixy) {
-            // Interpolant is seperable
-            // We have the opportunity to speed up the calculation by
-            // re-using the sums over rows.  So we will keep a
-            // cache of them.
-            if (x != _cacheX || ixy != _cacheInterp) {
-                clearCache();
-                _cacheX = x;
-                _cacheInterp = ixy;
-            } else if (iyMax==iyMin && !_cache.empty()) {
-                // Special case for interpolation on a single iy value:
-                // See if we already have this row in cache:
-                int index = iyMin - _cacheStartY;
-                if (index < 0) index += _N;
-                if (index < int(_cache.size()))
-                    // We have it!
-                    return _cache[index];
-                else
-                    // Desired row not in cache - kill cache, continue as normal.
-                    // (But don't clear xwt, since that's still good.)
-                    _cache.clear();
-            }
 
-            // Build x factors for interpolant
-            int nx = ixMax - ixMin + 1;
-            // This is also cached if possible.  It gets cleared when x != cacheX above.
-            if (_xwt.empty()) {
-                _xwt.resize(nx);
-                for (int i=0; i<nx; ++i)
-                    _xwt[i] = ixy->xval1d(i+ixMin-x);
-            } else {
-                assert(int(_xwt.size()) == nx);
-            }
-
-            // cache always holds sequential y values (no wrap).  Throw away
-            // elements until we get to the one we need first
-            std::deque<double>::iterator nextSaved = _cache.begin();
-            while (nextSaved != _cache.end() && _cacheStartY != iyMin) {
-                _cache.pop_front();
-                ++_cacheStartY;
-                nextSaved = _cache.begin();
-            }
-
-            for (int iy=iyMin; iy<=iyMax; ++iy) {
-                double sumy = 0.;
-                if (nextSaved != _cache.end()) {
-                    // This row is cached
-                    sumy = *nextSaved;
-                    ++nextSaved;
-                } else {
-                    // Need to compute a new row's sum
-                    const double* dptr = _array.get() + index(ixMin, iy);
-                    std::vector<double>::const_iterator xwt_it = _xwt.begin();
-                    int count = nx;
-                    for(; count; --count) sumy += (*xwt_it++) * (*dptr++);
-                    xassert(xwt_it == _xwt.end());
-                    // Add to back of cache
-                    if (_cache.empty()) _cacheStartY = iy;
-                    _cache.push_back(sumy);
-                    nextSaved = _cache.end();
-                }
-                sum += sumy * ixy->xval1d(iy-y);
-            }
-        } else {
-            // Interpolant is not seperable, calculate weight at each point
-            for (int iy=iyMin; iy<=iyMax; ++iy) {
-                const double* dptr = _array.get() + index(ixMin, iy);
-                for (int ix=ixMin; ix<=ixMax; ++ix, ++dptr)
-                    sum += *dptr * interp.xval(ix-x, iy-y);
-            }
+        // We have the opportunity to speed up the calculation by
+        // re-using the sums over rows.  So we will keep a
+        // cache of them.
+        if (x != _cacheX || &interp != _cacheInterp) {
+            clearCache();
+            _cacheX = x;
+            _cacheInterp = &interp;
+        } else if (iyMax==iyMin && !_cache.empty()) {
+            // Special case for interpolation on a single iy value:
+            // See if we already have this row in cache:
+            int index = iyMin - _cacheStartY;
+            if (index < 0) index += _N;
+            if (index < int(_cache.size()))
+                // We have it!
+                return _cache[index];
+            else
+                // Desired row not in cache - kill cache, continue as normal.
+                // (But don't clear xwt, since that's still good.)
+                _cache.clear();
         }
+
+        // Build x factors for interpolant
+        int nx = ixMax - ixMin + 1;
+        // This is also cached if possible.  It gets cleared when x != cacheX above.
+        if (_xwt.empty()) {
+            _xwt.resize(nx);
+            for (int i=0; i<nx; ++i)
+                _xwt[i] = interp.xval(i+ixMin-x);
+        } else {
+            assert(int(_xwt.size()) == nx);
+        }
+
+        // cache always holds sequential y values (no wrap).  Throw away
+        // elements until we get to the one we need first
+        std::deque<double>::iterator nextSaved = _cache.begin();
+        while (nextSaved != _cache.end() && _cacheStartY != iyMin) {
+            _cache.pop_front();
+            ++_cacheStartY;
+            nextSaved = _cache.begin();
+        }
+
+        for (int iy=iyMin; iy<=iyMax; ++iy) {
+            double sumy = 0.;
+            if (nextSaved != _cache.end()) {
+                // This row is cached
+                sumy = *nextSaved;
+                ++nextSaved;
+            } else {
+                // Need to compute a new row's sum
+                const double* dptr = _array.get() + index(ixMin, iy);
+                std::vector<double>::const_iterator xwt_it = _xwt.begin();
+                int count = nx;
+                for(; count; --count) sumy += (*xwt_it++) * (*dptr++);
+                xassert(xwt_it == _xwt.end());
+                // Add to back of cache
+                if (_cache.empty()) _cacheStartY = iy;
+                _cache.push_back(sumy);
+                nextSaved = _cache.end();
+            }
+            sum += sumy * interp.xval(iy-y);
+        }
+
         return sum;
     }
 
