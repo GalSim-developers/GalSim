@@ -93,7 +93,8 @@ namespace galsim {
         const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
         const Interpolant& xInterp, const Interpolant& kInterp,
         double stepk, double maxk, const GSParams& gsparams) :
-        SBProfileImpl(gsparams), _image_bounds(image.getBounds()),
+        SBProfileImpl(gsparams),
+        _image(image.view()), _image_bounds(image.getBounds()),
         _init_bounds(init_bounds), _nonzero_bounds(nonzero_bounds),
         _xInterp(xInterp), _kInterp(kInterp),
         _stepk(stepk), _maxk(maxk),
@@ -342,14 +343,13 @@ namespace galsim {
         oss << "galsim._galsim.SBInterpolatedImage(";
         oss << "galsim.ImageD(array([";
 
-        ConstImageView<double> im = getPaddedImage();
-        const double* ptr = im.getData();
-        const int skip = im.getNSkip();
-        const int step = im.getStep();
-        const int xmin = im.getXMin();
-        const int xmax = im.getXMax();
-        const int ymin = im.getYMin();
-        const int ymax = im.getYMax();
+        const double* ptr = _image.getData();
+        const int skip = _image.getNSkip();
+        const int step = _image.getStep();
+        const int xmin = _image.getXMin();
+        const int xmax = _image.getXMax();
+        const int ymin = _image.getYMin();
+        const int ymax = _image.getYMax();
         for (int j=ymin; j<=ymax; j++, ptr+=skip) {
             if (j > ymin) oss <<",";
             oss << "[" << *ptr;
@@ -369,20 +369,13 @@ namespace galsim {
     }
 
     ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getPaddedImage() const
-    {
-        return ConstImageView<double>(_xtab->getArray(), shared_ptr<double>(),
-                                      1, _Nk, _image_bounds);
-    }
+    { return _image; }
 
     ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getNonZeroImage() const
-    {
-        return getPaddedImage()[_nonzero_bounds];
-    }
+    { return _image[_nonzero_bounds]; }
 
     ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getImage() const
-    {
-        return getPaddedImage()[_init_bounds];
-    }
+    { return _image[_init_bounds]; }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(
         double& xmin, double& xmax, std::vector<double>& splits) const
@@ -618,7 +611,7 @@ namespace galsim {
             int x = xStart;
             double yy = y;
             for (int ix = b.getXMin(); ix<= b.getXMax(); ++ix, ++x) {
-                double flux = _xtab->xval(x,y);
+                double flux = _image(ix,iy);
                 if (flux==0.) continue;
                 double xx = x;
                 if (flux > 0.) {
@@ -685,7 +678,6 @@ namespace galsim {
         if (!dynamic_cast<const Delta*>(&_xInterp)) {
             PhotonArray temp(N);
             _xInterp.shoot(temp, ud);
-            temp.scaleXY(_xtab->getDx());
             photons.convolve(temp, ud);
         }
 

@@ -121,6 +121,7 @@ namespace galsim {
     private:
 
         int _Nk;
+        const ConstImageView<double> _image;
         Bounds<int> _image_bounds;
         Bounds<int> _init_bounds;
         Bounds<int> _nonzero_bounds;
