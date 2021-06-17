@@ -125,8 +125,8 @@ namespace galsim {
         Bounds<int> _init_bounds;
         Bounds<int> _nonzero_bounds;
 
-        InterpolantXY _xInterp; ///< Interpolant used in real space.
-        InterpolantXY _kInterp; ///< Interpolant used in k space.
+        const Interpolant& _xInterp; ///< Interpolant used in real space.
+        const Interpolant& _kInterp; ///< Interpolant used in k space.
         shared_ptr<XTable> _xtab; ///< Final real-space image.
         mutable shared_ptr<KTable> _ktab; ///< Final k-space image.
         mutable double _stepk;
@@ -255,7 +255,7 @@ namespace galsim {
         mutable double _xcentroid;
         mutable double _ycentroid;
 
-        InterpolantXY _kInterp; ///< Interpolant used in k space.
+        const Interpolant& _kInterp; ///< Interpolant used in k space.
         shared_ptr<KTable> _ktab; ///< Final k-space image.
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK

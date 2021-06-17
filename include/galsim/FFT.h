@@ -247,7 +247,7 @@ namespace galsim {
         { return _array[index2(ix,iy)]; }
 
         /// interpolate to k=(kx, ky) - WILL wrap k values to fill interpolant kernel
-        std::complex<double> interpolate(double kx, double ky, const Interpolant2d& interp) const;
+        std::complex<double> interpolate(double kx, double ky, const Interpolant& interp) const;
 
         /// Set the value of a grid point ix,iy (k = (ix*dk, iy*dk)) to a given value.
         void kSet(int ix, int iy, std::complex<double> value);
@@ -349,7 +349,7 @@ namespace galsim {
         mutable std::vector<double> _xwt;
         mutable int _cacheStartY;
         mutable double _cacheX;
-        mutable const InterpolantXY* _cacheInterp;
+        mutable const Interpolant* _cacheInterp;
 
         friend class XTable;
     };
@@ -414,7 +414,7 @@ namespace galsim {
         double xval(int ix, int iy) const;
 
         /// interpolate to (x,y) - will NOT wrap the x data around +-N/2
-        double interpolate(double x, double y, const Interpolant2d& interp) const;
+        double interpolate(double x, double y, const Interpolant& interp) const;
 
         /// Set the value of a grid point ix,iy ((x,y) = (ix*dk, iy*dk)) to a given value.
         void xSet(int ix, int iy, double value);
@@ -493,7 +493,7 @@ namespace galsim {
         mutable std::vector<double> _xwt;
         mutable double _cacheX;
         mutable int _cacheStartY;
-        mutable const InterpolantXY* _cacheInterp;
+        mutable const Interpolant* _cacheInterp;
 
         friend class KTable;
     };

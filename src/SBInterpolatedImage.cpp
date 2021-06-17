@@ -166,10 +166,10 @@ namespace galsim {
     SBInterpolatedImage::SBInterpolatedImageImpl::~SBInterpolatedImageImpl() {}
 
     const Interpolant& SBInterpolatedImage::SBInterpolatedImageImpl::getXInterp() const
-    { return _xInterp.get1d(); }
+    { return _xInterp; }
 
     const Interpolant& SBInterpolatedImage::SBInterpolatedImageImpl::getKInterp() const
-    { return _kInterp.get1d(); }
+    { return _kInterp; }
 
     double SBInterpolatedImage::SBInterpolatedImageImpl::maxSB() const
     {
@@ -201,7 +201,7 @@ namespace galsim {
         // Don't bother if the desired k value is cut off by the x interpolant:
         if (std::abs(k.x) > _maxk1 || std::abs(k.y) > _maxk1) return std::complex<double>(0.,0.);
         checkK();
-        double xKernelTransform = _xInterp.uval(k.x*_uscale, k.y*_uscale);
+        double xKernelTransform = _xInterp.uval(k.x*_uscale) * _xInterp.uval(k.y*_uscale);
         return xKernelTransform * _ktab->interpolate(k.x, k.y, _kInterp);
     }
 
@@ -285,9 +285,9 @@ namespace galsim {
         // Then the uval's are separable.  Go ahead and pre-calculate them.
         // Note: We only have separable interpolant, so this is the only branch ever used.
         uxit = ux.begin();
-        for (int i=i1; i<i2; ++i,++uxit) *uxit = _xInterp.get1d().uval(*uxit);
+        for (int i=i1; i<i2; ++i,++uxit) *uxit = _xInterp.uval(*uxit);
         uyit = uy.begin();
-        for (int j=j1; j<j2; ++j,++uyit) *uyit = _xInterp.get1d().uval(*uyit);
+        for (int j=j1; j<j2; ++j,++uyit) *uyit = _xInterp.uval(*uyit);
 
         uxit = ux.begin();
         for (int i=i1; i<i2; ++i,kx0+=dkx,++uxit,ptr+=skip) {
@@ -330,7 +330,7 @@ namespace galsim {
                 if (std::abs(kx) > _maxk1 || std::abs(ky) > _maxk1) {
                     *ptr++ = T(0);
                 } else {
-                    double xKernelTransform = _xInterp.uval(ux, uy);
+                    double xKernelTransform = _xInterp.uval(ux) * _xInterp.uval(uy);
                     *ptr++ = xKernelTransform * _ktab->interpolate(kx, ky, _kInterp);
                 }
             }
@@ -639,8 +639,8 @@ namespace galsim {
         double p1 = _positiveFlux;
         double n1 = _negativeFlux;
         dbg<<"positiveFlux = "<<p1<<", negativeFlux = "<<n1<<std::endl;
-        double p2 = _xInterp.getPositiveFlux();
-        double n2 = _xInterp.getNegativeFlux();
+        double p2 = _xInterp.getPositiveFlux2d();
+        double n2 = _xInterp.getNegativeFlux2d();
         dbg<<"Interpolant has positiveFlux = "<<p2<<", negativeFlux = "<<n2<<std::endl;
         _positiveFlux = p1*p2 + n1*n2;
         _negativeFlux = p1*n2 + n1*p2;
@@ -685,7 +685,7 @@ namespace galsim {
 
         // Last step is to convolve with the interpolation kernel.
         // Can skip if using a 2d delta function
-        if (!dynamic_cast<const Delta*>(&_xInterp.get1d())) {
+        if (!dynamic_cast<const Delta*>(&_xInterp)) {
             PhotonArray temp(N);
             _xInterp.shoot(temp, ud);
             temp.scaleXY(_xtab->getDx());
@@ -836,7 +836,7 @@ namespace galsim {
 
     const Interpolant& SBInterpolatedKImage::SBInterpolatedKImageImpl::getKInterp() const
     {
-        return _kInterp.get1d();
+        return _kInterp;
     }
 
     std::complex<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::kValue(

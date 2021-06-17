@@ -162,6 +162,12 @@ namespace galsim {
         { checkSampler(); return _sampler->getNegativeFlux(); }
 
         /**
+         * @brief Return the positive and negative flux for a 2d application of the interpolant.
+         */
+        double getPositiveFlux2d() const;
+        double getNegativeFlux2d() const;
+
+        /**
          * @brief Return array of displacements drawn from this kernel.
          *
          * Since Interpolant is 1d, will use only x array of PhotonArray.  It will be assumed that
@@ -202,70 +208,6 @@ namespace galsim {
             }
             _sampler.reset(new OneDimensionalDeviate(_interp, ranges, false, 1.0, _gsparams));
         }
-    };
-
-    /**
-     * @brief Two-dimensional version of the `Interpolant` interface.
-     *
-     * Methods have same meaning as in 1d.
-     */
-    class Interpolant2d
-    {
-    public:
-        Interpolant2d() {}
-        virtual ~Interpolant2d() {}
-
-        // Ranges are assumed to be same in x as in y.
-        virtual double xrange() const=0;
-        virtual int ixrange() const=0;
-        virtual double urange() const=0;
-
-        virtual double xval(double x, double y) const=0;
-        virtual double xvalWrapped(double x, double y, int N) const=0;
-        virtual double uval(double u, double v) const=0;
-        virtual bool isExactAtNodes() const=0;
-
-        virtual double getPositiveFlux() const=0;
-        virtual double getNegativeFlux() const=0;
-        virtual void shoot(PhotonArray& photons, UniformDeviate ud) const=0;
-    };
-
-    /**
-     * @brief An interpolant that is product of same 1d `Interpolant` in x and y
-     *
-     * The 1d interpolant gets passed in by reference, so it needs to exist elsewhere.
-     * (Typically in Python layer.)
-     */
-    class InterpolantXY : public Interpolant2d
-    {
-    public:
-        InterpolantXY(const Interpolant& i1d) : _i1d(i1d) {}
-        ~InterpolantXY() {}
-
-        // All of the calls below implement base class methods.
-        double xrange() const { return _i1d.xrange(); }
-        int ixrange() const { return _i1d.ixrange(); }
-        double urange() const { return _i1d.urange(); }
-
-        double xval(double x, double y) const { return _i1d.xval(x)*_i1d.xval(y); }
-        double xvalWrapped(double x, double y, int N) const
-        { return _i1d.xvalWrapped(x,N)*_i1d.xvalWrapped(y,N); }
-        double uval(double u, double v) const { return _i1d.uval(u)*_i1d.uval(v); }
-        bool isExactAtNodes() const { return _i1d.isExactAtNodes(); }
-
-        // Photon-shooting routines:
-        double getPositiveFlux() const;
-        double getNegativeFlux() const;
-        void shoot(PhotonArray& photons, UniformDeviate ud) const;
-
-        // Access the 1d interpolant functions for more efficient 2d interps:
-        double xval1d(double x) const { return _i1d.xval(x); }
-        double xvalWrapped1d(double x, int N) const { return _i1d.xvalWrapped(x,N); }
-        double uval1d(double u) const { return _i1d.uval(u); }
-        const Interpolant& get1d() const { return _i1d; }
-
-    private:
-        const Interpolant& _i1d;  // The 1d function used in both axes here.
     };
 
     /**
