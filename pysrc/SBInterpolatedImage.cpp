@@ -22,31 +22,22 @@
 
 namespace galsim {
 
-    template <typename T, typename W>
-    static void WrapTemplates(PY_MODULE& _galsim, W& wrapper)
-    {
-        wrapper.def(py::init<const BaseImage<T> &, const Bounds<int>&, const Bounds<int>&,
-                    const Interpolant&, const Interpolant&,
-                    double, double, GSParams>());
-
-        typedef double (*cscf_func_type)(const BaseImage<T>&, double);
-        GALSIM_DOT def("CalculateSizeContainingFlux", cscf_func_type(&CalculateSizeContainingFlux));
-    }
-
     void pyExportSBInterpolatedImage(PY_MODULE& _galsim)
     {
         py::class_<SBInterpolatedImage, BP_BASES(SBProfile)> pySBInterpolatedImage(
             GALSIM_COMMA "SBInterpolatedImage" BP_NOINIT);
         pySBInterpolatedImage
+            .def(py::init<const BaseImage<double>&, const Bounds<int>&, const Bounds<int>&,
+                 const Interpolant&, const Interpolant&, double, double, GSParams>())
             .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK);
-        WrapTemplates<float>(_galsim, pySBInterpolatedImage);
-        WrapTemplates<double>(_galsim, pySBInterpolatedImage);
 
         py::class_<SBInterpolatedKImage, BP_BASES(SBProfile)> pySBInterpolatedKImage(
             GALSIM_COMMA "SBInterpolatedKImage" BP_NOINIT);
         pySBInterpolatedKImage
             .def(py::init<const BaseImage<std::complex<double> > &,
                  double, const Interpolant&, GSParams>());
+
+        GALSIM_DOT def("CalculateSizeContainingFlux", &CalculateSizeContainingFlux);
     }
 
 } // namespace galsim

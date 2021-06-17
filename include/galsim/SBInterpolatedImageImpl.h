@@ -23,6 +23,7 @@
 #include "SBProfileImpl.h"
 #include "SBInterpolatedImage.h"
 #include "ProbabilityTree.h"
+#include "FFT.h"
 
 namespace galsim {
 
@@ -30,9 +31,8 @@ namespace galsim {
     {
     public:
 
-        template <typename T>
         SBInterpolatedImageImpl(
-            const BaseImage<T>& image,
+            const BaseImage<double>& image,
             const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
             const Interpolant& xInterp, const Interpolant& kInterp,
             double stepk, double maxk, const GSParams& gsparams);
@@ -204,9 +204,8 @@ namespace galsim {
     {
     public:
 
-        template <typename T>
         SBInterpolatedKImageImpl(
-            const BaseImage<T>& kimage, double stepk,
+            const BaseImage<std::complex<double> >& kimage, double stepk,
             const Interpolant& kInterp, const GSParams& gsparams);
 
         // Alternative constructor used for serialization
