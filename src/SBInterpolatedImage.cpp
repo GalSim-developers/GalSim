@@ -171,25 +171,7 @@ namespace galsim {
     { return _kInterp; }
 
     double SBInterpolatedImage::SBInterpolatedImageImpl::maxSB() const
-    {
-        // Find the pixel with the largest (absolute) value.
-        double maxsb = 0.;
-
-        Bounds<int> b = _nonzero_bounds;
-        int xStart = -((b.getXMax()-b.getXMin()+1)/2);
-        int y = -((b.getYMax()-b.getYMin()+1)/2);
-
-        for (int iy = b.getYMin(); iy<= b.getYMax(); ++iy, ++y) {
-            int x = xStart;
-            for (int ix = b.getXMin(); ix<= b.getXMax(); ++ix, ++x) {
-                double sb = _xtab->xval(x,y);
-                if (std::abs(sb) > maxsb) maxsb = std::abs(sb);
-            }
-        }
-        // Since xtab stores surface brightness (not flux), this is directly the value we want.
-        // i.e. no need to account for any pixel scale factor.
-        return maxsb;
-    }
+    { return _image.maxAbsElement(); }
 
     double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const
     { return _xtab->interpolate(p.x, p.y, _xInterp); }

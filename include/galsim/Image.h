@@ -36,6 +36,24 @@
 #include "Std.h"
 #include "Bounds.h"
 
+template <typename T>
+struct Traits
+{
+    enum { isreal = true };
+    enum { iscomplex = false };
+    typedef T real_type;
+    typedef std::complex<T> complex_type;
+};
+
+template <typename T>
+struct Traits<std::complex<T> >
+{
+    enum { isreal = false };
+    enum { iscomplex = true };
+    typedef T real_type;
+    typedef std::complex<T> complex_type;
+};
+
 namespace galsim {
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -306,6 +324,11 @@ namespace galsim {
          *  @brief Return the sum of the elements in the image.
          */
         T sumElements() const;
+
+        /**
+         *  @brief Return the maximum absolute value in the image.
+         */
+        typename Traits<T>::real_type maxAbsElement() const;
 
     protected:
 

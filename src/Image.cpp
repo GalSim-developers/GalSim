@@ -167,6 +167,38 @@ T BaseImage<T>::sumElements() const
     return T(sum.sum);
 }
 
+// Avoid warning about abs being a no op for unsigned types
+template <typename T>
+inline typename Traits<T>::real_type ABS(T x)
+{ return std::abs(x); }
+template <> inline uint32_t ABS(uint32_t x) { return x; }
+template <> inline uint16_t ABS(uint16_t x) { return x; }
+
+template <typename T>
+struct MaxAbs
+{
+    MaxAbs(): max(0) {}
+    void operator()(T x) { T absx = ABS(x); if (absx > max) max = absx; }
+    T max;
+};
+
+template <typename T>
+struct MaxAbs<std::complex<T> >
+{
+    typedef typename Traits<T>::real_type RT;
+    MaxAbs(): max(0) {}
+    void operator()(std::complex<T> x) { RT absx = ABS(x); if (absx > max) max = absx; }
+    RT max;
+};
+
+template <typename T>
+typename Traits<T>::real_type BaseImage<T>::maxAbsElement() const
+{
+    MaxAbs<T> max;
+    for_each_pixel_ref(*this, max);
+    return (max.max);
+}
+
 template <typename T>
 struct NonZeroBounds
 {
