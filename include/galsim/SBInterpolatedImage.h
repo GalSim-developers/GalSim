@@ -25,12 +25,10 @@
 
 #include "SBProfile.h"
 #include "Interpolant.h"
-#include "FFT.h"
 
 namespace galsim {
 
-    template <typename T>
-    double CalculateSizeContainingFlux(const BaseImage<T>& im, double target_flux);
+    double CalculateSizeContainingFlux(const BaseImage<double>& im, double target_flux);
 
     /**
      * @brief Surface Brightness Profile represented by interpolation over one or more data
@@ -82,9 +80,8 @@ namespace galsim {
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering.
          */
-        template <typename T>
         SBInterpolatedImage(
-            const BaseImage<T>& image,
+            const BaseImage<double>& image,
             const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
             const Interpolant& xInterp, const Interpolant& kInterp,
             double stepk, double maxk, const GSParams& gsparams);
@@ -141,13 +138,11 @@ namespace galsim {
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering.
          */
-        template <typename T>
         SBInterpolatedKImage(
-            const BaseImage<T>& kimage, double stepk,
+            const BaseImage<std::complex<double> >& kimage, double stepk,
             const Interpolant& kInterp, const GSParams& gsparams);
 
         // @brief Serialization constructor.
-        // Note this is *not* a template since getKData only returns doubles.
         SBInterpolatedKImage(
             const BaseImage<double>& data,
             double stepk, double maxk,

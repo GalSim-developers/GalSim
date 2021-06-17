@@ -29,9 +29,8 @@ namespace galsim {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedImage methods
 
-    template <typename T>
     SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<T>& image,
+        const BaseImage<double>& image,
         const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
         const Interpolant& xInterp, const Interpolant& kInterp,
         double stepk, double maxk, const GSParams& gsparams) :
@@ -89,9 +88,8 @@ namespace galsim {
 
 #define INVALID -1.e300  // dummy value to indicate that flux or centroid not calculated yet.
 
-    template <typename T>
     SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<T>& image,
+        const BaseImage<double>& image,
         const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
         const Interpolant& xInterp, const Interpolant& kInterp,
         double stepk, double maxk, const GSParams& gsparams) :
@@ -459,8 +457,7 @@ namespace galsim {
         return _flux;
     }
 
-    template <typename T>
-    double CalculateSizeContainingFlux(const BaseImage<T>& im, double target_flux)
+    double CalculateSizeContainingFlux(const BaseImage<double>& im, double target_flux)
     {
         dbg<<"Start CalculateSizeWithFlux\n";
         dbg<<"Find box that encloses flux = "<<target_flux<<std::endl;
@@ -699,9 +696,8 @@ namespace galsim {
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedKImage methods
 
-    template <typename T>
     SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<T>& kimage, double stepk,
+        const BaseImage<std::complex<double> >& kimage, double stepk,
         const Interpolant& kInterp, const GSParams& gsparams) :
         SBProfile(new SBInterpolatedKImageImpl(kimage, stepk, kInterp, gsparams)) {}
 
@@ -731,9 +727,8 @@ namespace galsim {
     // SBInterpolatedKImageImpl methods
 
     // "Normal" constructor
-    template <typename T>
     SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
-        const BaseImage<T>& kimage, double stepk,
+        const BaseImage<std::complex<double> >& kimage, double stepk,
         const Interpolant& kInterp, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _kInterp(kInterp), _stepk(stepk), _maxk(0.) //fill in maxk below
@@ -809,7 +804,6 @@ namespace galsim {
     }
 
     // "Serialization" constructor.  Only used when unpickling an InterpolatedKImage.
-    // Note *not* a template, since getKData() only returns doubles.
     SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
         const BaseImage<double>& data, double stepk, double maxk,
         const Interpolant& kInterp,
@@ -909,40 +903,5 @@ namespace galsim {
 
         return oss.str();
     }
-
-    // instantiate template functions for expected image types
-    template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<float>& image,
-        const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
-        const Interpolant& xInterp, const Interpolant& kInterp,
-        double stepk, double maxk, const GSParams& gsparams);
-    template SBInterpolatedImage::SBInterpolatedImage(
-        const BaseImage<double>& image,
-        const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
-        const Interpolant& xInterp, const Interpolant& kInterp,
-        double stepk, double maxk, const GSParams& gsparams);
-
-    template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<float>& image,
-        const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
-        const Interpolant& xInterp, const Interpolant& kInterp,
-        double stepk, double maxk, const GSParams& gsparams);
-    template SBInterpolatedImage::SBInterpolatedImageImpl::SBInterpolatedImageImpl(
-        const BaseImage<double>& image,
-        const Bounds<int>& init_bounds, const Bounds<int>& nonzero_bounds,
-        const Interpolant& xInterp, const Interpolant& kInterp,
-        double stepk, double maxk, const GSParams& gsparams);
-
-    typedef std::complex<double> cdouble;
-    template SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<cdouble>& kimage, double stepk,
-        const Interpolant& kInterp, const GSParams& gsparams);
-
-    template SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
-        const BaseImage<cdouble>& kimage, double stepk,
-        const Interpolant& kInterp, const GSParams& gsparams);
-
-    template double CalculateSizeContainingFlux(const BaseImage<double>& im, double target_flux);
-    template double CalculateSizeContainingFlux(const BaseImage<float>& im, double target_flux);
 
 } // namespace galsim
