@@ -250,16 +250,113 @@ namespace galsim {
         const int m = im.getNCol();
         const int n = im.getNRow();
         T* ptr = im.getData();
+        const int skip = im.getNSkip();
         assert(im.getStep() == 1);
+        const double SMALL = 10.*std::numeric_limits<double>::epsilon();
 
-        // The XTable interpolation routine will go faster if we make y iteration the
-        // inner loop.
-        const int stride = im.getStride();
-        const int skip = 1 - n*stride;
-        for (int i=0; i<m; ++i,x0+=dx,ptr+=skip) {
-            double y = y0;
-            for (int j=0; j<n; ++j,y+=dy,ptr+=stride)
-                *ptr = _xtab->interpolate(x0, y, _xInterp);
+        // Notation: We have two images to loop over here, so there are two sets of x,y values.
+        //           To distinguish them, I'll use x,y for the output image,
+        //           and p,q for the image we are interpolating.
+        //           i,j are used for the indices in the output array as usual.
+
+        // Find the min/max x and y values where the output can be nonzero.
+        double minx = _nonzero_bounds.getXMin() - _xInterp.xrange();
+        double maxx = _nonzero_bounds.getXMax() + _xInterp.xrange();
+        double miny = _nonzero_bounds.getYMin() - _xInterp.xrange();
+        double maxy = _nonzero_bounds.getYMax() + _xInterp.xrange();
+        dbg<<"nonzero bounds = "<<_nonzero_bounds<<std::endl;
+        dbg<<"min/max x/y = "<<minx<<"  "<<maxx<<"  "<<miny<<"  "<<maxy<<std::endl;
+
+        // Each point in the output image is going to be
+        //
+        //     I(x,y) = Sum_p,q wt(p-x) wt(q-y) _image(p,q)
+        //
+        // We have a lot of points with the same x or the same y, which means that
+        // xwt and ywt values are repeated a lot.  So we want to find a way to reuse
+        // those _xInterp.xval values.
+        //
+        // Finally, it is most efficient if we have the innermost loop be along the
+        // direction with step=1 in both the input and output images.
+        //
+        // The way we try to meet all these goals is to build up the output image one row
+        // at a time:
+        //
+        //     I(:,j) = Sum_q wt(q-y_j) row_yq(:)
+        //
+        // where row_yq is an array the same length as the output row.
+        // Then for each of these y,q values, we can compute row_yq as
+        //
+        //     row_yq(i) = Sum_p wt(p-x_i) _image(p,q)
+        //
+        // The same set of wt(p-x) values are needed for every row_yq calculation, so we
+        // compute them once and save them.
+
+        double x = x0;
+        double xwt[_xInterp.ixrange()*m];
+        double p1ar[m];
+        double p2ar[m];
+        int k=0;
+        for (int i=0; i<m; ++i,x+=dx) {
+            if (x > maxx || x < minx) continue;
+
+            int p1,p2;
+            // If x is (basically) an integer, only 1 p value.
+            // Otherwise, have a range based on xInterp.xrange()
+            if (std::abs(x-std::floor(x+0.01)) < SMALL) {
+                p1 = p2 = int(std::floor(x+0.01));
+            } else {
+                p1 = int(std::ceil(x-_xInterp.xrange()));
+                p2 = int(std::floor(x+_xInterp.xrange()));
+            }
+            // Limit to nonzero region
+            if (p1 < _nonzero_bounds.getXMin()) p1 = _nonzero_bounds.getXMin();
+            if (p2 > _nonzero_bounds.getXMax()) p2 = _nonzero_bounds.getXMax();
+            p1ar[i] = p1;
+            p2ar[i] = p2;
+
+            for (int p=p1; p<=p2; ++p) {
+                xwt[k++] = _xInterp.xval(p-x);
+            }
+        }
+
+        im.setZero();
+        double y = y0;
+        for (int j=0; j<n; ++j,y+=dy,ptr+=skip) {
+            if (y > maxy || y < miny) { ptr += m; continue; }
+
+            // If y is (basically) an integer, only 1 q value.
+            // Otherwise, have a range based on xInterp.xrange()
+            int q1,q2;
+            if (std::abs(y-std::floor(y+0.01)) < SMALL) {
+                q1 = q2 = int(std::floor(y+0.01));
+            } else {
+                q1 = int(std::ceil(y-_xInterp.xrange()));
+                q2 = int(std::floor(y+_xInterp.xrange()));
+            }
+            // Limit to nonzero region
+            if (q1 < _nonzero_bounds.getYMin()) q1 = _nonzero_bounds.getYMin();
+            if (q2 > _nonzero_bounds.getYMax()) q2 = _nonzero_bounds.getYMax();
+            T* ptr0 = ptr;  // Need to reset back to here for each q value.
+            for (int q=q1; q<=q2; ++q) {
+                double ywt = _xInterp.xval(q-y);
+
+                // Calculate row_yq and add to output image
+                double x = x0;
+                ptr = ptr0;
+                int k=0;
+                for (int i=0; i<m; ++i,x+=dx) {
+                    if (x > maxx || x < minx) { ++ptr; continue; }
+
+                    int p1 = p1ar[i];
+                    int p2 = p2ar[i];
+                    double row_yqi = 0.;
+                    const double* imptr = &_image(p1,q);
+                    for (int p=p1; p<=p2; ++p) {
+                        row_yqi += xwt[k++] * *imptr++;
+                    }
+                    *ptr++ += row_yqi * ywt;
+                }
+            }
         }
     }
 
