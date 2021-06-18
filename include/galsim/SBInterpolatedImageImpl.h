@@ -128,7 +128,6 @@ namespace galsim {
 
         const Interpolant& _xInterp; ///< Interpolant used in real space.
         const Interpolant& _kInterp; ///< Interpolant used in k space.
-        shared_ptr<XTable> _xtab; ///< Final real-space image.
         mutable shared_ptr<KTable> _ktab; ///< Final k-space image.
         mutable double _stepk;
         mutable double _maxk;
