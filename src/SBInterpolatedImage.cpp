@@ -105,22 +105,6 @@ namespace galsim {
         dbg<<"init bounds = "<<_init_bounds<<std::endl;
         dbg<<"nonzero bounds = "<<_nonzero_bounds<<std::endl;
 
-        int Ninitx = image.getXMax()-image.getXMin()+1;
-        //int Ninity = image.getYMax()-image.getYMin()+1;
-        //assert(Ninitx == Ninity);  // (Ensured by the python layer.)
-        _Nk = Ninitx;
-        _image_bounds = image.getBounds();
-        dbg<<"_Nk = "<<_Nk<<std::endl;
-
-        // Copy the input image to an XTable
-        _xtab = shared_ptr<XTable>(new XTable(_Nk, 1.));
-        ImageView<double> xtab_view(_xtab->getArray(), shared_ptr<double>(),
-                                    1, _Nk, _image_bounds);
-        xtab_view.copyFrom(image);
-
-        dbg<<"N = "<<_Nk<<", xrange = "<<_xInterp.xrange()<<std::endl;
-        dbg<<"xtab size = "<<_xtab->getN()<<", scale = "<<_xtab->getDx()<<std::endl;
-
         if (_stepk <= 0.) {
             // Calculate stepK:
             //
@@ -233,7 +217,18 @@ namespace galsim {
     {
         // Conduct FFT
         if (_ktab.get()) return;
-        _ktab = _xtab->transform();
+
+        int Nx = _image.getXMax()-_image.getXMin()+1;
+        dbg<<"Nx = "<<Nx<<std::endl;
+
+        // Copy the input image to an XTable
+        XTable xtab(Nx, 1.);
+        ImageView<double> xtab_view(xtab.getArray(), shared_ptr<double>(),
+                                    1, Nx, _image_bounds);
+        xtab_view.copyFrom(_image);
+
+        // Transform to a KTable
+        _ktab = xtab.transform();
         dbg<<"Built ktab\n";
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
     }
@@ -727,21 +722,18 @@ namespace galsim {
         // We loop over the non-zero bounds, since this is the only region with any flux.
         //
         // ix,iy are the indices in the original image
-        // x,y are the corresponding indices in _xtab
-        // xx,yy are the positions scaled by the pixel scale
+        // x,y are the positions relative to the center point.
         for (int iy = b.getYMin(); iy<= b.getYMax(); ++iy, ++y) {
             int x = xStart;
-            double yy = y;
             for (int ix = b.getXMin(); ix<= b.getXMax(); ++ix, ++x) {
                 double flux = _image(ix,iy);
                 if (flux==0.) continue;
-                double xx = x;
                 if (flux > 0.) {
                     _positiveFlux += flux;
                 } else {
                     _negativeFlux += -flux;
                 }
-                _pt.push_back(shared_ptr<Pixel>(new Pixel(xx,yy,flux)));
+                _pt.push_back(shared_ptr<Pixel>(new Pixel(x,y,flux)));
             }
         }
 
