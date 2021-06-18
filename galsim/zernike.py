@@ -510,11 +510,23 @@ class Zernike(object):
             raise ValueError("Cannot add Zernikes with inconsistent R_outer")
         if self.R_inner != rhs.R_inner:
             raise ValueError("Cannot add Zernikes with inconsistent R_inner")
-        n = max(len(self.coef), len(rhs.coef))
-        newCoef = np.zeros(n, dtype=float)
-        newCoef[:len(self.coef)] = self.coef
-        newCoef[:len(rhs.coef)] += rhs.coef
-        return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
+        if 'coef' in self.__dict__:
+            n = max(len(self.coef), len(rhs.coef))
+            newCoef = np.zeros(n, dtype=float)
+            newCoef[:len(self.coef)] = self.coef
+            newCoef[:len(rhs.coef)] += rhs.coef
+            return Zernike(newCoef, R_outer=self.R_outer, R_inner=self.R_inner)
+        else:
+            s1 = self._coef_array_xy.shape
+            s2 = rhs._coef_array_xy.shape
+            sout = max(s1[0], s2[0]), max(s1[1], s2[1])
+            ret = Zernike.__new__(Zernike)
+            ret._coef_array_xy = np.zeros(sout, dtype=float)
+            ret._coef_array_xy[:s1[0], :s1[1]] = self._coef_array_xy
+            ret._coef_array_xy[:s2[0], :s2[1]] += rhs._coef_array_xy
+            ret.R_outer = self.R_outer
+            ret.R_inner = self.R_inner
+            return ret
 
     def __sub__(self, rhs):
         """Subtract two Zernikes.
@@ -536,7 +548,14 @@ class Zernike(object):
         """
         from numbers import Real
         if isinstance(rhs, Real):
-            return Zernike(rhs*self.coef, self.R_outer, self.R_inner)
+            if 'coef' in self.__dict__:
+                return Zernike(rhs*self.coef, self.R_outer, self.R_inner)
+            else:
+                ret = Zernike.__new__(Zernike)
+                ret._coef_array_xy = rhs*self._coef_array_xy
+                ret.R_outer = self.R_outer
+                ret.R_inner = self.R_inner
+                return ret
         elif isinstance(rhs, Zernike):
             if self.R_outer != rhs.R_outer:
                 raise ValueError("Cannot multiply Zernikes with inconsistent R_outer")
@@ -558,33 +577,10 @@ class Zernike(object):
             for (i, j), c in np.ndenumerate(sxy):
                 newXY[i:i+rxy.shape[0], j:j+rxy.shape[1]] += c*rxy
 
-            # Each multiplier has adjustments for R_outer present, leading to the new coefficients
-            # having adjustments for R_outer^2.  So unadjust by 1 factor of R_outer here.
-            adjustedXY = np.array(newXY)
-            if self.R_outer != 1.0:
-                n = shape[0]
-                norm = np.power(self.R_outer, np.arange(1, n))
-                adjustedXY[0,1:] *= norm
-                for i in range(1, n):
-                    adjustedXY[i,0:-i] *= norm[i-1:]
-
-            # We now have the XY coefficients for the product polynomial in newXY.  What we want,
-            # however, is the contribution from each Zernike term.  We can use lstsq and knowledge
-            # of each individual Zernike term's xy contribution (from _noll_coef_array_xy) to solve
-            # for the appropriate coefficients.
-            obscuration = self.R_inner/self.R_outer
-            nca = np.linalg.lstsq(
-                _noll_coef_array_xy(jTarget, obscuration).reshape(-1, jTarget),
-                adjustedXY.ravel(),
-                rcond=-1.
-            )[0]
-            newCoef = np.empty((len(nca)+1,), dtype=float)
-            newCoef[0] = 0.0
-            newCoef[1:] = nca
-            ret = Zernike(newCoef, self.R_outer, self.R_inner)
-            # We've already computed the XY coefficients for the product, so insert those now
-            # instead of waiting on the lazy_property to compute them again.
+            ret = Zernike.__new__(Zernike)
             ret._coef_array_xy = newXY
+            ret.R_inner = self.R_inner
+            ret.R_outer = self.R_outer
             return ret
         else:
             raise TypeError("Cannot multiply Zernike by type {}".format(type(rhs)))
@@ -592,6 +588,38 @@ class Zernike(object):
     def __rmul__(self, rhs):
         """Equivalent to obj * rhs.  See `__mul__` for details."""
         return self*rhs
+
+    @lazy_property
+    def coef(self):
+        """Zernike series coefficients.
+
+        Note that coef[i] corresponds to Z_i under the Noll index convention, and coef[0] is
+        ignored.  (I.e., coef[1] is 'piston', coef[4] is 'defocus', ...).
+        """
+        # Given _coef_array_xy, we can solve for the Zernike coefficients using lstsq to project
+        # _coef_array_xy onto each individual Zernike term's xy contribution
+        # (from _noll_coef_array_xy).
+
+        # Start by adjusting xy array to account for R_outer != 1.
+        adjustedXY = np.array(self._coef_array_xy)
+        if self.R_outer != 1.0:
+            shape = self._coef_array_xy.shape
+            n = shape[0]
+            norm = np.power(self.R_outer, np.arange(1, n))
+            adjustedXY[0,1:] *= norm
+            for i in range(1, n):
+                adjustedXY[i,0:-i] *= norm[i-1:]
+        nTarget = max(*adjustedXY.shape)-1  # Maximum radial degree
+        jTarget = (nTarget+1)*(nTarget+2)//2  # Largest Noll index with above radial degree
+        nca = np.linalg.lstsq(
+            _noll_coef_array_xy(jTarget, self.R_inner/self.R_outer).reshape(-1, jTarget),
+            adjustedXY.ravel(),
+            rcond=-1.
+        )[0]
+        coef = np.empty((len(nca)+1), dtype=float)
+        coef[0] = 0.0
+        coef[1:] = nca
+        return coef
 
     @lazy_property
     def hessian(self):

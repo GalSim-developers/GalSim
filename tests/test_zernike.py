@@ -687,6 +687,34 @@ def test_describe_zernike():
     assert galsim.zernike.describe_zernike(36) == Z36str
 
 
+@timer
+def test_lazy_coef():
+    """Check that coefs reconstructed from _coef_array_xy round trip correctly."""
+    bd = galsim.BaseDeviate(191120)
+    u = galsim.UniformDeviate(bd)
+    # For triangular jmax, get the same shape array back.
+    for jmax in [3, 6, 10, 15, 21]:
+        zarr = [0]+[u() for i in range(jmax)]
+        R_inner = u()*0.5+0.2
+        R_outer = u()*2.0+2.0
+        Z = galsim.zernike.Zernike(zarr, R_outer=R_outer, R_inner=R_inner)
+        Z._coef_array_xy
+        del Z.coef
+        np.testing.assert_allclose(zarr, Z.coef, rtol=0, atol=1e-12)
+
+    # For non-triangular jmax, get shape rounded up to next triangular
+    for jmax in [2, 7, 11, 17, 23]:
+        zarr = [0]+[u() for i in range(jmax)]
+        R_inner = u()*0.5+0.2
+        R_outer = u()*2.0+2.0
+        Z = galsim.zernike.Zernike(zarr, R_outer=R_outer, R_inner=R_inner)
+        Z._coef_array_xy
+        del Z.coef
+        np.testing.assert_allclose(zarr, Z.coef[:len(zarr)], rtol=0, atol=1e-12)
+        # extra coefficients are all ~0
+        np.testing.assert_allclose(Z.coef[len(zarr):], 0.0, rtol=0, atol=1e-12)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_']
     for testfn in testfns:
