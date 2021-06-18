@@ -356,6 +356,72 @@ namespace galsim {
     }
 
     template <typename T>
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
+        ImageView<T> im,
+        double x0, double dx, double dxy,
+        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBInterpolatedImage fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        T* ptr = im.getData();
+        const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        // In this version every _xInterp.xval call is different, so there's not really any
+        // way to save any of those calls.  The only real optimization that still applies
+        // is the min/max checks to skip places where the output is zero.
+
+        // Find the min/max x and y values where the output can be nonzero.
+        double minx = _nonzero_bounds.getXMin() - _xInterp.xrange();
+        double maxx = _nonzero_bounds.getXMax() + _xInterp.xrange();
+        double miny = _nonzero_bounds.getYMin() - _xInterp.xrange();
+        double maxy = _nonzero_bounds.getYMax() + _xInterp.xrange();
+        dbg<<"nonzero bounds = "<<_nonzero_bounds<<std::endl;
+        dbg<<"min/max x/y = "<<minx<<"  "<<maxx<<"  "<<miny<<"  "<<maxy<<std::endl;
+
+        im.setZero();
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
+            double x = x0;
+            double y = y0;
+
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx,++ptr) {
+                if (y > maxy || y < miny || x > maxx || x < minx) continue;
+
+                *ptr = xValue(Position<double>(x,y));
+                continue;
+
+                int p1 = int(std::ceil(x-_xInterp.xrange()));
+                int p2 = int(std::floor(x+_xInterp.xrange()));
+                int q1 = int(std::ceil(y-_xInterp.xrange()));
+                int q2 = int(std::floor(y+_xInterp.xrange()));
+                if (p1 < _nonzero_bounds.getXMin()) p1 = _nonzero_bounds.getXMin();
+                if (p2 > _nonzero_bounds.getXMax()) p2 = _nonzero_bounds.getXMax();
+                if (q1 < _nonzero_bounds.getYMin()) q1 = _nonzero_bounds.getYMin();
+                if (q2 > _nonzero_bounds.getYMax()) q2 = _nonzero_bounds.getYMax();
+
+                double xwt[p2-p1+1];
+                for (int p=p1, pp=0; p<=p2; ++p, ++pp) {
+                    xwt[pp] = _xInterp.xval(p-x);
+                }
+
+                for (int q=q1; q<=q2; ++q) {
+                    double ywt = _xInterp.xval(q-y);
+
+                    double sum = 0.;
+                    const double* imptr = &_image(p1,q);
+                    for (int p=p1, pp=0; p<=p2; ++p, ++pp) {
+                        sum += xwt[pp] * *imptr++;
+                    }
+                    *ptr += sum * ywt;
+                }
+            }
+        }
+    }
+
+    template <typename T>
     void SBInterpolatedImage::SBInterpolatedImageImpl::fillKImage(
         ImageView<std::complex<T> > im,
         double kx0, double dkx, int izero,

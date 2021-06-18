@@ -45,11 +45,14 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& p) const;
 
-        // Only the izero, jzero one can be improved, so override that one.
         template <typename T>
         void fillXImage(ImageView<T> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
+        template <typename T>
+        void fillXImage(ImageView<T> im,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
         template <typename T>
         void fillKImage(ImageView<std::complex<T> > im,
                         double kx0, double dkx, int izero,
@@ -177,6 +180,14 @@ namespace galsim {
                           double x0, double dx, int izero,
                           double y0, double dy, int jzero) const
         { fillXImage(im,x0,dx,izero,y0,dy,jzero); }
+        void doFillXImage(ImageView<double> im,
+                          double x0, double dx, double dxy,
+                          double y0, double dy, double dyx) const
+        { fillXImage(im,x0,dx,dxy,y0,dy,dyx); }
+        void doFillXImage(ImageView<float> im,
+                          double x0, double dx, double dxy,
+                          double y0, double dy, double dyx) const
+        { fillXImage(im,x0,dx,dxy,y0,dy,dyx); }
         void doFillKImage(ImageView<std::complex<double> > im,
                           double kx0, double dkx, int izero,
                           double ky0, double dky, int jzero) const
