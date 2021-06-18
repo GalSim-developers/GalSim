@@ -174,7 +174,50 @@ namespace galsim {
     { return _image.maxAbsElement(); }
 
     double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const
-    { return _xtab->interpolate(p.x, p.y, _xInterp); }
+    {
+        int i1, i2, j1, j2;  // Range over which we need to sum.
+
+        // If x or y are integers, only sum 1 element in that direction.
+        if (std::abs(p.x-std::floor(p.x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+            i1 = i2 = int(std::floor(p.x+0.01));
+        } else {
+            i1 = int(std::ceil(p.x-_xInterp.xrange()));
+            i2 = int(std::floor(p.x+_xInterp.xrange()));
+        }
+        if (std::abs(p.y-std::floor(p.y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+            j1 = j2 = int(std::floor(p.y+0.01));
+        } else {
+            j1 = int(std::ceil(p.y-_xInterp.xrange()));
+            j2 = int(std::floor(p.y+_xInterp.xrange()));
+        }
+
+        // If either range is not in non-zero part, then value is 0.
+        if (i2 < _nonzero_bounds.getXMin() ||
+            i1 > _nonzero_bounds.getXMax() ||
+            j2 < _nonzero_bounds.getYMin() ||
+            j1 > _nonzero_bounds.getYMax()) {
+            return 0.;
+        }
+        // Limit to nonzero region
+        if (i1 < _nonzero_bounds.getXMin()) i1 = _nonzero_bounds.getXMin();
+        if (i2 > _nonzero_bounds.getXMax()) i2 = _nonzero_bounds.getXMax();
+        if (j1 < _nonzero_bounds.getYMin()) j1 = _nonzero_bounds.getYMin();
+        if (j2 > _nonzero_bounds.getYMax()) j2 = _nonzero_bounds.getYMax();
+
+        // We'll need these for each row.  Save them.
+        double xwt[i2-i1+1];
+        for (int i=i1, ii=0; i<=i2; ++i, ++ii) xwt[ii] = _xInterp.xval(i-p.x);
+
+        double sum = 0.;
+        for (int j=j1; j<=j2; ++j) {
+            double xsum = 0.;
+            for (int i=i1, ii=0; i<=i2; ++i, ++ii) {
+                xsum += xwt[ii] * _image(i,j);
+            }
+            sum += xsum * _xInterp.xval(j-p.y);
+        }
+        return sum;
+    }
 
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
         const Position<double>& k) const
