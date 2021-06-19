@@ -332,7 +332,7 @@ namespace galsim {
         const int m = im.getNCol();
         const int n = im.getNRow();
         T* ptr = im.getData();
-        const int skip = im.getNSkip();
+        int skip = im.getNSkip();
         assert(im.getStep() == 1);
         const double SMALL = 10.*std::numeric_limits<double>::epsilon();
 
@@ -348,6 +348,31 @@ namespace galsim {
         double maxy = _nonzero_bounds.getYMax() + _xInterp.xrange();
         dbg<<"nonzero bounds = "<<_nonzero_bounds<<std::endl;
         dbg<<"min/max x/y = "<<minx<<"  "<<maxx<<"  "<<miny<<"  "<<maxy<<std::endl;
+
+        // Figure out what range of i,j these correspond to.
+        int i1 = int((minx-x0)/dx);
+        int i2 = int((maxx-x0)/dx);
+        int j1 = int((miny-y0)/dy);
+        int j2 = int((maxy-y0)/dy);
+        if (i2 < i1) std::swap(i1,i2);
+        if (j2 < j1) std::swap(j1,j2);
+        ++i2; ++j2;  // Make them one past the end, rather than last index to use.
+        if (i1 < 0) i1 = 0;
+        if (i2 > m) i2 = m;
+        if (j1 < 0) j1 = 0;
+        if (j2 > n) j2 = n;
+        xdbg<<"Output bounds = "<<im.getBounds()<<std::endl;
+        xdbg<<"Old i,j ranges = "<<0<<"  "<<m<<"  "<<0<<"  "<<n<<std::endl;
+        xdbg<<"New i,j ranges = "<<i1<<"  "<<i2<<"  "<<j1<<"  "<<j2<<std::endl;
+
+        // Fix up x0, y0, ptr, skip to correspond to these i,j ranges.
+        x0 += i1*dx;
+        y0 += j1*dy;
+        if (x0 < minx || x0 > maxx) { x0 += dx; ++i1; } // First points may be able to increase
+        if (y0 < miny || y0 > maxy) { y0 += dy; ++j1; } // by one more spot.
+        ptr += i1 + j1*im.getStride();
+        int mm = i2-i1;  // We'll need this new row length a few times below.
+        skip += (m - mm);
 
         // Each point in the output image is going to be
         //
@@ -375,13 +400,11 @@ namespace galsim {
         // a given q is independent of y, so we save that as well.
 
         double x = x0;
-        double xwt[_xInterp.ixrange()*m];
-        double p1ar[m];
-        double p2ar[m];
+        double xwt[_xInterp.ixrange() * mm];
+        double p1ar[mm];
+        double p2ar[mm];
         int k=0;
-        for (int i=0; i<m; ++i,x+=dx) {
-            if (x > maxx || x < minx) continue;
-
+        for (int i=i1; i<i2; ++i,x+=dx) {
             int p1,p2;
             // If x is (basically) an integer, only 1 p value.
             // Otherwise, have a range based on xInterp.xrange()
@@ -394,8 +417,8 @@ namespace galsim {
             // Limit to nonzero region
             if (p1 < _nonzero_bounds.getXMin()) p1 = _nonzero_bounds.getXMin();
             if (p2 > _nonzero_bounds.getXMax()) p2 = _nonzero_bounds.getXMax();
-            p1ar[i] = p1;
-            p2ar[i] = p2;
+            p1ar[i-i1] = p1;
+            p2ar[i-i1] = p2;
 
             for (int p=p1; p<=p2; ++p) {
                 xwt[k++] = _xInterp.xval(p-x);
@@ -409,9 +432,8 @@ namespace galsim {
 
         im.setZero();
         double y = y0;
-        for (int j=0; j<n; ++j,y+=dy,ptr+=skip) {
-            if (y > maxy || y < miny) { ptr += m; continue; }
-
+        for (int j=j1; j<j2; ++j,y+=dy,ptr+=skip) {
+            xdbg<<"j = "<<j<<", y = "<<y<<std::endl;
             // If y is (basically) an integer, only 1 q value.
             // Otherwise, have a range based on xInterp.xrange()
             // Subtlety: also keep track of the minimum q we want to keep in the cache, which
@@ -424,9 +446,11 @@ namespace galsim {
                 qmin = q1 = int(std::ceil(y-_xInterp.xrange()));
                 q2 = int(std::floor(y+_xInterp.xrange()));
             }
+            xdbg<<"q1,q2 = "<<q1<<','<<q2<<std::endl;
             // Limit to nonzero region
             if (q1 < _nonzero_bounds.getYMin()) q1 = _nonzero_bounds.getYMin();
             if (q2 > _nonzero_bounds.getYMax()) q2 = _nonzero_bounds.getYMax();
+            xdbg<<"q1,q2 => "<<q1<<','<<q2<<std::endl;
             T* ptr0 = ptr;  // Need to reset back to here for each q value.
 
             // Dump any cached rows we don't need anymore.
@@ -435,22 +459,19 @@ namespace galsim {
             }
 
             for (int q=q1; q<=q2; ++q) {
-
                 // Get rowq from cache.  If it isn't there, it will be an empty vector.
                 std::vector<double>& rowq = rowq_cache[q];
 
                 // If this rowq was not in cache, need to make it.
                 if (rowq.size() == 0) {
-                    rowq.resize(m);
+                    rowq.resize(mm);
                     double x = x0;
                     int k=0;
                     std::vector<double>::iterator row_it=rowq.begin();
-                    for (int i=0; i<m; ++i,x+=dx,++row_it) {
+                    for (int i=i1; i<i2; ++i,x+=dx,++row_it) {
                         *row_it = 0.;
-                        if (x > maxx || x < minx) continue;
-
-                        int p1 = p1ar[i];
-                        int p2 = p2ar[i];
+                        int p1 = p1ar[i-i1];
+                        int p2 = p2ar[i-i1];
                         const double* imptr = &_image(p1,q);
                         for (int p=p1; p<=p2; ++p) {
                             *row_it += xwt[k++] * *imptr++;
@@ -462,10 +483,11 @@ namespace galsim {
                 double ywt = _xInterp.xval(q-y);
                 ptr = ptr0;
                 std::vector<double>::const_iterator row_it = rowq.begin();
-                for (int i=0; i<m; ++i) {
+                for (int i=i1; i<i2; ++i) {
                     *ptr++ += *row_it++ * ywt;
                 }
             }
+            if (q1 > q2) ptr += mm; // This is unusual, but possible.
         }
         dbg<<"Done SBInterpolatedImage fillXImage\n";
     }
