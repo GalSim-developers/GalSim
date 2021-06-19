@@ -513,7 +513,7 @@ def test_binomial():
 
     # Test generate with an int array
     b.seed(testseed)
-    test_array = np.empty(3, dtype=np.int)
+    test_array = np.empty(3, dtype=int)
     b.generate(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(bResult), precisionI,

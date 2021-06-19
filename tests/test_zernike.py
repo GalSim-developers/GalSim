@@ -247,8 +247,8 @@ def test_Zernike_basis():
     u = galsim.UniformDeviate(4669201609)
     for i in range(10):
         # Test at some random points
-        x = np.empty((10000,), dtype=np.float)
-        y = np.empty((10000,), dtype=np.float)
+        x = np.empty((10000,), dtype=float)
+        y = np.empty((10000,), dtype=float)
         u.generate(x)
         u.generate(y)
 
@@ -270,8 +270,8 @@ def test_fit():
     """Test fitting values to a Zernike series, using the ZernikeBasis function"""
     u = galsim.UniformDeviate(161803)
     for i in range(10):
-        x = np.empty((1000,), dtype=np.float)
-        y = np.empty((1000,), dtype=np.float)
+        x = np.empty((1000,), dtype=float)
+        y = np.empty((1000,), dtype=float)
         u.generate(x)
         u.generate(y)
         x -= 0.5
@@ -314,8 +314,8 @@ def test_fit():
 
     # Should also work, and make congruent output, if the shapes of x and y are multi-dimensional
     for i in range(10):
-        x = np.empty((1000,), dtype=np.float)
-        y = np.empty((1000,), dtype=np.float)
+        x = np.empty((1000,), dtype=float)
+        y = np.empty((1000,), dtype=float)
         u.generate(x)
         u.generate(y)
         x -= 0.5
