@@ -19,6 +19,20 @@
 
 // A few generically useful utilities.
 
+
+// The regular assert is turned off by NDEBUG, which Python always sets.
+// It's easier to just make our own than to try to undo the NDEBUG definition.
+// Plus by making our own we can have it raise an exception, rather than abort, which
+// is nicer behavior anyway.
+// Note: do this outside of include guard since cassert doesn't have one, so we might need
+// to revert this multiple times depending on order of #include lines in various files.
+#ifdef assert
+#undef assert
+#endif
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define assert(x) do { if (!(x)) { dbg<<"Failed Assert: "<<#x<<std::endl; throw std::runtime_error("Failed Assert: " #x " at " __FILE__ ":" TOSTRING(__LINE__)); } } while (false)
+
 #ifndef GalSim_Std_H
 #define GalSim_Std_H
 
@@ -78,17 +92,6 @@ inline bool IsAligned(const void* p) { return (reinterpret_cast<size_t>(p) & 0xf
 // If DEBUGLOGGING is not enabled, the compiler optimizes it away, so it
 // doesn't take any CPU cycles.
 //
-
-// The regular assert is turned off by NDEBUG, which Python always sets.
-// It's easier to just make our own than to try to undo the NDEBUG definition.
-// Plus by making our own we can have it raise an exception, rather than abort, which
-// is nicer behavior anyway.
-#ifdef assert
-#undef assert
-#endif
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define assert(x) do { if (!(x)) { dbg<<"Failed Assert: "<<#x<<std::endl; throw std::runtime_error("Failed Assert: " #x " at " __FILE__ ":" TOSTRING(__LINE__)); } } while (false)
 
 #ifdef DEBUGLOGGING
 
