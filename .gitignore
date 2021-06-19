@@ -29,3 +29,5 @@ dist
 .clang_complete
 pytest_session.txt
 downloaded_eigen
+.vscode
+.ipynb_checkpoints
