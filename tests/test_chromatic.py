@@ -1832,6 +1832,9 @@ def test_ChromaticOpticalPSF():
     with assert_raises(galsim.GalSimIncompatibleValuesError):
         galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations, lam_over_diam=0.02)
 
+    with assert_raises(galsim.GalSimValueError):
+        galsim.ChromaticOpticalPSF(lam=lam, diam=diam, fft_sign=0)
+
     if not os.path.isfile(os.path.join(refdir, 'r_exact.fits')):
         import warnings
         warnings.warn("Could not find file r_exact.fits, so generating it from scratch.  This "
@@ -1839,7 +1842,7 @@ def test_ChromaticOpticalPSF():
                       "regenerate it!")
 
         # Generate exact results inside this if-block.
-        # This block took ~30 seconds to run on a new-ish Macbook Pro, nearly all in the image
+        # This block took ~30 seconds to run on a ~2016 Macbook Pro, nearly all in the image
         # rendering process.  In contrast, the ChromaticOpticalPSF with interpolation that is used
         # for this unit test takes about ~9 seconds to initialize, and ~1s for the image rendering
         # process.  Obviously, if many images are to be rendered after incurring the overhead of
@@ -2007,7 +2010,7 @@ def test_phot():
     diam = 3.1 # meters
     obscuration = 0.11
     psf1 = galsim.ChromaticAiry(lam=bandpass.effective_wavelength, diam=diam,
-                               obscuration=obscuration)
+                                obscuration=obscuration)
     # Do this first so we can see the real timing for photon shooting separate from the setup time.
     t0 = time.time()
     psf_achrom = galsim.Airy(lam=bandpass.effective_wavelength, diam=diam, obscuration=obscuration)
@@ -2050,13 +2053,17 @@ def test_phot():
 
     for psf in [psf1, psf2, psf3, psf4, psf5, psf6, psf7]:
         print('psf = ',psf)
-        atol = 3.e-4
+        atol = 4.e-4
         if psf in [psf5, psf6]:
-            atol = 4.e-4  # OpticalPSF doesn't match quite as well as the others.
+            atol = 5.e-4  # OpticalPSF doesn't match quite as well as the others.
                           # geometric_shooting=False does better, even with the larger aberrations,
                           # but it doesn't reliably pass at 3e-4 under different random seeds,
                           # so just leave this as 4e-4 too to be more future-proof to random
                           # variations.
+                          # Bumped these to 4e-4, 5e-4 after introducing fft_sign kwarg to
+                          # OpticalPSF.  We effectively rotate the PSF 180 degrees here, but not the
+                          # galaxy, so we end up with a slightly different profile.  I (JM) think we
+                          # just got lucky before.
         rng = galsim.BaseDeviate(1234)
 
         # First draw with FFT
@@ -2106,7 +2113,7 @@ def test_phot():
             wave_sampler = galsim.WavelengthSampler(sed, bandpass)
             t0 = time.time()
             im3 = gal_achrom.drawImage(image=im1.copy(), method='phot', rng=rng,
-                                    photon_ops=[wave_sampler, psf])
+                                       photon_ops=[wave_sampler, psf])
             t1 = time.time()
             print('wave_sampler time = ',t1-t0)
             print('max diff/flux = ',np.max(np.abs(im1.array-im3.array)/flux))
@@ -2706,6 +2713,7 @@ def test_ne():
     # here.
     gals = [galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0),
             galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1),
+            galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1, fft_sign='-'),
             galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1, scale_unit=galsim.arcmin),
             galsim.ChromaticOpticalPSF(lam=1.0, diam=1.1, scale_unit='radians'),
             galsim.ChromaticOpticalPSF(lam=1.0, lam_over_diam=1.0, obscuration=0.5),
