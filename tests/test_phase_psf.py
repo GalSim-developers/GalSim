@@ -487,13 +487,14 @@ def test_flux():
         psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper).withFlux(flux)
         assert psf2 == psf1
 
-        psf3 = galsim.OpticalPSF(lam=500.0, diam=0.9, flux=flux)
+        gsp = galsim.GSParams(maximum_fft_size=4096)
+        psf3 = galsim.OpticalPSF(lam=500.0, diam=0.9, flux=flux, gsparams=gsp)
         psf3.drawImage(im)
         print('flux = ',flux,' image sum = ',np.sum(im.array))
         np.testing.assert_allclose(np.sum(im.array), flux, rtol=1.e-3)
         check_basic(psf3, 'OpticalPSF with flux=%f'%flux, approx_maxsb=True)
 
-        psf4 = galsim.OpticalPSF(lam=500.0, diam=0.9).withFlux(flux)
+        psf4 = galsim.OpticalPSF(lam=500.0, diam=0.9, gsparams=gsp).withFlux(flux)
         assert psf4 == psf3
 
     with assert_raises(galsim.GalSimValueError):
