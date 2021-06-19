@@ -694,7 +694,8 @@ namespace galsim {
         }
 
         // Apply flux scaling
-        im *= T(_ampScaling);
+        if (std::abs(_ampScaling - 1.) > this->gsparams.xvalue_accuracy)
+            im *= T(_ampScaling);
     }
 
     template <typename T>
@@ -727,7 +728,8 @@ namespace galsim {
         GetImpl(_adaptee)->fillXImage(im,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
 
         // Apply flux scaling
-        im *= T(_ampScaling);
+        if (std::abs(_ampScaling - 1.) > this->gsparams.xvalue_accuracy)
+            im *= T(_ampScaling);
     }
 
     // A helper function for filKImage below.
@@ -790,7 +792,8 @@ namespace galsim {
         // Apply phases
         if (_zeroCen) {
             xdbg<<"zeroCen\n";
-            im *= T(_fluxScaling);
+            if (std::abs(_fluxScaling - 1.) > this->gsparams.kvalue_accuracy)
+                im *= T(_fluxScaling);
         } else {
             xdbg<<"!zeroCen\n";
             // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
@@ -858,7 +861,8 @@ namespace galsim {
         // Apply phase terms = |det| exp(-i(kx*cenx + ky*ceny))
         if (_zeroCen) {
             xdbg<<"zeroCen\n";
-            im *= T(_fluxScaling);
+            if (std::abs(_fluxScaling - 1.) > this->gsparams.kvalue_accuracy)
+                im *= T(_fluxScaling);
         } else {
             xdbg<<"!zeroCen\n";
             const int m = im.getNCol();
