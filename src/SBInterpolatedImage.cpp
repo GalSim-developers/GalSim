@@ -19,6 +19,8 @@
 
 //#define DEBUGLOGGING
 
+#include <vector>
+#include <map>
 #include <algorithm>
 #include "SBInterpolatedImage.h"
 #include "SBInterpolatedImageImpl.h"
@@ -361,15 +363,16 @@ namespace galsim {
         // The way we try to meet all these goals is to build up the output image one row
         // at a time:
         //
-        //     I(:,j) = Sum_q wt(q-y_j) row_yq(:)
+        //     I(:,j) = Sum_q wt(q-y_j) rowq(:)
         //
-        // where row_yq is an array the same length as the output row.
-        // Then for each of these y,q values, we can compute row_yq as
+        // where rowq is an array the same length as the output row.
+        // Then for each of these y,q values, we can compute rowq as
         //
-        //     row_yq(i) = Sum_p wt(p-x_i) _image(p,q)
+        //     rowq(i) = Sum_p wt(p-x_i) _image(p,q)
         //
-        // The same set of wt(p-x) values are needed for every row_yq calculation, so we
-        // compute them once and save them.
+        // The same set of wt(p-x) values are needed for every rowq calculation, so we
+        // compute them once and save them.  Furthermore, the complete rowq calculation for
+        // a given q is independent of y, so we save that as well.
 
         double x = x0;
         double xwt[_xInterp.ixrange()*m];
@@ -399,6 +402,11 @@ namespace galsim {
             }
         }
 
+        // The inner calculation for rowq is the same for multiple y values since it is
+        // independent of y, so each time we use the same q, the rowq array is the same.
+        // Therefore we should cache these calculations to reuse when possible.
+        std::map<int, std::vector<double> > rowq_cache;
+
         im.setZero();
         double y = y0;
         for (int j=0; j<n; ++j,y+=dy,ptr+=skip) {
@@ -406,38 +414,60 @@ namespace galsim {
 
             // If y is (basically) an integer, only 1 q value.
             // Otherwise, have a range based on xInterp.xrange()
-            int q1,q2;
+            // Subtlety: also keep track of the minimum q we want to keep in the cache, which
+            // may be less than q1 to account for sometimes y being integer, sometimes not.
+            int q1,q2,qmin;
             if (std::abs(y-std::floor(y+0.01)) < SMALL) {
                 q1 = q2 = int(std::floor(y+0.01));
+                qmin = int(std::ceil(y-_xInterp.xrange()));
             } else {
-                q1 = int(std::ceil(y-_xInterp.xrange()));
+                qmin = q1 = int(std::ceil(y-_xInterp.xrange()));
                 q2 = int(std::floor(y+_xInterp.xrange()));
             }
             // Limit to nonzero region
             if (q1 < _nonzero_bounds.getYMin()) q1 = _nonzero_bounds.getYMin();
             if (q2 > _nonzero_bounds.getYMax()) q2 = _nonzero_bounds.getYMax();
             T* ptr0 = ptr;  // Need to reset back to here for each q value.
+
+            // Dump any cached rows we don't need anymore.
+            while (rowq_cache.size() > 0 && rowq_cache.begin()->first < qmin) {
+                rowq_cache.erase(rowq_cache.begin());
+            }
+
             for (int q=q1; q<=q2; ++q) {
-                double ywt = _xInterp.xval(q-y);
 
-                // Calculate row_yq and add to output image
-                double x = x0;
-                ptr = ptr0;
-                int k=0;
-                for (int i=0; i<m; ++i,x+=dx) {
-                    if (x > maxx || x < minx) { ++ptr; continue; }
+                // Get rowq from cache.  If it isn't there, it will be an empty vector.
+                std::vector<double>& rowq = rowq_cache[q];
 
-                    int p1 = p1ar[i];
-                    int p2 = p2ar[i];
-                    double row_yqi = 0.;
-                    const double* imptr = &_image(p1,q);
-                    for (int p=p1; p<=p2; ++p) {
-                        row_yqi += xwt[k++] * *imptr++;
+                // If this rowq was not in cache, need to make it.
+                if (rowq.size() == 0) {
+                    rowq.resize(m);
+                    double x = x0;
+                    int k=0;
+                    std::vector<double>::iterator row_it=rowq.begin();
+                    for (int i=0; i<m; ++i,x+=dx,++row_it) {
+                        *row_it = 0.;
+                        if (x > maxx || x < minx) continue;
+
+                        int p1 = p1ar[i];
+                        int p2 = p2ar[i];
+                        const double* imptr = &_image(p1,q);
+                        for (int p=p1; p<=p2; ++p) {
+                            *row_it += xwt[k++] * *imptr++;
+                        }
                     }
-                    *ptr++ += row_yqi * ywt;
+                }
+
+                // Now add that to the output row with the ywt scaling.
+                double ywt = _xInterp.xval(q-y);
+                ptr = ptr0;
+                std::vector<double>::const_iterator row_it = rowq.begin();
+                for (int i=0; i<m; ++i) {
+                    *ptr++ += *row_it++ * ywt;
                 }
             }
         }
+        dbg<<"Done SBInterpolatedImage fillXImage\n";
     }
 
     template <typename T>
