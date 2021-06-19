@@ -15,7 +15,7 @@ Python 3 as soon as possible, since it is becoming harder to continue to
 support this platform now that it is officially sunsetted, so we may drop
 support for that in the next release or two.
 
-A full list of changes in this release are below.  The numbers in parantheses
+A full list of changes in this release are below.  The numbers in parentheses
 are GalSim issue or pull request numbers where the change was implemented.
 
 cf. https://github.com/GalSim-developers/GalSim/milestone/20?closed=1
@@ -79,6 +79,12 @@ API Changes
   in GalSim that reprented (x,y) positions.  But if you have been using
   `LookupTable2D`, you will need to add ``.T`` (or remove it) from the
   ``f`` argument you are passing to the class. (#1103)
+- Changed the behavior of PhaseScreenPsf, OpticalPsf, and
+  ChromaticOpticalPsf by adding the kwarg ``fft_sign``, which controls the
+  sign in the exponent of the Fourier kernel using in the Fourier optics
+  PSF equation.  The new default value of '+' produces a profile that is
+  180 degrees rotated compared to the former behavior.  To revive the
+  former behavior, set ``fft_sign='-'``. (#1104)
 
 
 Config Updates
@@ -143,6 +149,9 @@ New Features
   AffineTransformation rather than the correct WCS. (#1120)
 - Added area and exptime parameters to COSMOSCatalog constructor to make it
   easier to rescale the fluxes to a different telescope than HST. (#1121)
+- Added zernike.describe_zernike to construct an algebraic string describing
+  circular Zernike terms in the Cartesian basis. (#1104)
+
 
 Performance Improvements
 ------------------------
@@ -158,6 +167,8 @@ Performance Improvements
   the integrals. (#1098)
 - Sped up the Hankel transforms several classes use for computing either the
   k-space values (e.g. Sersic) or real-space values (e.g. Kolmogorov). (#1099)
+- Sped up Zernike arithmetic for the case where you just want to evaluate a
+  resulting Zernike series without knowing its coefficients. (#1124)
 
 
 Bug Fixes
