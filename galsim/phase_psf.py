@@ -1325,7 +1325,7 @@ class PhaseScreenPSF(GSObject):
             maxk = self._force_maxk
         else:
             maxk = self.aper._getMaxK(self.lam, self.scale_unit)
-        image = _Image(np.array([[self._flux]], dtype=np.float),
+        image = _Image(np.array([[self._flux]], dtype=float),
                        _BoundsI(1, 1, 1, 1), PixelScale(1.))
         interpolant = 'delta'  # Use delta so it doesn't contribute to stepk
         return InterpolatedImage(

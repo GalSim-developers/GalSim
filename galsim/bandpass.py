@@ -193,7 +193,7 @@ class Bandpass(object):
             if self.blue_limit not in self.wave_list:
                 np.insert(self.wave_list, 0, self.blue_limit)
         else:
-            self.wave_list = np.array([], dtype=np.float)
+            self.wave_list = np.array([], dtype=float)
 
         self._setup_func()
 
@@ -339,7 +339,7 @@ class Bandpass(object):
                 return 0.0
         else:
             wgood = (wave >= self.blue_limit) & (wave <= self.red_limit)
-            ret = np.zeros(wave.shape, dtype=np.float)
+            ret = np.zeros(wave.shape, dtype=float)
             np.place(ret, wgood, self.func(wave[wgood]))
             return ret
 

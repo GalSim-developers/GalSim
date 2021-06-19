@@ -303,7 +303,7 @@ _noll_coef_array_xy_grady = LRU_Cache(__noll_coef_array_xy_grady)
 
 def __noll_coef_array_gradx(j, obscuration):
     if j == 1:
-        return np.zeros((1,1), dtype=np.float)
+        return np.zeros((1,1), dtype=np.float64)
     n, _ = noll_to_zern(j)
     # Gradient of Zernike with radial coefficient n has radial coefficient n-1.
     # Next line computes the largest j for which radial coefficient is n-1.
@@ -319,7 +319,7 @@ _noll_coef_array_gradx = LRU_Cache(__noll_coef_array_gradx)
 
 def __noll_coef_array_grady(j, obscuration):
     if j == 1:
-        return np.zeros((1,1), dtype=np.float)
+        return np.zeros((1,1), dtype=np.float64)
     n, _ = noll_to_zern(j)
     # Gradient of Zernike with radial coefficient n has radial coefficient n-1.
     # Next line computes the largest j for which radial coefficient is n-1.
