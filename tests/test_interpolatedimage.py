@@ -548,6 +548,24 @@ def test_operations_simple():
         test_decimal,
         err_msg='Sheared InterpolatedImage disagrees with reference')
 
+    # Also test drawing into a larger image to test some of the indexing adjustments
+    # in fillXImage.
+    big_im = galsim.Image(2*im_size,2*im_size, scale=pix_scale)
+    test_int_im.drawImage(image=big_im, method='no_pixel')
+    im.write('junk1.fits')
+    big_im.write('junk2.fits')
+    ref_im.write('junk3.fits')
+    big_comp_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
+    big_comp_bounds = big_comp_bounds.shift(galsim.PositionI((2*im_size-comp_region)/2,
+                                                             (2*im_size-comp_region)/2))
+    big_im_sub = big_im.subImage(big_comp_bounds)
+    print('comp_bounds = ',comp_bounds)
+    print('big_comp_bounds = ',big_comp_bounds)
+    print('center = ',big_im[big_im.center])
+    print('sub center = ',big_im_sub[big_im_sub.center])
+    print('ref center = ',ref_im[ref_im.center])
+    np.testing.assert_allclose(big_im_sub.array, ref_im_sub.array, rtol=0.01)
+
     # The do_pickle tests should all pass below, but the a == eval(repr(a)) check can take a
     # really long time, so we only do that if __name__ == "__main__".
     irreprable = not __name__ == "__main__"
