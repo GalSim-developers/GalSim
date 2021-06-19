@@ -373,8 +373,6 @@ namespace galsim {
                 _cache.clear();
         }
 
-        const bool simple_xval = interp.xrange() <= _Nd;
-
         // Build the x component of interpolant
         int nx = ixMax - ixMin;
         if (nx<=0) nx += _N;
@@ -383,25 +381,13 @@ namespace galsim {
         if (_xwt.empty()) {
             _xwt.resize(nx);
             int ix = ixMin;
-            if (simple_xval) {
-                // Then simple xval is fine (and faster)
-                // Just need to keep ix-kx to [-N/2,N/2)
-                double arg = ix-kx;
-                if (std::abs(arg) >= _halfNd) arg -= _Nd*std::floor(arg*_invNd+0.5);
-                for (int i=0; i<nx; ++i, ++ix, ++arg) {
-                    xdbg<<"Call xval for arg = "<<arg<<std::endl;
-                    if (arg > _halfNd) arg -= _Nd;
-                    _xwt[i] = interp.xval(arg);
-                    xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
-                }
-            } else {
-                // Then might need to wrap to do the sum that's in xvalWrapped...
-                for (int i=0; i<nx; ++i, ++ix) {
-                    xdbg<<"Call xvalWrapped1d for ix-kx = "<<ix<<" - "<<kx<<" = "<<
-                        ix-kx<<std::endl;
-                    _xwt[i] = interp.xvalWrapped(ix-kx, _N);
-                    xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
-                }
+            double arg = ix-kx;
+            if (std::abs(arg) >= _halfNd) arg -= _Nd*std::floor(arg*_invNd+0.5);
+            for (int i=0; i<nx; ++i, ++ix, ++arg) {
+                xdbg<<"Call xval for arg = "<<arg<<std::endl;
+                if (arg > _halfNd) arg -= _Nd;
+                _xwt[i] = interp.xval(arg);
+                xdbg<<"xwt["<<i<<"] = "<<_xwt[i]<<std::endl;
             }
         } else {
             assert(int(_xwt.size()) == nx);
@@ -428,7 +414,7 @@ namespace galsim {
         if (ny<=0) ny += _N;
         int iy = iyMin;
         double arg = iy-ky;
-        if (simple_xval && std::abs(arg) > _halfNd) {
+        if (std::abs(arg) > _halfNd) {
             arg -= _Nd*std::floor(arg*_invNd+0.5);
         }
         for (; ny; --ny, ++iy, ++arg) {
@@ -493,14 +479,9 @@ namespace galsim {
                 _cache.push_back(sumy);
                 nextSaved = _cache.end();
             }
-            if (simple_xval) {
-                if (arg > _halfNd) arg -= _Nd;
-                xdbg<<"Call xval for arg = "<<arg<<std::endl;
-                sum += sumy * interp.xval(arg);
-            } else {
-                xdbg<<"Call xvalWrapped1d for iy-ky = "<<iy<<" - "<<ky<<" = "<<iy-ky<<std::endl;
-                sum += sumy * interp.xvalWrapped(arg, _N);
-            }
+            if (arg > _halfNd) arg -= _Nd;
+            xdbg<<"Call xval for arg = "<<arg<<std::endl;
+            sum += sumy * interp.xval(arg);
             xdbg<<"After multiply by column xvalWrapped: sum = "<<sum<<std::endl;
         }
 
