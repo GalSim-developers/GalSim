@@ -504,7 +504,7 @@ namespace galsim {
         const int m = im.getNCol();
         const int n = im.getNRow();
         T* ptr = im.getData();
-        const int skip = im.getNSkip();
+        int skip = im.getNSkip();
         assert(im.getStep() == 1);
 
         // In this version every _xInterp.xval call is different, so there's not really any
@@ -519,16 +519,54 @@ namespace galsim {
         dbg<<"nonzero bounds = "<<_nonzero_bounds<<std::endl;
         dbg<<"min/max x/y = "<<minx<<"  "<<maxx<<"  "<<miny<<"  "<<maxy<<std::endl;
 
+        // Figure out what range of i,j these correspond to.
+        // This is a bit more complicated than the separable case.
+        // We need to find the i,j corresponding to each corner of the allowed range.
+        //     x = x0 + idx + jdxy
+        //     y = y0 + idyx + jdy
+        // ->  i = ( (x-x0) dy - (y-y0) dxy ) / (dx dy - dxy dyx)
+        //     j = ( (y-y0) dx - (x-x0) dyx ) / (dx dy - dxy dyx)
+        double denom = dx*dy - dxy*dyx;
+        int ia = int(((minx-x0)*dy - (miny-y0)*dxy)/denom);
+        int ja = int(((miny-y0)*dx - (minx-x0)*dyx)/denom);
+        int ib = int(((minx-x0)*dy - (maxy-y0)*dxy)/denom);
+        int jb = int(((maxy-y0)*dx - (minx-x0)*dyx)/denom);
+        int ic = int(((maxx-x0)*dy - (miny-y0)*dxy)/denom);
+        int jc = int(((miny-y0)*dx - (maxx-x0)*dyx)/denom);
+        int id = int(((maxx-x0)*dy - (maxy-y0)*dxy)/denom);
+        int jd = int(((maxy-y0)*dx - (maxx-x0)*dyx)/denom);
+        dbg<<"Corners at "<<ia<<','<<ja<<"  "<<ib<<','<<jb<<"  "<<ic<<','<<jc<<"  "<<id<<','<<jd<<std::endl;
+        int i1 = std::min( {ia,ib,ic,id} );
+        int i2 = std::max( {ia,ib,ic,id} );
+        int j1 = std::min( {ja,jb,jc,jd} );
+        int j2 = std::max( {ja,jb,jc,jd} );
+        dbg<<"i,j ranges = "<<i1<<"  "<<i2<<"  "<<j1<<"  "<<j2<<std::endl;
+
+        ++i2; ++j2;  // Make them one past the end, rather than last index to use.
+        if (i1 < 0) i1 = 0;
+        if (i2 > m) i2 = m;
+        if (j1 < 0) j1 = 0;
+        if (j2 > n) j2 = n;
+        dbg<<"Output bounds = "<<im.getBounds()<<std::endl;
+        dbg<<"Old i,j ranges = "<<0<<"  "<<m<<"  "<<0<<"  "<<n<<std::endl;
+        dbg<<"New i,j ranges = "<<i1<<"  "<<i2<<"  "<<j1<<"  "<<j2<<std::endl;
+
+        // Fix up x0, y0, ptr, skip to correspond to these i,j ranges.
+        x0 += i1*dx + j1*dxy;
+        y0 += j1*dy + i1*dyx;
+        ptr += i1 + j1*im.getStride();
+        int mm = i2-i1;
+        skip += (m - mm);
+
         im.setZero();
-        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
+        for (int j=i1; j<i2; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
 
-            for (int i=0; i<m; ++i,x+=dx,y+=dyx,++ptr) {
+            for (int i=i1; i<i2; ++i,x+=dx,y+=dyx,++ptr) {
+                // Still want this check even with above i1,i2,j1,j2 stuff, since projected
+                // region is a parallelogram, so some points can still be sipped.
                 if (y > maxy || y < miny || x > maxx || x < minx) continue;
-
-                *ptr = xValue(Position<double>(x,y));
-                continue;
 
                 int p1 = int(std::ceil(x-_xInterp.xrange()));
                 int p2 = int(std::floor(x+_xInterp.xrange()));
