@@ -306,9 +306,8 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
     """
-    from .. import Image, OpticalPSF, ChromaticOpticalPSF
+    from .. import OpticalPSF, ChromaticOpticalPSF
     from . import diameter, obscuration
-    from ..bounds import BoundsI
     from ..bandpass import Bandpass
     from .roman_bandpass import getBandpasses
 

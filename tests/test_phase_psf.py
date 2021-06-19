@@ -500,6 +500,14 @@ def test_flux():
         psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, flux=0.)
         im = psf.drawImage(nx=256, ny=256, scale=0.3)
 
+    with assert_raises(galsim.GalSimValueError):
+        psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, fft_sign=0)
+
+    psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper)
+    assert psf.fft_sign == '+'
+    psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, fft_sign='-')
+    assert psf.fft_sign == '-'
+
 
 @timer
 def test_stepk_maxk():
@@ -671,6 +679,7 @@ def test_ne():
     psl = galsim.PhaseScreenList(atm)
     objs = [galsim.PhaseScreenPSF(psl, 500.0, exptime=0.03, diam=1.0)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0)]
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, fft_sign='-')]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.1)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, flux=1.1)]
     objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, interpolant='linear')]
@@ -770,9 +779,20 @@ def test_phase_gradient_shoot():
         size_bias = 0.15
         shape_tolerance = 0.04
 
-    psfs = [atm.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper) for th in thetas]
-    psfs2 = [atm2.makePSF(lam, diam=diam, theta=th, exptime=exptime, aper=aper, time_step=time_step)
-             for th in thetas]
+    psfs = [
+        atm.makePSF(
+            lam, diam=diam, theta=th, exptime=exptime, aper=aper,
+            fft_sign='+' if i%2 else '-'  # Test both possibilities
+        )
+        for i, th in enumerate(thetas)
+    ]
+    psfs2 = [
+        atm2.makePSF(
+            lam, diam=diam, theta=th, exptime=exptime, aper=aper, time_step=time_step,
+            fft_sign='+' if i%2 else '-'
+        )
+        for i, th in enumerate(thetas)
+    ]
     shoot_moments = []
     fft_moments = []
 
@@ -858,10 +878,9 @@ def test_phase_gradient_shoot():
 
         # Check doing this with photon_ops
         im_shoot2 = galsim.DeltaFunction().drawImage(nx=256, ny=256, scale=0.05, method='phot',
-                                                     n_photons=100000, rng=rng1.duplicate(),
+                                                     n_photons=100000, rng=rng1,
                                                      photon_ops=[psf])
         np.testing.assert_allclose(im_shoot2.array, im_shoot.array)
-
 
     # I cheated.  Here's code to evaluate how small I could potentially set the tolerances above.
     # I think they're all fine, but this is admittedly a tad bit backwards.

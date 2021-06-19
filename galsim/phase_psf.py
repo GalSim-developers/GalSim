@@ -16,8 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import sys
-from itertools import chain
 from heapq import heappush, heappop
 import numpy as np
 
@@ -29,8 +27,9 @@ from .bounds import _BoundsI
 from .wcs import PixelScale
 from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property, basestring
-from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
+from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 from .errors import GalSimFFTSizeError, galsim_warn
+
 
 class Aperture(object):
     """Class representing a telescope aperture embedded in a larger pupil plane array -- for use
@@ -975,6 +974,25 @@ class PhaseScreenList(object):
                                 optics and then shoot from the derived InterpolatedImage.
                                 [default: True]
             aper:               `Aperture` to use to compute PSF(s).  [default: None]
+            second_kick:        An optional second kick to also convolve by when using geometric
+                                photon-shooting.  (This can technically be any `GSObject`, though
+                                usually it should probably be a SecondKick object).  If None, then a
+                                good second kick will be chosen automatically based on
+                                ``screen_list``.  If False, then a second kick won't be applied.
+                                [default: None]
+            kcrit:              Critical Fourier scale (in units of 1/r0) at which to separate low-k
+                                and high-k turbulence.  The default value was chosen based on
+                                comparisons between Fourier optics and geometric optics with a
+                                second kick correction.  While most values of kcrit smaller than the
+                                default produce similar results, we caution the user to compare the
+                                affected geometric PSFs against Fourier optics PSFs carefully before
+                                changing this value.  [default: 0.2]
+            fft_sign:           The sign (+/-) to use in the exponent of the Fourier kernel when
+                                evaluating the Fourier optics PSF.  As of version 2.3, GalSim uses a
+                                plus sign by default, which we believe to be consistent with, for
+                                example, how Zemax computes a Fourier optics PSF on DECam.  Before
+                                version 2.3, the default was a negative sign.  Input should be
+                                either the string '+' or the string '-'.  [default: '+']
             gsparams:           An optional `GSParams` argument. [default: None]
 
         The following are optional keywords to use to setup the aperture if ``aper`` is not
@@ -1158,6 +1176,12 @@ class PhaseScreenPSF(GSObject):
                             produce similar results, we caution the user to compare the affected
                             geometric PSFs against Fourier optics PSFs carefully before changing
                             this value.  [default: 0.2]
+        fft_sign:           The sign (+/-) to use in the exponent of the Fourier kernel when
+                            evaluating the Fourier optics PSF.  As of version 2.3, GalSim uses a
+                            plus sign by default, which we believe to be consistent with, for
+                            example, how Zemax computes a Fourier optics PSF on DECam.  Before
+                            version 2.3, the default was a negative sign.  Input should be either
+                            the string '+' or the string '-'.  [default: '+']
         gsparams:           An optional `GSParams` argument. [default: None]
 
     The following are optional keywords to use to setup the aperture if ``aper`` is not provided:
@@ -1208,13 +1232,16 @@ class PhaseScreenPSF(GSObject):
     def __init__(self, screen_list, lam, t0=0.0, exptime=0.0, time_step=0.025, flux=1.0,
                  theta=(0.0*arcsec, 0.0*arcsec), interpolant=None, scale_unit=arcsec,
                  ii_pad_factor=None, suppress_warning=False,
-                 geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2,
+                 geometric_shooting=True, aper=None, second_kick=None, kcrit=0.2, fft_sign='+',
                  gsparams=None, _force_stepk=0., _force_maxk=0., _bar=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
         if not isinstance(screen_list, PhaseScreenList):
             screen_list = PhaseScreenList(screen_list)
+
+        if fft_sign not in ['+', '-']:
+            raise GalSimValueError("Invalid fft_sign", fft_sign, allowed_values=['+','-'])
 
         self._screen_list = screen_list
         self.t0 = float(t0)
@@ -1258,6 +1285,7 @@ class PhaseScreenPSF(GSObject):
         self._suppress_warning = suppress_warning
         self._geometric_shooting = geometric_shooting
         self._kcrit = kcrit
+        self._fft_sign = fft_sign
         # We'll set these more intelligently as needed below
         self._second_kick = second_kick
         self._screen_list._delayCalculation(self)
@@ -1316,6 +1344,13 @@ class PhaseScreenPSF(GSObject):
         """The critical Fourier scale being used for this object.
         """
         return self._kcrit
+
+    @property
+    def fft_sign(self):
+        """The sign (+/-) to use in the exponent of the Fourier kernel when evaluating the Fourier
+        optics PSF.
+        """
+        return self._fft_sign
 
     @lazy_property
     def screen_kmax(self):
@@ -1384,13 +1419,15 @@ class PhaseScreenPSF(GSObject):
 
     def __repr__(self):
         outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, aper=%r, theta=%r, "
-                  "interpolant=%r, scale_unit=%r, gsparams=%r)")
+                  "interpolant=%r, scale_unit=%r, fft_sign=%r, gsparams=%r)")
         return outstr % (self._screen_list, self.lam, self.exptime, self.flux, self.aper,
-                         self.theta, self.interpolant, self.scale_unit, self.gsparams)
+                         self.theta, self.interpolant, self.scale_unit,
+                         self._fft_sign, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
-        # identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.
+        # identically if their img, interpolant, stepk, maxk, pad_factor, fft_sign and gsparams
+        # match.
         return (self is other or
                 (isinstance(other, PhaseScreenPSF) and
                  self._screen_list == other._screen_list and
@@ -1404,12 +1441,14 @@ class PhaseScreenPSF(GSObject):
                  self._force_stepk == other._force_stepk and
                  self._force_maxk == other._force_maxk and
                  self._ii_pad_factor == other._ii_pad_factor and
+                 self._fft_sign == other._fft_sign and
                  self.gsparams == other.gsparams))
 
     def __hash__(self):
         return hash(("galsim.PhaseScreenPSF", tuple(self._screen_list), self.lam, self.aper,
                      self.t0, self.exptime, self.time_step, self._flux, self.interpolant,
-                     self._force_stepk, self._force_maxk, self._ii_pad_factor, self.gsparams))
+                     self._force_stepk, self._force_maxk, self._ii_pad_factor, self._fft_sign,
+                     self.gsparams))
 
     def _prepareDraw(self):
         # Trigger delayed computation of all pending PSFs.
@@ -1426,7 +1465,11 @@ class PhaseScreenPSF(GSObject):
         expwf = np.exp((2j*np.pi/self.lam) * wf)
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
-        ftexpwf = fft.fft2(expwf_grid, shift_in=True, shift_out=True)
+        # Note fft is '-' and ifft is '+' below
+        if self._fft_sign == '+':
+            ftexpwf = fft.ifft2(expwf_grid, shift_in=True, shift_out=True)
+        else:
+            ftexpwf = fft.fft2(expwf_grid, shift_in=True, shift_out=True)
         if self._img is None:
             self._img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
         self._img += np.abs(ftexpwf)**2
@@ -1538,6 +1581,8 @@ class PhaseScreenPSF(GSObject):
         # shooting.
         self._screen_list.instantiate(kmax=self.screen_kmax, check='phot')
         nm_to_arcsec = 1.e-9 * radians / arcsec
+        if self._fft_sign == '+':
+            nm_to_arcsec *= -1
         photons.x, photons.y = self._screen_list._wavefront_gradient(u, v, t, self.theta)
         photons.x *= nm_to_arcsec
         photons.y *= nm_to_arcsec
@@ -1752,6 +1797,12 @@ class OpticalPSF(GSObject):
                             are supplied separately.  Should be either a `galsim.AngleUnit` or a
                             string that can be used to construct one (e.g., 'arcsec', 'radians',
                             etc.).  [default: galsim.arcsec]
+        fft_sign:           The sign (+/-) to use in the exponent of the Fourier kernel when
+                            evaluating the Fourier optics PSF.  As of version 2.3, GalSim uses a
+                            plus sign by default, which we believe to be consistent with, for
+                            example, how Zemax computes a Fourier optics PSF on DECam.  Before
+                            version 2.3, the default was a negative sign.  Input should be either
+                            the string '+' or the string '-'.  [default: '+']
         gsparams:           An optional `GSParams` argument. [default: None]
     """
     _opt_params = {
@@ -1779,7 +1830,8 @@ class OpticalPSF(GSObject):
         "pupil_angle": Angle,
         "pupil_plane_scale": float,
         "pupil_plane_size": float,
-        "scale_unit": str}
+        "scale_unit": str,
+        "fft_sign": str}
     _single_params = [{"lam_over_diam": float, "lam": float}]
 
     _has_hard_edges = False
@@ -1796,10 +1848,12 @@ class OpticalPSF(GSObject):
                  oversampling=1.5, pad_factor=1.5, ii_pad_factor=None, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*radians,
                  pupil_plane_im=None, pupil_plane_scale=None, pupil_plane_size=None,
-                 pupil_angle=0.*radians, scale_unit=arcsec, gsparams=None,
+                 pupil_angle=0.*radians, scale_unit=arcsec, fft_sign='+', gsparams=None,
                  _force_stepk=0., _force_maxk=0.,
                  suppress_warning=False, geometric_shooting=False):
         from .phase_screens import OpticalScreen
+        if fft_sign not in ['+', '-']:
+            raise GalSimValueError("Invalid fft_sign", fft_sign, allowed_values=['+','-'])
         if isinstance(scale_unit, str):
             scale_unit = AngleUnit.from_name(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
@@ -1868,12 +1922,14 @@ class OpticalPSF(GSObject):
         self._force_stepk = _force_stepk
         self._force_maxk = _force_maxk
         self._ii_pad_factor = ii_pad_factor if ii_pad_factor is not None else self._default_iipf
+        self._fft_sign = fft_sign
 
     @lazy_property
     def _psf(self):
         psf = PhaseScreenPSF(PhaseScreenList(self._screen), lam=self._lam, flux=self._flux,
                              aper=self._aper, interpolant=self._interpolant,
-                             scale_unit=self._scale_unit, gsparams=self._gsparams,
+                             scale_unit=self._scale_unit, fft_sign=self._fft_sign,
+                             gsparams=self._gsparams,
                              suppress_warning=self._suppress_warning,
                              geometric_shooting=self._geometric_shooting,
                              _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
@@ -1909,6 +1965,8 @@ class OpticalPSF(GSObject):
             s += ", interpolant=%r"%self._interpolant
         if self._scale_unit != arcsec:
             s += ", scale_unit=%r"%self._scale_unit
+        if self._fft_sign != '+':
+            s += ", fft_sign='-'"
         if self._gsparams != GSParams():
             s += ", gsparams=%r"%self._gsparams
         if self._flux != 1.0:
@@ -1934,12 +1992,13 @@ class OpticalPSF(GSObject):
                  self._force_stepk == other._force_stepk and
                  self._force_maxk == other._force_maxk and
                  self._ii_pad_factor == other._ii_pad_factor and
+                 self._fft_sign == other._fft_sign and
                  self._gsparams == other._gsparams))
 
     def __hash__(self):
         return hash(("galsim.OpticalPSF", self._lam, self._aper, self._screen,
                      self._flux, self._interpolant, self._scale_unit, self._force_stepk,
-                     self._force_maxk, self._ii_pad_factor, self._gsparams))
+                     self._force_maxk, self._ii_pad_factor, self._fft_sign, self._gsparams))
 
     @property
     def _sbp(self):
@@ -1983,6 +2042,10 @@ class OpticalPSF(GSObject):
     def _max_sb(self):
         return self._psf.max_sb
 
+    @property
+    def fft_sign(self):
+        return self._fft_sign
+
     @doc_inherit
     def _xValue(self, pos):
         return self._psf._xValue(pos)
@@ -2010,4 +2073,5 @@ class OpticalPSF(GSObject):
                 lam=self._lam, diam=self._aper.diam, aper=self._aper,
                 aberrations=screen.aberrations, annular_zernike=screen.annular_zernike,
                 flux=flux, _force_stepk=self._force_stepk, _force_maxk=self._force_maxk,
-                ii_pad_factor=self._ii_pad_factor)
+                ii_pad_factor=self._ii_pad_factor, fft_sign=self._fft_sign,
+                gsparams=self._gsparams)

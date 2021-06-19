@@ -3153,6 +3153,11 @@ class ChromaticOpticalPSF(ChromaticObject):
                                 'trefoil2', 'spher']):
             if ab in kwargs:
                 self.aberrations[i+4] = kwargs.pop(ab)
+        if 'fft_sign' in kwargs:
+            fft_sign = kwargs['fft_sign']
+            if fft_sign not in ['+', '-']:
+                raise GalSimValueError("Invalid fft_sign", fft_sign, allowed_values=['+','-'])
+
         self.kwargs = kwargs
 
         # Define the necessary attributes for this ChromaticObject.
