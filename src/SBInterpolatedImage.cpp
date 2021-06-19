@@ -203,20 +203,98 @@ namespace galsim {
         return sum;
     }
 
+    int WrapKIndex(int k, int No2, int N)
+    {
+        k = (k + No2) % N;
+        if (k < 0) k += N;
+        return k - No2;
+    }
+
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
         const Position<double>& k) const
     {
+        dbg<<"evaluating kValue("<<k.x<<","<<k.y<<")"<<std::endl;
+
         // Don't bother if the desired k value is cut off by the x interpolant:
         if (std::abs(k.x) > _maxk1 || std::abs(k.y) > _maxk1) return std::complex<double>(0.,0.);
+
         checkK();
         double xKernelTransform = _xInterp.uval(k.x*_uscale) * _xInterp.uval(k.y*_uscale);
-        return xKernelTransform * _ktab->interpolate(k.x, k.y, _kInterp);
+        dbg<<"xKernelTransform = "<<xKernelTransform<<std::endl;
+
+        int No2 = _kimage->getBounds().getXMax();
+        int N = No2 * 2;
+        double kscale = M_PI/No2;
+        dbg<<"kimage size = "<<_kimage->getBounds()<<", scale = "<<kscale<<std::endl;
+        double kx = k.x / kscale;
+        double ky = k.y / kscale;
+
+        int i1, i2, j1, j2;  // Range over which we need to sum.
+        // Note, unlike for xValue, whre we limited the range to the size of the image,
+        // here, we allow i,j to nominally go off the kimage bounds, in which case we
+        // wrap around when using it, due to the periodic nature of the fft.
+
+        if (std::abs(kx-std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+            // If kx or ky are integers, only sum 1 element in that direction.
+            i1 = i2 = int(std::floor(kx+0.01));
+        } else if (_kInterp.xrange() >= No2) {
+            // If interpolant covers whole kimage, use all elements
+            i1 = -No2;
+            i2 = No2-1;
+        } else {
+            i1 = int(std::ceil(kx-_kInterp.xrange()));
+            i2 = int(std::floor(kx+_kInterp.xrange()));
+        }
+        if (std::abs(ky-std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+            j1 = j2 = int(std::floor(ky+0.01));
+        } else if (_kInterp.xrange() >= No2) {
+            j1 = -No2;
+            j2 = No2-1;
+        } else {
+            j1 = int(std::ceil(ky-_kInterp.xrange()));
+            j2 = int(std::floor(ky+_kInterp.xrange()));
+        }
+        dbg<<"ikx range = "<<i1<<"..."<<i2<<std::endl;
+        dbg<<"iky range = "<<j1<<"..."<<j2<<std::endl;
+
+        // We'll need these for each row.  Save them.
+        double xwt[i2-i1+1];
+        for (int i=i1, ii=0; i<=i2; ++i, ++ii) xwt[ii] = _kInterp.xval(i-kx);
+
+        std::complex<double> sum = 0.;
+        int iwrap1 = WrapKIndex(i1, No2, N);
+        int jwrap1 = WrapKIndex(j1, No2, N);
+        dbg<<"iwrap, jwrap = "<<iwrap1<<','<<jwrap1<<std::endl;
+        dbg<<"kimage bounds = "<<_kimage->getBounds()<<std::endl;
+        for (int j=j1, jwrap=jwrap1; j<=j2; ++j, ++jwrap) {
+            if (jwrap == No2) jwrap -= N;
+            std::complex<double> xsum = 0.;
+            for (int i=i1, iwrap=iwrap1, ii=0; i<=i2; ++i, ++iwrap, ++ii) {
+                if (iwrap == No2+1) iwrap -= N;
+                // _kimage doesn't store i<0 half, so need to use the fact that
+                // _kimage(i,j) = conj(_kimage(-i,-j)) when i < 0.
+                if (iwrap < 0)
+                    if (jwrap == -No2)
+                        // N.B. _kimage(i,No2) == _kimage(i,-No2)
+                        xsum += xwt[ii] * std::conj((*_kimage)(-iwrap,jwrap));
+                    else
+                        xsum += xwt[ii] * std::conj((*_kimage)(-iwrap,-jwrap));
+                else
+                    xsum += xwt[ii] * (*_kimage)(iwrap,jwrap);
+            }
+            sum += xsum * _kInterp.xval(j-ky);
+        }
+
+        dbg<<"sum = "<<sum<<std::endl;
+        sum *= xKernelTransform;
+        dbg<<"sum => "<<sum<<std::endl;
+        return sum;
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::checkK() const
     {
         // Conduct FFT
-        if (_ktab.get()) return;
+        if (_kimage.get()) return;
 
         int Nx = _image.getXMax()-_image.getXMin()+1;
         dbg<<"Nx = "<<Nx<<std::endl;
@@ -231,6 +309,13 @@ namespace galsim {
         _ktab = xtab.transform();
         dbg<<"Built ktab\n";
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
+
+        Bounds<int> b(0,Nx/2,-Nx/2,Nx/2-1);
+        _kimage.reset(new ImageAlloc<std::complex<double> >(b));
+        rfft(_image, _kimage->view());
+        dbg<<"kimage size = "<<_kimage->getBounds()<<std::endl;
+        dbg<<"ktab flux = "<<kValue(Position<double>(0.,0.)).real()<<std::endl;
+        dbg<<"kimage flux = "<<(*_kimage)(0,0).real()<<std::endl;
     }
 
     template <typename T>
