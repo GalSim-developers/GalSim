@@ -299,23 +299,11 @@ namespace galsim {
 
         int Nx = _image.getXMax()-_image.getXMin()+1;
         dbg<<"Nx = "<<Nx<<std::endl;
-
-        // Copy the input image to an XTable
-        XTable xtab(Nx, 1.);
-        ImageView<double> xtab_view(xtab.getArray(), shared_ptr<double>(),
-                                    1, Nx, _image_bounds);
-        xtab_view.copyFrom(_image);
-
-        // Transform to a KTable
-        _ktab = xtab.transform();
-        dbg<<"Built ktab\n";
-        dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
-
         Bounds<int> b(0,Nx/2,-Nx/2,Nx/2-1);
         _kimage.reset(new ImageAlloc<std::complex<double> >(b));
         rfft(_image, _kimage->view());
+        dbg<<"made kimage\n";
         dbg<<"kimage bounds = "<<_kimage->getBounds()<<std::endl;
-        dbg<<"ktab flux = "<<kValue(Position<double>(0.,0.)).real()<<std::endl;
         dbg<<"kimage flux = "<<(*_kimage)(0,0).real()<<std::endl;
     }
 
