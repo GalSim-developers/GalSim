@@ -159,48 +159,51 @@ namespace galsim {
     double SBInterpolatedImage::SBInterpolatedImageImpl::maxSB() const
     { return _image.maxAbsElement(); }
 
-    double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const
+    double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& pos) const
     {
-        int i1, i2, j1, j2;  // Range over which we need to sum.
+        double x = pos.x;
+        double y = pos.y;
+
+        int p1, p2, q1, q2;  // Range over which we need to sum.
 
         // If x or y are integers, only sum 1 element in that direction.
-        if (std::abs(p.x-std::floor(p.x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
-            i1 = i2 = int(std::floor(p.x+0.01));
+        if (std::abs(x-std::floor(x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+            p1 = p2 = int(std::floor(x+0.01));
         } else {
-            i1 = int(std::ceil(p.x-_xInterp.xrange()));
-            i2 = int(std::floor(p.x+_xInterp.xrange()));
+            p1 = int(std::ceil(x-_xInterp.xrange()));
+            p2 = int(std::floor(x+_xInterp.xrange()));
         }
-        if (std::abs(p.y-std::floor(p.y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
-            j1 = j2 = int(std::floor(p.y+0.01));
+        if (std::abs(y-std::floor(y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+            q1 = q2 = int(std::floor(y+0.01));
         } else {
-            j1 = int(std::ceil(p.y-_xInterp.xrange()));
-            j2 = int(std::floor(p.y+_xInterp.xrange()));
+            q1 = int(std::ceil(y-_xInterp.xrange()));
+            q2 = int(std::floor(y+_xInterp.xrange()));
         }
 
         // If either range is not in non-zero part, then value is 0.
-        if (i2 < _nonzero_bounds.getXMin() ||
-            i1 > _nonzero_bounds.getXMax() ||
-            j2 < _nonzero_bounds.getYMin() ||
-            j1 > _nonzero_bounds.getYMax()) {
+        if (p2 < _nonzero_bounds.getXMin() ||
+            p1 > _nonzero_bounds.getXMax() ||
+            q2 < _nonzero_bounds.getYMin() ||
+            q1 > _nonzero_bounds.getYMax()) {
             return 0.;
         }
         // Limit to nonzero region
-        if (i1 < _nonzero_bounds.getXMin()) i1 = _nonzero_bounds.getXMin();
-        if (i2 > _nonzero_bounds.getXMax()) i2 = _nonzero_bounds.getXMax();
-        if (j1 < _nonzero_bounds.getYMin()) j1 = _nonzero_bounds.getYMin();
-        if (j2 > _nonzero_bounds.getYMax()) j2 = _nonzero_bounds.getYMax();
+        if (p1 < _nonzero_bounds.getXMin()) p1 = _nonzero_bounds.getXMin();
+        if (p2 > _nonzero_bounds.getXMax()) p2 = _nonzero_bounds.getXMax();
+        if (q1 < _nonzero_bounds.getYMin()) q1 = _nonzero_bounds.getYMin();
+        if (q2 > _nonzero_bounds.getYMax()) q2 = _nonzero_bounds.getYMax();
 
         // We'll need these for each row.  Save them.
-        double xwt[i2-i1+1];
-        for (int i=i1, ii=0; i<=i2; ++i, ++ii) xwt[ii] = _xInterp.xval(i-p.x);
+        double xwt[p2-p1+1];
+        for (int p=p1, pp=0; p<=p2; ++p, ++pp) xwt[pp] = _xInterp.xval(p-x);
 
         double sum = 0.;
-        for (int j=j1; j<=j2; ++j) {
+        for (int q=q1; q<=q2; ++q) {
             double xsum = 0.;
-            for (int i=i1, ii=0; i<=i2; ++i, ++ii) {
-                xsum += xwt[ii] * _image(i,j);
+            for (int p=p1, pp=0; p<=p2; ++p, ++pp) {
+                xsum += xwt[pp] * _image(p,q);
             }
-            sum += xsum * _xInterp.xval(j-p.y);
+            sum += xsum * _xInterp.xval(q-y);
         }
         return sum;
     }
@@ -213,78 +216,81 @@ namespace galsim {
     }
 
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
-        const Position<double>& k) const
+        const Position<double>& kpos) const
     {
-        dbg<<"evaluating kValue("<<k.x<<","<<k.y<<")"<<std::endl;
+        double kx = kpos.x;
+        double ky = kpos.y;
+
+        dbg<<"evaluating kValue("<<kx<<","<<ky<<")"<<std::endl;
 
         // Don't bother if the desired k value is cut off by the x interpolant:
-        if (std::abs(k.x) > _maxk1 || std::abs(k.y) > _maxk1) return std::complex<double>(0.,0.);
+        if (std::abs(kx) > _maxk1 || std::abs(ky) > _maxk1) return std::complex<double>(0.,0.);
 
         checkK();
-        double xKernelTransform = _xInterp.uval(k.x*_uscale) * _xInterp.uval(k.y*_uscale);
+        double xKernelTransform = _xInterp.uval(kx*_uscale) * _xInterp.uval(ky*_uscale);
         dbg<<"xKernelTransform = "<<xKernelTransform<<std::endl;
 
         int No2 = _kimage->getBounds().getXMax();
         int N = No2 * 2;
-        double kscale = M_PI/No2;
-        dbg<<"kimage size = "<<_kimage->getBounds()<<", scale = "<<kscale<<std::endl;
-        double kx = k.x / kscale;
-        double ky = k.y / kscale;
+        double kscale = No2/M_PI;
+        xdbg<<"kimage bounds = "<<_kimage->getBounds()<<", scale = "<<kscale<<std::endl;
+        kx *= kscale;
+        ky *= kscale;
 
-        int i1, i2, j1, j2;  // Range over which we need to sum.
+        int p1, p2, q1, q2;  // Range over which we need to sum.
         // Note, unlike for xValue, whre we limited the range to the size of the image,
         // here, we allow i,j to nominally go off the kimage bounds, in which case we
         // wrap around when using it, due to the periodic nature of the fft.
 
         if (std::abs(kx-std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // If kx or ky are integers, only sum 1 element in that direction.
-            i1 = i2 = int(std::floor(kx+0.01));
+            p1 = p2 = int(std::floor(kx+0.01));
         } else if (_kInterp.xrange() >= No2) {
             // If interpolant covers whole kimage, use all elements
-            i1 = -No2;
-            i2 = No2-1;
+            p1 = -No2;
+            p2 = No2-1;
         } else {
-            i1 = int(std::ceil(kx-_kInterp.xrange()));
-            i2 = int(std::floor(kx+_kInterp.xrange()));
+            p1 = int(std::ceil(kx-_kInterp.xrange()));
+            p2 = int(std::floor(kx+_kInterp.xrange()));
         }
         if (std::abs(ky-std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
-            j1 = j2 = int(std::floor(ky+0.01));
+            q1 = q2 = int(std::floor(ky+0.01));
         } else if (_kInterp.xrange() >= No2) {
-            j1 = -No2;
-            j2 = No2-1;
+            q1 = -No2;
+            q2 = No2-1;
         } else {
-            j1 = int(std::ceil(ky-_kInterp.xrange()));
-            j2 = int(std::floor(ky+_kInterp.xrange()));
+            q1 = int(std::ceil(ky-_kInterp.xrange()));
+            q2 = int(std::floor(ky+_kInterp.xrange()));
         }
-        dbg<<"ikx range = "<<i1<<"..."<<i2<<std::endl;
-        dbg<<"iky range = "<<j1<<"..."<<j2<<std::endl;
+        dbg<<"p range = "<<p1<<"..."<<p2<<std::endl;
+        dbg<<"q range = "<<q1<<"..."<<q2<<std::endl;
 
         // We'll need these for each row.  Save them.
-        double xwt[i2-i1+1];
-        for (int i=i1, ii=0; i<=i2; ++i, ++ii) xwt[ii] = _kInterp.xval(i-kx);
+        double xwt[p2-p1+1];
+        for (int p=p1, pp=0; p<=p2; ++p, ++pp) xwt[pp] = _kInterp.xval(p-kx);
 
         std::complex<double> sum = 0.;
-        int iwrap1 = WrapKIndex(i1, No2, N);
-        int jwrap1 = WrapKIndex(j1, No2, N);
-        dbg<<"iwrap, jwrap = "<<iwrap1<<','<<jwrap1<<std::endl;
+        int pwrap1 = WrapKIndex(p1, No2, N);
+        int qwrap1 = WrapKIndex(q1, No2, N);
+        dbg<<"pwrap, qwrap = "<<qwrap1<<','<<qwrap1<<std::endl;
         dbg<<"kimage bounds = "<<_kimage->getBounds()<<std::endl;
-        for (int j=j1, jwrap=jwrap1; j<=j2; ++j, ++jwrap) {
-            if (jwrap == No2) jwrap -= N;
+        for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
+            if (qwrap == No2) qwrap -= N;
             std::complex<double> xsum = 0.;
-            for (int i=i1, iwrap=iwrap1, ii=0; i<=i2; ++i, ++iwrap, ++ii) {
-                if (iwrap == No2+1) iwrap -= N;
-                // _kimage doesn't store i<0 half, so need to use the fact that
-                // _kimage(i,j) = conj(_kimage(-i,-j)) when i < 0.
-                if (iwrap < 0)
-                    if (jwrap == -No2)
-                        // N.B. _kimage(i,No2) == _kimage(i,-No2)
-                        xsum += xwt[ii] * std::conj((*_kimage)(-iwrap,jwrap));
+            for (int p=p1, pwrap=pwrap1, pp=0; p<=p2; ++p, ++pwrap, ++pp) {
+                if (pwrap == No2+1) pwrap -= N;
+                // _kimage doesn't store p<0 half, so need to use the fact that
+                // _kimage(p,q) = conj(_kimage(-p,-q)) when p < 0.
+                if (pwrap < 0)
+                    if (qwrap == -No2)
+                        // N.B. _kimage(p,No2) == _kimage(p,-No2)
+                        xsum += xwt[pp] * std::conj((*_kimage)(-pwrap,qwrap));
                     else
-                        xsum += xwt[ii] * std::conj((*_kimage)(-iwrap,-jwrap));
+                        xsum += xwt[pp] * std::conj((*_kimage)(-pwrap,-qwrap));
                 else
-                    xsum += xwt[ii] * (*_kimage)(iwrap,jwrap);
+                    xsum += xwt[pp] * (*_kimage)(pwrap,qwrap);
             }
-            sum += xsum * _kInterp.xval(j-ky);
+            sum += xsum * _kInterp.xval(q-ky);
         }
 
         dbg<<"sum = "<<sum<<std::endl;
@@ -315,7 +321,7 @@ namespace galsim {
         Bounds<int> b(0,Nx/2,-Nx/2,Nx/2-1);
         _kimage.reset(new ImageAlloc<std::complex<double> >(b));
         rfft(_image, _kimage->view());
-        dbg<<"kimage size = "<<_kimage->getBounds()<<std::endl;
+        dbg<<"kimage bounds = "<<_kimage->getBounds()<<std::endl;
         dbg<<"ktab flux = "<<kValue(Position<double>(0.,0.)).real()<<std::endl;
         dbg<<"kimage flux = "<<(*_kimage)(0,0).real()<<std::endl;
     }
@@ -432,7 +438,9 @@ namespace galsim {
 
         im.setZero();
         double y = y0;
+        double temp[mm];
         for (int j=j1; j<j2; ++j,y+=dy,ptr+=skip) {
+            memset(temp, 0, mm * sizeof(double)); // Zero out temp array
             xdbg<<"j = "<<j<<", y = "<<y<<std::endl;
             // If y is (basically) an integer, only 1 q value.
             // Otherwise, have a range based on xInterp.xrange()
@@ -451,7 +459,6 @@ namespace galsim {
             if (q1 < _nonzero_bounds.getYMin()) q1 = _nonzero_bounds.getYMin();
             if (q2 > _nonzero_bounds.getYMax()) q2 = _nonzero_bounds.getYMax();
             xdbg<<"q1,q2 => "<<q1<<','<<q2<<std::endl;
-            T* ptr0 = ptr;  // Need to reset back to here for each q value.
 
             // Dump any cached rows we don't need anymore.
             while (rowq_cache.size() > 0 && rowq_cache.begin()->first < qmin) {
@@ -481,13 +488,19 @@ namespace galsim {
 
                 // Now add that to the output row with the ywt scaling.
                 double ywt = _xInterp.xval(q-y);
-                ptr = ptr0;
+                double* tptr = temp;
                 std::vector<double>::const_iterator row_it = rowq.begin();
                 for (int i=i1; i<i2; ++i) {
-                    *ptr++ += *row_it++ * ywt;
+                    *tptr++ += *row_it++ * ywt;
                 }
             }
-            if (q1 > q2) ptr += mm; // This is unusual, but possible.
+            // Now finally copy onto the real output image.
+            // Note: In addition to getting a tiny efficiency gain from having temp on
+            // the stack while doing the calculation above, this is also important for
+            // accuracy if the output image is T=float, so we don't gratuitously
+            // lose precision by adding floats rather than doubles.
+            double* tptr = temp;
+            for (int i=i1; i<i2; ++i) *ptr++ = *tptr++;
         }
         dbg<<"Done SBInterpolatedImage fillXImage\n";
     }
@@ -609,7 +622,9 @@ namespace galsim {
         const int n = im.getNRow();
         std::complex<T>* ptr = im.getData();
         assert(im.getStep() == 1);
+        int skip = im.getNSkip();
         checkK();
+        const double SMALL = 10.*std::numeric_limits<double>::epsilon();
 
         // Only non-zero where |u| <= maxu
         double absdkx = std::abs(dkx);
@@ -618,11 +633,13 @@ namespace galsim {
         int i2 = std::min( int(_maxk1/absdkx-kx0/dkx)+1 , m );
         int j1 = std::max( int(-_maxk1/absdky-ky0/dky) , 0 );
         int j2 = std::min( int(_maxk1/absdky-ky0/dky)+1 , n );
+        dbg<<"i1,i2,j1,j1 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
 
         kx0 += i1*dkx;
         ky0 += j1*dky;
         ptr += i1 + j1*im.getStride();
-        xdbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<"  kx0,ky0 = "<<kx0<<','<<ky0<<std::endl;
+        int mm = i2-i1;
+        skip += (m - mm);
 
         // For the rest of the range, calculate ux, uy values
         std::vector<double> ux(i2-i1);
@@ -636,23 +653,135 @@ namespace galsim {
         double ky = ky0;
         for (int j=j1; j<j2; ++j,ky+=dky) *uyit++ = ky * _uscale;
 
-        im.setZero();
-        const int stride = im.getStride();
-        const int skip = 1 - (j2-j1)*stride;
-        // Then the uval's are separable.  Go ahead and pre-calculate them.
-        // Note: We only have separable interpolant, so this is the only branch ever used.
+        // Rescale the k values by kscale
+        int No2 = _kimage->getBounds().getXMax();
+        int N = No2 * 2;
+        double kscale = No2/M_PI;
+        dbg<<"kimage bounds = "<<_kimage->getBounds()<<", scale = "<<kscale<<std::endl;
+        kx0 *= kscale;
+        ky0 *= kscale;
+        dkx *= kscale;
+        dky *= kscale;
+
+        // The caching stuff is the same here as it was for fillXValue.  The only difference
+        // is that we need to wrap around the p,q values and handle the conjugation possibility
+        // correctly.  (cf. comments in kValue method.)
+        kx = kx0;
+        double xwt[_kInterp.ixrange() * mm];
+        double p1ar[mm];
+        double p2ar[mm];
+        int k=0;
+        for (int i=i1; i<i2; ++i,kx+=dkx) {
+            int p1, p2;  // Range over which we need to sum.
+            if (std::abs(kx-std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+                // If kx is integer, only sum 1 element in that direction.
+                p1 = p2 = int(std::floor(kx+0.01));
+            } else if (_kInterp.xrange() >= No2) {
+                // If interpolant covers whole kimage, use all elements
+                p1 = -No2;
+                p2 = No2-1;
+            } else {
+                p1 = int(std::ceil(kx-_kInterp.xrange()));
+                p2 = int(std::floor(kx+_kInterp.xrange()));
+            }
+            p1ar[i-i1] = p1;
+            p2ar[i-i1] = p2;
+            dbg<<"i = "<<i<<"  kx = "<<kx<<": p1,p2 = "<<p1<<','<<p2<<std::endl;
+
+            for (int p=p1; p<=p2; ++p) {
+                xwt[k++] = _kInterp.xval(p-kx);
+            }
+        }
+
+        // Again, can cache the rowq vectors.
+        std::map<int, std::vector<std::complex<double> > > rowq_cache;
+
+        // Pre-calculate xInterp factors in place
         uxit = ux.begin();
         for (int i=i1; i<i2; ++i,++uxit) *uxit = _xInterp.uval(*uxit);
         uyit = uy.begin();
         for (int j=j1; j<j2; ++j,++uyit) *uyit = _xInterp.uval(*uyit);
 
-        uxit = ux.begin();
-        for (int i=i1; i<i2; ++i,kx0+=dkx,++uxit,ptr+=skip) {
-            double ky = ky0;
-            uyit = uy.begin();
-            for (int j=j1; j<j2; ++j,ky+=dky,ptr+=stride)
-                *ptr = *uxit * *uyit++ * _ktab->interpolate(kx0, ky, _kInterp);
+        im.setZero();
+        ky = ky0;
+        uyit = uy.begin();
+        double temp[2*mm]; // Can't put complex<double> array on stack, so reinterpret_cast below.
+        for (int j=j1; j<j2; ++j,ky+=dky,ptr+=skip,++uyit) {
+            memset(temp, 0, 2*mm * sizeof(double));
+            dbg<<"j = "<<j<<", ky = "<<ky<<std::endl;
+            // If y is (basically) an integer, only 1 q value.
+            int q1,q2,qmin;
+            if (std::abs(ky-std::floor(ky+0.01)) < SMALL) {
+                q1 = q2 = int(std::floor(ky+0.01));
+                qmin = int(std::ceil(ky-_kInterp.xrange()));
+            } else if (_kInterp.xrange() >= No2) {
+                qmin = q1 = -No2;
+                q2 = No2-1;
+            } else {
+                qmin = q1 = int(std::ceil(ky-_kInterp.xrange()));
+                q2 = int(std::floor(ky+_kInterp.xrange()));
+            }
+            dbg<<"q1,q2 = "<<q1<<','<<q2<<std::endl;
+
+            // Dump any cached rows we don't need anymore.
+            while (rowq_cache.size() > 0 && rowq_cache.begin()->first < qmin) {
+                rowq_cache.erase(rowq_cache.begin());
+            }
+
+            int qwrap1 = WrapKIndex(q1, No2, N);
+            for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
+                if (qwrap == No2) qwrap -= N;
+
+                // Get rowq from cache.  If it isn't there, it will be an empty vector.
+                std::vector<std::complex<double> >& rowq = rowq_cache[q];
+
+                // If this rowq was not in cache, need to make it.
+                if (rowq.size() == 0) {
+                    rowq.resize(mm);
+                    kx = kx0;
+                    int k=0;
+                    std::vector<std::complex<double> >::iterator row_it=rowq.begin();
+                    for (int i=i1; i<i2; ++i,kx+=dkx,++row_it) {
+                        *row_it = 0.;
+                        int p1 = p1ar[i-i1];
+                        int p2 = p2ar[i-i1];
+                        int pwrap1 = WrapKIndex(p1, No2, N);
+                        for (int p=p1, pwrap=pwrap1; p<=p2; ++p, ++pwrap) {
+                            if (pwrap == No2+1) pwrap -= N;
+                            if (pwrap < 0)
+                                if (qwrap == -No2)
+                                    *row_it += xwt[k++] * std::conj((*_kimage)(-pwrap,qwrap));
+                                else
+                                    *row_it += xwt[k++] * std::conj((*_kimage)(-pwrap,-qwrap));
+                            else
+                                *row_it += xwt[k++] * (*_kimage)(pwrap,qwrap);
+                        }
+                    }
+                }
+
+                // Now add that to the output row with the ywt scaling.
+                double ywt = _kInterp.xval(q-ky);
+                std::complex<double>* tptr = reinterpret_cast<std::complex<double>*>(temp);
+                std::vector<std::complex<double> >::const_iterator row_it = rowq.begin();
+                for (int i=i1; i<i2; ++i) {
+                    *tptr++ += *row_it++ * ywt;
+                }
+            }
+
+            // Now account for the x-interpolant
+            // And finally copy onto the real output image.
+            // Note: In addition to getting a tiny efficiency gain from having temp on
+            // the stack while doing the calculation above, this is also important for
+            // accuracy if the output image is complex<float>, so we don't gratuitously
+            // lose precision by adding floats rather than doubles.
+            uxit = ux.begin();
+            std::complex<double>* tptr = reinterpret_cast<std::complex<double>*>(temp);
+            for (int i=i1; i<i2; ++i) {
+                *ptr++ = *uxit++ * *uyit * *tptr++;
+            }
         }
+
+        dbg<<"Done SBInterpolatedImage fillKImage\n";
     }
 
     template <typename T>
