@@ -23,7 +23,6 @@
 #include "SBProfileImpl.h"
 #include "SBInterpolatedImage.h"
 #include "ProbabilityTree.h"
-#include "FFT.h"
 
 namespace galsim {
 
@@ -260,16 +259,14 @@ namespace galsim {
 
     protected:
 
-        int _Ninitx, _Ninity, _Ninitial;
-        int _Nk;
-        mutable double _xcentroid;
-        mutable double _ycentroid;
-
+        const ConstImageView<std::complex<double> > _kimage;
         const Interpolant& _kInterp; ///< Interpolant used in k space.
-        shared_ptr<KTable> _ktab; ///< Final k-space image.
         double _stepk; ///< Stored value of stepK
         double _maxk; ///< Stored value of maxK
         double _flux;
+
+        mutable double _xcentroid;
+        mutable double _ycentroid;
 
         std::string serialize() const;
 

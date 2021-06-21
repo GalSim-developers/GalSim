@@ -292,7 +292,7 @@ class InterpolatedImage(GSObject):
 
         # Store the image as an attribute and make sure we don't change the original image
         # in anything we do here.  (e.g. set scale, etc.)
-        self._image = image.view(dtype=np.float64)
+        self._image = image.view(dtype=np.float64, contiguous=True)
         self._image.setCenter(0,0)
         self._gsparams = GSParams.check(gsparams)
 
@@ -410,7 +410,7 @@ class InterpolatedImage(GSObject):
             if isinstance(pad_image, basestring):
                 pad_image = fits.read(pad_image).view(dtype=np.float64)
             elif isinstance(pad_image, Image):
-                pad_image = pad_image.view(dtype=np.float64)
+                pad_image = pad_image.view(dtype=np.float64, contiguous=True)
             else:
                 raise TypeError("Supplied pad_image must be an Image.", pad_image)
 
@@ -734,7 +734,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     ret = InterpolatedImage.__new__(InterpolatedImage)
 
     # We need to set all the various attributes that are expected to be in an InterpolatedImage:
-    ret._image = image.view(dtype=np.float64)
+    ret._image = image.view(dtype=np.float64, contiguous=True)
     ret._gsparams = GSParams.check(gsparams)
     ret._x_interpolant = x_interpolant.withGSParams(ret._gsparams)
     ret._k_interpolant = k_interpolant.withGSParams(ret._gsparams)
@@ -896,7 +896,6 @@ class InterpolatedKImage(GSObject):
         if not kimage.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Supplied image does not have bounds defined.")
 
-        self._kimage = kimage.copy()
         self._gsparams = GSParams.check(gsparams)
 
         # Check for Hermitian symmetry properties of kimage
@@ -913,6 +912,10 @@ class InterpolatedKImage(GSObject):
                             -kimage[bd].imag.array[::-1,::-1])):
             raise GalSimIncompatibleValuesError(
                 "Real and Imag kimages must form a Hermitian complex matrix.", kimage=kimage)
+
+        # Make sure the image is complex128 and contiguous
+        self._kimage = kimage.view(dtype=np.complex128, contiguous=True)
+        self._kimage.setCenter(0,0)
 
         if stepk is None:
             if self._kimage.scale is None:
@@ -958,8 +961,14 @@ class InterpolatedKImage(GSObject):
     def _sbp(self):
         stepk_image = self.stepk / self.kimage.scale  # usually 1, but could be larger
         with convert_cpp_errors():
+            # C++ layer needs Bounds that look like 0, N/2, -N/2, N/2-1
+            # So find the biggest N that works like that.
+            b = self._kimage.bounds
+            N = min(b.xmax*2, -b.ymin*2, b.ymax*2+1)
+            b = _BoundsI(0, N//2, -(N//2), N//2-1)
+            posx_kimage = self._kimage[b]
             self._sbiki = _galsim.SBInterpolatedKImage(
-                    self.kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
+                    posx_kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
 
         scale = self.kimage.scale
         if scale != 1.:
@@ -1053,7 +1062,8 @@ def _InterpolatedKImage(kimage, k_interpolant, gsparams):
         gsparams:       An optional `GSParams` argument. [default: None]
      """
     ret = InterpolatedKImage.__new__(InterpolatedKImage)
-    ret._kimage = kimage.copy()
+    ret._kimage = kimage.view(dtype=np.complex128, contiguous=True)
+    ret._kimage.shift(-kimage.center)
     ret._stepk = kimage.scale
     ret._gsparams = GSParams.check(gsparams)
     ret._k_interpolant = k_interpolant.withGSParams(gsparams)
