@@ -131,7 +131,6 @@ namespace galsim {
 
         const Interpolant& _xInterp; ///< Interpolant used in real space.
         const Interpolant& _kInterp; ///< Interpolant used in k space.
-        mutable shared_ptr<KTable> _ktab; ///< Final k-space image.
         mutable shared_ptr<ImageAlloc<std::complex<double> > > _kimage;
         mutable double _stepk;
         mutable double _maxk;
@@ -142,7 +141,7 @@ namespace galsim {
         double _maxk1; ///< maxk based just on the xInterp urange
         double _uscale; ///< conversion from k to u for xInterpolant
 
-        /// @brief Make ktab if necessary.
+        /// @brief Make kimage if necessary.
         void checkK() const;
 
         /// @brief Set true if the data structures for photon-shooting are valid
