@@ -793,17 +793,53 @@ namespace galsim {
         double duxy = dkxy * _uscale;
         double duyx = dkyx * _uscale;
 
+        int No2 = _kimage->getBounds().getXMax();
+        int N = No2 * 2;
+        double kscale = No2/M_PI;
+        kx0 *= kscale;
+        dkx *= kscale;
+        dkxy *= kscale;
+        ky0 *= kscale;
+        dky *= kscale;
+        dkyx *= kscale;
+        double maxk1 = _maxk1 * kscale;
+
         for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ux0+=duxy,uy0+=duy,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
             double ux = ux0;
             double uy = uy0;
             for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx,ux+=dux,uy+=duyx) {
-                if (std::abs(kx) > _maxk1 || std::abs(ky) > _maxk1) {
+                if (std::abs(kx) > maxk1 || std::abs(ky) > maxk1) {
                     *ptr++ = T(0);
                 } else {
-                    double xKernelTransform = _xInterp.uval(ux) * _xInterp.uval(uy);
-                    *ptr++ = xKernelTransform * _ktab->interpolate(kx, ky, _kInterp);
+                    int p1 = int(std::ceil(kx-_kInterp.xrange()));
+                    int p2 = int(std::floor(kx+_kInterp.xrange()));
+                    int q1 = int(std::ceil(ky-_kInterp.xrange()));
+                    int q2 = int(std::floor(ky+_kInterp.xrange()));
+
+                    double xwt[p2-p1+1];
+                    for (int p=p1, pp=0; p<=p2; ++p, ++pp) xwt[pp] = _kInterp.xval(p-kx);
+
+                    std::complex<double> sum = 0.;
+                    int pwrap1 = WrapKIndex(p1, No2, N);
+                    int qwrap1 = WrapKIndex(q1, No2, N);
+                    for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
+                        if (qwrap == No2) qwrap -= N;
+                        std::complex<double> xsum = 0.;
+                        for (int p=p1, pwrap=pwrap1, pp=0; p<=p2; ++p, ++pwrap, ++pp) {
+                            if (pwrap == No2+1) pwrap -= N;
+                            if (pwrap < 0)
+                                if (qwrap == -No2)
+                                    xsum += xwt[pp] * std::conj((*_kimage)(-pwrap,qwrap));
+                                else
+                                    xsum += xwt[pp] * std::conj((*_kimage)(-pwrap,-qwrap));
+                            else
+                                xsum += xwt[pp] * (*_kimage)(pwrap,qwrap);
+                        }
+                        sum += xsum * _kInterp.xval(q-ky);
+                    }
+                    *ptr++ = _xInterp.uval(ux) * _xInterp.uval(uy) * sum;
                 }
             }
         }
