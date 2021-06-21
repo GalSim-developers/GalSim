@@ -25,6 +25,9 @@
 #include "SBInterpolatedImage.h"
 #include "SBInterpolatedImageImpl.h"
 
+#ifdef __SSE2__
+#include "xmmintrin.h"
+#endif
 
 namespace galsim {
 
@@ -215,6 +218,167 @@ namespace galsim {
         return k - No2;
     }
 
+    template <bool yn>
+    struct Maybe // true
+    {
+        template <typename T>
+        static inline void increment(T& p) { ++p; }
+        template <typename T>
+        static inline void increment(T& p, int n) { p += n; }
+
+        template <typename T>
+        static inline std::complex<T> conj(const std::complex<T>& x) { return std::conj(x); }
+
+        template <typename T, typename T2>
+        static inline T plus(const T& x, const T2& y) { return x+y; }
+    };
+    template <>
+    struct Maybe<false>
+    {
+        template <typename T>
+        static inline void increment(T& p) { --p; }
+        template <typename T>
+        static inline void increment(T& p, int n) { p -= n; }
+
+        template <typename T>
+        static inline std::complex<T> conj(const std::complex<T>& x) { return x; }
+
+        template <typename T, typename T2>
+        static inline T plus(const T& x, const T2& y) { return x-y; }
+    };
+
+    // A helper function for fast calculation of a dot product of real and complex vectors
+    template <bool c2>
+    static std::complex<double> ZDot(int n, const double* A, const std::complex<double>* B)
+    {
+        if (n) {
+#ifdef __SSE2__
+            std::complex<double> sum(0);
+            while (n && !IsAligned(A) ) {
+                sum += *A * *B;
+                ++A;
+                Maybe<!c2>::increment(B);
+                --n;
+            }
+
+            int n_2 = (n>>1);
+            int nb = n-(n_2<<1);
+
+            if (n_2) {
+                union { __m128d xm; double xd[2]; } xsum;
+                xsum.xm = _mm_set1_pd(0.);
+                __m128d xsum2 = _mm_set1_pd(0.);
+                const std::complex<double>* B1 = Maybe<!c2>::plus(B,1);
+                assert(IsAligned(A));
+                assert(IsAligned(B));
+                do {
+                    const __m128d& xA = *(const __m128d*)(A);
+                    const __m128d& xB1 = *(const __m128d*)(B);
+                    const __m128d& xB2 = *(const __m128d*)(B1);
+                    A += 2;
+                    Maybe<!c2>::increment(B,2);
+                    Maybe<!c2>::increment(B1,2);
+                    __m128d xA1 = _mm_shuffle_pd(xA,xA,_MM_SHUFFLE2(0,0));
+                    __m128d xA2 = _mm_shuffle_pd(xA,xA,_MM_SHUFFLE2(1,1));
+                    __m128d x1 = _mm_mul_pd(xA1,xB1);
+                    __m128d x2 = _mm_mul_pd(xA2,xB2);
+                    xsum.xm = _mm_add_pd(xsum.xm,x1);
+                    xsum2 = _mm_add_pd(xsum2,x2);
+                } while (--n_2);
+                xsum.xm = _mm_add_pd(xsum.xm,xsum2);
+                sum += std::complex<double>(xsum.xd[0],xsum.xd[1]);
+            }
+            if (nb) {
+                sum += *A * *B;
+                ++A;
+                Maybe<!c2>::increment(B);
+            }
+            return Maybe<c2>::conj(sum);
+#else
+            std::complex<double> sum = 0.;
+            do {
+                sum += *A * *B;
+                ++A;
+                Maybe<!c2>::increment(B);
+            } while (--n);
+            return Maybe<c2>::conj(sum);
+#endif
+        } else {
+            return 0.;
+        }
+    }
+
+    // This is the inner loop in all of the KValue calculations, including both the regular
+    // kValue method and both versions of fillKImage.
+    std::complex<double> KValueInnerLoop(int n, int p, int q, int No2, int N, double* xwt,
+                                         const BaseImage<std::complex<double> >& kimage)
+    {
+        std::complex<double> sum = 0.;
+#if 0
+        // This is the more straightforward implementation of this calculation, which we
+        // preserve here for readability.
+        for (; n; --n, ++p) {
+            if (p == No2+1) p -= N;
+            // _kimage doesn't store p<0 half, so need to use the fact that
+            // _kimage(p,q) = conj(_kimage(-p,-q)) when p < 0.
+            if (p < 0)
+                if (q == -No2)
+                    // N.B. _kimage(p,No2) == _kimage(p,-No2)
+                    sum += *xwt++ * std::conj(kimage(-p,q));
+                else
+                    sum += *xwt++ * std::conj(kimage(-p,-q));
+            else
+                sum += *xwt++ * kimage(p,q);
+        }
+#else
+        // This version is more efficient, but a little obfuscated.
+        // It is equivalent in result to the above calculation.
+
+        // Note: q=No2 is not stored in the kimage, so when doing negative p values
+        // we need to use q on the conjugate side, not -q.
+        // Figure this out now, so we can ignore this subtlety below.
+        int mq = q == -No2 ? q : -q;
+        assert(kimage.getStep() == 1);
+
+        // First do any negative p values
+        if (p < 0) {
+            xdbg<<"Some initial negative p: p = "<<p<<std::endl;
+            int n1 = std::min(n, -p);
+            xdbg<<"n1 = "<<n1<<std::endl;
+            n -= n1;
+            const std::complex<double>* ptr = &kimage(-p,mq);
+            sum += ZDot<true>(n1, xwt, ptr);
+            xwt += n1;
+            p = 0;
+        }
+
+        // Next do positive p values:
+        if (n) {
+            xdbg<<"Positive p: p = "<<p<<std::endl;
+            const std::complex<double>* ptr = &kimage(p,q);
+            int n1 = std::min(n, No2+1-p);
+            xdbg<<"n1 = "<<n1<<std::endl;
+            n -= n1;
+            sum += ZDot<false>(n1, xwt, ptr);
+            xwt += n1;
+        }
+
+        // Finally if we've wrapped around again, do more negative p values:
+        if (n) {
+            xdbg<<"More negative p: p = "<<p<<std::endl;
+            int n1 = std::min(n, No2);
+            // Note: n1 is always n in practice, but this prevents pointer access going past
+            // edges of image if there is some unanticipated use case where it isn't.
+            xassert(n < No2);
+            xdbg<<"n1 = "<<n1<<std::endl;
+            p = -No2+1;
+            const std::complex<double>* ptr = &kimage(-p,mq);
+            sum += ZDot<true>(n1, xwt, ptr);
+        }
+#endif
+        return sum;
+    }
+
     std::complex<double> SBInterpolatedImage::SBInterpolatedImageImpl::kValue(
         const Position<double>& kpos) const
     {
@@ -269,20 +433,7 @@ namespace galsim {
         dbg<<"kimage bounds = "<<_kimage->getBounds()<<std::endl;
         for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
             if (qwrap == No2) qwrap -= N;
-            std::complex<double> xsum = 0.;
-            for (int p=p1, pwrap=pwrap1, pp=0; p<=p2; ++p, ++pwrap, ++pp) {
-                if (pwrap == No2+1) pwrap -= N;
-                // _kimage doesn't store p<0 half, so need to use the fact that
-                // _kimage(p,q) = conj(_kimage(-p,-q)) when p < 0.
-                if (pwrap < 0)
-                    if (qwrap == -No2)
-                        // N.B. _kimage(p,No2) == _kimage(p,-No2)
-                        xsum += xwt[pp] * std::conj((*_kimage)(-pwrap,qwrap));
-                    else
-                        xsum += xwt[pp] * std::conj((*_kimage)(-pwrap,-qwrap));
-                else
-                    xsum += xwt[pp] * (*_kimage)(pwrap,qwrap);
-            }
+            std::complex<double> xsum = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt,*_kimage);
             sum += xsum * _kInterp.xval(q-ky);
         }
 
@@ -715,21 +866,12 @@ namespace galsim {
                     kx = kx0;
                     int k=0;
                     std::vector<std::complex<double> >::iterator row_it=rowq.begin();
-                    for (int i=i1; i<i2; ++i,kx+=dkx,++row_it) {
-                        *row_it = 0.;
+                    for (int i=i1; i<i2; ++i,kx+=dkx) {
                         int p1 = p1ar[i-i1];
                         int p2 = p2ar[i-i1];
                         int pwrap1 = WrapKIndex(p1, No2, N);
-                        for (int p=p1, pwrap=pwrap1; p<=p2; ++p, ++pwrap) {
-                            if (pwrap == No2+1) pwrap -= N;
-                            if (pwrap < 0)
-                                if (qwrap == -No2)
-                                    *row_it += xwt[k++] * std::conj((*_kimage)(-pwrap,qwrap));
-                                else
-                                    *row_it += xwt[k++] * std::conj((*_kimage)(-pwrap,-qwrap));
-                            else
-                                *row_it += xwt[k++] * (*_kimage)(pwrap,qwrap);
-                        }
+                        *row_it++ = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,&xwt[k],*_kimage);
+                        k += p2-p1+1;
                     }
                 }
 
@@ -814,18 +956,8 @@ namespace galsim {
                     int qwrap1 = WrapKIndex(q1, No2, N);
                     for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
                         if (qwrap == No2) qwrap -= N;
-                        std::complex<double> xsum = 0.;
-                        for (int p=p1, pwrap=pwrap1, pp=0; p<=p2; ++p, ++pwrap, ++pp) {
-                            if (pwrap == No2+1) pwrap -= N;
-                            if (pwrap < 0)
-                                if (qwrap == -No2)
-                                    xsum += xwt[pp] * std::conj((*_kimage)(-pwrap,qwrap));
-                                else
-                                    xsum += xwt[pp] * std::conj((*_kimage)(-pwrap,-qwrap));
-                            else
-                                xsum += xwt[pp] * (*_kimage)(pwrap,qwrap);
-                        }
-                        sum += xsum * _kInterp.xval(q-ky);
+                        double ywt = _kInterp.xval(q-ky);
+                        sum += ywt * KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt,*_kimage);
                     }
                     *ptr++ = _xInterp.uval(ux) * _xInterp.uval(uy) * sum;
                 }
