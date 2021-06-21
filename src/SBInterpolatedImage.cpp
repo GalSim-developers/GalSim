@@ -232,7 +232,7 @@ namespace galsim {
 
         int No2 = _kimage->getBounds().getXMax();
         int N = No2 * 2;
-        double kscale = No2/M_PI;
+        double kscale = No2/M_PI; // This is 1/dk
         xdbg<<"kimage bounds = "<<_kimage->getBounds()<<", scale = "<<kscale<<std::endl;
         kx *= kscale;
         ky *= kscale;
@@ -1029,9 +1029,9 @@ namespace galsim {
         dbg<<"Find the smallest k such that all values outside of this are less than "
             <<this->gsparams.maxk_threshold<<std::endl;
         checkK();
-        dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
 
-        double dk = _ktab->getDk();
+        int No2 = _kimage->getBounds().getXMax();
+        double dk = M_PI/No2;
 
         // Among the elements with kval > thresh, find the one with the maximum ksq
         double thresh = this->gsparams.maxk_threshold * getFlux();
@@ -1039,11 +1039,10 @@ namespace galsim {
         double maxk_ix = 0.;
         // When we get 5 rows in a row all below thresh, stop.
         int n_below_thresh = 0;
-        int N = _ktab->getN();
         // Don't go past the current value of maxk
         if (max_maxk == 0.) max_maxk = _maxk;
         int max_ix = int(std::ceil(max_maxk / dk));
-        if (max_ix > N/2) max_ix = N/2;
+        if (max_ix > No2) max_ix = No2;
 
         // We take the k value to be maximum of kx and ky.  This is appropriate, because
         // this is how maxK() is eventually used -- it sets the size in k-space for both
@@ -1054,25 +1053,24 @@ namespace galsim {
             xdbg<<"Start search for ix = "<<ix<<std::endl;
             // Search along the two sides with either kx = ix or ky = ix.
             for(int iy=0; iy<=ix; ++iy) {
-                // The right side of the square in the upper-right quadrant.
-                double norm_kval = fast_norm(_ktab->kval2(ix,iy));
-                xdbg<<"norm_kval at "<<ix<<','<<iy<<" = "<<norm_kval<<std::endl;
-                if (norm_kval <= thresh && iy != ix) {
+                // The bottom side of the square in the lower-right quadrant.
+                double norm_kval = fast_norm((*_kimage)(iy,-ix));
+                xdbg<<"norm_kval at "<<iy<<','<<-ix<<" = "<<norm_kval<<std::endl;
+                if (norm_kval <= thresh && iy != ix && ix != No2) {
                     // The top side of the square in the upper-right quadrant.
-                    norm_kval = fast_norm(_ktab->kval2(iy,ix));
+                    norm_kval = fast_norm((*_kimage)(iy,ix));
                     xdbg<<"norm_kval at "<<iy<<','<<ix<<" = "<<norm_kval<<std::endl;
                 }
                 if (norm_kval <= thresh && iy > 0) {
                     // The right side of the square in the lower-right quadrant.
-                    // The ky argument is wrapped to positive values.
-                    norm_kval = fast_norm(_ktab->kval2(ix,N-iy));
+                    norm_kval = fast_norm((*_kimage)(ix,-iy));
                     xdbg<<"norm_kval at "<<ix<<','<<-iy<<" = "<<norm_kval<<std::endl;
                 }
-                if (norm_kval <= thresh && ix > 0) {
-                    // The bottom side of the square in the lower-right quadrant.
+                if (norm_kval <= thresh && ix > 0 && iy != No2) {
+                    // The right side of the square in the upper-right quadrant.
                     // The ky argument is wrapped to positive values.
-                    norm_kval = fast_norm(_ktab->kval2(iy,N-ix));
-                    xdbg<<"norm_kval at "<<iy<<','<<-ix<<" = "<<norm_kval<<std::endl;
+                    norm_kval = fast_norm((*_kimage)(ix,iy));
+                    xdbg<<"norm_kval at "<<ix<<','<<iy<<" = "<<norm_kval<<std::endl;
                 }
                 if (norm_kval > thresh) {
                     xdbg<<"This one is above thresh\n";
