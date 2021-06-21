@@ -168,15 +168,16 @@ namespace galsim {
         double y = pos.y;
 
         int p1, p2, q1, q2;  // Range over which we need to sum.
+        const double SMALL = 10.*std::numeric_limits<double>::epsilon();
 
         // If x or y are integers, only sum 1 element in that direction.
-        if (std::abs(x-std::floor(x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+        if (std::abs(x-std::floor(x+0.01)) < SMALL) {
             p1 = p2 = int(std::floor(x+0.01));
         } else {
             p1 = int(std::ceil(x-_xInterp.xrange()));
             p2 = int(std::floor(x+_xInterp.xrange()));
         }
-        if (std::abs(y-std::floor(y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+        if (std::abs(y-std::floor(y+0.01)) < SMALL) {
             q1 = q2 = int(std::floor(y+0.01));
         } else {
             q1 = int(std::ceil(y-_xInterp.xrange()));
@@ -405,15 +406,16 @@ namespace galsim {
         // Note, unlike for xValue, whre we limited the range to the size of the image,
         // here, we allow i,j to nominally go off the kimage bounds, in which case we
         // wrap around when using it, due to the periodic nature of the fft.
+        const double SMALL = 10.*std::numeric_limits<double>::epsilon();
 
-        if (std::abs(kx-std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+        if (std::abs(kx-std::floor(kx+0.01)) < SMALL) {
             // If kx or ky are integers, only sum 1 element in that direction.
             p1 = p2 = int(std::floor(kx+0.01));
         } else {
             p1 = int(std::ceil(kx-_kInterp.xrange()));
             p2 = int(std::floor(kx+_kInterp.xrange()));
         }
-        if (std::abs(ky-std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+        if (std::abs(ky-std::floor(ky+0.01)) < SMALL) {
             q1 = q2 = int(std::floor(ky+0.01));
         } else {
             q1 = int(std::ceil(ky-_kInterp.xrange()));
@@ -805,7 +807,7 @@ namespace galsim {
         int k=0;
         for (int i=i1; i<i2; ++i,kx+=dkx) {
             int p1, p2;  // Range over which we need to sum.
-            if (std::abs(kx-std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
+            if (std::abs(kx-std::floor(kx+0.01)) < SMALL) {
                 // If kx is integer, only sum 1 element in that direction.
                 p1 = p2 = int(std::floor(kx+0.01));
             } else {
@@ -814,7 +816,7 @@ namespace galsim {
             }
             p1ar[i-i1] = p1;
             p2ar[i-i1] = p2;
-            dbg<<"i = "<<i<<"  kx = "<<kx<<": p1,p2 = "<<p1<<','<<p2<<std::endl;
+            xdbg<<"i = "<<i<<"  kx = "<<kx<<": p1,p2 = "<<p1<<','<<p2<<std::endl;
 
             for (int p=p1; p<=p2; ++p) {
                 xwt[k++] = _kInterp.xval(p-kx);
@@ -836,7 +838,7 @@ namespace galsim {
         double temp[2*mm]; // Can't put complex<double> array on stack, so reinterpret_cast below.
         for (int j=j1; j<j2; ++j,ky+=dky,ptr+=skip,++uyit) {
             memset(temp, 0, 2*mm * sizeof(double));
-            dbg<<"j = "<<j<<", ky = "<<ky<<std::endl;
+            xdbg<<"j = "<<j<<", ky = "<<ky<<std::endl;
             // If y is (basically) an integer, only 1 q value.
             int q1,q2,qmin;
             if (std::abs(ky-std::floor(ky+0.01)) < SMALL) {
@@ -846,7 +848,7 @@ namespace galsim {
                 qmin = q1 = int(std::ceil(ky-_kInterp.xrange()));
                 q2 = int(std::floor(ky+_kInterp.xrange()));
             }
-            dbg<<"q1,q2 = "<<q1<<','<<q2<<std::endl;
+            xdbg<<"q1,q2 = "<<q1<<','<<q2<<std::endl;
 
             // Dump any cached rows we don't need anymore.
             while (rowq_cache.size() > 0 && rowq_cache.begin()->first < qmin) {
@@ -1347,42 +1349,21 @@ namespace galsim {
         const BaseImage<std::complex<double> >& kimage, double stepk,
         const Interpolant& kInterp, const GSParams& gsparams) :
         SBProfileImpl(gsparams),
+        _kimage(kimage.view()),
         _kInterp(kInterp), _stepk(stepk), _maxk(0.) //fill in maxk below
     {
         // Note that _stepk indicates the maximum pitch for drawImage() to use when rendering an
-        // image, in units of the sampling pitch of the input images.  _stepk must be greater than
-        // 1.0
+        // image, in units of the sampling pitch of the input images.
+        // _stepk must be at least 1.0.
         assert(_stepk >= 1.0);
 
         dbg<<"stepk = "<<_stepk<<std::endl;
         dbg<<"kimage bounds = "<<kimage.getBounds()<<std::endl;
 
-        _Ninitx = kimage.getXMax()-kimage.getXMin()+1;
-        _Ninity = kimage.getYMax()-kimage.getYMin()+1;
-        _Ninitial = std::max(_Ninitx, _Ninity);
-        dbg<<"_Ninitial = "<<_Ninitial<<std::endl;
-        _Nk = goodFFTSize(int(_Ninitial));
-        dbg<<"_Nk = "<<_Nk<<std::endl;
-
-        _ktab = shared_ptr<KTable>(new KTable(_Nk, 1.0));
-        _maxk = _Ninitial/2;
+        int No2 = _kimage.getBounds().getXMax();
+        _maxk = No2;
         dbg<<"_maxk = "<<_maxk<<std::endl;
 
-        // Only need to fill in x>=0 since the negative x's are the Hermitian
-        // conjugates of the positive x's.
-        int kxStart = 0;
-        int ikxStart = (kimage.getXMin()+kimage.getXMax()+1)/2;
-        int ky = -((kimage.getYMax()-kimage.getYMin()+1)/2);
-        dbg<<"kxStart = "<<kxStart<<", kyStart = "<<ky<<std::endl;
-        for (int iky = kimage.getYMin(); iky<= kimage.getYMax(); ++iky, ++ky) {
-             int kx = kxStart;
-             for (int ikx = ikxStart; ikx<= kimage.getXMax(); ++ikx, ++kx) {
-                 std::complex<double> kvalue = kimage(ikx, iky);
-                 _ktab->kSet(kx, ky, kvalue);
-                 xxdbg<<"ikx,iky,kx,ky = "<<ikx<<','<<iky<<','<<kx<<','<<ky<<std::endl;
-                 xxdbg<<"kvalue = "<<kvalue<<std::endl;
-             }
-        }
         _flux = kValue(Position<double>(0.,0.)).real();
         dbg<<"flux = "<<_flux<<std::endl;
         setCentroid();
@@ -1402,42 +1383,46 @@ namespace galsim {
             Of course, lim kx->0 sin(kx)/kx is 1 though, so that term survives.  Algebra
             eventually reduces the above expression to what's in the code below.
          */
+        int No2 = _kimage.getBounds().getXMax();
         double xsum(0.0), ysum(0.0);
-        int iky = -_Ninitial/2;
+        int iky = -No2;
         double sign = (iky % 2 == 0) ? 1.0 : -1.0;
-        for (; iky < _Ninitial/2; iky++, sign = -sign) {
+        for (; iky < No2; iky++, sign = -sign) {
             if (iky == 0) continue;
-            ysum += sign / iky * _ktab->kval(0, iky).imag();
+            ysum += sign / iky * _kimage(0, iky).imag();
         }
-        int ikx = -_Ninitial/2;
+        int ikx = -No2;
         sign = (ikx % 2 == 0) ? 1.0 : -1.0;
-        for (; ikx < _Ninitial/2; ikx++, sign = -sign) {
+        for (; ikx < No2; ikx++, sign = -sign) {
             if (ikx == 0) continue;
-            xsum += sign / ikx * _ktab->kval(ikx, 0).imag();
+            if (ikx < 0) {
+                // kimage(i,0) = conj(kimage(-i,0)
+                // so imag part gets a - sign.
+                xsum -= sign / ikx * _kimage(-ikx, 0).imag();
+            } else {
+                xsum += sign / ikx * _kimage(ikx, 0).imag();
+            }
         }
         _xcentroid = xsum/_flux;
         _ycentroid = ysum/_flux;
     }
 
-    // "Serialization" constructor.  Only used when unpickling an InterpolatedKImage.
+    // "Serialization" constructor.
+    // Not used anymore.
     SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
         const BaseImage<double>& data, double stepk, double maxk,
         const Interpolant& kInterp,
         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
+        _kimage(reinterpret_cast<std::complex<double>*>(const_cast<double*>(data.getData())),
+                std::shared_ptr<std::complex<double> >(),
+                1, data.getStride()/2,
+                Bounds<int>(0,
+                            data.getBounds().getXMax()/2,
+                            data.getBounds().getYMin(),
+                            data.getBounds().getYMax())),
         _kInterp(kInterp), _stepk(stepk), _maxk(maxk)
     {
-        dbg << "Using alternative constructor" << std::endl;
-        _Nk = 2*(data.getYMax() - data.getYMin());
-        dbg << "_Nk = " << _Nk << std::endl;
-        // Original _Ninitial could have been smaller, but setting it equal to _Nk should be
-        // safe nonetheless.
-        _Ninitial = _Ninitx = _Ninity = _Nk;
-        _ktab = shared_ptr<KTable>(new KTable(_Nk, 1.0));
-        double *kptr = reinterpret_cast<double*>(_ktab->getArray());
-        const double* ptr = data.getData();
-        for(int i=0; i<2*_Nk*(_Nk/2+1); i++)
-            kptr[i] = ptr[i];
         _flux = kValue(Position<double>(0.,0.)).real();
         setCentroid();
     }
@@ -1450,12 +1435,56 @@ namespace galsim {
     }
 
     std::complex<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::kValue(
-        const Position<double>& k) const
+        const Position<double>& kpos) const
     {
-        xdbg<<"evaluating kValue("<<k.x<<","<<k.y<<")"<<std::endl;
-        xdbg<<"_maxk = "<<_maxk<<std::endl;
-        if (std::abs(k.x) > _maxk || std::abs(k.y) > _maxk) return std::complex<double>(0.,0.);
-        return _ktab->interpolate(k.x, k.y, _kInterp);
+        // Basically the same as SBInterpolatedImag::kValue, but no x-interpolant to deal with.
+        double kx = kpos.x;
+        double ky = kpos.y;
+
+        dbg<<"evaluating kValue("<<kx<<","<<ky<<")"<<std::endl;
+
+        if (std::abs(kx) > _maxk || std::abs(ky) > _maxk) return std::complex<double>(0.,0.);
+
+        int No2 = _kimage.getBounds().getXMax();
+        int N = No2 * 2;
+        xdbg<<"kimage bounds = "<<_kimage.getBounds()<<std::endl;
+
+        int p1, p2, q1, q2;  // Range over which we need to sum.
+        const double SMALL = 10.*std::numeric_limits<double>::epsilon();
+
+        if (std::abs(kx-std::floor(kx+0.01)) < SMALL) {
+            // If kx or ky are integers, only sum 1 element in that direction.
+            p1 = p2 = int(std::floor(kx+0.01));
+        } else {
+            p1 = int(std::ceil(kx-_kInterp.xrange()));
+            p2 = int(std::floor(kx+_kInterp.xrange()));
+        }
+        if (std::abs(ky-std::floor(ky+0.01)) < SMALL) {
+            q1 = q2 = int(std::floor(ky+0.01));
+        } else {
+            q1 = int(std::ceil(ky-_kInterp.xrange()));
+            q2 = int(std::floor(ky+_kInterp.xrange()));
+        }
+        dbg<<"p range = "<<p1<<"..."<<p2<<std::endl;
+        dbg<<"q range = "<<q1<<"..."<<q2<<std::endl;
+
+        // We'll need these for each row.  Save them.
+        double xwt[p2-p1+1];
+        for (int p=p1, pp=0; p<=p2; ++p, ++pp) xwt[pp] = _kInterp.xval(p-kx);
+
+        std::complex<double> sum = 0.;
+        int pwrap1 = WrapKIndex(p1, No2, N);
+        int qwrap1 = WrapKIndex(q1, No2, N);
+        dbg<<"pwrap, qwrap = "<<qwrap1<<','<<qwrap1<<std::endl;
+        dbg<<"kimage bounds = "<<_kimage.getBounds()<<std::endl;
+        for (int q=q1, qwrap=qwrap1; q<=q2; ++q, ++qwrap) {
+            if (qwrap == No2) qwrap -= N;
+            std::complex<double> xsum = KValueInnerLoop(p2-p1+1,pwrap1,qwrap,No2,N,xwt,_kimage);
+            sum += xsum * _kInterp.xval(q-ky);
+        }
+
+        dbg<<"sum = "<<sum<<std::endl;
+        return sum;
     }
 
     double SBInterpolatedKImage::SBInterpolatedKImageImpl::maxSB() const
@@ -1474,20 +1503,18 @@ namespace galsim {
         return Position<double>(_xcentroid, _ycentroid);
     }
 
+    // Not used anymore.
     ConstImageView<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::getKData() const
     {
-        int N = _ktab->getN();
-        dbg << "_ktab->getN(): " << N << std::endl;
-        double *data = reinterpret_cast<double*>(_ktab->getArray());
-        // JM - I'm not completely confident that I got the dimensions below correct,
-        //      (i.e., should it be (2N x N/2+1) or (N/2+1 x 2N)?), but it doesn't
-        //      actually matter for the intended application, which is just to store and
-        //      later retrieve the 2N * N/2+1 memory-contiguous numbers representing the
-        //      KTable.
+        double* data = const_cast<double*>(reinterpret_cast<const double*>(_kimage.getData()));
+        int No2 = _kimage.getBounds().getXMax();
+        int N = 2*No2;
         return ConstImageView<double>(data, shared_ptr<double>(), 1, 2*N,
-                                      Bounds<int>(0,2*N-1,0,N/2));
+                                      Bounds<int>(0,N+1,-No2,No2-1));
     }
 
+    // Not used anymore.
+    // MJ: Maybe time to remove all these SBProfile serialize functions?
     std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::serialize() const
     {
         std::ostringstream oss(" ");

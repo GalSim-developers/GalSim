@@ -1018,7 +1018,8 @@ class Image(object):
                 "Trying to copy images that are not the same shape", self_image=self, rhs=rhs)
         self._array[:,:] = rhs.array[:,:]
 
-    def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False, dtype=None):
+    def view(self, scale=None, wcs=None, origin=None, center=None,
+             make_const=False, dtype=None, contiguous=False):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
         but view the same underlying data as the original image.
 
@@ -1035,6 +1036,7 @@ class Image(object):
             make_const: Make the view's data array immutable. [default: False]
             dtype:      If provided, ensure that the output has this dtype.  If the original
                         Image is a different dtype, then a copy will be made. [default: None]
+            contiguous: If provided, ensure that the output array is contiguous. [default: False]
         """
         if origin is not None and center is not None:
             raise GalSimIncompatibleValuesError(
@@ -1060,7 +1062,9 @@ class Image(object):
 
         # Recast the array type if necessary
         if dtype != self.array.dtype:
-            array = self.array.astype(float)
+            array = self.array.astype(dtype)
+        elif contiguous:
+            array = np.ascontiguousarray(self.array)
         else:
             array = self.array
 
