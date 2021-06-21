@@ -245,19 +245,12 @@ namespace galsim {
         if (std::abs(kx-std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // If kx or ky are integers, only sum 1 element in that direction.
             p1 = p2 = int(std::floor(kx+0.01));
-        } else if (_kInterp.xrange() >= No2) {
-            // If interpolant covers whole kimage, use all elements
-            p1 = -No2;
-            p2 = No2-1;
         } else {
             p1 = int(std::ceil(kx-_kInterp.xrange()));
             p2 = int(std::floor(kx+_kInterp.xrange()));
         }
         if (std::abs(ky-std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             q1 = q2 = int(std::floor(ky+0.01));
-        } else if (_kInterp.xrange() >= No2) {
-            q1 = -No2;
-            q2 = No2-1;
         } else {
             q1 = int(std::ceil(ky-_kInterp.xrange()));
             q2 = int(std::floor(ky+_kInterp.xrange()));
@@ -676,10 +669,6 @@ namespace galsim {
             if (std::abs(kx-std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
                 // If kx is integer, only sum 1 element in that direction.
                 p1 = p2 = int(std::floor(kx+0.01));
-            } else if (_kInterp.xrange() >= No2) {
-                // If interpolant covers whole kimage, use all elements
-                p1 = -No2;
-                p2 = No2-1;
             } else {
                 p1 = int(std::ceil(kx-_kInterp.xrange()));
                 p2 = int(std::floor(kx+_kInterp.xrange()));
@@ -714,9 +703,6 @@ namespace galsim {
             if (std::abs(ky-std::floor(ky+0.01)) < SMALL) {
                 q1 = q2 = int(std::floor(ky+0.01));
                 qmin = int(std::ceil(ky-_kInterp.xrange()));
-            } else if (_kInterp.xrange() >= No2) {
-                qmin = q1 = -No2;
-                q2 = No2-1;
             } else {
                 qmin = q1 = int(std::ceil(ky-_kInterp.xrange()));
                 q2 = int(std::floor(ky+_kInterp.xrange()));
