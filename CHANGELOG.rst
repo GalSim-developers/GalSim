@@ -156,6 +156,7 @@ New Features
 Performance Improvements
 ------------------------
 
+- Sped up the draw routines for InterpolatedImage. (#935)
 - Improved the rendering of Roman PSFs to always show 12 diffraction spikes
   (rather than 6 in the now-deprecated approximate_struts mode), remove an
   FFT artifact in the exact pupil plane mode, and significantly speed up all
