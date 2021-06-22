@@ -65,6 +65,7 @@ using Eigen::VectorXd;
 #include "hsm/PSFCorr.h"
 #include "math/Nan.h"
 #include "FFT.h"
+#include "Image.h"
 
 namespace galsim {
 namespace hsm {
@@ -309,19 +310,22 @@ namespace hsm {
     {
 #if 1
         // Allocate memory
-        FFTW_Array<std::complex<double> > b1(nn);
-        FFTW_Array<std::complex<double> > b2(nn);
+        typedef std::complex<double> CD;
+        std::shared_ptr<CD> b1p = allocateAlignedMemory<CD>(nn);
+        std::shared_ptr<CD> b2p = allocateAlignedMemory<CD>(nn);
+        CD* b1 = b1p.get();
+        CD* b2 = b2p.get();
 
         // Copy data to b1
         // Note: insert - sign for imag part because
         //       Num Rec FFT  uses exp(+i*2*pi*m*n/N) whereas
         //               FFTW uses exp(-i*2*pi*m*n/N)
         for (int i=0; i<nn; ++i){
-            b1[i] =  std::complex<double>(data[2*i] , -data[2*i+1]);
+            b1[i] =  CD(data[2*i] , -data[2*i+1]);
         }
 
         // Make the fftw plan
-        fftw_plan plan=fftw_plan_dft_1d(nn, b1.get_fftw(), b2.get_fftw(),
+        fftw_plan plan=fftw_plan_dft_1d(nn, (fftw_complex*) b1, (fftw_complex*) b2,
                                         isign == 1 ? FFTW_FORWARD : FFTW_BACKWARD,
                                         FFTW_ESTIMATE);
         if (plan == NULL) throw FFTInvalid();
