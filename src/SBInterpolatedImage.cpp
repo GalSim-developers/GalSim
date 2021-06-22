@@ -22,12 +22,13 @@
 #include <vector>
 #include <map>
 #include <algorithm>
-#include "SBInterpolatedImage.h"
-#include "SBInterpolatedImageImpl.h"
-
 #ifdef __SSE2__
 #include "xmmintrin.h"
 #endif
+
+#include "SBInterpolatedImage.h"
+#include "SBInterpolatedImageImpl.h"
+#include "Std.h"
 
 namespace galsim {
 
@@ -171,13 +172,13 @@ namespace galsim {
         const double SMALL = 10.*std::numeric_limits<double>::epsilon();
 
         // If x or y are integers, only sum 1 element in that direction.
-        if (std::abs(x-std::floor(x+0.01)) < SMALL) {
+        if (std::abs(x-std::floor(x+0.01)) < SMALL*(std::abs(x)+1)) {
             p1 = p2 = int(std::floor(x+0.01));
         } else {
             p1 = int(std::ceil(x-_xInterp.xrange()));
             p2 = int(std::floor(x+_xInterp.xrange()));
         }
-        if (std::abs(y-std::floor(y+0.01)) < SMALL) {
+        if (std::abs(y-std::floor(y+0.01)) < SMALL*(std::abs(y)+1)) {
             q1 = q2 = int(std::floor(y+0.01));
         } else {
             q1 = int(std::ceil(y-_xInterp.xrange()));
@@ -408,14 +409,14 @@ namespace galsim {
         // wrap around when using it, due to the periodic nature of the fft.
         const double SMALL = 10.*std::numeric_limits<double>::epsilon();
 
-        if (std::abs(kx-std::floor(kx+0.01)) < SMALL) {
+        if (std::abs(kx-std::floor(kx+0.01)) < SMALL*(std::abs(kx)+1)) {
             // If kx or ky are integers, only sum 1 element in that direction.
             p1 = p2 = int(std::floor(kx+0.01));
         } else {
             p1 = int(std::ceil(kx-_kInterp.xrange()));
             p2 = int(std::floor(kx+_kInterp.xrange()));
         }
-        if (std::abs(ky-std::floor(ky+0.01)) < SMALL) {
+        if (std::abs(ky-std::floor(ky+0.01)) < SMALL*(std::abs(ky)+1)) {
             q1 = q2 = int(std::floor(ky+0.01));
         } else {
             q1 = int(std::ceil(ky-_kInterp.xrange()));
@@ -548,7 +549,7 @@ namespace galsim {
             int p1,p2;
             // If x is (basically) an integer, only 1 p value.
             // Otherwise, have a range based on xInterp.xrange()
-            if (std::abs(x-std::floor(x+0.01)) < SMALL) {
+            if (std::abs(x-std::floor(x+0.01)) < SMALL*(std::abs(x)+1)) {
                 p1 = p2 = int(std::floor(x+0.01));
             } else {
                 p1 = int(std::ceil(x-_xInterp.xrange()));
@@ -559,8 +560,11 @@ namespace galsim {
             if (p2 > _nonzero_bounds.getXMax()) p2 = _nonzero_bounds.getXMax();
             p1ar[i-i1] = p1;
             p2ar[i-i1] = p2;
+            xdbg<<"i = "<<i<<"  x = "<<x<<": p1,p2 = "<<p1<<','<<p2<<std::endl;
+            assert(p2-p1+1 <= _xInterp.ixrange());
 
             for (int p=p1; p<=p2; ++p) {
+                xassert(k < _xInterp.ixrange()*mm);
                 xwt[k++] = _xInterp.xval(p-x);
             }
         }
@@ -581,7 +585,7 @@ namespace galsim {
             // Subtlety: also keep track of the minimum q we want to keep in the cache, which
             // may be less than q1 to account for sometimes y being integer, sometimes not.
             int q1,q2,qmin;
-            if (std::abs(y-std::floor(y+0.01)) < SMALL) {
+            if (std::abs(y-std::floor(y+0.01)) < SMALL*(std::abs(y)+1)) {
                 q1 = q2 = int(std::floor(y+0.01));
                 qmin = int(std::ceil(y-_xInterp.xrange()));
             } else {
@@ -807,7 +811,7 @@ namespace galsim {
         int k=0;
         for (int i=i1; i<i2; ++i,kx+=dkx) {
             int p1, p2;  // Range over which we need to sum.
-            if (std::abs(kx-std::floor(kx+0.01)) < SMALL) {
+            if (std::abs(kx-std::floor(kx+0.01)) < SMALL*(std::abs(kx)+1)) {
                 // If kx is integer, only sum 1 element in that direction.
                 p1 = p2 = int(std::floor(kx+0.01));
             } else {
@@ -817,8 +821,10 @@ namespace galsim {
             p1ar[i-i1] = p1;
             p2ar[i-i1] = p2;
             xdbg<<"i = "<<i<<"  kx = "<<kx<<": p1,p2 = "<<p1<<','<<p2<<std::endl;
+            assert(p2-p1+1 <= _kInterp.ixrange());
 
             for (int p=p1; p<=p2; ++p) {
+                xassert(k < _kInterp.ixrange()*mm);
                 xwt[k++] = _kInterp.xval(p-kx);
             }
         }
@@ -841,7 +847,7 @@ namespace galsim {
             xdbg<<"j = "<<j<<", ky = "<<ky<<std::endl;
             // If y is (basically) an integer, only 1 q value.
             int q1,q2,qmin;
-            if (std::abs(ky-std::floor(ky+0.01)) < SMALL) {
+            if (std::abs(ky-std::floor(ky+0.01)) < SMALL*(std::abs(ky)+1)) {
                 q1 = q2 = int(std::floor(ky+0.01));
                 qmin = int(std::ceil(ky-_kInterp.xrange()));
             } else {
@@ -882,6 +888,8 @@ namespace galsim {
                 std::complex<double>* tptr = reinterpret_cast<std::complex<double>*>(temp);
                 std::vector<std::complex<double> >::const_iterator row_it = rowq.begin();
                 for (int i=i1; i<i2; ++i) {
+                    xassert(row_it < rowq.end());
+                    xassert((void*)tptr < (void*)(temp + 2*mm));
                     *tptr++ += *row_it++ * ywt;
                 }
             }
@@ -895,6 +903,10 @@ namespace galsim {
             uxit = ux.begin();
             std::complex<double>* tptr = reinterpret_cast<std::complex<double>*>(temp);
             for (int i=i1; i<i2; ++i) {
+                xassert(ptr < im.getData() + im.getNElements());
+                xassert(uxit < ux.end());
+                xassert(uyit < uy.end());
+                xassert((void*)tptr < (void*)(temp + 2*mm));
                 *ptr++ = *uxit++ * *uyit * *tptr++;
             }
         }
@@ -1452,14 +1464,14 @@ namespace galsim {
         int p1, p2, q1, q2;  // Range over which we need to sum.
         const double SMALL = 10.*std::numeric_limits<double>::epsilon();
 
-        if (std::abs(kx-std::floor(kx+0.01)) < SMALL) {
+        if (std::abs(kx-std::floor(kx+0.01)) < SMALL*(std::abs(kx)+1)) {
             // If kx or ky are integers, only sum 1 element in that direction.
             p1 = p2 = int(std::floor(kx+0.01));
         } else {
             p1 = int(std::ceil(kx-_kInterp.xrange()));
             p2 = int(std::floor(kx+_kInterp.xrange()));
         }
-        if (std::abs(ky-std::floor(ky+0.01)) < SMALL) {
+        if (std::abs(ky-std::floor(ky+0.01)) < SMALL*(std::abs(ky)+1)) {
             q1 = q2 = int(std::floor(ky+0.01));
         } else {
             q1 = int(std::ceil(ky-_kInterp.xrange()));
