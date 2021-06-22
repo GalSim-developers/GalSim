@@ -29,9 +29,6 @@
 // An interface for dealing with images
 #include "galsim/Image.h"
 
-// FFT's
-#include "galsim/FFT.h"
-
 // Noise stuff
 #include "galsim/Random.h"
 

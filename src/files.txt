@@ -1,5 +1,4 @@
 BinomFact.cpp
-FFT.cpp
 Image.cpp
 Interpolant.cpp
 Laguerre.cpp
