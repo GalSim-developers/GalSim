@@ -23,6 +23,8 @@ template class ImageAlloc<T>;
 template class ImageView<T>;
 template class ConstImageView<T>;
 
+template std::shared_ptr<T> allocateAlignedMemory<T>(int n);
+
 template void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
         bool shift_in, bool shift_out);
 template void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool shift_out);

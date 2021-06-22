@@ -56,6 +56,9 @@ struct Traits<std::complex<T> >
 
 namespace galsim {
 
+    template <typename T>
+    std::shared_ptr<T> allocateAlignedMemory(int n);
+
     // All code between the @cond and @endcond is excluded from Doxygen documentation
     //! @cond
 

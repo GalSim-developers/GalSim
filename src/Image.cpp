@@ -117,6 +117,21 @@ struct AlignedDeleter {
 };
 
 template <typename T>
+std::shared_ptr<T> allocateAlignedMemory(int n)
+{
+    // This bit is based on the answers here:
+    // http://stackoverflow.com/questions/227897/how-to-allocate-aligned-memory-only-using-the-standard-library/227900
+    // The point of this is to get the _data pointer aligned to a 16 byte (128 bit) boundary.
+    // Arrays that are so aligned can use SSE operations and so can be much faster than
+    // non-aligned memroy.  FFTW in particular is faster if it gets aligned data.
+    char* mem = new char[n * sizeof(T) + sizeof(char*) + 15];
+    T* data = reinterpret_cast<T*>( (uintptr_t)(mem + sizeof(char*) + 15) & ~(size_t) 0x0F );
+    ((char**)data)[-1] = mem;
+    std::shared_ptr<T> owner(data, AlignedDeleter<T>());
+    return owner;
+}
+
+template <typename T>
 void BaseImage<T>::allocateMem()
 {
     // Note: this version always does the memory (re-)allocation.
@@ -132,15 +147,8 @@ void BaseImage<T>::allocateMem()
             "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")";
     }
 
-    // This bit is based on the answers here:
-    // http://stackoverflow.com/questions/227897/how-to-allocate-aligned-memory-only-using-the-standard-library/227900
-    // The point of this is to get the _data pointer aligned to a 16 byte (128 bit) boundary.
-    // Arrays that are so aligned can use SSE operations and so can be much faster than
-    // non-aligned memroy.  FFTW in particular is faster if it gets aligned data.
-    char* mem = new char[_nElements * sizeof(T) + sizeof(char*) + 15];
-    _data = reinterpret_cast<T*>( (uintptr_t)(mem + sizeof(char*) + 15) & ~(size_t) 0x0F );
-    ((char**)_data)[-1] = mem;
-    _owner.reset(_data, AlignedDeleter<T>());
+    _owner = allocateAlignedMemory<T>(_nElements);
+    _data = _owner.get();
 }
 
 template <typename T>
