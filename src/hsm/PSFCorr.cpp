@@ -47,6 +47,7 @@ damages of any kind.
 
 #include <cstring>
 #include <string>
+#include <fftw3.h>
 
 #ifdef USE_TMV
 #define TMV_NDEBUG
@@ -64,7 +65,6 @@ using Eigen::VectorXd;
 
 #include "hsm/PSFCorr.h"
 #include "math/Nan.h"
-#include "FFT.h"
 #include "Image.h"
 
 namespace galsim {
@@ -328,7 +328,7 @@ namespace hsm {
         fftw_plan plan=fftw_plan_dft_1d(nn, (fftw_complex*) b1, (fftw_complex*) b2,
                                         isign == 1 ? FFTW_FORWARD : FFTW_BACKWARD,
                                         FFTW_ESTIMATE);
-        if (plan == NULL) throw FFTInvalid();
+        if (plan == NULL) throw HSMError("Invalid FFTW plan");
 
         // Execute the plan.
         fftw_execute(plan);
@@ -919,6 +919,7 @@ namespace hsm {
      * > image_out: output (convolved) image, ImageView format
      */
 
+#if 1
     void fast_convolve_image_1(
         ConstImageView<double> image1, ConstImageView<double> image2, ImageView<double> image_out)
     {
@@ -926,125 +927,89 @@ namespace hsm {
         dbg<<"image1.bounds = "<<image1.getBounds()<<std::endl;
         dbg<<"image2.bounds = "<<image2.getBounds()<<std::endl;
         dbg<<"image_out.bounds = "<<image_out.getBounds()<<std::endl;
-        int nx1 = image1.getNCol();
-        int ny1 = image1.getNRow();
-        int sx1 = image1.getStep();
-        int sy1 = image1.getStride();
-        int nx2 = image2.getNCol();
-        int ny2 = image2.getNRow();
-        int sx2 = image2.getStep();
-        int sy2 = image2.getStride();
-        int nx3 = image_out.getNCol();
-        int ny3 = image_out.getNRow();
-        int sx3 = image_out.getStep();
-        int sy3 = image_out.getStride();
-        dbg<<"image1: "<<nx1<<','<<ny1<<','<<sx1<<','<<sy1<<std::endl;
-        dbg<<"image2: "<<nx2<<','<<ny2<<','<<sx2<<','<<sy2<<std::endl;
-        dbg<<"image3: "<<nx3<<','<<ny3<<','<<sx3<<','<<sy3<<std::endl;
 
-        // Convenient matrix views into the images:
-#ifdef USE_TMV
-        tmv::ConstMatrixView<double> mIm1(image1.getData(),nx1,ny1,sx1,sy1,tmv::NonConj);
-        tmv::ConstMatrixView<double> mIm2(image2.getData(),nx2,ny2,sx2,sy2,tmv::NonConj);
-        tmv::MatrixView<double> mIm3(image_out.getData(),nx3,ny3,sx3,sy3,tmv::NonConj);
-#else
-        using Eigen::Dynamic;
-        using Eigen::Stride;
-        Eigen::Map<const MatrixXd,0,Stride<Dynamic,Dynamic> > mIm1(
-            image1.getData(),nx1,ny1, Stride<Dynamic,Dynamic>(sy1,sx1));
-        Eigen::Map<const MatrixXd,0,Stride<Dynamic,Dynamic> > mIm2(
-            image2.getData(),nx2,ny2, Stride<Dynamic,Dynamic>(sy2,sx2));
-        Eigen::Map<MatrixXd,0,Stride<Dynamic,Dynamic> > mIm3(
-            image_out.getData(),nx3,ny3, Stride<Dynamic,Dynamic>(sy3,sx3));
-#endif
-        dbg<<"mIm1 = "<<mIm1<<std::endl;
-        dbg<<"mIm2 = "<<mIm2<<std::endl;
-        dbg<<"mIm3 = "<<mIm3<<std::endl;
-
-#if 1
         // Get a good size to use for the FFTs
-        int N1 = std::max(nx1,ny1) * 4/3;
-        int N2 = std::max(nx2,ny2) * 4/3;
-        int N3 = std::max(nx3,ny3);
+        int N1 = std::max(image1.getNCol(), image1.getNRow()) * 4/3;
+        int N2 = std::max(image2.getNCol(), image2.getNRow()) * 4/3;
+        int N3 = std::max(image_out.getNCol(), image_out.getNRow());
         int N = std::max(std::max(N1,N2),N3); // N3 isn't always the largest!
-        assert(nx1 <= N);
-        assert(ny1 <= N);
-        assert(nx2 <= N);
-        assert(ny2 <= N);
         N = goodFFTSize(N);
         dbg<<"N => "<<N<<std::endl;
 
-        // Make an XTable for image1:
-        XTable xtab(N,1.);
-#ifdef USE_TMV
-        tmv::MatrixView<double> mxt(xtab.getArray(),N,N,1,N,tmv::NonConj);
-#else
-        Eigen::Map<MatrixXd> mxt(xtab.getArray(),N,N);
-#endif
-        int offset_x1 = N/4;
-        int offset_y1 = N/4;
-#ifdef USE_TMV
-        mxt.subMatrix(offset_x1,offset_x1+nx1, offset_y1,offset_y1+ny1) = mIm1;
-#else
-        mxt.block(offset_x1,offset_y1,nx1,ny1) = mIm1;
-#endif
-        dbg<<"mxt = "<<mxt<<std::endl;
+        // Make NxN image for doing FFT
+        // Note: We will eventually need 2 extra cols for the inverse fft.
+        //       So allocate that size now and just use the first N columns for forward ffts.
+        ImageAlloc<double> xim2(Bounds<int>(0,N+1,0,N-1), 0.);
+        ImageView<double> xim = xim2[Bounds<int>(0,N-1,0,N-1)];
+        Bounds<int> b1 = image1.getBounds();
+        b1.shift(-b1.origin());
+        int offset_1 = N/4;
+        b1.shift(Position<int>(offset_1, offset_1));
+        dbg<<"b1 = "<<b1<<std::endl;
+        xim[b1] = image1;
 
         // Do the FFT:
-        shared_ptr<KTable> ktab1 = xtab.transform();
+        xim.shift(Position<int>(-N/2,-N/2));
+        dbg<<"xim.bounds = "<<xim.getBounds()<<std::endl;
+        Bounds<int> kb(0,N/2,-N/2,N/2-1);
+        dbg<<"kb = "<<kb<<std::endl;
+        ImageAlloc<std::complex<double> > kim1(kb, 0.);
+        rfft(xim.view(), kim1.view());
+        xim.shift(Position<int>(N/2,N/2));
 
-        // Fill image2 into the XTable
-        mxt.setZero();
-        int offset_x2 = N/4;
-        int offset_y2 = N/4;
-#ifdef USE_TMV
-        mxt.subMatrix(offset_x2,offset_x2+nx2, offset_y2,offset_y2+ny2) = mIm2;
-#else
-        mxt.block(offset_x2,offset_y2,nx2,ny2) = mIm2;
-#endif
-        dbg<<"mxt = "<<mxt<<std::endl;
+        // Repeat for image2
+        Bounds<int> b2 = image2.getBounds();
+        b2.shift(-b2.origin());
+        int offset_2 = N/4;
+        b2.shift(Position<int>(offset_2, offset_2));
+        xim.setZero();
+        xim[b2] = image2;
+        xim.shift(Position<int>(-N/2,-N/2));
+        dbg<<"xim.bounds = "<<xim.getBounds()<<std::endl;
+        ImageAlloc<std::complex<double> > kim2(kb, 0.);
+        rfft(xim.view(), kim2.view());
+        xim.shift(Position<int>(N/2,N/2));
 
-        // Do the second FFT and multiply:
-        shared_ptr<KTable> ktab2 = xtab.transform();
-        (*ktab2) *= (*ktab1);
+        // Multiply k images (i.e. convolve the original images)
+        kim2 *= kim1;
 
         // Inverse FFT to get back to real space
-        ktab2->transform(xtab);
-
-        dbg<<"mout = "<<mxt<<std::endl;
+        xim2.shift(Position<int>(-N/2,-N/2));
+        dbg<<"xim.bounds => "<<xim2.getBounds()<<std::endl;
+        irfft(kim2.view(), xim2.view());
 
         // Copy back to the output image
         // Note: (MJ) I don't really understand the offsets here.  Nor the N/4 offsets for
         // the initial assignments.  The choices were made to match the original algorithm
         // below.  This now matches the original behavior (below), but it seems like someone
         // might want to change these somewhat to get im1 and im2 centered in the center of the
-        // XTable rather than kind of offcenter as they are now.  Another time perhaps....
+        // images rather than kind of offcenter as they are now.  Another time perhaps....
         int offset_x3 = image_out.getXMin() - image1.getXMin() - image2.getXMin();
         int offset_y3 = image_out.getYMin() - image1.getYMin() - image2.getYMin();
-        int i1 = 0;
-        int i2 = nx3;
-        int j1 = 0;
-        int j2 = ny3;
-        int mi1 = i1 + offset_x3;
-        int mi2 = i2 + offset_x3;
-        int mj1 = j1 + offset_y3;
-        int mj2 = j2 + offset_y3;
-        if (mi1 < 0) { i1 -= mi1; mi1 = 0; }
-        if (mi2 > N) { i2 -= (mi2-N); mi2 = N; }
-        if (mj1 < 0) { j1 -= mj1; mj1 = 0; }
-        if (mj2 > N) { j2 -= (mj2-N); mj2 = N; }
-        dbg<<"offset_x3 , offset_y3 = "<<offset_x3<<','<<offset_y3<<std::endl;
-        dbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
-        dbg<<"mi1,mi2,mj1,mj2 = "<<mi1<<','<<mi2<<','<<mj1<<','<<mj2<<std::endl;
-
-#ifdef USE_TMV
-        dbg<<"Add portion: "<<mxt.subMatrix(mi1,mi2,mj1,mj2)<<std::endl;;
-        dbg<<"Add to: "<<mIm3.subMatrix(i1,i2,j1,j2)<<std::endl;
-        mIm3.subMatrix(i1,i2,j1,j2) += mxt.subMatrix(mi1,mi2,mj1,mj2);
+        dbg<<"offset_x3 = "<<offset_x3<<std::endl;
+        dbg<<"offset_y3 = "<<offset_y3<<std::endl;
+        Bounds<int> b3 = image_out.getBounds();
+        b3.shift(-b3.origin());
+        b3.shift(Position<int>(offset_x3, offset_y3));
+        dbg<<"b3 = "<<b3<<std::endl;
+        b3 = b3 & xim.getBounds();
+        dbg<<"b3 => "<<b3<<std::endl;
+        Bounds<int> b4 = b3;
+        b4.shift(Position<int>(-offset_x3, -offset_y3));
+        b4.shift(image_out.getBounds().origin());
+        dbg<<"b4 = "<<b4<<std::endl;
+        image_out[b4] += xim[b3];
+     }
 #else
-        mIm3.block(i1,j1,i2-i1,j2-j1) += mxt.block(mi1,mj1,mi2-mi1,mj2-mj1);
-#endif
-#else  // Old code.  Not used.
+    // Original version of the code by HSM.  Preserved for reference.
+    void fast_convolve_image_1(
+        ConstImageView<double> image1, ConstImageView<double> image2, ImageView<double> image_out)
+    {
+        dbg<<"Start fast_convolve_image_1:\n";
+        dbg<<"image1.bounds = "<<image1.getBounds()<<std::endl;
+        dbg<<"image2.bounds = "<<image2.getBounds()<<std::endl;
+        dbg<<"image_out.bounds = "<<image_out.getBounds()<<std::endl;
+
         long dim1x, dim1y, dim1o, dim1, dim2, dim3, dim4;
         double xr,xi,yr,yi;
         long i,i_conj,j,k,ii,ii_conj;
@@ -1127,16 +1092,8 @@ namespace hsm {
         for(i=out_xmin;i<=out_xmax;i++)
             for(j=out_ymin;j<=out_ymax;j++)
                 image_out(i,j) += mout(i-out_xref,j-out_yref);
-#endif
-        dbg<<"Done: mIm3 => "<<mIm3<<std::endl;
-#ifdef USE_TMV
-        dbg<<"maximum is "<<mIm3.maxAbsElement()<<std::endl;
-        dbg<<"Center is "<<mIm3.subMatrix(nx3/2-2,nx3/2+2,ny3/2-2,ny3/2+2)<<std::endl;
-#else
-        dbg<<"maximum is "<<mIm3.array().abs().maxCoeff()<<std::endl;
-        dbg<<"Center is "<<mIm3.block(nx3/2-2,ny3/2-2,4,4)<<std::endl;
-#endif
     }
+#endif
 
     void matrix22_invert(double& a, double& b, double& c, double& d)
     {
