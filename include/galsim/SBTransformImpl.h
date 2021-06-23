@@ -37,7 +37,11 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return _stillIsAxisymmetric; }
+        bool isAxisymmetric() const {
+            return _adaptee.isAxisymmetric()
+                && (_mB==-_mC) && (_mA==_mD)
+                && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
+        }
         bool hasHardEdges() const { return _adaptee.hasHardEdges(); }
         bool isAnalyticX() const { return _adaptee.isAnalyticX(); }
         bool isAnalyticK() const { return _adaptee.isAnalyticK(); }
@@ -111,10 +115,9 @@ namespace galsim {
         double _ampScaling;  ///< Amount to scale amplitude by
         double _fluxScaling;  ///< Amount to scale flux by (= absdet * ampScaling)
         double _invdet;  ///< Inverse determinant of `M` matrix.
-        bool _stillIsAxisymmetric; ///< Is output SBProfile shape still circular?
         bool _zeroCen;
-        double _major, _minor;
 
+        mutable double _major, _minor;
         mutable double _maxk;
         mutable double _stepk;
         mutable double _xmin, _xmax, _ymin, _ymax; ///< Ranges propagated from adaptee
