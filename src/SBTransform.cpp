@@ -129,28 +129,22 @@ namespace galsim {
             dbg<<"Using identity functions for fwd and inv\n";
             _fwd = &SBTransform::SBTransformImpl::_ident;
             _inv = &SBTransform::SBTransformImpl::_ident;
+
+            _absdet = _invdet = 1.;
+            _fluxScaling = _ampScaling;
         } else {
             dbg<<"Using normal fwd and inv\n";
             _fwd = &SBTransform::SBTransformImpl::_fwd_normal;
             _inv = &SBTransform::SBTransformImpl::_inv_normal;
+
+            // Calculate some derived quantities:
+            double det = _mA*_mD-_mB*_mC;
+            if (det==0.) throw SBError("Attempt to SBTransform with degenerate matrix");
+            _absdet = std::abs(det);
+            _invdet = 1./det;
+            // The scale factor for the flux is absdet * ampScaling.
+            _fluxScaling = _absdet * _ampScaling;
         }
-
-        // Calculate some derived quantities:
-        double det = _mA*_mD-_mB*_mC;
-        if (det==0.) throw SBError("Attempt to SBTransform with degenerate matrix");
-        _absdet = std::abs(det);
-        _invdet = 1./det;
-        _stillIsAxisymmetric = _adaptee.isAxisymmetric()
-            && (_mB==-_mC)
-            && (_mA==_mD)
-            && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
-
-        // Needed for maxK, stepK:
-        double h1 = hypot( _mA+_mD, _mB-_mC);
-        double h2 = hypot( _mA-_mD, _mB+_mC);
-        _major = 0.5*std::abs(h1+h2);
-        _minor = 0.5*std::abs(h1-h2);
-        if (_major < _minor) std::swap(_major,_minor);
 
         xdbg<<"Transformation init\n";
         xdbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
@@ -158,10 +152,6 @@ namespace galsim {
         xdbg<<"_invdet = "<<_invdet<<std::endl;
         xdbg<<"_absdet = "<<_absdet<<std::endl;
         xdbg<<"_ampScaling = "<<_ampScaling<<std::endl;
-        xdbg<<"major, minor = "<<_major<<", "<<_minor<<std::endl;
-
-        // The scale factor for the flux is absdet * ampScaling.
-        _fluxScaling = _absdet * _ampScaling;
         xdbg<<"_fluxScaling -> "<<_fluxScaling<<std::endl;
 
         // Figure out which function we need for kValue and kValueNoPhase
@@ -185,14 +175,24 @@ namespace galsim {
     {
         // The adaptee's maxk can be slow (e.g. high-n Sersic), so delay this calculation
         // until we actually need it.
-        if (_maxk == 0.) _maxk = _adaptee.maxK() / _minor;
+        if (_maxk == 0.) {
+            stepK(); // Make sure _major, _minor are set.
+            _maxk = _adaptee.maxK() / _minor;
+        }
         return _maxk;
     }
 
     double SBTransform::SBTransformImpl::stepK() const
     {
         if (_stepk == 0.) {
+            double h1 = hypot( _mA+_mD, _mB-_mC);
+            double h2 = hypot( _mA-_mD, _mB+_mC);
+            _major = 0.5*std::abs(h1+h2);
+            _minor = 0.5*std::abs(h1-h2);
+            if (_major < _minor) std::swap(_major,_minor);
+
             _stepk = _adaptee.stepK() / _major;
+
             // If we have a shift, we need to further modify stepk
             //     stepk = Pi/R
             // R <- R + |shift|
