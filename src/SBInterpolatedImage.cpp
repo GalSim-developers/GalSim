@@ -22,6 +22,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <cstring>  // For memset
 #ifdef __SSE2__
 #include "xmmintrin.h"
 #endif
