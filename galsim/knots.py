@@ -283,15 +283,12 @@ class RandomKnots(GSObject):
     def _max_sb(self):
         return self._sbp.maxSB()
 
-    @doc_inherit
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
 
-    @doc_inherit
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)
 
-    @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
 
@@ -326,7 +323,6 @@ class RandomKnots(GSObject):
         return RandomKnots(self._npoints, profile=self._profile.shear(*args, **kwargs),
                            rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
-    @doc_inherit
     def _shear(self, shear):
         return RandomKnots(self._npoints, profile=self._profile._shear(shear),
                            rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
@@ -346,7 +342,6 @@ class RandomKnots(GSObject):
         return RandomKnots(self._npoints, profile=self._profile.shift(*args, **kwargs),
                            rng=self._orig_rng.duplicate(), gsparams=self._gsparams)
 
-    @doc_inherit
     def _shift(self, offset):
         return RandomKnots(self._npoints, profile=self._profile._shift(offset),
                            rng=self._orig_rng.duplicate(), gsparams=self._gsparams)

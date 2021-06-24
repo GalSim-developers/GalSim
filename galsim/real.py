@@ -445,11 +445,9 @@ class RealGalaxy(GSObject):
     def _max_sb(self):
         return self._sbp.maxSB()
 
-    @doc_inherit
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
 
-    @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
 

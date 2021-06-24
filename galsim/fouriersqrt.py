@@ -22,7 +22,7 @@ from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject
-from .utilities import lazy_property, doc_inherit
+from .utilities import lazy_property
 from .errors import convert_cpp_errors, galsim_warn
 
 
@@ -197,11 +197,9 @@ class FourierSqrtProfile(GSObject):
         # maxSB = 2 * maxSB_orig / flux
         return 2. * self.orig_obj.max_sb / self.flux
 
-    @doc_inherit
     def _kValue(self, pos):
         return np.sqrt(self.orig_obj._kValue(pos))
 
-    @doc_inherit
     def _drawKImage(self, image):
         self.orig_obj._drawKImage(image)
         image.array[:,:] = np.sqrt(image.array)

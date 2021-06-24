@@ -139,25 +139,20 @@ class Exponential(GSObject):
     def _max_sb(self):
         return self._norm
 
-    @doc_inherit
     def _xValue(self, pos):
         r = math.sqrt(pos.x**2 + pos.y**2)
         return self._norm * math.exp(-r * self._inv_r0)
 
-    @doc_inherit
     def _kValue(self, kpos):
         ksqp1 = (kpos.x**2 + kpos.y**2) * self._r0**2 + 1.
         return self._flux / (ksqp1 * math.sqrt(ksqp1))
 
-    @doc_inherit
     def _drawReal(self, image):
         self._sbp.draw(image._image, image.scale)
 
-    @doc_inherit
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)
 
-    @doc_inherit
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
 

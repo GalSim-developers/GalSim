@@ -22,7 +22,7 @@ from . import _galsim
 from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject, ChromaticConvolution
-from .utilities import lazy_property, doc_inherit
+from .utilities import lazy_property
 from .errors import GalSimError, convert_cpp_errors, galsim_warn
 
 def Convolve(*args, **kwargs):
@@ -379,7 +379,6 @@ class Convolution(GSObject):
         area_list = [obj.flux / obj.max_sb for obj in self.obj_list]
         return self.flux / np.sum(area_list)
 
-    @doc_inherit
     def _xValue(self, pos):
         if len(self.obj_list) == 1:
             return self.obj_list[0]._xValue(pos)
@@ -392,12 +391,10 @@ class Convolution(GSObject):
         else:
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
-    @doc_inherit
     def _kValue(self, pos):
         kv_list = [obj.kValue(pos) for obj in self.obj_list]
         return np.prod(kv_list)
 
-    @doc_inherit
     def _drawReal(self, image):
         if len(self.obj_list) == 1:
             self.obj_list[0]._drawReal(image)
@@ -410,7 +407,6 @@ class Convolution(GSObject):
         else:
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
-    @doc_inherit
     def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
 
@@ -424,7 +420,6 @@ class Convolution(GSObject):
             obj._shoot(p1, rng)
             photons.convolve(p1, rng)
 
-    @doc_inherit
     def _drawKImage(self, image):
         self.obj_list[0]._drawKImage(image)
         if len(self.obj_list) > 1:
@@ -615,7 +610,6 @@ class Deconvolution(GSObject):
         #
         return -self.orig_obj.max_sb / self.orig_obj.flux**2
 
-    @doc_inherit
     def _kValue(self, pos):
         # Really, for very low original kvalues, this gets very high, which can be unstable
         # in the presence of noise.  So if the original value is less than min_acc_kvalue,
@@ -626,7 +620,6 @@ class Deconvolution(GSObject):
         else:
             return 1./kval
 
-    @doc_inherit
     def _drawKImage(self, image):
         self.orig_obj._drawKImage(image)
         do_inverse = np.abs(image.array) > self._min_acc_kvalue
@@ -801,7 +794,6 @@ class AutoConvolution(Convolution):
     def _prepareDraw(self):
         self.orig_obj._prepareDraw()
 
-    @doc_inherit
     def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
         self.orig_obj._shoot(photons, rng)
@@ -971,7 +963,6 @@ class AutoCorrelation(Convolution):
     def _prepareDraw(self):
         self._orig_obj._prepareDraw()
 
-    @doc_inherit
     def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
         self.orig_obj._shoot(photons, rng)
