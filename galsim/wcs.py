@@ -1453,14 +1453,14 @@ class PixelScale(LocalWCS):
         # In the usual case of GSObject, it's more efficient to use the _Transform version.
         # else, it's a ChromaticObject, and we need to use the regular Transform function.
         Transform = _Transform if isinstance(image_profile, GSObject) else Transform
-        return Transform(image_profile, (self._scale, 0., 0., self._scale),
-                         flux_ratio=self._scale**-2 * flux_ratio, offset=offset)
+        j = np.array(((self._scale, 0.), (0., self._scale)))
+        return Transform(image_profile, j, flux_ratio=self._invscale**2 * flux_ratio, offset=offset)
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform, Transform
         Transform = _Transform if isinstance(world_profile, GSObject) else Transform
-        return Transform(world_profile, (1.*self._invscale, 0., 0., 1.*self._invscale),
-                         flux_ratio=self._scale**2 * flux_ratio, offset=offset)
+        j = np.array(((self._invscale, 0.), (0., self._invscale)))
+        return Transform(world_profile, j, flux_ratio=self._scale**2 * flux_ratio, offset=offset)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1724,17 +1724,15 @@ class JacobianWCS(LocalWCS):
         # In the usual case of GSObject, it's more efficient to use the _Transform version.
         # else, it's a ChromaticObject, and we need to use the regular Transform function.
         Transform = _Transform if isinstance(image_profile, GSObject) else Transform
-        return Transform(image_profile, (self._dudx, self._dudy, self._dvdx, self._dvdy),
-                         flux_ratio=flux_ratio/self._pixelArea(), offset=offset)
+        j = np.array(((self._dudx, self._dudy), (self._dvdx, self._dvdy)))
+        return Transform(image_profile, j, flux_ratio=flux_ratio*abs(self._invdet), offset=offset)
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform, Transform
         Transform = _Transform if isinstance(world_profile, GSObject) else Transform
         try:
-            return Transform(world_profile,
-                             (self._dvdy*self._invdet, -self._dudy*self._invdet,
-                              -self._dvdx*self._invdet, self._dudx*self._invdet),
-                             flux_ratio=flux_ratio*self._pixelArea(), offset=offset)
+            j = np.array(((self._dvdy, -self._dudy), (-self._dvdx, self._dudx))) * self._invdet
+            return Transform(world_profile, j, flux_ratio=flux_ratio*abs(self._det), offset=offset)
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
