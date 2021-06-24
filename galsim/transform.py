@@ -524,11 +524,24 @@ class Transformation(GSObject):
         self._sbp.drawK(image._image, image.scale)
 
 
-def _Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.),
-               flux_ratio=1., gsparams=None):
+def _Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1.):
     """Approximately equivalent to Transform, but without some of the sanity checks (such as
-    checking for chromatic options).
+    checking for chromatic options) or setting a new gsparams.
 
     For a `ChromaticObject`, you must use the regular `Transform`.
     """
-    return Transformation(obj, jac, offset, flux_ratio, gsparams)
+    ret = Transformation.__new__(Transformation)
+    ret._jac = np.asarray(jac, dtype=float).reshape(2,2)
+    ret._gsparams = obj.gsparams
+    ret._propagate_gsparams = True
+    if isinstance(obj, Transformation):
+        dx, dy = ret._fwd_normal(obj.offset.x, obj.offset.y)
+        ret._jac = ret._jac.dot(obj.jac)
+        ret._offset = _PositionD(offset.x + dx, offset.y + dy)
+        ret._flux_ratio = flux_ratio * obj._flux_ratio
+        ret._original = obj.original
+    else:
+        ret._offset = offset
+        ret._flux_ratio = flux_ratio
+        ret._original = obj
+    return ret

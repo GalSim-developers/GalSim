@@ -258,7 +258,7 @@ class BaseWCS(object):
         """
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._profileToWorld(
-                    image_profile, flux_ratio, offset)
+                    image_profile, flux_ratio, PositionD(offset))
 
     def toImage(self, *args, **kwargs):
         """Convert from world coordinates to image coordinates
@@ -343,7 +343,7 @@ class BaseWCS(object):
         """
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._profileToImage(
-                    world_profile, flux_ratio, offset)
+                    world_profile, flux_ratio, PositionD(offset))
 
     def pixelArea(self, image_pos=None, world_pos=None, color=None):
         """Return the area of a pixel in arcsec**2 (or in whatever units you are using for
