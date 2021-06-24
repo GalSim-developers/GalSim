@@ -1994,9 +1994,7 @@ class ChromaticTransformation(ChromaticObject):
         jac = self._jac
         flux_ratio = self._flux_ratio
         return BaseCorrelatedNoise(noise.rng,
-                                   _Transform(noise._profile,
-                                              (jac[0,0], jac[0,1], jac[1,0], jac[1,1]),
-                                              flux_ratio=flux_ratio**2),
+                                   _Transform(noise._profile, jac, flux_ratio=flux_ratio**2),
                                    noise.wcs)
 
 

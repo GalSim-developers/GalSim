@@ -198,11 +198,10 @@ class Transformation(GSObject):
         if self.original.noise is None:
             return None
         else:
-            dudx, dudy, dvdx, dvdy = self._jac.ravel()
             return BaseCorrelatedNoise(
                     self.original.noise.rng,
                     _Transform(self.original.noise._profile,
-                               (dudx, dudy, dvdx, dvdy),
+                               self._jac,
                                flux_ratio=self.flux_ratio**2),
                     self.original.noise.wcs)
 
@@ -524,19 +523,28 @@ class Transformation(GSObject):
         self._sbp.drawK(image._image, image.scale)
 
 
-def _Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1.):
+def _Transform(obj, jac=np.array(((1.,0.),(0.,1.))), offset=_PositionD(0.,0.), flux_ratio=1.):
     """Approximately equivalent to Transform, but without some of the sanity checks (such as
     checking for chromatic options) or setting a new gsparams.
 
     For a `ChromaticObject`, you must use the regular `Transform`.
+
+    Parameters:
+        obj:                The object to be transformed.
+        jac:                A 2x2 numpy array describing the Jacobian of the transformation.
+                            [default: np.array(((1.,0.),(0.,1.)))]
+        offset:             A galsim.PositionD giving the offset by which to shift the profile.
+                            [default: PositionD(0,0)]
+        flux_ratio:         A factor by which to multiply the surface brightness of the object.
+                            [default: 1.]
     """
     ret = Transformation.__new__(Transformation)
-    ret._jac = np.asarray(jac, dtype=float).reshape(2,2)
     ret._gsparams = obj.gsparams
     ret._propagate_gsparams = True
+    ret._jac = jac
     if isinstance(obj, Transformation):
         dx, dy = ret._fwd_normal(obj.offset.x, obj.offset.y)
-        ret._jac = ret._jac.dot(obj.jac)
+        ret._jac = jac.dot(obj.jac)
         ret._offset = _PositionD(offset.x + dx, offset.y + dy)
         ret._flux_ratio = flux_ratio * obj._flux_ratio
         ret._original = obj.original
