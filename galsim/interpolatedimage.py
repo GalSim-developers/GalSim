@@ -971,9 +971,10 @@ class InterpolatedKImage(GSObject):
                     posx_kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
 
         scale = self.kimage.scale
+        jac = np.array((1./scale, 0., 0., 1./scale))
         if scale != 1.:
             with convert_cpp_errors():
-                return _galsim.SBTransform(self._sbiki, 1./scale, 0., 0., 1./scale,
+                return _galsim.SBTransform(self._sbiki, jac.ctypes.data,
                                            _galsim.PositionD(0.,0.), scale**2,
                                            self.gsparams._gsp)
         else:
