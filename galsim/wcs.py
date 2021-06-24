@@ -24,7 +24,7 @@ from .celestial import CelestialCoord
 from .shear import Shear
 from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimNotImplementedError
 from .errors import GalSimValueError
-from .utilities import doc_inherit
+from .utilities import doc_inherit, lazy_property
 
 class BaseWCS(object):
     """The base class for all other kinds of WCS transformations.
@@ -1428,6 +1428,10 @@ class PixelScale(LocalWCS):
         """
         return self._scale
 
+    @lazy_property
+    def _invscale(self):
+        return 1./self._scale
+
     @doc_inherit
     def isPixelScale(self):
         return True
@@ -1439,10 +1443,10 @@ class PixelScale(LocalWCS):
         return y * self._scale
 
     def _x(self, u, v, color=None):
-        return u / self._scale
+        return u * self._invscale
 
     def _y(self, u, v, color=None):
-        return v / self._scale
+        return v * self._invscale
 
     def _profileToWorld(self, image_profile, flux_ratio, offset):
         from .transform import _Transform, Transform
@@ -1455,7 +1459,7 @@ class PixelScale(LocalWCS):
     def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform, Transform
         Transform = _Transform if isinstance(world_profile, GSObject) else Transform
-        return Transform(world_profile, (1./self._scale, 0., 0., 1./self._scale),
+        return Transform(world_profile, (1.*self._invscale, 0., 0., 1.*self._invscale),
                          flux_ratio=self._scale**2 * flux_ratio, offset=offset)
 
     def _pixelArea(self):
@@ -1468,7 +1472,7 @@ class PixelScale(LocalWCS):
         return self._scale
 
     def _inverse(self):
-        return PixelScale(1./self._scale)
+        return PixelScale(self._invscale)
 
     def _toJacobian(self):
         return JacobianWCS(self._scale, 0., 0., self._scale)
@@ -1705,13 +1709,13 @@ class JacobianWCS(LocalWCS):
         #  J^-1 = (1/det) (  dvdy  -dudy )
         #                 ( -dvdx   dudx )
         try:
-            return (self._dvdy * u - self._dudy * v)/self._det
+            return (self._dvdy * u - self._dudy * v)*self._invdet
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
     def _y(self, u, v, color=None):
         try:
-            return (-self._dvdx * u + self._dudx * v)/self._det
+            return (-self._dvdx * u + self._dudx * v)*self._invdet
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
@@ -1728,11 +1732,15 @@ class JacobianWCS(LocalWCS):
         Transform = _Transform if isinstance(world_profile, GSObject) else Transform
         try:
             return Transform(world_profile,
-                             (self._dvdy/self._det, -self._dudy/self._det,
-                              -self._dvdx/self._det, self._dudx/self._det),
+                             (self._dvdy*self._invdet, -self._dudy*self._invdet,
+                              -self._dvdx*self._invdet, self._dudx*self._invdet),
                              flux_ratio=flux_ratio*self._pixelArea(), offset=offset)
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
+
+    @lazy_property
+    def _invdet(self):
+        return 1./self._det
 
     def _pixelArea(self):
         return abs(self._det)
@@ -1843,8 +1851,8 @@ class JacobianWCS(LocalWCS):
 
     def _inverse(self):
         try:
-            return JacobianWCS(self._dvdy/self._det, -self._dudy/self._det,
-                               -self._dvdx/self._det, self._dudx/self._det)
+            return JacobianWCS(self._dvdy*self._invdet, -self._dudy*self._invdet,
+                               -self._dvdx*self._invdet, self._dudx*self._invdet)
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
