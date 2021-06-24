@@ -140,8 +140,8 @@ def check_basic_x(prof, name, approx_maxsb=False, scale=None):
         np.testing.assert_allclose(
                 image(i,j), prof._xValue(galsim.PositionD(x,y)), rtol=1.e-5,
                 err_msg="%s profile sb image does not match _xValue at %d,%d"%(name,i,j))
-        assert prof._xValue.__doc__ == galsim.GSObject._xValue.__doc__
-        assert prof.__class__._xValue.__doc__ == galsim.GSObject._xValue.__doc__
+    assert prof.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
+    assert prof.__class__.withFlux.__doc__ == galsim.GSObject.withFlux.__doc__
 
     # Check negative flux:
     neg_image = prof.withFlux(-prof.flux).drawImage(method='sb', scale=scale, use_true_center=False)
@@ -198,8 +198,6 @@ def check_basic_k(prof, name):
         np.testing.assert_allclose(
                 kimage(i,j), prof._kValue(galsim.PositionD(kx,ky)), rtol=1.e-5,
                 err_msg="%s profile kimage does not match _kValue at %d,%d"%(name,i,j))
-        assert prof._kValue.__doc__ == galsim.GSObject._kValue.__doc__
-        assert prof.__class__._kValue.__doc__ == galsim.GSObject._kValue.__doc__
 
     # Check negative flux:
     neg_image = prof.withFlux(-prof.flux).drawKImage(kimage.copy())

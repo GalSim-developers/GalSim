@@ -1539,21 +1539,17 @@ class PhaseScreenPSF(GSObject):
     def _max_sb(self):
         return self._ii.max_sb
 
-    @doc_inherit
     def _xValue(self, pos):
         self._prepareDraw()
         return self._ii._xValue(pos)
 
-    @doc_inherit
     def _kValue(self, kpos):
         self._prepareDraw()
         return self._ii._kValue(kpos)
 
-    @doc_inherit
     def _drawReal(self, image):
         self._ii._drawReal(image)
 
-    @doc_inherit
     def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
         from .random import UniformDeviate
@@ -1593,7 +1589,6 @@ class PhaseScreenPSF(GSObject):
             self.second_kick._shoot(p2, rng)
             photons.convolve(p2, rng)
 
-    @doc_inherit
     def _drawKImage(self, image):
         self._ii._drawKImage(image)
 
@@ -2046,23 +2041,18 @@ class OpticalPSF(GSObject):
     def fft_sign(self):
         return self._fft_sign
 
-    @doc_inherit
     def _xValue(self, pos):
         return self._psf._xValue(pos)
 
-    @doc_inherit
     def _kValue(self, kpos):
         return self._psf._kValue(kpos)
 
-    @doc_inherit
     def _drawReal(self, image):
         self._psf._drawReal(image)
 
-    @doc_inherit
     def _shoot(self, photons, rng):
         self._psf._shoot(photons, rng)
 
-    @doc_inherit
     def _drawKImage(self, image):
         self._psf._drawKImage(image)
 
