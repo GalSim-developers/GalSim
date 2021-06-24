@@ -23,7 +23,7 @@ from . import _galsim
 from .position import PositionI, _PositionD
 from .bounds import BoundsI, BoundsD
 from .wcs import BaseWCS, PixelScale, JacobianWCS
-from . import utilities
+from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
 from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError, convert_cpp_errors
 
@@ -415,7 +415,9 @@ class Image(object):
     # Pickling almost works out of the box, but numpy arrays lose their non-writeable flag
     # when pickled, so make sure to set it to preserve const Images.
     def __getstate__(self):
-        return self.__dict__, self.isconst
+        d = self.__dict__.copy()
+        d.pop('_image',None)
+        return d, self.isconst
 
     def __setstate__(self, args):
         d, isconst = args
@@ -464,7 +466,7 @@ class Image(object):
         """
         return self._array.strides[1]//self._array.itemsize == 1
 
-    @property
+    @lazy_property
     def _image(self):
         cls = self._cpp_type[self.dtype]
         return cls(self._array.ctypes.data,
@@ -1104,7 +1106,7 @@ class Image(object):
             >>> im.shift(3,9)
             >>> ixy = im(x+3, y+9)
         """
-        delta = utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
+        delta = parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
         self._shift(delta)
 
     def _shift(self, delta):
@@ -1155,7 +1157,7 @@ class Image(object):
             >>> im.bounds
             galsim.BoundsI(xmin=232, xmax=235, ymin=454, ymax=457)
         """
-        cen = utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
+        cen = parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
         self._shift(cen - self.center)
 
     def setOrigin(self, *args, **kwargs):
@@ -1191,7 +1193,7 @@ class Image(object):
             >>> im.bounds
             galsim.BoundsI(xmin=234, xmax=237, ymin=456, ymax=459)
          """
-        origin = utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
+        origin = parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
         self._shift(origin - self.origin)
 
     @property
@@ -1270,7 +1272,7 @@ class Image(object):
         The arguments here may be either (x, y) or a PositionI instance.
         Or you can provide x, y as named kwargs.
         """
-        pos = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
+        pos = parse_pos_args(args, kwargs, 'x', 'y', integer=True)
         return self.getValue(pos.x,pos.y)
 
     def getValue(self, x, y):
@@ -1307,8 +1309,7 @@ class Image(object):
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Attempt to set value of an undefined image")
-        pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
-                                                     others=['value'])
+        pos, value = parse_pos_args(args, kwargs, 'x', 'y', integer=True, others=['value'])
         if not self.bounds.includes(pos):
             raise GalSimBoundsError("Attempt to set position not in bounds of image",
                                     pos, self.bounds)
@@ -1337,8 +1338,7 @@ class Image(object):
             raise GalSimImmutableError("Cannot modify the values of an immutable Image", self)
         if not self.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Attempt to set value of an undefined image")
-        pos, value = utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
-                                                     others=['value'])
+        pos, value = parse_pos_args(args, kwargs, 'x', 'y', integer=True, others=['value'])
         if not self.bounds.includes(pos):
             raise GalSimBoundsError("Attempt to set position not in bounds of image",
                                     pos,self.bounds)
