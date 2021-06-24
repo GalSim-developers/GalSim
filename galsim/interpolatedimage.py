@@ -382,7 +382,7 @@ class InterpolatedImage(GSObject):
 
         # Bring the profile from image coordinates into world coordinates
         # Note: offset needs to happen first before the transformation, so can't bundle it here.
-        prof = self._wcs._profileToWorld(prof, flux_ratio, (0,0))
+        prof = self._wcs._profileToWorld(prof, flux_ratio, _PositionD(0,0))
 
         return prof._sbp
 
