@@ -187,9 +187,8 @@ class Transformation(GSObject):
 
     @lazy_property
     def _sbp(self):
-        dudx, dudy, dvdx, dvdy = self._jac.ravel()
         with convert_cpp_errors():
-            return _galsim.SBTransform(self._original._sbp, dudx, dudy, dvdx, dvdy,
+            return _galsim.SBTransform(self._original._sbp, self._jac.ctypes.data,
                                        self._offset._p, self._flux_ratio, self.gsparams._gsp)
 
     @lazy_property
