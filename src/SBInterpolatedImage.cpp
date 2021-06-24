@@ -506,6 +506,7 @@ namespace galsim {
         xdbg<<"Output bounds = "<<im.getBounds()<<std::endl;
         xdbg<<"Old i,j ranges = "<<0<<"  "<<m<<"  "<<0<<"  "<<n<<std::endl;
         xdbg<<"New i,j ranges = "<<i1<<"  "<<i2<<"  "<<j1<<"  "<<j2<<std::endl;
+        if (i1 >= m || i2 < 0 || j1 >= n || j2 < 0) return;
 
         // Fix up x0, y0, ptr, skip to correspond to these i,j ranges.
         x0 += i1*dx;
@@ -702,6 +703,7 @@ namespace galsim {
         dbg<<"Output bounds = "<<im.getBounds()<<std::endl;
         dbg<<"Old i,j ranges = "<<0<<"  "<<m<<"  "<<0<<"  "<<n<<std::endl;
         dbg<<"New i,j ranges = "<<i1<<"  "<<i2<<"  "<<j1<<"  "<<j2<<std::endl;
+        if (i1 >= m || i2 < 0 || j1 >= n || j2 < 0) return;
 
         // Fix up x0, y0, ptr, skip to correspond to these i,j ranges.
         x0 += i1*dx + j1*dxy;
@@ -773,6 +775,7 @@ namespace galsim {
         int j1 = std::max( int(-_maxk1/absdky-ky0/dky) , 0 );
         int j2 = std::min( int(_maxk1/absdky-ky0/dky)+1 , n );
         dbg<<"i1,i2,j1,j1 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
+        if (i1 >= m || i2 < 0 || j1 >= n || j2 < 0) return;
 
         kx0 += i1*dkx;
         ky0 += j1*dky;
