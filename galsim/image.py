@@ -407,7 +407,7 @@ class Image(object):
     def __str__(self):
         # Get the type name without the <type '...'> part.
         t = str(self.dtype).split("'")[1]
-        if self.wcs is not None and self.wcs.isPixelScale():
+        if self.wcs is not None and self.wcs._isPixelScale:
             return 'galsim.Image(bounds=%s, scale=%s, dtype=%s)'%(self.bounds, self.scale, t)
         else:
             return 'galsim.Image(bounds=%s, wcs=%s, dtype=%s)'%(self.bounds, self.wcs, t)
@@ -485,7 +485,7 @@ class Image(object):
             >>> image.scale = new_pixel_scale
         """
         if self.wcs:
-            if self.wcs.isPixelScale():
+            if self.wcs._isPixelScale:
                 return self.wcs.scale
             else:
                 raise GalSimError("image.wcs is not a simple PixelScale; scale is undefined.")
@@ -494,7 +494,7 @@ class Image(object):
 
     @scale.setter
     def scale(self, value):
-        if self.wcs is not None and not self.wcs.isPixelScale():
+        if self.wcs is not None and not self.wcs._isPixelScale:
             raise GalSimError("image.wcs is not a simple PixelScale; scale is undefined.")
         else:
             self.wcs = PixelScale(value)
@@ -819,10 +819,10 @@ class Image(object):
         target_ar = np.bincount(current_bins.ravel(), weights=self.array.ravel())
         target_ar = target_ar.reshape(target_bins.shape)
 
-        if self.wcs is None or not self.wcs.isUniform():
+        if self.wcs is None or not self.wcs._isUniform:
             target_wcs = None
         else:
-            if self.wcs.isPixelScale() and nx == ny:
+            if self.wcs._isPixelScale and nx == ny:
                 target_wcs = PixelScale(self.scale * nx)
             else:
                 dudx, dudy, dvdx, dvdy = self.wcs.jacobian().getMatrix().ravel()
@@ -873,10 +873,10 @@ class Image(object):
         target_ar = target_ar.astype(dtype, copy=False)  # Cute. This is a no op if dtype=None
         target_ar /= flux_factor
 
-        if self.wcs is None or not self.wcs.isUniform():
+        if self.wcs is None or not self.wcs._isUniform:
             target_wcs = None
         else:
-            if self.wcs.isPixelScale() and nx == ny:
+            if self.wcs._isPixelScale and nx == ny:
                 target_wcs = PixelScale(self.scale / nx)
             else:
                 dudx, dudy, dvdx, dvdy = self.wcs.jacobian().getMatrix().ravel()
@@ -910,7 +910,7 @@ class Image(object):
         """
         if self.wcs is None:
             raise GalSimError("calculate_fft requires that the scale be set.")
-        if not self.wcs.isPixelScale():
+        if not self.wcs._isPixelScale:
             raise GalSimError("calculate_fft requires that the image has a PixelScale wcs.")
         if not self.bounds.isDefined():
             raise GalSimUndefinedBoundsError(
@@ -960,7 +960,7 @@ class Image(object):
         """
         if self.wcs is None:
             raise GalSimError("calculate_inverse_fft requires that the scale be set.")
-        if not self.wcs.isPixelScale():
+        if not self.wcs._isPixelScale:
             raise GalSimError("calculate_inverse_fft requires that the image has a PixelScale wcs.")
         if not self.bounds.isDefined():
             raise GalSimUndefinedBoundsError("calculate_inverse_fft requires that the image have "

@@ -210,7 +210,7 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
     # config apparatus does not use it -- we always use the wcs -- but we keep it in case
     # the user wants to use it for an Eval item.  It's one of the variables they are allowed
     # to assume will be present for them.
-    if wcs.isPixelScale():
+    if wcs._isPixelScale:
         config['pixel_scale'] = wcs.scale
 
     # Set world_center

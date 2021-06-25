@@ -853,7 +853,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             offsets.append(offset)
 
     wcs = image.wcs
-    if wcs is not None and wcs.isUniform():
+    if wcs is not None and wcs._isUniform:
         jac = wcs.jacobian()
         for img in im_list:
             img_wcs = JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
@@ -1034,7 +1034,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         img /= 1.0*len(im_list)
 
     # Assign an appropriate WCS for the output
-    if wcs is not None and wcs.isUniform():
+    if wcs is not None and wcs._isUniform:
         jac = wcs.jacobian()
         dudx, dudy, dvdx, dvdy = jac.dudx, jac.dudy, jac.dvdx, jac.dvdy
         img_wcs = JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)

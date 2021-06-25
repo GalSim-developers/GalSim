@@ -1164,7 +1164,7 @@ class GSObject(object):
     def _local_wcs(self, wcs, image, offset, center, use_true_center, new_bounds):
         # Get the local WCS at the location of the object.
 
-        if wcs.isUniform():
+        if wcs._isUniform:
             return wcs.local()
         elif image is None:
             bounds = new_bounds
@@ -1258,7 +1258,7 @@ class GSObject(object):
             wcs = image.wcs
 
         # If the input scale <= 0, or wcs is still None at this point, then use the Nyquist scale:
-        if wcs is None or (wcs.isPixelScale() and wcs.scale <= 0):
+        if wcs is None or (wcs._isPixelScale and wcs.scale <= 0):
             if default_wcs is None:
                 wcs = PixelScale(self.nyquist_scale)
             else:
@@ -1839,7 +1839,7 @@ class GSObject(object):
             The total flux drawn inside the image bounds.
         """
         from .image import ImageD, ImageF
-        if image.wcs is None or not image.wcs.isPixelScale():
+        if image.wcs is None or not image.wcs._isPixelScale:
             raise GalSimValueError("drawReal requires an image with a PixelScale wcs", image)
 
         if image.dtype in (np.float64, np.float32) and not add_to_image and image.iscontiguous:
@@ -2011,7 +2011,7 @@ class GSObject(object):
         Returns:
             The total flux drawn inside the image bounds.
         """
-        if image.wcs is None or not image.wcs.isPixelScale():
+        if image.wcs is None or not image.wcs._isPixelScale:
             raise GalSimValueError("drawPhot requires an image with a PixelScale wcs", image)
 
         kimage, wrap_size = self.drawFFT_makeKImage(image)
@@ -2319,7 +2319,7 @@ class GSObject(object):
                     "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
 
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
-        if image.wcs is None or not image.wcs.isPixelScale():
+        if image.wcs is None or not image.wcs._isPixelScale:
             raise GalSimValueError("drawPhot requires an image with a PixelScale wcs", image)
 
         if sensor is None:

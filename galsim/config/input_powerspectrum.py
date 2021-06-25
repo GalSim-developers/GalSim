@@ -148,7 +148,7 @@ class PowerSpectrumLoader(InputLoader):
 
         if 'center' in config:
             center = ParseWorldPos(config, 'center', base, logger)
-        elif base['wcs'].isCelestial():
+        elif base['wcs']._isCelestial:
             center = PositionD(0,0)
         else:
             center = base['wcs'].toWorld(base['image_center'])
