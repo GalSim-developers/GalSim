@@ -885,7 +885,7 @@ class InterpolatedKImage(GSObject):
                 raise GalSimValueError("Supplied kimage is not complex", kimage)
 
         # Make sure wcs is a PixelScale.
-        if kimage.wcs is not None and not kimage.wcs.isPixelScale():
+        if kimage.wcs is not None and not kimage.wcs._isPixelScale:
             raise GalSimValueError("kimage wcs must be PixelScale or None.", kimage.wcs)
 
         if not kimage.bounds.isDefined():

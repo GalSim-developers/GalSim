@@ -283,7 +283,7 @@ class Shapelet(GSObject):
 
         ret = Shapelet(sigma, order, bvec=None, gsparams=gsparams)
 
-        if image.wcs is not None and not image.wcs.isPixelScale():
+        if image.wcs is not None and not image.wcs._isPixelScale:
             # TODO: Add ability for ShapeletFitImage to take jacobian matrix.
             raise GalSimNotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "
                                             "with a non-trivial WCS.")

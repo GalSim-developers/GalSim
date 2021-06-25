@@ -212,7 +212,7 @@ class BaseWCS(object):
             else:
                 return self.posToWorld(*args, **kwargs)
         elif len(args) == 2:
-            if self.isCelestial():
+            if self._isCelestial:
                 return self.xyToradec(*args, **kwargs)
             else:
                 return self.xyTouv(*args, **kwargs)
@@ -303,7 +303,7 @@ class BaseWCS(object):
             else:
                 return self.posToImage(*args, **kwargs)
         elif len(args) == 2:
-            if self.isCelestial():
+            if self._isCelestial:
                 return self.radecToxy(*args, **kwargs)
             else:
                 return self.uvToxy(*args, **kwargs)
@@ -320,9 +320,9 @@ class BaseWCS(object):
             color:      For color-dependent WCS's, the color term to use. [default: None]
         """
         if color is None: color = self._color
-        if self.isCelestial() and not isinstance(world_pos, CelestialCoord):
+        if self._isCelestial and not isinstance(world_pos, CelestialCoord):
             raise TypeError("world_pos must be a CelestialCoord argument")
-        elif not self.isCelestial() and not isinstance(world_pos, Position):
+        elif not self._isCelestial and not isinstance(world_pos, Position):
             raise TypeError("world_pos must be a PositionD or PositionI argument")
         return self._posToImage(world_pos, color=color)
 
@@ -419,6 +419,10 @@ class BaseWCS(object):
         ``wcs.isPixelScale()`` is shorthand for ``isinstance(wcs, (galsim.PixelScale,
         galsim.OffsetWCS))``.
         """
+        return self._isPixelScale
+
+    @property
+    def _isPixelScale(self):
         return False   # Overridden by PixelScale and OffsetWCS
 
     def isLocal(self):
@@ -426,6 +430,10 @@ class BaseWCS(object):
 
         ``wcs.isLocal()`` is shorthand for ``isinstance(wcs, galsim.LocalWCS)``.
         """
+        return self._isLocal
+
+    @property
+    def _isLocal(self):
         return False   # Overridden by LocalWCS
 
     def isUniform(self):
@@ -433,6 +441,10 @@ class BaseWCS(object):
 
         ``wcs.isUniform()`` is shorthand for ``isinstance(wcs, galsim.UniformWCS)``.
         """
+        return self._isUniform
+
+    @property
+    def _isUniform(self):
         return False   # Overridden by UniformWCS
 
     def isCelestial(self):
@@ -440,6 +452,10 @@ class BaseWCS(object):
 
         ``wcs.isCelestial()`` is shorthand for ``isinstance(wcs, galsim.CelestialWCS)``.
         """
+        return self._isCelestial
+
+    @property
+    def _isCelestial(self):
         return False   # Overridden by CelestialWCS
 
     def local(self, image_pos=None, world_pos=None, color=None):
@@ -546,7 +562,7 @@ class BaseWCS(object):
             # Both are None.  Must be a local WCS
             image_pos = _PositionD(0,0)
 
-        if self.isCelestial():
+        if self._isCelestial:
             return jac.withOrigin(image_pos)
         else:
             if world_pos is None:
@@ -928,7 +944,7 @@ class EuclideanWCS(BaseWCS):
         # wcs.world_pos to keep it from resetting the world_pos back to None.
 
         if world_origin is None:
-            if not self.isLocal():
+            if not self._isLocal:
                 origin += self.origin
                 world_origin = self.world_origin
             return self._newOrigin(origin, world_origin)
@@ -959,7 +975,7 @@ class EuclideanWCS(BaseWCS):
         else:
             if not isinstance(world_origin, Position):
                 raise TypeError("world_origin must be a PositionD or PositionI argument")
-            if not self.isLocal():
+            if not self._isLocal:
                 world_origin += self.world_origin - self._posToWorld(self.origin, color=color)
             return self._newOrigin(origin, world_origin)
 
@@ -1025,7 +1041,8 @@ class EuclideanWCS(BaseWCS):
 class UniformWCS(EuclideanWCS):
     """A UniformWCS is a `EuclideanWCS` which has a uniform pixel size and shape.
     """
-    def isUniform(self):
+    @property
+    def _isUniform(self):
         return True
 
     # These can also just pass through to the _localwcs attribute.
@@ -1118,8 +1135,8 @@ class LocalWCS(UniformWCS):
                 raise TypeError("world_origin must be a PositionD or PositionI argument")
         return self._newOrigin(origin, world_origin)
 
-    @doc_inherit
-    def isLocal(self):
+    @property
+    def _isLocal(self):
         return True
 
     # The origins are definitionally (0,0) for these.  So just define them here.
@@ -1163,8 +1180,8 @@ class CelestialWCS(BaseWCS):
     We use the `CelestialCoord` class for the world coordinates.
     """
 
-    @doc_inherit
-    def isCelestial(self):
+    @property
+    def _isCelestial(self):
         return True
 
     # CelestialWCS classes still have origin, but not world_origin.
@@ -1432,8 +1449,8 @@ class PixelScale(LocalWCS):
     def _invscale(self):
         return 1./self._scale
 
-    @doc_inherit
-    def isPixelScale(self):
+    @property
+    def _isPixelScale(self):
         return True
 
     def _u(self, x, y, color=None):
@@ -1963,8 +1980,8 @@ class OffsetWCS(UniformWCS):
         """
         return self._world_origin
 
-    @doc_inherit
-    def isPixelScale(self):
+    @property
+    def _isPixelScale(self):
         return True
 
     def _writeHeader(self, header, bounds):
@@ -2817,7 +2834,7 @@ def compatible(wcs1, wcs2):
     each other modulo a shifted origin, we consider them to be compatible, even though they are not
     equal.
     """
-    if wcs1.isUniform() and wcs2.isUniform():
+    if wcs1._isUniform and wcs2._isUniform:
         return wcs1.jacobian() == wcs2.jacobian()
     else:
         return wcs1 == wcs2.shiftOrigin(wcs1.origin, wcs1.world_origin)

@@ -197,7 +197,7 @@ def GetSky(config, base, logger=None, full=False):
         logger.debug('image %d, obj %d: sky_level = %f',
                      base.get('image_num',0),base.get('obj_num',0), sky_level)
         wcs = base['wcs']
-        if wcs.isUniform():
+        if wcs._isUniform:
             sky_level_pixel = sky_level * wcs.pixelArea()
             logger.debug('image %d, obj %d: Uniform: sky_level_pixel = %f',
                          base.get('image_num',0),base.get('obj_num',0), sky_level_pixel)

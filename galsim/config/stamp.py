@@ -569,7 +569,7 @@ def ParseWorldPos(config, param_name, base, logger):
     """
     param = config[param_name]
     wcs = base.get('wcs', PixelScale(1.0)) # should be here, but just in case...
-    if wcs.isCelestial():
+    if wcs._isCelestial:
         return ParseValue(config, param_name, base, CelestialCoord)[0]
     else:
         return ParseValue(config, param_name, base, PositionD)[0]

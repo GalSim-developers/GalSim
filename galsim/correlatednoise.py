@@ -1240,7 +1240,7 @@ class CorrelatedNoise(BaseCorrelatedNoise):
                                                     scale=scale, wcs=scale)
             if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
-            if not wcs.isUniform():
+            if not wcs._isUniform:
                 raise GalSimValueError("Cannot provide non-uniform wcs", wcs)
             cf_image.wcs = wcs
         elif scale is not None:
@@ -1249,7 +1249,7 @@ class CorrelatedNoise(BaseCorrelatedNoise):
             cf_image.wcs = image.wcs.local(image.true_center)
 
         # If wcs is still None at this point or is a PixelScale <= 0., use scale=1.
-        if cf_image.wcs is None or (cf_image.wcs.isPixelScale() and cf_image.wcs.scale <= 0):
+        if cf_image.wcs is None or (cf_image.wcs._isPixelScale and cf_image.wcs.scale <= 0):
             cf_image.scale = 1.
 
         # If x_interpolant not specified on input, use bilinear
@@ -1489,7 +1489,7 @@ class UncorrelatedNoise(BaseCorrelatedNoise):
                                                     scale=scale, wcs=wcs)
             if not isinstance(wcs, BaseWCS):
                 raise TypeError("wcs must be a BaseWCS instance")
-            if not wcs.isUniform():
+            if not wcs._isUniform:
                 raise GalSimValueError("Cannot provide non-uniform wcs", wcs)
         elif scale is not None:
             wcs = PixelScale(scale)
