@@ -380,21 +380,6 @@ namespace galsim {
     double SBVonKarman::SBVonKarmanImpl::getHalfLightRadius() const
     { return _info->getHalfLightRadius()/_scale; }
 
-    std::string SBVonKarman::SBVonKarmanImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBVonKarman("
-            <<getLam()<<", "
-            <<getR0()<<", "
-            <<getL0()<<", "
-            <<getFlux()<<", "
-            <<getScale()<<", "
-            <<getDoDelta()<<", "
-            <<"galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     double SBVonKarman::SBVonKarmanImpl::structureFunction(double rho) const
     {
         xdbg<<"rho = "<<rho<<'\n';

@@ -423,18 +423,6 @@ namespace galsim {
     double SBSecondKick::SBSecondKickImpl::getDelta() const
     { return _info->getDelta() * _flux; }
 
-    std::string SBSecondKick::SBSecondKickImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBSecondKick("
-            <<getLamOverR0()<<", "
-            <<getKCrit()<<", "
-            <<getFlux()<<", "
-            <<"galsim.GSParams("<<this->gsparams<<"))";
-        return oss.str();
-    }
-
     double SBSecondKick::SBSecondKickImpl::structureFunction(double rho) const
     {
         return _info->structureFunction(rho);

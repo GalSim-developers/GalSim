@@ -361,11 +361,6 @@ namespace galsim {
         template <typename T>
         void drawK(ImageView<std::complex<T> > image, double dk) const;
 
-        /// @brief Return a string that can act as the repr in python
-        std::string repr() const;
-        /// @brief Return a string that can act as the pickle serialization string in python
-        std::string serialize() const;
-
     protected:
 
         class SBProfileImpl;

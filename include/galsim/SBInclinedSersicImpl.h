@@ -84,8 +84,6 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        std::string serialize() const;
-
     private:
         double _n;       ///< Sersic index.
         double _inclination; ///< Inclination angle

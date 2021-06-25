@@ -31,15 +31,6 @@ namespace galsim {
 
     SBDeltaFunction::~SBDeltaFunction() {}
 
-    std::string SBDeltaFunction::SBDeltaFunctionImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBDeltaFunction("<<getFlux();
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     SBDeltaFunction::SBDeltaFunctionImpl::SBDeltaFunctionImpl(double flux,
                                                               const GSParams& gsparams) :
         SBProfileImpl(gsparams), _flux(flux)

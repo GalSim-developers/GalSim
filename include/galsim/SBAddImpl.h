@@ -138,8 +138,6 @@ namespace galsim {
         typedef std::list<SBProfile>::iterator Iter;
         typedef std::list<SBProfile>::const_iterator ConstIter;
 
-        std::string serialize() const;
-
     private:
 
         /// @brief The plist content is a pointer to a fresh copy of the summands.

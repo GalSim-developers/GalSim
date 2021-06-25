@@ -51,15 +51,6 @@ namespace galsim {
 
     SBAiry::~SBAiry() {}
 
-    std::string SBAiry::SBAiryImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBAiry("<<getLamOverD()<<", "<<getObscuration()<<", "<<
-            getFlux()<<", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     double SBAiry::getLamOverD() const
     {
         assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));

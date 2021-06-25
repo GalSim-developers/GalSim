@@ -983,38 +983,6 @@ namespace galsim {
         }
     }
 
-    std::string SBInterpolatedImage::SBInterpolatedImageImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBInterpolatedImage(";
-        oss << "galsim.ImageD(array([";
-
-        const double* ptr = _image.getData();
-        const int skip = _image.getNSkip();
-        const int step = _image.getStep();
-        const int xmin = _image.getXMin();
-        const int xmax = _image.getXMax();
-        const int ymin = _image.getYMin();
-        const int ymax = _image.getYMax();
-        for (int j=ymin; j<=ymax; j++, ptr+=skip) {
-            if (j > ymin) oss <<",";
-            oss << "[" << *ptr;
-            ptr += step;
-            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << *ptr;
-            oss << "]";
-        }
-
-        oss<<"],dtype=float)).image, ";
-
-        oss << getXInterp().makeStr()<<", ";
-        oss << getKInterp().makeStr()<<", ";
-        oss << stepK()<<", "<<maxK()<<", ";
-        oss << "galsim._galsim.GSParams("<<gsparams<<"))";
-
-        return oss.str();
-    }
-
     ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getPaddedImage() const
     { return _image; }
 
@@ -1335,11 +1303,6 @@ namespace galsim {
         const Interpolant& kInterp, const GSParams& gsparams) :
         SBProfile(new SBInterpolatedKImageImpl(kimage, stepk, kInterp, gsparams)) {}
 
-    SBInterpolatedKImage::SBInterpolatedKImage(
-        const BaseImage<double>& data, double stepk, double maxk,
-        const Interpolant& kInterp, const GSParams& gsparams) :
-        SBProfile(new SBInterpolatedKImageImpl(data, stepk, maxk, kInterp, gsparams)) {}
-
     SBInterpolatedKImage::SBInterpolatedKImage(const SBInterpolatedKImage& rhs)
         : SBProfile(rhs) {}
 
@@ -1349,12 +1312,6 @@ namespace galsim {
     {
         assert(dynamic_cast<const SBInterpolatedKImageImpl*>(_pimpl.get()));
         return static_cast<const SBInterpolatedKImageImpl&>(*_pimpl).getKInterp();
-    }
-
-    ConstImageView<double> SBInterpolatedKImage::getKData() const
-    {
-        assert(dynamic_cast<const SBInterpolatedKImageImpl*>(_pimpl.get()));
-        return static_cast<const SBInterpolatedKImageImpl&>(*_pimpl).getKData();
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1421,26 +1378,6 @@ namespace galsim {
         }
         _xcentroid = xsum/_flux;
         _ycentroid = ysum/_flux;
-    }
-
-    // "Serialization" constructor.
-    // Not used anymore.
-    SBInterpolatedKImage::SBInterpolatedKImageImpl::SBInterpolatedKImageImpl(
-        const BaseImage<double>& data, double stepk, double maxk,
-        const Interpolant& kInterp,
-        const GSParams& gsparams) :
-        SBProfileImpl(gsparams),
-        _kimage(reinterpret_cast<std::complex<double>*>(const_cast<double*>(data.getData())),
-                std::shared_ptr<std::complex<double> >(),
-                1, data.getStride()/2,
-                Bounds<int>(0,
-                            data.getBounds().getXMax()/2,
-                            data.getBounds().getYMin(),
-                            data.getBounds().getYMax())),
-        _kInterp(kInterp), _stepk(stepk), _maxk(maxk)
-    {
-        _flux = kValue(Position<double>(0.,0.)).real();
-        setCentroid();
     }
 
     SBInterpolatedKImage::SBInterpolatedKImageImpl::~SBInterpolatedKImageImpl() {}
@@ -1517,50 +1454,6 @@ namespace galsim {
         double flux = getFlux();
         if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
         return Position<double>(_xcentroid, _ycentroid);
-    }
-
-    // Not used anymore.
-    ConstImageView<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::getKData() const
-    {
-        double* data = const_cast<double*>(reinterpret_cast<const double*>(_kimage.getData()));
-        int No2 = _kimage.getBounds().getXMax();
-        int N = 2*No2;
-        return ConstImageView<double>(data, shared_ptr<double>(), 1, 2*N,
-                                      Bounds<int>(0,N+1,-No2,No2-1));
-    }
-
-    // Not used anymore.
-    // MJ: Maybe time to remove all these SBProfile serialize functions?
-    std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBInterpolatedKImage(";
-        oss << "galsim.ImageD(array([";
-
-        ConstImageView<double> data = getKData();
-        const double* ptr = data.getData();
-        const int skip = data.getNSkip();
-        const int step = data.getStep();
-        const int xmin = data.getXMin();
-        const int xmax = data.getXMax();
-        const int ymin = data.getYMin();
-        const int ymax = data.getYMax();
-        for (int j=ymin; j<=ymax; j++, ptr+=skip) {
-            if (j > ymin) oss <<",";
-            oss << "[" << (*ptr == 0. ? 0. : *ptr);
-            ptr += step;
-            for (int i=xmin+1; i<=xmax; i++, ptr+=step) oss << "," << (*ptr == 0. ? 0. : *ptr);
-            oss << "]";
-        }
-
-        oss<<"],dtype=float)).image, ";
-
-        oss << stepK() << ", " << maxK() << ", ";
-        oss << getKInterp().makeStr()<<", ";
-        oss << "galsim._galsim.GSParams("<<gsparams<<"))";
-
-        return oss.str();
     }
 
 } // namespace galsim

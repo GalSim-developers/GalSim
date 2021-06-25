@@ -45,17 +45,6 @@ namespace galsim {
         return maxsb;
     }
 
-    std::string SBAdd::SBAddImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss << "galsim._galsim.SBAdd([";
-        ConstIter sptr = _plist.begin();
-        oss << sptr->serialize();
-        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
-        oss << "], galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist, const GSParams& gsparams) :
         SBProfileImpl(gsparams)
     {

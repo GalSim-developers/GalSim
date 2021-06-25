@@ -125,10 +125,6 @@ namespace galsim {
         // Public so it can be directly used from SBProfile.
         GSParams gsparams;
 
-        virtual std::string serialize() const = 0;
-
-        virtual std::string repr() const {return serialize(); }
-
     protected:
 
         // A helper function for cases where the profile has f(x,y) = f(|x|,|y|).

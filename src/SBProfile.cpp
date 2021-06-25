@@ -56,18 +56,6 @@ namespace galsim {
         _pimpl.reset();
     }
 
-    std::string SBProfile::serialize() const
-    {
-        assert(_pimpl.get());
-        return _pimpl->serialize();
-    }
-
-    std::string SBProfile::repr() const
-    {
-        assert(_pimpl.get());
-        return _pimpl->repr();
-    }
-
     GSParams SBProfile::getGSParams() const
     {
         assert(_pimpl.get());

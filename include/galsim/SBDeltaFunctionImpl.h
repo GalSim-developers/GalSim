@@ -60,8 +60,6 @@ namespace galsim {
          */
         void shoot(PhotonArray& photons, UniformDeviate ud) const;
 
-        std::string serialize() const;
-
     private:
         double _flux;
 

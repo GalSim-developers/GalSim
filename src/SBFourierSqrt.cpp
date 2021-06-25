@@ -37,14 +37,6 @@ namespace galsim {
 
     SBFourierSqrt::~SBFourierSqrt() {}
 
-    std::string SBFourierSqrt::SBFourierSqrtImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss << "galsim._galsim.SBFourierSqrt(" << _adaptee.serialize();
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     SBFourierSqrt::SBFourierSqrtImpl::SBFourierSqrtImpl(const SBProfile& adaptee,
                                                         const GSParams& gsparams) :
         SBProfileImpl(gsparams), _adaptee(adaptee)
