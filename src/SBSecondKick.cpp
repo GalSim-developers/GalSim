@@ -23,7 +23,6 @@
 #include "SBSecondKickImpl.h"
 #include "SBVonKarmanImpl.h"
 #include "fmath/fmath.hpp"
-#include "Solve.h"
 #include "math/Bessel.h"
 #include "math/Gamma.h"
 #include "math/Hankel.h"

@@ -31,7 +31,7 @@ from .image import ImageCD
 from .correlatednoise import CovarianceSpectrum
 from . import _galsim
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import GalSimIndexError, convert_cpp_errors
+from .errors import GalSimIndexError
 
 
 HST_area = 45238.93416  # Area of HST primary mirror in cm^2 from Synphot User's Guide.
@@ -1275,11 +1275,10 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
         # effectively a constrained chromatic deconvolution.  Take advantage of symmetries.
-        with convert_cpp_errors():
-            _galsim.ComputeCRGCoefficients(
-                coef.ctypes.data, Sigma.ctypes.data,
-                w.ctypes.data, kimgs.ctypes.data, PSF_eff_kimgs.ctypes.data,
-                NSED, Nim, nk, nk)
+        _galsim.ComputeCRGCoefficients(
+            coef.ctypes.data, Sigma.ctypes.data,
+            w.ctypes.data, kimgs.ctypes.data, PSF_eff_kimgs.ctypes.data,
+            NSED, Nim, nk, nk)
 
         # Reorder these so they correspond to (NSED, nky, nkx) and (NSED, NSED, nky, nkx) shapes.
         coef = np.transpose(coef, (2,0,1))

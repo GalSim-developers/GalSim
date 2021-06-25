@@ -25,7 +25,7 @@ from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, WeakMethod
 from .position import PositionD, _PositionD
-from .errors import GalSimError, convert_cpp_errors
+from .errors import GalSimError
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1., gsparams=None,
               propagate_gsparams=True):
@@ -156,6 +156,8 @@ class Transformation(GSObject):
             self._original = obj.original
         else:
             self._original = obj
+        if self._det==0.:
+            raise GalSimError("Attempt to Transform with degenerate matrix");
 
     @property
     def original(self):
@@ -187,9 +189,8 @@ class Transformation(GSObject):
 
     @lazy_property
     def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBTransform(self._original._sbp, self._jac.ctypes.data,
-                                       self._offset._p, self._flux_ratio, self.gsparams._gsp)
+        return _galsim.SBTransform(self._original._sbp, self._jac.ctypes.data,
+                                   self._offset._p, self._flux_ratio, self.gsparams._gsp)
 
     @lazy_property
     def _noise(self):

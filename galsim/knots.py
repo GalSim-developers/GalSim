@@ -23,12 +23,7 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .position import PositionD
 from .utilities import lazy_property, doc_inherit
-from .errors import (
-    GalSimRangeError,
-    GalSimValueError,
-    GalSimIncompatibleValuesError,
-    convert_cpp_errors,
-)
+from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .gaussian import Gaussian
 
 class RandomKnots(GSObject):
@@ -137,14 +132,13 @@ class RandomKnots(GSObject):
     def _sbp(self):
         fluxper = self._flux/self._npoints
         deltas = []
-        with convert_cpp_errors():
-            for p in self.points:
-                d = _galsim.SBDeltaFunction(fluxper, self.gsparams._gsp)
-                jac = np.array([1.,0.,0.,1.])
-                d = _galsim.SBTransform(d, jac.ctypes.data, _galsim.PositionD(p[0],p[1]), 1.0,
-                                        self.gsparams._gsp)
-                deltas.append(d)
-            return _galsim.SBAdd(deltas, self.gsparams._gsp)
+        for p in self.points:
+            d = _galsim.SBDeltaFunction(fluxper, self.gsparams._gsp)
+            jac = np.array([1.,0.,0.,1.])
+            d = _galsim.SBTransform(d, jac.ctypes.data, _galsim.PositionD(p[0],p[1]), 1.0,
+                                    self.gsparams._gsp)
+            deltas.append(d)
+        return _galsim.SBAdd(deltas, self.gsparams._gsp)
 
     @property
     def input_half_light_radius(self):

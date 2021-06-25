@@ -23,7 +23,7 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject, ChromaticConvolution
 from .utilities import lazy_property
-from .errors import GalSimError, convert_cpp_errors, galsim_warn
+from .errors import GalSimError, galsim_warn
 
 def Convolve(*args, **kwargs):
     """A function for convolving 2 or more `GSObject` or `ChromaticObject` instances.
@@ -224,8 +224,7 @@ class Convolution(GSObject):
     @lazy_property
     def _sbp(self):
         SBList = [obj._sbp for obj in self.obj_list]
-        with convert_cpp_errors():
-            return _galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
+        return _galsim.SBConvolve(SBList, self._real_space, self.gsparams._gsp)
 
     @lazy_property
     def _noise(self):
@@ -506,8 +505,7 @@ class Deconvolution(GSObject):
 
     @lazy_property
     def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBDeconvolve(self.orig_obj._sbp, self.gsparams._gsp)
+        return _galsim.SBDeconvolve(self.orig_obj._sbp, self.gsparams._gsp)
 
     @property
     def orig_obj(self):
@@ -730,8 +728,7 @@ class AutoConvolution(Convolution):
 
     @lazy_property
     def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBAutoConvolve(self.orig_obj._sbp, self._real_space, self.gsparams._gsp)
+        return _galsim.SBAutoConvolve(self.orig_obj._sbp, self._real_space, self.gsparams._gsp)
 
     @property
     def orig_obj(self):
@@ -899,8 +896,7 @@ class AutoCorrelation(Convolution):
 
     @lazy_property
     def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBAutoCorrelate(self.orig_obj._sbp, self._real_space, self.gsparams._gsp)
+        return _galsim.SBAutoCorrelate(self.orig_obj._sbp, self._real_space, self.gsparams._gsp)
 
     @property
     def orig_obj(self):

@@ -23,7 +23,7 @@ from .gsparams import GSParams
 from .gsobject import GSObject
 from .chromatic import ChromaticObject
 from .utilities import lazy_property
-from .errors import convert_cpp_errors, galsim_warn
+from .errors import galsim_warn
 
 
 def FourierSqrt(obj, gsparams=None, propagate_gsparams=True):
@@ -107,8 +107,7 @@ class FourierSqrtProfile(GSObject):
 
     @property
     def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBFourierSqrt(self.orig_obj._sbp, self.gsparams._gsp)
+        return _galsim.SBFourierSqrt(self.orig_obj._sbp, self.gsparams._gsp)
 
     @property
     def _noise(self):

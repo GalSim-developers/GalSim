@@ -24,7 +24,6 @@ from .image import Image
 from .utilities import lazy_property
 from . import _galsim
 from .errors import GalSimValueError, GalSimIncompatibleValuesError, GalSimNotImplementedError
-from .errors import convert_cpp_errors
 
 
 class Shapelet(GSObject):
@@ -111,9 +110,8 @@ class Shapelet(GSObject):
 
     @lazy_property
     def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
-                                      self.gsparams._gsp)
+        return _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
+                                  self.gsparams._gsp)
 
     @classmethod
     def size(cls, order):
@@ -291,9 +289,8 @@ class Shapelet(GSObject):
         # Make it double precision if it is not.
         image = Image(image, dtype=np.float64, copy=False)
 
-        with convert_cpp_errors():
-            _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
-                                     image._image, image.scale, center._p)
+        _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
+                                 image._image, image.scale, center._p)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
             ret._bvec /= image.scale**2

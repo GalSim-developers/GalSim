@@ -22,7 +22,7 @@ import numpy as np
 from . import _galsim
 from .gsparams import GSParams
 from .utilities import lazy_property
-from .errors import GalSimValueError, convert_cpp_errors
+from .errors import GalSimValueError
 
 class Interpolant(object):
     """A base class that defines how interpolation should be done.
@@ -211,8 +211,7 @@ class Delta(Interpolant):
 
     @lazy_property
     def _i(self):
-        with convert_cpp_errors():
-            return _galsim.Delta(self._gsparams._gsp)
+        return _galsim.Delta(self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Delta(gsparams=%r)"%(self._gsparams)
@@ -261,8 +260,7 @@ class Nearest(Interpolant):
 
     @lazy_property
     def _i(self):
-        with convert_cpp_errors():
-            return _galsim.Nearest(self._gsparams._gsp)
+        return _galsim.Nearest(self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Nearest(gsparams=%r)"%(self._gsparams)
@@ -312,8 +310,7 @@ class SincInterpolant(Interpolant):
 
     @lazy_property
     def _i(self):
-        with convert_cpp_errors():
-            return _galsim.SincInterpolant(self._gsparams._gsp)
+        return _galsim.SincInterpolant(self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.SincInterpolant(gsparams=%r)"%(self._gsparams)
@@ -362,8 +359,7 @@ class Linear(Interpolant):
 
     @lazy_property
     def _i(self):
-        with convert_cpp_errors():
-            return _galsim.Linear(self._gsparams._gsp)
+        return _galsim.Linear(self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Linear(gsparams=%r)"%(self._gsparams)
@@ -411,8 +407,7 @@ class Cubic(Interpolant):
 
     @lazy_property
     def _i(self):
-        with convert_cpp_errors():
-            return _galsim.Cubic(self._gsparams._gsp)
+        return _galsim.Cubic(self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Cubic(gsparams=%r)"%(self._gsparams)
@@ -460,8 +455,7 @@ class Quintic(Interpolant):
 
     @lazy_property
     def _i(self):
-        with convert_cpp_errors():
-            return _galsim.Quintic(self._gsparams._gsp)
+        return _galsim.Quintic(self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Quintic(gsparams=%r)"%(self._gsparams)
@@ -519,8 +513,7 @@ class Lanczos(Interpolant):
 
     @lazy_property
     def _i(self):
-        with convert_cpp_errors():
-            return _galsim.Lanczos(self._n, self._conserve_dc, self._gsparams._gsp)
+        return _galsim.Lanczos(self._n, self._conserve_dc, self._gsparams._gsp)
 
     def __repr__(self):
         return "galsim.Lanczos(%r, %r, gsparams=%r)"%(self._n, self._conserve_dc, self._gsparams)

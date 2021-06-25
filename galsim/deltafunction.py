@@ -23,7 +23,6 @@ from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import doc_inherit
-from .errors import convert_cpp_errors
 
 
 class DeltaFunction(GSObject):
@@ -54,8 +53,7 @@ class DeltaFunction(GSObject):
     @property
     def _sbp(self):
         # NB. I only need this until compound and transform are reimplemented in Python...
-        with convert_cpp_errors():
-            return _galsim.SBDeltaFunction(self._flux, self.gsparams._gsp)
+        return _galsim.SBDeltaFunction(self._flux, self.gsparams._gsp)
 
     def __eq__(self, other):
         return (self is other or

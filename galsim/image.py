@@ -773,8 +773,7 @@ class Image(object):
         Equivalent to ``image.wrap(bounds, hermitian=='x', hermitian=='y')``.
         """
         ret = self.subImage(bounds)
-        with convert_cpp_errors():
-            _galsim.wrapImage(self._image, bounds._b, hermx, hermy)
+        _galsim.wrapImage(self._image, bounds._b, hermx, hermy)
         return ret
 
     def bin(self, nx, ny):
@@ -1005,8 +1004,7 @@ class Image(object):
         going to be performing FFTs on an image, these will tend to be faster at performing
         the FFT.
         """
-        with convert_cpp_errors():
-            return _galsim.goodFFTSize(int(input_size))
+        return _galsim.goodFFTSize(int(input_size))
 
     def copyFrom(self, rhs):
         """Copy the contents of another image
@@ -1395,8 +1393,7 @@ class Image(object):
         """Equivalent to `invertSelf`, except that there are no checks that the bounds are defined.
         """
         # C++ version skips 0's to 1/0 -> 0 instead of inf.
-        with convert_cpp_errors():
-            _galsim.invertImage(self._image)
+        _galsim.invertImage(self._image)
 
     def replaceNegative(self, replace_value=0):
         """Replace any negative values currently in the image with 0 (or some other value).
