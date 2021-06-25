@@ -359,13 +359,12 @@ class InterpolatedImage(GSObject):
     def _sbp(self):
         min_scale = self._wcs._minScale()
         max_scale = self._wcs._maxScale()
-        with convert_cpp_errors():
-            self._sbii = _galsim.SBInterpolatedImage(
-                    self._xim._image, self._image.bounds._b, self._pad_image.bounds._b,
-                    self._x_interpolant._i, self._k_interpolant._i,
-                    self._stepk*min_scale,
-                    self._maxk*max_scale,
-                    self.gsparams._gsp)
+        self._sbii = _galsim.SBInterpolatedImage(
+                self._xim._image, self._image.bounds._b, self._pad_image.bounds._b,
+                self._x_interpolant._i, self._k_interpolant._i,
+                self._stepk*min_scale,
+                self._maxk*max_scale,
+                self.gsparams._gsp)
 
         self._sbp = self._sbii  # Temporary.  Will overwrite this with the return value.
 
@@ -560,8 +559,7 @@ class InterpolatedImage(GSObject):
                 b = self._image.bounds & b
                 im = self._image[b]
             thresh = (1.-self.gsparams.folding_threshold) * self._image_flux
-            with convert_cpp_errors():
-                R = _galsim.CalculateSizeContainingFlux(self._image._image, thresh)
+            R = _galsim.CalculateSizeContainingFlux(self._image._image, thresh)
         else:
             R = np.max(self._image.array.shape) / 2. - 0.5
         return self._getSimpleStepK(R)
@@ -955,23 +953,22 @@ class InterpolatedKImage(GSObject):
     @lazy_property
     def _sbp(self):
         stepk_image = self.stepk / self.kimage.scale  # usually 1, but could be larger
-        with convert_cpp_errors():
-            # C++ layer needs Bounds that look like 0, N/2, -N/2, N/2-1
-            # So find the biggest N that works like that.
-            b = self._kimage.bounds
-            N = min(b.xmax*2, -b.ymin*2, b.ymax*2+1)
-            b = _BoundsI(0, N//2, -(N//2), N//2-1)
-            posx_kimage = self._kimage[b]
-            self._sbiki = _galsim.SBInterpolatedKImage(
-                    posx_kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
+
+        # C++ layer needs Bounds that look like 0, N/2, -N/2, N/2-1
+        # So find the biggest N that works like that.
+        b = self._kimage.bounds
+        N = min(b.xmax*2, -b.ymin*2, b.ymax*2+1)
+        b = _BoundsI(0, N//2, -(N//2), N//2-1)
+        posx_kimage = self._kimage[b]
+        self._sbiki = _galsim.SBInterpolatedKImage(
+                posx_kimage._image, stepk_image, self.k_interpolant._i, self.gsparams._gsp)
 
         scale = self.kimage.scale
         jac = np.array((1./scale, 0., 0., 1./scale))
         if scale != 1.:
-            with convert_cpp_errors():
-                return _galsim.SBTransform(self._sbiki, jac.ctypes.data,
-                                           _galsim.PositionD(0.,0.), scale**2,
-                                           self.gsparams._gsp)
+            return _galsim.SBTransform(self._sbiki, jac.ctypes.data,
+                                       _galsim.PositionD(0.,0.), scale**2,
+                                       self.gsparams._gsp)
         else:
             return self._sbiki
 
@@ -1019,7 +1016,8 @@ class InterpolatedKImage(GSObject):
 
     @property
     def _centroid(self):
-        return PositionD(self._sbp.centroid())
+        with convert_cpp_errors():
+            return PositionD(self._sbp.centroid())
 
     @property
     def _flux(self):

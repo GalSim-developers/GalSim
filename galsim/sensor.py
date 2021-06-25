@@ -25,7 +25,7 @@ from .position import PositionI, PositionD
 from .table import LookupTable
 from .random import UniformDeviate
 from . import meta_data
-from .errors import GalSimUndefinedBoundsError, convert_cpp_errors
+from .errors import GalSimUndefinedBoundsError
 
 class Sensor(object):
     """
@@ -244,12 +244,11 @@ class SiliconSensor(Sensor):
             raise OSError("Vertex file %s does not match config file %s"%(
                           self.vertex_file, self.config_file))
 
-        with convert_cpp_errors():
-            self._silicon = _galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
-                                            diff_step, PixelSize, SensorThickness,
-                                            vertex_data.ctypes.data,
-                                            self.treering_func._tab, self.treering_center._p,
-                                            self.abs_length_table._tab, self.transpose)
+        self._silicon = _galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
+                                        diff_step, PixelSize, SensorThickness,
+                                        vertex_data.ctypes.data,
+                                        self.treering_func._tab, self.treering_center._p,
+                                        self.abs_length_table._tab, self.transpose)
 
     def updateRNG(self, rng):
         self.rng.reset(rng)

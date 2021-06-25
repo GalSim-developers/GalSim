@@ -20,7 +20,6 @@ import numpy as np
 
 from . import _galsim
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
-from .errors import convert_cpp_errors
 from .utilities import isinteger
 
 class BaseDeviate(object):
@@ -100,14 +99,11 @@ class BaseDeviate(object):
         if isinstance(seed, BaseDeviate):
             self._reset(seed)
         elif isinstance(seed, str):
-            with convert_cpp_errors():
-                self._rng = self._rng_type(_galsim.BaseDeviateImpl(seed), *self._rng_args)
+            self._rng = self._rng_type(_galsim.BaseDeviateImpl(seed), *self._rng_args)
         elif seed is None:
-            with convert_cpp_errors():
-                self._rng = self._rng_type(_galsim.BaseDeviateImpl(0), *self._rng_args)
+            self._rng = self._rng_type(_galsim.BaseDeviateImpl(0), *self._rng_args)
         elif isinteger(seed):
-            with convert_cpp_errors():
-                self._rng = self._rng_type(_galsim.BaseDeviateImpl(int(seed)), *self._rng_args)
+            self._rng = self._rng_type(_galsim.BaseDeviateImpl(int(seed)), *self._rng_args)
         else:
             raise TypeError("BaseDeviate must be initialized with either an int or another "
                             "BaseDeviate")
@@ -116,8 +112,7 @@ class BaseDeviate(object):
         """Equivalent to `reset`, but rng must be a `BaseDeviate` (not an int), and there
         is no type checking.
         """
-        with convert_cpp_errors():
-            self._rng = self._rng_type(rng._rng, *self._rng_args)
+        self._rng = self._rng_type(rng._rng, *self._rng_args)
 
     def duplicate(self):
         """Create a duplicate of the current `BaseDeviate` object.
@@ -143,8 +138,7 @@ class BaseDeviate(object):
         """
         ret = BaseDeviate.__new__(self.__class__)
         ret.__dict__.update(self.__dict__)
-        with convert_cpp_errors():
-            ret._rng = self._rng.duplicate()
+        ret._rng = self._rng.duplicate()
         return ret
 
     def __copy__(self):
@@ -158,9 +152,8 @@ class BaseDeviate(object):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        with convert_cpp_errors():
-            rng = _galsim.BaseDeviateImpl(d['rng_str'])
-            self._rng = self._rng_type(rng, *self._rng_args)
+        rng = _galsim.BaseDeviateImpl(d['rng_str'])
+        self._rng = self._rng_type(rng, *self._rng_args)
 
     def clearCache(self):
         """Clear the internal cache of the `BaseDeviate`, if any.  This is currently only relevant

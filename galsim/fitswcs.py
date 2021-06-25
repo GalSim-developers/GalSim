@@ -1300,9 +1300,8 @@ class GSFitsWCS(CelestialWCS):
 
     def _apply_cd(self, x, y):
         # Do this in C++ layer for speed.
-        with convert_cpp_errors():
-            nx = len(x.ravel())
-            _galsim.ApplyCD(nx, x.ctypes.data, y.ctypes.data, self.cd.ctypes.data)
+        nx = len(x.ravel())
+        _galsim.ApplyCD(nx, x.ctypes.data, y.ctypes.data, self.cd.ctypes.data)
         return x, y
 
     def _uv(self, x, y):
@@ -1361,10 +1360,10 @@ class GSFitsWCS(CelestialWCS):
         x = np.atleast_1d(u.copy())    # Start with x,y = u,v.
         y = np.atleast_1d(v.copy())    # This may be updated below if abp is provided.
 
+        nab = ab.shape[1]
+        nabp = abp.shape[1] if abp is not None else 0
+        nx = len(x.ravel())
         with convert_cpp_errors():
-            nab = ab.shape[1]
-            nabp = abp.shape[1] if abp is not None else 0
-            nx = len(x.ravel())
             _galsim.InvertAB(nx, nab, uu.ctypes.data, vv.ctypes.data, ab.ctypes.data,
                              x.ravel().ctypes.data, y.ravel().ctypes.data, self._doiter,
                              nabp, abp.ctypes.data if abp is not None else 0)

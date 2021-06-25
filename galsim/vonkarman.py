@@ -169,9 +169,8 @@ class VonKarman(GSObject):
         # Add in a delta function with appropriate amplitude if requested.
         if self._do_delta:
             sbvk = self._sbvk
-            with convert_cpp_errors():
-                sbdelta = _galsim.SBDeltaFunction(self._delta, self._gsparams._gsp)
-                return _galsim.SBAdd([sbvk, sbdelta], self._gsparams._gsp)
+            sbdelta = _galsim.SBDeltaFunction(self._delta, self._gsparams._gsp)
+            return _galsim.SBAdd([sbvk, sbdelta], self._gsparams._gsp)
         else:
             return self._sbvk
 

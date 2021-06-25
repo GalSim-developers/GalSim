@@ -139,7 +139,7 @@ namespace galsim {
 
             // Calculate some derived quantities:
             double det = _mA*_mD-_mB*_mC;
-            if (det==0.) throw SBError("Attempt to SBTransform with degenerate matrix");
+            assert(det != 0);  // Checked in python layer
             _absdet = std::abs(det);
             _invdet = 1./det;
             // The scale factor for the flux is absdet * ampScaling.

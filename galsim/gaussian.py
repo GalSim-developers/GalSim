@@ -23,7 +23,7 @@ from . import _galsim
 from .gsobject import GSObject
 from .gsparams import GSParams
 from .utilities import lazy_property, doc_inherit
-from .errors import GalSimIncompatibleValuesError, convert_cpp_errors
+from .errors import GalSimIncompatibleValuesError
 
 
 class Gaussian(GSObject):
@@ -93,8 +93,7 @@ class Gaussian(GSObject):
 
     @lazy_property
     def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBGaussian(self._sigma, self._flux, self.gsparams._gsp)
+        return _galsim.SBGaussian(self._sigma, self._flux, self.gsparams._gsp)
 
     @property
     def sigma(self):

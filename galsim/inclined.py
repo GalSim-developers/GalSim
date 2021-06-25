@@ -129,9 +129,8 @@ class InclinedExponential(GSObject):
 
     @lazy_property
     def _sbp(self):
-        with convert_cpp_errors():
-            return _galsim.SBInclinedExponential(self._inclination.rad, self._r0,
-                                                 self._h0, self._flux, self.gsparams._gsp)
+        return _galsim.SBInclinedExponential(self._inclination.rad, self._r0,
+                                             self._h0, self._flux, self.gsparams._gsp)
 
     @property
     def inclination(self):

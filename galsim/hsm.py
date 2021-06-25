@@ -24,8 +24,6 @@ from .bounds import BoundsI
 from .shear import Shear
 from .image import Image, ImageI, ImageF, ImageD
 from .errors import GalSimError, GalSimValueError, GalSimHSMError, GalSimIncompatibleValuesError
-from .errors import convert_cpp_errors
-
 
 class ShapeData(object):
     """A class to contain the outputs of the HSM shape and moments measurement routines.
@@ -109,17 +107,17 @@ class ShapeData(object):
 
         if not isinstance(image_bounds, BoundsI):
             raise TypeError("image_bounds must be a BoundsI instance")
-        # The others will raise an appropriate TypeError from the call to _galsim.ShapeData.
 
-        with convert_cpp_errors(GalSimHSMError):
-            self._data = _galsim.ShapeData(
-                image_bounds._b, int(moments_status), observed_shape.e1, observed_shape.e2,
-                float(moments_sigma), float(moments_amp), moments_centroid._p,
-                float(moments_rho4), int(moments_n_iter), int(correction_status),
-                float(corrected_e1), float(corrected_e2), float(corrected_g1), float(corrected_g2),
-                str(meas_type), float(corrected_shape_err), str(correction_method),
-                float(resolution_factor), float(psf_sigma), psf_shape.e1, psf_shape.e2,
-                str(error_message))
+        # The others will raise an appropriate TypeError from the call to _galsim.ShapeData
+        # when converting to int, float, etc.
+        self._data = _galsim.ShapeData(
+            image_bounds._b, int(moments_status), observed_shape.e1, observed_shape.e2,
+            float(moments_sigma), float(moments_amp), moments_centroid._p,
+            float(moments_rho4), int(moments_n_iter), int(correction_status),
+            float(corrected_e1), float(corrected_e2), float(corrected_g1), float(corrected_g2),
+            str(meas_type), float(corrected_shape_err), str(correction_method),
+            float(resolution_factor), float(psf_sigma), psf_shape.e1, psf_shape.e2,
+            str(error_message))
 
     @property
     def image_bounds(self): return BoundsI(self._data.image_bounds)
@@ -348,8 +346,7 @@ class HSMParams(object):
         self._make_hsmp()
 
     def _make_hsmp(self):
-        with convert_cpp_errors(GalSimHSMError):
-            self._hsmp = _galsim.HSMParams(*self._getinitargs())
+        self._hsmp = _galsim.HSMParams(*self._getinitargs())
 
     def _getinitargs(self):
         return (self.nsig_rg, self.nsig_rg2, self.max_moment_nsig2, self.regauss_too_small,

@@ -23,7 +23,7 @@ from .utilities import lazy_property, convert_interpolant, find_out_of_bounds_po
 from .utilities import basestring
 from .bounds import BoundsD
 from .errors import GalSimRangeError, GalSimBoundsError, GalSimValueError
-from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
+from .errors import GalSimIncompatibleValuesError, galsim_warn
 from .errors import GalSimNotImplementedError
 from .interpolant import Interpolant
 
@@ -172,13 +172,12 @@ class LookupTable(object):
         self._x = np.log(self.x) if self.x_log else self.x
         self._f = np.log(self.f) if self.f_log else self.f
 
-        with convert_cpp_errors():
-            if self._interp1d is not None:
-                return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
-                                            len(self._x), self._interp1d._i)
-            else:
-                return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
-                                            len(self._x), self.interpolant)
+        if self._interp1d is not None:
+            return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
+                                        len(self._x), self._interp1d._i)
+        else:
+            return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
+                                        len(self._x), self.interpolant)
 
     @property
     def x_min(self):
@@ -809,20 +808,19 @@ class LookupTable2D(object):
 
     @lazy_property
     def _tab(self):
-        with convert_cpp_errors():
-            if self._interp2d is not None:
-                return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                              self.f.ctypes.data, len(self.x), len(self.y),
-                                              self._interp2d._i)
-            elif self.interpolant == 'spline':
-                return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                              self.f.ctypes.data, len(self.x), len(self.y),
-                                              self.dfdx.ctypes.data, self.dfdy.ctypes.data,
-                                              self.d2fdxdy.ctypes.data)
-            else:
-                return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                              self.f.ctypes.data, len(self.x), len(self.y),
-                                              self.interpolant)
+        if self._interp2d is not None:
+            return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                          self.f.ctypes.data, len(self.x), len(self.y),
+                                          self._interp2d._i)
+        elif self.interpolant == 'spline':
+            return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                          self.f.ctypes.data, len(self.x), len(self.y),
+                                          self.dfdx.ctypes.data, self.dfdy.ctypes.data,
+                                          self.d2fdxdy.ctypes.data)
+        else:
+            return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
+                                          self.f.ctypes.data, len(self.x), len(self.y),
+                                          self.interpolant)
 
     def getXArgs(self):
         return self.x

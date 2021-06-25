@@ -26,7 +26,7 @@ from .celestial import CelestialCoord
 from .utilities import lazy_property
 from .angle import radians, arcsec, Angle, AngleUnit
 from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimUndefinedBoundsError
-from .errors import GalSimIncompatibleValuesError, convert_cpp_errors, galsim_warn
+from .errors import GalSimIncompatibleValuesError, galsim_warn
 
 # Add on more methods in the python layer
 
@@ -390,9 +390,8 @@ class PhotonArray(object):
         if self.hasAllocatedWavelengths():
             #assert(self._wave.strides[0] == self._wave.itemsize)
             _wave = self._wave.ctypes.data
-        with convert_cpp_errors():
-            return _galsim.PhotonArray(int(self.size()), _x, _y, _flux, _dxdz, _dydz, _wave,
-                                       self._is_corr)
+        return _galsim.PhotonArray(int(self.size()), _x, _y, _flux, _dxdz, _dydz, _wave,
+                                   self._is_corr)
 
     def addTo(self, image):
         """Add flux of photons to an image by binning into pixels.

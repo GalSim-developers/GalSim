@@ -17,7 +17,6 @@
 #
 
 from . import _galsim
-from .errors import convert_cpp_errors
 
 class GSParams(object):
     """GSParams stores a set of numbers that govern how a `GSObject` makes various speed/accuracy
@@ -144,10 +143,7 @@ class GSParams(object):
             from .deprecated import depr
             depr('small_fraction_of_flux', 2.1, "", "This parameter is no longer used.")
 
-
-        # This is the thing that is needed for any c++ calls.
-        with convert_cpp_errors():
-            self._gsp = _galsim.GSParams(*self._getinitargs())
+        self._gsp = _galsim.GSParams(*self._getinitargs())
 
     # Make all the attributes read-only
     @property

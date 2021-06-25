@@ -883,7 +883,7 @@ def test_ne():
     objs = [galsim.Transform(gal1),
             galsim.Transform(gal2),
             galsim.Transform(gal1, jac=(1, 0.5, 0.5, 1)),
-            galsim.Transform(gal1, jac=(1, 1, 1, 1)),
+            galsim.Transform(gal1, jac=(1, 1, 1, 0)),
             galsim.Transform(gal1, jac=jac),
             galsim.Transform(gal1, offset=galsim.PositionD(2, 2)),
             galsim.Transform(gal1, offset=offset),
@@ -893,10 +893,9 @@ def test_ne():
             galsim.Transform(gal1, gsparams=gsp, propagate_gsparams=False)]
     all_obj_diff(objs)
 
-    # The degenerate jacobian will build fine, but will raise an exception when used.
-    degen = galsim.Transform(gal1, jac=(1, 1, 1, 1))
+    # A degenerate jacobian will raise an exception.
     with assert_raises(galsim.GalSimError):
-        sbp = degen._sbp
+        degen = galsim.Transform(gal1, jac=(1, 1, 1, 1))
 
     assert_raises(TypeError, galsim.Transform, jac)
 
