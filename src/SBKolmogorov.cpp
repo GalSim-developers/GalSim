@@ -62,15 +62,6 @@ namespace galsim {
         return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0();
     }
 
-    std::string SBKolmogorov::SBKolmogorovImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBKolmogorov("<<getLamOverR0()<<", "<<getFlux();
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     LRUCache<GSParamsPtr, KolmogorovInfo> SBKolmogorov::SBKolmogorovImpl::cache(
         sbp::max_kolmogorov_cache);
 

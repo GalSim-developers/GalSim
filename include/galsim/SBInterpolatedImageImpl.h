@@ -167,8 +167,6 @@ namespace galsim {
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
-        std::string serialize() const;
-
     private:
 
         void doFillXImage(ImageView<double> im,
@@ -218,11 +216,6 @@ namespace galsim {
             const BaseImage<std::complex<double> >& kimage, double stepk,
             const Interpolant& kInterp, const GSParams& gsparams);
 
-        // Alternative constructor used for serialization
-        SBInterpolatedKImageImpl(
-            const BaseImage<double>& data, double stepk, double maxk,
-            const Interpolant& kInterp, const GSParams& gsparams);
-
         ~SBInterpolatedKImageImpl();
 
         ////////////////////////////////////////////////////////////////////////////
@@ -267,8 +260,6 @@ namespace galsim {
 
         mutable double _xcentroid;
         mutable double _ycentroid;
-
-        std::string serialize() const;
 
     private:
 

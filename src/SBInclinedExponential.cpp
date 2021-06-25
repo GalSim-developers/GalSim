@@ -64,29 +64,6 @@ namespace galsim {
         return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getScaleHeight();
     }
 
-    // NB.  This function is virtually wrapped by repr() in SBProfile.cpp
-    std::string SBInclinedExponential::SBInclinedExponentialImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        // NB. The choice of digits10 + 4 is because the normal general output
-        // scheme for double uses fixed notation if >= 0.0001, but then switches
-        // to scientific for smaller numbers.  So those first 4 digits in 0.0001 don't
-        // count for the number of required digits, which is nominally given by digits10.
-        // cf. http://stackoverflow.com/questions/4738768/printing-double-without-losing-precision
-        // Unfortunately, there doesn't seem to be an easy equivalent of python's %r for
-        // printing the repr of a double that always works and doesn't print more digits than
-        // it needs.  This is the reason why we reimplement the __repr__ methods in python
-        // for all the SB classes except SBProfile.  Only the last one can't be done properly
-        // in python, so it will use the C++ virtual function to get the right thing for
-        // any subclass.  But possibly with ugly extra digits.
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBInclinedExponential("<<getInclination();
-        oss << ", "<<getScaleRadius()<<", "<<getScaleHeight();
-        oss << ", "<<getFlux()<<", False";
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(
             double inclination, double scale_radius,
             double scale_height, double flux, const GSParams& gsparams) :

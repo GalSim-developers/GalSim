@@ -67,21 +67,6 @@ namespace galsim {
         return _fluxProduct / twopisigmasq;
     }
 
-    std::string SBConvolve::SBConvolveImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBConvolve([";
-        ConstIter sptr = _plist.begin();
-        oss << sptr->serialize();
-        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
-        oss << "], ";
-        if (_real_space) oss << "True, ";
-        else oss << "False, ";
-        oss << "galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     SBConvolve::SBConvolveImpl::SBConvolveImpl(const std::list<SBProfile>& plist, bool real_space,
                                                const GSParams& gsparams) :
         SBProfileImpl(gsparams), _real_space(real_space),
@@ -315,17 +300,6 @@ namespace galsim {
         return _adaptee.getFlux() * _adaptee.maxSB() / 2.;
     }
 
-    std::string SBAutoConvolve::SBAutoConvolveImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBAutoConvolve(" << _adaptee.serialize() << ", ";
-        if (_real_space) oss << "True";
-        else oss << "False";
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s, bool real_space,
                                                            const GSParams& gsparams) :
         SBProfileImpl(gsparams), _adaptee(s), _real_space(real_space) {}
@@ -413,17 +387,6 @@ namespace galsim {
     double SBAutoCorrelate::SBAutoCorrelateImpl::maxSB() const
     {
         return _adaptee.getFlux() * _adaptee.maxSB() / 2.;
-    }
-
-    std::string SBAutoCorrelate::SBAutoCorrelateImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBAutoCorrelate(" << _adaptee.serialize() << ", ";
-        if (_real_space) oss << "True";
-        else oss << "False";
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
     }
 
     SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(

@@ -101,8 +101,6 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        std::string serialize() const;
-
     private:
         double _beta; ///< Moffat beta parameter for profile `[1 + (r / rD)^2]^beta`.
         double _flux; ///< Flux.

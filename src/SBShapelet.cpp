@@ -50,15 +50,6 @@ namespace galsim {
         bvec.rotate(theta);
     }
 
-    std::string SBShapelet::SBShapeletImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBShapelet("<<getSigma()<<", "<<getBVec().repr();
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     SBShapelet::SBShapeletImpl::SBShapeletImpl(double sigma, const LVector& bvec,
                                                const GSParams& gsparams) :
         SBProfileImpl(gsparams),

@@ -117,8 +117,6 @@ namespace galsim {
 
         double structureFunction(double rho) const;
 
-        std::string serialize() const;
-
     private:
 
         double _lam_over_r0;

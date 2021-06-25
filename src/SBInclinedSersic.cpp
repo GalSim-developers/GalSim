@@ -90,17 +90,6 @@ namespace galsim {
         return static_cast<const SBInclinedSersicImpl&>(*_pimpl).getTrunc();
     }
 
-    // NB.  This function is virtually wrapped by repr() in SBProfile.cpp
-    std::string SBInclinedSersic::SBInclinedSersicImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBInclinedSersic("<<getN()<<", "<<getInclination()<<", "<<getScaleRadius();
-        oss <<", "<<getScaleHeight()<<", None, "<<getFlux()<<", "<<getTrunc()<<", False";
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
     SBInclinedSersic::SBInclinedSersicImpl::SBInclinedSersicImpl(
         double n, double inclination, double scale_radius,
         double height, double flux, double trunc, const GSParams& gsparams) :

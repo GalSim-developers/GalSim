@@ -84,17 +84,6 @@ namespace galsim {
         return static_cast<const SBMoffatImpl&>(*_pimpl).getTrunc();
     }
 
-    std::string SBMoffat::SBMoffatImpl::serialize() const
-    {
-        std::ostringstream oss(" ");
-        oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBMoffat("<<getBeta()<<", "<<getScaleRadius();
-        oss << ", None, None, "<<getTrunc()<<", "<<getFlux();
-        oss << ", galsim._galsim.GSParams("<<gsparams<<"))";
-        return oss.str();
-    }
-
-
     class MoffatScaleRadiusFunc
     {
     public:
