@@ -2069,7 +2069,7 @@ def test_phot():
         # First draw with FFT
         obj = galsim.Convolve(gal, psf)
         pixel_scale = 0.01
-        im1 = galsim.ImageD(50, 50, scale=pixel_scale)
+        im1 = galsim.ImageD(100, 100, scale=pixel_scale)
         t0 = time.time()
         obj.drawImage(bandpass, image=im1)
         t1 = time.time()
@@ -2148,6 +2148,11 @@ def test_phot():
                              add_to_image=True)
         print('im5.max,sum => ', im5.array.max(), im5.array.sum())
         np.testing.assert_allclose(im5.array/flux, im1.array/flux, atol=atol)
+
+        # Different code path when scale=1, since no jac (in some cases at least)
+        im6 = obj.drawImage(bandpass, nx=50, ny=50, scale=1., method='phot', rng=rng)
+        print('im6.max,sum = ', im6.array.max(), im6.array.sum())
+        np.testing.assert_allclose(im6.array.sum(), im1.array.sum(), rtol=0.1)
 
     # Invalid to shoot photons outside of InterpolatedChromaticObject's range.
     # Note: It requires some care to avoid all the other range checks and actually hit the

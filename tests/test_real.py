@@ -592,6 +592,7 @@ def test_ne():
             galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
             galsim.RealGalaxy(rgc, index=0, gsparams=gsp),
             crg1,
+            crg1.shear(g1=0.1,g2=0.3),
             crg2,
             galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0, k_interpolant='Linear'),
             covspec1,

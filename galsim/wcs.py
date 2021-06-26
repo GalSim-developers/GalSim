@@ -1470,13 +1470,19 @@ class PixelScale(LocalWCS):
         # In the usual case of GSObject, it's more efficient to use the _Transform version.
         # else, it's a ChromaticObject, and we need to use the regular Transform function.
         Transform = _Transform if isinstance(image_profile, GSObject) else Transform
-        j = np.array(((self._scale, 0.), (0., self._scale)))
+        if self._scale == 1.:
+            j = None
+        else:
+            j = np.array(((self._scale, 0.), (0., self._scale)))
         return Transform(image_profile, j, flux_ratio=self._invscale**2 * flux_ratio, offset=offset)
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform, Transform
         Transform = _Transform if isinstance(world_profile, GSObject) else Transform
-        j = np.array(((self._invscale, 0.), (0., self._invscale)))
+        if self._scale == 1.:
+            j = None
+        else:
+            j = np.array(((self._invscale, 0.), (0., self._invscale)))
         return Transform(world_profile, j, flux_ratio=self._scale**2 * flux_ratio, offset=offset)
 
     def _pixelArea(self):

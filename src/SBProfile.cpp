@@ -175,8 +175,8 @@ namespace galsim {
 
     SBTransform SBProfile::transform(double dudx, double dudy, double dvdx, double dvdy) const
     {
-        return SBTransform(*this, dudx, dudy, dvdx, dvdy,
-                           Position<double>(0,0), 1., getGSParams());
+        double jac[4] = {dudx, dudy, dvdx, dvdy};
+        return SBTransform(*this, jac, Position<double>(0,0), 1., getGSParams());
     }
 
     //

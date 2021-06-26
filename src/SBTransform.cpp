@@ -25,11 +25,10 @@
 
 namespace galsim {
 
-    SBTransform::SBTransform(const SBProfile& adaptee,
-                             double mA, double mB, double mC, double mD,
+    SBTransform::SBTransform(const SBProfile& adaptee, const double* jac,
                              const Position<double>& cen, double ampScaling,
                              const GSParams& gsparams) :
-        SBProfile(new SBTransformImpl(adaptee,mA,mB,mC,mD,cen,ampScaling,gsparams)) {}
+        SBProfile(new SBTransformImpl(adaptee,jac,cen,ampScaling,gsparams)) {}
 
     SBTransform::SBTransform(const SBTransform& rhs) : SBProfile(rhs) {}
 
@@ -61,14 +60,26 @@ namespace galsim {
 
 
     SBTransform::SBTransformImpl::SBTransformImpl(
-        const SBProfile& adaptee, double mA, double mB, double mC, double mD,
+        const SBProfile& adaptee, const double* jac,
         const Position<double>& cen, double ampScaling,
         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
-        _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _ampScaling(ampScaling),
+        _adaptee(adaptee), _cen(cen), _ampScaling(ampScaling),
         _maxk(0.), _stepk(0.), _xmin(0.), _xmax(0.), _ymin(0.), _ymax(0.),
         _kValue(0), _kValueNoPhase(0)
     {
+        bool unit = !jac;
+        if (jac) {
+            _mA = jac[0];
+            _mB = jac[1];
+            _mC = jac[2];
+            _mD = jac[3];
+        } else {
+            _mA = 1.;
+            _mB = 0.;
+            _mC = 0.;
+            _mD = 1.;
+        }
         dbg<<"Start TransformImpl\n";
         dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
         dbg<<"cen = "<<_cen<<", ampScaling = "<<_ampScaling<<std::endl;
@@ -97,6 +108,7 @@ namespace galsim {
             _mB = mA*sbt->_mB + mB*sbt->_mD;
             _mC = mC*sbt->_mA + mD*sbt->_mC;
             _mD = mC*sbt->_mB + mD*sbt->_mD;
+            unit = false;
             _ampScaling *= sbt->_ampScaling;
             dbg<<"this transformation => "<<
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
@@ -113,7 +125,7 @@ namespace galsim {
         // It will be reasonably common to have an identity matrix (for just
         // a flux scaling and/or shift) for (A,B,C,D).  If so, we can use simpler
         // versions of fwd and inv:
-        if (_mA == 1. && _mB == 0. && _mC == 0. && _mD == 1.) {
+        if (unit) {
             dbg<<"Using identity functions for fwd and inv\n";
             _fwd = &SBTransform::SBTransformImpl::_ident;
             _inv = &SBTransform::SBTransformImpl::_ident;
@@ -141,7 +153,6 @@ namespace galsim {
         xdbg<<"_absdet = "<<_absdet<<std::endl;
         xdbg<<"_ampScaling = "<<_ampScaling<<std::endl;
         xdbg<<"_fluxScaling -> "<<_fluxScaling<<std::endl;
-
     }
 
     double SBTransform::SBTransformImpl::maxK() const
