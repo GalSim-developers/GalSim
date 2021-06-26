@@ -144,10 +144,10 @@ namespace galsim {
         /// @brief Returns the k value (no phase).
         std::complex<double> kValueNoPhase(const Position<double>& k) const;
 
-        std::complex<double> (*_kValue)(
+        mutable std::complex<double> (*_kValue)(
             const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
             const Position<double>& k, const Position<double>& cen);
-        std::complex<double> (*_kValueNoPhase)(
+        mutable std::complex<double> (*_kValueNoPhase)(
             const SBProfile& adaptee, const Position<double>& fwdTk, double fluxScaling,
             const Position<double>& , const Position<double>& );
 

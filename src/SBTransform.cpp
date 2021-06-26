@@ -66,7 +66,8 @@ namespace galsim {
         const GSParams& gsparams) :
         SBProfileImpl(gsparams),
         _adaptee(adaptee), _mA(mA), _mB(mB), _mC(mC), _mD(mD), _cen(cen), _ampScaling(ampScaling),
-        _maxk(0.), _stepk(0.), _xmin(0.), _xmax(0.), _ymin(0.), _ymax(0.)
+        _maxk(0.), _stepk(0.), _xmin(0.), _xmax(0.), _ymin(0.), _ymax(0.),
+        _kValue(0), _kValueNoPhase(0)
     {
         dbg<<"Start TransformImpl\n";
         dbg<<"matrix = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
@@ -107,6 +108,7 @@ namespace galsim {
                 _mA<<','<<_mB<<','<<_mC<<','<<_mD<<','<<
                 _cen<<','<<_ampScaling<<std::endl;
         }
+        _zeroCen = _cen.x == 0. && _cen.y == 0.;
 
         // It will be reasonably common to have an identity matrix (for just
         // a flux scaling and/or shift) for (A,B,C,D).  If so, we can use simpler
@@ -140,21 +142,6 @@ namespace galsim {
         xdbg<<"_ampScaling = "<<_ampScaling<<std::endl;
         xdbg<<"_fluxScaling -> "<<_fluxScaling<<std::endl;
 
-        // Figure out which function we need for kValue and kValueNoPhase
-        if (std::abs(_fluxScaling-1.) < this->gsparams.kvalue_accuracy) {
-            xdbg<<"fluxScaling = "<<_fluxScaling<<" = 1, so use NoDet version.\n";
-            _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseNoDet;
-        } else {
-            xdbg<<"fluxScaling = "<<_fluxScaling<<" != 1, so use WithDet version.\n";
-            _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseWithDet;
-        }
-        if (_cen.x == 0. && _cen.y == 0.) {
-            _zeroCen = true;
-            _kValue = _kValueNoPhase;
-        } else {
-            _zeroCen = false;
-            _kValue = &SBTransform::SBTransformImpl::_kValueWithPhase;
-        }
     }
 
     double SBTransform::SBTransformImpl::maxK() const
@@ -486,7 +473,24 @@ namespace galsim {
     { return _adaptee.xValue(inv(p-_cen)) * _ampScaling; }
 
     std::complex<double> SBTransform::SBTransformImpl::kValue(const Position<double>& k) const
-    { return _kValue(_adaptee,fwdT(k),_fluxScaling,k,_cen); }
+    {
+        if (!_kValue) {
+            // Figure out which function we need for kValue and kValueNoPhase
+            if (std::abs(_fluxScaling-1.) < this->gsparams.kvalue_accuracy) {
+                xdbg<<"fluxScaling = "<<_fluxScaling<<" = 1, so use NoDet version.\n";
+                _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseNoDet;
+            } else {
+                xdbg<<"fluxScaling = "<<_fluxScaling<<" != 1, so use WithDet version.\n";
+                _kValueNoPhase = &SBTransform::SBTransformImpl::_kValueNoPhaseWithDet;
+            }
+            if (_zeroCen) {
+                _kValue = _kValueNoPhase;
+            } else {
+                _kValue = &SBTransform::SBTransformImpl::_kValueWithPhase;
+            }
+        }
+        return _kValue(_adaptee,fwdT(k),_fluxScaling,k,_cen);
+    }
 
     std::complex<double> SBTransform::SBTransformImpl::kValueNoPhase(
         const Position<double>& k) const
