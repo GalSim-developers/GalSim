@@ -26,8 +26,8 @@ namespace galsim {
                                 const Position<double>& cen, double ampScaling,
                                 const GSParams& gsparams)
     {
-        const double* jac = reinterpret_cast<double*>(ijac);
-        return new SBTransform(sbin, jac[0], jac[1], jac[2], jac[3], cen, ampScaling, gsparams);
+        const double* jac = reinterpret_cast<const double*>(ijac);
+        return new SBTransform(sbin, jac, cen, ampScaling, gsparams);
     }
 
     void pyExportSBTransform(PY_MODULE& _galsim)

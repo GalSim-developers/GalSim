@@ -838,7 +838,7 @@ class ChromaticObject(object):
                 return np.diag([s,s])
             jac = buildScaleJac
         else:
-            jac = np.diag([scale, scale])
+            jac = None if scale == 1 else np.diag([scale, scale])
         return Transform(self, jac=jac)
 
     def dilate(self, scale):
@@ -1669,7 +1669,8 @@ class ChromaticTransformation(ChromaticObject):
         jac:                A list or tuple (dudx, dudy, dvdx, dvdy), or a numpy.array object
                             [[dudx, dudy], [dvdx, dvdy]] describing the Jacobian to apply.  May
                             also be a function of wavelength returning a numpy array.
-                            [default: (1,0,0,1)]
+                            Use None to indicate that the Jacobian is the 2x2 unit matrix.
+                            [default: None]
         offset:             A galsim.PositionD or list or tuple or numpy array giving the offset
                             (dx,dy) by which to shift the profile.  May also be a function of
                             wavelength returning a numpy array.  [default: (0,0)]
@@ -1681,11 +1682,11 @@ class ChromaticTransformation(ChromaticObject):
                             is normally a good idea, but there may be use cases where one
                             would not want to do this. [default: True]
     """
-    def __init__(self, obj, jac=np.identity(2), offset=(0.,0.), flux_ratio=1., redshift=None,
+    def __init__(self, obj, jac=None, offset=(0.,0.), flux_ratio=1., redshift=None,
                  gsparams=None, propagate_gsparams=True):
         if isinstance(offset, Position):
             offset = (offset.x, offset.y)
-        if not hasattr(jac,'__call__'):
+        if not hasattr(jac,'__call__') and jac is not None:
             jac = np.asarray(jac).reshape(2,2)
         if not hasattr(offset,'__call__'):
             offset = np.asarray(offset)
@@ -1709,9 +1710,9 @@ class ChromaticTransformation(ChromaticObject):
             @np.vectorize
             def detjac(w):
                 return np.linalg.det(np.asarray(jac(w)).reshape(2,2))
-        else:
-            detjac = np.linalg.det(np.asarray(jac).reshape(2,2))
-        self.SED *= detjac
+            self.SED *= detjac
+        elif jac is not None:
+            self.SED *= np.linalg.det(np.asarray(jac).reshape(2,2))
 
         if obj.interpolated and self.chromatic:
             galsim_warn("Cannot render image with chromatic transformation applied to it "
@@ -1736,8 +1737,12 @@ class ChromaticTransformation(ChromaticObject):
             # (I think this last case could be remedied, so if there is a use case where it
             # is important, we could try to implement it.)
             self._original = obj.original
-            self._jac = jac.dot(obj._jac)
-            self._offset = jac.dot(obj._offset) + offset
+            if jac is None:
+                self._jac = obj._jac
+                self._offset = obj._offset + offset
+            else:
+                self._jac = jac if obj._jac is None else jac.dot(obj._jac)
+                self._offset = jac.dot(obj._offset) + offset
             if hasattr(flux_ratio, '__call__') or hasattr(obj._flux_ratio, '__call__'):
                 self._flux_ratio = SED(flux_ratio, 'nm', '1') * obj._flux_ratio
             else:
@@ -1824,7 +1829,7 @@ class ChromaticTransformation(ChromaticObject):
                 selfattr = getattr(self, attr)
                 if hasattr(selfattr, '__call__'):
                     self._hash ^= hash(selfattr)
-                else:
+                elif selfattr is not None:
                     self._hash ^= hash(tuple(selfattr.ravel().tolist()))
             self._hash ^= hash(self._flux_ratio)
         return self._hash
@@ -1832,6 +1837,8 @@ class ChromaticTransformation(ChromaticObject):
     def __repr__(self):
         if hasattr(self._jac, '__call__'):
             jac = self._jac
+        elif self._jac is None:
+            jac = None
         else:
             jac = self._jac.ravel().tolist()
         if hasattr(self._offset, '__call__'):
@@ -1848,7 +1855,7 @@ class ChromaticTransformation(ChromaticObject):
         s = str(self.original)
         if hasattr(self._jac, '__call__'):
             s += '.transform(%s)'%self._jac
-        else:
+        elif self._jac is not None:
             s += Transformation._str_from_jac(self._jac)
         if hasattr(self._offset, '__call__'):
             s += '.shift(%s)'%self._offset
@@ -1913,17 +1920,20 @@ class ChromaticTransformation(ChromaticObject):
         jac, offset, flux_ratio = self._getTransformations(wave)
 
         # cf. Transformation._fwd_normal
-        temp = jac[0,1] * photons.y
-        photons.y *= jac[1,1]
-        photons.y += jac[1,0] * photons.x
-        photons.x *= jac[0,0]
-        photons.x += temp
+        if jac is not None:
+            temp = jac[0,1] * photons.y
+            photons.y *= jac[1,1]
+            photons.y += jac[1,0] * photons.x
+            photons.x *= jac[0,0]
+            photons.x += temp
+
+            det = jac[0,0] * jac[1,1] - jac[0,1] * jac[1,0]
+            flux_ratio *= np.abs(det)
 
         photons.x += offset[0]
         photons.y += offset[1]
 
-        det = jac[0,0] * jac[1,1] - jac[0,1] * jac[1,0]
-        photons.flux *= flux_ratio * np.abs(det)
+        photons.flux *= flux_ratio
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """

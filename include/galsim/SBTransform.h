@@ -45,16 +45,14 @@ namespace galsim {
          * @brief General constructor.
          *
          * @param[in] obj         SBProfile being transformed
-         * @param[in] mA          A element of 2x2 distortion matrix `M = [(A B), (C D)]`
-         * @param[in] mB          B element of 2x2 distortion matrix `M = [(A B), (C D)]`
-         * @param[in] mC          C element of 2x2 distortion matrix `M = [(A B), (C D)]`
-         * @param[in] mD          D element of 2x2 distortion matrix `M = [(A B), (C D)]`
+         * @param[in] jac         4-element array (A,B,C,D) of 2x2 distortion matrix
+         *                          `M = [(A B), (C D)]`
          * @param[in] cen         2-element (x, y) Position for the translational shift.
          * @param[in] ampScaling  Amount by which the SB amplitude should be multiplied.
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
          *                        image operations and rendering, if different from the default.
          */
-        SBTransform(const SBProfile& sbin, double mA, double mB, double mC, double mD,
+        SBTransform(const SBProfile& sbin, const double* jac,
                     const Position<double>& cen, double ampScaling, const GSParams& gsparams);
 
         /// @brief Copy constructor

@@ -27,7 +27,7 @@ from .utilities import lazy_property, WeakMethod
 from .position import PositionD, _PositionD
 from .errors import GalSimError
 
-def Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1., gsparams=None,
+def Transform(obj, jac=None, offset=_PositionD(0.,0.), flux_ratio=1., gsparams=None,
               propagate_gsparams=True):
     """A function for transforming either a `GSObject` or `ChromaticObject`.
 
@@ -42,7 +42,8 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1., g
     Parameters:
         obj:                The object to be transformed.
         jac:                A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian
-                            of the transformation. [default: (1,0,0,1)]
+                            of the transformation.  Use None to indicate that the Jacobian is the
+                            2x2 unit matrix.  [default: None]
         offset:             A galsim.PositionD giving the offset by which to shift the profile.
         flux_ratio:         A factor by which to multiply the surface brightness of the object.
                             (Technically, not necessarily the flux.  See above.) [default: 1]
@@ -74,16 +75,18 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1., g
                 [ Transform(o,jac,offset,flux_ratio,gsparams,propagate_gsparams)
                   for o in obj.obj_list ])
             if hasattr(obj, 'covspec'):
-                dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).flatten()
-                new_obj.covspec = obj.covspec.transform(dudx, dudy, dvdx, dvdy)*flux_ratio**2
+                if jac is None:
+                    new_obj.covspec = obj.covspec * flux_ratio**2
+                else:
+                    dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).flatten()
+                    new_obj.covspec = obj.covspec.transform(dudx, dudy, dvdx, dvdy) * flux_ratio**2
             return new_obj
 
         # If we are just flux scaling, then a Convolution can do that to the first element.
         # NB. Even better, if the flux scaling is chromatic, would be to find a component
         # that is already non-separable.  But we don't bother trying to do that currently.
         elif (isinstance(obj, ChromaticConvolution or isinstance(obj, Convolution))
-              and np.array_equal(np.asarray(jac).ravel(),(1,0,0,1))
-              and offset == _PositionD(0.,0.)):
+              and jac is None and offset == _PositionD(0.,0.)):
             first = Transform(obj.obj_list[0], flux_ratio=flux_ratio, gsparams=gsparams,
                               propagate_gsparams=propagate_gsparams)
             return ChromaticConvolution( [first] + [o for o in obj.obj_list[1:]] )
@@ -115,7 +118,8 @@ class Transformation(GSObject):
     Parameters:
         obj:                The object to be transformed.
         jac:                A list, tuple or numpy array ( dudx, dudy, dvdx, dvdy ) describing
-                            the Jacobian of the transformation. [default: (1,0,0,1)]
+                            the Jacobian of the transformation.  Use None to indicate that the
+                            Jacobian is the 2x2 unit matrix.  [default: None]
         offset:             A galsim.PositionD giving the offset by which to shift the profile.
         flux_ratio:         A factor by which to multiply the surface brightness of the object.
                             (Technically, not necessarily the flux.  See above.) [default: 1]
@@ -136,9 +140,15 @@ class Transformation(GSObject):
     be set when initializing obj, NOT when creating the Transform (at which point the accuracy and
     threshold parameters will simply be ignored).
     """
-    def __init__(self, obj, jac=(1.,0.,0.,1.), offset=_PositionD(0.,0.), flux_ratio=1.,
+    unit_jac = np.array([[1,0],[0,1]], dtype=float)
+
+    def __init__(self, obj, jac=None, offset=_PositionD(0.,0.), flux_ratio=1.,
                  gsparams=None, propagate_gsparams=True):
-        self._jac = np.asarray(jac, dtype=float).reshape(2,2)
+        if jac is None:
+            self._jac = None
+        else:
+            self._jac = np.asarray(jac, dtype=float).reshape(2,2)
+
         self._offset = PositionD(offset)
         self._flux_ratio = float(flux_ratio)
         self._gsparams = GSParams.check(gsparams, obj.gsparams)
@@ -148,10 +158,14 @@ class Transformation(GSObject):
 
         if isinstance(obj, Transformation):
             # Combine the two affine transformations into one.
-            dx, dy = self._fwd_normal(obj.offset.x, obj.offset.y)
-            self._offset.x += dx
-            self._offset.y += dy
-            self._jac = self._jac.dot(obj.jac)
+            if jac is None:
+                self._offset += obj.offset
+                self._jac = obj._jac
+            else:
+                dx, dy = self._fwd_normal(obj.offset.x, obj.offset.y)
+                self._offset.x += dx
+                self._offset.y += dy
+                self._jac = self._jac if obj._jac is None else self._jac.dot(obj.jac)
             self._flux_ratio *= obj._flux_ratio
             self._original = obj.original
         else:
@@ -169,7 +183,7 @@ class Transformation(GSObject):
     def jac(self):
         """The Jacobian of the transforamtion.
         """
-        return self._jac
+        return self.unit_jac if self._jac is None else self._jac
 
     @property
     def offset(self):
@@ -189,7 +203,8 @@ class Transformation(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBTransform(self._original._sbp, self._jac.ctypes.data,
+        return _galsim.SBTransform(self._original._sbp,
+                                   0 if self._jac is None else self._jac.ctypes.data,
                                    self._offset._p, self._flux_ratio, self.gsparams._gsp)
 
     @lazy_property
@@ -200,8 +215,7 @@ class Transformation(GSObject):
         else:
             return BaseCorrelatedNoise(
                     self.original.noise.rng,
-                    _Transform(self.original.noise._profile,
-                               self._jac,
+                    _Transform(self.original.noise._profile, self._jac,
                                flux_ratio=self.flux_ratio**2),
                     self.original.noise.wcs)
 
@@ -232,55 +246,53 @@ class Transformation(GSObject):
                  self._propagate_gsparams == other._propagate_gsparams))
 
     def __hash__(self):
-        return hash(("galsim.Transformation", self.original, tuple(self._jac.ravel()),
+        return hash(("galsim.Transformation", self.original, tuple(self.jac.ravel()),
                      self.offset.x, self.offset.y, self.flux_ratio, self.gsparams,
                      self._propagate_gsparams))
 
     def __repr__(self):
         return ('galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r, '
                 'propagate_gsparams=%r)')%(
-            self.original, self._jac.tolist(), self.offset, self.flux_ratio, self.gsparams,
-            self._propagate_gsparams)
+            self.original, None if self._jac is None else self._jac.tolist(),
+            self.offset, self.flux_ratio, self.gsparams, self._propagate_gsparams)
 
     @classmethod
     def _str_from_jac(cls, jac):
         from .wcs import JacobianWCS
         dudx, dudy, dvdx, dvdy = jac.ravel()
-        if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
-            # Figure out the shear/rotate/dilate calls that are equivalent.
-            jac = JacobianWCS(dudx,dudy,dvdx,dvdy)
-            scale, shear, theta, flip = jac.getDecomposition()
-            s = None
-            if flip:
-                s = 0  # Special value indicating to just use transform.
-            if abs(theta.rad) > 1.e-12:
-                if s is None:
-                    s = '.rotate(%s)'%theta
-                else:
-                    s = 0
-            if shear.g > 1.e-12:
-                if s is None:
-                    s = '.shear(%s)'%shear
-                else:
-                    s = 0
-            if abs(scale-1.0) > 1.e-12:
-                if s is None:
-                    s = '.expand(%s)'%scale
-                else:
-                    s = 0
-            if s == 0:
-                # If flip or there are two components, then revert to transform as simpler.
-                s = '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
+        # Figure out the shear/rotate/dilate calls that are equivalent.
+        jac = JacobianWCS(dudx,dudy,dvdx,dvdy)
+        scale, shear, theta, flip = jac.getDecomposition()
+        s = None
+        if flip:
+            s = 0  # Special value indicating to just use transform.
+        if abs(theta.rad) > 1.e-12:
             if s is None:
-                # If nothing is large enough to show up above, give full detail of transform
-                s = '.transform(%r,%r,%r,%r)'%(dudx,dudy,dvdx,dvdy)
-            return s
-        else:
-            return ''
+                s = '.rotate(%s)'%theta
+            else:
+                s = 0
+        if shear.g > 1.e-12:
+            if s is None:
+                s = '.shear(%s)'%shear
+            else:
+                s = 0
+        if abs(scale-1.0) > 1.e-12:
+            if s is None:
+                s = '.expand(%s)'%scale
+            else:
+                s = 0
+        if s == 0:
+            # If flip or there are two components, then revert to transform as simpler.
+            s = '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
+        if s is None:
+            # If nothing is large enough to show up above, give full detail of transform
+            s = '.transform(%r,%r,%r,%r)'%(dudx,dudy,dvdx,dvdy)
+        return s
 
     def __str__(self):
         s = str(self.original)
-        s += self._str_from_jac(self._jac)
+        if self._jac is not None:
+            s += self._str_from_jac(self._jac)
         if self.offset.x != 0 or self.offset.y != 0:
             s += '.shift(%s,%s)'%(self.offset.x,self.offset.y)
         if self.flux_ratio != 1.:
@@ -293,6 +305,8 @@ class Transformation(GSObject):
     # Some lazy properties to calculate things as needed.
     @lazy_property
     def _det(self):
+        if self._jac is None:
+            return 1
         if self._jac[0,1] == 0. and self._jac[1,0] == 0.:
             if self._jac[0,0] == 1. and self._jac[1,1] == 1.:     # jac is (1,0,0,1)
                 return 1.
@@ -303,7 +317,7 @@ class Transformation(GSObject):
 
     @lazy_property
     def _invdet(self):
-        return 1./self._det
+        return 1. if self._jac is None else 1./self._det
 
     @lazy_property
     def _invjac(self):
@@ -324,31 +338,28 @@ class Transformation(GSObject):
     # Some helper attributes to make fwd and inv transformation quicker
     @lazy_property
     def _fwd(self):
-        if self._jac[0,1] == 0. and self._jac[1,0] == 0.:
-            if self._jac[0,0] == 1. and self._jac[1,1] == 1.:
-                return WeakMethod(self._ident)
-            else:
-                return WeakMethod(self._fwd_diag)
+        if self._jac is None:
+            return WeakMethod(self._ident)
+        elif self._jac[0,1] == 0. and self._jac[1,0] == 0.:
+            return WeakMethod(self._fwd_diag)
         else:
             return WeakMethod(self._fwd_normal)
 
     @lazy_property
     def _fwdT(self):
-        if self._jac[0,1] == 0. and self._jac[1,0] == 0.:
-            if self._jac[0,0] == 1. and self._jac[1,1] == 1.:
-                return WeakMethod(self._ident)
-            else:
-                return WeakMethod(self._fwd_diag)
+        if self._jac is None:
+            return WeakMethod(self._ident)
+        elif self._jac[0,1] == 0. and self._jac[1,0] == 0.:
+            return WeakMethod(self._fwd_diag)
         else:
             return WeakMethod(self._fwdT_normal)
 
     @lazy_property
     def _inv(self):
-        if self._jac[0,1] == 0. and self._jac[1,0] == 0.:
-            if self._jac[0,0] == 1. and self._jac[1,1] == 1.:
-                return WeakMethod(self._ident)
-            else:
-                return WeakMethod(self._inv_diag)
+        if self._jac is None:
+            return WeakMethod(self._ident)
+        elif self._jac[0,1] == 0. and self._jac[1,0] == 0.:
+            return WeakMethod(self._inv_diag)
         else:
             return WeakMethod(self._inv_normal)
 
@@ -424,10 +435,13 @@ class Transformation(GSObject):
 
     def _major_minor(self):
         if not hasattr(self, "_major"):
-            h1 = math.hypot(self._jac[0,0] + self._jac[1,1], self._jac[0,1] - self._jac[1,0])
-            h2 = math.hypot(self._jac[0,0] - self._jac[1,1], self._jac[0,1] + self._jac[1,0])
-            self._major = 0.5 * abs(h1+h2)
-            self._minor = 0.5 * abs(h1-h2)
+            if self._jac is None:
+                self._major = self._minor = 1.
+            else:
+                h1 = math.hypot(self._jac[0,0] + self._jac[1,1], self._jac[0,1] - self._jac[1,0])
+                h2 = math.hypot(self._jac[0,0] - self._jac[1,1], self._jac[0,1] + self._jac[1,0])
+                self._major = 0.5 * abs(h1+h2)
+                self._minor = 0.5 * abs(h1-h2)
 
     @lazy_property
     def _maxk(self):
@@ -454,8 +468,8 @@ class Transformation(GSObject):
     @property
     def _is_axisymmetric(self):
         return bool(self._original.is_axisymmetric and
-                    self._jac[0,0] == self._jac[1,1] and
-                    self._jac[0,1] == -self._jac[1,0] and
+                    (self._jac is None or (self._jac[0,0] == self._jac[1,1] and
+                                           self._jac[0,1] == -self._jac[1,0])) and
                     self._offset == _PositionD(0.,0.))
 
     @property
@@ -513,7 +527,7 @@ class Transformation(GSObject):
         self._sbp.drawK(image._image, image.scale)
 
 
-def _Transform(obj, jac=np.array(((1.,0.),(0.,1.))), offset=_PositionD(0.,0.), flux_ratio=1.):
+def _Transform(obj, jac=None, offset=_PositionD(0.,0.), flux_ratio=1.):
     """Approximately equivalent to Transform, but without some of the sanity checks (such as
     checking for chromatic options) or setting a new gsparams.
 
@@ -522,7 +536,8 @@ def _Transform(obj, jac=np.array(((1.,0.),(0.,1.))), offset=_PositionD(0.,0.), f
     Parameters:
         obj:                The object to be transformed.
         jac:                A 2x2 numpy array describing the Jacobian of the transformation.
-                            [default: np.array(((1.,0.),(0.,1.)))]
+                            Use None to indicate that the Jacobian is the 2x2 unit matrix.
+                            [default: None]
         offset:             A galsim.PositionD giving the offset by which to shift the profile.
                             [default: PositionD(0,0)]
         flux_ratio:         A factor by which to multiply the surface brightness of the object.
@@ -533,9 +548,13 @@ def _Transform(obj, jac=np.array(((1.,0.),(0.,1.))), offset=_PositionD(0.,0.), f
     ret._propagate_gsparams = True
     ret._jac = jac
     if isinstance(obj, Transformation):
-        dx, dy = ret._fwd_normal(obj.offset.x, obj.offset.y)
-        ret._jac = jac.dot(obj.jac)
-        ret._offset = _PositionD(offset.x + dx, offset.y + dy)
+        if jac is None:
+            ret._offset = offset + obj.offset
+            ret._jac = obj._jac
+        else:
+            dx, dy = ret._fwd_normal(obj.offset.x, obj.offset.y)
+            ret._offset = _PositionD(offset.x + dx, offset.y + dy)
+            ret._jac = ret._jac if obj._jac is None else ret._jac.dot(obj.jac)
         ret._flux_ratio = flux_ratio * obj._flux_ratio
         ret._original = obj.original
     else:
