@@ -736,16 +736,18 @@ namespace galsim {
                     xwt[pp] = _xInterp.xval(p-x);
                 }
 
+                double sum=0.;
                 for (int q=q1; q<=q2; ++q) {
                     double ywt = _xInterp.xval(q-y);
 
-                    double sum = 0.;
+                    double xsum = 0.;
                     const double* imptr = &_image(p1,q);
                     for (int p=p1, pp=0; p<=p2; ++p, ++pp) {
-                        sum += xwt[pp] * *imptr++;
+                        xsum += xwt[pp] * *imptr++;
                     }
-                    *ptr += sum * ywt;
+                    sum += xsum * ywt;
                 }
+                *ptr = sum;
             }
         }
     }
