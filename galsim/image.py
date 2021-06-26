@@ -484,13 +484,13 @@ class Image(object):
 
             >>> image.scale = new_pixel_scale
         """
-        if self.wcs:
-            if self.wcs._isPixelScale:
-                return self.wcs.scale
-            else:
+        try:
+            return self.wcs.scale
+        except Exception:
+            if self.wcs:
                 raise GalSimError("image.wcs is not a simple PixelScale; scale is undefined.")
-        else:
-            return None
+            else:
+                return None
 
     @scale.setter
     def scale(self, value):
