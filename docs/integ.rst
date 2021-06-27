@@ -21,7 +21,7 @@ Integration
 
 .. autodata:: galsim.integ.trapzRule
 
-.. autodata:: galsim.integ.trapzRule
+.. autodata:: galsim.integ.quadRule
 
 .. autoclass:: galsim.integ.ImageIntegrator
     :members:

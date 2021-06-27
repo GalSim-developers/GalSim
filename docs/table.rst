@@ -12,3 +12,6 @@ Lookup Tables
     .. automethod:: galsim.LookupTable2D.__call__
 
 .. autofunction:: galsim.table._LookupTable2D
+
+.. autofunction:: galsim.trapz
+
