@@ -1097,7 +1097,7 @@ namespace galsim {
         return oss.str() == version();
     }
 }
-"""%version_info
+"""%version_info[:3]
 version_h_file = os.path.join('include', 'galsim', 'Version.h')
 with open(version_h_file, 'w') as f:
     f.write(version_h_text)

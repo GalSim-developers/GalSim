@@ -16,4 +16,4 @@
 #    and/or other materials provided with the distribution.
 #
 __version__ = '2.3'
-__version_info__ = tuple(map(int, __version__.split('.')))
+__version_info__ = tuple(map(lambda x:int(x.split('-')[0]), __version__.split('.')))[:3]
