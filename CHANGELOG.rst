@@ -156,6 +156,9 @@ New Features
 Performance Improvements
 ------------------------
 
+- Implemented Transformation._drawReal and _drawKImage in python to provide
+  hooks for performance improvements in user code when these are used in
+  tight loops. (#934)
 - Sped up the draw routines for InterpolatedImage. (#935)
 - Improved the rendering of Roman PSFs to always show 12 diffraction spikes
   (rather than 6 in the now-deprecated approximate_struts mode), remove an
@@ -170,6 +173,8 @@ Performance Improvements
   k-space values (e.g. Sersic) or real-space values (e.g. Kolmogorov). (#1099)
 - Sped up Zernike arithmetic for the case where you just want to evaluate a
   resulting Zernike series without knowing its coefficients. (#1124)
+- Removed some small bits of overhead in some "leading underscore" methods
+  (e.g. _drawReal, _Transform, _shift, etc.) to make them faster. (#1126)
 
 
 Bug Fixes
