@@ -505,10 +505,6 @@ class Deconvolution(GSObject):
         else:
             self._orig_obj = obj
 
-    @lazy_property
-    def _sbp(self):
-        return _galsim.SBDeconvolve(self.orig_obj._sbp, self.gsparams._gsp)
-
     @property
     def orig_obj(self):
         """The original object that is being deconvolved.
@@ -583,18 +579,6 @@ class Deconvolution(GSObject):
         return 1./self.orig_obj.flux
 
     @lazy_property
-    def _positive_flux(self):
-        return 1./self.orig_obj.positive_flux
-
-    @lazy_property
-    def _negative_flux(self):
-        return 0. if self.orig_obj.negative_flux==0. else 1./self.orig_obj.negative_flux
-
-    @lazy_property
-    def _flux_per_photon(self):
-        return self._calculate_flux_per_photon()
-
-    @lazy_property
     def _max_sb(self):
         # The only way to really give this any meaning is to consider it in the context
         # of being part of a larger convolution with other components.  The calculation
@@ -632,14 +616,6 @@ class Deconvolution(GSObject):
         ksq = (kx**2 + ky**2) * image.scale**2
         # Set to zero outside of nominal maxk so as not to amplify high frequencies.
         image.array[ksq > self.maxk**2] = 0.
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        d.pop('_sbp',None)
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None, propagate_gsparams=True):

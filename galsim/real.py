@@ -385,8 +385,6 @@ class RealGalaxy(GSObject):
         return 'galsim.RealGalaxy(index=%s, flux=%s)'%(self.index, self.flux)
 
     def __getstate__(self):
-        # The _sbp is picklable, but it is pretty inefficient, due to the large images being
-        # written as a string.  Better to pickle the image and remake the InterpolatedImage.
         d = self.__dict__.copy()
         d.pop('_conv',None)
         d.pop('_psf_inv',None)
@@ -404,10 +402,6 @@ class RealGalaxy(GSObject):
         return Convolve([self.original_gal, self._psf_inv], gsparams=self._gsparams)
 
     @property
-    def _sbp(self):
-        return self._conv._sbp
-
-    @property
     def _noise(self):
         # We just store the original noise, not convolved with psf_inv until we need it,
         # mostly so we don't have to invalidate this if gsparams changes.
@@ -415,27 +409,27 @@ class RealGalaxy(GSObject):
 
     @property
     def _maxk(self):
-        return self._sbp.maxK()
+        return self._conv._maxk
 
     @property
     def _stepk(self):
-        return self._sbp.stepK()
+        return self._conv._stepk
 
     @property
     def _centroid(self):
-        return PositionD(self._sbp.centroid())
+        return self._conv._centroid
 
     @property
     def _flux(self):
-        return self._sbp.getFlux()
+        return self._conv._flux
 
     @property
     def _positive_flux(self):
-        return self._sbp.getPositiveFlux()
+        return self._conv._positive_flux
 
     @property
     def _negative_flux(self):
-        return self._sbp.getNegativeFlux()
+        return self._conv._negative_flux
 
     @lazy_property
     def _flux_per_photon(self):
@@ -443,14 +437,13 @@ class RealGalaxy(GSObject):
 
     @property
     def _max_sb(self):
-        return self._sbp.maxSB()
+        return self._conv._max_sb
 
     def _kValue(self, kpos):
-        return self._sbp.kValue(kpos._p)
+        return self._conv._kValue(kpos)
 
     def _drawKImage(self, image, jac=None):
-        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
-        self._sbp.drawK(image._image, image.scale, _jac)
+        self._conv._drawKImage(image, jac)
 
 
 class RealGalaxyCatalog(object):

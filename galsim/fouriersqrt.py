@@ -106,10 +106,6 @@ class FourierSqrtProfile(GSObject):
         return self._orig_obj
 
     @property
-    def _sbp(self):
-        return _galsim.SBFourierSqrt(self.orig_obj._sbp, self.gsparams._gsp)
-
-    @property
     def _noise(self):
         if self.orig_obj.noise is not None:
             galsim_warn("Unable to propagate noise in galsim.FourierSqrtProfile")

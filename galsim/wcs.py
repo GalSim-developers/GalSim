@@ -1733,16 +1733,10 @@ class JacobianWCS(LocalWCS):
         #      ( dvdx  dvdy )
         #  J^-1 = (1/det) (  dvdy  -dudy )
         #                 ( -dvdx   dudx )
-        try:
-            return (self._dvdy * u - self._dudy * v)*self._invdet
-        except ZeroDivisionError:
-            raise GalSimError("Transformation is singular")
+        return (self._dvdy * u - self._dudy * v)*self._invdet
 
     def _y(self, u, v, color=None):
-        try:
-            return (-self._dvdx * u + self._dudx * v)*self._invdet
-        except ZeroDivisionError:
-            raise GalSimError("Transformation is singular")
+        return (-self._dvdx * u + self._dudx * v)*self._invdet
 
     def _profileToWorld(self, image_profile, flux_ratio, offset):
         from .transform import _Transform, Transform
@@ -1757,11 +1751,8 @@ class JacobianWCS(LocalWCS):
         from .transform import _Transform, Transform
         Transform = _Transform if isinstance(world_profile, GSObject) else Transform
         j = np.array(((self._dvdy, -self._dudy), (-self._dvdx, self._dudx))) * self._invdet
-        try:
-            return Transform(world_profile, j, flux_ratio=flux_ratio*abs(self._det),
-                             offset=(offset.x, offset.y))
-        except ZeroDivisionError:
-            raise GalSimError("Transformation is singular")
+        return Transform(world_profile, j, flux_ratio=flux_ratio*abs(self._det),
+                         offset=(offset.x, offset.y))
 
     @lazy_property
     def _invdet(self):
