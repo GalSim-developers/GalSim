@@ -134,8 +134,7 @@ class RandomKnots(GSObject):
         deltas = []
         for p in self.points:
             d = _galsim.SBDeltaFunction(fluxper, self.gsparams._gsp)
-            jac = np.array([1.,0.,0.,1.])
-            d = _galsim.SBTransform(d, jac.ctypes.data, p[0], p[1], 1.0, self.gsparams._gsp)
+            d = _galsim.SBTransform(d, 0, p[0], p[1], 1.0, self.gsparams._gsp)
             deltas.append(d)
         return _galsim.SBAdd(deltas, self.gsparams._gsp)
 

@@ -179,7 +179,8 @@ class BaseDeviate(object):
         """
         array_1d = np.ascontiguousarray(array.ravel(),dtype=float)
         #assert(array_1d.strides[0] == array_1d.itemsize)
-        self._rng.generate(len(array_1d), array_1d.ctypes.data)
+        _a = array_1d.__array_interface__['data'][0]
+        self._rng.generate(len(array_1d), _a)
         if array_1d.data != array.data:
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
@@ -189,7 +190,8 @@ class BaseDeviate(object):
         """
         array_1d = np.ascontiguousarray(array.ravel(),dtype=float)
         #assert(array_1d.strides[0] == array_1d.itemsize)
-        self._rng.add_generate(len(array_1d), array_1d.ctypes.data)
+        _a = array_1d.__array_interface__['data'][0]
+        self._rng.add_generate(len(array_1d), _a)
         if array_1d.data != array.data:
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
@@ -308,7 +310,8 @@ class GaussianDeviate(BaseDeviate):
         """
         array_1d = np.ascontiguousarray(array.ravel(), dtype=float)
         #assert(array_1d.strides[0] == array_1d.itemsize)
-        self._rng.generate_from_variance(len(array_1d), array_1d.ctypes.data)
+        _a = array_1d.__array_interface__['data'][0]
+        self._rng.generate_from_variance(len(array_1d), _a)
         if array_1d.data != array.data:
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
@@ -423,7 +426,8 @@ class PoissonDeviate(BaseDeviate):
             raise GalSimValueError("Expectation array may not have values < 0.", array)
         array_1d = np.ascontiguousarray(array.ravel(), dtype=float)
         #assert(array_1d.strides[0] == array_1d.itemsize)
-        self._rng.generate_from_expectation(len(array_1d), array_1d.ctypes.data)
+        _a = array_1d.__array_interface__['data'][0]
+        self._rng.generate_from_expectation(len(array_1d), _a)
         if array_1d.data != array.data:
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')

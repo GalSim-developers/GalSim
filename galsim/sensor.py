@@ -244,9 +244,10 @@ class SiliconSensor(Sensor):
             raise OSError("Vertex file %s does not match config file %s"%(
                           self.vertex_file, self.config_file))
 
+        _vertex_data = vertex_data.__array_interface__['data'][0]
         self._silicon = _galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
                                         diff_step, PixelSize, SensorThickness,
-                                        vertex_data.ctypes.data,
+                                        _vertex_data,
                                         self.treering_func._tab, self.treering_center._p,
                                         self.abs_length_table._tab, self.transpose)
 

@@ -172,12 +172,12 @@ class LookupTable(object):
         self._x = np.log(self.x) if self.x_log else self.x
         self._f = np.log(self.f) if self.f_log else self.f
 
+        _x = self._x.__array_interface__['data'][0]
+        _f = self._f.__array_interface__['data'][0]
         if self._interp1d is not None:
-            return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
-                                        len(self._x), self._interp1d._i)
+            return _galsim._LookupTable(_x, _f, len(self._x), self._interp1d._i)
         else:
-            return _galsim._LookupTable(self._x.ctypes.data, self._f.ctypes.data,
-                                        len(self._x), self.interpolant)
+            return _galsim._LookupTable(_x, _f, len(self._x), self.interpolant)
 
     @property
     def x_min(self):
@@ -226,12 +226,16 @@ class LookupTable(object):
                 if dimen > 1:
                     f = np.empty_like(x.ravel(), dtype=float)
                     xx = x.astype(float,copy=False).ravel()
-                    self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+                    _xx = xx.__array_interface__['data'][0]
+                    _f = f.__array_interface__['data'][0]
+                    self._tab.interpMany(_xx, _f, len(xx))
                     f = f.reshape(x.shape)
                 else:
                     f = np.empty_like(x, dtype=float)
                     xx = x.astype(float,copy=False)
-                    self._tab.interpMany(xx.ctypes.data, f.ctypes.data, len(xx))
+                    _xx = xx.__array_interface__['data'][0]
+                    _f = f.__array_interface__['data'][0]
+                    self._tab.interpMany(_xx, _f, len(xx))
         except RuntimeError:
             # If there were points outside the valid range, this will have raised an exception.
             # so call _check_range to give a better error message.
@@ -808,18 +812,20 @@ class LookupTable2D(object):
 
     @lazy_property
     def _tab(self):
+        _x = self.x.__array_interface__['data'][0]
+        _y = self.y.__array_interface__['data'][0]
+        _f = self.f.__array_interface__['data'][0]
         if self._interp2d is not None:
-            return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                          self.f.ctypes.data, len(self.x), len(self.y),
+            return _galsim._LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
                                           self._interp2d._i)
         elif self.interpolant == 'spline':
-            return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                          self.f.ctypes.data, len(self.x), len(self.y),
-                                          self.dfdx.ctypes.data, self.dfdy.ctypes.data,
-                                          self.d2fdxdy.ctypes.data)
+            _dfdx = self.dfdx.__array_interface__['data'][0]
+            _dfdy = self.dfdy.__array_interface__['data'][0]
+            _d2fdxdy = self.d2fdxdy.__array_interface__['data'][0]
+            return _galsim._LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
+                                          _dfdx, _dfdy, _d2fdxdy)
         else:
-            return _galsim._LookupTable2D(self.x.ctypes.data, self.y.ctypes.data,
-                                          self.f.ctypes.data, len(self.x), len(self.y),
+            return _galsim._LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
                                           self.interpolant)
 
     def getXArgs(self):
@@ -843,8 +849,10 @@ class LookupTable2D(object):
         # Original x and y may have been modified, so need to use x0 and xperiod attributes here.
         #x = (x-self.x0) % self.xperiod + self.x0
         #y = (y-self.y0) % self.yperiod + self.y0
-        _galsim.WrapArrayToPeriod(x.ctypes.data, len(x), self.x0, self.xperiod)
-        _galsim.WrapArrayToPeriod(y.ctypes.data, len(y), self.y0, self.yperiod)
+        _x = x.__array_interface__['data'][0]
+        _y = y.__array_interface__['data'][0]
+        _galsim.WrapArrayToPeriod(_x, len(x), self.x0, self.xperiod)
+        _galsim.WrapArrayToPeriod(_y, len(y), self.y0, self.yperiod)
         return x, y
 
     @property
@@ -854,13 +862,17 @@ class LookupTable2D(object):
         return BoundsD(self.x[0], self.x[-1], self.y[0], self.y[-1])
 
     def _call_inbounds(self, x, y, grid=False):
+        _x = x.__array_interface__['data'][0]
+        _y = y.__array_interface__['data'][0]
         if grid:
             f = np.empty((len(y), len(x)), dtype=float)
-            self._tab.interpGrid(x.ctypes.data, y.ctypes.data, f.ctypes.data, len(x), len(y))
+            _f = f.__array_interface__['data'][0]
+            self._tab.interpGrid(_x, _y, _f, len(x), len(y))
             return f
         else:
             f = np.empty_like(x, dtype=float)
-            self._tab.interpMany(x.ctypes.data, y.ctypes.data, f.ctypes.data, len(x))
+            _f = f.__array_interface__['data'][0]
+            self._tab.interpMany(_x, _y, _f, len(x))
             return f
 
     def _call_constant(self, x, y, grid=False):
@@ -870,7 +882,10 @@ class LookupTable2D(object):
             f = np.empty((len(y), len(x)), dtype=float)
             # Fill in interpolated values first, then go back and fill in
             # constants
-            self._tab.interpGrid(x.ctypes.data, y.ctypes.data, f.ctypes.data, len(x), len(y))
+            _x = x.__array_interface__['data'][0]
+            _y = y.__array_interface__['data'][0]
+            _f = f.__array_interface__['data'][0]
+            self._tab.interpGrid(_x, _y, _f, len(x), len(y))
             badx = (x < self.x[0]) | (x > self.x[-1])
             bady = (y < self.y[0]) | (y > self.y[-1])
             f[bady, :] = self.constant
@@ -885,7 +900,10 @@ class LookupTable2D(object):
             xx = np.ascontiguousarray(x[good].ravel(), dtype=float)
             yy = np.ascontiguousarray(y[good].ravel(), dtype=float)
             tmp = np.empty_like(xx, dtype=float)
-            self._tab.interpMany(xx.ctypes.data, yy.ctypes.data, tmp.ctypes.data, len(xx))
+            _xx = xx.__array_interface__['data'][0]
+            _yy = yy.__array_interface__['data'][0]
+            _tmp = tmp.__array_interface__['data'][0]
+            self._tab.interpMany(_xx, _yy, _tmp, len(xx))
             f[good] = tmp
             return f
 
@@ -945,15 +963,20 @@ class LookupTable2D(object):
         if grid:
             dfdx = np.empty((len(y), len(x)), dtype=float)
             dfdy = np.empty((len(y), len(x)), dtype=float)
-            self._tab.gradientGrid(x.ctypes.data, y.ctypes.data,
-                                   dfdx.ctypes.data, dfdy.ctypes.data,
-                                   len(x), len(y))
+            _x = x.__array_interface__['data'][0]
+            _y = y.__array_interface__['data'][0]
+            _dfdx = dfdx.__array_interface__['data'][0]
+            _dfdy = dfdy.__array_interface__['data'][0]
+            self._tab.gradientGrid(_x, _y, _dfdx, _dfdy, len(x), len(y))
             return dfdx, dfdy
         else:
             dfdx = np.empty_like(x)
             dfdy = np.empty_like(x)
-            self._tab.gradientMany(x.ctypes.data, y.ctypes.data,
-                                   dfdx.ctypes.data, dfdy.ctypes.data, len(x))
+            _x = x.__array_interface__['data'][0]
+            _y = y.__array_interface__['data'][0]
+            _dfdx = dfdx.__array_interface__['data'][0]
+            _dfdy = dfdy.__array_interface__['data'][0]
+            self._tab.gradientMany(_x, _y, _dfdx, _dfdy, len(x))
             return dfdx, dfdy
 
     def _gradient_raise(self, x, y, grid=False):
@@ -980,8 +1003,11 @@ class LookupTable2D(object):
         if grid:
             dfdx = np.empty((len(y), len(x)), dtype=float)
             dfdy = np.empty((len(y), len(x)), dtype=float)
-            self._tab.gradientGrid(x.ctypes.data, y.ctypes.data,
-                dfdx.ctypes.data, dfdy.ctypes.data, len(x), len(y))
+            _x = x.__array_interface__['data'][0]
+            _y = y.__array_interface__['data'][0]
+            _dfdx = dfdx.__array_interface__['data'][0]
+            _dfdy = dfdy.__array_interface__['data'][0]
+            self._tab.gradientGrid(_x, _y, _dfdx, _dfdy, len(x), len(y))
             badx = (x < self.x[0]) | (x > self.x[-1])
             bady = (y < self.y[0]) | (y > self.y[-1])
             dfdx[bady,:] = 0.0
@@ -1000,8 +1026,11 @@ class LookupTable2D(object):
             y = np.ascontiguousarray(y[good].ravel(), dtype=float)
             tmp1 = np.empty_like(x, dtype=float)
             tmp2 = np.empty_like(x, dtype=float)
-            self._tab.gradientMany(x.ctypes.data, y.ctypes.data,
-                                   tmp1.ctypes.data, tmp2.ctypes.data, len(x))
+            _x = x.__array_interface__['data'][0]
+            _y = y.__array_interface__['data'][0]
+            _tmp1 = tmp1.__array_interface__['data'][0]
+            _tmp2 = tmp2.__array_interface__['data'][0]
+            self._tab.gradientMany(_x, _y, _tmp1, _tmp2, len(x))
             dfdx[good] = tmp1
             dfdy[good] = tmp2
             return dfdx, dfdy

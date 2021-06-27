@@ -676,7 +676,10 @@ def _horner(x, coef, result):
         result: Numpy array into which to write the result.  Must be same shape as x.
     """
     if result.dtype == float:
-        _galsim.Horner(x.ctypes.data, x.size, coef.ctypes.data, coef.size, result.ctypes.data)
+        _x = x.__array_interface__['data'][0]
+        _coef = coef.__array_interface__['data'][0]
+        _result = result.__array_interface__['data'][0]
+        _galsim.Horner(_x, x.size, _coef, coef.size, _result)
     else:
         coef = np.trim_zeros(coef, trim='b')  # trim only from the back
         if len(coef) == 0:
@@ -749,9 +752,12 @@ def _horner2d(x, y, coefs, result, temp, triangle=False):
     if result.dtype == float:
         # Note: the c++ implementation doesn't need to care about triangle.
         # It is able to trivially account for the zeros without special handling.
-        _galsim.Horner2D(x.ctypes.data, y.ctypes.data, x.size,
-                         coefs.ctypes.data, coefs.shape[0], coefs.shape[1],
-                         result.ctypes.data, temp.ctypes.data)
+        _x = x.__array_interface__['data'][0]
+        _y = y.__array_interface__['data'][0]
+        _coefs = coefs.__array_interface__['data'][0]
+        _result = result.__array_interface__['data'][0]
+        _temp = temp.__array_interface__['data'][0]
+        _galsim.Horner2D(_x, _y, x.size, _coefs, coefs.shape[0], coefs.shape[1], _result, _temp)
     else:
         if triangle:
             result.fill(coefs[-1][0])

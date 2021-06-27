@@ -147,9 +147,9 @@ class Exponential(GSObject):
         return self._flux / (ksqp1 * math.sqrt(ksqp1))
 
     def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
         dx,dy = offset
-        self._sbp.draw(image._image, image.scale, 0 if jac is None else jac.ctypes.data,
-                       dx, dy, flux_scaling)
+        self._sbp.draw(image._image, image.scale, _jac, dx, dy, flux_scaling)
 
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)

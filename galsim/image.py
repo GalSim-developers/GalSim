@@ -469,7 +469,8 @@ class Image(object):
     @lazy_property
     def _image(self):
         cls = self._cpp_type[self.dtype]
-        return cls(self._array.ctypes.data,
+        _data = self._array.__array_interface__['data'][0]
+        return cls(_data,
                    self._array.strides[1]//self._array.itemsize,
                    self._array.strides[0]//self._array.itemsize,
                    self._bounds._b)
@@ -585,7 +586,7 @@ class Image(object):
             # Make degenerate images have 1 element.  Otherwise things get weird.
             return np.zeros(shape=(1,1), dtype=self._dtype)
         buf = np.zeros(nbytes + 16, dtype=np.uint8)
-        start_index = -buf.ctypes.data % 16
+        start_index = -buf.__array_interface__['data'][0] % 16
         a = buf[start_index:start_index + nbytes].view(dtype).reshape(shape)
         #assert a.ctypes.data % 16 == 0
         return a

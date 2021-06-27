@@ -1275,10 +1275,12 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
         # effectively a constrained chromatic deconvolution.  Take advantage of symmetries.
-        _galsim.ComputeCRGCoefficients(
-            coef.ctypes.data, Sigma.ctypes.data,
-            w.ctypes.data, kimgs.ctypes.data, PSF_eff_kimgs.ctypes.data,
-            NSED, Nim, nk, nk)
+        _coef = coef.__array_interface__['data'][0]
+        _Sigma = Sigma.__array_interface__['data'][0]
+        _w = w.__array_interface__['data'][0]
+        _kimgs = kimgs.__array_interface__['data'][0]
+        _psf = PSF_eff_kimgs.__array_interface__['data'][0]
+        _galsim.ComputeCRGCoefficients(_coef, _Sigma, _w, _kimgs, _psf, NSED, Nim, nk, nk)
 
         # Reorder these so they correspond to (NSED, nky, nkx) and (NSED, NSED, nky, nkx) shapes.
         coef = np.transpose(coef, (2,0,1))
