@@ -371,7 +371,8 @@ class InterpolatedImage(GSObject):
         # Apply the offset
         prof = self
         if self._offset != _PositionD(0,0):
-            prof = prof._shift(-self._offset)  # Opposite direction of what drawImage does.
+            # Opposite direction of what drawImage does.
+            prof = prof._shift(-self._offset.x, -self._offset.y)
 
         # If the user specified a flux, then set to that flux value.
         if self._flux != self._image_flux:
@@ -687,9 +688,10 @@ class InterpolatedImage(GSObject):
             self._sbp.shoot(photons._pa, rng._rng)
         photons.flux *= self._flux_per_photon
 
-    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
+    def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
+        dx,dy = offset
         self._sbp.draw(image._image, image.scale, 0 if jac is None else jac.ctypes.data,
-                       xoff, yoff, flux_scaling)
+                       dx, dy, flux_scaling)
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
@@ -967,9 +969,8 @@ class InterpolatedKImage(GSObject):
         scale = self.kimage.scale
         jac = np.array((1./scale, 0., 0., 1./scale))
         if scale != 1.:
-            return _galsim.SBTransform(self._sbiki, jac.ctypes.data,
-                                       _galsim.PositionD(0.,0.), scale**2,
-                                       self.gsparams._gsp)
+            return _galsim.SBTransform(self._sbiki, jac.ctypes.data, 0., 0.,
+                                       scale**2, self.gsparams._gsp)
         else:
             return self._sbiki
 

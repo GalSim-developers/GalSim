@@ -1474,7 +1474,8 @@ class PixelScale(LocalWCS):
             j = None
         else:
             j = np.array(((self._scale, 0.), (0., self._scale)))
-        return Transform(image_profile, j, flux_ratio=self._invscale**2 * flux_ratio, offset=offset)
+        return Transform(image_profile, j, flux_ratio=self._invscale**2 * flux_ratio,
+                         offset=(offset.x, offset.y))
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform, Transform
@@ -1483,7 +1484,8 @@ class PixelScale(LocalWCS):
             j = None
         else:
             j = np.array(((self._invscale, 0.), (0., self._invscale)))
-        return Transform(world_profile, j, flux_ratio=self._scale**2 * flux_ratio, offset=offset)
+        return Transform(world_profile, j, flux_ratio=self._scale**2 * flux_ratio,
+                         offset=(offset.x, offset.y))
 
     def _pixelArea(self):
         return self._scale**2
@@ -1748,20 +1750,25 @@ class JacobianWCS(LocalWCS):
         # else, it's a ChromaticObject, and we need to use the regular Transform function.
         Transform = _Transform if isinstance(image_profile, GSObject) else Transform
         j = np.array(((self._dudx, self._dudy), (self._dvdx, self._dvdy)))
-        return Transform(image_profile, j, flux_ratio=flux_ratio*abs(self._invdet), offset=offset)
+        return Transform(image_profile, j, flux_ratio=flux_ratio*abs(self._invdet),
+                         offset=(offset.x, offset.y))
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
         from .transform import _Transform, Transform
         Transform = _Transform if isinstance(world_profile, GSObject) else Transform
+        j = np.array(((self._dvdy, -self._dudy), (-self._dvdx, self._dudx))) * self._invdet
         try:
-            j = np.array(((self._dvdy, -self._dudy), (-self._dvdx, self._dudx))) * self._invdet
-            return Transform(world_profile, j, flux_ratio=flux_ratio*abs(self._det), offset=offset)
+            return Transform(world_profile, j, flux_ratio=flux_ratio*abs(self._det),
+                             offset=(offset.x, offset.y))
         except ZeroDivisionError:
             raise GalSimError("Transformation is singular")
 
     @lazy_property
     def _invdet(self):
-        return 1./self._det
+        try:
+            return 1./self._det
+        except ZeroDivisionError:
+            raise GalSimError("Transformation is singular")
 
     def _pixelArea(self):
         return abs(self._det)
@@ -1871,11 +1878,8 @@ class JacobianWCS(LocalWCS):
         return 0.5 * (h1 + h2)
 
     def _inverse(self):
-        try:
-            return JacobianWCS(self._dvdy*self._invdet, -self._dudy*self._invdet,
-                               -self._dvdx*self._invdet, self._dudx*self._invdet)
-        except ZeroDivisionError:
-            raise GalSimError("Transformation is singular")
+        return JacobianWCS(self._dvdy*self._invdet, -self._dudy*self._invdet,
+                           -self._dvdx*self._invdet, self._dudx*self._invdet)
 
     def _toJacobian(self):
         return self

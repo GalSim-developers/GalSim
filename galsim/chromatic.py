@@ -1132,18 +1132,19 @@ class ChromaticObject(object):
 
         return Transform(self, offset=offset)
 
-    def _shift(self, offset):
-        """Equivalent to `ChromaticObject.shift`, but only valid for a galsim.PositionD object,
+    def _shift(self, dx, dy):
+        """Equivalent to `ChromaticObject.shift`, but only valid for a scalar shift (dx, dy)
         not any of the possible wavelength-dependent options.
 
         Parameters:
-            offset:     The shift to apply, given as a `PositionD`
+            dx:         The x-component of the shift to apply
+            dy:         The y-component of the shift to apply
 
         Returns:
             the shifted object.
         """
         from .transform import Transform
-        return Transform(self, offset=offset)
+        return Transform(self, offset=_PositionD(dx,dy))
 
 ChromaticObject._multiplier_cache = utilities.LRU_Cache(
     ChromaticObject._get_multiplier, maxsize=10)
@@ -1673,7 +1674,7 @@ class ChromaticTransformation(ChromaticObject):
                             [default: None]
         offset:             A galsim.PositionD or list or tuple or numpy array giving the offset
                             (dx,dy) by which to shift the profile.  May also be a function of
-                            wavelength returning a numpy array.  [default: (0,0)]
+                            wavelength returning a numpy array.  [default: None]
         flux_ratio:         A factor by which to multiply the flux of the object. [default: 1]
         redshift:           A redshift to apply to the wavelength when evaluating. [default: None]
         gsparams:           An optional `GSParams` argument.  See the docstring for `GSParams` for

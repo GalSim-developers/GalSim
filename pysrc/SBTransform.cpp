@@ -23,11 +23,11 @@
 namespace galsim {
 
     static SBTransform* MakeSBT(const SBProfile& sbin, size_t ijac,
-                                const Position<double>& cen, double ampScaling,
+                                double cenx, double ceny, double ampScaling,
                                 const GSParams& gsparams)
     {
         const double* jac = reinterpret_cast<const double*>(ijac);
-        return new SBTransform(sbin, jac, cen, ampScaling, gsparams);
+        return new SBTransform(sbin, jac, Position<double>(cenx,ceny), ampScaling, gsparams);
     }
 
     void pyExportSBTransform(PY_MODULE& _galsim)

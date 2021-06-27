@@ -405,7 +405,7 @@ def test_knots_transform():
     test_op(rw.shear(g1=0.05, g2=0), 'rotate(23 * galsim.degrees)')
     test_op(rw, 'transform(1.2, 0.1, -0.2, 1.1)')
     test_op(rw, 'shift(0.3, 0.9)')
-    test_op(rw, '_shift(galsim.PositionD(-0.3, 0.2))')
+    test_op(rw, '_shift(-0.3, 0.2)')
 
     if __name__ == '__main__':
         # A couple more that are currently not overridden, but call out to the above functions.
