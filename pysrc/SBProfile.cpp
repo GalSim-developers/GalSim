@@ -23,10 +23,20 @@
 
 namespace galsim {
 
+    template <typename T>
+    static void SBPdraw(const SBProfile& prof, ImageView<T> image, double dx,
+                        size_t ijac, double xoff, double yoff, double flux_ratio)
+    {
+        double* jac = reinterpret_cast<double*>(ijac);
+        prof.draw(image, dx, jac, xoff, yoff, flux_ratio);
+    }
+
     template <typename T, typename W>
     static void WrapTemplates(W& wrapper)
     {
-        wrapper.def("draw", (void (SBProfile::*)(ImageView<T>, double) const)&SBProfile::draw);
+        typedef void (*draw_func)(const SBProfile&, ImageView<T>,
+                                  double, size_t, double, double, double);
+        wrapper.def("draw", (draw_func)&SBPdraw);
         wrapper.def("drawK", (void (SBProfile::*)(ImageView<std::complex<T> >, double) const)
                     &SBProfile::drawK);
     }

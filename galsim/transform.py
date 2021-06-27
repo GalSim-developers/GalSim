@@ -512,9 +512,16 @@ class Transformation(GSObject):
         fwdT_kpos = _PositionD(*self._fwdT(kpos.x, kpos.y))
         return self._original._kValue(fwdT_kpos) * self._kfactor(kpos.x, kpos.y)
 
-    def _drawReal(self, image):
-        # TODO: Refactor the C++ draw function to allow this to be implemented in python
-        self._sbp.draw(image._image, image.scale)
+    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
+        if jac is not None:
+            x1, y1 = jac.dot(np.array([self._offset.x, self._offset.y]))
+        else:
+            x1, y1 = self._offset.x, self._offset.y
+        xoff += x1
+        yoff += y1
+        flux_scaling *= self._flux_scaling
+        jac = self._jac if jac is None else jac if self._jac is None else jac.dot(self._jac)
+        self._original._drawReal(image, jac, xoff, yoff, flux_scaling)
 
     def _shoot(self, photons, rng):
         self._original._shoot(photons, rng)

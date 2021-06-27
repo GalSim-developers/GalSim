@@ -1858,7 +1858,7 @@ class GSObject(object):
                 image.array[:,:] = im1.array
             return im1.array.sum(dtype=float)
 
-    def _drawReal(self, image):
+    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
         """A version of `drawReal` without the sanity checks or some options.
 
         This is nearly equivalent to the regular ``drawReal(image, add_to_image=False)``, but

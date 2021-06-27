@@ -289,19 +289,82 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::draw(ImageView<T> image, double dx) const
+    void SBProfile::draw(ImageView<T> image, double imscale,
+                         double* jac, double xoff, double yoff, double flux_ratio) const
     {
         dbg<<"Start plainDraw"<<std::endl;
+        dbg<<"bounds = "<<image.getBounds()<<std::endl;
+        dbg<<"imscale = "<<imscale<<std::endl;
+        dbg<<"offset = "<<xoff<<','<<yoff<<std::endl;
+        dbg<<"flux_ratio = "<<flux_ratio<<std::endl;
         assert(_pimpl.get());
         assert(image.getStep() == 1);
 
-        const int xmin = image.getXMin();
-        const int ymin = image.getYMin();
-        const int izero = xmin < 0 ? -xmin : 0;
-        const int jzero = ymin < 0 ? -ymin : 0;
+        const int m = image.getNCol();
+        const int n = image.getNRow();
+        int xmin = image.getXMin();
+        int ymin = image.getYMin();
+        int izero, jzero;
+        double x0, y0;
+        if (xoff == 0.) {
+            x0 = xmin*imscale;
+            izero = xmin < 0 ? -xmin : 0;
+        } else {
+            x0 = xmin*imscale - xoff;
+            izero = int(-x0/imscale+0.5);
+            if (std::abs(x0 + izero*imscale) > 1.e-10 || izero < 0 || izero >= m) izero = 0;
+        }
+        if (yoff == 0.) {
+            y0 = ymin*imscale;
+            jzero = ymin < 0 ? -ymin : 0;
+        } else {
+            y0 = ymin*imscale - yoff;
+            jzero = int(-y0/imscale+0.5);
+            if (std::abs(y0 + jzero*imscale) > 1.e-10 || jzero < 0 || jzero >= n) jzero = 0;
+        }
 
-        _pimpl->fillXImage(image, xmin*dx, dx, izero, ymin*dx, dx, jzero);
-        if (dx != 1.) image *= dx*dx;
+        if (!jac) {
+            dbg<<"no jac\n";
+            _pimpl->fillXImage(image, x0, imscale, izero, y0, imscale, jzero);
+            // Convert flux ratio to amplitude ratio
+            if (imscale != 1.) flux_ratio *= imscale*imscale;
+        } else if (jac[1] == 0. && jac[2] == 0.) {
+            double mA = jac[0];
+            double mD = jac[3];
+            dbg<<"diag jac: "<<mA<<','<<mD<<std::endl;
+            double xscale = 1./mA;
+            double yscale = 1./mD;
+            double new_x0 = x0 * xscale;
+            double new_y0 = y0 * yscale;
+            double dx = imscale * xscale;
+            double dy = imscale * yscale;
+            _pimpl->fillXImage(image, new_x0, dx, izero, new_y0, dy, jzero);
+            flux_ratio *= std::abs(dx*dy);
+        } else {
+            double mA = jac[0];
+            double mB = jac[1];
+            double mC = jac[2];
+            double mD = jac[3];
+            dbg<<"jac = "<<mA<<','<<mB<<','<<mC<<','<<mD<<std::endl;
+            double det = mA*mD - mB*mC;
+            double invdet = 1./det;
+            double new_x0 = (mD*x0 - mB*y0) * invdet;
+            double new_y0 = (-mC*x0 + mA*y0) * invdet;
+            // The rest all have the factor imscale * invdet, so do that here.
+            invdet *= imscale;
+            double dx = mD * invdet;
+            double dxy = -mB * invdet;
+            double dy = mA * invdet;
+            double dyx = -mC * invdet;
+            _pimpl->fillXImage(image, new_x0, dx, dxy, new_y0, dy, dyx);
+            flux_ratio *= std::abs(invdet);
+        }
+
+        // At this point the "flux" ration is really an amplitude ratio, including det(jac)
+        // and the image pixel scale.
+        dbg<<"amp_ratio = "<<flux_ratio<<std::endl;
+        if (flux_ratio != 1.)
+            image *= flux_ratio;
     }
 
     template <typename T>
@@ -483,8 +546,10 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template void SBProfile::draw(ImageView<float> image, double dx) const;
-    template void SBProfile::draw(ImageView<double> image, double dx) const;
+    template void SBProfile::draw(ImageView<float> image, double dx,
+                                  double* jac, double xoff, double yoff, double flux_ratio) const;
+    template void SBProfile::draw(ImageView<double> image, double dx,
+                                  double* jac, double xoff, double yoff, double flux_ratio) const;
 
     template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk) const;
     template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;

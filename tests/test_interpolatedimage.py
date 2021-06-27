@@ -79,7 +79,7 @@ def test_roundtrip():
             interp = galsim.InterpolatedImage(image_in, wcs=wcs)
             image_out = galsim.Image(test_array, wcs=wcs)
             interp.drawImage(image_out, method='no_pixel')
-            np.testing.assert_array_equal(
+            np.testing.assert_almost_equal(
                     ref_array.astype(array_type),image_out.array,
                     err_msg="Output Image differs from reference for type %s, wcs %s"%
                             (array_type,wcs))

@@ -164,8 +164,9 @@ class Gaussian(GSObject):
         ksq = (kpos.x**2 + kpos.y**2) * self._sigsq
         return self._flux * math.exp(-0.5 * ksq)
 
-    def _drawReal(self, image):
-        self._sbp.draw(image._image, image.scale)
+    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
+        self._sbp.draw(image._image, image.scale, 0 if jac is None else jac.ctypes.data,
+                       xoff, yoff, flux_scaling)
 
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)

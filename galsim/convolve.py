@@ -394,12 +394,13 @@ class Convolution(GSObject):
         kv_list = [obj.kValue(pos) for obj in self.obj_list]
         return np.prod(kv_list)
 
-    def _drawReal(self, image):
+    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
         if len(self.obj_list) == 1:
-            self.obj_list[0]._drawReal(image)
+            self.obj_list[0]._drawReal(image, jac, xoff, yoff, flux_scaling)
         elif len(self.obj_list) == 2:
             try:
-                self._sbp.draw(image._image, image.scale)
+                self._sbp.draw(image._image, image.scale, 0 if jac is None else jac.ctypes.data,
+                               xoff, yoff, flux_scaling)
             except (AttributeError, RuntimeError):
                 raise GalSimError(
                     "At least one profile in %s does not implement real-space convolution"%self)

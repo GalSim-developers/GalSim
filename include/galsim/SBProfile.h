@@ -347,7 +347,8 @@ namespace galsim {
          * @param[in]        dx, the pixel scale
          */
         template <typename T>
-        void draw(ImageView<T> image, double dx) const;
+        void draw(ImageView<T> image, double dx, double* jac,
+                  double xoff, double yoff, double flux_ratio) const;
 
         /**
          * @brief Draw an image of the SBProfile in k space.
