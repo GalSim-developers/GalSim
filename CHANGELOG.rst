@@ -9,11 +9,21 @@ telescopes as well as some new features to add additional realism to the
 simulations.
 
 With this release, we are no longer supporting Python 3.5.  And we have
-upgraded Python 3.8 to a primary supported platform, which now include
-2.7, 3.6, 3.7, 3.8.  We encourage any Python 2.7 users to migrate to
-Python 3 as soon as possible, since it is becoming harder to continue to
-support this platform now that it is officially sunsetted, so we may drop
-support for that in the next release or two.
+upgraded Python 3.8 and 3.9 to primary supported platforms, which now include
+2.7, 3.6, 3.7, 3.8, 3.9.
+
+.. warning::
+
+    This will be the last GalSim release to support the following legacy
+    options:
+
+    * Python 2.7
+    * TMV for matrices in C++
+    * Boost Python for C++ bindings
+    * SCons builds
+
+    If any of these will cause hardship for you, please open an issue, so we
+    can help you find mitigation strategies.
 
 A full list of changes in this release are below.  The numbers in parentheses
 are GalSim issue or pull request numbers where the change was implemented.
