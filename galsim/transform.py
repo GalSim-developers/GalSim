@@ -542,8 +542,16 @@ class Transformation(GSObject):
         photons.y += self._dy
         photons.scaleFlux(self._flux_scaling)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
+    def _drawKImage(self, image, jac=None):
+        jac1 = self._jac if jac is None else jac if self._jac is None else jac.dot(self._jac)
+        self._original._drawKImage(image, jac1)
+
+        if self._has_offset:
+            _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+            _galsim.ApplyKImagePhases(image._image, image.scale, _jac,
+                                      self._dx, self._dy, self._flux_scaling)
+        elif abs(self._flux_scaling-1.) > self._gsparams.kvalue_accuracy:
+            image *= self._flux_scaling
 
 
 def _Transform(obj, jac=None, offset=(0.,0.), flux_ratio=1.):

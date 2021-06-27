@@ -29,6 +29,10 @@
 
 namespace galsim {
 
+    template <typename T>
+    void ApplyKImagePhases(ImageView<std::complex<T> > image, double imscale, const double* jac,
+                           double cenx, double ceny, double fluxScaling);
+
     /**
      * @brief An affine transformation of another SBProfile.
      *

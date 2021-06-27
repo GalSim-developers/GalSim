@@ -360,7 +360,7 @@ namespace galsim {
          * @param[in]        dk, the step size in k space
          */
         template <typename T>
-        void drawK(ImageView<std::complex<T> > image, double dk) const;
+        void drawK(ImageView<std::complex<T> > image, double dk, double* jac) const;
 
     protected:
 

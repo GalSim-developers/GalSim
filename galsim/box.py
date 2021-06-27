@@ -124,8 +124,9 @@ class Box(GSObject):
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
+    def _drawKImage(self, image, jac=None):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.drawK(image._image, image.scale, _jac)
 
     @doc_inherit
     def withFlux(self, flux):
@@ -265,8 +266,9 @@ class TopHat(GSObject):
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
+    def _drawKImage(self, image, jac=None):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.drawK(image._image, image.scale, _jac)
 
     @doc_inherit
     def withFlux(self, flux):

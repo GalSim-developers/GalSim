@@ -2558,7 +2558,7 @@ class GSObject(object):
             image += im2
         return image
 
-    def _drawKImage(self, image):  # pragma: no cover  (all our classes override this)
+    def _drawKImage(self, image, jac=None):  # pragma: no cover  (all our classes override this)
         """A version of `drawKImage` without the sanity checks or some options.
 
         Equivalent to ``drawKImage(image, add_to_image=False, recenter=False, add_to_image=False)``,

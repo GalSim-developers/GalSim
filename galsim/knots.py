@@ -281,8 +281,9 @@ class RandomKnots(GSObject):
     def _shoot(self, photons, rng):
         self._sbp.shoot(photons._pa, rng._rng)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
+    def _drawKImage(self, image, jac=None):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.drawK(image._image, image.scale, _jac)
 
     # For all the transformations methods, apply to the internal profile, and remake points
     # in the correct locations.  This makes fft drawing much faster than the normal way

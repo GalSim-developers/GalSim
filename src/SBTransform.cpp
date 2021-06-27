@@ -759,6 +759,132 @@ namespace galsim {
     }
 
     template <typename T>
+    void ApplyKImagePhases(ImageView<std::complex<T> > im,
+                           double kx0, double dkx, double ky0, double dky,
+                           double cenx, double ceny, double fluxScaling)
+    {
+        // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
+        // In this case, the terms are separable, so only need to make kx and ky phases
+        // separately.
+        const int m = im.getNCol();
+        int n = im.getNRow();
+        std::complex<T>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= cenx;
+        dkx *= cenx;
+        ky0 *= ceny;
+        dky *= ceny;
+
+        // Use the stack rather than the heap for these, since a bit faster and small
+        // enough that they should fit without any problem.
+        T xphase_kx[2*m];
+        T xphase_ky[2*n];
+        std::complex<T>* phase_kx = reinterpret_cast<std::complex<T>*>(xphase_kx);
+        std::complex<T>* phase_ky = reinterpret_cast<std::complex<T>*>(xphase_ky);
+
+        fillphase_1d<T>(phase_kx, m, kx0, dkx);
+        fillphase_1d<T>(phase_ky, n, ky0, dky);
+
+        for (; n; --n, ptr+=skip, ++phase_ky) {
+            InnerLoopHelper<T>::phaseloop_1d(ptr, phase_kx, m, T(fluxScaling) * *phase_ky);
+        }
+    }
+
+    template <typename T>
+    void ApplyKImagePhases(ImageView<std::complex<T> > im,
+                           double kx0, double dkx, double dkxy,
+                           double ky0, double dky, double dkyx,
+                           double cenx, double ceny, double fluxScaling)
+    {
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<T>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= cenx;
+        dkx *= cenx;
+        dkxy *= cenx;
+        ky0 *= ceny;
+        dky *= ceny;
+        dkyx *= ceny;
+
+        // Only ever use these as sum of kx + ky, so add them together now.
+        T k0 = kx0 + ky0;
+        T dk0 = dkxy + dky;
+        T dk1 = dkx + dkyx;
+
+        for (int j=n; j; --j, k0+=dk0, ptr+=skip) {
+            T k = k0;
+#if 0
+            // Original, more legible code
+            for (int i=m; i; --i, k+=dk1) {
+                *ptr++ *= std::polar(T(fluxScaling), -k);
+            }
+#else
+            // See comments above in fillphase_1d for what's going on here.
+            // MJ: Could consider putting this in the InnerLoop struct above and write
+            // specialized SSE versions, since native complex multiplication is terribly slow.
+            // But this use case is very rare, so probably not worth it.
+            std::complex<T> kpol = std::polar(T(1), -k);
+            std::complex<T> dkpol = std::polar(T(1), -dk1);
+            *ptr++ *= fluxScaling * kpol;
+            for (int i=m-1; i; --i) {
+                kpol = kpol * dkpol;
+                kpol = kpol * T(1.5 - 0.5 * std::norm(kpol));
+                *ptr++ *= fluxScaling * kpol;
+            }
+#endif
+        }
+    }
+
+    // This one is exposed to Python
+    template <typename T>
+    void ApplyKImagePhases(ImageView<std::complex<T> > image, double imscale, const double* jac,
+                           double cenx, double ceny, double fluxScaling)
+    {
+        dbg<<"Start ApplyKImagePhases: \n";
+        dbg<<"bounds = "<<image.getBounds()<<std::endl;
+        dbg<<"imscale = "<<imscale<<std::endl;
+        assert(_pimpl.get());
+        assert(image.getStep() == 1);
+
+        int xmin = image.getXMin();
+        int ymin = image.getYMin();
+        double x0 = xmin*imscale;
+        double y0 = ymin*imscale;
+
+        if (!jac) {
+            dbg<<"no jac\n";
+            ApplyKImagePhases(image, x0, imscale, y0, imscale, cenx, ceny, fluxScaling);
+        } else if (jac[1] == 0. && jac[2] == 0.) {
+            double mA = jac[0];
+            double mD = jac[3];
+            dbg<<"diag jac: "<<mA<<','<<mD<<std::endl;
+            double new_x0 = x0 * mA;
+            double new_y0 = y0 * mD;
+            double dx = imscale * mA;
+            double dy = imscale * mD;
+            ApplyKImagePhases(image, new_x0, dx, new_y0, dy, cenx, ceny, fluxScaling);
+        } else {
+            double mA = jac[0];
+            double mB = jac[1];
+            double mC = jac[2];
+            double mD = jac[3];
+            dbg<<"jac = "<<mA<<','<<mB<<','<<mC<<','<<mD<<std::endl;
+            double new_x0 = mA*x0 + mC*y0;
+            double new_y0 = mB*x0 + mD*y0;
+            double dx = mA * imscale;
+            double dxy = mC * imscale;
+            double dy = mD * imscale;
+            double dyx = mB * imscale;
+            ApplyKImagePhases(image, new_x0, dx, dxy, new_y0, dy, dyx, cenx, ceny, fluxScaling);
+        }
+    }
+
+    template <typename T>
     void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<T> > im,
                                                   double kx0, double dkx, int izero,
                                                   double ky0, double dky, int jzero) const
@@ -797,33 +923,7 @@ namespace galsim {
                 im *= T(_fluxScaling);
         } else {
             xdbg<<"!zeroCen\n";
-            // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
-            // In this case, the terms are separable, so only need to make kx and ky phases
-            // separately.
-            const int m = im.getNCol();
-            int n = im.getNRow();
-            std::complex<T>* ptr = im.getData();
-            int skip = im.getNSkip();
-            assert(im.getStep() == 1);
-
-            kx0 *= _cen.x;
-            dkx *= _cen.x;
-            ky0 *= _cen.y;
-            dky *= _cen.y;
-
-            // Use the stack rather than the heap for these, since a bit faster and small
-            // enough that they should fit without any problem.
-            T xphase_kx[2*m];
-            T xphase_ky[2*n];
-            std::complex<T>* phase_kx = reinterpret_cast<std::complex<T>*>(xphase_kx);
-            std::complex<T>* phase_ky = reinterpret_cast<std::complex<T>*>(xphase_ky);
-
-            fillphase_1d<T>(phase_kx, m, kx0, dkx);
-            fillphase_1d<T>(phase_ky, n, ky0, dky);
-
-            for (; n; --n, ptr+=skip, ++phase_ky) {
-                InnerLoopHelper<T>::phaseloop_1d(ptr, phase_kx, m, T(_fluxScaling) * *phase_ky);
-            }
+            ApplyKImagePhases(im, kx0, dkx, ky0, dky, _cen.x, _cen.y, _fluxScaling);
         }
     }
 
@@ -866,46 +966,7 @@ namespace galsim {
                 im *= T(_fluxScaling);
         } else {
             xdbg<<"!zeroCen\n";
-            const int m = im.getNCol();
-            const int n = im.getNRow();
-            std::complex<T>* ptr = im.getData();
-            int skip = im.getNSkip();
-            assert(im.getStep() == 1);
-
-            kx0 *= _cen.x;
-            dkx *= _cen.x;
-            dkxy *= _cen.x;
-            ky0 *= _cen.y;
-            dky *= _cen.y;
-            dkyx *= _cen.y;
-
-            // Only ever use these as sum of kx + ky, so add them together now.
-            T k0 = kx0 + ky0;
-            T dk0 = dkxy + dky;
-            T dk1 = dkx + dkyx;
-
-            for (int j=n; j; --j, k0+=dk0, ptr+=skip) {
-                T k = k0;
-#if 0
-                // Original, more legible code
-                for (int i=m; i; --i, k+=dk1) {
-                    *ptr++ *= std::polar(T(_fluxScaling), -k);
-                }
-#else
-                // See comments above in fillphase_1d for what's going on here.
-                // MJ: Could consider putting this in the InnerLoop struct above and write
-                // specialized SSE versions, since native complex multiplication is terribly slow.
-                // But this use case is very rare, so probably not worth it.
-                std::complex<T> kpol = std::polar(T(1), -k);
-                std::complex<T> dkpol = std::polar(T(1), -dk1);
-                *ptr++ *= _fluxScaling * kpol;
-                for (int i=m-1; i; --i) {
-                    kpol = kpol * dkpol;
-                    kpol = kpol * T(1.5 - 0.5 * std::norm(kpol));
-                    *ptr++ *= _fluxScaling * kpol;
-                }
-#endif
-            }
+            ApplyKImagePhases(im, kx0, dkx, dkxy, ky0, dky, dkyx, _cen.x, _cen.y, _fluxScaling);
         }
     }
 
@@ -923,4 +984,11 @@ namespace galsim {
         }
         dbg<<"Distort Realized flux = "<<photons.getTotalFlux()<<std::endl;
     }
+
+    template void ApplyKImagePhases(ImageView<std::complex<double> > image,
+                                    double imscale, const double* jac,
+                                    double cenx, double ceny, double fluxScaling);
+    template void ApplyKImagePhases(ImageView<std::complex<float> > image,
+                                    double imscale, const double* jac,
+                                    double cenx, double ceny, double fluxScaling);
 }
