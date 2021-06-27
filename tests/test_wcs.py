@@ -1100,6 +1100,10 @@ def test_pixelscale():
     """
     scale = 0.23
     wcs = galsim.PixelScale(scale)
+    assert wcs.isPixelScale()
+    assert wcs.isLocal()
+    assert wcs.isUniform()
+    assert not wcs.isCelestial()
 
     # Check basic copy and == , !=:
     wcs2 = wcs.copy()
@@ -1147,6 +1151,10 @@ def test_pixelscale():
     assert wcs == wcs2, 'OffsetWCS is not == PixelScale.withOrigin(origin)'
     assert wcs.origin == origin
     assert wcs.scale == scale
+    assert wcs.isPixelScale()
+    assert not wcs.isLocal()
+    assert wcs.isUniform()
+    assert not wcs.isCelestial()
 
     # Default origin is (0,0)
     wcs3 = galsim.OffsetWCS(scale)
@@ -1212,6 +1220,10 @@ def test_shearwcs():
     assert wcs.shear == shear
     assert wcs.origin == galsim.PositionD(0,0)
     assert wcs.world_origin == galsim.PositionD(0,0)
+    assert not wcs.isPixelScale()
+    assert wcs.isLocal()
+    assert wcs.isUniform()
+    assert not wcs.isCelestial()
 
     assert_raises(TypeError, galsim.ShearWCS)
     assert_raises(TypeError, galsim.ShearWCS, shear=0.3)
@@ -1261,6 +1273,10 @@ def test_shearwcs():
     assert wcs.shear == shear
     assert wcs.origin == origin
     assert wcs.world_origin == galsim.PositionD(0,0)
+    assert not wcs.isPixelScale()
+    assert not wcs.isLocal()
+    assert wcs.isUniform()
+    assert not wcs.isCelestial()
 
     wcs3 = galsim.OffsetShearWCS(scale, shear)
     assert wcs3.origin == galsim.PositionD(0,0)
@@ -1326,6 +1342,10 @@ def test_affinetransform():
     dvdy = 0.2391
 
     wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+    assert not wcs.isPixelScale()
+    assert wcs.isLocal()
+    assert wcs.isUniform()
+    assert not wcs.isCelestial()
 
     assert wcs.dudx == dudx
     assert wcs.dudy == dudy
@@ -1365,6 +1385,10 @@ def test_affinetransform():
     wcs = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
     wcs2 = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy).withOrigin(origin)
     assert wcs == wcs2, 'AffineTransform is not == JacobianWCS.withOrigin(origin)'
+    assert not wcs.isPixelScale()
+    assert not wcs.isLocal()
+    assert wcs.isUniform()
+    assert not wcs.isCelestial()
 
     assert_raises(TypeError, galsim.AffineTransform)
     assert_raises(TypeError, galsim.AffineTransform, dudx, dudy, dvdx)
@@ -1518,6 +1542,10 @@ def test_uvfunction():
     assert wcs.vfunc(2.9, 3.7) == vfunc(2.9, 3.7)
     assert wcs.xfunc is None
     assert wcs.yfunc is None
+    assert not wcs.isPixelScale()
+    assert not wcs.isLocal()
+    assert not wcs.isUniform()
+    assert not wcs.isCelestial()
 
     # Also check with inverse functions.
     xfunc = lambda u,v: u / scale
@@ -1835,6 +1863,10 @@ def test_radecfunction():
             radec_func = lambda x,y: center.deproject_rad(ufunc(x,y)*scale, vfunc(x,y)*scale,
                                                           projection='lambert')
             wcs2 = galsim.RaDecFunction(radec_func)
+            assert not wcs2.isPixelScale()
+            assert not wcs2.isLocal()
+            assert not wcs2.isUniform()
+            assert wcs2.isCelestial()
 
             # Also test with one that doesn't work with numpy arrays to test that the
             # code does the right thing in that case too, since local and makeSkyImage
@@ -2070,6 +2102,10 @@ def test_astropywcs():
             wcs = galsim.AstropyWCS(file_name, dir=dir, compression='none', hdu=0)
         else:
             wcs = galsim.AstropyWCS(file_name, dir=dir)
+        assert not wcs.isPixelScale()
+        assert not wcs.isLocal()
+        assert not wcs.isUniform()
+        assert wcs.isCelestial()
 
         do_ref(wcs, ref_list, 'AstropyWCS '+tag)
 
@@ -2145,6 +2181,10 @@ def test_pyastwcs():
             wcs = galsim.PyAstWCS(file_name, dir=dir, compression='none', hdu=0)
         else:
             wcs = galsim.PyAstWCS(file_name, dir=dir)
+        assert not wcs.isPixelScale()
+        assert not wcs.isLocal()
+        assert not wcs.isUniform()
+        assert wcs.isCelestial()
 
         # The PyAst implementation of the SIP type only gets the inverse transformation
         # approximately correct.  So we need to be a bit looser in that check.
@@ -2220,6 +2260,10 @@ def test_wcstools():
         file_name, ref_list = references[tag]
         print(tag,' file_name = ',file_name)
         wcs = galsim.WcsToolsWCS(file_name, dir=dir)
+        assert not wcs.isPixelScale()
+        assert not wcs.isLocal()
+        assert not wcs.isUniform()
+        assert wcs.isCelestial()
 
         # The wcstools implementation of the SIP and TPV types only gets the inverse
         # transformations approximately correct.  So we need to be a bit looser in those checks.
@@ -2271,6 +2315,10 @@ def test_gsfitswcs():
             wcs = galsim.GSFitsWCS(file_name, dir=dir, compression='none', hdu=0)
         else:
             wcs = galsim.GSFitsWCS(file_name, dir=dir)
+        assert not wcs.isPixelScale()
+        assert not wcs.isLocal()
+        assert not wcs.isUniform()
+        assert wcs.isCelestial()
 
         do_ref(wcs, ref_list, 'GSFitsWCS '+tag)
 
