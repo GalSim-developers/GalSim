@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.gsobject &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.gsobject &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.gsobject</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -189,7 +196,7 @@
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 <span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">Position</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">_PositionD</span><span class="p">,</span> <span class="n">_PositionI</span><span class="p">,</span> <span class="n">Position</span>
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">parse_pos_args</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
@@ -371,16 +378,17 @@
     <span class="c1">#     _stepk (the sampling in k space necessary to avoid folding of image in x space)</span>
     <span class="c1">#     _maxk (the value of k beyond which aliasing can be neglected)</span>
     <span class="c1">#     _has_hard_edges (true if should use real-space convolution with another hard edge profile)</span>
-    <span class="c1">#     _is_axisymmetric (true if f(x,y) = f(r)</span>
+    <span class="c1">#     _is_axisymmetric (true if f(x,y) = f(r))</span>
     <span class="c1">#     _is_analytic_x (true if _xValue and _drawReal are implemented)</span>
     <span class="c1">#     _is_analytic_k (true if _kValue and _drawKImage are implemented)</span>
     <span class="c1">#</span>
-    <span class="c1"># Required for use with config processing (typically class attributes):</span>
+    <span class="c1"># Required and typically class attributes, but there are defaults in each case:</span>
     <span class="c1">#</span>
-    <span class="c1">#     _req_params (dict of required config parameters: name : type)</span>
-    <span class="c1">#     _opt_params (dict of optional config parameters)</span>
-    <span class="c1">#     _single_params (list of dicts for parameters where exactly one of several is required)</span>
-    <span class="c1">#     _takes_rng (bool specifying whether rng is an input parameter)</span>
+    <span class="c1">#     _req_params (dict of required config parameters: name : type, default: {})</span>
+    <span class="c1">#     _opt_params (dict of optional config parameters: name : type, default: {})</span>
+    <span class="c1">#     _single_params (list of dicts for parameters where exactly one of several is required,</span>
+    <span class="c1">#                    default: [])</span>
+    <span class="c1">#     _takes_rng (bool specifying whether rng is an input parameter, default: False)</span>
     <span class="c1">#</span>
     <span class="c1"># Optional</span>
     <span class="c1">#</span>
@@ -476,7 +484,7 @@
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Most profiles are centered at 0,0, so make this the default.</span>
-        <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">positive_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -519,6 +527,19 @@
     <span class="k">def</span> <span class="nf">_negative_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># The usual case.</span>
         <span class="k">return</span> <span class="mf">0.</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># The usual case.</span>
+        <span class="k">return</span> <span class="mf">1.</span>
+
+    <span class="k">def</span> <span class="nf">_calculate_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># If negative_flux is overriden, then _flux_per_photon should be overridden as well</span>
+        <span class="c1"># to return this calculation.</span>
+        <span class="n">posflux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive_flux</span>
+        <span class="n">negflux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative_flux</span>
+        <span class="n">eta</span> <span class="o">=</span> <span class="n">negflux</span> <span class="o">/</span> <span class="p">(</span><span class="n">posflux</span> <span class="o">+</span> <span class="n">negflux</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">1.</span><span class="o">-</span><span class="mf">2.</span><span class="o">*</span><span class="n">eta</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -587,10 +608,14 @@
     <span class="k">def</span> <span class="nf">dimensionless</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="kc">True</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">wave_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">redshift</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_redshift&#39;</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
 
-    <span class="c1"># Also need this method to duck-type as a ChromaticObject</span>
+    <span class="c1"># Also need these methods to duck-type as a ChromaticObject</span>
     <span class="k">def</span> <span class="nf">evaluateAtWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span>
+    <span class="k">def</span> <span class="nf">_approxWavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wave</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">wave</span><span class="p">,</span> <span class="bp">self</span>
 
     <span class="c1"># Make op+ of two GSObjects work to return an Add object</span>
     <span class="c1"># Note: we don&#39;t define __iadd__ and similar.  Let python handle this automatically</span>
@@ -681,8 +706,13 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            an estimate of the half-light radius in physical units</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;half_light_radius&#39;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># It there is a half_light_radius attribute, use that.</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">half_light_radius</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="n">GalSimError</span><span class="p">):</span>
+            <span class="c1"># Otherwise, or (e.g. with Airy where it is only implemented for obscuration=0)</span>
+            <span class="c1"># if there is an error trying to use it, then keep going with this calculation.</span>
+            <span class="k">pass</span>
 
         <span class="k">if</span> <span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nyquist_scale</span> <span class="o">*</span> <span class="mf">0.5</span>
@@ -692,7 +722,7 @@
 
         <span class="c1"># Draw the image.  Note: need a method that integrates over pixels to get flux right.</span>
         <span class="c1"># The offset is to make all the rsq values different to help the precision a bit.</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">)</span>
         <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">nx</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
         <span class="n">center</span> <span class="o">=</span> <span class="n">im</span><span class="o">.</span><span class="n">true_center</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">centroid</span><span class="o">/</span><span class="n">scale</span>
@@ -808,7 +838,7 @@
         <span class="c1"># Draw the image.  Note: draw with method=&#39;sb&#39; here, since the fwhm is a property of the</span>
         <span class="c1"># raw surface brightness profile, not integrated over pixels.</span>
         <span class="c1"># The offset is to make all the rsq values different to help the precision a bit.</span>
-        <span class="n">offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">)</span>
 
         <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">nx</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;sb&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
@@ -887,7 +917,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement kValue&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject.withGSParams"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject.withGSParams"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given `GSParams`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Note to developers: objects that wrap other objects should override this in order</span>
@@ -898,7 +928,7 @@
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="GSObject.withFlux"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.withFlux">[docs]</a>    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
@@ -1060,14 +1090,11 @@
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Error, shear argument is required&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">shear</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span></div>
+        <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">())</span></div>
 
 <div class="viewcode-block" id="GSObject._shear"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shear">[docs]</a>    <span class="k">def</span> <span class="nf">_shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equivalent to `GSObject.shear`, but without the overhead of sanity checks or other</span>
 <span class="sd">        ways to input the ``shear`` value.</span>
-
-<span class="sd">        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular</span>
-<span class="sd">        `GSObject.shear` method.</span>
 
 <span class="sd">        Also, it won&#39;t propagate any noise attribute.</span>
 
@@ -1078,8 +1105,7 @@
 <span class="sd">            the sheared object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
-        <span class="n">new_obj</span> <span class="o">=</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">())</span>
-        <span class="k">return</span> <span class="n">new_obj</span></div>
+        <span class="k">return</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">())</span></div>
 
 <div class="viewcode-block" id="GSObject.lens"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.lens">[docs]</a>    <span class="k">def</span> <span class="nf">lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a version of the current object with both a lensing shear and magnification</span>
@@ -1102,7 +1128,30 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            the lensed object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shear</span><span class="p">(</span><span class="n">g1</span><span class="o">=</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="o">=</span><span class="n">g2</span><span class="p">)</span><span class="o">.</span><span class="n">magnify</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span></div>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">Transform</span>
+        <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">Shear</span>
+        <span class="n">shear</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="n">g1</span><span class="o">=</span><span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="o">=</span><span class="n">g2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_lens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">g1</span><span class="p">,</span> <span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Equivalent to `GSObject.lens`, but without the overhead of some of the sanity checks.</span>
+
+<span class="sd">        Also, it won&#39;t propagate any noise attribute.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            g1:         First component of lensing (reduced) shear to apply to the object.</span>
+<span class="sd">            g2:         Second component of lensing (reduced) shear to apply to the object.</span>
+<span class="sd">            mu:         Lensing magnification to apply to the object.  This is the factor by which</span>
+<span class="sd">                        the solid angle subtended by the object is magnified, preserving surface</span>
+<span class="sd">                        brightness.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the lensed object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.shear</span> <span class="kn">import</span> <span class="n">_Shear</span>
+        <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
+        <span class="n">shear</span> <span class="o">=</span> <span class="n">_Shear</span><span class="p">(</span><span class="n">g1</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">g2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">getMatrix</span><span class="p">()</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mu</span><span class="p">))</span>
 
 <div class="viewcode-block" id="GSObject.rotate"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.rotate">[docs]</a>    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Rotate this object by an `Angle` ``theta``.</span>
@@ -1194,24 +1243,37 @@
         <span class="n">offset</span> <span class="o">=</span> <span class="n">parse_pos_args</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="s1">&#39;dx&#39;</span><span class="p">,</span> <span class="s1">&#39;dy&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject._shift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shift">[docs]</a>    <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject._shift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._shift">[docs]</a>    <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equivalent to `shift`, but without the overhead of sanity checks or option</span>
-<span class="sd">        to give the shift as (dx,dy).</span>
-
-<span class="sd">        This is only valid for `GSObject`.  For a `ChromaticObject`, you must use the regular</span>
-<span class="sd">        `shift` method.</span>
+<span class="sd">        to give the shift as a PositionD.</span>
 
 <span class="sd">        Also, it won&#39;t propagate any noise attribute.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            offset:     The shift to apply, given as a `PositionD`</span>
+<span class="sd">            dx:         The x-component of the shift to apply</span>
+<span class="sd">            dy:         The y-component of the shift to apply</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the shifted object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.transform</span> <span class="kn">import</span> <span class="n">_Transform</span>
-        <span class="n">new_obj</span> <span class="o">=</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">new_obj</span> <span class="o">=</span> <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">new_obj</span></div>
+
+<div class="viewcode-block" id="GSObject.atRedshift"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.atRedshift">[docs]</a>    <span class="k">def</span> <span class="nf">atRedshift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">redshift</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a version of the current object with a different redshift.</span>
+
+<span class="sd">        For regular GSObjects, this method doesn&#39;t do anything aside from setting a ``redshift``</span>
+<span class="sd">        attribute with the given value.  But this allows duck typing with ChromaticObjects</span>
+<span class="sd">        where this function will adjust the SED appropriately.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            the object with the new redshift</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_redshift</span> <span class="o">=</span> <span class="n">redshift</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="c1"># Make sure the image is defined with the right size and wcs for drawImage()</span>
     <span class="k">def</span> <span class="nf">_setup_image</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">odd</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -1264,21 +1326,21 @@
                         <span class="s2">&quot;Must set either both or neither of nx, ny&quot;</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">ny</span><span class="p">)</span>
                 <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">image</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="mf">0.5</span><span class="o">-</span><span class="n">image</span><span class="o">.</span><span class="n">true_center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span>
-                                          <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="mf">0.5</span><span class="o">-</span><span class="n">image</span><span class="o">.</span><span class="n">true_center</span><span class="o">.</span><span class="n">y</span><span class="p">)))</span>
+                    <span class="n">image</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">_PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="mf">0.5</span><span class="o">-</span><span class="n">image</span><span class="o">.</span><span class="n">true_center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span>
+                                           <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="mf">0.5</span><span class="o">-</span><span class="n">image</span><span class="o">.</span><span class="n">true_center</span><span class="o">.</span><span class="n">y</span><span class="p">)))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">N</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getGoodImageSize</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">odd</span><span class="p">:</span> <span class="n">N</span> <span class="o">+=</span> <span class="mi">1</span>
                 <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">image</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="n">PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">)))</span>
+                    <span class="n">image</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="n">_PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">)))</span>
 
         <span class="k">return</span> <span class="n">image</span>
 
     <span class="k">def</span> <span class="nf">_local_wcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">use_true_center</span><span class="p">,</span> <span class="n">new_bounds</span><span class="p">):</span>
         <span class="c1"># Get the local WCS at the location of the object.</span>
 
-        <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isUniform</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">_isUniform</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">wcs</span><span class="o">.</span><span class="n">local</span><span class="p">()</span>
         <span class="k">elif</span> <span class="n">image</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">bounds</span> <span class="o">=</span> <span class="n">new_bounds</span>
@@ -1295,29 +1357,29 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">obj_cen</span> <span class="o">=</span> <span class="n">bounds</span><span class="o">.</span><span class="n">center</span>
             <span class="c1"># Convert from PositionI to PositionD</span>
-            <span class="n">obj_cen</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">obj_cen</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">obj_cen</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">obj_cen</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">obj_cen</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">obj_cen</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
         <span class="c1"># _parse_offset has already turned offset=None into PositionD(0,0), so it is safe to add.</span>
         <span class="n">obj_cen</span> <span class="o">+=</span> <span class="n">offset</span>
         <span class="k">return</span> <span class="n">wcs</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="o">=</span><span class="n">obj_cen</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_parse_offset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">Position</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Let python raise the appropriate exception if this isn&#39;t valid.</span>
-            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">offset</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_parse_center</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
         <span class="c1"># Almost the same as _parse_offset, except we leave it as None in that case.</span>
         <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">Position</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Let python raise the appropriate exception if this isn&#39;t valid.</span>
-            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">center</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">center</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_get_new_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">bounds</span><span class="p">,</span> <span class="n">center</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">BoundsI</span>
@@ -1326,8 +1388,8 @@
         <span class="k">elif</span> <span class="n">nx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">ny</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">b</span> <span class="o">=</span> <span class="n">BoundsI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">ny</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
-                                      <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+                <span class="n">b</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="n">_PositionI</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+                                       <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">b</span>
         <span class="k">elif</span> <span class="n">bounds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="k">return</span> <span class="n">bounds</span>
@@ -1341,7 +1403,7 @@
                 <span class="n">offset</span> <span class="o">+=</span> <span class="n">center</span> <span class="o">-</span> <span class="n">new_bounds</span><span class="o">.</span><span class="n">center</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># Then will be created as even sized image.</span>
-                <span class="n">offset</span> <span class="o">+=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">center</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
         <span class="k">elif</span> <span class="n">use_true_center</span><span class="p">:</span>
             <span class="c1"># For even-sized images, the SBProfile draw function centers the result in the</span>
             <span class="c1"># pixel just up and right of the real center.  So shift it back to make sure it really</span>
@@ -1352,7 +1414,7 @@
             <span class="n">shape</span> <span class="o">=</span> <span class="n">new_bounds</span><span class="o">.</span><span class="n">numpyShape</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">dx</span> <span class="o">-=</span> <span class="mf">0.5</span>
             <span class="k">if</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span> <span class="n">dy</span> <span class="o">-=</span> <span class="mf">0.5</span>
-            <span class="n">offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">offset</span>
 
     <span class="k">def</span> <span class="nf">_determine_wcs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">wcs</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">default_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1372,7 +1434,7 @@
             <span class="n">wcs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span>
 
         <span class="c1"># If the input scale &lt;= 0, or wcs is still None at this point, then use the Nyquist scale:</span>
-        <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">wcs</span><span class="o">.</span><span class="n">isPixelScale</span><span class="p">()</span> <span class="ow">and</span> <span class="n">wcs</span><span class="o">.</span><span class="n">scale</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="n">wcs</span><span class="o">.</span><span class="n">_isPixelScale</span> <span class="ow">and</span> <span class="n">wcs</span><span class="o">.</span><span class="n">scale</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">default_wcs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">wcs</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nyquist_scale</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -1388,8 +1450,9 @@
                   <span class="n">method</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">area</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">n_photons</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
-                  <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">n_subsample</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                  <span class="n">save_photons</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                  <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">photon_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">n_subsample</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">save_photons</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                  <span class="n">surface_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draws an `Image` of the object.</span>
 
 <span class="sd">        The drawImage() method is used to draw an `Image` of the current object using one of several</span>
@@ -1615,10 +1678,10 @@
 <span class="sd">        passed into the sensor object.  For instance, the photons may need to be given appropriate</span>
 <span class="sd">        incidence angles according to the optics of the telescope (since this matters for where the</span>
 <span class="sd">        photons are converted to electrons).  You may also need to give the photons wavelengths</span>
-<span class="sd">        according to the `SED` of the object.  Such steps are specified in a ``surface_ops``</span>
+<span class="sd">        according to the `SED` of the object.  Such steps are specified in a ``photon_ops``</span>
 <span class="sd">        parameter, which should be a list of any such operations you wish to perform on the photon</span>
 <span class="sd">        array before passing them to the sensor.  See `FRatioAngles` and `WavelengthSampler` for</span>
-<span class="sd">        two examples of such surface operators.</span>
+<span class="sd">        two examples of such photon operators.</span>
 
 <span class="sd">        Since the sensor deals with photons, it is most natural to use this feature in conjunction</span>
 <span class="sd">        with photon shooting (``method=&#39;phot&#39;``).  However, it is allowed with FFT methods too.</span>
@@ -1707,7 +1770,7 @@
 <span class="sd">                            is False]</span>
 <span class="sd">            sensor:         An optional `Sensor` instance, which will be used to accumulate the</span>
 <span class="sd">                            photons onto the image. [default: None]</span>
-<span class="sd">            surface_ops:    A list of operators that can modify the photon array that will be</span>
+<span class="sd">            photon_ops:     A list of operators that can modify the photon array that will be</span>
 <span class="sd">                            applied in order before accumulating the photons on the sensor.</span>
 <span class="sd">                            [default: ()]</span>
 <span class="sd">            n_subsample:    The number of sub-pixels per final pixel to use for fft drawing when</span>
@@ -1721,6 +1784,9 @@
 <span class="sd">                            [default: None, which means no limit]</span>
 <span class="sd">            save_photons:   If True, save the `PhotonArray` as ``image.photons``. Only valid if</span>
 <span class="sd">                            method is &#39;phot&#39; or sensor is not None.  [default: False]</span>
+<span class="sd">            bandpass:       This parameter is ignored, but is allowed to enable duck typing</span>
+<span class="sd">                            eqivalence between this method and the ChromaticObject.drawImage</span>
+<span class="sd">                            method. [default: None]</span>
 <span class="sd">            setup_only:     Don&#39;t actually draw anything on the image.  Just make sure the image</span>
 <span class="sd">                            is set up correctly.  This is used internally by GalSim, but there</span>
 <span class="sd">                            may be cases where the user will want the same functionality.</span>
@@ -1734,6 +1800,11 @@
         <span class="kn">from</span> <span class="nn">.box</span> <span class="kn">import</span> <span class="n">Pixel</span>
         <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
         <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span>
+
+        <span class="k">if</span> <span class="n">surface_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;surface_ops&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span> <span class="s1">&#39;photon_ops&#39;</span><span class="p">)</span>
+            <span class="n">photon_ops</span> <span class="o">=</span> <span class="n">surface_ops</span>
 
         <span class="c1"># Check that image is sane</span>
         <span class="k">if</span> <span class="n">image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
@@ -1781,10 +1852,10 @@
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;poisson_flux is only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="n">poisson_flux</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">surface_ops</span> <span class="o">!=</span> <span class="p">():</span>
+            <span class="k">if</span> <span class="n">photon_ops</span> <span class="o">!=</span> <span class="p">():</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
-                    <span class="s2">&quot;surface_ops are only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
-                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="n">surface_ops</span><span class="p">)</span>
+                    <span class="s2">&quot;photon_ops are only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">photon_ops</span><span class="o">=</span><span class="n">photon_ops</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">maxN</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;maxN is only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
@@ -1832,8 +1903,8 @@
 
         <span class="c1"># Convert the profile in world coordinates to the profile in image coordinates:</span>
         <span class="n">prof</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">profileToImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_scale</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">offset</span> <span class="o">!=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
-            <span class="n">local_wcs</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">withOrigin</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">offset</span> <span class="o">!=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+            <span class="n">local_wcs</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">shiftOrigin</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
 
         <span class="c1"># If necessary, convolve by the pixel</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="s1">&#39;fft&#39;</span><span class="p">,</span> <span class="s1">&#39;real_space&#39;</span><span class="p">):</span>
@@ -1863,7 +1934,7 @@
         <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
             <span class="n">added_photons</span><span class="p">,</span> <span class="n">photons</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">drawPhot</span><span class="p">(</span><span class="n">imview</span><span class="p">,</span> <span class="n">gain</span><span class="p">,</span> <span class="n">add_to_image</span><span class="p">,</span>
                                                    <span class="n">n_photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span>
-                                                   <span class="n">sensor</span><span class="p">,</span> <span class="n">surface_ops</span><span class="p">,</span> <span class="n">maxN</span><span class="p">,</span>
+                                                   <span class="n">sensor</span><span class="p">,</span> <span class="n">photon_ops</span><span class="p">,</span> <span class="n">maxN</span><span class="p">,</span>
                                                    <span class="n">orig_center</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># If not using phot, but doing sensor, then make a copy.</span>
@@ -1901,8 +1972,8 @@
 
             <span class="k">if</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">photons</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="o">.</span><span class="n">makeFromImage</span><span class="p">(</span><span class="n">draw_image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">surface_ops</span><span class="p">:</span>
-                    <span class="n">op</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">photon_ops</span><span class="p">:</span>
+                    <span class="n">op</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">imview</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
                     <span class="n">added_photons</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">imview</span><span class="p">,</span> <span class="n">orig_center</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
@@ -1944,7 +2015,7 @@
 <span class="sd">            The total flux drawn inside the image bounds.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">ImageD</span><span class="p">,</span> <span class="n">ImageF</span>
-        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">isPixelScale</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">_isPixelScale</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;drawReal requires an image with a PixelScale wcs&quot;</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">add_to_image</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">iscontiguous</span><span class="p">:</span>
@@ -1963,7 +2034,7 @@
                 <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[:,:]</span> <span class="o">=</span> <span class="n">im1</span><span class="o">.</span><span class="n">array</span>
             <span class="k">return</span> <span class="n">im1</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="GSObject._drawReal"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawReal">[docs]</a>    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
+<div class="viewcode-block" id="GSObject._drawReal"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawReal">[docs]</a>    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A version of `drawReal` without the sanity checks or some options.</span>
 
 <span class="sd">        This is nearly equivalent to the regular ``drawReal(image, add_to_image=False)``, but</span>
@@ -2116,7 +2187,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            The total flux drawn inside the image bounds.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">isPixelScale</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">_isPixelScale</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;drawPhot requires an image with a PixelScale wcs&quot;</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
 
         <span class="n">kimage</span><span class="p">,</span> <span class="n">wrap_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">drawFFT_makeKImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
@@ -2187,14 +2258,13 @@
         <span class="n">flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
         <span class="k">if</span> <span class="n">flux</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span>
-        <span class="n">posflux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">positive_flux</span>
-        <span class="n">negflux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">negative_flux</span>
-        <span class="n">eta</span> <span class="o">=</span> <span class="n">negflux</span> <span class="o">/</span> <span class="p">(</span><span class="n">posflux</span> <span class="o">+</span> <span class="n">negflux</span><span class="p">)</span>
-        <span class="n">eta_factor</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">-</span><span class="mf">2.</span><span class="o">*</span><span class="n">eta</span>  <span class="c1"># This is also the amount to scale each photon.</span>
-        <span class="n">mod_flux</span> <span class="o">=</span> <span class="n">flux</span><span class="o">/</span><span class="p">(</span><span class="n">eta_factor</span><span class="o">*</span><span class="n">eta_factor</span><span class="p">)</span>
 
-        <span class="c1"># Use this for the factor by which to scale photon arrays.</span>
-        <span class="n">g</span> <span class="o">=</span> <span class="n">eta_factor</span>
+        <span class="c1"># The _flux_per_photon property is (1-2eta)</span>
+        <span class="c1"># This factor will already be accounted for by the shoot function, so don&#39;t include</span>
+        <span class="c1"># that as part of our scaling here.  There may be other adjustments though, so g=1 here.</span>
+        <span class="n">eta_factor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_per_photon</span>
+        <span class="n">mod_flux</span> <span class="o">=</span> <span class="n">flux</span> <span class="o">/</span> <span class="p">(</span><span class="n">eta_factor</span> <span class="o">*</span> <span class="n">eta_factor</span><span class="p">)</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="mf">1.</span>
 
         <span class="c1"># If requested, let the target flux value vary as a Poisson deviate</span>
         <span class="k">if</span> <span class="n">poisson_flux</span><span class="p">:</span>
@@ -2235,10 +2305,106 @@
         <span class="k">return</span> <span class="n">iN</span><span class="p">,</span> <span class="n">g</span></div>
 
 
+<div class="viewcode-block" id="GSObject.makePhot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.makePhot">[docs]</a>    <span class="k">def</span> <span class="nf">makePhot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_photons</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">photon_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make photons for a profile.</span>
+
+<span class="sd">        This is equivalent to drawPhot, except that the photons are not placed onto</span>
+<span class="sd">        an image.  Instead, it just returns the PhotonArray.</span>
+
+<span class="sd">        .. note::</span>
+
+<span class="sd">            The (x,y) positions returned are in the same units as the distance units</span>
+<span class="sd">            of the GSObject being rendered.  If you want (x,y) in pixel coordinates, you</span>
+<span class="sd">            should call this function for the profile in image coordinates::</span>
+
+<span class="sd">                &gt;&gt;&gt; photons = image.wcs.toImage(obj).makePhot()</span>
+
+<span class="sd">            Or if you just want a simple pixel scale conversion from sky coordinates to image</span>
+<span class="sd">            coordinates, you can instead do</span>
+
+<span class="sd">                &gt;&gt;&gt; photons = obj.makePhot()</span>
+<span class="sd">                &gt;&gt;&gt; photons.scaleXY(1./pixel_scale)</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            n_photons:      If provided, the number of photons to use for photon shooting.</span>
+<span class="sd">                            If not provided (i.e. ``n_photons = 0``), use as many photons as</span>
+<span class="sd">                            necessary to result in an image with the correct Poisson shot</span>
+<span class="sd">                            noise for the object&#39;s flux.  For positive definite profiles, this</span>
+<span class="sd">                            is equivalent to ``n_photons = flux``.  However, some profiles need</span>
+<span class="sd">                            more than this because some of the shot photons are negative</span>
+<span class="sd">                            (usually due to interpolants).  [default: 0]</span>
+<span class="sd">            rng:            If provided, a random number generator to use for photon shooting,</span>
+<span class="sd">                            which may be any kind of `BaseDeviate` object.  If ``rng`` is None, one</span>
+<span class="sd">                            will be automatically created, using the time as a seed.</span>
+<span class="sd">                            [default: None]</span>
+<span class="sd">            max_extra_noise: If provided, the allowed extra noise in each pixel when photon</span>
+<span class="sd">                            shooting.  This is only relevant if ``n_photons=0``, so the number of</span>
+<span class="sd">                            photons is being automatically calculated.  In that case, if the image</span>
+<span class="sd">                            noise is dominated by the sky background, then you can get away with</span>
+<span class="sd">                            using fewer shot photons than the full ``n_photons = flux``.</span>
+<span class="sd">                            Essentially each shot photon can have a ``flux &gt; 1``, which increases</span>
+<span class="sd">                            the noise in each pixel.  The ``max_extra_noise`` parameter specifies</span>
+<span class="sd">                            how much extra noise per pixel is allowed because of this approximation.</span>
+<span class="sd">                            A typical value for this might be ``max_extra_noise = sky_level / 100``</span>
+<span class="sd">                            where ``sky_level`` is the flux per pixel due to the sky.  Note that</span>
+<span class="sd">                            this uses a &quot;variance&quot; definition of noise, not a &quot;sigma&quot; definition.</span>
+<span class="sd">                            [default: 0.]</span>
+<span class="sd">            poisson_flux:   Whether to allow total object flux scaling to vary according to</span>
+<span class="sd">                            Poisson statistics for ``n_photons`` samples when photon shooting.</span>
+<span class="sd">                            [default: True, unless ``n_photons`` is given, in which case the default</span>
+<span class="sd">                            is False]</span>
+<span class="sd">            photon_ops:     A list of operators that can modify the photon array that will be</span>
+<span class="sd">                            applied in order before accumulating the photons on the sensor.</span>
+<span class="sd">                            [default: ()]</span>
+<span class="sd">            local_wcs:      The local wcs in the original image. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            - a `PhotonArray` with the data about the photons.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">surface_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;surface_ops&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span> <span class="s1">&#39;photon_ops&#39;</span><span class="p">)</span>
+            <span class="n">photon_ops</span> <span class="o">=</span> <span class="n">surface_ops</span>
+
+        <span class="c1"># Make sure the type of n_photons is correct and has a valid value:</span>
+        <span class="k">if</span> <span class="n">n_photons</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Invalid n_photons &lt; 0.&quot;</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">poisson_flux</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If n_photons is given, poisson_flux = False</span>
+            <span class="n">poisson_flux</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_photons</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">)</span>
+
+        <span class="c1"># Check that either n_photons is set to something or flux is set to something</span>
+        <span class="k">if</span> <span class="n">n_photons</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span>
+                    <span class="s2">&quot;Warning: drawImage for object with flux == 1, area == 1, and &quot;</span>
+                    <span class="s2">&quot;exptime == 1, but n_photons == 0.  This will only shoot a single photon.&quot;</span><span class="p">)</span>
+
+        <span class="n">Ntot</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_nphotons</span><span class="p">(</span><span class="n">n_photons</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">photons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shoot</span><span class="p">(</span><span class="n">Ntot</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">GalSimError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimNotImplementedError</span><span class="p">(</span>
+                    <span class="s2">&quot;Unable to draw this GSObject with photon shooting.  Perhaps it &quot;</span>
+                    <span class="s2">&quot;is a Deconvolve or is a compound including one or more &quot;</span>
+                    <span class="s2">&quot;Deconvolve objects.</span><span class="se">\n</span><span class="s2">Original error: </span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span>
+            <span class="n">photons</span><span class="o">.</span><span class="n">scaleFlux</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">photon_ops</span><span class="p">:</span>
+            <span class="n">op</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">photons</span></div>
+
+
 <div class="viewcode-block" id="GSObject.drawPhot"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawPhot">[docs]</a>    <span class="k">def</span> <span class="nf">drawPhot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">n_photons</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
-                 <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">photon_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">_PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
+                 <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">surface_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Draw this profile into an `Image` by shooting photons.</span>
 
@@ -2291,7 +2457,7 @@
 <span class="sd">                            is False]</span>
 <span class="sd">            sensor:         An optional `Sensor` instance, which will be used to accumulate the</span>
 <span class="sd">                            photons onto the image. [default: None]</span>
-<span class="sd">            surface_ops:    A list of operators that can modify the photon array that will be</span>
+<span class="sd">            photon_ops:     A list of operators that can modify the photon array that will be</span>
 <span class="sd">                            applied in order before accumulating the photons on the sensor.</span>
 <span class="sd">                            [default: ()]</span>
 <span class="sd">            maxN:           Sets the maximum number of photons that will be added to the image</span>
@@ -2308,13 +2474,19 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.sensor</span> <span class="kn">import</span> <span class="n">Sensor</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">ImageD</span>
+
+        <span class="k">if</span> <span class="n">surface_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;surface_ops&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span> <span class="s1">&#39;photon_ops&#39;</span><span class="p">)</span>
+            <span class="n">photon_ops</span> <span class="o">=</span> <span class="n">surface_ops</span>
+
         <span class="c1"># Make sure the type of n_photons is correct and has a valid value:</span>
         <span class="k">if</span> <span class="n">n_photons</span> <span class="o">&lt;</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Invalid n_photons &lt; 0.&quot;</span><span class="p">,</span> <span class="n">n_photons</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">poisson_flux</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">n_photons</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span> <span class="n">poisson_flux</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">else</span><span class="p">:</span> <span class="n">poisson_flux</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># If n_photons is given, poisson_flux = False</span>
+            <span class="n">poisson_flux</span> <span class="o">=</span> <span class="p">(</span><span class="n">n_photons</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">)</span>
 
         <span class="c1"># Check that either n_photons is set to something or flux is set to something</span>
         <span class="k">if</span> <span class="n">n_photons</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
@@ -2323,7 +2495,7 @@
                     <span class="s2">&quot;exptime == 1, but n_photons == 0.  This will only shoot a single photon.&quot;</span><span class="p">)</span>
 
         <span class="c1"># Make sure the image is set up to have unit pixel scale and centered at 0,0.</span>
-        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">isPixelScale</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">_isPixelScale</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;drawPhot requires an image with a PixelScale wcs&quot;</span><span class="p">,</span> <span class="n">image</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2366,8 +2538,8 @@
             <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span>
                 <span class="n">photons</span><span class="o">.</span><span class="n">scaleXY</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>  <span class="c1"># Convert x,y to image coords if necessary</span>
 
-            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">surface_ops</span><span class="p">:</span>
-                <span class="n">op</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">photon_ops</span><span class="p">:</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
                 <span class="n">added_flux</span> <span class="o">+=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="p">,</span> <span class="n">resume</span><span class="o">=</span><span class="n">resume</span><span class="p">)</span>
@@ -2420,8 +2592,27 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> does not implement shoot&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="GSObject.applyTo"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply this surface brightness profile as a convolution to an existing photon array.</span>
+
+<span class="sd">        This method allows a GSObject to duck type as a PhotonOp, so one can apply a PSF</span>
+<span class="sd">        in a photon_ops list.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
+<span class="sd">            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon</span>
+<span class="sd">                            bundle in case the operator needs this information.  [default: None]</span>
+<span class="sd">            rng:            A random number generator to use to effect the convolution.</span>
+<span class="sd">                            [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span>
+        <span class="n">p1</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">photon_array</span><span class="p">))</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">if</span> <span class="n">local_wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="GSObject.drawKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject.drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                   <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recenter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                   <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">recenter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draws the k-space (complex) `Image` of the object, with bounds optionally set by input</span>
 <span class="sd">        `Image` instance.</span>
 
@@ -2459,6 +2650,13 @@
 <span class="sd">                            bounds. [default: False]</span>
 <span class="sd">            recenter:       Whether to recenter the image to put k = 0 at the center (True) or to</span>
 <span class="sd">                            trust the provided bounds (False).  [default: True]</span>
+<span class="sd">            bandpass:       This parameter is ignored, but is allowed to enable duck typing</span>
+<span class="sd">                            eqivalence between this method and the ChromaticObject.drawImage</span>
+<span class="sd">                            method. [default: None]</span>
+<span class="sd">            setup_only:     Don&#39;t actually draw anything on the image.  Just make sure the image</span>
+<span class="sd">                            is set up correctly.  This is used internally by GalSim, but there</span>
+<span class="sd">                            may be cases where the user will want the same functionality.</span>
+<span class="sd">                            [default: False]</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            an `Image` instance (created if necessary)</span>
@@ -2512,13 +2710,13 @@
                     <span class="s2">&quot;Cannot provide nx,ny if image is provided&quot;</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">ny</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">)</span>
 
         <span class="c1"># Can&#39;t both recenter a provided image and add to it.</span>
-        <span class="k">if</span> <span class="n">recenter</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">center</span> <span class="o">!=</span> <span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">add_to_image</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">recenter</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">center</span> <span class="o">!=</span> <span class="n">_PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="n">add_to_image</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                 <span class="s2">&quot;Cannot use add_to_image=True unless image is centered at (0,0) or recenter=False&quot;</span><span class="p">,</span>
                 <span class="n">recenter</span><span class="o">=</span><span class="n">recenter</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="n">add_to_image</span><span class="p">)</span>
 
         <span class="c1"># Set the center to 0,0 if appropriate</span>
-        <span class="k">if</span> <span class="n">recenter</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">center</span> <span class="o">!=</span> <span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">recenter</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">center</span> <span class="o">!=</span> <span class="n">_PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
             <span class="n">image</span><span class="o">.</span><span class="n">_shift</span><span class="p">(</span><span class="o">-</span><span class="n">image</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
 
         <span class="c1"># Set the wcs of the images to use the dk scale size</span>
@@ -2535,7 +2733,7 @@
             <span class="n">image</span> <span class="o">+=</span> <span class="n">im2</span>
         <span class="k">return</span> <span class="n">image</span></div>
 
-<div class="viewcode-block" id="GSObject._drawKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
+<div class="viewcode-block" id="GSObject._drawKImage"><a class="viewcode-back" href="../../gsobject.html#galsim.GSObject._drawKImage">[docs]</a>    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>  <span class="c1"># pragma: no cover  (all our classes override this)</span>
         <span class="sd">&quot;&quot;&quot;A version of `drawKImage` without the sanity checks or some options.</span>
 
 <span class="sd">        Equivalent to ``drawKImage(image, add_to_image=False, recenter=False, add_to_image=False)``,</span>
@@ -2559,20 +2757,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -2580,7 +2783,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

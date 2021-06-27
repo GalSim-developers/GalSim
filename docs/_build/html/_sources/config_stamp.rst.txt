@@ -32,6 +32,7 @@ Some attributes that are allowed for all stamp types are:
 * ``skip`` = *bool_value* (default=False)  Skip this stamp.
 * ``quick_skip`` = *bool_value* (default=False)  Skip this stamp before doing any work, even making the rng or calculating the position.  (Usually used by some other part of the processing to precalculate objects that are not worth doing for some reason.)
 * ``obj_rng`` = *bool_value* (default=True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.
+* ``photon_ops``  See `Photon Operators List` below.
 
 Stamp Types
 -----------
@@ -98,7 +99,7 @@ cases where it would be useful for custom stamp types.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_stamp.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_stamp.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml
@@ -108,7 +109,7 @@ in the config file:
 
 This ``modules`` field is a list, so it can contain more than one module to load if you want.
 Then before processing anything, the code will execute the command ``import my_custom_stamp``,
-which will read your file and execute the registration command to add the buidler to the list
+which will read your file and execute the registration command to add the builder to the list
 of valid stamp types.
 
 Then you can use this as a valid stamp type:
@@ -124,7 +125,7 @@ For examples of custom stamps, see
 * :download:`blend.yaml <../examples/des/blend.yaml>`
 * :download:`blendset.yaml <../examples/des/blendset.yaml>`
 
-which use custom stamp types ``Blend`` and ``BlendSet`` defined in :download:`blend.py <../examples/des/blend.py>`. 
+which use custom stamp types ``Blend`` and ``BlendSet`` defined in :download:`blend.py <../examples/des/blend.py>`.
 
 It may also be helpful to look at the GalSim implementation of the include ``Ring`` type:
 (click on the ``[source]`` link):
@@ -132,3 +133,104 @@ It may also be helpful to look at the GalSim implementation of the include ``Rin
 .. autoclass:: galsim.config.stamp_ring.RingBuilder
     :show-inheritance:
 
+Photon Operators List
+---------------------
+
+When drawing with ``method='phot'``, there are a number of operators you can apply to the
+photon array before accumulating the photons on the sensor.  You can specify these using
+``photon_ops`` in the ``stamp`` field.  This directive should be a list of dicts, each
+specifying a `PhotonOp` in the order in which the operators should be applied to the photons.
+
+The photon operator types defined by GalSim are:
+
+* 'WavelengthSampler' assigns wavelengths to the photons based on an SED and the current Bandpass.
+
+    * ``sed`` = *SED* (required)  The SED to use.  To use the galaxy SED (which would be typical),
+      you can use ``@gal.sed`` for this.
+    * ``npoints`` = *int_value* (optional)  The number of points `DistDeviate` should use for its
+      interpolation table.
+
+* 'FRatioAngles' assigns incidence angles (in terms of their tangent, dxdz and dydz) to the
+  photons randomly given an f/ratio and an obscuration.
+
+    * ``fratio`` = *float_vale* (required)  The f/ratio of the telescope.
+    * ``obscuration`` = *float_value* (default = 0.0)  The linear dimension of the central
+      obscuration as a fraction of the aperture size.
+
+* 'PhotonDCR' adjusts the positions of the photons according to the effect of differential
+  chromatic refraction in the atmosphere.  There are several ways one can define the
+  parallactic angle needed to compute the DCR effect.  One of the following is required.
+
+  1. ``zenith_angle`` and ``parallactic_angle``
+  2. ``zenith_angle`` alone, implicitly taking ``parallactic_angle = 0``.
+  3. ``zenith_coord`` along with either ``sky_pos`` in the ``stamp`` field or using a
+     `CelestialWCS` so GalSim can determine the sky position from the image coordinates.
+  4. ``HA`` and ``latitude`` along with either ``sky_pos`` in the ``stamp`` field or using a
+     `CelestialWCS` so GalSim can determine the sky position from the image coordinates.
+
+    * ``base_wavelength`` = *float_value* (required)  The wavelength (in nm) for the fiducial
+      photon positions.
+    * ``scale_unit`` = *str_value* (default = 'arcsec')  The scale unit for the photon positions.
+    * ``alpha`` = *float_value* (default = 0.0)  A power law index for wavelength-dependent
+      seeing.  This should only be used if doing a star-only simulation.  It is not correct when
+      drawing galaxies.
+    * ``zenith_angle`` = *angle_value* (optional; see above) the angle from the object to zenith.
+    * ``parallactic_angle`` = *angle_value* (option; see above) the parallactic angle.
+    * ``zenith_coord`` = *sky_value* (optional; see above) the celestial coordinates of the zenith.
+    * ``HA`` = *angle_value* (optional; see above) the local hour angle.
+    * ``latitude`` = *angle_value* (optional; see above) the latitude of the telescope.
+    * ``pressure`` = *float_value* (default = 69.328) the pressure in kPa.
+    * ``temperature`` = *float_value* (default = 293.15) the temperature in Kelvin.
+    * ``H2O_pressure`` = *float_value* (default = 1.067) the water vapor pressure in kPa.
+
+* 'FocusDepth' adjusts the positions of the photons at the surface of the sensor to account for
+  the nominal focus being either above or below the sensor surface.  The depth value is typically
+  negative, since the best focus is generally somewhere in the bulk of the sensor (although for
+  short wavelengths it is often very close to the surface).
+
+   * ``depth`` = *float_value* (required)  The distance above the surface where the photons are
+     nominally in focus.  A negative value means the focus in below the surface of the sensor.
+
+* 'Refraction' adjusts the incidence angles to account for refraction at the surface of the
+  sensor.
+
+  .. note::
+
+        If this is combined with FocusDepth, then the order of the two operators is important.
+        If FocusDepth is before Refraction, then the depth refers to the distance the sensor
+        would need to move for the bundle to be in focus at the surface.
+        If FocusDepth is after Refraction, then the depth refers to the physical distance
+        below the surface of the sensor where the photons actually come to a focus.
+
+   * ``index_ratio`` = *float_value* (required) The ratio of the index of refraction of the
+     sensor material to that of the air.
+
+You may also define your own custom `PhotonOp` type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of `galsim.config.PhotonOpBuilder`.
+
+.. autoclass:: galsim.config.PhotonOpBuilder
+    :members:
+
+Then, as usual, you need to register this type using::
+
+    galsim.config.RegisterPhotonOpType('CustomPhotonOp', CustomPhotonOpBuilder())
+
+.. autofunction:: galsim.config.RegisterPhotonOpType
+
+and tell the config parser the name of the module to load at the start of processing.
+
+.. code-block:: yaml
+
+    modules:
+        - my_custom_photon_op
+
+Then you can use this as a valid photon operator type:
+
+.. code-block:: yaml
+
+    stamp:
+        photon_ops:
+            -
+                type: CustomPhotonOp
+                ...

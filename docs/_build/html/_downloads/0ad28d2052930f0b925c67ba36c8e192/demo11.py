@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2019 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2021 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -313,7 +313,7 @@ def main(argv):
         gal = gal.lens(g1, g2, mu)
 
         # Convolve with the PSF.
-        final = galsim.Convolve(psf, gal)
+        final = galsim.Convolve(gal, psf)
 
         # Account for the fractional part of the position
         # cf. demo9.py for an explanation of this nominal position stuff.

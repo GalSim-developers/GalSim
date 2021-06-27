@@ -10,7 +10,7 @@ There are also some `Generic Types` that can be appropriate for either.
 
 Each object type sets a number of other items that either must or may be present in the dict
 for the object (i.e. in the top level ``psf`` or ``gal`` field or farther down in the dict where
-an object is being defined, such is in a 'List' object type).  These attributes are given as 
+an object is being defined, such is in a 'List' object type).  These attributes are given as
 bullet items for each type defined below.
 
 There are also some `Other attributes` that are allowed for any object (or
@@ -76,6 +76,18 @@ PSF Types
     * ``pupil_angle`` = *angle_value* (default = 0 degrees) When specifying a pupil_plane_im, use this parameter to rotate it by some angle defined counter-clockwise with respect to the vertical.
     * ``scale_unit`` = *str_value* (default = 'arcsec') Units to be used for internal calculations when calculating lam/diam.
 
+* 'ChromaticAtmosphere'  A chromatic PSF implementing both differential chromatic diffraction (DCR) and wavelength-dependent seeing.  See `ChromaticAtmosphere` for valid combinations that can be used to set the zenith and parallactic angles needed for DCR.
+    * ``base_profile`` = *object* (required) The base profile to use for the profile shape at a given reference wavelength
+    * ``base_wavelength`` = *float_value* (required) The wavelength at which the PSF has the base profile
+    * ``alpha`` = *float_value* (default = -0.2)  Power law index for wavelength-dependent seeing.
+    * ``zenith_angle`` = *Angle_value* (optional) The zenith angle.
+    * ``parallactic_angle`` = *Angle_value*  (optional) The parallactic angle.
+    * ``zenith_coord`` = *CelestialCoord*  (optional)  The (ra,dec) coordinate of the zenith.
+    * ``HA`` = *Angle_value* (optional)  Hour angle of the observation.
+    * ``latitude`` = *Angle_value* (optional)  Latitude of the observatory.
+    * ``pressure`` = *float_value* (default = 69.328)  Air pressure in kPa.
+    * ``temperature`` = *float_value* (default = 293.15)  Temperature in K.
+    * ``H2O_pressure`` = *float_value* (default = 1.067)  Water vapor pressure in kPa.
 
 Galaxy Types
 ------------
@@ -122,14 +134,18 @@ Galaxy Types
 
     * ``index`` = *int_value* (default = 'Sequence' from 0 to ``cosmos_catalog.nobjects``-1)  Which item in the catalog to use. Special: If ``index`` is either a 'Sequence' or 'Random' and ``last`` or ``max`` (respectively) is not specified, then it is automatically set to ``real_catalog.nobjects-1``.
     * ``gal_type`` = *str_vale* (required, unless ``real_catalog.use_real`` is False, in which case 'parametric') Which type of galaxy to use.  Options are 'real' or 'parametric'.
+    * ``noise_pad_size`` = *float_val* (default = 5) The size of a padding region in arcsec around the HST image when ``gal_type='real'``.  Only applies to galaxies whose original potage stamp size is smaller than this value; it effectively sets a minimum stamp size with the HST correlated noise for small galaxies.
     * ``deep`` = *bool_value* (default = False) Whether the flux and size should be rescaled to approximate a galaxy catalog with a limiting mag of 25 in F814W, rather than 23.5.
     * ``noise_pad_size`` = *float* (optional) If provided, then the original image is padded to a larger image of this size using the noise profile of the original image.  This is important if you are using ``noise.whiten`` or ``noise.symmetrize``.  You want to make sure the image has the original noise all the way to the edge of the postage stamp.  Otherwise, the edges will have the wrong noise profile.
     * ``sersic_prec`` = *float_value* (default = 0.05) The desired precision on the Sersic index n in parametric galaxies.  GalSim is significantly faster if it gets a smallish number of Sersic values, so it can cache some of the calculations and use them again the next time it gets a galaxy with the same index.  If ``sersic_prec`` is 0.0, then use the exact value of index n from the catalog.  But if it is >0, then round the index to that precision.
+    * ``chromatic`` = *bool_value* (default = False) Whether to build chromatic profiles. (Only valid if ``gal_type='parametric'``.)
+    * ``area`` = *float_value* (default = None, which will use the HST collecting area.)  The effective collecting area in cm**2 of the telescope being simulated.  Used for rescaling the flux values.
+    * ``exptime`` = *float_value* (default = 1)  The exposure time in seconds.  Used for rescaling the flux values. (Note: The processed COSMOS ACS/HST science images have units of counts/second; i.e. they have an effective exposure time of 1 second in terms of their flux levels. The default value corresponds to a 1 second exposure on HST, which will match these processed images.)
     * ``num`` = *int_value* (default = 0)  If ``input.real_catalog`` is a list, this indicates which number catalog to use.
 
 * 'InclinedExponential'  The 2D projection of a 3D exponential profile: :math:`I(R,z) \sim \mathrm{sech}^2 (z/h_s) * \exp(-R/R_s)` at an arbitrary inclination angle, where :math:`h_s` is the ``scale_height`` and :math:`R_s` is the ``scale_radius``  The base profile is inclined along the y-axis, so if you want a different position angle, you should add a ``rotate`` field.
 
-    * ``inclination`` = *angle_value* (required) The inclination angle, defined such that 0 degrees is face-on and 90 degrees is edge-on. 
+    * ``inclination`` = *angle_value* (required) The inclination angle, defined such that 0 degrees is face-on and 90 degrees is edge-on.
     * ``half_light_radius`` = *float_value* (exactly one of ``half_light_radius`` or ``scale_radius`` is required) The half-light radius as an alternative to ``scale_radius``.
     * ``scale_radius`` = *float_value* (exactly one of ``half_light_radius`` or ``scale_radius`` is required) The scale_radius, R_s.
     * ``scale_height`` = *float_value* (exactly one of ``scale_height`` or ``scale_h_over_r`` is required) The scale height, h_s.
@@ -160,7 +176,7 @@ Generic Types
 
     * ``sigma`` = *float_value* (exactly one of ``sigma``, ``fwhm`` or ``half_light_radius`` is required)
     * ``fwhm`` = *float_value* (exactly one of ``sigma``, ``fwhm`` or ``half_light_radius`` is required)
-    * ``half_light_radius`` = *float_value* (exactly one of ``sigma``, ``fwhm`` or ``half_light_radius`` is required)  
+    * ``half_light_radius`` = *float_value* (exactly one of ``sigma``, ``fwhm`` or ``half_light_radius`` is required)
 
 * 'InterpolatedImage'  A profile described simply by a provided image (given in a fits file).
 
@@ -217,11 +233,11 @@ Some of these operations do not commute with each other, so the order is importa
 The following transformations will be applied in the order given here, which corresponds
 roughly to when they occur to the light packet traveling through the universe.
 
-The first few, ``flux``, ``dilate``, ``ellip``, and ``rotate``, are typically used to define the 
-intrinsic profile of the object. 
+The first few, ``flux``, ``dilate``, ``ellip``, and ``rotate``, are typically used to define the
+intrinsic profile of the object.
 The next two, ``magnify`` and ``shear``, are typically used to define how the profile is
 modified by lensing.
-The last one, ``shift``, is used to shift the position of the galaxy relative to its nominal
+The next one, ``shift``, is used to shift the position of the galaxy relative to its nominal
 position on the sky.
 
 * ``flux`` = *float_value* (default = 1.0)  Set the flux of the object in ADU. Note that the component ``items`` in a 'Sum' can also have fluxes specified, which can be used as fractional fluxes (e.g. 0.6 for the disk and 0.4 for the bulge). Then the outer level profile can set the real flux for the whole thing.
@@ -233,6 +249,7 @@ position on the sky.
 * ``shear`` = *shear_value* (optional)  Shear the profile by a given shear.
 * ``shift`` = *pos_value* (optional)  Shift the centroid of the profile by a given amount relative to the center of the image on which it will be drawn.
 * ``skip`` = *bool_value* (default=False)  Skip this object.
+* ``sed`` = *SED* (optional)  If desired, you may set an SED to use for the object.  See `SED Field` below for details.
 
 There are also a few special attributes that are only allowed for the top-level ``gal`` field,
 not for objects that are part of an aggregate object like 'Sum', 'Convolution' or 'List'
@@ -246,7 +263,7 @@ and not for ``psf``.
 Custom Object Types
 -------------------
 
-To define your own object type, you will need to write an importable Python module 
+To define your own object type, you will need to write an importable Python module
 (typically a file in the current directory where you are running ``galsim``, but it could also
 be something you have installed in your Python distro) with a function that will be used
 to build a GalSim `GSObject`.
@@ -261,7 +278,7 @@ The build function should have the following functional form:
         Parameters:
             config:     The configuration dict of the object being built
             base:       The base configuration dict.
-            ignore:     A list of parameters that might be in the config dict, 
+            ignore:     A list of parameters that might be in the config dict,
                         but which may be ignored.  i.e. it is not an error for
                         these items to be present.
             gsparams:   An optional dict of items used to build a GSParams object
@@ -270,8 +287,8 @@ The build function should have the following functional form:
 
         Returns:
             gsobject, safe
-    
-        The returned gsobject is the built GSObject instance, and safe is a bool 
+
+        The returned gsobject is the built GSObject instance, and safe is a bool
         value that indicates whether the object is safe to reuse for future stamps
         (e.g. if all the parameters used to build this object are constant and will
         not change for later stamps).
@@ -283,7 +300,7 @@ The build function should have the following functional form:
         # The gsparams are passed around using a dict so they can be easily added to.
         # At this point, we would typically convert them to a regular GSParams
         # instance to use when building the GSObject.
-        if gsparams: 
+        if gsparams:
             gsparams = galsim.GSParams( **gsparams )
 
         # If you need a random number generator, this is the one to use.
@@ -298,7 +315,7 @@ The build function should have the following functional form:
 
 The ``base`` parameter is the original full configuration dict that is being used for running the
 simulation.  The ``config`` parameter is the local portion of the full dict that defines the object
-being built, e.g. ``config`` might be ``base['gal']`` or it might be farther down as an item in 
+being built, e.g. ``config`` might be ``base['gal']`` or it might be farther down as an item in
 the ``items`` attribute of a 'List' or 'Sum' object.
 
 Then, in the Python module, you need to register this function with some type name, which will
@@ -312,7 +329,7 @@ If the builder will use a particular input type, you should let GalSim know this
 the ``input_type`` when registering.  E.g. if the builder expects to use an input ``dict`` file
 to define some properties that will be used, you would register this fact using::
 
-    galsim.config.RegisterObjectType('CustomObject', BuildCustomObject, 
+    galsim.config.RegisterObjectType('CustomObject', BuildCustomObject,
                                      input_type='dict')
 
 The input object can be accessed in the build function as e.g.::
@@ -320,7 +337,7 @@ The input object can be accessed in the build function as e.g.::
     input_dict = galsim.config.GetInputObj('dict', config, base, 'CustomObject')
     ignore = ignore + ['num']
 
-The last argument is just used to help give sensible error messages if there is some problem, 
+The last argument is just used to help give sensible error messages if there is some problem,
 but it should typically be the name of the object type being built.  When you are using an
 input object, the 'num' attribute is reserved for indicating which of possibly several input
 objects (``dict`` in this case) to use.  You should not also define a num attribute that has
@@ -329,7 +346,7 @@ invalid parameters, you would thus want to add 'num' to the list.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_object.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_object.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml
@@ -363,3 +380,53 @@ It may also be helpful to look at the GalSim implementation of some of the inclu
 .. autofunction:: galsim.config.gsobject._BuildList
 
 .. autofunction:: galsim.config.gsobject._BuildOpticalPSF
+
+
+SED Field
+---------
+
+If you want your object to have a non-trivial wavelength dependence, you can include an
+``sed`` parameter to define its `SED`.  Currently, there is only one defined
+type to use for the SED, but the code is written in a modular way to allow for
+other types, including custom SED types.
+
+* 'FileSED' is the default type here, and you may omit the type name when using it.
+
+    * ``file_name`` = *str_value* (required)  The file to read in.
+    * ``wave_type`` = *str_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `SED`)
+    * ``flux_type`` = *str_value* (required)  The type of spectral density or dimensionless normalization used in the file ('flambda', 'fnu', 'fphotons' or '1' -- cf. `SED`)
+    * ``redshift`` = *float_value* (optional)  If given, shift the spectrum to the given redshift.  You can also specify the redshift as an object-level parameter if preferred.
+    * ``norm_flux_density`` = *float_value* (optional)  Set a normalization value of the flux density at a specific wavelength.  If given, ``norm_wavelength`` is required.
+    * ``norm_wavelength`` = *float_value* (optional)  The wavelength to use for the normalization flux density.
+    * ``norm_flux`` = *float_value* (optional)  Set a normalization value of the flux over a specific bandpass.  If given, ``norm_bandpass`` is required.
+    * ``norm_bandpass`` = *Bandpass* (optional)  The bandpass to use for the normalization flux.
+
+You may also define your own custom SED type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of `galsim.config.SEDBuilder`.
+
+.. autoclass:: galsim.config.SEDBuilder
+    :members:
+
+Then, as usual, you need to register this type using::
+
+    galsim.config.RegisterSEDType('CustomSED', CustomSEDBuilder())
+
+.. autofunction:: galsim.config.RegisterSEDType
+
+and tell the config parser the name of the module to load at the start of processing.
+
+.. code-block:: yaml
+
+    modules:
+        - my_custom_sed
+
+Then you can use this as a valid sed type:
+
+.. code-block:: yaml
+
+    gal:
+        ...
+        sed:
+            type: CustomSED
+            ...

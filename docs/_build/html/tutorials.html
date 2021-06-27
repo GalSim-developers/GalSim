@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Tutorials &mdash; GalSim 2.2.4 documentation</title>
+  <title>Tutorials &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Images and Related Concepts" href="image.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -122,7 +126,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -130,6 +134,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -164,18 +169,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Tutorials</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/tutorials.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -657,18 +664,18 @@ The flux and size distribution are thus realistic for an I &lt; 23.5 magnitude l
 </div>
 <div class="section" id="demo-12">
 <h2>Demo 12<a class="headerlink" href="#demo-12" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/3577f1fcb98c9d3f7c1fcc49c0cee67c/demo12.py"><code class="xref download docutils literal notranslate"><span class="pre">demo12.py</span></code></a></p>
-<p>This demo introduces the chromatic objects module galsim.chromatic, which handles wavelength-
-dependent profiles.  Three uses of this module are demonstrated:</p>
+<p><a class="reference download internal" download="" href="_downloads/3577f1fcb98c9d3f7c1fcc49c0cee67c/demo12.py"><code class="xref download docutils literal notranslate"><span class="pre">demo12.py</span></code></a>
+<a class="reference download internal" download="" href="_downloads/27d9afd615c6db1714d4dfa58784033a/demo12.yaml"><code class="xref download docutils literal notranslate"><span class="pre">demo12.yaml</span></code></a></p>
+<p>This demo introduces wavelength-dependent profiles.  Three kinds of chromatic profiles are
+demonstrated:</p>
 <ol class="arabic simple">
-<li><p>A chromatic object representing a De Vaucouleurs galaxy with an early-type SED at redshift 0.8 is
-created.  The galaxy is then drawn using the six LSST filter throughput curves to demonstrate
-that the galaxy is a g-band dropout.</p></li>
-<li><p>A two-component bulge+disk galaxy, in which the bulge and disk have different SEDs, is created
-and then drawn using LSST filters.</p></li>
-<li><p>A wavelength-dependent PSF is created to represent atmospheric effects of differential chromatic
-refraction, and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF is
-used to draw a single Sersic galaxy in the LSST filters.</p></li>
+<li><p>A chromatic object representing a DeVaucouleurs galaxy with an early-type SED at redshift 0.8.
+This galaxy is drawn using the six LSST filters, which demonstrate that the galaxy is a
+g-band dropout.</p></li>
+<li><p>A two-component bulge+disk galaxy, in which the bulge and disk have different SEDs.</p></li>
+<li><p>A wavelength-dependent atmospheric PSF, which includes the effect of differential chromatic
+refraction and the wavelength dependence of Kolmogorov-turbulence-induced seeing.  This PSF
+is convolved with a simple Exponential galaxy.</p></li>
 </ol>
 <p><strong>New features in the Python file</strong>:</p>
 <ul class="simple">
@@ -683,15 +690,23 @@ used to draw a single Sersic galaxy in the LSST filters.</p></li>
 <li><p>PSF = galsim.ChromaticAtmosphere(GSObject, base_wavelength, zenith_angle)</p></li>
 </ul>
 <p><strong>New features in the YAML file</strong>:</p>
-<p>This demo currently does not have a YAML version.  The config processing of chromatic objects
-has not been implemented yet.</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>sed<span class="classifier">file_name, wave_type, flux_type, norm_flux_density, norm_wavelength,</span></dt><dd><p>norm_flux, norm_bandpass</p>
+</dd>
+</dl>
+</li>
+<li><p>bandpass : filename, wave_type, thin</p></li>
+<li><p>gal : redshift</p></li>
+<li><p>psf_type : ChromaticAtmosphere (base_profile, base_wavelength, latitude, HA)</p></li>
+</ul>
 </div>
 <div class="section" id="demo-13">
 <h2>Demo 13<a class="headerlink" href="#demo-13" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference download internal" download="" href="_downloads/23a7fc820a00c8441d37d758545cd4d6/demo13.py"><code class="xref download docutils literal notranslate"><span class="pre">demo13.py</span></code></a></p>
 <p>This script introduces non-idealities arising from NIR detectors, in particular those that will be
-observed and accounted for in the WFIRST survey. Three such non-ideal effects are demonstrated, in
-the order in which they are introduced in the detectors:</p>
+observed and accounted for in the Roman Space Telescope. Three such non-ideal effects are
+demonstrated, in the order in which they are introduced in the detectors:</p>
 <ol class="arabic simple">
 <li><p>Reciprocity failure: Flux-dependent sensitivity of the detector.</p></li>
 <li><p>Non-linearity: Charge-dependent gain in converting from units of electrons to ADU.  Non-linearity
@@ -706,18 +721,18 @@ of noise at appropriate stages.</p>
 <ul class="simple">
 <li><p>image.quantize()</p></li>
 <li><p>obj = galsim.DeltaFunction(flux)</p></li>
-<li><p>galsim.wfirst.addReciprocityFailure(image)</p></li>
-<li><p>galsim.wfirst.applyNonlinearity(image)</p></li>
-<li><p>galsim.wfirst.applyIPC(image)</p></li>
-<li><p>galsim.wfirst.getBandpasses()</p></li>
-<li><p>galsim.wfirst.getPSF()</p></li>
-<li><p>galsim.wfirst.getWCS()</p></li>
-<li><p>galsim.wfirst.allowedPos()</p></li>
-<li><p>galsim.wfirst.getSkyLevel()</p></li>
+<li><p>galsim.roman.addReciprocityFailure(image)</p></li>
+<li><p>galsim.roman.applyNonlinearity(image)</p></li>
+<li><p>galsim.roman.applyIPC(image)</p></li>
+<li><p>galsim.roman.getBandpasses()</p></li>
+<li><p>galsim.roman.getPSF()</p></li>
+<li><p>galsim.roman.getWCS()</p></li>
+<li><p>galsim.roman.allowedPos()</p></li>
+<li><p>galsim.roman.getSkyLevel()</p></li>
 </ul>
 <p><strong>New features in the YAML file</strong>:</p>
 <p>This demo currently does not have a YAML version.  The config processing of chromatic objects and
-of the WFIRST functionality have not been implemented yet.</p>
+of the Roman functionality have not been implemented yet.</p>
 </div>
 <div class="section" id="advanced-simulations">
 <h2>Advanced Simulations<a class="headerlink" href="#advanced-simulations" title="Permalink to this headline">¶</a></h2>
@@ -771,29 +786,29 @@ is very close to a real simulation we actually used in DES for testing shear mea
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="image.html" class="btn btn-neutral float-right" title="Images and Related Concepts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="install_scons.html" class="btn btn-neutral float-left" title="Installing With SCons" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="image.html" class="btn btn-neutral float-right" title="Images and Related Concepts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="install_scons.html" class="btn btn-neutral float-left" title="Installing With SCons" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -801,7 +816,6 @@ is very close to a real simulation we actually used in DES for testing shear mea
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>The GSObject base class &mdash; GalSim 2.2.4 documentation</title>
+  <title>The GSObject base class &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Simple Profiles" href="simple.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -114,7 +118,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -122,6 +126,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -156,11 +161,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="sb.html">Surface Brightness Profiles</a> &raquo;</li>
         
@@ -169,7 +176,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/gsobject.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -393,8 +400,6 @@ acts like a wavelength-dependent <code class="docutils literal notranslate"><spa
 <code class="sig-name descname">_shear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shear</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.GSObject.shear" title="galsim.GSObject.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shear</span></code></a>, but without the overhead of sanity checks or other
 ways to input the <code class="docutils literal notranslate"><span class="pre">shear</span></code> value.</p>
-<p>This is only valid for <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.  For a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>, you must use the regular
-<a class="reference internal" href="#galsim.GSObject.shear" title="galsim.GSObject.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shear</span></code></a> method.</p>
 <p>Also, it won’t propagate any noise attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -408,15 +413,16 @@ ways to input the <code class="docutils literal notranslate"><span class="pre">s
 
 <dl class="py method">
 <dt id="galsim.GSObject._shift">
-<code class="sig-name descname">_shift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">offset</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shift" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_shift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dx</span></em>, <em class="sig-param"><span class="n">dy</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._shift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.GSObject.shift" title="galsim.GSObject.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">shift</span></code></a>, but without the overhead of sanity checks or option
-to give the shift as (dx,dy).</p>
-<p>This is only valid for <a class="reference internal" href="#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.  For a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>, you must use the regular
-<a class="reference internal" href="#galsim.GSObject.shift" title="galsim.GSObject.shift"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">shift</span></code></a> method.</p>
+to give the shift as a PositionD.</p>
 <p>Also, it won’t propagate any noise attribute.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>offset</strong> – The shift to apply, given as a <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a></p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dx</strong> – The x-component of the shift to apply</p></li>
+<li><p><strong>dy</strong> – The y-component of the shift to apply</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the shifted object.</p>
@@ -426,7 +432,7 @@ to give the shift as (dx,dy).</p>
 
 <dl class="py method">
 <dt id="galsim.GSObject._drawReal">
-<code class="sig-name descname">_drawReal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._drawReal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._drawReal" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_drawReal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">jac</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">(0.0, 0.0)</span></em>, <em class="sig-param"><span class="n">flux_scaling</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._drawReal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._drawReal" title="Permalink to this definition">¶</a></dt>
 <dd><p>A version of <a class="reference internal" href="#galsim.GSObject.drawReal" title="galsim.GSObject.drawReal"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawReal</span></code></a> without the sanity checks or some options.</p>
 <p>This is nearly equivalent to the regular <code class="docutils literal notranslate"><span class="pre">drawReal(image,</span> <span class="pre">add_to_image=False)</span></code>, but
 the image’s dtype must be either float32 or float64, and it must have a c_contiguous array
@@ -463,7 +469,7 @@ have in order to produce an image with the right S/N and total flux.</p>
 
 <dl class="py method">
 <dt id="galsim.GSObject._drawKImage">
-<code class="sig-name descname">_drawKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._drawKImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_drawKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">jac</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject._drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject._drawKImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>A version of <a class="reference internal" href="#galsim.GSObject.drawKImage" title="galsim.GSObject.drawKImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawKImage</span></code></a> without the sanity checks or some options.</p>
 <p>Equivalent to <code class="docutils literal notranslate"><span class="pre">drawKImage(image,</span> <span class="pre">add_to_image=False,</span> <span class="pre">recenter=False,</span> <span class="pre">add_to_image=False)</span></code>,
 but without the option to create the image automatically.</p>
@@ -474,6 +480,39 @@ have a c_contiguous array (image.iscontiguous must be True).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>image</strong> – The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> onto which to draw the k-space image. [required]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.GSObject.applyTo">
+<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon_array</span></em>, <em class="sig-param"><span class="n">local_wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.applyTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply this surface brightness profile as a convolution to an existing photon array.</p>
+<p>This method allows a GSObject to duck type as a PhotonOp, so one can apply a PSF
+in a photon_ops list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>photon_array</strong> – A <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> to apply the operator to.</p></li>
+<li><p><strong>local_wcs</strong> – A <a class="reference internal" href="wcs.html#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a> instance defining the local WCS for the current photon
+bundle in case the operator needs this information.  [default: None]</p></li>
+<li><p><strong>rng</strong> – A random number generator to use to effect the convolution.
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.GSObject.atRedshift">
+<code class="sig-name descname">atRedshift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">redshift</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.atRedshift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.atRedshift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different redshift.</p>
+<p>For regular GSObjects, this method doesn’t do anything aside from setting a <code class="docutils literal notranslate"><span class="pre">redshift</span></code>
+attribute with the given value.  But this allows duck typing with ChromaticObjects
+where this function will adjust the SED appropriately.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the object with the new redshift</p>
 </dd>
 </dl>
 </dd></dl>
@@ -698,7 +737,7 @@ the result should be wrapped before doing the inverse fft.</p>
 
 <dl class="py method">
 <dt id="galsim.GSObject.drawImage">
-<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ny</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bounds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">exptime</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gain</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">center</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_true_center</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_photons</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_extra_noise</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">poisson_flux</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sensor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_ops</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">n_subsample</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">maxN</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_photons</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">setup_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ny</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bounds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dtype</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">area</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">exptime</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gain</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">center</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">use_true_center</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n_photons</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_extra_noise</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">poisson_flux</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sensor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">photon_ops</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">n_subsample</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">maxN</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">save_photons</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">bandpass</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">setup_only</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">surface_ops</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draws an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the object.</p>
 <p>The drawImage() method is used to draw an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the current object using one of several
 possible rendering methods (see below).  It can create a new <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> or can draw onto an
@@ -904,10 +943,10 @@ sensors.</p>
 passed into the sensor object.  For instance, the photons may need to be given appropriate
 incidence angles according to the optics of the telescope (since this matters for where the
 photons are converted to electrons).  You may also need to give the photons wavelengths
-according to the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> of the object.  Such steps are specified in a <code class="docutils literal notranslate"><span class="pre">surface_ops</span></code>
+according to the <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> of the object.  Such steps are specified in a <code class="docutils literal notranslate"><span class="pre">photon_ops</span></code>
 parameter, which should be a list of any such operations you wish to perform on the photon
-array before passing them to the sensor.  See <a class="reference internal" href="surface.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a> and <a class="reference internal" href="surface.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> for
-two examples of such surface operators.</p>
+array before passing them to the sensor.  See <a class="reference internal" href="photon_ops.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a> and <a class="reference internal" href="photon_ops.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> for
+two examples of such photon operators.</p>
 <p>Since the sensor deals with photons, it is most natural to use this feature in conjunction
 with photon shooting (<code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>).  However, it is allowed with FFT methods too.
 But there is a caveat one should be aware of in this case.  The FFT drawing is used to
@@ -995,7 +1034,7 @@ Poisson statistics for <code class="docutils literal notranslate"><span class="p
 is False]</p></li>
 <li><p><strong>sensor</strong> – An optional <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> instance, which will be used to accumulate the
 photons onto the image. [default: None]</p></li>
-<li><p><strong>surface_ops</strong> – A list of operators that can modify the photon array that will be
+<li><p><strong>photon_ops</strong> – A list of operators that can modify the photon array that will be
 applied in order before accumulating the photons on the sensor.
 [default: ()]</p></li>
 <li><p><strong>n_subsample</strong> – The number of sub-pixels per final pixel to use for fft drawing when
@@ -1009,6 +1048,9 @@ at a time.  (Memory requirements are proportional to this number.)
 [default: None, which means no limit]</p></li>
 <li><p><strong>save_photons</strong> – If True, save the <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> as <code class="docutils literal notranslate"><span class="pre">image.photons</span></code>. Only valid if
 method is ‘phot’ or sensor is not None.  [default: False]</p></li>
+<li><p><strong>bandpass</strong> – This parameter is ignored, but is allowed to enable duck typing
+eqivalence between this method and the ChromaticObject.drawImage
+method. [default: None]</p></li>
 <li><p><strong>setup_only</strong> – Don’t actually draw anything on the image.  Just make sure the image
 is set up correctly.  This is used internally by GalSim, but there
 may be cases where the user will want the same functionality.
@@ -1023,7 +1065,7 @@ may be cases where the user will want the same functionality.
 
 <dl class="py method">
 <dt id="galsim.GSObject.drawKImage">
-<code class="sig-name descname">drawKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ny</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bounds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">recenter</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">setup_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawKImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">nx</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ny</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bounds</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">recenter</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">bandpass</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">setup_only</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawKImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draws the k-space (complex) <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the object, with bounds optionally set by input
 <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance.</p>
 <p>Normalization is always such that image(0,0) = flux.  Unlike the real-space <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a>
@@ -1059,6 +1101,13 @@ Note: This requires that <code class="docutils literal notranslate"><span class=
 bounds. [default: False]</p></li>
 <li><p><strong>recenter</strong> – Whether to recenter the image to put k = 0 at the center (True) or to
 trust the provided bounds (False).  [default: True]</p></li>
+<li><p><strong>bandpass</strong> – This parameter is ignored, but is allowed to enable duck typing
+eqivalence between this method and the ChromaticObject.drawImage
+method. [default: None]</p></li>
+<li><p><strong>setup_only</strong> – Don’t actually draw anything on the image.  Just make sure the image
+is set up correctly.  This is used internally by GalSim, but there
+may be cases where the user will want the same functionality.
+[default: False]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1069,7 +1118,7 @@ trust the provided bounds (False).  [default: True]</p></li>
 
 <dl class="py method">
 <dt id="galsim.GSObject.drawPhot">
-<code class="sig-name descname">drawPhot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">gain</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_photons</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_extra_noise</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">poisson_flux</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sensor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_ops</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">maxN</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">orig_center</span><span class="o">=</span><span class="default_value">galsim.PositionI(x=0, y=0)</span></em>, <em class="sig-param"><span class="n">local_wcs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawPhot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawPhot" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawPhot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image</span></em>, <em class="sig-param"><span class="n">gain</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">add_to_image</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">n_photons</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_extra_noise</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">poisson_flux</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sensor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">photon_ops</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">maxN</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">orig_center</span><span class="o">=</span><span class="default_value">galsim.PositionI(x=0, y=0)</span></em>, <em class="sig-param"><span class="n">local_wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_ops</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.drawPhot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.drawPhot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw this profile into an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> by shooting photons.</p>
 <p>This is usually called from the <a class="reference internal" href="#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> function, rather than called directly by the
 user.  In particular, the input image must be already set up with defined bounds.  The
@@ -1121,7 +1170,7 @@ Poisson statistics for <code class="docutils literal notranslate"><span class="p
 is False]</p></li>
 <li><p><strong>sensor</strong> – An optional <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> instance, which will be used to accumulate the
 photons onto the image. [default: None]</p></li>
-<li><p><strong>surface_ops</strong> – A list of operators that can modify the photon array that will be
+<li><p><strong>photon_ops</strong> – A list of operators that can modify the photon array that will be
 applied in order before accumulating the photons on the sensor.
 [default: ()]</p></li>
 <li><p><strong>maxN</strong> – Sets the maximum number of photons that will be added to the image
@@ -1322,6 +1371,72 @@ brightness.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the magnified object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.GSObject.makePhot">
+<code class="sig-name descname">makePhot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n_photons</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">max_extra_noise</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">poisson_flux</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">photon_ops</span><span class="o">=</span><span class="default_value">()</span></em>, <em class="sig-param"><span class="n">local_wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">surface_ops</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.makePhot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.makePhot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make photons for a profile.</p>
+<p>This is equivalent to drawPhot, except that the photons are not placed onto
+an image.  Instead, it just returns the PhotonArray.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The (x,y) positions returned are in the same units as the distance units
+of the GSObject being rendered.  If you want (x,y) in pixel coordinates, you
+should call this function for the profile in image coordinates:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">photons</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span><span class="o">.</span><span class="n">makePhot</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Or if you just want a simple pixel scale conversion from sky coordinates to image
+coordinates, you can instead do</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">photons</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">makePhot</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">photons</span><span class="o">.</span><span class="n">scaleXY</span><span class="p">(</span><span class="mf">1.</span><span class="o">/</span><span class="n">pixel_scale</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_photons</strong> – If provided, the number of photons to use for photon shooting.
+If not provided (i.e. <code class="docutils literal notranslate"><span class="pre">n_photons</span> <span class="pre">=</span> <span class="pre">0</span></code>), use as many photons as
+necessary to result in an image with the correct Poisson shot
+noise for the object’s flux.  For positive definite profiles, this
+is equivalent to <code class="docutils literal notranslate"><span class="pre">n_photons</span> <span class="pre">=</span> <span class="pre">flux</span></code>.  However, some profiles need
+more than this because some of the shot photons are negative
+(usually due to interpolants).  [default: 0]</p></li>
+<li><p><strong>rng</strong> – If provided, a random number generator to use for photon shooting,
+which may be any kind of <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object.  If <code class="docutils literal notranslate"><span class="pre">rng</span></code> is None, one
+will be automatically created, using the time as a seed.
+[default: None]</p></li>
+<li><p><strong>max_extra_noise</strong> – If provided, the allowed extra noise in each pixel when photon
+shooting.  This is only relevant if <code class="docutils literal notranslate"><span class="pre">n_photons=0</span></code>, so the number of
+photons is being automatically calculated.  In that case, if the image
+noise is dominated by the sky background, then you can get away with
+using fewer shot photons than the full <code class="docutils literal notranslate"><span class="pre">n_photons</span> <span class="pre">=</span> <span class="pre">flux</span></code>.
+Essentially each shot photon can have a <code class="docutils literal notranslate"><span class="pre">flux</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>, which increases
+the noise in each pixel.  The <code class="docutils literal notranslate"><span class="pre">max_extra_noise</span></code> parameter specifies
+how much extra noise per pixel is allowed because of this approximation.
+A typical value for this might be <code class="docutils literal notranslate"><span class="pre">max_extra_noise</span> <span class="pre">=</span> <span class="pre">sky_level</span> <span class="pre">/</span> <span class="pre">100</span></code>
+where <code class="docutils literal notranslate"><span class="pre">sky_level</span></code> is the flux per pixel due to the sky.  Note that
+this uses a “variance” definition of noise, not a “sigma” definition.
+[default: 0.]</p></li>
+<li><p><strong>poisson_flux</strong> – Whether to allow total object flux scaling to vary according to
+Poisson statistics for <code class="docutils literal notranslate"><span class="pre">n_photons</span></code> samples when photon shooting.
+[default: True, unless <code class="docutils literal notranslate"><span class="pre">n_photons</span></code> is given, in which case the default
+is False]</p></li>
+<li><p><strong>photon_ops</strong> – A list of operators that can modify the photon array that will be
+applied in order before accumulating the photons on the sensor.
+[default: ()]</p></li>
+<li><p><strong>local_wcs</strong> – The local wcs in the original image. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>a <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> with the data about the photons.</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1552,7 +1667,7 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt id="galsim.GSObject.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gsobject.html#GSObject.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GSObject.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
 </dd></dl>
 
@@ -1627,29 +1742,29 @@ object.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="simple.html" class="btn btn-neutral float-right" title="Simple Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="sb.html" class="btn btn-neutral float-left" title="Surface Brightness Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="simple.html" class="btn btn-neutral float-right" title="Simple Profiles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="sb.html" class="btn btn-neutral float-left" title="Surface Brightness Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1657,7 +1772,6 @@ object.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

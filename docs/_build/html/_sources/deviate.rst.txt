@@ -35,7 +35,7 @@ random number seed.  See the docstring of `BaseDeviate` for details.
     and then use that to seed the actual pseudo-rng that we will use.
 
     This means you can start the rngs for sequential images or even galaxies with sequential seed
-    values and there will not be any measureable correlations in the results.  This can greatly
+    values and there will not be any measurable correlations in the results.  This can greatly
     ease the ability to split work across multiple processes and still achieve deterministic
     results.
 
@@ -92,4 +92,3 @@ random number seed.  See the docstring of `BaseDeviate` for details.
     :show-inheritance:
 
     .. automethod:: galsim.DistDeviate.__call__
-

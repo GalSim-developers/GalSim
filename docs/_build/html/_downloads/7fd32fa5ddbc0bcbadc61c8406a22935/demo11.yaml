@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2019 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2021 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -120,6 +120,10 @@ psf :
     # tell GalSim that the pixel scale is 0.2 arcsec to match the pixel scale we use below.
     scale : *pixel_scale
 
+    # Make sure the PSF has flux=1.  Most PSF types have this by default, but InterpolatedImage
+    # doesn't, so set it here.
+    flux: 1
+
 # Define the galaxy profile
 gal :
 
@@ -170,14 +174,15 @@ gal :
     # catalog.  We employ this random selection by simply failing to specify an index or identifier
     # for a galaxy, in which case it chooses a random one.
 
-    shear :
-        # We again use PowerSpectrumShear, which is set up below using input : power_spectrum.
-        type : PowerSpectrumShear
-
-    magnification :
-        # We use PowerSpectrumMagnification for this, which is set up below using input :
-        # power_spectrum.
-        type : PowerSpectrumMagnification
+    lens:
+        # Here we have combine the shear and magnification into a single step, which is slightly
+        # more efficient to apply.
+        # The PowerSpectrumShear and PowerSpectrumMagnification types require the power_spectrum
+        # input type, which is set up below using input : power_spectrum.
+        shear :
+            type : PowerSpectrumShear
+        mu:
+            type : PowerSpectrumMagnification
 
     rotation :
         type : Random

@@ -13,7 +13,7 @@ The usual way to install GalSim is now (starting with version 2.0) simply::
 
     pip install galsim
 
-which will install the latest official release of GalSim. 
+which will install the latest official release of GalSim.
 For complete details, see
 
 .. toctree::
@@ -35,9 +35,9 @@ For more information, see
 Finally, there is a legacy option to use SCons, which was the only
 installation method prior to version 2.0.  This installation mode is still
 supported, but is not recommended unless you have difficulties with the pip
-or conda installation methods. 
+or conda installation methods.
 
-For details about this methos, see
+For details about this method, see
 
 .. toctree::
     :maxdepth: 1
@@ -126,4 +126,3 @@ learning the config file usage of GalSim.
 All demo scripts are designed to be run in the ``GalSim/examples`` directory.
 Some of them access files in subdirectories of the ``examples`` directory, so they
 would not work correctly from other locations.
-

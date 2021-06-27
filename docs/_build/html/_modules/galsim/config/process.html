@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.config.process &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.config.process &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.config.process</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -187,6 +194,7 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 
 <span class="c1"># Lots of function that used to be here are now in util, so import them back here in case users</span>
@@ -241,6 +249,7 @@
 <span class="sd">        list of config dicts</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Reading config file </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">config_file</span><span class="p">)</span>
     <span class="c1"># Determine the file type from the extension if necessary:</span>
     <span class="k">if</span> <span class="n">file_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="kn">import</span> <span class="nn">os</span>
@@ -262,10 +271,11 @@
         <span class="n">config</span> <span class="o">=</span> <span class="n">ReadJson</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
 
     <span class="n">ConvertNones</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Successfully read in config file.&#39;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">config</span></div>
 
-<div class="viewcode-block" id="ImportModules"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ImportModules">[docs]</a><span class="k">def</span> <span class="nf">ImportModules</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<div class="viewcode-block" id="ImportModules"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ImportModules">[docs]</a><span class="k">def</span> <span class="nf">ImportModules</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">gdict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Import any modules listed in config[&#39;modules&#39;].</span>
 
 <span class="sd">    These won&#39;t be brought into the running scope of the config processing, but any side</span>
@@ -276,21 +286,20 @@
 <span class="sd">        config:     The configuration dict.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">sys</span>
+    <span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">import_module</span>
+    <span class="k">if</span> <span class="n">gdict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">gdict</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span>
     <span class="k">if</span> <span class="s1">&#39;modules&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">module</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;modules&#39;</span><span class="p">]:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="c1"># Do this first to let user modules take precedence</span>
-                <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import &#39;</span><span class="o">+</span><span class="n">module</span><span class="p">)</span>
+                <span class="n">gdict</span><span class="p">[</span><span class="n">module</span><span class="p">]</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import galsim.&#39;</span><span class="o">+</span><span class="n">module</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-                    <span class="c1"># But do it again if everything fails to give a better error message.</span>
-                    <span class="c1"># Also make sure &#39;.&#39; in the path to load local modules.</span>
-                    <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
-                        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
-                    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import &#39;</span><span class="o">+</span><span class="n">module</span><span class="p">)</span></div>
-
+                <span class="c1"># Try adding &#39;.&#39; to path, in case loading a local module and &#39;.&#39; not present.</span>
+                <span class="k">if</span> <span class="s1">&#39;.&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="p">:</span>
+                    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+                    <span class="n">gdict</span><span class="p">[</span><span class="n">module</span><span class="p">]</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span></div>
 
 <div class="viewcode-block" id="ProcessTemplate"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessTemplate">[docs]</a><span class="k">def</span> <span class="nf">ProcessTemplate</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;If the config dict has a &#39;template&#39; item, read in the appropriate file and</span>
@@ -377,7 +386,6 @@
 <span class="sd">        the final config dict that was used.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
-    <span class="kn">import</span> <span class="nn">pprint</span>
     <span class="k">if</span> <span class="n">njobs</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid number of jobs&quot;</span><span class="p">,</span><span class="n">njobs</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">job</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -398,7 +406,8 @@
     <span class="c1"># Import any modules if requested</span>
     <span class="n">ImportModules</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Final config dict to be processed: </span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">pprint</span><span class="o">.</span><span class="n">pformat</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Final config dict to be processed: </span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                 <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="n">o</span><span class="p">),</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
 
     <span class="c1"># Warn about any unexpected fields.</span>
     <span class="n">unexpected</span> <span class="o">=</span> <span class="p">[</span> <span class="n">k</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">config</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">top_level_fields</span> <span class="p">]</span>
@@ -409,7 +418,7 @@
 
     <span class="c1"># Determine how many files we will be processing in total.</span>
     <span class="c1"># Usually, this is just output.nfiles, but different output types may define this differently.</span>
-    <span class="n">nfiles</span> <span class="o">=</span> <span class="n">GetNFiles</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">nfiles</span> <span class="o">=</span> <span class="n">GetNFiles</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;nfiles = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">nfiles</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">njobs</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -438,20 +447,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -459,7 +473,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

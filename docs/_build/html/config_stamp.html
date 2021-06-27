@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Config Stamp Field &mdash; GalSim 2.2.4 documentation</title>
+  <title>Config Stamp Field &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Config Image Field" href="config_image.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -106,6 +110,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#stamp-field-attributes">Stamp Field Attributes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#stamp-types">Stamp Types</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#custom-stamp-types">Custom Stamp Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#photon-operators-list">Photon Operators List</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
@@ -122,7 +127,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -130,6 +135,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -164,11 +170,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="config.html">The Config Module</a> &raquo;</li>
         
@@ -179,7 +187,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/config_stamp.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -230,6 +238,7 @@ object.  It is often unneccessary to explicitly include this top-level field.  T
 <li><p><code class="docutils literal notranslate"><span class="pre">skip</span></code> = <em>bool_value</em> (default=False)  Skip this stamp.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">quick_skip</span></code> = <em>bool_value</em> (default=False)  Skip this stamp before doing any work, even making the rng or calculating the position.  (Usually used by some other part of the processing to precalculate objects that are not worth doing for some reason.)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">obj_rng</span></code> = <em>bool_value</em> (default=True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">photon_ops</span></code>  See <a class="reference internal" href="#photon-operators-list"><span class="std std-ref">Photon Operators List</span></a> below.</p></li>
 </ul>
 </div>
 <div class="section" id="stamp-types">
@@ -475,8 +484,8 @@ Save this as base[‘stamp_offset’]</p></li>
 </ul>
 <p>&#64;param config       The configuration dict for the stamp field.
 &#64;param base         The base configuration dict.
-&#64;param xsize        The size of the stamp in the x-dimension. [may be None]
-&#64;param ysize        The size of the stamp in the y-dimension. [may be None]
+&#64;param xsize        The size of the stamp in the x-dimension. [may be 0 if unknown]
+&#64;param ysize        The size of the stamp in the y-dimension. [may be 0 if unknown]
 &#64;param image_pos    The position of the stamp in image coordinates. [may be None]
 &#64;param world_pos    The position of the stamp in world coordinates. [may be None]
 &#64;param logger       A logger object to log progress.</p>
@@ -689,7 +698,7 @@ in the config file:</p>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
 Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_stamp</span></code>,
-which will read your file and execute the registration command to add the buidler to the list
+which will read your file and execute the registration command to add the builder to the list
 of valid stamp types.</p>
 <p>Then you can use this as a valid stamp type:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">stamp</span><span class="p">:</span>
@@ -715,6 +724,158 @@ It specializes the setup, buildProfile, reject, and makeTasks functions.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="photon-operators-list">
+<h2>Photon Operators List<a class="headerlink" href="#photon-operators-list" title="Permalink to this headline">¶</a></h2>
+<p>When drawing with <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>, there are a number of operators you can apply to the
+photon array before accumulating the photons on the sensor.  You can specify these using
+<code class="docutils literal notranslate"><span class="pre">photon_ops</span></code> in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.  This directive should be a list of dicts, each
+specifying a <a class="reference internal" href="photon_ops.html#galsim.PhotonOp" title="galsim.PhotonOp"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonOp</span></code></a> in the order in which the operators should be applied to the photons.</p>
+<p>The photon operator types defined by GalSim are:</p>
+<ul>
+<li><p>‘WavelengthSampler’ assigns wavelengths to the photons based on an SED and the current Bandpass.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sed</span></code> = <em>SED</em> (required)  The SED to use.  To use the galaxy SED (which would be typical),
+you can use <code class="docutils literal notranslate"><span class="pre">&#64;gal.sed</span></code> for this.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">npoints</span></code> = <em>int_value</em> (optional)  The number of points <a class="reference internal" href="deviate.html#galsim.DistDeviate" title="galsim.DistDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DistDeviate</span></code></a> should use for its
+interpolation table.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FRatioAngles’ assigns incidence angles (in terms of their tangent, dxdz and dydz) to the
+photons randomly given an f/ratio and an obscuration.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">fratio</span></code> = <em>float_vale</em> (required)  The f/ratio of the telescope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obscuration</span></code> = <em>float_value</em> (default = 0.0)  The linear dimension of the central
+obscuration as a fraction of the aperture size.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘PhotonDCR’ adjusts the positions of the photons according to the effect of differential
+chromatic refraction in the atmosphere.  There are several ways one can define the
+parallactic angle needed to compute the DCR effect.  One of the following is required.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> and <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> alone, implicitly taking <code class="docutils literal notranslate"><span class="pre">parallactic_angle</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> along with either <code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field or using a
+<a class="reference internal" href="wcs.html#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a> so GalSim can determine the sky position from the image coordinates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HA</span></code> and <code class="docutils literal notranslate"><span class="pre">latitude</span></code> along with either <code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field or using a
+<a class="reference internal" href="wcs.html#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialWCS</span></code></a> so GalSim can determine the sky position from the image coordinates.</p></li>
+</ol>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">base_wavelength</span></code> = <em>float_value</em> (required)  The wavelength (in nm) for the fiducial
+photon positions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">scale_unit</span></code> = <em>str_value</em> (default = ‘arcsec’)  The scale unit for the photon positions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> = <em>float_value</em> (default = 0.0)  A power law index for wavelength-dependent
+seeing.  This should only be used if doing a star-only simulation.  It is not correct when
+drawing galaxies.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> = <em>angle_value</em> (optional; see above) the angle from the object to zenith.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code> = <em>angle_value</em> (option; see above) the parallactic angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> = <em>sky_value</em> (optional; see above) the celestial coordinates of the zenith.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HA</span></code> = <em>angle_value</em> (optional; see above) the local hour angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">latitude</span></code> = <em>angle_value</em> (optional; see above) the latitude of the telescope.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pressure</span></code> = <em>float_value</em> (default = 69.328) the pressure in kPa.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">temperature</span></code> = <em>float_value</em> (default = 293.15) the temperature in Kelvin.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H2O_pressure</span></code> = <em>float_value</em> (default = 1.067) the water vapor pressure in kPa.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FocusDepth’ adjusts the positions of the photons at the surface of the sensor to account for
+the nominal focus being either above or below the sensor surface.  The depth value is typically
+negative, since the best focus is generally somewhere in the bulk of the sensor (although for
+short wavelengths it is often very close to the surface).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">depth</span></code> = <em>float_value</em> (required)  The distance above the surface where the photons are
+nominally in focus.  A negative value means the focus in below the surface of the sensor.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Refraction’ adjusts the incidence angles to account for refraction at the surface of the
+sensor.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<blockquote>
+<div><p>If this is combined with FocusDepth, then the order of the two operators is important.
+If FocusDepth is before Refraction, then the depth refers to the distance the sensor
+would need to move for the bundle to be in focus at the surface.
+If FocusDepth is after Refraction, then the depth refers to the physical distance
+below the surface of the sensor where the photons actually come to a focus.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">index_ratio</span></code> = <em>float_value</em> (required) The ratio of the index of refraction of the
+sensor material to that of the air.</p></li>
+</ul>
+</div>
+</li>
+</ul>
+<p>You may also define your own custom <a class="reference internal" href="photon_ops.html#galsim.PhotonOp" title="galsim.PhotonOp"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonOp</span></code></a> type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.PhotonOpBuilder" title="galsim.config.PhotonOpBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.PhotonOpBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt id="galsim.config.PhotonOpBuilder">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">PhotonOpBuilder</code><a class="reference internal" href="_modules/galsim/config/photon_ops.html#PhotonOpBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.PhotonOpBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for building PhotonOp objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt id="galsim.config.PhotonOpBuilder.buildPhotonOp">
+<code class="sig-name descname">buildPhotonOp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/photon_ops.html#PhotonOpBuilder.buildPhotonOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.PhotonOpBuilder.buildPhotonOp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the PhotonOp based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the PhotonOp</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the constructed PhotonOp object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;CustomPhotonOp&#39;</span><span class="p">,</span> <span class="n">CustomPhotonOpBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt id="galsim.config.RegisterPhotonOpType">
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterPhotonOpType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon_op_type</span></em>, <em class="sig-param"><span class="n">builder</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/photon_ops.html#RegisterPhotonOpType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterPhotonOpType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a photon_op type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>photon_op_type</strong> – The name of the config type to register</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the PhotonOp object.  It should
+be an instance of a subclass of PhotonOpBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the PhotonOp builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">my_custom_photon_op</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid photon operator type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">stamp</span><span class="p">:</span>
+    <span class="nt">photon_ops</span><span class="p">:</span>
+        <span class="p p-Indicator">-</span>
+            <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">CustomPhotonOp</span>
+            <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -722,29 +883,29 @@ It specializes the setup, buildProfile, reject, and makeTasks functions.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="config_image.html" class="btn btn-neutral float-right" title="Config Image Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="config_objects.html" class="btn btn-neutral float-left" title="Config Objects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="config_image.html" class="btn btn-neutral float-right" title="Config Image Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="config_objects.html" class="btn btn-neutral float-left" title="Config Objects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -752,7 +913,6 @@ It specializes the setup, buildProfile, reject, and makeTasks functions.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

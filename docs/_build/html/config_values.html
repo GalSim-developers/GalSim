@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Config Values &mdash; GalSim 2.2.4 documentation</title>
+  <title>Config Values &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Special Fields" href="config_special.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -115,6 +119,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#shear-value">shear_value</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#pos-value">pos_value</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#sky-value">sky_value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#table-value">table_value</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#eval-type">Eval type</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#custom-value-types">Custom Value Types</a></li>
 </ul>
@@ -129,7 +134,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -137,6 +142,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -171,11 +177,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="config.html">The Config Module</a> &raquo;</li>
         
@@ -186,7 +194,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/config_values.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -213,6 +221,7 @@ have been designating using the following italic names:</p>
 <li><p><em>shear_value</em> corresponds to a GalSim <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> instance.  See <a class="reference internal" href="#shear-value"><span class="std std-ref">shear_value</span></a></p></li>
 <li><p><em>pos_value</em> corresponds to a GalSim <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> instance.  See <a class="reference internal" href="#pos-value"><span class="std std-ref">pos_value</span></a></p></li>
 <li><p><em>sky_value</em> corresponds to a GalSim <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> instance.  See <a class="reference internal" href="#sky-value"><span class="std std-ref">sky_value</span></a></p></li>
+<li><p><em>table_value</em> corresponds to a GalSim <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> instance.  See <a class="reference internal" href="#table-value"><span class="std std-ref">table_value</span></a></p></li>
 </ul>
 <p>Each of the Python types can be given as a constant value using the normal Python conventions
 for how to specify such a value.  The GalSim <em>angle_value</em> and <em>pos_value</em> also have
@@ -702,6 +711,7 @@ would normally be used for random booleans with a different probability of True.
 </div>
 <div class="section" id="angle-value">
 <h2>angle_value<a class="headerlink" href="#angle-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> values.</p>
 <p>Options are:</p>
 <ul>
 <li><p>A string consisting of a float followed by one of the following angle units: radians, degrees, hours, arcminutes, arcseconds. These may be abbreviated as rad, deg, hr, arcmin, arcsec. (e.g. ‘45 deg’)</p></li>
@@ -760,6 +770,7 @@ would normally be used for random booleans with a different probability of True.
 </div>
 <div class="section" id="shear-value">
 <h2>shear_value<a class="headerlink" href="#shear-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> values.</p>
 <p>Options are:</p>
 <ul>
 <li><p>A dict with:</p>
@@ -884,6 +895,7 @@ observer (perhaps within the telescope).</p>
 </div>
 <div class="section" id="pos-value">
 <h2>pos_value<a class="headerlink" href="#pos-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> values, usually for a location on the image.</p>
 <p>Options are:</p>
 <ul>
 <li><p>A string consisting of two floats separated by a comma and possibly white space. (e.g. ‘1.7, 3.0’)</p></li>
@@ -957,12 +969,13 @@ preferentially pick locations near the center of the circle.</p>
 </div>
 <div class="section" id="sky-value">
 <h2>sky_value<a class="headerlink" href="#sky-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> values for a location in the sky.</p>
 <p>Options are:</p>
 <ul>
 <li><p>A dict with:</p>
 <blockquote>
 <div><ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  There is currenly only one valid option:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  There is currently only one valid option:</p>
 <blockquote>
 <div><ul>
 <li><p>‘RaDec’ Specify x and y separately.</p>
@@ -970,6 +983,56 @@ preferentially pick locations near the center of the circle.</p>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">ra</span></code> = <em>angle_value</em> (required)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dec</span></code> = <em>angle_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="table-value">
+<h2>table_value<a class="headerlink" href="#table-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> values to provide some kind of unary function, although in some
+cases you may be able to provide a regular function instead, e.g. via an Eval type using a lambda
+function.</p>
+<p>Options are:</p>
+<ul>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘File’  Read a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> from a file.  cf. <a class="reference internal" href="table.html#galsim.LookupTable.from_file" title="galsim.LookupTable.from_file"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LookupTable.from_file</span></code></a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interpolant</span></code> = <em>str_value</em> (default = ‘spline’) Which interpolant to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_log</span></code> = <em>bool_value</em> (default = False) Whether to use log(x) for the abscissae.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">f_log</span></code> = <em>bool_value</em> (default = False) Whether to use log(f) for the ordinates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitude</span></code> = <em>float_value</em> (default = 1.0) An optional scaling to apply to the
+ordinates.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>table_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Current’  Use the current value of some other item in the config file.  (See the description of this for <em>float_value</em> for more details.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -1004,15 +1067,6 @@ image, which GalSim will make available for you for any
 position on the image.</p>
 <p>Variables that GalSim will provide for you to use:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">world_pos</span></code> = the position of the object in world coordinates relative to the center of the image.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>Available if image <code class="docutils literal notranslate"><span class="pre">type</span></code> is ‘Tiled’ or ‘Scattered’</p></li>
-<li><p>Available if <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> is explicitly given in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.</p></li>
-<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance</p></li>
-</ul>
-</div></blockquote>
-</li>
 <li><p><code class="docutils literal notranslate"><span class="pre">image_pos</span></code> = the position of the object on the image in pixels.</p>
 <blockquote>
 <div><ul class="simple">
@@ -1022,10 +1076,45 @@ position on the image.</p>
 </ul>
 </div></blockquote>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">image_center</span></code> = the center of the image in pixels.  This is the position on the image that corresponds to <code class="docutils literal notranslate"><span class="pre">world_pos</span> <span class="pre">=</span> <span class="pre">(0,0)</span></code>.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_pos</span></code> = the position of the object in world coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Available if image <code class="docutils literal notranslate"><span class="pre">type</span></code> is ‘Tiled’ or ‘Scattered’</p></li>
+<li><p>Available if <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> is explicitly given in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.</p></li>
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance if the wcs is a <a class="reference internal" href="wcs.html#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.wcs.EuclideanWCS</span></code></a> or a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> if the wcs is a <a class="reference internal" href="wcs.html#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> = the position of the object in sky coordinates (RA, Dec)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Available if <code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> is explicitly given in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.</p></li>
+<li><p>Available if <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> is defined (as per above) and the WCS is a CelestialWCS.</p></li>
+<li><p>A <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">uv_pos</span></code> = the position of the object in a tangent plane projection relative to <code class="docutils literal notranslate"><span class="pre">world_center</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Available if either image_pos or world_pos is defined and the wcs is defined.</p></li>
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_center</span></code> = the center of the image in pixels.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_center</span></code> = the world position of <code class="docutils literal notranslate"><span class="pre">image_center</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Computed automatically from <code class="docutils literal notranslate"><span class="pre">image_center</span></code> and the wcs.</p></li>
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance if the wcs is a <a class="reference internal" href="wcs.html#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.wcs.EuclideanWCS</span></code></a> or a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> if the wcs is a <a class="reference internal" href="wcs.html#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a>.</p></li>
+<li><p>May also be provided directly if you want something different for this, by specifically including a <code class="docutils literal notranslate"><span class="pre">world_center</span></code> item in the <code class="docutils literal notranslate"><span class="pre">image</span></code> field.  In this case, it should be a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> value.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -1065,6 +1154,13 @@ position on the image.</p>
 </ul>
 </div></blockquote>
 </li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bandpass</span></code> = the bandpass of the current image if defined.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Bandpass</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
 <li><p><code class="docutils literal notranslate"><span class="pre">file_num</span></code> = the number of the file currently being worked on.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">image_num</span></code> = the number of the image currently being worked on.</p>
 <blockquote>
@@ -1090,12 +1186,16 @@ position on the image.</p>
 </div></blockquote>
 </li>
 </ul>
+</div>
+<div class="section" id="available-modules">
+<h3>Available Modules<a class="headerlink" href="#available-modules" title="Permalink to this headline">¶</a></h3>
 <p>Python modules that GalSim will import for you to use:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">math</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code> or <code class="docutils literal notranslate"><span class="pre">np</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">os</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">galsim</span></code> (obviously)</p></li>
+<li><p>Anything in the <code class="docutils literal notranslate"><span class="pre">modules</span></code> field of your configuration file.</p></li>
 </ul>
 </div>
 <div class="section" id="user-defined-variables">
@@ -1132,6 +1232,9 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
 <li><p>‘a’ = <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a></p></li>
 <li><p>‘p’ = <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a></p></li>
 <li><p>‘g’ = <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Shear</span></code></a></p></li>
+<li><p>‘t’ = <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.LookupTable</span></code></a></p></li>
+<li><p>‘d’ = <code class="docutils literal notranslate"><span class="pre">dict</span></code>  (This takes a dict as a literal, rather than evaluating it.)</p></li>
+<li><p>‘l’ = <code class="docutils literal notranslate"><span class="pre">list</span></code>  (Similarly, this allows for a literal list in the config file.)</p></li>
 </ul>
 </div>
 <div class="section" id="the-eval-variables-field">
@@ -1158,6 +1261,26 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
     <span class="nt">theta </span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span> <span class="nv">Random</span> <span class="p p-Indicator">}</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="module-defined-variables">
+<h3>Module-defined variables<a class="headerlink" href="#module-defined-variables" title="Permalink to this headline">¶</a></h3>
+<p>If you are using any user-defined modules (loaded in the <code class="docutils literal notranslate"><span class="pre">modules</span></code> field), then they are
+allowed to add to the list of <a class="reference internal" href="#preset-variables"><span class="std std-ref">Preset variables</span></a>. The mechanism for this is to append items
+to the list <code class="docutils literal notranslate"><span class="pre">galsim.config.eval_base_variables</span></code>.  This list includes all of the variables
+that an Eval type will load into the local namespace before evaluating.  For instance,
+if a user-defined module wants to make available a variable called, say, <code class="docutils literal notranslate"><span class="pre">coadd_wcs</span></code>,
+then the module could add this name to the list of avilable variables as folllows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_base_variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;coadd_wcs&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should be done at module scope, since you only want to add it once.  So probably best
+to add it when your module is imported.</p>
+<p>Then in some processing step, you could set this variable as</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;coadd_wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">coadd_wcs</span>
+</pre></div>
+</div>
+<p>Then any subsequent Eval field could use this variable as a local variable, just like the
+ones listed in <a class="reference internal" href="#preset-variables"><span class="std std-ref">Preset variables</span></a>.</p>
 </div>
 <div class="section" id="shorthand-notation">
 <h3>Shorthand notation<a class="headerlink" href="#shorthand-notation" title="Permalink to this headline">¶</a></h3>
@@ -1304,7 +1427,7 @@ of valid value types.</p>
 <p>For examples of custom values, see:</p>
 <ul class="simple">
 <li><p><a class="reference download internal" download="" href="_downloads/1737a601c25c75e9f9b0d094623726b3/log_normal.py"><code class="xref download docutils literal notranslate"><span class="pre">log_normal.py</span></code></a></p></li>
-<li><p><a class="reference download internal" download="" href="_downloads/f14611d6dade51ef820f931656f171cf/hsm_shape.py"><code class="xref download docutils literal notranslate"><span class="pre">hsm_shape.py</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/bc94768c9d2f9706b2d023770899b648/hsm_shape_measure.py"><code class="xref download docutils literal notranslate"><span class="pre">hsm_shape_measure.py</span></code></a></p></li>
 <li><p><a class="reference download internal" download="" href="_downloads/63439d5c29c2bf8116006cbfd597cf1e/excluded_random.py"><code class="xref download docutils literal notranslate"><span class="pre">excluded_random.py</span></code></a></p></li>
 <li><p><a class="reference download internal" download="" href="_downloads/f7da6f537e4ea271cac073d7468fe0ad/great3_reject.py"><code class="xref download docutils literal notranslate"><span class="pre">great3_reject</span></code></a></p></li>
 </ul>
@@ -1316,29 +1439,29 @@ of valid value types.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="config_special.html" class="btn btn-neutral float-right" title="Special Fields" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="config_output.html" class="btn btn-neutral float-left" title="Config Output Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="config_special.html" class="btn btn-neutral float-right" title="Special Fields" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="config_output.html" class="btn btn-neutral float-left" title="Config Output Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1346,7 +1469,6 @@ of valid value types.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -9,7 +9,7 @@ Image Field Attributes
 
 Some attributes that are allowed for all image types are:
 
-* ``pixel_scale`` = *float_value* (default = 1.0)  The pixel scale, typically taken to be arcsec/pixel. Most size parameters for the profiles are taken to be specified in arcsec. If you would rather specify everything in pixels, just leave off the pixel_scale (or set it to 1.0) and then 1 pixel = 1 arcsec, so everything should work the way you expect.  Or if you want all your units to be degrees or radians or something else, then just set this pixel scale in the same units. 
+* ``pixel_scale`` = *float_value* (default = 1.0)  The pixel scale, typically taken to be arcsec/pixel. Most size parameters for the profiles are taken to be specified in arcsec. If you would rather specify everything in pixels, just leave off the pixel_scale (or set it to 1.0) and then 1 pixel = 1 arcsec, so everything should work the way you expect.  Or if you want all your units to be degrees or radians or something else, then just set this pixel scale in the same units.
 * ``sky_level`` = *float_value* (default = 0.0; only one of ``sky_level`` and ``sky_level_pixel`` is allowed)  The background level of the image in ADU/arcsec^2
 * ``sky_level_pixel`` = *float_value* (default = 0.0; only one of ``sky_level`` and ``sky_level_pixel`` is allowed)  The background level of the image in ADU/pixel
 * ``index_convention`` = *str_value* (default = 'FITS')  The convention for what to call the lower left pixel of the image.  The standard FITS convention is to call this pixel (1,1).  However, this can be counter-intuitive to people used to C or python indexing.  So if ``index_convention`` is 'C' or 'python' or '0', then the image origin will be considered (0,0) instead.  (While unnecessary to specify explicitly since it is the default, the (1,1) convention may be called 'FITS', 'Fortran' or '1'.)
@@ -18,6 +18,9 @@ Some attributes that are allowed for all image types are:
     * If ``random_seed`` is a list, then multiple random number generators will be available for each object according to the multiple seed specifications.  This is normally used to have one random number repeat with some cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure).  Whenever you want to use an rng other than the first one, add ``rng_num`` to the field and set it to the number of the rng you want to use in this list.
 
 * ``nproc`` = *int_value*  (default = 1)  Specify the number of processors to use when drawing images. If nproc <= 0, then this means to try to automatically figure out the number of cpus and use that.
+* ``wcs`` See `WCS Field` below.
+* ``bandpass`` See `Bandpass Field` below.
+* ``sensor``  See `Sensor Field` below.
 
 Image Types
 -----------
@@ -36,7 +39,7 @@ The image types defined by GalSim are:
     * ``world_pos`` = *pos_value* The position of the object in world coordinates.  For the Single image type, this is unconnected to the object rendering on the image, which is always at the center.  However, it may be provided as something that other calculations need to access.  e.g. shear from a PowerSpectrum or NFWHalo.
     * ``image_pos`` = *pos_value* The nominal position on the image at which to center of the object.  For the Single image type, the object is always placed as close as possible to the center of the image (unless an explicit offset is specified), but the bounds will be adjusted so that position is equal to ``image_pos``.
 
-* 'Tiled' The image consists of a tiled array of postage stamps. 
+* 'Tiled' The image consists of a tiled array of postage stamps.
 
     * ``nx_tiles`` = *int_value* (required)
     * ``ny_tiles`` = *int_value* (required)
@@ -58,7 +61,7 @@ The image types defined by GalSim are:
     * ``stamp_xsize`` = *int_value* (default = ``stamp_size``)
     * ``stamp_ysize`` = *int_value* (default = ``stamp_size``)
     * ``world_pos`` = *pos_value* (only one of ``world_pos`` and ``image_pos`` is allowed) The position in world coordinates relative to the center of the image at which to center of the object.
-    * ``image_pos`` = *pos_value* (only one of ``world_pos`` and ``image_pos`` is allowed; default if neither is given isi to use type 'XY' with ``x`` = 'Random' from 1 .. ``xsize``, ``y`` = 'Random' from 1 .. ``ysize``)  The position on the image at which to center of the object.
+    * ``image_pos`` = *pos_value* (only one of ``world_pos`` and ``image_pos`` is allowed; default if neither is given is to use type 'XY' with ``x`` = 'Random' from 1 .. ``xsize``, ``y`` = 'Random' from 1 .. ``ysize``)  The position on the image at which to center of the object.
 
 Custom Image Types
 ------------------
@@ -93,7 +96,7 @@ cases where it would be useful for custom image types.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_image.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_image.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml
@@ -103,7 +106,7 @@ in the config file:
 
 This ``modules`` field is a list, so it can contain more than one module to load if you want.
 Then before processing anything, the code will execute the command ``import my_custom_image``,
-which will read your file and execute the registration command to add the buidler to the list
+which will read your file and execute the registration command to add the builder to the list
 of valid image types.
 
 Then you can use this as a valid image type:
@@ -205,12 +208,12 @@ We don't currently have any examples of custom noise types, but it may be helpfu
     :show-inheritance:
 
 
-WCS
----
+WCS Field
+---------
 
 The ``pixel_scale`` attribute mentioned above is the usual way to define the connection between
 pixel coordinates and sky coordinates.  However, one can define a more complicated relationship,
-which is known as a World Coordinate System (WCS) if desired.  To do this, use the ``wcs`` 
+which is known as a World Coordinate System (WCS) if desired.  To do this, use the ``wcs``
 attribute instead of the ``pixel_scale`` attribute.  This should be a dict with a ``type``
 attribute that defines what kind of WCS to use.  The wcs types that are defined by GalSim are:
 
@@ -237,7 +240,7 @@ attribute that defines what kind of WCS to use.  The wcs types that are defined 
     * ``xfunc`` = *str_value* (optional) A string that can be turned into the function x(u,v) of the inverse transformation via the python command ``eval('lambda u,v : ' + xfunc)``.
     * ``yfunc`` = *str_value* (optional) A string that can be turned into the function y(u,v) of the inverse transformation via the python command ``eval('lambda u,v : ' + yfunc)``.
 
-* 'RaDecFunction' implements an arbitrary transformation from image coordinates (x,y) to celestial coordinates (ra,dec) via two functions ra(x,y) and dec(x,y).  
+* 'RaDecFunction' implements an arbitrary transformation from image coordinates (x,y) to celestial coordinates (ra,dec) via two functions ra(x,y) and dec(x,y).
 
     * ``ra_func`` = *str_value* (required) A string that can be turned into the function ra(x,y) via the python command ``eval('lambda x,y : ' + rafunc)``.
     * ``dec_func`` = *str_value* (required) A string that can be turned into the function dec(x,y) via the python command ``eval('lambda x,y : ' + decfunc)``.
@@ -316,4 +319,113 @@ the ``[source]`` links):
 .. autoclass:: galsim.config.ListWCSBuilder
     :show-inheritance:
 
+Bandpass Field
+--------------
+
+If you want to draw chromatic objects, then you also need to define the `Bandpass` to use
+for the image in a ``image.bandpass`` field.  Currently, there is only one defined
+type to use for the Bandpass, but the code is written in a modular way to allow for
+other types, including custom Bandpass types.
+
+* 'FileBandpass' is the default type here, and you may omit the type name when using it.
+
+    * ``file_name`` = *str_value* (required)  The file to read in.
+    * ``wave_type`` = *str_value* (required)  The unit of the wavelengths in the file ('nm' or 'Ang' or variations on these -- cf. `Bandpass`)
+    * ``blue_limit`` = *float_value* (optional)  Hard cut off on the blue side.
+    * ``red_limit`` = *float value* (optional)  Hard cut off on the red side.
+    * ``zeropoint`` = *float_value* (optional)  The zero-point to use.
+    * ``thin`` = *float_value* (optional)  If given, call `Bandpass.thin` on the Bandpass after reading in from the file, using this for the ``rel_err``.
+
+You may also define your own custom Bandpass type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of `galsim.config.BandpassBuilder`.
+
+.. autoclass:: galsim.config.BandpassBuilder
+    :members:
+
+Then, as usual, you need to register this type using::
+
+    galsim.config.RegisterBandpassType('CustomBandpass', CustomBandpassBuilder())
+
+.. autofunction:: galsim.config.RegisterBandpassType
+
+and tell the config parser the name of the module to load at the start of processing.
+
+.. code-block:: yaml
+
+    modules:
+        - my_custom_bandpass
+
+Then you can use this as a valid bandpass type:
+
+.. code-block:: yaml
+
+    image:
+        bandpass:
+            type: CustomBandpass
+            ...
+
+Sensor Field
+------------
+
+When drawing with ``method='phot'``, one can use a `Sensor` to model the conversion of photons
+to electrons and then the accumulation of these electrons in the pixels.
+
+The sensor types defined by GalSim are:
+
+* 'Simple' is the default, which does nothing but accumulate the photons at their (x,y)
+  positions onto the corresponding pixels in the image.  Typically, in this case, you would
+  omit the ``sensor`` field entirely.
+
+* 'Silicon' models a silicon-based CCD sensor that converts photons to electrons at a wavelength-
+  dependent depth (probabilistically) and drifts them down to the wells, properly taking
+  into account the repulsion of previously accumulated electrons (known as the brighter-fatter
+  effect).  See `SiliconSensor` for details.
+
+    * ``name`` = *str_value* (default = 'lsst_itl_50_8')  The naem of the sensor model to use.
+      See `SiliconSensor` for the other allowed values.
+    * ``strength`` = *float_value* (default = 1.0)  The strength of the brighter-fatter effect
+      relative to the nominal value in the model.
+    * ``diffusion_factor`` = *float_value* (default = 1.0)  The magnitude of the diffusion
+      relative to the nominal value in the model.
+    * ``qdist`` = *int_value* (default = 3)  The maximum number of pixels away to calculate the
+      distortions due to charge accumulation.
+    * ``nrecalc`` = *int_value* (default = 10000)  The number of electrons to accumulate before
+      recalculating the distortion of the pixel shapes.
+    * ``treering_func`` = *table_value* (optional) A `LookupTable` giving the tree ring pattern
+      as a radial function f(r).
+    * ``treering_center`` = *pos_value* (optional) The position of the center of the tree ring
+      pattern in image coordinates (which may be off the edge of the image).
+    * ``transpose`` = *bool_value* (default = False) Whether to transpose the meaning of (x,y)
+      for the purpose of the brighter-fatter effect.  This changes which direction the BFE
+      causes more elongation.
+
+You may also define your own custom `Sensor` type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of `galsim.config.SensorBuilder`.
+
+.. autoclass:: galsim.config.SensorBuilder
+    :members:
+
+Then, as usual, you need to register this type using::
+
+    galsim.config.RegisterSensorType('CustomSensor', CustomSensorBuilder())
+
+.. autofunction:: galsim.config.RegisterSensorType
+
+and tell the config parser the name of the module to load at the start of processing.
+
+.. code-block:: yaml
+
+    modules:
+        - my_custom_sensor
+
+Then you can use this as a valid sensor type:
+
+.. code-block:: yaml
+
+    image:
+        sensor:
+            type: CustomSensor
+            ...
 

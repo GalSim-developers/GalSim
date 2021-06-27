@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Installing With Pip &mdash; GalSim 2.2.4 documentation</title>
+  <title>Installing With Pip &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installing With Conda" href="install_conda.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -107,7 +111,6 @@
 <li class="toctree-l4"><a class="reference internal" href="#installing-eigen-with-apt-get">Installing Eigen with apt-get</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#installing-eigen-with-fink">Installing Eigen with fink</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#installing-eigen-with-macports">Installing Eigen with MacPorts</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#using-eigency">Using eigency</a></li>
 </ul>
 </li>
 </ul>
@@ -132,7 +135,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -140,6 +143,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -174,11 +178,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="install.html">Installation Instructions</a> &raquo;</li>
         
@@ -187,7 +193,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/install_pip.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -238,7 +244,7 @@ for you.  See section 2 below if you have trouble with any of these.</p>
 <p>FFTW is not directly pip installable, so if the above installation fails,
 you may need to install it separately. See section 3 below for more details
 about how to do this.</p>
-<p>Fianlly, a version of Eigen can be installed by pip, but you might prefer to
+<p>Finally, a version of Eigen can be installed by pip, but you might prefer to
 install this manually.  See section 4 below for more details.</p>
 </div>
 <div class="section" id="installing-python-dependencies">
@@ -286,7 +292,7 @@ add <code class="docutils literal notranslate"><span class="pre">--user</span></
 <div class="section" id="installing-fftw">
 <h2>Installing FFTW<a class="headerlink" href="#installing-fftw" title="Permalink to this headline">¶</a></h2>
 <p>GalSim uses FFTW (The Fastest Fourier Transform in the West) for performing
-fast fourier transforms.</p>
+fast Fourier transforms.</p>
 <p>We require FFTW version &gt;= 3.0.  Most tests have been done with FFTW 3.3.7,
 so if you have trouble with an earlier version, try upgrading to 3.3.7 or later.</p>
 <div class="section" id="installing-fftw-yourself">
@@ -391,18 +397,17 @@ to look here, so there is nothing additional you need to do.</p>
 <h2>Installing Eigen<a class="headerlink" href="#installing-eigen" title="Permalink to this headline">¶</a></h2>
 <p>GalSim uses Eigen for the C++-layer linear algebra calculations.  It is a
 header-only library, which means that nothing needs to be compiled to use it.
-You can download the header files yourself, but if you do not, then we use
-the pip-installable eigency module, which bundles the header files in their
-installed python directory.  So usually, this dependency should require no
-work on your part.</p>
-<p>However, it might become useful to install Eigen separately from eigency
-e.g. if you want to upgrade to a newer version of Eigen than the one that is
-bundled with eigency.  (Eigen 3.2.8 is bundled with eigency 1.77.)  Therefore,
-this section describes several options for how to obtain and install Eigen.</p>
-<p>We require Eigen version &gt;= 3.0.  Most tests have been done with Eigen 3.2.8
-or 3.3.4, but we have also tested on 3.0.4, so probably any 3.x version will
-work.  However, if you have trouble with another version, try upgrading to
-3.2.8 or later.</p>
+You can download the header files yourself, but if you do not, then the
+installation script will download it for you automatically.  So usually,
+this dependency should require no work on your part.</p>
+<p>However, if you have a version of Eigen already installed on your system,
+you may want to use that.  If the right directory is in your path for
+include files (C_INCLUDE_PATH), it should find it.  If not, you may specify
+the right directory to use by setting the EIGEN_DIR environment variable.</p>
+<p>We require Eigen version &gt;= 3.0.  The version we download automatically is
+3.3.4, so that version is known to work.  We have also tested with versions
+3.2.8 and 3.0.4, so probably any 3.x version will work.  However, if you have
+trouble with another version, try upgrading to 3.3.4 or later.</p>
 <p>Note: Prior to version 2.0, GalSim used TMV for the linear algebra back end.
 This is still an option if you prefer (e.g. it may be faster for some use
 cases, since it can use an optimized BLAS library on your system), but to
@@ -495,28 +500,6 @@ to look here, so there is nothing additional you need to do.</p>
 <p>This will put it into the /opt/local/include directory on your system. GalSim
 knows to look here, so there is nothing additional you need to do.</p>
 </div>
-<div class="section" id="using-eigency">
-<h3>Using eigency<a class="headerlink" href="#using-eigency" title="Permalink to this headline">¶</a></h3>
-<p>Eigency is a pip-installable module that bundles the Eigen header files, so it
-can also be used to install these files on your system.  Indeed, as mentioned
-above, we will use eigency automatically if Eigen is not found in one of the
-above locations.  So the above installations will take precendence, but
-eigency should work as a fall-back.</p>
-<p>Note: At the time of this writing, installation of eigency depends on having
-cython already installed.  I thought I fixed this with PR #26, but it was
-not quite complete.  There is now an open PR #27, which I believe will
-finish making pip install eigency work, even if you do not have cython
-installed.  But for now, you can do:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">cython</span>
-<span class="n">pip</span> <span class="n">install</span> <span class="n">eigency</span>
-</pre></div>
-</div>
-<p>(in that order) to get it to work.  Alternatively, you can use my (MJ) version
-which is the source of PR #27.  This is pip installable as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rmjarvis</span><span class="o">.</span><span class="n">eigency</span>
-</pre></div>
-</div>
-</div>
 </div>
 </div>
 
@@ -525,29 +508,29 @@ which is the source of PR #27.  This is pip installable as:</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="install_conda.html" class="btn btn-neutral float-right" title="Installing With Conda" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="install.html" class="btn btn-neutral float-left" title="Installation Instructions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="install_conda.html" class="btn btn-neutral float-right" title="Installing With Conda" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="install.html" class="btn btn-neutral float-left" title="Installation Instructions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -555,7 +538,6 @@ which is the source of PR #27.  This is pip installable as:</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

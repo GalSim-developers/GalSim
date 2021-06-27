@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.photon_array &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.photon_array &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.photon_array</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -188,10 +195,13 @@
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span><span class="p">,</span> <span class="n">BaseDeviate</span>
+<span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">SED</span>
+<span class="kn">from</span> <span class="nn">.bandpass</span> <span class="kn">import</span> <span class="n">Bandpass</span>
+<span class="kn">from</span> <span class="nn">.celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
 <span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span>
-<span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span>
+<span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">Angle</span><span class="p">,</span> <span class="n">AngleUnit</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimUndefinedBoundsError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">galsim_warn</span>
 
 <span class="c1"># Add on more methods in the python layer</span>
 
@@ -203,7 +213,7 @@
 <span class="sd">    typically constructed as the return value of the `GSObject.shoot` method.</span>
 <span class="sd">    At this point, the photons only have x,y,flux values.</span>
 
-<span class="sd">    Then there are a number of `Surface Operators`, which perform various modifications to the</span>
+<span class="sd">    Then there are a number of `Photon Operators`, which perform various modifications to the</span>
 <span class="sd">    photons such as giving them wavelengths (`WavelengthSampler` or inclination angles</span>
 <span class="sd">    (`FRatioAngles`) or move them around according to the effect of differential chromatic</span>
 <span class="sd">    refraction (DCR; `PhotonDCR`).</span>
@@ -214,11 +224,20 @@
 <span class="sd">    A PhotonArray instance has the following attributes, each of which is a numpy array:</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">        x:          The incidence x position at the top of the detector</span>
-<span class="sd">        y:          The incidence y position at the top of the detector</span>
-<span class="sd">        flux:       The flux of the photons</span>
-<span class="sd">        dxdz:       The tangent of the inclination angles in the x direction</span>
-<span class="sd">        dydz:       The tangent of the inclination angles in the y direction</span>
+<span class="sd">        x:          The incidence x position of the photons in image coordinates (pixels),</span>
+<span class="sd">                    typically measured at the top of the detector.</span>
+<span class="sd">        y:          The incidence y position of the photons in image coordinates (pixels),</span>
+<span class="sd">                    typically measured at the top of the detector.</span>
+<span class="sd">        flux:       The flux of the photons in units of photons. Typically, these are all 1,</span>
+<span class="sd">                    but see the note below for reasons some photons might have flux != 1.</span>
+<span class="sd">        dxdz:       The tangent of the inclination angles in the x direction.  Note that we define</span>
+<span class="sd">                    the +z direction as towards towards the dielectric medium of the detector and</span>
+<span class="sd">                    -z as towards vacuum; consequently, a photon with increasing x in time has</span>
+<span class="sd">                    positive dxdz.</span>
+<span class="sd">        dydz:       The tangent of the inclination angles in the y direction.  Note that we define</span>
+<span class="sd">                    the +z direction as towards towards the dielectric medium of the detector and</span>
+<span class="sd">                    -z as towards vacuum; consequently, a photon with increasing y in time has</span>
+<span class="sd">                    positive dydz.</span>
 <span class="sd">        wavelength  The wavelength of the photons (in nm)</span>
 
 <span class="sd">    Unlike most GalSim objects (but like `Image`), PhotonArrays are mutable.  It is permissible</span>
@@ -264,13 +283,69 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_wave</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_corr</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="c1"># These give reasonable errors in x,y,flux are the wrong size/type</span>
+        <span class="c1"># These give reasonable errors if x,y,flux are the wrong size/type</span>
         <span class="k">if</span> <span class="n">x</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
         <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
         <span class="k">if</span> <span class="n">flux</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">=</span> <span class="n">flux</span>
         <span class="k">if</span> <span class="n">dxdz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dxdz</span> <span class="o">=</span> <span class="n">dxdz</span>
         <span class="k">if</span> <span class="n">dydz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dydz</span> <span class="o">=</span> <span class="n">dydz</span>
         <span class="k">if</span> <span class="n">wavelength</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">=</span> <span class="n">wavelength</span>
+
+<div class="viewcode-block" id="PhotonArray.fromArrays"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.fromArrays">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">fromArrays</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">dxdz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dydz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_corr</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create a PhotonArray from pre-allocated numpy arrays without any copying.</span>
+
+<span class="sd">        The normal PhotonArray constructor always allocates new arrays and copies any provided</span>
+<span class="sd">        initial values into those new arrays.  This class method, by constrast, constructs a</span>
+<span class="sd">        PhotonArray that references existing numpy arrays, so that any PhotonOps or photon shooting</span>
+<span class="sd">        of GSObjects applied to the resulting PhotonArray will also be reflected in the original</span>
+<span class="sd">        arrays.</span>
+
+<span class="sd">        Note that the input arrays must all be the same length, have dtype float64 and be</span>
+<span class="sd">        c_contiguous.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            x:          X values.</span>
+<span class="sd">            y:          X values.</span>
+<span class="sd">            flux:       Flux values.</span>
+<span class="sd">            dxdz:       Optionally, the initial dxdz values. [default: None]</span>
+<span class="sd">            dydz:       Optionally, the initial dydz values. [default: None]</span>
+<span class="sd">            wavelength: Optionally, the initial wavelength values (in nm). [default: None]</span>
+<span class="sd">            is_corr:    Whether or not the photons are correlated. [default: False]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">flux</span><span class="p">]</span>
+        <span class="n">argnames</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;flux&#39;</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">aname</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">([</span><span class="n">dxdz</span><span class="p">,</span> <span class="n">dydz</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;dxdz&#39;</span><span class="p">,</span> <span class="s1">&#39;dydz&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># don&#39;t check optional args that are None</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+                <span class="n">argnames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">aname</span><span class="p">)</span>
+
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">aname</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">argnames</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument </span><span class="si">{}</span><span class="s2"> must be an ndarray&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">aname</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Array </span><span class="si">{}</span><span class="s2"> dtype must be np.float64&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">aname</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="n">N</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Arrays must all be the same length&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">a</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">c_contiguous</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Array </span><span class="si">{}</span><span class="s2"> must be c_contiguous&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">aname</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_fromArrays</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">dxdz</span><span class="p">,</span> <span class="n">dydz</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span> <span class="n">is_corr</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_fromArrays</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">dxdz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dydz</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_corr</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Same as `fromArrays`, but no sanity checking of inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">PhotonArray</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="n">flux</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_dxdz</span> <span class="o">=</span> <span class="n">dxdz</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_dydz</span> <span class="o">=</span> <span class="n">dydz</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_wave</span> <span class="o">=</span> <span class="n">wavelength</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_is_corr</span> <span class="o">=</span> <span class="n">is_corr</span>
+        <span class="k">return</span> <span class="n">ret</span>
 
 <div class="viewcode-block" id="PhotonArray.size"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.size">[docs]</a>    <span class="k">def</span> <span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Return the size of the photon array.  Equivalent to ``len(self)``.</span>
@@ -282,7 +357,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The incidence x position at the top of the detector.</span>
+        <span class="sd">&quot;&quot;&quot;The incidence x position in image coordinates (pixels), typically at the top of</span>
+<span class="sd">        the detector.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span>
     <span class="nd">@x</span><span class="o">.</span><span class="n">setter</span>
@@ -291,7 +367,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">y</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The incidence y position at the top of the detector.</span>
+        <span class="sd">&quot;&quot;&quot;The incidence y position in image coordinates (pixels), typically at the top of</span>
+<span class="sd">        the detector.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span>
     <span class="nd">@y</span><span class="o">.</span><span class="n">setter</span>
@@ -404,8 +481,8 @@
 <span class="sd">        Parameter:</span>
 <span class="sd">            scale:      The factor by which to scale the positions.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">*=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_x</span> <span class="o">*=</span> <span class="n">scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_y</span> <span class="o">*=</span> <span class="n">scale</span></div>
 
 <div class="viewcode-block" id="PhotonArray.assignAt"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.assignAt">[docs]</a>    <span class="k">def</span> <span class="nf">assignAt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">istart</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Assign the contents of another `PhotonArray` to this one starting at istart.</span>
@@ -429,8 +506,7 @@
         <span class="k">if</span> <span class="n">rhs</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="s2">&quot;PhotonArray.convolve with unequal size arrays&quot;</span><span class="p">,</span>
                                                 <span class="n">self_pa</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="o">=</span><span class="n">rhs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">()</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_pa</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">_pa</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">_rng</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -477,21 +553,20 @@
         <span class="c1">#assert(self._x.strides[0] == self._x.itemsize)</span>
         <span class="c1">#assert(self._y.strides[0] == self._y.itemsize)</span>
         <span class="c1">#assert(self._flux.strides[0] == self._flux.itemsize)</span>
-        <span class="n">_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
-        <span class="n">_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
-        <span class="n">_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_y</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">_dxdz</span> <span class="o">=</span> <span class="n">_dydz</span> <span class="o">=</span> <span class="n">_wave</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasAllocatedAngles</span><span class="p">():</span>
             <span class="c1">#assert(self._dxdz.strides[0] == self._dxdz.itemsize)</span>
             <span class="c1">#assert(self._dydz.strides[0] == self._dydz.itemsize)</span>
-            <span class="n">_dxdz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dxdz</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
-            <span class="n">_dydz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dydz</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">_dxdz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dxdz</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">_dydz</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dydz</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasAllocatedWavelengths</span><span class="p">():</span>
             <span class="c1">#assert(self._wave.strides[0] == self._wave.itemsize)</span>
-            <span class="n">_wave</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wave</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PhotonArray</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">()),</span> <span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">,</span> <span class="n">_flux</span><span class="p">,</span> <span class="n">_dxdz</span><span class="p">,</span> <span class="n">_dydz</span><span class="p">,</span> <span class="n">_wave</span><span class="p">,</span>
-                                       <span class="bp">self</span><span class="o">.</span><span class="n">_is_corr</span><span class="p">)</span>
+            <span class="n">_wave</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wave</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">PhotonArray</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">()),</span> <span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">,</span> <span class="n">_flux</span><span class="p">,</span> <span class="n">_dxdz</span><span class="p">,</span> <span class="n">_dydz</span><span class="p">,</span> <span class="n">_wave</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_is_corr</span><span class="p">)</span>
 
 <div class="viewcode-block" id="PhotonArray.addTo"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.addTo">[docs]</a>    <span class="k">def</span> <span class="nf">addTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add flux of photons to an image by binning into pixels.</span>
@@ -542,8 +617,7 @@
         <span class="n">N</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">+</span> <span class="n">total_flux</span> <span class="o">/</span> <span class="n">max_flux</span><span class="p">)</span>
         <span class="n">photons</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">N</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">()</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
         <span class="n">N</span> <span class="o">=</span> <span class="n">photons</span><span class="o">.</span><span class="n">_pa</span><span class="o">.</span><span class="n">setFrom</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">max_flux</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">_rng</span><span class="p">)</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">_x</span> <span class="o">=</span> <span class="n">photons</span><span class="o">.</span><span class="n">x</span><span class="p">[:</span><span class="n">N</span><span class="p">]</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">_y</span> <span class="o">=</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span><span class="p">[:</span><span class="n">N</span><span class="p">]</span>
@@ -586,10 +660,7 @@
             <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pyfits</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;wavelength&#39;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;D&#39;</span><span class="p">,</span> <span class="n">array</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wavelength</span><span class="p">))</span>
 
         <span class="n">cols</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">ColDefs</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">table</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="o">.</span><span class="n">from_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (Might need this for older pyfits versions)</span>
-            <span class="n">table</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">new_table</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">BinTableHDU</span><span class="o">.</span><span class="n">from_columns</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
         <span class="n">fits</span><span class="o">.</span><span class="n">writeFile</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="PhotonArray.read"><a class="viewcode-back" href="../../photon_array.html#galsim.PhotonArray.read">[docs]</a>    <span class="nd">@classmethod</span>
@@ -619,9 +690,37 @@
             <span class="n">photons</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;wavelength&#39;</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">photons</span></div></div>
 
-<div class="viewcode-block" id="WavelengthSampler"><a class="viewcode-back" href="../../surface.html#galsim.WavelengthSampler">[docs]</a><span class="k">class</span> <span class="nc">WavelengthSampler</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This class is a sensor operation that uses sed.sampleWavelength to set the wavelengths</span>
-<span class="sd">    array of a `PhotonArray`.</span>
+
+<div class="viewcode-block" id="PhotonOp"><a class="viewcode-back" href="../../photon_ops.html#galsim.PhotonOp">[docs]</a><span class="k">class</span> <span class="nc">PhotonOp</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A base class for photon operators, which just defines the interface.</span>
+
+<span class="sd">    Photon operators are designed to apply some physical effect to a bundle of photons.  They</span>
+<span class="sd">    may adjust the fluxes in some way, or the positions, maybe in a wavelength-dependent way, etc.</span>
+<span class="sd">    They are typically applied via a ``photon_ops`` argument to the `GSObject.drawImage` method.</span>
+<span class="sd">    The order typically matters, so the operators are applied in the order they appear in the list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PhotonOp.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.PhotonOp.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Apply the photon operator to a PhotonArray.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
+<span class="sd">            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon</span>
+<span class="sd">                            bundle in case the operator needs this information.  [default: None]</span>
+<span class="sd">            rng:            A random number generator to use if needed. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot call applyTo on a pure PhotonOp object&quot;</span><span class="p">)</span></div>
+
+    <span class="c1"># These simpler versions of == and hash are fine.</span>
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">==</span> <span class="nb">repr</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="WavelengthSampler"><a class="viewcode-back" href="../../photon_ops.html#galsim.WavelengthSampler">[docs]</a><span class="k">class</span> <span class="nc">WavelengthSampler</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A photon operator that uses sed.sampleWavelength to set the wavelengths array of a</span>
+<span class="sd">    `PhotonArray`.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        sed:        The `SED` to use for the objects spectral energy distribution.</span>
@@ -633,20 +732,45 @@
 <span class="sd">        npoints:    Number of points `DistDeviate` should use for its internal interpolation</span>
 <span class="sd">                    tables. [default: None, which uses the `DistDeviate` default]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sed</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;npoints&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sed</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;WavelengthSampler(..., rng)&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Instead provide rng when calling applyTo, drawImage, etc.&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">sed</span> <span class="o">=</span> <span class="n">sed</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bandpass</span> <span class="o">=</span> <span class="n">bandpass</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">rng</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">npoints</span> <span class="o">=</span> <span class="n">npoints</span>
 
-<div class="viewcode-block" id="WavelengthSampler.applyTo"><a class="viewcode-back" href="../../surface.html#galsim.WavelengthSampler.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Assign wavelengths to the photons sampled from the SED * Bandpass.&quot;&quot;&quot;</span>
-        <span class="n">photon_array</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sed</span><span class="o">.</span><span class="n">sampleWavelength</span><span class="p">(</span>
-                <span class="n">photon_array</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">npoints</span><span class="p">)</span></div></div>
+<div class="viewcode-block" id="WavelengthSampler.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.WavelengthSampler.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assign wavelengths to the photons sampled from the SED * Bandpass.</span>
 
-<div class="viewcode-block" id="FRatioAngles"><a class="viewcode-back" href="../../surface.html#galsim.FRatioAngles">[docs]</a><span class="k">class</span> <span class="nc">FRatioAngles</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A surface-layer operator that assigns photon directions based on the f/ratio and</span>
-<span class="sd">    obscuration.</span>
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
+<span class="sd">            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon</span>
+<span class="sd">                            bundle in case the operator needs this information.  [default: None]</span>
+<span class="sd">            rng:            A random number generator to use if needed. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">rng</span> <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
+        <span class="k">if</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">hasAllocatedWavelengths</span><span class="p">():</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Wavelengths already set before applying WavelengthSampler. &quot;</span>
+                        <span class="s2">&quot;This is most likely an error.&quot;</span><span class="p">)</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sed</span><span class="o">.</span><span class="n">sampleWavelength</span><span class="p">(</span>
+                <span class="n">photon_array</span><span class="o">.</span><span class="n">size</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">npoints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">npoints</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.WavelengthSampler(sed=</span><span class="si">%s</span><span class="s2">, bandpass=</span><span class="si">%s</span><span class="s2">, rng=</span><span class="si">%s</span><span class="s2">, npoints=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bandpass</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npoints</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.WavelengthSampler(sed=</span><span class="si">%r</span><span class="s2">, bandpass=</span><span class="si">%r</span><span class="s2">, rng=</span><span class="si">%r</span><span class="s2">, npoints=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bandpass</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">npoints</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FRatioAngles"><a class="viewcode-back" href="../../photon_ops.html#galsim.FRatioAngles">[docs]</a><span class="k">class</span> <span class="nc">FRatioAngles</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A photon operator that assigns photon directions based on the f/ratio and obscuration.</span>
 
 <span class="sd">    Assigns arrival directions at the focal plane for photons, drawing from a uniform</span>
 <span class="sd">    brightness distribution between the obscuration angle and the edge of the pupil defined</span>
@@ -660,21 +784,35 @@
 <span class="sd">        rng:            A random number generator to use or None, in which case an rng</span>
 <span class="sd">                        will be automatically constructed for you. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fratio</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;fratio&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;obscuration&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
 
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fratio</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">fratio</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;The f-ratio must be positive.&quot;</span><span class="p">,</span> <span class="n">fratio</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">obscuration</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">obscuration</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Invalid obscuration.&quot;</span><span class="p">,</span> <span class="n">obscuration</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
-        <span class="n">ud</span> <span class="o">=</span> <span class="n">UniformDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;FRatioAngles(..., rng)&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Instead provide rng when calling applyTo, drawImage, etc.&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fratio</span> <span class="o">=</span> <span class="n">fratio</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">=</span> <span class="n">obscuration</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ud</span> <span class="o">=</span> <span class="n">ud</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span> <span class="o">=</span> <span class="n">rng</span>
 
 
-<div class="viewcode-block" id="FRatioAngles.applyTo"><a class="viewcode-back" href="../../surface.html#galsim.FRatioAngles.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Assign directions to the photons in photon_array.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="FRatioAngles.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.FRatioAngles.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assign directions to the photons in photon_array.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
+<span class="sd">            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon</span>
+<span class="sd">                            bundle in case the operator needs this information.  [default: None]</span>
+<span class="sd">            rng:            A random number generator to use if needed. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">rng</span> <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span>
+        <span class="n">ud</span> <span class="o">=</span> <span class="n">UniformDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
 
         <span class="n">dxdz</span> <span class="o">=</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">dxdz</span>
         <span class="n">dydz</span> <span class="o">=</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">dydz</span>
@@ -688,13 +826,13 @@
 
         <span class="c1"># Generate azimuthal angles for the photons</span>
         <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_photons</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ud</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+        <span class="n">ud</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
         <span class="n">phi</span> <span class="o">*=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
 
         <span class="c1"># Generate inclination angles for the photons, which are uniform in sin(theta) between</span>
         <span class="c1"># the sine of the obscuration angle and the sine of the pupil radius</span>
         <span class="n">sintheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_photons</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ud</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">sintheta</span><span class="p">)</span>
+        <span class="n">ud</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">sintheta</span><span class="p">)</span>
         <span class="n">sintheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">obscuration_angle</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pupil_angle</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">obscuration_angle</span><span class="p">))</span> \
             <span class="o">*</span> <span class="n">sintheta</span>
 
@@ -703,10 +841,19 @@
         <span class="c1"># phi</span>
         <span class="n">tantheta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">sintheta</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">sintheta</span><span class="p">)))</span>
         <span class="n">dxdz</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">tantheta</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
-        <span class="n">dydz</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">tantheta</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span></div></div>
+        <span class="n">dydz</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">tantheta</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="PhotonDCR"><a class="viewcode-back" href="../../surface.html#galsim.PhotonDCR">[docs]</a><span class="k">class</span> <span class="nc">PhotonDCR</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A surface-layer operator that applies the effect of differential chromatic refraction (DCR)</span>
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.FRatioAngles(fratio=</span><span class="si">%s</span><span class="s2">, obscration=</span><span class="si">%s</span><span class="s2">, rng=</span><span class="si">%s</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.FRatioAngles(fratio=</span><span class="si">%r</span><span class="s2">, obscration=</span><span class="si">%r</span><span class="s2">, rng=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PhotonDCR"><a class="viewcode-back" href="../../photon_ops.html#galsim.PhotonDCR">[docs]</a><span class="k">class</span> <span class="nc">PhotonDCR</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;A photon operator that applies the effect of differential chromatic refraction (DCR)</span>
 <span class="sd">    and optionally the chromatic dilation due to atmospheric seeing.</span>
 
 <span class="sd">    Due to DCR, blue photons land closer to the zenith than red photons.  Kolmogorov turbulence</span>
@@ -732,12 +879,12 @@
 <span class="sd">    default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but</span>
 <span class="sd">    they are broadly reasonable for most observatories.</span>
 
-<span class="sd">    This surface op is intended to match the functionality of `ChromaticAtmosphere`, but acting</span>
+<span class="sd">    This photon op is intended to match the functionality of `ChromaticAtmosphere`, but acting</span>
 <span class="sd">    on the photon array rather than as a `ChromaticObject`.  The photons will need to have</span>
 <span class="sd">    wavelengths defined in order to work.</span>
 
 <span class="sd">    .. warning::</span>
-<span class="sd">        The alpha parameter is only appropriate for stars.  This surface op will act on</span>
+<span class="sd">        The alpha parameter is only appropriate for stars.  This photon op will act on</span>
 <span class="sd">        all of the photons, so applying a chromatic dilation according to the chromatic</span>
 <span class="sd">        seeing is the wrong thing to do when the surface brightness being rendered is</span>
 <span class="sd">        not a pure PSF.  As such, the default is alpha=0, not -0.2, which would be</span>
@@ -762,15 +909,20 @@
 <span class="sd">        temperature:        Temperature in Kelvins.  [default: 293.15 K]</span>
 <span class="sd">        H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;base_wavelength&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;scale_units&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;alpha&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="s1">&#39;parallactic_angle&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span> <span class="s1">&#39;latitude&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span>
+                    <span class="s1">&#39;pressure&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;temperature&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;H2O_pressure&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">{</span> <span class="s1">&#39;zenith_angle&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span> <span class="s1">&#39;HA&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span> <span class="s1">&#39;zenit_coord&#39;</span> <span class="p">:</span> <span class="n">CelestialCoord</span> <span class="p">}</span> <span class="p">]</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base_wavelength</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dcr</span>
-        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">angle</span>
 
         <span class="c1"># This matches the code in ChromaticAtmosphere.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">base_wavelength</span> <span class="o">=</span> <span class="n">base_wavelength</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-            <span class="n">scale_unit</span> <span class="o">=</span> <span class="n">angle</span><span class="o">.</span><span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">)</span>
+            <span class="n">scale_unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span> <span class="o">=</span> <span class="n">scale_unit</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
 
@@ -783,14 +935,22 @@
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Got unexpected keyword: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kw</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">base_refraction</span> <span class="o">=</span> <span class="n">dcr</span><span class="o">.</span><span class="n">get_refraction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_wavelength</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span>
-                                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
+                                                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
 
-<div class="viewcode-block" id="PhotonDCR.applyTo"><a class="viewcode-back" href="../../surface.html#galsim.PhotonDCR.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">):</span>
+<div class="viewcode-block" id="PhotonDCR.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.PhotonDCR.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Apply the DCR effect to the photons</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
+<span class="sd">            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon</span>
+<span class="sd">                            bundle in case the operator needs this information.  [default: None]</span>
+<span class="sd">            rng:            A random number generator to use if needed. [default: None]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">dcr</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">hasAllocatedWavelengths</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;PhotonDCR requires that wavelengths be set&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">local_wcs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;PhotonDCR requires a local_wcs to be provided to applyTo&quot;</span><span class="p">)</span>
 
         <span class="n">w</span> <span class="o">=</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">wavelength</span>
         <span class="n">cenx</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">origin</span><span class="o">.</span><span class="n">x</span>
@@ -805,7 +965,7 @@
         <span class="c1"># Apply DCR</span>
         <span class="n">shift_magnitude</span> <span class="o">=</span> <span class="n">dcr</span><span class="o">.</span><span class="n">get_refraction</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">)</span>
         <span class="n">shift_magnitude</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_refraction</span>
-        <span class="n">shift_magnitude</span> <span class="o">=</span> <span class="n">shift_magnitude</span> <span class="o">*</span> <span class="p">(</span><span class="n">radians</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">)</span>
+        <span class="n">shift_magnitude</span> <span class="o">*=</span> <span class="n">radians</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span>
         <span class="n">sinp</span><span class="p">,</span> <span class="n">cosp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallactic_angle</span><span class="o">.</span><span class="n">sincos</span><span class="p">()</span>
 
         <span class="n">du</span> <span class="o">=</span> <span class="o">-</span><span class="n">shift_magnitude</span> <span class="o">*</span> <span class="n">sinp</span>
@@ -814,27 +974,146 @@
         <span class="n">dx</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">_x</span><span class="p">(</span><span class="n">du</span><span class="p">,</span> <span class="n">dv</span><span class="p">)</span>
         <span class="n">dy</span> <span class="o">=</span> <span class="n">local_wcs</span><span class="o">.</span><span class="n">_y</span><span class="p">(</span><span class="n">du</span><span class="p">,</span> <span class="n">dv</span><span class="p">)</span>
         <span class="n">photon_array</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">dx</span>
-        <span class="n">photon_array</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">dy</span></div></div>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">dy</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.PhotonDCR(base_wavelength=</span><span class="si">%r</span><span class="s2">, scale_unit=</span><span class="si">%r</span><span class="s2">, alpha=</span><span class="si">%r</span><span class="s2">, &quot;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_wavelength</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;zenith_angle=</span><span class="si">%r</span><span class="s2">, parallactic_angle=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallactic_angle</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">):</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, </span><span class="si">%s</span><span class="s2">=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kw</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="n">s</span></div>
+
+
+<div class="viewcode-block" id="Refraction"><a class="viewcode-back" href="../../photon_ops.html#galsim.Refraction">[docs]</a><span class="k">class</span> <span class="nc">Refraction</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A photon operator that refracts photons (manipulating their dxdz and dydz values) at an</span>
+<span class="sd">    interface, commonly the interface between vacuum and silicon at the surface of a CCD.</span>
+
+<span class="sd">    Assumes that the surface normal is along the z-axis.  If the refraction would result in total</span>
+<span class="sd">    internal reflection, then those photon&#39;s dxdz and dydz values are set to NaN, and flux values</span>
+<span class="sd">    set to 0.0.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        index_ratio:    The ratio of the refractive index on the far side of the interface to the</span>
+<span class="sd">                        near side.  Can be given as a number or a callable function.  In the</span>
+<span class="sd">                        latter case, the function should accept a numpy array of vacuum wavelengths</span>
+<span class="sd">                        as input and return a numpy array of refractive index ratios.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;index_ratio&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_ratio</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index_ratio</span> <span class="o">=</span> <span class="n">index_ratio</span>
+
+<div class="viewcode-block" id="Refraction.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.Refraction.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Refract photons</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
+<span class="sd">            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon</span>
+<span class="sd">                            bundle in case the operator needs this information.  [default: None]</span>
+<span class="sd">            rng:            A random number generator to use if needed. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index_ratio</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+            <span class="n">index_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_ratio</span><span class="p">(</span><span class="n">photon_array</span><span class="o">.</span><span class="n">wavelength</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">index_ratio</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">index_ratio</span>
+        <span class="c1"># Here&#39;s the math avoiding any actual trig function calls:</span>
+        <span class="c1">#</span>
+        <span class="c1">#        x1 = dr/dz</span>
+        <span class="c1">#        ------+</span>
+        <span class="c1">#         \    |</span>
+        <span class="c1">#          \   |</span>
+        <span class="c1">#           \  |  dz/dz = 1</span>
+        <span class="c1">#            \ |</span>
+        <span class="c1">#             \|         n1</span>
+        <span class="c1">#  ------------------------</span>
+        <span class="c1">#              |\        n2</span>
+        <span class="c1">#              |\</span>
+        <span class="c1"># dz&#39;/dz&#39; = 1  | \</span>
+        <span class="c1">#              | \</span>
+        <span class="c1">#              |  \</span>
+        <span class="c1">#              +---</span>
+        <span class="c1">#              x2 = dr&#39;/dz&#39;</span>
+        <span class="c1">#</span>
+        <span class="c1"># Solve Snell&#39;s law for x2 as fn of x1:</span>
+        <span class="c1">#   n1 sin(th1) = n2 sin(th2)</span>
+        <span class="c1">#   n1 x1 / sqrt(1 + x1^2) = n2 x2 / sqrt(1 + x2^2)</span>
+        <span class="c1">#   n1^2 x1^2 (1 + x2^2) = n2^2 x2^2 (1 + x1^2)</span>
+        <span class="c1">#   n1^2 x1^2 = x2^2 (n2^2 (1 + x1^2) - n1^2 x1^2)</span>
+        <span class="c1">#   x1^2 = x2^2 ((n2/n1)^2 (1 + x1^2) - x1^2)</span>
+        <span class="c1">#   x1 = x2 sqrt( (n2/n1)^2 (1 + x1^2) - x1^2 )</span>
+        <span class="c1">#      = x2 sqrt( (n2/n1)^2 (1 + x1^2) - (1 + x1^2) + 1 )</span>
+        <span class="c1">#      = x2 sqrt( 1 - (1 + x1^2) (1 - (n2/n1)^2) )</span>
+        <span class="n">normsqr</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">dxdz</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">dydz</span><span class="o">**</span><span class="mi">2</span>  <span class="c1"># (1 + x1^2)</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s1">&#39;ignore&#39;</span><span class="p">):</span>
+            <span class="c1"># NaN below &lt;=&gt; total internal reflection</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">normsqr</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">index_ratio</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">dxdz</span> <span class="o">/=</span> <span class="n">factor</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">dydz</span> <span class="o">/=</span> <span class="n">factor</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">factor</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.Refraction(index_ratio=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">index_ratio</span></div>
+
+
+<div class="viewcode-block" id="FocusDepth"><a class="viewcode-back" href="../../photon_ops.html#galsim.FocusDepth">[docs]</a><span class="k">class</span> <span class="nc">FocusDepth</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A photon operator that focuses/defocuses photons by changing the height of the focal</span>
+<span class="sd">    surface with respect to the conical beam.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        depth:   The z-distance by which to displace the focal surface, in units of pixels.  A</span>
+<span class="sd">                 positive (negative) number here indicates an extra- (intra-) focal sensor height.</span>
+<span class="sd">                 I.e., depth &gt; 0 means the sensor surface intersects the beam after it has</span>
+<span class="sd">                 converged, and depth &lt; 0 means the sensor surface intersects the beam before it</span>
+<span class="sd">                 has converged.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;depth&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span>
+
+<div class="viewcode-block" id="FocusDepth.applyTo"><a class="viewcode-back" href="../../photon_ops.html#galsim.FocusDepth.applyTo">[docs]</a>    <span class="k">def</span> <span class="nf">applyTo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_array</span><span class="p">,</span> <span class="n">local_wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adjust a photon bundle to account for the change in focal depth.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_array:   A `PhotonArray` to apply the operator to.</span>
+<span class="sd">            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon</span>
+<span class="sd">                            bundle in case the operator needs this information.  [default: None]</span>
+<span class="sd">            rng:            A random number generator to use if needed. [default: None]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">hasAllocatedAngles</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;FocusDepth requires that angles be set&quot;</span><span class="p">)</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">*</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">dxdz</span>
+        <span class="n">photon_array</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">*</span> <span class="n">photon_array</span><span class="o">.</span><span class="n">dydz</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.FocusDepth(depth=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span></div>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -842,7 +1121,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

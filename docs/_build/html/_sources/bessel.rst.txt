@@ -16,3 +16,4 @@ is mostly to enable unit tests that these C++ function are correct.
 .. autofunction:: galsim.bessel.yn
 .. autofunction:: galsim.bessel.iv
 .. autofunction:: galsim.bessel.j0_root
+.. autofunction:: galsim.bessel.jv_root

@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.real &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.real &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.real</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -199,7 +206,7 @@
 <span class="kn">from</span> <span class="nn">.correlatednoise</span> <span class="kn">import</span> <span class="n">CovarianceSpectrum</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIndexError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIndexError</span>
 
 
 <span class="n">HST_area</span> <span class="o">=</span> <span class="mf">45238.93416</span>  <span class="c1"># Area of HST primary mirror in cm^2 from Synphot User&#39;s Guide.</span>
@@ -330,7 +337,6 @@
 <span class="sd">        logger:                 A logger object for output of progress statements if the user wants</span>
 <span class="sd">                                them.  [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;x_interpolant&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">,</span>
                     <span class="s2">&quot;k_interpolant&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">,</span>
                     <span class="s2">&quot;flux&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span>
@@ -393,7 +399,7 @@
             <span class="k">elif</span> <span class="n">random</span><span class="p">:</span>
                 <span class="n">ud</span> <span class="o">=</span> <span class="n">UniformDeviate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="p">)</span>
                 <span class="n">use_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">real_galaxy_catalog</span><span class="o">.</span><span class="n">nobjects</span> <span class="o">*</span> <span class="n">ud</span><span class="p">())</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">real_galaxy_catalog</span><span class="p">,</span> <span class="s1">&#39;weight&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">real_galaxy_catalog</span><span class="o">.</span><span class="n">weight</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="c1"># If weight factors are available, make sure the random selection uses the</span>
                     <span class="c1"># weights to remove the catalog-level selection effects (flux_radius-dependent</span>
                     <span class="c1"># probability of making a postage stamp for a given object).</span>
@@ -483,14 +489,14 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxy </span><span class="si">%d</span><span class="s1">: Finished building RealGalaxy&#39;</span><span class="p">,</span><span class="n">use_index</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RealGalaxy.withGSParams"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">original_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_gal</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">original_psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_psf</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_gal_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gal_noise</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">original_gal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_gal</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">original_psf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original_psf</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gal_noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gal_noise</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="RealGalaxy.makeFromImage"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxy.makeFromImage">[docs]</a>    <span class="nd">@classmethod</span>
@@ -554,8 +560,6 @@
         <span class="k">return</span> <span class="s1">&#39;galsim.RealGalaxy(index=</span><span class="si">%s</span><span class="s1">, flux=</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># The _sbp is picklable, but it is pretty inefficient, due to the large images being</span>
-        <span class="c1"># written as a string.  Better to pickle the image and remake the InterpolatedImage.</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_conv&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
         <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_psf_inv&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
@@ -573,10 +577,6 @@
         <span class="k">return</span> <span class="n">Convolve</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">original_gal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf_inv</span><span class="p">],</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_sbp</span>
-
-    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># We just store the original noise, not convolved with psf_inv until we need it,</span>
         <span class="c1"># mostly so we don&#39;t have to invalidate this if gsparams changes.</span>
@@ -584,39 +584,41 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_maxk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">maxK</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_maxk</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_stepk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">stepK</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_stepk</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">centroid</span><span class="p">())</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_centroid</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">getFlux</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_flux</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_positive_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">getPositiveFlux</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_positive_flux</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_negative_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">getNegativeFlux</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_negative_flux</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_flux_per_photon</span><span class="p">()</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">maxSB</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_max_sb</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">kValue</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_kValue</span><span class="p">(</span><span class="n">kpos</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_conv</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RealGalaxyCatalog"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog">[docs]</a><span class="k">class</span> <span class="nc">RealGalaxyCatalog</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -693,63 +695,103 @@
 <span class="sd">                    various calls to `getGalImage` and `getPSFImage`.  [default: False]</span>
 <span class="sd">        logger:     An optional logger object to log progress. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;file_name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;sample&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;dir&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                     <span class="s1">&#39;preload&#39;</span> <span class="p">:</span> <span class="nb">bool</span> <span class="p">}</span>
-    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="c1"># _nobject_only is an intentionally undocumented kwarg that should be used only by</span>
     <span class="c1"># the config structure.  It indicates that all we care about is the nobjects parameter.</span>
     <span class="c1"># So skip any other calculations that might normally be necessary on construction.</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_nobjects_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">preload</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
         <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span>
+        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Lock</span>
 
         <span class="k">if</span> <span class="n">sample</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                 <span class="s2">&quot;Cannot specify both the sample and file_name.&quot;</span><span class="p">,</span>
                 <span class="n">sample</span><span class="o">=</span><span class="n">sample</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="n">file_name</span><span class="p">)</span>
 
+        <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span> <span class="o">=</span> <span class="n">_parse_files_dirs</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">sample</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cat</span> <span class="o">=</span> <span class="n">fits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="p">)</span> <span class="c1"># number of objects in the catalog</span>
-        <span class="k">if</span> <span class="n">_nobjects_only</span><span class="p">:</span> <span class="k">return</span>  <span class="c1"># Exit early if that&#39;s all we needed.</span>
-        <span class="n">ident</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;ident&#39;</span><span class="p">)</span> <span class="c1"># ID for object in the training sample</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%s</span><span class="s1"> has </span><span class="si">%d</span><span class="s1"> objects&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">nobjects</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_preload</span> <span class="o">=</span> <span class="n">preload</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># The pyfits commands aren&#39;t thread safe.  So we need to make sure the methods that</span>
+        <span class="c1"># use pyfits are not run concurrently from multiple threads.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when accessing gal files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psf_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when accessing psf files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loaded_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when opening new files from disk</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">noise_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this for building the noise image(s) (usually just one)</span>
+
+
+    <span class="c1"># Some lazy properties that we set up the first time they are used.</span>
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">ident</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ident</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;ident&#39;</span><span class="p">)</span> <span class="c1"># ID for object in the training sample</span>
         <span class="c1"># We want to make sure that the ident array contains all strings.</span>
         <span class="c1"># Strangely, ident.astype(str) produces a string with each element == &#39;1&#39;.</span>
         <span class="c1"># Hence this way of doing the conversion:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ident</span> <span class="o">=</span> <span class="p">[</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">ident</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">ident</span> <span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;gal_filename&#39;</span><span class="p">)</span> <span class="c1"># file containing the galaxy image</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;PSF_filename&#39;</span><span class="p">)</span> <span class="c1"># file containing the PSF image</span>
-
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">gal_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">gal_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;gal_filename&#39;</span><span class="p">)</span> <span class="c1"># file containing the galaxy image</span>
         <span class="c1"># Add the directories:</span>
         <span class="c1"># Note the strip call.  Sometimes the filenames have an extra space at the end.</span>
         <span class="c1"># This gets rid of that space.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span> <span class="o">=</span> <span class="p">[</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_dir</span><span class="p">,</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span> <span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span> <span class="o">=</span> <span class="p">[</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_dir</span><span class="p">,</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_dir</span><span class="p">,</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">gal_file_name</span><span class="p">]</span>
 
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">psf_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">psf_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;PSF_filename&#39;</span><span class="p">)</span> <span class="c1"># file containing the PSF image</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_dir</span><span class="p">,</span><span class="n">f</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">psf_file_name</span><span class="p">]</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">noise_file_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># We don&#39;t require the noise_filename column.  If it is not present, we will use</span>
         <span class="c1"># Uncorrelated noise based on the variance column.</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;noise_filename&#39;</span><span class="p">)</span> <span class="c1"># file containing the noise cf</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span> <span class="o">=</span> <span class="p">[</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_dir</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span> <span class="p">]</span>
+            <span class="n">noise_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;noise_filename&#39;</span><span class="p">)</span> <span class="c1"># file containing the noise cf</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_dir</span><span class="p">,</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">noise_file_name</span><span class="p">]</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">gal_hdu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;gal_hdu&#39;</span><span class="p">)</span> <span class="c1"># HDU containing the galaxy image</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf_hdu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;PSF_hdu&#39;</span><span class="p">)</span> <span class="c1"># HDU containing the PSF image</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;pixel_scale&#39;</span><span class="p">)</span> <span class="c1"># pixel scale for image (could be different</span>
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">gal_hdu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;gal_hdu&#39;</span><span class="p">)</span> <span class="c1"># HDU containing the galaxy image</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">psf_hdu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;PSF_hdu&#39;</span><span class="p">)</span> <span class="c1"># HDU containing the PSF image</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">pixel_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;pixel_scale&#39;</span><span class="p">)</span> <span class="c1"># pixel scale for image (could be different</span>
         <span class="c1"># if we have training data from other datasets... let&#39;s be general here and make it a</span>
         <span class="c1"># vector in case of mixed training set)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">variance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;noise_variance&#39;</span><span class="p">)</span> <span class="c1"># noise variance for image</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;mag&#39;</span><span class="p">)</span>   <span class="c1"># apparent magnitude</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">band</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;band&#39;</span><span class="p">)</span> <span class="c1"># bandpass in which apparent mag is measured, e.g., F814W</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">variance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;noise_variance&#39;</span><span class="p">)</span> <span class="c1"># noise variance for image</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">mag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;mag&#39;</span><span class="p">)</span>   <span class="c1"># apparent magnitude</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">band</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;band&#39;</span><span class="p">)</span> <span class="c1"># bandpass in which apparent mag is measured, e.g., F814W</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">weight</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># The weight factor should be a float value &gt;=0 (so that random selections of indices can</span>
         <span class="c1"># use it to remove any selection effects in the catalog creation process).</span>
         <span class="c1"># Here we renormalize by the maximum weight.  If the maximum is below 1, that just means</span>
@@ -757,30 +799,21 @@
         <span class="c1"># relative selection effects within the catalog, not absolute subsampling.  If the maximum</span>
         <span class="c1"># is above 1, then our random number generation test used to draw a weighted sample will</span>
         <span class="c1"># fail since we use uniform deviates in the range 0 to 1.</span>
-        <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;stamp_flux&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">stamp_flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;stamp_flux&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;weight&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;You still have the old COSMOS catalog.  Run the program &quot;</span>
+                          <span class="s2">&quot;`galsim_download_cosmos -s </span><span class="si">%s</span><span class="s2">` to upgrade.&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">weight</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
-
-        <span class="c1"># The pyfits commands aren&#39;t thread safe.  So we need to make sure the methods that</span>
-        <span class="c1"># use pyfits are not run concurrently from multiple threads.</span>
-        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Lock</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when accessing gal files</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when accessing psf files</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">loaded_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this when opening new files from disk</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">noise_lock</span> <span class="o">=</span> <span class="n">Lock</span><span class="p">()</span>  <span class="c1"># Use this for building the noise image(s) (usually just one)</span>
-
-        <span class="c1"># Preload all files if desired</span>
-        <span class="k">if</span> <span class="n">preload</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">preload</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_preload</span> <span class="o">=</span> <span class="n">preload</span>
-
-        <span class="c1"># eventually I think we&#39;ll want information about the training dataset,</span>
-        <span class="c1"># i.e. (dataset, ID within dataset)</span>
-        <span class="c1"># also note: will be adding bits of information, like noise properties and galaxy fit params</span>
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">stamp_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">field</span><span class="p">(</span><span class="s1">&#39;stamp_flux&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;You still have the old COSMOS catalog.  Run the program &quot;</span>
+                          <span class="s2">&quot;`galsim_download_cosmos -s </span><span class="si">%s</span><span class="s2">` to upgrade.&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Make sure to clean up pyfits open files if people forget to call close()</span>
@@ -811,6 +844,15 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s1">&#39;ID not found in list of IDs&#39;</span><span class="p">,</span><span class="nb">id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ident</span><span class="p">)</span></div>
 
+    <span class="k">def</span> <span class="nf">_maybe_preload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Preload all files if desired.</span>
+        <span class="c1"># This is delayed until the first time we might need it, since we might only need</span>
+        <span class="c1"># to know nobjects and not load the data at all.  The first time we try to do something</span>
+        <span class="c1"># that needs the files, we&#39;ll call preload (if requested).</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preload</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">preload</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_preload</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># Once we&#39;ve loaded them.  Don&#39;t do it again.</span>
+
 <div class="viewcode-block" id="RealGalaxyCatalog.preload"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.preload">[docs]</a>    <span class="k">def</span> <span class="nf">preload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Preload the files into memory.</span>
 
@@ -818,41 +860,37 @@
 <span class="sd">        a big speedup if memory isn&#39;t an issue.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog: start preload&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span> <span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">)):</span>
-            <span class="c1"># numpy sometimes add a space at the end of the string that is not present in</span>
-            <span class="c1"># the original file.  Stupid.  But this next line removes it.</span>
-            <span class="n">file_name</span> <span class="o">=</span> <span class="n">file_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">file_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog: preloading </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
-                <span class="c1"># I use memmap=False, because I was getting problems with running out of</span>
-                <span class="c1"># file handles in the great3 real_gal run, which uses a lot of rgc files.</span>
-                <span class="c1"># I think there must be a bug in pyfits that leaves file handles open somewhere</span>
-                <span class="c1"># when memmap = True.  Anyway, I don&#39;t know what the performance implications</span>
-                <span class="c1"># are (since I couldn&#39;t finish the run with the default memmap=True), but I</span>
-                <span class="c1"># don&#39;t think there is much impact either way with memory mapping in our case.</span>
-                <span class="n">f</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="n">memmap</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
-                <span class="c1"># Access all the data from all hdus to force PyFits to read the data</span>
-                <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
-                    <span class="n">hdu</span><span class="o">.</span><span class="n">data</span></div>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_lock</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span> <span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">)):</span>
+                <span class="c1"># numpy sometimes add a space at the end of the string that is not present in</span>
+                <span class="c1"># the original file.  Stupid.  But this next line removes it.</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="n">file_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">file_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span>
+                    <span class="c1"># I use memmap=False, because I was getting problems with running out of</span>
+                    <span class="c1"># file handles in the great3 real_gal run, which uses a lot of rgc files.</span>
+                    <span class="c1"># I think there must be a bug in pyfits that leaves file handles open somewhere</span>
+                    <span class="c1"># when memmap = True.  Anyway, I don&#39;t know what the performance implications</span>
+                    <span class="c1"># are (since I couldn&#39;t finish the run with the default memmap=True), but I</span>
+                    <span class="c1"># don&#39;t think there is much impact either way with memory mapping in our case.</span>
+                    <span class="n">f</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="n">memmap</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
+                    <span class="c1"># Access all the data from all hdus to force PyFits to read the data</span>
+                    <span class="k">for</span> <span class="n">hdu</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">hdu</span><span class="o">.</span><span class="n">data</span></div>
 
     <span class="k">def</span> <span class="nf">_getFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_preload</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog: File </span><span class="si">%s</span><span class="s1"> is already open&#39;</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
             <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">loaded_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
-            <span class="c1"># Check again in case two processes both hit the else at the same time.</span>
-            <span class="k">if</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span> <span class="c1"># pragma: no cover</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog: File </span><span class="si">%s</span><span class="s1"> is already open&#39;</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
-                <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog: open file </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">file_name</span><span class="p">)</span>
-                <span class="n">f</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="n">memmap</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">loaded_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_lock</span><span class="p">:</span>
+                <span class="c1"># Check again in case two processes both hit the else at the same time.</span>
+                <span class="k">if</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span> <span class="c1"># pragma: no cover</span>
+                    <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">f</span> <span class="o">=</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span><span class="n">memmap</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">file_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span>
         <span class="k">return</span> <span class="n">f</span>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getBandpass"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getBandpass">[docs]</a>    <span class="k">def</span> <span class="nf">getBandpass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -871,15 +909,11 @@
         <span class="sd">&quot;&quot;&quot;Returns the galaxy at index ``i`` as an `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Start getGalImage&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">GalSimIndexError</span><span class="p">(</span><span class="s1">&#39;index out of range (0..</span><span class="si">%d</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="n">i</span><span class="p">)</span>
         <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="c1"># For some reason the more elegant `with gal_lock:` syntax isn&#39;t working for me.</span>
-        <span class="c1"># It gives an EOFError.  But doing an explicit acquire and release seems to work fine.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
-        <span class="n">array</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_hdu</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">gal_lock</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gal_hdu</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">data</span>
         <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">im</span></div>
 
@@ -887,13 +921,11 @@
         <span class="sd">&quot;&quot;&quot;Returns the PSF at index ``i`` as an `Image` object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Start getPSFImage&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">GalSimIndexError</span><span class="p">(</span><span class="s1">&#39;index out of range (0..</span><span class="si">%d</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="n">i</span><span class="p">)</span>
         <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
-        <span class="n">array</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_hdu</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psf_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">psf_lock</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">psf_hdu</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">data</span>
         <span class="k">return</span> <span class="n">Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span> <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></div>
 
 <div class="viewcode-block" id="RealGalaxyCatalog.getPSF"><a class="viewcode-back" href="../../real_gal.html#galsim.RealGalaxyCatalog.getPSF">[docs]</a>    <span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -911,7 +943,6 @@
 <span class="sd">           as a tuple (im, scale, var).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Start getNoise&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">im</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
@@ -919,22 +950,18 @@
                 <span class="k">raise</span> <span class="n">GalSimIndexError</span><span class="p">(</span><span class="s1">&#39;index out of range (0..</span><span class="si">%d</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="n">i</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">:</span>
                 <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Got saved noise im&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">noise_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
-                <span class="c1"># Again, a second check in case two processes get here at the same time.</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-                    <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Got saved noise im&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
-                    <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
-                        <span class="n">array</span> <span class="o">=</span> <span class="n">fits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
-                    <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span>
-                                      <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">im</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;RealGalaxyCatalog </span><span class="si">%d</span><span class="s1">: Built noise im&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">noise_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_lock</span><span class="p">:</span>
+                    <span class="c1"># Again, a second check in case two processes get here at the same time.</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                        <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="kn">from</span> <span class="nn">._pyfits</span> <span class="kn">import</span> <span class="n">pyfits</span>
+                        <span class="k">with</span> <span class="n">pyfits</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">as</span> <span class="n">fits</span><span class="p">:</span>
+                            <span class="n">array</span> <span class="o">=</span> <span class="n">fits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">data</span>
+                        <span class="n">im</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)),</span>
+                                        <span class="n">scale</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">saved_noise_im</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">noise_file_name</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="n">im</span>
 
         <span class="k">return</span> <span class="n">im</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pixel_scale</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">variance</span><span class="p">[</span><span class="n">i</span><span class="p">]</span></div>
 
@@ -1161,6 +1188,16 @@
 <span class="sd">                                them.  [default: None]</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: SEDs isn&#39;t implemented yet in config parser.</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;k_interpolant&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">,</span>
+                    <span class="s2">&quot;maxk&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="s2">&quot;pad_factor&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="s2">&quot;noise_pad_size&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="s2">&quot;area_norm&quot;</span> <span class="p">:</span> <span class="nb">float</span>
+                  <span class="p">}</span>
+    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[</span> <span class="p">{</span> <span class="s2">&quot;index&quot;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">,</span> <span class="s2">&quot;id&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">,</span> <span class="s2">&quot;random&quot;</span> <span class="p">:</span> <span class="nb">bool</span> <span class="p">}</span> <span class="p">]</span>
+    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">real_galaxy_catalogs</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">UniformDeviate</span>
@@ -1407,11 +1444,12 @@
 
         <span class="c1"># Solve the weighted linear least squares problem for each Fourier mode.  This is</span>
         <span class="c1"># effectively a constrained chromatic deconvolution.  Take advantage of symmetries.</span>
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="n">_galsim</span><span class="o">.</span><span class="n">ComputeCRGCoefficients</span><span class="p">(</span>
-                <span class="n">coef</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                <span class="n">w</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">kimgs</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">PSF_eff_kimgs</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                <span class="n">NSED</span><span class="p">,</span> <span class="n">Nim</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span>
+        <span class="n">_coef</span> <span class="o">=</span> <span class="n">coef</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_Sigma</span> <span class="o">=</span> <span class="n">Sigma</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_w</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_kimgs</span> <span class="o">=</span> <span class="n">kimgs</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_psf</span> <span class="o">=</span> <span class="n">PSF_eff_kimgs</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">ComputeCRGCoefficients</span><span class="p">(</span><span class="n">_coef</span><span class="p">,</span> <span class="n">_Sigma</span><span class="p">,</span> <span class="n">_w</span><span class="p">,</span> <span class="n">_kimgs</span><span class="p">,</span> <span class="n">_psf</span><span class="p">,</span> <span class="n">NSED</span><span class="p">,</span> <span class="n">Nim</span><span class="p">,</span> <span class="n">nk</span><span class="p">,</span> <span class="n">nk</span><span class="p">)</span>
 
         <span class="c1"># Reorder these so they correspond to (NSED, nky, nkx) and (NSED, NSED, nky, nkx) shapes.</span>
         <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
@@ -1482,20 +1520,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1503,7 +1546,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

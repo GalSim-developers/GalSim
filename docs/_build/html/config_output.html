@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Config Output Field &mdash; GalSim 2.2.4 documentation</title>
+  <title>Config Output Field &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Config Values" href="config_values.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -124,7 +128,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -132,6 +136,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -166,11 +171,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="config.html">The Config Module</a> &raquo;</li>
         
@@ -181,7 +188,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/config_output.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -199,6 +206,34 @@
 <h1>Config Output Field<a class="headerlink" href="#config-output-field" title="Permalink to this headline">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">output</span></code> field indicates where to write the output files and what kind of output format
 they should be.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Multiprocessing</strong></p>
+<p>The config processing can use python multiprocessing to split the work among multiple
+processes on a single node.  This can be done either at the file level or the image level.
+If you set output.nproc != 1, then it will parallelize the creation of files, building
+and writing each file in a separate process.  If you instead set image.nproc != 1, then
+the files will be built one at a time, but the work for drawing the objects will be
+parallelized across the processes.</p>
+<p>There are tradeoffs between these two kinds of multiprocessing that the user should be
+aware of.  Python multiprocessing uses pickle to pass information between processes.
+In the image-based multiprocessing, each process builds a postage stamp image for each
+object and sends that stamp back to the main process to assemble into the final image.
+If the objects are all very easy to draw, this communication can end up dominating the
+run time as python will pickle the image data to send back to the main process.</p>
+<p>File-based multiprocessing has much less communication between processes, since each image
+is fully built and written all in a single process.  However, this kind of multiprocessing
+often requires more memory, since each process holds a full image to be written to disk
+as it is building it.  Users should consider this tradeoff carefully when deciding which
+kind of multiprocessing (if either) is appropriate for their use case.</p>
+<p>Finally, one last caveat about multiprocessing.  Galsim turns off OpenMP threading when
+in a multiprocessing context, so you don’t, for instance, have 64 processes, each spawning
+64 OpenMP threads at once.  This works for OpenMP, but not some other sources of threading
+that may be initiated by numpy functions.  If you get errors related to being unable to
+create threads, you should install (via pip or conda) the <code class="docutils literal notranslate"><span class="pre">threadpoolctl</span></code> package.
+If this package is installed, GalSim will use it to turn off threading for all of the
+possible backends used by numpy.</p>
+</div>
 <div class="section" id="output-field-attributes">
 <h2>Output Field Attributes<a class="headerlink" href="#output-field-attributes" title="Permalink to this headline">¶</a></h2>
 <p>All output types use the following attributes to specify the location and number
@@ -207,7 +242,7 @@ of output files, or aspects of how to build and write the output files.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (default = ‘&lt;config file root name&gt;.fits’)  You would typically want to specify this explicitly, but if you do not, then if the configuration file is called my_test.yaml, the output file would be my_test.fits.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">dir</span></code> = <em>str_value</em> (default = ‘.’)  In which directory should the output file be put.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nfiles</span></code> = <em>int_value</em> (default = 1)  How many files to build. Note: if <code class="docutils literal notranslate"><span class="pre">nfiles</span></code> &gt; 1, then <code class="docutils literal notranslate"><span class="pre">file_name</span></code> and/or <code class="docutils literal notranslate"><span class="pre">dir</span></code> should not be a simple string. Rather it should be some generated string that provides a different save location for each file. See the section below on setting <em>str_value</em>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">nproc</span></code> = <em>int_value</em>  (default = 1)  Specify the number of processors to use when building files. If nproc &lt;= 0, then this means to try to automatically figure out the number of cpus and use that. If you are doing many files, it is more efficient to split up the processes at this level rather than when drawing the postage stamps (which is what <code class="docutils literal notranslate"><span class="pre">image.nproc</span></code> means).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nproc</span></code> = <em>int_value</em>  (default = 1)  Specify the number of processors to use when building files. If nproc &lt;= 0, then this means to try to automatically figure out the number of cpus and use that. If you are doing many files, it is often more efficient to split up the processes at this level rather than when drawing the postage stamps (which is what <code class="docutils literal notranslate"><span class="pre">image.nproc</span></code> means).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">skip</span></code> = <em>bool_value</em> (default = False) Specify files to skip.  This would normally be an evaluated boolean rather than simply True or False of course.  e.g. To only do the fifth file, you could use <code class="docutils literal notranslate"><span class="pre">skip</span> <span class="pre">:</span> <span class="pre">{</span> <span class="pre">type</span> <span class="pre">:</span> <span class="pre">Eval,</span> <span class="pre">str</span> <span class="pre">:</span> <span class="pre">'ffile_num</span> <span class="pre">!=</span> <span class="pre">4'</span> <span class="pre">}</span></code>, which may be useful during debugging if you are trying to diagnose a problem in one particular file.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">noclobber</span></code> = <em>bool_value</em> (default = False) Specify whether to skip building files that already exist.  This may be useful if you are running close to the memory limit on your machine with multiprocessing.  e.g. You could use <code class="docutils literal notranslate"><span class="pre">nproc</span></code> &gt; 1 for a first run using multiprocessing, and then run again with <code class="docutils literal notranslate"><span class="pre">nproc</span></code> = 1 and <code class="docutils literal notranslate"><span class="pre">noclobber</span></code> = True to clean up any files that failed from insufficient memory during the multiprocessing run.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">retry_io</span></code> = <em>int_value</em> (default = 0) How many times to retry the write command if there is any kind of failure.  Some systems have trouble with multiple concurrent writes to disk, so if you are doing a big parallel job, this can be helpful.  If this is &gt; 0, then after an IOError exception on the write command, the code will wait an increasing number of seconds (starting with 1 for the first failure), and then try again up to this many times.</p></li>
@@ -324,7 +359,7 @@ This can be overridden by subclasses by changing the default_ext property.</p>
 
 <dl class="py method">
 <dt id="galsim.config.OutputBuilder.getNFiles">
-<code class="sig-name descname">getNFiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNFiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNFiles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNFiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNFiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNFiles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of files to be built.</p>
 <p>In the base class, this is just output.nfiles.</p>
 <dl class="field-list simple">
@@ -332,6 +367,7 @@ This can be overridden by subclasses by changing the default_ext property.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
 <li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -342,7 +378,7 @@ This can be overridden by subclasses by changing the default_ext property.</p>
 
 <dl class="py method">
 <dt id="galsim.config.OutputBuilder.getNImages">
-<code class="sig-name descname">getNImages</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">file_num</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNImages" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNImages</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">file_num</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNImages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of images to be built for a given <code class="docutils literal notranslate"><span class="pre">file_num</span></code>.</p>
 <p>In the base class, we only build a single image, so it returns 1.</p>
 <dl class="field-list simple">
@@ -351,6 +387,7 @@ This can be overridden by subclasses by changing the default_ext property.</p>
 <li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
 <li><p><strong>base</strong> – The base configuration dict.</p></li>
 <li><p><strong>file_num</strong> – The current file number.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -361,7 +398,7 @@ This can be overridden by subclasses by changing the default_ext property.</p>
 
 <dl class="py method">
 <dt id="galsim.config.OutputBuilder.getNObjPerImage">
-<code class="sig-name descname">getNObjPerImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">file_num</span></em>, <em class="sig-param"><span class="n">image_num</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNObjPerImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNObjPerImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNObjPerImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">file_num</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#OutputBuilder.getNObjPerImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.OutputBuilder.getNObjPerImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects that will be made for each image built as part of the file
 file_num, which starts at image number image_num, based on the information in the config
 dict.</p>
@@ -372,6 +409,7 @@ dict.</p>
 <li><p><strong>base</strong> – The base configuration dict.</p></li>
 <li><p><strong>file_num</strong> – The current file number.</p></li>
 <li><p><strong>image_num</strong> – The current image number (the first one for this file).</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -471,7 +509,7 @@ in the config file:</p>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
 Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_output</span></code>,
-which will read your file and execute the registration command to add the buidler to the list
+which will read your file and execute the registration command to add the builder to the list
 of valid output types.</p>
 <p>Then you can use this as a valid output type:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">output</span><span class="p">:</span>
@@ -876,29 +914,29 @@ when we eventually add defects, saturation, etc.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="config_values.html" class="btn btn-neutral float-right" title="Config Values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="config_input.html" class="btn btn-neutral float-left" title="Config Input Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="config_values.html" class="btn btn-neutral float-right" title="Config Values" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="config_input.html" class="btn btn-neutral float-left" title="Config Input Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -906,7 +944,6 @@ when we eventually add defects, saturation, etc.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

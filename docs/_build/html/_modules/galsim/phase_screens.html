@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.phase_screens &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.phase_screens &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.phase_screens</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -184,7 +191,6 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">range</span><span class="p">,</span> <span class="nb">zip</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">multiprocessing</span>
@@ -204,14 +210,14 @@
 <span class="c1"># Two helper functions to cache the calculation required for _getStepK</span>
 <span class="k">def</span> <span class="nf">__calcAtmStepK</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">r0_500</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">.kolmogorov</span> <span class="kn">import</span> <span class="n">Kolmogorov</span>
-    <span class="c1"># Use an Airy for get appropriate stepk.</span>
+    <span class="c1"># Use a Kolmogorov to get appropriate stepk.</span>
     <span class="n">obj</span> <span class="o">=</span> <span class="n">Kolmogorov</span><span class="p">(</span><span class="n">lam</span><span class="o">=</span><span class="n">lam</span><span class="p">,</span> <span class="n">r0_500</span><span class="o">=</span><span class="n">r0_500</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">stepk</span>
 <span class="n">_calcAtmStepK</span> <span class="o">=</span> <span class="n">LRU_Cache</span><span class="p">(</span><span class="n">__calcAtmStepK</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">__calcOptStepK</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">obscuration</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">.airy</span> <span class="kn">import</span> <span class="n">Airy</span>
-    <span class="c1"># Use an Airy for get appropriate stepk.</span>
+    <span class="c1"># Use an Airy to get appropriate stepk.</span>
     <span class="n">obj</span> <span class="o">=</span> <span class="n">Airy</span><span class="p">(</span><span class="n">lam</span><span class="o">=</span><span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="n">diam</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="n">obscuration</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">stepk</span>
 <span class="n">_calcOptStepK</span> <span class="o">=</span> <span class="n">LRU_Cache</span><span class="p">(</span><span class="n">__calcOptStepK</span><span class="p">)</span>
@@ -525,7 +531,10 @@
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;lock&#39;</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;refcount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">-=</span> <span class="mi">1</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;lock&#39;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;refcount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Normally, shareKey is present, but on final cleanup, we have no control over</span>
+            <span class="c1"># the order than things are deleted, so it might already be gone, in which</span>
+            <span class="c1"># case there can be a KeyError here.</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objDict</span><span class="p">[</span><span class="s1">&#39;refcount&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">value</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span> <span class="ow">in</span> <span class="n">_GSScreenShare</span><span class="p">:</span>
                 <span class="k">del</span> <span class="n">_GSScreenShare</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_shareKey</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="nf">_getScreenShare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1127,6 +1136,9 @@
 <span class="sd">        lam_0:              Reference wavelength in nanometers at which Zernike aberrations are</span>
 <span class="sd">                            being specified.  [default: 500]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dynamic</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">reversible</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">astig1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">astig2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">coma1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                  <span class="n">coma2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">trefoil1</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">trefoil2</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">spher</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">annular_zernike</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">lam_0</span><span class="o">=</span><span class="mf">500.0</span><span class="p">):</span>
@@ -1175,9 +1187,6 @@
                                             <span class="n">R_inner</span><span class="o">=</span><span class="n">R_outer</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_zernike</span> <span class="o">=</span> <span class="n">zernike</span><span class="o">.</span><span class="n">Zernike</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="n">R_outer</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">dynamic</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reversible</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;galsim.OpticalScreen(diam=</span><span class="si">%s</span><span class="s2">, lam_0=</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_0</span><span class="p">)</span>
@@ -1288,26 +1297,141 @@
 <span class="k">class</span> <span class="nc">_DummyScreen</span><span class="p">(</span><span class="n">OpticalScreen</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">_wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Shouldn&#39;t reach this&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">UserScreen</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Create a (static) user-defined phase screen.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        table:        LookupTable2D instance representing the wavefront as a function on the</span>
+<span class="sd">                      entrance pupil.  Units are (meters, meters) -&gt; nanometers.</span>
+<span class="sd">        diam:         Diameter of entrance pupil in meters.  If None, then use the length of the</span>
+<span class="sd">                      larger side of the LookupTable2D rectangle in ``table``.  This keyword is only</span>
+<span class="sd">                      used to compute a value for stepk, and thus has no effect on the</span>
+<span class="sd">                      ``wavefront()`` or ``wavefront_gradient()`` methods.</span>
+<span class="sd">        obscuration:  Optional fractional circular obscuration of pupil.  Like ``diam``, only used</span>
+<span class="sd">                      for computing a value for stepk.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dynamic</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">reversible</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">table</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="o">=</span> <span class="n">diam</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">=</span> <span class="n">obscuration</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;galsim.UserScreen(</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, diam=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, obscuration=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;galsim.UserScreen(</span><span class="si">{!r}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, diam=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, obscuration=</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">UserScreen</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">==</span> <span class="n">rhs</span><span class="o">.</span><span class="n">table</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="o">==</span> <span class="n">rhs</span><span class="o">.</span><span class="n">diam</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">==</span> <span class="n">rhs</span><span class="o">.</span><span class="n">obscuration</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span> <span class="o">==</span> <span class="n">rhs</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;UserScreen&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_getStepK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an appropriate stepk for this phase screen.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            lam:            Wavelength in nanometers.</span>
+<span class="sd">            gsparams:       An optional `GSParams` argument. [default: None]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            stepk in inverse arcsec.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;lam&#39;</span><span class="p">]</span>
+        <span class="n">gsparams</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gsparams&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">diam</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="k">else</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ptp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">_calcOptStepK</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Evaluate wavefront from lookup table.</span>
+
+<span class="sd">        Wavefront here indicates the distance by which the physical wavefront lags or leads the</span>
+<span class="sd">        ideal plane wave.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can</span>
+<span class="sd">                    be a scalar or an iterable.  The shapes of u and v must match.</span>
+<span class="sd">            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can</span>
+<span class="sd">                    be a scalar or an iterable.  The shapes of u and v must match.</span>
+<span class="sd">            t:      Ignored for `UserScreen`.</span>
+<span class="sd">            theta:  Ignored for `UserScreen`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Array of wavefront lag or lead in nanometers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_wavefront</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Evaluate gradient of wavefront from lookup table.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            u:      Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can</span>
+<span class="sd">                    be a scalar or an iterable.  The shapes of u and v must match.</span>
+<span class="sd">            v:      Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can</span>
+<span class="sd">                    be a scalar or an iterable.  The shapes of u and v must match.</span>
+<span class="sd">            t:      Ignored for `UserScreen`.</span>
+<span class="sd">            theta:  Ignored for `UserScreen`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_wavefront_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">gradient</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1315,7 +1439,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

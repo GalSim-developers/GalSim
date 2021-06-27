@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Point-spread functions &mdash; GalSim 2.2.4 documentation</title>
+  <title>Point-spread functions &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Galaxies" href="gal.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -121,7 +125,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -129,6 +133,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -163,11 +168,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="sb.html">Surface Brightness Profiles</a> &raquo;</li>
         
@@ -176,7 +183,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/psf.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -520,7 +527,7 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 <h2>Von Karman Profile<a class="headerlink" href="#von-karman-profile" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="galsim.VonKarman">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">VonKarman</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lam</span></em>, <em class="sig-param"><span class="n">r0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">r0_500</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">L0</span><span class="o">=</span><span class="default_value">25.0</span></em>, <em class="sig-param"><span class="n">flux</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">scale_unit</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em>, <em class="sig-param"><span class="n">do_delta</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">suppress_warning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/vonkarman.html#VonKarman"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VonKarman" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">VonKarman</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lam</span></em>, <em class="sig-param"><span class="n">r0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">r0_500</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">L0</span><span class="o">=</span><span class="default_value">25.0</span></em>, <em class="sig-param"><span class="n">flux</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">scale_unit</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em>, <em class="sig-param"><span class="n">force_stepk</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">do_delta</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">suppress_warning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/vonkarman.html#VonKarman"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.VonKarman" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>Class describing a von Karman surface brightness profile, which represents a long exposure
 atmospheric PSF.  The difference between the von Karman profile and the related <a class="reference internal" href="#galsim.Kolmogorov" title="galsim.Kolmogorov"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Kolmogorov</span></code></a>
@@ -566,6 +573,19 @@ should be specified.</p></li>
 etc.  Should be a <a class="reference internal" href="units.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a string that can be used to
 construct one (e.g., ‘arcsec’, ‘radians’, etc.).
 [default: galsim.arcsec]</p></li>
+<li><p><strong>force_stepk</strong> – By default, VonKarman will derive a value of stepk from a computed
+real-space surface brightness profile and gsparams settings.  Although
+this profile is cached for future instantiations of identical VonKarman
+objects, it is relatively slow to compute for the first instance and
+can dominate the compute time when drawing many VonKaman’s with
+different parameters using method ‘fft’, ‘sb’, or ‘no_pixel’, a
+situation that may occur, e.g., in a fitting context.  This keyword
+enables a user to bypass the real-space profile computation by directly
+specifying a stepk value.  Note that if the <code class="docutils literal notranslate"><span class="pre">.half_light_radius</span></code>
+property is queried, or the object is drawn using method ‘phot’ or
+‘real_space’, then the real-space profile calculation is performed (if
+not cached) at that point.  [default: 0.0, which means do not force a
+value of stepk]</p></li>
 <li><p><strong>do_delta</strong> – Include delta-function at origin? (not recommended; see above).
 [default: False]</p></li>
 <li><p><strong>suppress_warning</strong> – For some combinations of r0 and L0, it may become impossible to satisfy
@@ -593,6 +613,12 @@ keyword.  [default: False]</p></li>
 <dt id="galsim.VonKarman.do_delta">
 <em class="property">property </em><code class="sig-name descname">do_delta</code><a class="headerlink" href="#galsim.VonKarman.do_delta" title="Permalink to this definition">¶</a></dt>
 <dd><p>Whether to include the delta function at the center.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.VonKarman.force_stepk">
+<em class="property">property </em><code class="sig-name descname">force_stepk</code><a class="headerlink" href="#galsim.VonKarman.force_stepk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forced value of stepk or 0.0.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -651,7 +677,7 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 <h2>Optical PSF<a class="headerlink" href="#optical-psf" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="galsim.OpticalPSF">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">OpticalPSF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lam_over_diam</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lam</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">diam</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tip</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">tilt</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">defocus</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">astig1</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">astig2</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">coma1</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">coma2</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">trefoil1</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">trefoil2</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">spher</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">aberrations</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">annular_zernike</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">aper</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">circular_pupil</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">obscuration</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">interpolant</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oversampling</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">pad_factor</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">ii_pad_factor</span><span class="o">=</span><span class="default_value">4.0</span></em>, <em class="sig-param"><span class="n">flux</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">nstruts</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">strut_thick</span><span class="o">=</span><span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">strut_angle</span><span class="o">=</span><span class="default_value">coord.Angle(0.0, coord.radians)</span></em>, <em class="sig-param"><span class="n">pupil_plane_im</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pupil_plane_scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pupil_plane_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pupil_angle</span><span class="o">=</span><span class="default_value">coord.Angle(0.0, coord.radians)</span></em>, <em class="sig-param"><span class="n">scale_unit</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_force_stepk</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">_force_maxk</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">suppress_warning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">geometric_shooting</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#OpticalPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalPSF" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">OpticalPSF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">lam_over_diam</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">lam</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">diam</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">tip</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">tilt</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">defocus</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">astig1</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">astig2</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">coma1</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">coma2</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">trefoil1</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">trefoil2</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">spher</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">aberrations</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">annular_zernike</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">aper</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">circular_pupil</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">obscuration</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">interpolant</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">oversampling</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">pad_factor</span><span class="o">=</span><span class="default_value">1.5</span></em>, <em class="sig-param"><span class="n">ii_pad_factor</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">flux</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">nstruts</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">strut_thick</span><span class="o">=</span><span class="default_value">0.05</span></em>, <em class="sig-param"><span class="n">strut_angle</span><span class="o">=</span><span class="default_value">coord.Angle(0.0, coord.radians)</span></em>, <em class="sig-param"><span class="n">pupil_plane_im</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pupil_plane_scale</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pupil_plane_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pupil_angle</span><span class="o">=</span><span class="default_value">coord.Angle(0.0, coord.radians)</span></em>, <em class="sig-param"><span class="n">scale_unit</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em>, <em class="sig-param"><span class="n">fft_sign</span><span class="o">=</span><span class="default_value">'+'</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">_force_stepk</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">_force_maxk</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">suppress_warning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">geometric_shooting</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_psf.html#OpticalPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.OpticalPSF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
 <p>A class describing aberrated PSFs due to telescope optics.  Its underlying implementation
 uses an InterpolatedImage to characterize the profile.</p>
@@ -785,7 +811,7 @@ compared to what would be employed for a simple <a class="reference internal" hr
 those larger than order unity.  [default: 1.5]</p></li>
 <li><p><strong>ii_pad_factor</strong> – Zero-padding factor by which to extend the image of the PSF when
 creating the <code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code>.  See the <code class="docutils literal notranslate"><span class="pre">InterpolatedImage</span></code>
-docstring for more details.  [default: 4.]</p></li>
+docstring for more details.  [default: 1.5]</p></li>
 <li><p><strong>suppress_warning</strong> – If <code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> is too small, the code will emit a warning telling you
 its best guess about how high you might want to raise it.  However,
 you can suppress this warning by using <code class="docutils literal notranslate"><span class="pre">suppress_warning=True</span></code>.
@@ -824,6 +850,12 @@ adjusting the pupil size.  [default: None]</p></li>
 are supplied separately.  Should be either a <a class="reference internal" href="units.html#galsim.AngleUnit" title="galsim.AngleUnit"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.AngleUnit</span></code></a> or a
 string that can be used to construct one (e.g., ‘arcsec’, ‘radians’,
 etc.).  [default: galsim.arcsec]</p></li>
+<li><p><strong>fft_sign</strong> – The sign (+/-) to use in the exponent of the Fourier kernel when
+evaluating the Fourier optics PSF.  As of version 2.3, GalSim uses a
+plus sign by default, which we believe to be consistent with, for
+example, how Zemax computes a Fourier optics PSF on DECam.  Before
+version 2.3, the default was a negative sign.  Input should be either
+the string ‘+’ or the string ‘-‘.  [default: ‘+’]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
 </ul>
 </dd>
@@ -857,29 +889,29 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="gal.html" class="btn btn-neutral float-right" title="Galaxies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="simple.html" class="btn btn-neutral float-left" title="Simple Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="gal.html" class="btn btn-neutral float-right" title="Galaxies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="simple.html" class="btn btn-neutral float-left" title="Simple Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -887,7 +919,6 @@ the given value.  Note that if <code class="docutils literal notranslate"><span 
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

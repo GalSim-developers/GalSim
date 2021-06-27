@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.wfirst.wfirst_wcs &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.roman.roman_wcs &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,15 +147,17 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>galsim.wfirst.wfirst_wcs</li>
+      <li>galsim.roman.roman_wcs</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -165,8 +172,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for galsim.wfirst.wfirst_wcs</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+  <h1>Source code for galsim.roman.roman_wcs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -184,11 +191,12 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">@file wfirst_wcs.py</span>
+<span class="sd">@file roman_wcs.py</span>
 
-<span class="sd">Part of the WFIRST module.  This file includes any routines needed to define and use the WFIRST WCS.</span>
-<span class="sd">Current version is consistent with WFIRST wide-field channel optical design version 7.6.8, generated</span>
-<span class="sd">during Phase A and presented at the WFIRST System Requirements Review and Mission Definition Review.</span>
+<span class="sd">Part of the Roman Space Telescope module.  This file includes any routines needed to define and use</span>
+<span class="sd">the Roman WCS.  Current version is consistent with Roman wide-field channel optical design version</span>
+<span class="sd">7.6.8, generated during Phase A and presented at the Roman System Requirements Review and Mission</span>
+<span class="sd">Definition Review.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -197,14 +205,14 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_sca</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
 
-<span class="c1"># Basic WFIRST reference info, with lengths in mm.</span>
+<span class="c1"># Basic Roman reference info, with lengths in mm.</span>
 <span class="n">pixel_size_mm</span> <span class="o">=</span> <span class="mf">0.01</span>
 <span class="n">focal_length</span> <span class="o">=</span> <span class="mf">18727.2</span>
 <span class="n">pix_scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">pixel_size_mm</span><span class="o">/</span><span class="n">focal_length</span><span class="p">)</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span>
 <span class="n">n_sip</span> <span class="o">=</span> <span class="mi">5</span> <span class="c1"># Number of SIP coefficients used, where arrays are n_sip x n_sip in dimension</span>
 
 <span class="c1"># Version-related information, for reference back to material provided by Jeff Kruk.</span>
-<span class="n">tel_name</span> <span class="o">=</span> <span class="s2">&quot;WFIRST&quot;</span>
+<span class="n">tel_name</span> <span class="o">=</span> <span class="s2">&quot;Roman&quot;</span>
 <span class="n">instr_name</span> <span class="o">=</span> <span class="s2">&quot;WFC&quot;</span>
 <span class="n">optics_design_ver</span> <span class="o">=</span> <span class="s2">&quot;7.6.8&quot;</span>
 <span class="n">prog_version</span> <span class="o">=</span> <span class="s2">&quot;0.5&quot;</span>
@@ -218,7 +226,7 @@
 <span class="c1"># SCA is 18, and its value is in sca_xc_mm[18].  Units are mm.  The ordering of SCAs was swapped</span>
 <span class="c1"># between cycle 5 and 6, with 1&lt;-&gt;2, 4&lt;-&gt;5, etc. swapping their y positions.  Gaps between the SCAs</span>
 <span class="c1"># were also modified, and the parity was flipped about the f2 axis to match the FPA diagrams.</span>
-<span class="n">infile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;sca_positions_7_6_8.txt&#39;</span><span class="p">)</span>
+<span class="n">infile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;roman&#39;</span><span class="p">,</span> <span class="s1">&#39;sca_positions_7_6_8.txt&#39;</span><span class="p">)</span>
 <span class="n">sca_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
 <span class="n">sca_xc_mm</span> <span class="o">=</span> <span class="o">-</span><span class="n">sca_data</span><span class="p">[</span><span class="mi">3</span><span class="p">,:]</span>
 <span class="n">sca_yc_mm</span> <span class="o">=</span> <span class="n">sca_data</span><span class="p">[</span><span class="mi">4</span><span class="p">,:]</span>
@@ -243,12 +251,12 @@
 <span class="n">theta_fpa</span> <span class="o">=</span> <span class="o">-</span><span class="mf">60.0</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span>
 
 <span class="c1"># File with SIP coefficients.</span>
-<span class="n">sip_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;sip_7_6_8.txt&#39;</span><span class="p">)</span>
+<span class="n">sip_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;roman&#39;</span><span class="p">,</span> <span class="s1">&#39;sip_7_6_8.txt&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="getWCS"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.getWCS">[docs]</a><span class="k">def</span> <span class="nf">getWCS</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">SCAs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="getWCS"><a class="viewcode-back" href="../../../roman.html#galsim.roman.getWCS">[docs]</a><span class="k">def</span> <span class="nf">getWCS</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">SCAs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This routine returns a dict containing a WCS for each of the WFIRST SCAs (Sensor Chip Array, the</span>
-<span class="sd">    equivalent of a chip in an optical CCD).  The WFIRST SCAs are labeled 1-18, so these numbers are</span>
+<span class="sd">    This routine returns a dict containing a WCS for each of the Roman SCAs (Sensor Chip Array, the</span>
+<span class="sd">    equivalent of a chip in an optical CCD).  The Roman SCAs are labeled 1-18, so these numbers are</span>
 <span class="sd">    used as the keys in the dict.  Alternatively the user can request a subset of the SCAs using the</span>
 <span class="sd">    ``SCAs`` option.  The basic instrument parameters used to create the WCS correspond to those in</span>
 <span class="sd">    Cycle 6, which includes some significant updates from Cycle 5, including a 90 degree rotation of</span>
@@ -265,7 +273,7 @@
 
 <span class="sd">    To fully understand all possible inputs and outputs to this routine, users may wish to consult</span>
 <span class="sd">    the diagram on the GalSim wiki,</span>
-<span class="sd">    https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams</span>
+<span class="sd">    https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        world_pos:      A `galsim.CelestialCoord` indicating the position to observe at the center</span>
@@ -356,7 +364,7 @@
         <span class="c1"># celestial coordinates. In other words, phi_p is the angle of the +Y axis in the tangent</span>
         <span class="c1"># plane, which is of course pi if we&#39;re measuring these phi angles clockwise from the -Y</span>
         <span class="c1"># axis.  Note that this quantity is not used in any calculations at all, but for consistency</span>
-        <span class="c1"># with the WCS code that comes from the WFIRST project office, we calculate this quantity</span>
+        <span class="c1"># with the WCS code that comes from the Roman project office, we calculate this quantity</span>
         <span class="c1"># and put it in the FITS header.</span>
         <span class="k">if</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">dec</span> <span class="o">/</span> <span class="n">coord</span><span class="o">.</span><span class="n">degrees</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">90.</span><span class="p">:</span>
             <span class="n">phi_p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">radians</span>
@@ -425,7 +433,7 @@
 
     <span class="k">return</span> <span class="n">wcs_dict</span></div>
 
-<div class="viewcode-block" id="convertCenter"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.convertCenter">[docs]</a><span class="k">def</span> <span class="nf">convertCenter</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">SCA</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">arcsec</span><span class="p">):</span>
+<div class="viewcode-block" id="convertCenter"><a class="viewcode-back" href="../../../roman.html#galsim.roman.convertCenter">[docs]</a><span class="k">def</span> <span class="nf">convertCenter</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">SCA</span><span class="p">,</span> <span class="n">PA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">PA_is_FPA</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">coord</span><span class="o">.</span><span class="n">arcsec</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a simple helper routine that takes an input position ``world_pos`` that is meant to</span>
 <span class="sd">    correspond to the position of the center of an SCA, and tells where the center of the focal</span>
@@ -442,7 +450,7 @@
 
 <span class="sd">    To fully understand all possible inputs and outputs to this routine, users may wish to consult</span>
 <span class="sd">    the diagram on the GalSim wiki,</span>
-<span class="sd">    https://github.com/GalSim-developers/GalSim/wiki/GalSim-WFIRST-module-diagrams</span>
+<span class="sd">    https://github.com/GalSim-developers/GalSim/wiki/GalSim-Roman-module-diagrams</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        world_pos:  A galsim.CelestialCoord indicating the position to observe at the center of the</span>
@@ -497,9 +505,9 @@
 
     <span class="k">return</span> <span class="n">fpa_cent</span></div>
 
-<div class="viewcode-block" id="findSCA"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.findSCA">[docs]</a><span class="k">def</span> <span class="nf">findSCA</span><span class="p">(</span><span class="n">wcs_dict</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">include_border</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="findSCA"><a class="viewcode-back" href="../../../roman.html#galsim.roman.findSCA">[docs]</a><span class="k">def</span> <span class="nf">findSCA</span><span class="p">(</span><span class="n">wcs_dict</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">include_border</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This is a subroutine to take a dict of WCS (one per SCA) from galsim.wfirst.getWCS() and query</span>
+<span class="sd">    This is a subroutine to take a dict of WCS (one per SCA) from galsim.roman.getWCS() and query</span>
 <span class="sd">    which SCA a particular real-world coordinate would be located on.  The position (``world_pos``)</span>
 <span class="sd">    should be specified as a galsim.CelestialCoord.  If the position is not located on any of the</span>
 <span class="sd">    SCAs, the result will be None.  Note that if ``wcs_dict`` does not include all SCAs in it, then</span>
@@ -515,7 +523,7 @@
 <span class="sd">    ``include_border`` switches between these scenarios.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        wcs_dict:        The dict of WCS&#39;s output from galsim.wfirst.getWCS().</span>
+<span class="sd">        wcs_dict:        The dict of WCS&#39;s output from galsim.roman.getWCS().</span>
 <span class="sd">        world_pos:       A galsim.CelestialCoord indicating the sky position of interest.</span>
 <span class="sd">        include_border:  If True, then include the half-border around SCA to cover the gap</span>
 <span class="sd">                         between each sensor. [default: False]</span>
@@ -529,7 +537,7 @@
 
     <span class="c1"># Sanity check args.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wcs_dict</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;wcs_dict should be a dict containing WCS output by galsim.wfirst.getWCS.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;wcs_dict should be a dict containing WCS output by galsim.roman.getWCS.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">CelestialCoord</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Position on the sky must be given as a galsim.CelestialCoord.&quot;</span><span class="p">)</span>
@@ -554,7 +562,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a helper routine to calculate the minimum and maximum pixel values that should be</span>
 <span class="sd">    considered within an SCA, possibly including the complexities of including 1/2 of the gap</span>
-<span class="sd">    between SCAs.  In that case it depends on the detailed geometry of the WFIRST focal plane.</span>
+<span class="sd">    between SCAs.  In that case it depends on the detailed geometry of the Roman focal plane.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        include_border:     A boolean value that determines whether to include 1/2 of the gap</span>
@@ -631,7 +639,7 @@
 
 <span class="k">def</span> <span class="nf">_populate_required_fields</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Utility routine to do populate some of the basic fields for the WCS headers for WFIRST that</span>
+<span class="sd">    Utility routine to do populate some of the basic fields for the WCS headers for Roman that</span>
 <span class="sd">    don&#39;t require any interesting calculation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span>
@@ -662,7 +670,7 @@
 <span class="sd">    for later calculations.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot find file that should have WFIRST SIP coefficients: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">file</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Cannot find file that should have Roman SIP coefficients: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">file</span><span class="p">)</span>
 
     <span class="c1"># Parse the file, which comes from wfi_wcs_sip_gen_0.1.c provided by Jeff Kruk.</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">usecols</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">])</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
@@ -701,8 +709,8 @@
 <span class="sd">    Note that the coefficients given in this routine go in the order {a0, a1, a2, a3}.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># These numbers come from the &quot;WFIRST Wide-Field Instrument Reference Information&quot; on</span>
-    <span class="c1"># https://wfirst.gsfc.nasa.gov/science/WFIRST_Reference_Information.html (cycle 7).</span>
+    <span class="c1"># These numbers come from the &quot;Roman Wide-Field Instrument Reference Information&quot; on</span>
+    <span class="c1"># https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html (cycle 7).</span>
     <span class="n">img_dist_coeff</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">7.1229e-3</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.6186e-2</span><span class="p">,</span> <span class="mf">6.9169e-02</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.4189e-02</span><span class="p">])</span>
     <span class="c1"># The optical distortion model is defined in terms of separations in *degrees*.</span>
     <span class="n">r_sq</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_in</span><span class="o">/</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y_in</span><span class="o">/</span><span class="n">coord</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
@@ -747,7 +755,7 @@
     <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span>
 
     <span class="c1"># This is a helper routine to parse the input SCAs (single number or iterable) and put it into a</span>
-    <span class="c1"># convenient format.  It is used in wfirst_wcs.py.</span>
+    <span class="c1"># convenient format.  It is used in roman_wcs.py.</span>
     <span class="c1">#</span>
     <span class="c1"># Check which SCAs are to be done.  Default is all (and they are 1-indexed).</span>
     <span class="n">all_SCAs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_sca</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
@@ -785,7 +793,7 @@
 
     <span class="c1"># Are we allowed to look here?</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">allowedPos</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Error, WFIRST cannot look at this position on this date!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Error, Roman cannot look at this position on this date!&quot;</span><span class="p">)</span>
 
     <span class="c1"># If position angle was not given, then get the optimal one:</span>
     <span class="k">if</span> <span class="n">PA</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -796,7 +804,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">PA</span><span class="p">,</span> <span class="n">coord</span><span class="o">.</span><span class="n">Angle</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Position angle must be a galsim.Angle!&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Check which SCAs are to be done using a helper routine in the galsim.wfirst module.</span>
+    <span class="c1"># Check which SCAs are to be done using a helper routine in the galsim.roman module.</span>
     <span class="n">SCAs</span> <span class="o">=</span> <span class="n">_parse_SCAs</span><span class="p">(</span><span class="n">SCAs</span><span class="p">)</span>
 
     <span class="c1"># Compute position angle of FPA f2 axis, where positive corresponds to the angle east of North.</span>
@@ -809,15 +817,15 @@
 
     <span class="k">return</span> <span class="n">date</span><span class="p">,</span> <span class="n">SCAs</span><span class="p">,</span> <span class="n">pa_fpa</span><span class="p">,</span> <span class="n">pa_obsy</span>
 
-<div class="viewcode-block" id="allowedPos"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.allowedPos">[docs]</a><span class="k">def</span> <span class="nf">allowedPos</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+<div class="viewcode-block" id="allowedPos"><a class="viewcode-back" href="../../../roman.html#galsim.roman.allowedPos">[docs]</a><span class="k">def</span> <span class="nf">allowedPos</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This routine can be used to check whether WFIRST would be allowed to look at a particular</span>
+<span class="sd">    This routine can be used to check whether Roman would be allowed to look at a particular</span>
 <span class="sd">    position (``world_pos``) on a given ``date``.   This is determined by the angle of this position</span>
 <span class="sd">    relative to the Sun.</span>
 
-<span class="sd">    In general, WFIRST can point at angles relative to the Sun in the range 90+/-36 degrees.</span>
+<span class="sd">    In general, Roman can point at angles relative to the Sun in the range 90+/-36 degrees.</span>
 <span class="sd">    Obviously, pointing too close to the Sun would result in overly high sky backgrounds.  It is</span>
-<span class="sd">    less obvious why WFIRST cannot look at a spot directly opposite from the Sun (180 degrees on the</span>
+<span class="sd">    less obvious why Roman cannot look at a spot directly opposite from the Sun (180 degrees on the</span>
 <span class="sd">    sky).  The reason is that the observatory is aligned such that if the observer is looking at</span>
 <span class="sd">    some sky position, the solar panels are oriented at 90 degrees from that position.  So it&#39;s</span>
 <span class="sd">    always optimal for the observatory to be pointing at an angle of 90 degrees relative to the</span>
@@ -843,7 +851,7 @@
     <span class="n">max_ang</span> <span class="o">=</span> <span class="mf">90.</span> <span class="o">+</span> <span class="mf">36.</span>
     <span class="k">return</span> <span class="n">angle_deg</span> <span class="o">&gt;=</span> <span class="n">min_ang</span> <span class="ow">and</span> <span class="n">angle_deg</span> <span class="o">&lt;=</span> <span class="n">max_ang</span></div>
 
-<div class="viewcode-block" id="bestPA"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.bestPA">[docs]</a><span class="k">def</span> <span class="nf">bestPA</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
+<div class="viewcode-block" id="bestPA"><a class="viewcode-back" href="../../../roman.html#galsim.roman.bestPA">[docs]</a><span class="k">def</span> <span class="nf">bestPA</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This routine determines the best position angle for the observatory for a given observation date</span>
 <span class="sd">    and position on the sky.</span>
@@ -889,20 +897,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -910,7 +923,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

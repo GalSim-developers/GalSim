@@ -1,7 +1,7 @@
 Config Processing From Python
 =============================
 
-It is aslo possible to run the config processing from a Python script, rather than using
+It is also possible to run the config processing from a Python script, rather than using
 `the galsim executable`.  An example of this can be found in
 :download:`demo8 <../examples/demo8.py>`.
 
@@ -93,7 +93,7 @@ dict:
 Building Objects
 ----------------
 
-The following functions are relevant to building individual objectss as specified by a config
+The following functions are relevant to building individual objects as specified by a config
 dict:
 
 .. autofunction:: galsim.config.BuildGSObject
@@ -218,4 +218,3 @@ but they might be useful for some users.
 .. autofunction:: galsim.config.MakeStampTasks
 
 .. autofunction:: galsim.config.RegisterInputConnectedType
-

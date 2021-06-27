@@ -12,6 +12,7 @@ have been designating using the following italic names:
 - *shear_value* corresponds to a GalSim `Shear` instance.  See `shear_value`
 - *pos_value* corresponds to a GalSim `PositionD` instance.  See `pos_value`
 - *sky_value* corresponds to a GalSim `CelestialCoord` instance.  See `sky_value`
+- *table_value* corresponds to a GalSim `LookupTable` instance.  See `table_value`
 
 Each of the Python types can be given as a constant value using the normal Python conventions
 for how to specify such a value.  The GalSim *angle_value* and *pos_value* also have
@@ -111,7 +112,7 @@ Options are:
             * ``first`` = *float_value* (default = 0)
             * ``step`` = *float_value* (default = 1) The step size between items.
             * ``repeat`` = *int_value* (default = 1) How many times to repeat the same value before moving on.
-            * ``last`` = *float_value* (optional; at most one of ``last`` and ``nitems`` is allowed) 
+            * ``last`` = *float_value* (optional; at most one of ``last`` and ``nitems`` is allowed)
 
                 .. note::
 
@@ -149,7 +150,7 @@ int_value
 Options are:
 
 * A normal int value (e.g. 8)
-* Anything that python can convert into an int (e.g. 8.0, '8')  
+* Anything that python can convert into an int (e.g. 8.0, '8')
 
     .. note::
 
@@ -194,10 +195,10 @@ Options are:
             * ``first`` = *int_value* (default = 0)
             * ``step`` = *int_value* (default = 1) The step size between items.
             * ``repeat`` = *int_value* (default = 1) How many times to repeat the same value before moving on.
-            * ``last`` = *float_value* (optional; at most one of ``last`` and ``nitems`` is allowed)  
+            * ``last`` = *float_value* (optional; at most one of ``last`` and ``nitems`` is allowed)
 
                 .. note::
-                   
+
                     if ``last`` is provided, once a value passes ``last``, the sequence will
                     repeat starting with ``first`` again.
 
@@ -253,10 +254,10 @@ Options are:
 
             * ``p`` = *float_value* (default = 0.5)  The probability of getting True.  [New in v1.5]
 
-        * 'RandomBinomial'  Generate random values from a Binomial deviate with N=1. 
+        * 'RandomBinomial'  Generate random values from a Binomial deviate with N=1.
 
             .. note::
-               
+
                 The default case with ``p`` = 0.5 is equivalent to the 'Random' type.  So this
                 would normally be used for random booleans with a different probability of True.
 
@@ -335,6 +336,8 @@ Options are:
 angle_value
 -----------
 
+These represent `Angle` values.
+
 Options are:
 
 * A string consisting of a float followed by one of the following angle units: radians, degrees, hours, arcminutes, arcseconds. These may be abbreviated as rad, deg, hr, arcmin, arcsec. (e.g. '45 deg')
@@ -370,6 +373,8 @@ Options are:
 
 shear_value
 -----------
+
+These represent `Shear` values.
 
 Options are:
 
@@ -432,10 +437,10 @@ Options are:
 
         * 'Sum'  The sum of two other *shear_value* items.
 
-            .. note:: 
-             
+            .. note::
+
                 Unlike the other kinds of values, shears addition is not commutative.
-                ``g_a + g_b`` is not the same as ``g_b + g_a``.  Thus, the order of the elements 
+                ``g_a + g_b`` is not the same as ``g_b + g_a``.  Thus, the order of the elements
                 in the ``items`` list matters.  The shear effects are applied from last to first,
                 so the effects should be listed in order from closest to the observer to farthest
                 along the light path.  This is a *somewhat* standard convention for what
@@ -451,6 +456,8 @@ Options are:
 
 pos_value
 ---------
+
+These represent `PositionD` values, usually for a location on the image.
 
 Options are:
 
@@ -469,10 +476,10 @@ Options are:
             * ``r`` = *float_value* (required)
             * ``theta`` = *angle_value* (required)
 
-        * 'RandomCircle'  Generate a random value uniformly distributed within a circle of a given radius.  
+        * 'RandomCircle'  Generate a random value uniformly distributed within a circle of a given radius.
 
             .. note::
-             
+
                 This is different from 'RTheta' with each one random, since that would
                 preferentially pick locations near the center of the circle.
 
@@ -500,11 +507,13 @@ Options are:
 sky_value
 ---------
 
+These represent `CelestialCoord` values for a location in the sky.
+
 Options are:
 
 * A dict with:
 
-    * ``type`` = *str* (required)  There is currenly only one valid option:
+    * ``type`` = *str* (required)  There is currently only one valid option:
 
         * 'RaDec' Specify x and y separately.
 
@@ -515,11 +524,47 @@ Options are:
 
 * A string that starts with '$' or '@'.  See `Shorthand Notation`.
 
+table_value
+-----------
+
+These represent `LookupTable` values to provide some kind of unary function, although in some
+cases you may be able to provide a regular function instead, e.g. via an Eval type using a lambda
+function.
+
+Options are:
+
+* A dict with:
+
+    * ``type`` = *str* (required)  Valid options are:
+
+        * 'File'  Read a `LookupTable` from a file.  cf. `LookupTable.from_file`.
+
+            * ``file_name`` = *str_value* (required)
+            * ``interpolant`` = *str_value* (default = 'spline') Which interpolant to use.
+            * ``x_log`` = *bool_value* (default = False) Whether to use log(x) for the abscissae.
+            * ``f_log`` = *bool_value* (default = False) Whether to use log(f) for the ordinates.
+            * ``amplitude`` = *float_value* (default = 1.0) An optional scaling to apply to the
+              ordinates.
+
+        * 'List'  Select items from a list.
+
+            * ``items`` = *list* (required)  A list of *table_value* items.
+            * ``index`` = *int_value* (default = 'Sequence' from 0 to len(items)-1)
+
+        * 'Current'  Use the current value of some other item in the config file.  (See the description of this for *float_value* for more details.)
+
+            * ``key`` = *str_value* (required)  The key name of the item to use.
+
+        * 'Eval'  Evaluate a string.  See `Eval type`.
+
+* A string that starts with '$' or '@'.  See `Shorthand Notation`.
+
+
 Eval type
 ---------
 
 Every kind of value has 'Eval' as one of its allowed types.  This works a little bit differently
-than the other types, so we describe it here in its own section.  
+than the other types, so we describe it here in its own section.
 
 The only required attribute to go along with an 'Eval' is ``str``, which is the string to be
 evaluated using the python ``eval`` function.
@@ -527,26 +572,20 @@ evaluated using the python ``eval`` function.
 For example ``str : '800 * 1.e-9 / 4 * 206265'`` will evaluate to 0.041253.  (This example is taken from demo3.yaml.)  This might either be easier than doing a calculation
 yourself or perhaps be clearer as to how the number was formed.  For example, this example
 calculates ``lam_over_diam`` using lambda = 800 nm, D = 4 m, converting the result into arcsec.
-If you later wanted to change to a 6.5m telescope, it would be very clear what to change, 
+If you later wanted to change to a 6.5m telescope, it would be very clear what to change,
 as opposed to if the value were listed as 0.041253.
 
 Preset variables
 ^^^^^^^^^^^^^^^^
 
-The 'Eval' type gets even more powerful when you use variables.  The file demo10.yaml has some 
-examples that use the ``pos`` variable, the position of the galaxy relative to the center of the 
-image, which GalSim will make available for you for any 
-'Tiled' or 'Scattered' image.  The PSF ``fwhm`` is given as 
+The 'Eval' type gets even more powerful when you use variables.  The file demo10.yaml has some
+examples that use the ``pos`` variable, the position of the galaxy relative to the center of the
+image, which GalSim will make available for you for any
+'Tiled' or 'Scattered' image.  The PSF ``fwhm`` is given as
 ``'0.9 + 0.5 * (world_pos.x**2 + world_pos.y**2) / 100**2'``, which calculates the PSF size as a function of
 position on the image.
 
 Variables that GalSim will provide for you to use:
-
-* ``world_pos`` = the position of the object in world coordinates relative to the center of the image.
-
-    * Available if image ``type`` is 'Tiled' or 'Scattered'
-    * Available if ``image_pos`` or ``world_pos`` is explicitly given in the ``stamp`` field.
-    * A `galsim.PositionD` instance
 
 * ``image_pos`` = the position of the object on the image in pixels.
 
@@ -554,9 +593,32 @@ Variables that GalSim will provide for you to use:
     * Available if ``image_pos`` or ``world_pos`` is explicitly given in the ``stamp`` field.
     * A `galsim.PositionD` instance
 
-* ``image_center`` = the center of the image in pixels.  This is the position on the image that corresponds to ``world_pos = (0,0)``.
+* ``world_pos`` = the position of the object in world coordinates.
+
+    * Available if image ``type`` is 'Tiled' or 'Scattered'
+    * Available if ``image_pos`` or ``world_pos`` is explicitly given in the ``stamp`` field.
+    * A `galsim.PositionD` instance if the wcs is a `galsim.wcs.EuclideanWCS` or a `galsim.CelestialCoord` if the wcs is a `galsim.wcs.CelestialWCS`.
+
+* ``sky_pos`` = the position of the object in sky coordinates (RA, Dec)
+
+    * Available if ``sky_pos`` is explicitly given in the ``stamp`` field.
+    * Available if ``world_pos`` is defined (as per above) and the WCS is a CelestialWCS.
+    * A `galsim.CelestialCoord` instance
+
+* ``uv_pos`` = the position of the object in a tangent plane projection relative to ``world_center``.
+
+    * Available if either image_pos or world_pos is defined and the wcs is defined.
+    * A `galsim.PositionD` instance
+
+* ``image_center`` = the center of the image in pixels.
 
     * A `galsim.PositionD` instance
+
+* ``world_center`` = the world position of ``image_center``.
+
+    * Computed automatically from ``image_center`` and the wcs.
+    * A `galsim.PositionD` instance if the wcs is a `galsim.wcs.EuclideanWCS` or a `galsim.CelestialCoord` if the wcs is a `galsim.wcs.CelestialWCS`.
+    * May also be provided directly if you want something different for this, by specifically including a ``world_center`` item in the ``image`` field.  In this case, it should be a `galsim.CelestialCoord` value.
 
 * ``image_origin`` = the origin of the image in pixels.  This is the position on the image that corresponds to the lower-leftmost pixel
 
@@ -579,6 +641,10 @@ Variables that GalSim will provide for you to use:
 
     * A `galsim.BaseWCS` instance
 
+* ``bandpass`` = the bandpass of the current image if defined.
+
+    * A `galsim.Bandpass` instance
+
 * ``file_num`` = the number of the file currently being worked on.
 * ``image_num`` = the number of the image currently being worked on.
 
@@ -594,19 +660,24 @@ Variables that GalSim will provide for you to use:
     * A `galsim.BaseDeviate` instance
     * You can convert it to whatever deviate you need.  e.g. ``galsim.GaussianDeviate(rng,1.0,0.2)()``
 
+Available Modules
+^^^^^^^^^^^^^^^^^^
+
 Python modules that GalSim will import for you to use:
 
 * ``math``
-* ``numpy``
+* ``numpy`` or ``np``
 * ``os``
 * ``galsim`` (obviously)
+* Anything in the ``modules`` field of your configuration file.
+
 
 User-defined variables
 ^^^^^^^^^^^^^^^^^^^^^^
 
-It is also possible to define your own variables to use in your expression simply by 
-defining more attributes in addition to ``str``.  The first letter of the attribute 
-declares what type it should be evaluated to.  Then the rest of the attribute name is 
+It is also possible to define your own variables to use in your expression simply by
+defining more attributes in addition to ``str``.  The first letter of the attribute
+declares what type it should be evaluated to.  Then the rest of the attribute name is
 the name of your variable.
 
 For example, we do not have a specific type for drawing from a Log-Normal distribution.
@@ -620,8 +691,8 @@ the following:
         str : '1.e5 * math.exp(normal)'
         fnormal : { type : RandomGaussian , sigma : 0.2 }
 
-The ``f`` at the start of ``fnormal`` indicates that the variable ``normal`` should be 
-evaluated as a *float_value*.  In this case using ``type`` = 'RandomGaussian'.  
+The ``f`` at the start of ``fnormal`` indicates that the variable ``normal`` should be
+evaluated as a *float_value*.  In this case using ``type`` = 'RandomGaussian'.
 
 Another example appears in demo10.yaml.  There, we define the magnitude of the ellipticity as:
 
@@ -643,13 +714,17 @@ Initial letters of user-defined variables for 'Eval':
 * 'a' = `galsim.Angle`
 * 'p' = `galsim.PositionD`
 * 'g' = `galsim.Shear`
+* 't' = `galsim.LookupTable`
+* 'd' = ``dict``  (This takes a dict as a literal, rather than evaluating it.)
+* 'l' = ``list``  (Similarly, this allows for a literal list in the config file.)
+
 
 The eval-variables field
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Sometimes it is useful to have the same variable used by multiple Eval calculations.  For such cases, Eval will look for a top-level field called ``eval_variables``.  If this field is present, then anything defined there will be accessible in all Eval calculations in addition to whatever variables are defined for each specific Eval item.
 
-This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an ``&`` before it before any value.  Then later, you can refer to the value by that name preceded by a ``*``, rather than write the value again.  This can lead to more maintainable config files.  E.g. demo10.yaml uses this functionality for ``num_in_ring``, since the value is needed in two different calculations.  
+This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an ``&`` before it before any value.  Then later, you can refer to the value by that name preceded by a ``*``, rather than write the value again.  This can lead to more maintainable config files.  E.g. demo10.yaml uses this functionality for ``num_in_ring``, since the value is needed in two different calculations.
 
 It can be convenient to combine the YAML naming scheme with our ``eval_variables`` setup in the following way:
 
@@ -677,10 +752,38 @@ or as part of an ``Eval`` item:
         r : { type : Eval , str : 'pixel_scale * 0.5' }
         theta : { type : Random }
 
+
+Module-defined variables
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you are using any user-defined modules (loaded in the ``modules`` field), then they are
+allowed to add to the list of `Preset variables`. The mechanism for this is to append items
+to the list ``galsim.config.eval_base_variables``.  This list includes all of the variables
+that an Eval type will load into the local namespace before evaluating.  For instance,
+if a user-defined module wants to make available a variable called, say, ``coadd_wcs``,
+then the module could add this name to the list of avilable variables as folllows:
+
+.. code-block:: python
+
+    galsim.config.eval_base_variables.append('coadd_wcs')
+
+This should be done at module scope, since you only want to add it once.  So probably best
+to add it when your module is imported.
+
+Then in some processing step, you could set this variable as
+
+.. code-block:: python
+
+    base['coadd_wcs'] = coadd_wcs
+
+Then any subsequent Eval field could use this variable as a local variable, just like the
+ones listed in `Preset variables`.
+
+
 Shorthand notation
 ^^^^^^^^^^^^^^^^^^
 
-It can be a bit cumbersome at times to write out a full dict with ``type : Eval`` and the 
+It can be a bit cumbersome at times to write out a full dict with ``type : Eval`` and the
 ``str`` item you want to evaluate.  To streamline this, we also allow for a shorthand notation
 for both Eval and Current types.
 
@@ -724,7 +827,7 @@ The generator function should have the following functional form::
 
         @returns value, safe
 
-        The returned value should be something of type value_type, and safe is a bool 
+        The returned value should be something of type value_type, and safe is a bool
         value that indicates whether the value is safe to reuse for future stamps
         (i.e. it is a constant value that will not change for later stamps).
         """
@@ -771,7 +874,7 @@ but it should typically be the name of the value type being built.
 
 Finally, to use this custom type in your config file, you need to tell the config parser the
 name of the module to load at the start of processing.  e.g. if this function is defined in the
-file ``my_custom_value.py``, then you would use the following top-level ``modules`` field 
+file ``my_custom_value.py``, then you would use the following top-level ``modules`` field
 in the config file:
 
 .. code-block:: yaml
@@ -796,6 +899,6 @@ Then you can use this as a valid value type:
 For examples of custom values, see:
 
 * :download:`log_normal.py <../examples/des/log_normal.py>`
-* :download:`hsm_shape.py <../examples/des/hsm_shape.py>`
+* :download:`hsm_shape_measure.py <../examples/des/hsm_shape_measure.py>`
 * :download:`excluded_random.py <../examples/des/excluded_random.py>`
 * :download:`great3_reject <../examples/great3/great3_reject.py>`

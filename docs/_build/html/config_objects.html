@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Config Objects &mdash; GalSim 2.2.4 documentation</title>
+  <title>Config Objects &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Config Stamp Field" href="config_stamp.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -107,6 +111,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#generic-types">Generic Types</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#other-attributes">Other Attributes</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#custom-object-types">Custom Object Types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sed-field">SED Field</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
@@ -124,7 +129,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -132,6 +137,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -166,11 +172,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="config.html">The Config Module</a> &raquo;</li>
         
@@ -181,7 +189,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/config_objects.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -280,6 +288,23 @@ which we describe in <a class="reference internal" href="#custom-object-types"><
 </ul>
 </div></blockquote>
 </li>
+<li><dl class="simple">
+<dt>‘ChromaticAtmosphere’  A chromatic PSF implementing both differential chromatic diffraction (DCR) and wavelength-dependent seeing.  See <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAtmosphere" title="galsim.ChromaticAtmosphere"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAtmosphere</span></code></a> for valid combinations that can be used to set the zenith and parallactic angles needed for DCR.</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">base_profile</span></code> = <em>object</em> (required) The base profile to use for the profile shape at a given reference wavelength</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">base_wavelength</span></code> = <em>float_value</em> (required) The wavelength at which the PSF has the base profile</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alpha</span></code> = <em>float_value</em> (default = -0.2)  Power law index for wavelength-dependent seeing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_angle</span></code> = <em>Angle_value</em> (optional) The zenith angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parallactic_angle</span></code> = <em>Angle_value</em>  (optional) The parallactic angle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zenith_coord</span></code> = <em>CelestialCoord</em>  (optional)  The (ra,dec) coordinate of the zenith.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HA</span></code> = <em>Angle_value</em> (optional)  Hour angle of the observation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">latitude</span></code> = <em>Angle_value</em> (optional)  Latitude of the observatory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pressure</span></code> = <em>float_value</em> (default = 69.328)  Air pressure in kPa.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">temperature</span></code> = <em>float_value</em> (default = 293.15)  Temperature in K.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H2O_pressure</span></code> = <em>float_value</em> (default = 1.067)  Water vapor pressure in kPa.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </div>
 <div class="section" id="galaxy-types">
@@ -343,9 +368,13 @@ which we describe in <a class="reference internal" href="#custom-object-types"><
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to <code class="docutils literal notranslate"><span class="pre">cosmos_catalog.nobjects</span></code>-1)  Which item in the catalog to use. Special: If <code class="docutils literal notranslate"><span class="pre">index</span></code> is either a ‘Sequence’ or ‘Random’ and <code class="docutils literal notranslate"><span class="pre">last</span></code> or <code class="docutils literal notranslate"><span class="pre">max</span></code> (respectively) is not specified, then it is automatically set to <code class="docutils literal notranslate"><span class="pre">real_catalog.nobjects-1</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">gal_type</span></code> = <em>str_vale</em> (required, unless <code class="docutils literal notranslate"><span class="pre">real_catalog.use_real</span></code> is False, in which case ‘parametric’) Which type of galaxy to use.  Options are ‘real’ or ‘parametric’.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> = <em>float_val</em> (default = 5) The size of a padding region in arcsec around the HST image when <code class="docutils literal notranslate"><span class="pre">gal_type='real'</span></code>.  Only applies to galaxies whose original potage stamp size is smaller than this value; it effectively sets a minimum stamp size with the HST correlated noise for small galaxies.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">deep</span></code> = <em>bool_value</em> (default = False) Whether the flux and size should be rescaled to approximate a galaxy catalog with a limiting mag of 25 in F814W, rather than 23.5.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">noise_pad_size</span></code> = <em>float</em> (optional) If provided, then the original image is padded to a larger image of this size using the noise profile of the original image.  This is important if you are using <code class="docutils literal notranslate"><span class="pre">noise.whiten</span></code> or <code class="docutils literal notranslate"><span class="pre">noise.symmetrize</span></code>.  You want to make sure the image has the original noise all the way to the edge of the postage stamp.  Otherwise, the edges will have the wrong noise profile.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sersic_prec</span></code> = <em>float_value</em> (default = 0.05) The desired precision on the Sersic index n in parametric galaxies.  GalSim is significantly faster if it gets a smallish number of Sersic values, so it can cache some of the calculations and use them again the next time it gets a galaxy with the same index.  If <code class="docutils literal notranslate"><span class="pre">sersic_prec</span></code> is 0.0, then use the exact value of index n from the catalog.  But if it is &gt;0, then round the index to that precision.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">chromatic</span></code> = <em>bool_value</em> (default = False) Whether to build chromatic profiles. (Only valid if <code class="docutils literal notranslate"><span class="pre">gal_type='parametric'</span></code>.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">area</span></code> = <em>float_value</em> (default = None, which will use the HST collecting area.)  The effective collecting area in cm**2 of the telescope being simulated.  Used for rescaling the flux values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exptime</span></code> = <em>float_value</em> (default = 1)  The exposure time in seconds.  Used for rescaling the flux values. (Note: The processed COSMOS ACS/HST science images have units of counts/second; i.e. they have an effective exposure time of 1 second in terms of their flux levels. The default value corresponds to a 1 second exposure on HST, which will match these processed images.)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.real_catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
 </ul>
 </div></blockquote>
@@ -477,7 +506,7 @@ roughly to when they occur to the light packet traveling through the universe.</
 intrinsic profile of the object.
 The next two, <code class="docutils literal notranslate"><span class="pre">magnify</span></code> and <code class="docutils literal notranslate"><span class="pre">shear</span></code>, are typically used to define how the profile is
 modified by lensing.
-The last one, <code class="docutils literal notranslate"><span class="pre">shift</span></code>, is used to shift the position of the galaxy relative to its nominal
+The next one, <code class="docutils literal notranslate"><span class="pre">shift</span></code>, is used to shift the position of the galaxy relative to its nominal
 position on the sky.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">flux</span></code> = <em>float_value</em> (default = 1.0)  Set the flux of the object in ADU. Note that the component <code class="docutils literal notranslate"><span class="pre">items</span></code> in a ‘Sum’ can also have fluxes specified, which can be used as fractional fluxes (e.g. 0.6 for the disk and 0.4 for the bulge). Then the outer level profile can set the real flux for the whole thing.</p></li>
@@ -489,6 +518,7 @@ position on the sky.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">shear</span></code> = <em>shear_value</em> (optional)  Shear the profile by a given shear.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">shift</span></code> = <em>pos_value</em> (optional)  Shift the centroid of the profile by a given amount relative to the center of the image on which it will be drawn.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">skip</span></code> = <em>bool_value</em> (default=False)  Skip this object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sed</span></code> = <em>SED</em> (optional)  If desired, you may set an SED to use for the object.  See <a class="reference internal" href="#sed-field"><span class="std std-ref">SED Field</span></a> below for details.</p></li>
 </ul>
 <p>There are also a few special attributes that are only allowed for the top-level <code class="docutils literal notranslate"><span class="pre">gal</span></code> field,
 not for objects that are part of an aggregate object like ‘Sum’, ‘Convolution’ or ‘List’
@@ -663,6 +693,93 @@ It may also be helpful to look at the GalSim implementation of some of the inclu
 </dd></dl>
 
 </div>
+<div class="section" id="sed-field">
+<h2>SED Field<a class="headerlink" href="#sed-field" title="Permalink to this headline">¶</a></h2>
+<p>If you want your object to have a non-trivial wavelength dependence, you can include an
+<code class="docutils literal notranslate"><span class="pre">sed</span></code> parameter to define its <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.  Currently, there is only one defined
+type to use for the SED, but the code is written in a modular way to allow for
+other types, including custom SED types.</p>
+<ul>
+<li><p>‘FileSED’ is the default type here, and you may omit the type name when using it.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)  The file to read in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wave_type</span></code> = <em>str_value</em> (required)  The unit of the wavelengths in the file (‘nm’ or ‘Ang’ or variations on these – cf. <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">flux_type</span></code> = <em>str_value</em> (required)  The type of spectral density or dimensionless normalization used in the file (‘flambda’, ‘fnu’, ‘fphotons’ or ‘1’ – cf. <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">redshift</span></code> = <em>float_value</em> (optional)  If given, shift the spectrum to the given redshift.  You can also specify the redshift as an object-level parameter if preferred.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm_flux_density</span></code> = <em>float_value</em> (optional)  Set a normalization value of the flux density at a specific wavelength.  If given, <code class="docutils literal notranslate"><span class="pre">norm_wavelength</span></code> is required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm_wavelength</span></code> = <em>float_value</em> (optional)  The wavelength to use for the normalization flux density.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm_flux</span></code> = <em>float_value</em> (optional)  Set a normalization value of the flux over a specific bandpass.  If given, <code class="docutils literal notranslate"><span class="pre">norm_bandpass</span></code> is required.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">norm_bandpass</span></code> = <em>Bandpass</em> (optional)  The bandpass to use for the normalization flux.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>You may also define your own custom SED type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.SEDBuilder" title="galsim.config.SEDBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.SEDBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt id="galsim.config.SEDBuilder">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SEDBuilder</code><a class="reference internal" href="_modules/galsim/config/sed.html#SEDBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SEDBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for building SED objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt id="galsim.config.SEDBuilder.buildSED">
+<code class="sig-name descname">buildSED</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/sed.html#SEDBuilder.buildSED"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SEDBuilder.buildSED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the SED based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the SED type.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the constructed SED object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterSEDType</span><span class="p">(</span><span class="s1">&#39;CustomSED&#39;</span><span class="p">,</span> <span class="n">CustomSEDBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt id="galsim.config.RegisterSEDType">
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterSEDType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sed_type</span></em>, <em class="sig-param"><span class="n">builder</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/sed.html#RegisterSEDType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterSEDType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a SED type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sed_type</strong> – The name of the type in the config dict.</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the SED object.  It should
+be an instance of a subclass of SEDBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the SED builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">my_custom_sed</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid sed type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span>
+    <span class="l l-Scalar l-Scalar-Plain">...</span>
+    <span class="l l-Scalar l-Scalar-Plain">sed</span><span class="p p-Indicator">:</span>
+        <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">CustomSED</span>
+        <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -670,29 +787,29 @@ It may also be helpful to look at the GalSim implementation of some of the inclu
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="config_stamp.html" class="btn btn-neutral float-right" title="Config Stamp Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="config_top.html" class="btn btn-neutral float-left" title="Top Level Fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="config_stamp.html" class="btn btn-neutral float-right" title="Config Stamp Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="config_top.html" class="btn btn-neutral float-left" title="Top Level Fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -700,7 +817,6 @@ It may also be helpful to look at the GalSim implementation of some of the inclu
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

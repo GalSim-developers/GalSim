@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.config.noise &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.config.noise &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.config.noise</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -189,8 +196,10 @@
 
 <span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">GetRNG</span>
 <span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetCurrentValue</span><span class="p">,</span> <span class="n">GetAllParams</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">RegisterInputConnectedType</span>
 <span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
 <span class="kn">from</span> <span class="nn">..image</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionI</span>
 <span class="kn">from</span> <span class="nn">..random</span> <span class="kn">import</span> <span class="n">PoissonDeviate</span>
 <span class="kn">from</span> <span class="nn">..noise</span> <span class="kn">import</span> <span class="n">GaussianNoise</span><span class="p">,</span> <span class="n">PoissonNoise</span><span class="p">,</span> <span class="n">DeviateNoise</span><span class="p">,</span> <span class="n">CCDNoise</span>
 <span class="kn">from</span> <span class="nn">..correlatednoise</span> <span class="kn">import</span> <span class="n">getCOSMOSNoise</span><span class="p">,</span> <span class="n">UncorrelatedNoise</span>
@@ -212,12 +221,12 @@
     <span class="sd">&quot;&quot;&quot;Add the sky level to the image</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        config:         The configuration dict</span>
+<span class="sd">        config:         The (base) configuration dict</span>
 <span class="sd">        im:             The image onto which to add the sky</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">index</span><span class="p">,</span> <span class="n">orig_index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">config</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
-    <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">config</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">sky</span><span class="p">:</span>
         <span class="n">im</span> <span class="o">+=</span> <span class="n">sky</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_index_key</span></div>
@@ -228,7 +237,7 @@
 <span class="sd">    Add noise to an image according to the noise specifications in the noise dict.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        config:         The configuration dict</span>
+<span class="sd">        config:         The (base) configuration dict</span>
 <span class="sd">        im:             The image onto which to add the noise</span>
 <span class="sd">        current_var:    The current noise variance present in the image already [default: 0]</span>
 <span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
@@ -246,7 +255,8 @@
     <span class="c1"># Default is Poisson</span>
     <span class="n">noise_type</span> <span class="o">=</span> <span class="n">noise</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;Poisson&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">noise_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_noise_types</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid noise.type.&quot;</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">,</span> <span class="n">valid_noise_types</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid noise.type.&quot;</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">,</span>
+                                     <span class="nb">list</span><span class="p">(</span><span class="n">valid_noise_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
 
     <span class="c1"># We need to use image_num for the index_key, but if we are running this from the stamp</span>
     <span class="c1"># building phase, then we want to use obj_num_rng for the noise rng.  So get the rng now</span>
@@ -265,12 +275,14 @@
 
     <span class="k">return</span> <span class="n">var</span></div>
 
-<div class="viewcode-block" id="CalculateNoiseVariance"><a class="viewcode-back" href="../../../config_process.html#galsim.config.CalculateNoiseVariance">[docs]</a><span class="k">def</span> <span class="nf">CalculateNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+<div class="viewcode-block" id="CalculateNoiseVariance"><a class="viewcode-back" href="../../../config_process.html#galsim.config.CalculateNoiseVariance">[docs]</a><span class="k">def</span> <span class="nf">CalculateNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate the noise variance from the noise specified in the noise dict.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        config:     The configuration dict</span>
+<span class="sd">        config:     The (base) configuration dict</span>
+<span class="sd">        full:       If the noise is variable across the image, return the full image with the</span>
+<span class="sd">                    noise variance at every pixel.  Otherwise, just return the value at the center.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        the noise variance</span>
@@ -281,13 +293,14 @@
 
     <span class="n">noise_type</span> <span class="o">=</span> <span class="n">noise</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;Poisson&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">noise_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_noise_types</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid noise.type.&quot;</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">,</span> <span class="n">valid_noise_types</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid noise.type.&quot;</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">,</span>
+                                     <span class="nb">list</span><span class="p">(</span><span class="n">valid_noise_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
 
     <span class="n">index</span><span class="p">,</span> <span class="n">orig_index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
 
     <span class="n">builder</span> <span class="o">=</span> <span class="n">valid_noise_types</span><span class="p">[</span><span class="n">noise_type</span><span class="p">]</span>
-    <span class="n">var</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">getNoiseVariance</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">getNoiseVariance</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_index_key</span>
 
     <span class="k">return</span> <span class="n">var</span></div>
@@ -298,7 +311,7 @@
 <span class="sd">    Typically, this is used for building a weight map, which is typically the inverse variance.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        config:             The configuration dict</span>
+<span class="sd">        config:             The (base) configuration dict</span>
 <span class="sd">        im:                 The image onto which to add the variance values</span>
 <span class="sd">        include_obj_var:    Whether to add the variance from the object photons for noise</span>
 <span class="sd">                            models that have a component based on the number of photons.</span>
@@ -319,7 +332,8 @@
 
     <span class="n">noise_type</span> <span class="o">=</span> <span class="n">noise</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;Poisson&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">noise_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_noise_types</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid noise.type.&quot;</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">,</span> <span class="n">valid_noise_types</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid noise.type.&quot;</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">,</span>
+                                     <span class="nb">list</span><span class="p">(</span><span class="n">valid_noise_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
 
     <span class="n">index</span><span class="p">,</span> <span class="n">orig_index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
@@ -328,7 +342,7 @@
     <span class="n">builder</span><span class="o">.</span><span class="n">addNoiseVariance</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">include_obj_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
     <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_index_key</span></div>
 
-<div class="viewcode-block" id="GetSky"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetSky">[docs]</a><span class="k">def</span> <span class="nf">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="GetSky"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetSky">[docs]</a><span class="k">def</span> <span class="nf">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parse the sky information and return either a float value for the sky level per pixel</span>
 <span class="sd">    or an image, as needed.</span>
 
@@ -337,12 +351,16 @@
 <span class="sd">    a current image_pos, then we are doing a stamp.  Otherwise a full image.</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        config:             The configuration dict</span>
+<span class="sd">        config:             The configuration field with the sky specification, which can be either</span>
+<span class="sd">                            base[&#39;image&#39;] or base[&#39;image&#39;][&#39;noise&#39;]</span>
 <span class="sd">        base:               The base configuration dict</span>
 <span class="sd">        logger:             If given, a logger object to log progress. [default: None]</span>
+<span class="sd">        full:               If the sky level is variable across the image, return the full</span>
+<span class="sd">                            image with the sky at every pixel.  Otherwise, just return the</span>
+<span class="sd">                            sky at the image center.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        sky, either a float value or an Image.</span>
+<span class="sd">        sky, either a float value or an Image.  (The latter only if full=True)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="k">if</span> <span class="s1">&#39;sky_level&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
@@ -354,12 +372,12 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">, obj </span><span class="si">%d</span><span class="s1">: sky_level = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
                      <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">sky_level</span><span class="p">)</span>
         <span class="n">wcs</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isUniform</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">_isUniform</span><span class="p">:</span>
             <span class="n">sky_level_pixel</span> <span class="o">=</span> <span class="n">sky_level</span> <span class="o">*</span> <span class="n">wcs</span><span class="o">.</span><span class="n">pixelArea</span><span class="p">()</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">, obj </span><span class="si">%d</span><span class="s1">: Uniform: sky_level_pixel = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
                          <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">sky_level_pixel</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">sky_level_pixel</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">full</span><span class="p">:</span>
             <span class="c1"># This calculation is non-trivial, so store this in case we need it again.</span>
             <span class="n">tag</span> <span class="o">=</span> <span class="p">(</span><span class="nb">id</span><span class="p">(</span><span class="n">base</span><span class="p">),</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;file_num&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_num&#39;</span><span class="p">])</span>
             <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;_current_sky_tag&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="n">tag</span><span class="p">:</span>
@@ -372,9 +390,21 @@
                 <span class="n">bounds</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span>
                 <span class="n">sky</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">wcs</span><span class="p">)</span>
                 <span class="n">wcs</span><span class="o">.</span><span class="n">makeSkyImage</span><span class="p">(</span><span class="n">sky</span><span class="p">,</span> <span class="n">sky_level</span><span class="p">)</span>
+                <span class="n">sensor</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sensor&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">center</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_origin&#39;</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span> <span class="o">-</span> <span class="n">sky</span><span class="o">.</span><span class="n">origin</span>
+                    <span class="n">use_flux</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;use_flux_sky_areas&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+                    <span class="c1"># TODO: If use_flux_sky_areas = True, then we should really build this up</span>
+                    <span class="c1">#       in steps.  E.g. for a flat field.</span>
+                    <span class="c1">#       This one step calcualtion isn&#39;t right.</span>
+                    <span class="n">area</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">calculate_pixel_areas</span><span class="p">(</span><span class="n">sky</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">center</span><span class="p">,</span> <span class="n">use_flux</span><span class="o">=</span><span class="n">use_flux</span><span class="p">)</span>
+                    <span class="n">sky</span> <span class="o">*=</span> <span class="n">area</span>
                 <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_current_sky_tag&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tag</span>
                 <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_current_sky&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sky</span>
                 <span class="k">return</span> <span class="n">sky</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">true_center</span>
+            <span class="k">return</span> <span class="n">wcs</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span><span class="o">=</span><span class="n">center</span><span class="p">)</span><span class="o">.</span><span class="n">pixelArea</span><span class="p">()</span> <span class="o">*</span> <span class="n">sky_level</span>
     <span class="k">elif</span> <span class="s1">&#39;sky_level_pixel&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">sky_level_pixel</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="s1">&#39;sky_level_pixel&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">, obj </span><span class="si">%d</span><span class="s1">: sky_level_pixel = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
@@ -385,7 +415,7 @@
 
 
 <span class="c1"># items that are parsed separately from the normal noise function</span>
-<span class="n">noise_ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;whiten&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetrize&#39;</span> <span class="p">]</span>
+<span class="n">noise_ignore</span> <span class="o">=</span> <span class="p">[</span> <span class="s1">&#39;whiten&#39;</span><span class="p">,</span> <span class="s1">&#39;symmetrize&#39;</span><span class="p">,</span> <span class="s1">&#39;use_flux_sky_areas&#39;</span> <span class="p">]</span>
 
 <div class="viewcode-block" id="NoiseBuilder"><a class="viewcode-back" href="../../../config_image.html#galsim.config.NoiseBuilder">[docs]</a><span class="k">class</span> <span class="nc">NoiseBuilder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A base class for building noise objects and applying the noise to images.</span>
@@ -408,12 +438,15 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;The </span><span class="si">%s</span><span class="s2"> class has not overridden addNoise&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="NoiseBuilder.getNoiseVariance"><a class="viewcode-back" href="../../../config_image.html#galsim.config.NoiseBuilder.getNoiseVariance">[docs]</a>    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+<div class="viewcode-block" id="NoiseBuilder.getNoiseVariance"><a class="viewcode-back" href="../../../config_image.html#galsim.config.NoiseBuilder.getNoiseVariance">[docs]</a>    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Read the noise parameters from the config dict and return the variance.</span>
 
 <span class="sd">        Parameters:</span>
-<span class="sd">            config:         The configuration dict for the noise field.</span>
-<span class="sd">            base:           The base configuration dict.</span>
+<span class="sd">            config:     The configuration dict for the noise field.</span>
+<span class="sd">            base:       The base configuration dict.</span>
+<span class="sd">            full:       If the noise is variable across the image, return the full image with the</span>
+<span class="sd">                        noise variance at every pixel.  Otherwise, just return the value at the</span>
+<span class="sd">                        center.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            the variance of the noise model</span>
@@ -442,7 +475,7 @@
 <span class="sd">                                Poisson and CCDNoise.</span>
 <span class="sd">            logger:             If given, a logger object to log progress.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">im</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span></div></div>
+        <span class="n">im</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div></div>
 
 <span class="c1">#</span>
 <span class="c1"># Gaussian</span>
@@ -476,7 +509,7 @@
 
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 
         <span class="c1"># The noise level can be specified either as a sigma or a variance.  Here we just calculate</span>
         <span class="c1"># the value of the variance from either one.</span>
@@ -498,8 +531,8 @@
     <span class="k">def</span> <span class="nf">addNoise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">current_var</span><span class="p">,</span> <span class="n">draw_method</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
 
         <span class="c1"># Get how much extra sky to assume from the image.noise attribute.</span>
-        <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-        <span class="n">extra_sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">extra_sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">total_sky</span> <span class="o">=</span> <span class="n">sky</span> <span class="o">+</span> <span class="n">extra_sky</span> <span class="c1"># for the return value</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">total_sky</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
             <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">total_sky</span><span class="o">.</span><span class="n">array</span><span class="p">)</span>
@@ -551,10 +584,10 @@
                      <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">var</span>
 
-    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="c1"># The noise variance is the net sky level per pixel</span>
-        <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">)</span>
-        <span class="n">sky</span> <span class="o">+=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+        <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">)</span>
+        <span class="n">sky</span> <span class="o">+=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">sky</span>
 
     <span class="k">def</span> <span class="nf">addNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">include_obj_var</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -569,7 +602,7 @@
             <span class="c1"># is still the best we can do.</span>
 
         <span class="c1"># Add the total sky level</span>
-        <span class="n">im</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span></div>
+        <span class="n">im</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 <span class="c1">#</span>
@@ -597,8 +630,8 @@
         <span class="n">gain</span><span class="p">,</span> <span class="n">read_noise</span><span class="p">,</span> <span class="n">read_noise_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCCDNoiseParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
 
         <span class="c1"># Get how much extra sky to assume from the image.noise attribute.</span>
-        <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
-        <span class="n">extra_sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">extra_sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">total_sky</span> <span class="o">=</span> <span class="n">sky</span> <span class="o">+</span> <span class="n">extra_sky</span> <span class="c1"># for the return value</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">total_sky</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
             <span class="n">var</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">total_sky</span><span class="o">.</span><span class="n">array</span><span class="p">)</span> <span class="o">+</span> <span class="n">read_noise_var</span>
@@ -673,13 +706,13 @@
 
         <span class="k">return</span> <span class="n">var</span>
 
-    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="c1"># The noise variance is sky / gain + (read_noise/gain)**2</span>
         <span class="n">gain</span><span class="p">,</span> <span class="n">read_noise</span><span class="p">,</span> <span class="n">read_noise_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCCDNoiseParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
 
         <span class="c1"># Start with the background sky level for the image</span>
-        <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">)</span>
-        <span class="n">sky</span> <span class="o">+=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+        <span class="n">sky</span> <span class="o">=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">)</span>
+        <span class="n">sky</span> <span class="o">+=</span> <span class="n">GetSky</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="n">full</span><span class="p">)</span>
 
         <span class="c1"># Account for the gain and read_noise</span>
         <span class="n">read_noise_var_adu</span> <span class="o">=</span> <span class="n">read_noise_var</span> <span class="o">/</span> <span class="n">gain</span><span class="o">**</span><span class="mi">2</span>
@@ -696,7 +729,7 @@
                 <span class="n">im</span> <span class="o">+=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_noise_image&#39;</span><span class="p">]</span>
 
         <span class="c1"># Now add on the regular CCDNoise from the sky and read noise.</span>
-        <span class="n">im</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">base</span><span class="p">)</span></div>
+        <span class="n">im</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getNoiseVariance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 <span class="c1">#</span>
@@ -743,7 +776,7 @@
                      <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">var</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">var</span>
 
-    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">getNoiseVariance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">full</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">cn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getCOSMOSNoise</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">base</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cn</span><span class="o">.</span><span class="n">getVariance</span><span class="p">()</span></div>
 
@@ -760,13 +793,7 @@
 <span class="sd">                        [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">valid_noise_types</span><span class="p">[</span><span class="n">noise_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">builder</span>
-    <span class="k">if</span> <span class="n">input_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-        <span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">RegisterInputConnectedType</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">input_type</span><span class="p">:</span>
-                <span class="n">RegisterInputConnectedType</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">RegisterInputConnectedType</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">)</span></div>
+    <span class="n">RegisterInputConnectedType</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">noise_type</span><span class="p">)</span></div>
 
 
 <span class="n">RegisterNoiseType</span><span class="p">(</span><span class="s1">&#39;Gaussian&#39;</span><span class="p">,</span> <span class="n">GaussianNoiseBuilder</span><span class="p">())</span>
@@ -780,20 +807,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -801,7 +833,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

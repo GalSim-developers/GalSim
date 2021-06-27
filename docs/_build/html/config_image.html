@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Config Image Field &mdash; GalSim 2.2.4 documentation</title>
+  <title>Config Image Field &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Config Input Field" href="config_input.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -108,7 +112,9 @@
 <li class="toctree-l4"><a class="reference internal" href="#image-types">Image Types</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#custom-image-types">Custom Image Types</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#noise">Noise</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#wcs">WCS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wcs-field">WCS Field</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bandpass-field">Bandpass Field</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#sensor-field">Sensor Field</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
@@ -124,7 +130,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -132,6 +138,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -166,11 +173,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="config.html">The Config Module</a> &raquo;</li>
         
@@ -181,7 +190,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/config_image.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -214,6 +223,9 @@
 </div></blockquote>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">nproc</span></code> = <em>int_value</em>  (default = 1)  Specify the number of processors to use when drawing images. If nproc &lt;= 0, then this means to try to automatically figure out the number of cpus and use that.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wcs</span></code> See <a class="reference internal" href="#wcs-field"><span class="std std-ref">WCS Field</span></a> below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bandpass</span></code> See <a class="reference internal" href="#bandpass-field"><span class="std std-ref">Bandpass Field</span></a> below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sensor</span></code>  See <a class="reference internal" href="#sensor-field"><span class="std std-ref">Sensor Field</span></a> below.</p></li>
 </ul>
 </div>
 <div class="section" id="image-types">
@@ -261,7 +273,7 @@ The image types defined by GalSim are:</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">stamp_xsize</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">stamp_ysize</span></code> = <em>int_value</em> (default = <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">world_pos</span></code> = <em>pos_value</em> (only one of <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> is allowed) The position in world coordinates relative to the center of the image at which to center of the object.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">image_pos</span></code> = <em>pos_value</em> (only one of <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> is allowed; default if neither is given isi to use type ‘XY’ with <code class="docutils literal notranslate"><span class="pre">x</span></code> = ‘Random’ from 1 .. <code class="docutils literal notranslate"><span class="pre">xsize</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> = ‘Random’ from 1 .. <code class="docutils literal notranslate"><span class="pre">ysize</span></code>)  The position on the image at which to center of the object.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_pos</span></code> = <em>pos_value</em> (only one of <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> and <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> is allowed; default if neither is given is to use type ‘XY’ with <code class="docutils literal notranslate"><span class="pre">x</span></code> = ‘Random’ from 1 .. <code class="docutils literal notranslate"><span class="pre">xsize</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code> = ‘Random’ from 1 .. <code class="docutils literal notranslate"><span class="pre">ysize</span></code>)  The position on the image at which to center of the object.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -305,6 +317,26 @@ add the noise properly.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="galsim.config.ImageBuilder.buildBandpass">
+<code class="sig-name descname">buildBandpass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">obj_num</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.buildBandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.buildBandpass" title="Permalink to this definition">¶</a></dt>
+<dd><p>If thre is a ‘bandpass’ field in config[‘image’], load it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>obj_num</strong> – The first object number in the image.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a gasim.Bandpass or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="galsim.config.ImageBuilder.buildImage">
 <code class="sig-name descname">buildImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">obj_num</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.buildImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.buildImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build an Image based on the parameters in the config dict.</p>
@@ -326,8 +358,28 @@ add the noise properly.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="galsim.config.ImageBuilder.buildSensor">
+<code class="sig-name descname">buildSensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">obj_num</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.buildSensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.buildSensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the sensor if given in the config dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>obj_num</strong> – The first object number in the image.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a galsim.Sensor or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="galsim.config.ImageBuilder.getNObj">
-<code class="sig-name descname">getNObj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.getNObj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.getNObj" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNObj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#ImageBuilder.getNObj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImageBuilder.getNObj" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects that will be built for this image.</p>
 <p>For Single, this is just 1, but other image types would figure this out from the
 configuration parameters.</p>
@@ -337,6 +389,7 @@ configuration parameters.</p>
 <li><p><strong>config</strong> – The configuration dict for the image field.</p></li>
 <li><p><strong>base</strong> – The base configuration dict.</p></li>
 <li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -442,7 +495,7 @@ in the config file:</p>
 </div>
 <p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
 Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_image</span></code>,
-which will read your file and execute the registration command to add the buidler to the list
+which will read your file and execute the registration command to add the builder to the list
 of valid image types.</p>
 <p>Then you can use this as a valid image type:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
@@ -572,13 +625,16 @@ Poisson and CCDNoise.</p></li>
 
 <dl class="py method">
 <dt id="galsim.config.NoiseBuilder.getNoiseVariance">
-<code class="sig-name descname">getNoiseVariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.getNoiseVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.getNoiseVariance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">getNoiseVariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">full</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#NoiseBuilder.getNoiseVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.NoiseBuilder.getNoiseVariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the noise parameters from the config dict and return the variance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – The configuration dict for the noise field.</p></li>
 <li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>full</strong> – If the noise is variable across the image, return the full image with the
+noise variance at every pixel.  Otherwise, just return the value at the
+center.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -649,8 +705,8 @@ input type here.  (If it uses more than one, this may be a list.)
 </dd></dl>
 
 </div>
-<div class="section" id="wcs">
-<h2>WCS<a class="headerlink" href="#wcs" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="wcs-field">
+<h2>WCS Field<a class="headerlink" href="#wcs-field" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> attribute mentioned above is the usual way to define the connection between
 pixel coordinates and sky coordinates.  However, one can define a more complicated relationship,
 which is known as a World Coordinate System (WCS) if desired.  To do this, use the <code class="docutils literal notranslate"><span class="pre">wcs</span></code>
@@ -836,6 +892,190 @@ which we make from ra, dec paramters.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="bandpass-field">
+<h2>Bandpass Field<a class="headerlink" href="#bandpass-field" title="Permalink to this headline">¶</a></h2>
+<p>If you want to draw chromatic objects, then you also need to define the <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> to use
+for the image in a <code class="docutils literal notranslate"><span class="pre">image.bandpass</span></code> field.  Currently, there is only one defined
+type to use for the Bandpass, but the code is written in a modular way to allow for
+other types, including custom Bandpass types.</p>
+<ul>
+<li><p>‘FileBandpass’ is the default type here, and you may omit the type name when using it.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)  The file to read in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wave_type</span></code> = <em>str_value</em> (required)  The unit of the wavelengths in the file (‘nm’ or ‘Ang’ or variations on these – cf. <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blue_limit</span></code> = <em>float_value</em> (optional)  Hard cut off on the blue side.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">red_limit</span></code> = <em>float value</em> (optional)  Hard cut off on the red side.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zeropoint</span></code> = <em>float_value</em> (optional)  The zero-point to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">thin</span></code> = <em>float_value</em> (optional)  If given, call <a class="reference internal" href="bandpass.html#galsim.Bandpass.thin" title="galsim.Bandpass.thin"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Bandpass.thin</span></code></a> on the Bandpass after reading in from the file, using this for the <code class="docutils literal notranslate"><span class="pre">rel_err</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>You may also define your own custom Bandpass type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.BandpassBuilder" title="galsim.config.BandpassBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.BandpassBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt id="galsim.config.BandpassBuilder">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">BandpassBuilder</code><a class="reference internal" href="_modules/galsim/config/bandpass.html#BandpassBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.BandpassBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for building Bandpass objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt id="galsim.config.BandpassBuilder.buildBandpass">
+<code class="sig-name descname">buildBandpass</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/bandpass.html#BandpassBuilder.buildBandpass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.BandpassBuilder.buildBandpass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the Bandpass based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the bandpass type.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the constructed Bandpass object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterBandpassType</span><span class="p">(</span><span class="s1">&#39;CustomBandpass&#39;</span><span class="p">,</span> <span class="n">CustomBandpassBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt id="galsim.config.RegisterBandpassType">
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterBandpassType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass_type</span></em>, <em class="sig-param"><span class="n">builder</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/bandpass.html#RegisterBandpassType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterBandpassType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a bandpass type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bandpass_type</strong> – The name of the type in the config dict.</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the Bandpass object.  It should
+be an instance of a subclass of BandpassBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the Bandpass builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">my_custom_bandpass</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid bandpass type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
+    <span class="nt">bandpass</span><span class="p">:</span>
+        <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">CustomBandpass</span>
+        <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sensor-field">
+<h2>Sensor Field<a class="headerlink" href="#sensor-field" title="Permalink to this headline">¶</a></h2>
+<p>When drawing with <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>, one can use a <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> to model the conversion of photons
+to electrons and then the accumulation of these electrons in the pixels.</p>
+<p>The sensor types defined by GalSim are:</p>
+<ul>
+<li><p>‘Simple’ is the default, which does nothing but accumulate the photons at their (x,y)
+positions onto the corresponding pixels in the image.  Typically, in this case, you would
+omit the <code class="docutils literal notranslate"><span class="pre">sensor</span></code> field entirely.</p></li>
+<li><p>‘Silicon’ models a silicon-based CCD sensor that converts photons to electrons at a wavelength-
+dependent depth (probabilistically) and drifts them down to the wells, properly taking
+into account the repulsion of previously accumulated electrons (known as the brighter-fatter
+effect).  See <a class="reference internal" href="sensor.html#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a> for details.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> = <em>str_value</em> (default = ‘lsst_itl_50_8’)  The naem of the sensor model to use.
+See <a class="reference internal" href="sensor.html#galsim.SiliconSensor" title="galsim.SiliconSensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SiliconSensor</span></code></a> for the other allowed values.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strength</span></code> = <em>float_value</em> (default = 1.0)  The strength of the brighter-fatter effect
+relative to the nominal value in the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">diffusion_factor</span></code> = <em>float_value</em> (default = 1.0)  The magnitude of the diffusion
+relative to the nominal value in the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">qdist</span></code> = <em>int_value</em> (default = 3)  The maximum number of pixels away to calculate the
+distortions due to charge accumulation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nrecalc</span></code> = <em>int_value</em> (default = 10000)  The number of electrons to accumulate before
+recalculating the distortion of the pixel shapes.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">treering_func</span></code> = <em>table_value</em> (optional) A <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> giving the tree ring pattern
+as a radial function f(r).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">treering_center</span></code> = <em>pos_value</em> (optional) The position of the center of the tree ring
+pattern in image coordinates (which may be off the edge of the image).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">transpose</span></code> = <em>bool_value</em> (default = False) Whether to transpose the meaning of (x,y)
+for the purpose of the brighter-fatter effect.  This changes which direction the BFE
+causes more elongation.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p>You may also define your own custom <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> type in the usual way
+with an importable module where you define a custom Builder class and register it with GalSim.
+The class should be a subclass of <a class="reference internal" href="#galsim.config.SensorBuilder" title="galsim.config.SensorBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.config.SensorBuilder</span></code></a>.</p>
+<dl class="py class">
+<dt id="galsim.config.SensorBuilder">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">SensorBuilder</code><a class="reference internal" href="_modules/galsim/config/sensor.html#SensorBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SensorBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class for building Sensor objects.</p>
+<p>The base class defines the call signatures of the methods that any derived class should follow.</p>
+<dl class="py method">
+<dt id="galsim.config.SensorBuilder.buildSensor">
+<code class="sig-name descname">buildSensor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/sensor.html#SensorBuilder.buildSensor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.SensorBuilder.buildSensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the Sensor based on the specifications in the config dict.</p>
+<p>Note: Sub-classes must override this function with a real implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the Sensor</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If provided, a logger for logging debug statements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the constructed Sensor object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<p>Then, as usual, you need to register this type using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterSensorType</span><span class="p">(</span><span class="s1">&#39;CustomSensor&#39;</span><span class="p">,</span> <span class="n">CustomSensorBuilder</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt id="galsim.config.RegisterSensorType">
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterSensorType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sensor_type</span></em>, <em class="sig-param"><span class="n">builder</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/sensor.html#RegisterSensorType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterSensorType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a sensor type for use by the config apparatus.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sensor_type</strong> – The name of the config type to register</p></li>
+<li><p><strong>builder</strong> – A builder object to use for building the Sensor object.  It should
+be an instance of a subclass of SensorBuilder.</p></li>
+<li><p><strong>input_type</strong> – If the Sensor builder utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>and tell the config parser the name of the module to load at the start of processing.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span>
+    <span class="p p-Indicator">-</span> <span class="l l-Scalar l-Scalar-Plain">my_custom_sensor</span>
+</pre></div>
+</div>
+<p>Then you can use this as a valid sensor type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span>
+    <span class="nt">sensor</span><span class="p">:</span>
+        <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">CustomSensor</span>
+        <span class="l l-Scalar l-Scalar-Plain">...</span>
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -843,29 +1083,29 @@ which we make from ra, dec paramters.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="config_input.html" class="btn btn-neutral float-right" title="Config Input Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="config_stamp.html" class="btn btn-neutral float-left" title="Config Stamp Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="config_input.html" class="btn btn-neutral float-right" title="Config Input Field" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="config_stamp.html" class="btn btn-neutral float-left" title="Config Stamp Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -873,7 +1113,6 @@ which we make from ra, dec paramters.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.interpolatedimage &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.interpolatedimage &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.interpolatedimage</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -184,7 +191,6 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="kn">import</span> <span class="n">basestring</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">math</span>
 
@@ -192,9 +198,9 @@
 <span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
 <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
 <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">_BoundsI</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">_PositionD</span>
 <span class="kn">from</span> <span class="nn">.interpolant</span> <span class="kn">import</span> <span class="n">Quintic</span><span class="p">,</span> <span class="n">Interpolant</span><span class="p">,</span> <span class="n">SincInterpolant</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">convert_interpolant</span><span class="p">,</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">convert_interpolant</span><span class="p">,</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">basestring</span>
 <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fits</span>
@@ -426,7 +432,6 @@
         <span class="s1">&#39;use_true_center&#39;</span> <span class="p">:</span> <span class="nb">bool</span> <span class="p">,</span>
         <span class="s1">&#39;hdu&#39;</span> <span class="p">:</span> <span class="nb">int</span>
     <span class="p">}</span>
-    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_cache_noise_pad</span> <span class="o">=</span> <span class="p">{}</span>
 
@@ -450,11 +455,6 @@
         <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Supplied image must be an Image or file name&quot;</span><span class="p">)</span>
 
-        <span class="c1"># make sure image is really an image and has a float type</span>
-        <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span> <span class="ow">and</span> <span class="n">image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Supplied image must have dtype = float32 or float64.&quot;</span><span class="p">,</span>
-                                   <span class="n">image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-
         <span class="c1"># it must have well-defined bounds, otherwise seg fault in SBInterpolatedImage constructor</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;Supplied image does not have bounds defined.&quot;</span><span class="p">)</span>
@@ -467,7 +467,7 @@
 
         <span class="c1"># Store the image as an attribute and make sure we don&#39;t change the original image</span>
         <span class="c1"># in anything we do here.  (e.g. set scale, etc.)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">_view</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">contiguous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
 
@@ -507,7 +507,7 @@
 
         <span class="c1"># Build the fully padded real-space image according to the various pad options.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_buildRealImage</span><span class="p">(</span><span class="n">pad_factor</span><span class="p">,</span> <span class="n">pad_image</span><span class="p">,</span> <span class="n">noise_pad_size</span><span class="p">,</span> <span class="n">noise_pad</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">use_cache</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_image_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_image_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
         <span class="c1"># I think the only things that will mess up if flux == 0 are the</span>
         <span class="c1"># calculateStepK and calculateMaxK functions, and rescaling the flux to some value.</span>
@@ -521,33 +521,33 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getMaxK</span><span class="p">(</span><span class="n">calculate_maxk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="p">)</span>
 
 <div class="viewcode-block" id="InterpolatedImage.withGSParams"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedImage.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_x_interpolant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_x_interpolant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">min_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span><span class="o">.</span><span class="n">_minScale</span><span class="p">()</span>
         <span class="n">max_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span><span class="o">.</span><span class="n">_maxScale</span><span class="p">()</span>
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sbii</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBInterpolatedImage</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">_b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">_b</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span><span class="o">.</span><span class="n">_i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="o">.</span><span class="n">_i</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span><span class="o">*</span><span class="n">min_scale</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span><span class="o">*</span><span class="n">max_scale</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbii</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBInterpolatedImage</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">_b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">_b</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_x_interpolant</span><span class="o">.</span><span class="n">_i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="o">.</span><span class="n">_i</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_stepk</span><span class="o">*</span><span class="n">min_scale</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_maxk</span><span class="o">*</span><span class="n">max_scale</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbii</span>  <span class="c1"># Temporary.  Will overwrite this with the return value.</span>
 
         <span class="c1"># Apply the offset</span>
         <span class="n">prof</span> <span class="o">=</span> <span class="bp">self</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">!=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
-            <span class="n">prof</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">_shift</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="p">)</span>  <span class="c1"># Opposite direction of what drawImage does.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">!=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+            <span class="c1"># Opposite direction of what drawImage does.</span>
+            <span class="n">prof</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">_shift</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
 
         <span class="c1"># If the user specified a flux, then set to that flux value.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_flux</span><span class="p">:</span>
@@ -557,7 +557,7 @@
 
         <span class="c1"># Bring the profile from image coordinates into world coordinates</span>
         <span class="c1"># Note: offset needs to happen first before the transformation, so can&#39;t bundle it here.</span>
-        <span class="n">prof</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span><span class="o">.</span><span class="n">_profileToWorld</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">prof</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span><span class="o">.</span><span class="n">_profileToWorld</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">prof</span><span class="o">.</span><span class="n">_sbp</span>
 
@@ -583,14 +583,11 @@
         <span class="c1"># Check that given pad_image is valid:</span>
         <span class="k">if</span> <span class="n">pad_image</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pad_image</span><span class="p">,</span> <span class="n">basestring</span><span class="p">):</span>
-                <span class="n">pad_image</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">pad_image</span><span class="p">)</span>
+                <span class="n">pad_image</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">pad_image</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pad_image</span><span class="p">,</span> <span class="n">Image</span><span class="p">):</span>
-                <span class="n">pad_image</span> <span class="o">=</span> <span class="n">pad_image</span><span class="o">.</span><span class="n">_view</span><span class="p">()</span>
+                <span class="n">pad_image</span> <span class="o">=</span> <span class="n">pad_image</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">contiguous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Supplied pad_image must be an Image.&quot;</span><span class="p">,</span> <span class="n">pad_image</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">pad_image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span> <span class="ow">and</span> <span class="n">pad_image</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid dtype for Supplied pad_image.&quot;</span><span class="p">,</span> <span class="n">pad_image</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                                       <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">pad_factor</span> <span class="o">&lt;=</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Invalid pad_factor &lt;= 0 in InterpolatedImage&quot;</span><span class="p">,</span> <span class="n">pad_factor</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
@@ -625,7 +622,7 @@
         <span class="c1"># And round up to a good fft size</span>
         <span class="n">pad_size</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">good_fft_size</span><span class="p">(</span><span class="n">pad_size</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">pad_size</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">pad_size</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="c1"># If requested, fill (some of) this image with noise padding.</span>
@@ -738,8 +735,7 @@
                 <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">bounds</span> <span class="o">&amp;</span> <span class="n">b</span>
                 <span class="n">im</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
             <span class="n">thresh</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">folding_threshold</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_image_flux</span>
-            <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-                <span class="n">R</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">CalculateSizeContainingFlux</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">CalculateSizeContainingFlux</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">thresh</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">-</span> <span class="mf">0.5</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getSimpleStepK</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
@@ -832,7 +828,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span><span class="o">.</span><span class="n">bounds</span> <span class="o">==</span> <span class="n">xim_bounds</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">xim_bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">xim_bounds</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_wcs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span><span class="o">.</span><span class="n">bounds</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pad_image</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xim</span><span class="p">[</span><span class="n">image_bounds</span><span class="p">]</span>
 
@@ -848,30 +844,33 @@
     <span class="k">def</span> <span class="nf">_negative_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">getNegativeFlux</span><span class="p">()</span>
 
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_flux_per_photon</span><span class="p">()</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">maxSB</span><span class="p">()</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">xValue</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">kValue</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
         <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">shoot</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">_pa</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">_rng</span><span class="p">)</span>
+        <span class="n">photons</span><span class="o">.</span><span class="n">flux</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_per_photon</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="n">dx</span><span class="p">,</span><span class="n">dy</span> <span class="o">=</span> <span class="n">offset</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">flux_scaling</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="_InterpolatedImage"><a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedImage">[docs]</a><span class="k">def</span> <span class="nf">_InterpolatedImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="n">Quintic</span><span class="p">(),</span>
@@ -907,7 +906,7 @@
     <span class="n">ret</span> <span class="o">=</span> <span class="n">InterpolatedImage</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">InterpolatedImage</span><span class="p">)</span>
 
     <span class="c1"># We need to set all the various attributes that are expected to be in an InterpolatedImage:</span>
-    <span class="n">ret</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">_view</span><span class="p">()</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">contiguous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_x_interpolant</span> <span class="o">=</span> <span class="n">x_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">k_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
@@ -917,7 +916,7 @@
     <span class="n">im_cen</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">true_center</span> <span class="k">if</span> <span class="n">use_true_center</span> <span class="k">else</span> <span class="n">ret</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">center</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_wcs</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span> <span class="o">=</span> <span class="n">im_cen</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_pad_factor</span> <span class="o">=</span> <span class="mf">1.</span>
-    <span class="n">ret</span><span class="o">.</span><span class="n">_image_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_image_flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_image_flux</span>
 
     <span class="c1"># If image isn&#39;t a good fft size, we may still need to pad it out.</span>
@@ -926,7 +925,7 @@
     <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="n">pad_size</span><span class="p">:</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_xim</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_image</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_xim</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">pad_size</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">ret</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_xim</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">pad_size</span><span class="p">,</span> <span class="n">pad_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_xim</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_xim</span><span class="p">[</span><span class="n">ret</span><span class="o">.</span><span class="n">_image</span><span class="o">.</span><span class="n">bounds</span><span class="p">]</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_image</span>
         <span class="n">ret</span><span class="o">.</span><span class="n">_xim</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_wcs</span>
@@ -1017,8 +1016,6 @@
         <span class="s1">&#39;k_interpolant&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;stepk&#39;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="s1">&#39;real_hdu&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;imag_hdu&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">}</span>
-    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="n">_has_hard_edges</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_axisymmetric</span> <span class="o">=</span> <span class="kc">False</span>
@@ -1065,13 +1062,12 @@
                 <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Supplied kimage is not complex&quot;</span><span class="p">,</span> <span class="n">kimage</span><span class="p">)</span>
 
         <span class="c1"># Make sure wcs is a PixelScale.</span>
-        <span class="k">if</span> <span class="n">kimage</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kimage</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">isPixelScale</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">kimage</span><span class="o">.</span><span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kimage</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">_isPixelScale</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;kimage wcs must be PixelScale or None.&quot;</span><span class="p">,</span> <span class="n">kimage</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">kimage</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;Supplied image does not have bounds defined.&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_kimage</span> <span class="o">=</span> <span class="n">kimage</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
 
         <span class="c1"># Check for Hermitian symmetry properties of kimage</span>
@@ -1088,6 +1084,10 @@
                             <span class="o">-</span><span class="n">kimage</span><span class="p">[</span><span class="n">bd</span><span class="p">]</span><span class="o">.</span><span class="n">imag</span><span class="o">.</span><span class="n">array</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">,::</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span>
             <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                 <span class="s2">&quot;Real and Imag kimages must form a Hermitian complex matrix.&quot;</span><span class="p">,</span> <span class="n">kimage</span><span class="o">=</span><span class="n">kimage</span><span class="p">)</span>
+
+        <span class="c1"># Make sure the image is complex128 and contiguous</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kimage</span> <span class="o">=</span> <span class="n">kimage</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">contiguous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kimage</span><span class="o">.</span><span class="n">setCenter</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">stepk</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kimage</span><span class="o">.</span><span class="n">scale</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1121,27 +1121,32 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span>
 
 <div class="viewcode-block" id="InterpolatedKImage.withGSParams"><a class="viewcode-back" href="../../arbitrary.html#galsim.InterpolatedKImage.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_k_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">stepk_image</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepk</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">scale</span>  <span class="c1"># usually 1, but could be larger</span>
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sbiki</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBInterpolatedKImage</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">stepk_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="o">.</span><span class="n">_i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+        <span class="c1"># C++ layer needs Bounds that look like 0, N/2, -N/2, N/2-1</span>
+        <span class="c1"># So find the biggest N that works like that.</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kimage</span><span class="o">.</span><span class="n">bounds</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">xmax</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="n">b</span><span class="o">.</span><span class="n">ymin</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">ymax</span><span class="o">*</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">_BoundsI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="p">(</span><span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="p">),</span> <span class="n">N</span><span class="o">//</span><span class="mi">2</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">posx_kimage</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kimage</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbiki</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBInterpolatedKImage</span><span class="p">(</span>
+                <span class="n">posx_kimage</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">stepk_image</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">k_interpolant</span><span class="o">.</span><span class="n">_i</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
         <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kimage</span><span class="o">.</span><span class="n">scale</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.</span><span class="o">/</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="n">scale</span><span class="p">))</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">scale</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-                <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sbiki</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="n">scale</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="o">/</span><span class="n">scale</span><span class="p">,</span>
-                                           <span class="n">_galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">scale</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
-                                           <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sbiki</span><span class="p">,</span> <span class="n">_jac</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">scale</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbiki</span>
 
@@ -1189,7 +1194,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">centroid</span><span class="p">())</span>
+        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">centroid</span><span class="p">())</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1203,14 +1209,16 @@
     <span class="k">def</span> <span class="nf">_negative_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">getNegativeFlux</span><span class="p">()</span>
 
-    <span class="nd">@doc_inherit</span>
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_flux_per_photon</span><span class="p">()</span>
+
     <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">kValue</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
-
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="_InterpolatedKImage"><a class="viewcode-back" href="../../arbitrary.html#galsim._InterpolatedKImage">[docs]</a><span class="k">def</span> <span class="nf">_InterpolatedKImage</span><span class="p">(</span><span class="n">kimage</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
@@ -1224,7 +1232,8 @@
 <span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
 <span class="sd">     &quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="n">InterpolatedKImage</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">InterpolatedKImage</span><span class="p">)</span>
-    <span class="n">ret</span><span class="o">.</span><span class="n">_kimage</span> <span class="o">=</span> <span class="n">kimage</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_kimage</span> <span class="o">=</span> <span class="n">kimage</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="n">contiguous</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_kimage</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">-</span><span class="n">kimage</span><span class="o">.</span><span class="n">center</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_stepk</span> <span class="o">=</span> <span class="n">kimage</span><span class="o">.</span><span class="n">scale</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
     <span class="n">ret</span><span class="o">.</span><span class="n">_k_interpolant</span> <span class="o">=</span> <span class="n">k_interpolant</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
@@ -1235,20 +1244,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1256,7 +1270,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

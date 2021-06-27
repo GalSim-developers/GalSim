@@ -9,9 +9,63 @@ Older Versions
 
 Below is a summary of the major changes with each new tagged version of GalSim.
 Each version may also include various other minor changes and bug fixes not
-listed here for brevity.  See the CHANGLELOG files associated with each
+listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
+
+v2.2
+----
+
+*Deprecated Features*
+
+- Deprecated ``galsim.correlatednoise._BaseCorrelatedNoise``. (#160)
+- Deprecated ``RandomWalk`` in favor of `RandomKnots`. (#977)
+- Deprecated the ``tol`` parameter of the various Interpolant classes. (#1038)
+
+*API Changes*
+
+- Removed functionality to store/reload WFIRST PSFs, and to get multiple WFIRST PSFs (#919)
+- Changed the function signature of StampBuilder.addNoise. (#1048)
+
+*Changes to Shared Files*
+
+- Added option to set the `galsim.meta_data.share_dir` via GALSIM_SHARE_DIR. (#1014)
+- Changed hosting of COSMOS catalog to `Zenodo <https://zenodo.org/record/3242143>`_ (#1033)
+
+*Config Updates*
+
+- Added some more customization hooks in the StampBuilder class. (#1048)
+- Added ``quick_skip``, ``obj_rng=False``, ``rng_index_key`` options. (#1048)
+
+*Documentation Updates*
+
+- Switched docs to `Sphinx <http://galsim-developers.github.io/GalSim/>`_.  (#160)
+
+*New Features*
+
+- Added `FitsHeader.extend` method.  Also, read_header option to `galsim.fits.read`. (#877)
+- Updated lots of WFIRST module to use Cycle 7 specifications. (#919)
+- Extended WFIRST aberrations to 22 Zernike coefficients and vary them across FOV. (#919)
+- Improved efficiency of drawing `RandomKnots` objects when transformed. (#977)
+- Added WFIRST fermi persistence model. (#992)
+- Added ``r0_500`` argument to VonKarman. (#1005)
+- Improved ability of `AtmosphericScreen` to use shared memory in multiprocessing context. (#1006)
+- Use OpenMP when appropriate in `SiliconSensor.accumulate` (#1008)
+- Added array versions of `BaseWCS.toWorld` and `BaseWCS.toImage`. (#1026)
+- Exposed some methods of `Interpolant` classes that had only been in the C++ layer. (#1038)
+- Added Zernike polynomial +, -, and * operators. (#1047)
+- Added Zernike polynomial properties .laplacian and .hessian. (#1047)
+- Added ``center`` option to the `GSObject.drawImage` method. (#1053)
+
+*Bug Fixes*
+
+- Fixed a couple places where negative fluxes were not working correctly. (#472)
+- Fixed FITS I/O to write out comments of header items properly. (#877)
+- Fixed error in the serialization of `RandomKnots` instances. (#977)
+- Fixed error in `PhaseScreenPSF` when aberrations has len=1. (#1006, #1029)
+- Fixed error in `BaseWCS.makeSkyImage` when crossing ra=0 line for some WCS classes. (#1030)
+- Fixed slight error in the realized flux of some profiles when using photon shooting. (#1036)
+- Fixed error in `Sersic` class when n is very, very close to 0.5. (#1041)
 
 v2.1
 ----

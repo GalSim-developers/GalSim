@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.phase_psf &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.phase_psf &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.phase_psf</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -184,10 +191,6 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 
-<span class="kn">import</span> <span class="nn">sys</span>
-<span class="kn">from</span> <span class="nn">past.builtins</span> <span class="kn">import</span> <span class="n">basestring</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">range</span>
 <span class="kn">from</span> <span class="nn">heapq</span> <span class="kn">import</span> <span class="n">heappush</span><span class="p">,</span> <span class="n">heappop</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -198,9 +201,10 @@
 <span class="kn">from</span> <span class="nn">.bounds</span> <span class="kn">import</span> <span class="n">_BoundsI</span>
 <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
 <span class="kn">from</span> <span class="nn">.interpolatedimage</span> <span class="kn">import</span> <span class="n">InterpolatedImage</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">OrderedWeakRef</span><span class="p">,</span> <span class="n">rotate_xy</span><span class="p">,</span> <span class="n">lazy_property</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">OrderedWeakRef</span><span class="p">,</span> <span class="n">rotate_xy</span><span class="p">,</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">basestring</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimFFTSizeError</span><span class="p">,</span> <span class="n">galsim_warn</span>
+
 
 <div class="viewcode-block" id="Aperture"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture">[docs]</a><span class="k">class</span> <span class="nc">Aperture</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Class representing a telescope aperture embedded in a larger pupil plane array -- for use</span>
@@ -618,13 +622,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
 
-<div class="viewcode-block" id="Aperture.withGSParams"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+<div class="viewcode-block" id="Aperture.withGSParams"><a class="viewcode-back" href="../../phase_psf.html#galsim.Aperture.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a version of the current aperture with the given gsparams</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="c1"># Used in Aperture.__str__ and OpticalPSF.__str__</span>
@@ -979,6 +983,7 @@
 <span class="sd">            pool:       A multiprocessing.Pool object to use to instantiate screens in parallel.</span>
 <span class="sd">            **kwargs:   Keyword arguments to forward to screen.instantiate().</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_bar</span> <span class="o">=</span> <span class="n">_bar</span> <span class="k">if</span> <span class="n">_bar</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># with dict() _bar.update() is a trivial no op.</span>
         <span class="k">if</span> <span class="n">pool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
@@ -986,8 +991,7 @@
                     <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">instantiate</span><span class="p">,</span> <span class="n">kwds</span><span class="o">=</span><span class="n">kwargs</span><span class="p">))</span>
                 <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># OpticalScreen has no instantiate method</span>
                     <span class="k">pass</span>
-                <span class="k">if</span> <span class="n">_bar</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-                    <span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+                <span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
                 <span class="n">r</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
@@ -996,8 +1000,7 @@
                     <span class="n">layer</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
                 <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
                     <span class="k">pass</span>
-                <span class="k">if</span> <span class="n">_bar</span><span class="p">:</span>
-                    <span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
+                <span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
 
     <span class="k">def</span> <span class="nf">_delayCalculation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">psf</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add psf to delayed calculation list.&quot;&quot;&quot;</span>
@@ -1135,7 +1138,7 @@
 <span class="sd">                                [default: galsim.arcsec]</span>
 <span class="sd">            ii_pad_factor:      Zero-padding factor by which to extend the image of the PSF when</span>
 <span class="sd">                                creating the ``InterpolatedImage``.  See the</span>
-<span class="sd">                                ``InterpolatedImage`` docstring for more details.  [default: 4.]</span>
+<span class="sd">                                ``InterpolatedImage`` docstring for more details.  [default: 1.5]</span>
 <span class="sd">            suppress_warning:   If ``pad_factor`` is too small, the code will emit a warning</span>
 <span class="sd">                                telling you its best guess about how high you might want to raise</span>
 <span class="sd">                                it.  However, you can suppress this warning by using</span>
@@ -1146,6 +1149,25 @@
 <span class="sd">                                optics and then shoot from the derived InterpolatedImage.</span>
 <span class="sd">                                [default: True]</span>
 <span class="sd">            aper:               `Aperture` to use to compute PSF(s).  [default: None]</span>
+<span class="sd">            second_kick:        An optional second kick to also convolve by when using geometric</span>
+<span class="sd">                                photon-shooting.  (This can technically be any `GSObject`, though</span>
+<span class="sd">                                usually it should probably be a SecondKick object).  If None, then a</span>
+<span class="sd">                                good second kick will be chosen automatically based on</span>
+<span class="sd">                                ``screen_list``.  If False, then a second kick won&#39;t be applied.</span>
+<span class="sd">                                [default: None]</span>
+<span class="sd">            kcrit:              Critical Fourier scale (in units of 1/r0) at which to separate low-k</span>
+<span class="sd">                                and high-k turbulence.  The default value was chosen based on</span>
+<span class="sd">                                comparisons between Fourier optics and geometric optics with a</span>
+<span class="sd">                                second kick correction.  While most values of kcrit smaller than the</span>
+<span class="sd">                                default produce similar results, we caution the user to compare the</span>
+<span class="sd">                                affected geometric PSFs against Fourier optics PSFs carefully before</span>
+<span class="sd">                                changing this value.  [default: 0.2]</span>
+<span class="sd">            fft_sign:           The sign (+/-) to use in the exponent of the Fourier kernel when</span>
+<span class="sd">                                evaluating the Fourier optics PSF.  As of version 2.3, GalSim uses a</span>
+<span class="sd">                                plus sign by default, which we believe to be consistent with, for</span>
+<span class="sd">                                example, how Zemax computes a Fourier optics PSF on DECam.  Before</span>
+<span class="sd">                                version 2.3, the default was a negative sign.  Input should be</span>
+<span class="sd">                                either the string &#39;+&#39; or the string &#39;-&#39;.  [default: &#39;+&#39;]</span>
 <span class="sd">            gsparams:           An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">        The following are optional keywords to use to setup the aperture if ``aper`` is not</span>
@@ -1305,7 +1327,7 @@
 <span class="sd">                            [default: galsim.arcsec]</span>
 <span class="sd">        ii_pad_factor:      Zero-padding factor by which to extend the image of the PSF when</span>
 <span class="sd">                            creating the ``InterpolatedImage``.  See the ``InterpolatedImage``</span>
-<span class="sd">                            docstring for more details.  [default: 4.]</span>
+<span class="sd">                            docstring for more details.  [default: 1.5]</span>
 <span class="sd">        suppress_warning:   If ``pad_factor`` is too small, the code will emit a warning telling</span>
 <span class="sd">                            you its best guess about how high you might want to raise it.</span>
 <span class="sd">                            However, you can suppress this warning by using</span>
@@ -1329,6 +1351,12 @@
 <span class="sd">                            produce similar results, we caution the user to compare the affected</span>
 <span class="sd">                            geometric PSFs against Fourier optics PSFs carefully before changing</span>
 <span class="sd">                            this value.  [default: 0.2]</span>
+<span class="sd">        fft_sign:           The sign (+/-) to use in the exponent of the Fourier kernel when</span>
+<span class="sd">                            evaluating the Fourier optics PSF.  As of version 2.3, GalSim uses a</span>
+<span class="sd">                            plus sign by default, which we believe to be consistent with, for</span>
+<span class="sd">                            example, how Zemax computes a Fourier optics PSF on DECam.  Before</span>
+<span class="sd">                            version 2.3, the default was a negative sign.  Input should be either</span>
+<span class="sd">                            the string &#39;+&#39; or the string &#39;-&#39;.  [default: &#39;+&#39;]</span>
 <span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 
 <span class="sd">    The following are optional keywords to use to setup the aperture if ``aper`` is not provided:</span>
@@ -1374,13 +1402,21 @@
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
+    <span class="n">_default_iipf</span> <span class="o">=</span> <span class="mf">1.5</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">screen_list</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">t0</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">time_step</span><span class="o">=</span><span class="mf">0.025</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                 <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">arcsec</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">arcsec</span><span class="p">),</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">ii_pad_factor</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">geometric_shooting</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">aper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">second_kick</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kcrit</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span>
+                 <span class="n">theta</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">arcsec</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">arcsec</span><span class="p">),</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span>
+                 <span class="n">ii_pad_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">geometric_shooting</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">aper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">second_kick</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">kcrit</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">fft_sign</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
                  <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a</span>
         <span class="c1"># progress bar during long calculations.</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">screen_list</span><span class="p">,</span> <span class="n">PhaseScreenList</span><span class="p">):</span>
+            <span class="n">screen_list</span> <span class="o">=</span> <span class="n">PhaseScreenList</span><span class="p">(</span><span class="n">screen_list</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fft_sign</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid fft_sign&quot;</span><span class="p">,</span> <span class="n">fft_sign</span><span class="p">,</span> <span class="n">allowed_values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">])</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span> <span class="o">=</span> <span class="n">screen_list</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">t0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">t0</span><span class="p">)</span>
@@ -1417,13 +1453,14 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Cannot integrate PSF for negative time.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">=</span> <span class="n">ii_pad_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">=</span> <span class="n">ii_pad_factor</span> <span class="k">if</span> <span class="n">ii_pad_factor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_iipf</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_bar</span> <span class="o">=</span> <span class="n">_bar</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bar</span> <span class="o">=</span> <span class="n">_bar</span> <span class="k">if</span> <span class="n">_bar</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">()</span>  <span class="c1"># with dict() _bar.update() is a trivial no op.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_suppress_warning</span> <span class="o">=</span> <span class="n">suppress_warning</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_geometric_shooting</span> <span class="o">=</span> <span class="n">geometric_shooting</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_kcrit</span> <span class="o">=</span> <span class="n">kcrit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="o">=</span> <span class="n">fft_sign</span>
         <span class="c1"># We&#39;ll set these more intelligently as needed below</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_second_kick</span> <span class="o">=</span> <span class="n">second_kick</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="o">.</span><span class="n">_delayCalculation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -1463,7 +1500,7 @@
             <span class="n">maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">maxk</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">_getMaxK</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">)</span>
-        <span class="n">image</span> <span class="o">=</span> <span class="n">_Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">),</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">_Image</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
                        <span class="n">_BoundsI</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.</span><span class="p">))</span>
         <span class="n">interpolant</span> <span class="o">=</span> <span class="s1">&#39;delta&#39;</span>  <span class="c1"># Use delta so it doesn&#39;t contribute to stepk</span>
         <span class="k">return</span> <span class="n">InterpolatedImage</span><span class="p">(</span>
@@ -1482,6 +1519,13 @@
         <span class="sd">&quot;&quot;&quot;The critical Fourier scale being used for this object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kcrit</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fft_sign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The sign (+/-) to use in the exponent of the Fourier kernel when evaluating the Fourier</span>
+<span class="sd">        optics PSF.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">screen_kmax</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1527,9 +1571,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span>
 
 <div class="viewcode-block" id="PhaseScreenPSF.withGSParams"><a class="viewcode-back" href="../../phase_psf.html#galsim.PhaseScreenPSF.withGSParams">[docs]</a>    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
-        <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">aper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
         <span class="n">ret</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
@@ -1550,13 +1594,15 @@
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">outstr</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;galsim.PhaseScreenPSF(</span><span class="si">%r</span><span class="s2">, lam=</span><span class="si">%r</span><span class="s2">, exptime=</span><span class="si">%r</span><span class="s2">, flux=</span><span class="si">%r</span><span class="s2">, aper=</span><span class="si">%r</span><span class="s2">, theta=</span><span class="si">%r</span><span class="s2">, &quot;</span>
-                  <span class="s2">&quot;interpolant=</span><span class="si">%r</span><span class="s2">, scale_unit=</span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span>
+                  <span class="s2">&quot;interpolant=</span><span class="si">%r</span><span class="s2">, scale_unit=</span><span class="si">%r</span><span class="s2">, fft_sign=</span><span class="si">%r</span><span class="s2">, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">outstr</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span>
-                         <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="c1"># Even if two PSFs were generated with different sets of parameters, they will act</span>
-        <span class="c1"># identically if their img, interpolant, stepk, maxk, pad_factor, and gsparams match.</span>
+        <span class="c1"># identically if their img, interpolant, stepk, maxk, pad_factor, fft_sign and gsparams</span>
+        <span class="c1"># match.</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">PhaseScreenPSF</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_screen_list</span> <span class="ow">and</span>
@@ -1570,12 +1616,14 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.PhaseScreenPSF&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">t0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">exptime</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">interpolant</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_prepareDraw</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Trigger delayed computation of all pending PSFs.</span>
@@ -1592,12 +1640,15 @@
         <span class="n">expwf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="mi">2</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">)</span> <span class="o">*</span> <span class="n">wf</span><span class="p">)</span>
         <span class="n">expwf_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">illuminated</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
         <span class="n">expwf_grid</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">illuminated</span><span class="p">]</span> <span class="o">=</span> <span class="n">expwf</span>
-        <span class="n">ftexpwf</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span><span class="n">expwf_grid</span><span class="p">,</span> <span class="n">shift_in</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shift_out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Note fft is &#39;-&#39; and ifft is &#39;+&#39; below</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+            <span class="n">ftexpwf</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">ifft2</span><span class="p">(</span><span class="n">expwf_grid</span><span class="p">,</span> <span class="n">shift_in</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shift_out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ftexpwf</span> <span class="o">=</span> <span class="n">fft</span><span class="o">.</span><span class="n">fft2</span><span class="p">(</span><span class="n">expwf_grid</span><span class="p">,</span> <span class="n">shift_in</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shift_out</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">illuminated</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">ftexpwf</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bar</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bar</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_finalize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Take accumulated integrated PSF image and turn it into a proper GSObject.&quot;&quot;&quot;</span>
@@ -1606,10 +1657,6 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_img</span> <span class="o">=</span> <span class="n">_Image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_img</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_finalized</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">_sbp</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -1653,24 +1700,27 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">negative_flux</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_geometric_shooting</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mf">1.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_flux_per_photon</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">max_sb</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">_xValue</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepareDraw</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">_kValue</span><span class="p">(</span><span class="n">kpos</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">_drawReal</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">_drawReal</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_scaling</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span>
         <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span>
@@ -1698,6 +1748,8 @@
         <span class="c1"># shooting.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="o">.</span><span class="n">instantiate</span><span class="p">(</span><span class="n">kmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">screen_kmax</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="s1">&#39;phot&#39;</span><span class="p">)</span>
         <span class="n">nm_to_arcsec</span> <span class="o">=</span> <span class="mf">1.e-9</span> <span class="o">*</span> <span class="n">radians</span> <span class="o">/</span> <span class="n">arcsec</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="o">==</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+            <span class="n">nm_to_arcsec</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen_list</span><span class="o">.</span><span class="n">_wavefront_gradient</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">theta</span><span class="p">)</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">*=</span> <span class="n">nm_to_arcsec</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">*=</span> <span class="n">nm_to_arcsec</span>
@@ -1708,9 +1760,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">second_kick</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
             <span class="n">photons</span><span class="o">.</span><span class="n">convolve</span><span class="p">(</span><span class="n">p2</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ii</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">img</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1873,7 +1924,7 @@
 <span class="sd">                            those larger than order unity.  [default: 1.5]</span>
 <span class="sd">        ii_pad_factor:      Zero-padding factor by which to extend the image of the PSF when</span>
 <span class="sd">                            creating the ``InterpolatedImage``.  See the ``InterpolatedImage``</span>
-<span class="sd">                            docstring for more details.  [default: 4.]</span>
+<span class="sd">                            docstring for more details.  [default: 1.5]</span>
 <span class="sd">        suppress_warning:   If ``pad_factor`` is too small, the code will emit a warning telling you</span>
 <span class="sd">                            its best guess about how high you might want to raise it.  However,</span>
 <span class="sd">                            you can suppress this warning by using ``suppress_warning=True``.</span>
@@ -1912,9 +1963,14 @@
 <span class="sd">                            are supplied separately.  Should be either a `galsim.AngleUnit` or a</span>
 <span class="sd">                            string that can be used to construct one (e.g., &#39;arcsec&#39;, &#39;radians&#39;,</span>
 <span class="sd">                            etc.).  [default: galsim.arcsec]</span>
+<span class="sd">        fft_sign:           The sign (+/-) to use in the exponent of the Fourier kernel when</span>
+<span class="sd">                            evaluating the Fourier optics PSF.  As of version 2.3, GalSim uses a</span>
+<span class="sd">                            plus sign by default, which we believe to be consistent with, for</span>
+<span class="sd">                            example, how Zemax computes a Fourier optics PSF on DECam.  Before</span>
+<span class="sd">                            version 2.3, the default was a negative sign.  Input should be either</span>
+<span class="sd">                            the string &#39;+&#39; or the string &#39;-&#39;.  [default: &#39;+&#39;]</span>
 <span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;diam&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="s2">&quot;defocus&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
@@ -1940,26 +1996,30 @@
         <span class="s2">&quot;pupil_angle&quot;</span><span class="p">:</span> <span class="n">Angle</span><span class="p">,</span>
         <span class="s2">&quot;pupil_plane_scale&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="s2">&quot;pupil_plane_size&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="s2">&quot;scale_unit&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">}</span>
+        <span class="s2">&quot;scale_unit&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="s2">&quot;fft_sign&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">}</span>
     <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;lam_over_diam&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;lam&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">}]</span>
-    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="n">_has_hard_edges</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_axisymmetric</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
 
+    <span class="n">_default_iipf</span> <span class="o">=</span> <span class="mf">1.5</span>  <span class="c1"># The default ii_pad_factor, since we need to check it for the repr</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tip</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">tilt</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">astig1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">astig2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">coma1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">coma2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">trefoil1</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">trefoil2</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">spher</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">annular_zernike</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">aper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">circular_pupil</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">ii_pad_factor</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+                 <span class="n">oversampling</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">pad_factor</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">ii_pad_factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
                  <span class="n">nstruts</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">strut_thick</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">strut_angle</span><span class="o">=</span><span class="mf">0.</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span>
                  <span class="n">pupil_plane_im</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_plane_scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_plane_size</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">pupil_angle</span><span class="o">=</span><span class="mf">0.</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">pupil_angle</span><span class="o">=</span><span class="mf">0.</span><span class="o">*</span><span class="n">radians</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">fft_sign</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">_force_stepk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
                  <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">geometric_shooting</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.phase_screens</span> <span class="kn">import</span> <span class="n">OpticalScreen</span>
+        <span class="k">if</span> <span class="n">fft_sign</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Invalid fft_sign&quot;</span><span class="p">,</span> <span class="n">fft_sign</span><span class="p">,</span> <span class="n">allowed_values</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span><span class="s1">&#39;-&#39;</span><span class="p">])</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">scale_unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">)</span>
         <span class="c1"># Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for</span>
@@ -1998,11 +2058,10 @@
                     <span class="n">lam_over_diam</span><span class="o">=</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="n">diam</span><span class="p">)</span>
 
         <span class="c1"># Make the optical screen.</span>
-        <span class="n">optics_screen</span> <span class="o">=</span> <span class="n">OpticalScreen</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span> <span class="o">=</span> <span class="n">OpticalScreen</span><span class="p">(</span>
                 <span class="n">diam</span><span class="o">=</span><span class="n">diam</span><span class="p">,</span> <span class="n">defocus</span><span class="o">=</span><span class="n">defocus</span><span class="p">,</span> <span class="n">astig1</span><span class="o">=</span><span class="n">astig1</span><span class="p">,</span> <span class="n">astig2</span><span class="o">=</span><span class="n">astig2</span><span class="p">,</span> <span class="n">coma1</span><span class="o">=</span><span class="n">coma1</span><span class="p">,</span> <span class="n">coma2</span><span class="o">=</span><span class="n">coma2</span><span class="p">,</span>
                 <span class="n">trefoil1</span><span class="o">=</span><span class="n">trefoil1</span><span class="p">,</span> <span class="n">trefoil2</span><span class="o">=</span><span class="n">trefoil2</span><span class="p">,</span> <span class="n">spher</span><span class="o">=</span><span class="n">spher</span><span class="p">,</span> <span class="n">aberrations</span><span class="o">=</span><span class="n">aberrations</span><span class="p">,</span>
                 <span class="n">obscuration</span><span class="o">=</span><span class="n">obscuration</span><span class="p">,</span> <span class="n">annular_zernike</span><span class="o">=</span><span class="n">annular_zernike</span><span class="p">,</span> <span class="n">lam_0</span><span class="o">=</span><span class="n">lam</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_screens</span> <span class="o">=</span> <span class="n">PhaseScreenList</span><span class="p">(</span><span class="n">optics_screen</span><span class="p">)</span>
 
         <span class="c1"># Make the aperture.</span>
         <span class="k">if</span> <span class="n">aper</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -2028,13 +2087,15 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span> <span class="o">=</span> <span class="n">aper</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="o">=</span> <span class="n">_force_stepk</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="o">=</span> <span class="n">_force_maxk</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">=</span> <span class="n">ii_pad_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">=</span> <span class="n">ii_pad_factor</span> <span class="k">if</span> <span class="n">ii_pad_factor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_iipf</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="o">=</span> <span class="n">fft_sign</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_psf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">psf</span> <span class="o">=</span> <span class="n">PhaseScreenPSF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screens</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">PhaseScreenPSF</span><span class="p">(</span><span class="n">PhaseScreenList</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_screen</span><span class="p">),</span> <span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span>
                              <span class="n">aper</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="p">,</span> <span class="n">interpolant</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span><span class="p">,</span>
-                             <span class="n">scale_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span>
+                             <span class="n">scale_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span><span class="p">,</span> <span class="n">fft_sign</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span><span class="p">,</span>
+                             <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">,</span>
                              <span class="n">suppress_warning</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_suppress_warning</span><span class="p">,</span>
                              <span class="n">geometric_shooting</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_geometric_shooting</span><span class="p">,</span>
                              <span class="n">_force_stepk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span>
@@ -2043,12 +2104,12 @@
         <span class="k">return</span> <span class="n">psf</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalPSF(lam=</span><span class="si">%s</span><span class="s2">, diam=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">lam_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
+        <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalPSF(lam=</span><span class="si">%s</span><span class="s2">, diam=</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">lam_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">):</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, aberrations=[&quot;</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">ab</span><span class="p">)</span> <span class="k">for</span> <span class="n">ab</span> <span class="ow">in</span> <span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">_pupil_plane_im</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">_geometry_str</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="o">.</span><span class="n">_pupil_plane_im</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="o">.</span><span class="n">_geometry_str</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">screen</span><span class="o">.</span><span class="n">annular_zernike</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, annular_zernike=True&quot;</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, obscuration=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span>
@@ -2058,21 +2119,29 @@
         <span class="k">return</span> <span class="n">s</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalPSF(lam=</span><span class="si">%r</span><span class="s2">, diam=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
-        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, aper=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span>
+        <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s2">&quot;galsim.OpticalPSF(lam=</span><span class="si">%r</span><span class="s2">, diam=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="o">.</span><span class="n">diam</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, aper=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_aper</span>
         <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">):</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, aberrations=[&quot;</span> <span class="o">+</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">ab</span><span class="p">)</span> <span class="k">for</span> <span class="n">ab</span> <span class="ow">in</span> <span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
         <span class="k">if</span> <span class="n">screen</span><span class="o">.</span><span class="n">annular_zernike</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, annular_zernike=True&quot;</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, obscuration=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, interpolant=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span> <span class="o">!=</span> <span class="n">arcsec</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, scale_unit=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="o">!=</span> <span class="s1">&#39;+&#39;</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, fft_sign=&#39;-&#39;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">!=</span> <span class="n">GSParams</span><span class="p">():</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, gsparams=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, flux=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, _force_stepk=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, _force_maxk=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">!=</span> <span class="mf">4.</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">!=</span> <span class="n">OpticalPSF</span><span class="o">.</span><span class="n">_default_iipf</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;, ii_pad_factor=</span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span>
         <span class="n">s</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
         <span class="k">return</span> <span class="n">s</span>
@@ -2082,23 +2151,20 @@
                 <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">OpticalPSF</span><span class="p">)</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_lam</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_aper</span> <span class="ow">and</span>
-                 <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_screen</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_flux</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_interpolant</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_scale_unit</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_force_stepk</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_force_maxk</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_ii_pad_factor</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_fft_sign</span> <span class="ow">and</span>
                  <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.OpticalPSF&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.OpticalPSF&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interpolant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_sbp</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># The SBProfile is picklable, but it is pretty inefficient, due to the large images being</span>
@@ -2131,57 +2197,66 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">negative_flux</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_flux_per_photon</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">max_sb</span>
 
-    <span class="nd">@doc_inherit</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fft_sign</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span>
+
     <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_xValue</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_kValue</span><span class="p">(</span><span class="n">kpos</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_drawReal</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_drawReal</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_scaling</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">)</span>
 
 <div class="viewcode-block" id="OpticalPSF.withFlux"><a class="viewcode-back" href="../../psf.html#galsim.OpticalPSF.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
-        <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">screen_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">screen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_screen</span>
         <span class="k">return</span> <span class="n">OpticalPSF</span><span class="p">(</span>
-                <span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="n">aper</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_psf</span><span class="o">.</span><span class="n">aper</span><span class="p">,</span>
+                <span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="n">aper</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_aper</span><span class="p">,</span>
                 <span class="n">aberrations</span><span class="o">=</span><span class="n">screen</span><span class="o">.</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">annular_zernike</span><span class="o">=</span><span class="n">screen</span><span class="o">.</span><span class="n">annular_zernike</span><span class="p">,</span>
                 <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">_force_stepk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_stepk</span><span class="p">,</span> <span class="n">_force_maxk</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_force_maxk</span><span class="p">,</span>
-                <span class="n">ii_pad_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">)</span></div></div>
+                <span class="n">ii_pad_factor</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ii_pad_factor</span><span class="p">,</span> <span class="n">fft_sign</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_fft_sign</span><span class="p">,</span>
+                <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -2189,7 +2264,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

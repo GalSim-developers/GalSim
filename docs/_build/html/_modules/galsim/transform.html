@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.transform &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.transform &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.transform</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -191,11 +198,11 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 <span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
 <span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
-<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span><span class="p">,</span> <span class="n">WeakMethod</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">WeakMethod</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">_PositionD</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span>
 
-<div class="viewcode-block" id="Transform"><a class="viewcode-back" href="../../transform.html#galsim.Transform">[docs]</a><span class="k">def</span> <span class="nf">Transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="Transform"><a class="viewcode-back" href="../../transform.html#galsim.Transform">[docs]</a><span class="k">def</span> <span class="nf">Transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
               <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A function for transforming either a `GSObject` or `ChromaticObject`.</span>
 
@@ -210,8 +217,10 @@
 <span class="sd">    Parameters:</span>
 <span class="sd">        obj:                The object to be transformed.</span>
 <span class="sd">        jac:                A list or tuple ( dudx, dudy, dvdx, dvdy ) describing the Jacobian</span>
-<span class="sd">                            of the transformation. [default: (1,0,0,1)]</span>
-<span class="sd">        offset:             A galsim.PositionD giving the offset by which to shift the profile.</span>
+<span class="sd">                            of the transformation.  Use None to indicate that the Jacobian is the</span>
+<span class="sd">                            2x2 unit matrix.  [default: None]</span>
+<span class="sd">        offset:             A galsim.PositionD or tuple giving the offset by which to shift the</span>
+<span class="sd">                            profile. [default: (0.,0.)]</span>
 <span class="sd">        flux_ratio:         A factor by which to multiply the surface brightness of the object.</span>
 <span class="sd">                            (Technically, not necessarily the flux.  See above.) [default: 1]</span>
 <span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
@@ -242,23 +251,25 @@
                 <span class="p">[</span> <span class="n">Transform</span><span class="p">(</span><span class="n">o</span><span class="p">,</span><span class="n">jac</span><span class="p">,</span><span class="n">offset</span><span class="p">,</span><span class="n">flux_ratio</span><span class="p">,</span><span class="n">gsparams</span><span class="p">,</span><span class="n">propagate_gsparams</span><span class="p">)</span>
                   <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">obj_list</span> <span class="p">])</span>
             <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;covspec&#39;</span><span class="p">):</span>
-                <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jac</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-                <span class="n">new_obj</span><span class="o">.</span><span class="n">covspec</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">covspec</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">)</span><span class="o">*</span><span class="n">flux_ratio</span><span class="o">**</span><span class="mi">2</span>
+                <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">new_obj</span><span class="o">.</span><span class="n">covspec</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">covspec</span> <span class="o">*</span> <span class="n">flux_ratio</span><span class="o">**</span><span class="mi">2</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jac</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                    <span class="n">new_obj</span><span class="o">.</span><span class="n">covspec</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">covspec</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">)</span> <span class="o">*</span> <span class="n">flux_ratio</span><span class="o">**</span><span class="mi">2</span>
             <span class="k">return</span> <span class="n">new_obj</span>
 
         <span class="c1"># If we are just flux scaling, then a Convolution can do that to the first element.</span>
         <span class="c1"># NB. Even better, if the flux scaling is chromatic, would be to find a component</span>
         <span class="c1"># that is already non-separable.  But we don&#39;t bother trying to do that currently.</span>
         <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ChromaticConvolution</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Convolution</span><span class="p">))</span>
-              <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),(</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
-              <span class="ow">and</span> <span class="n">offset</span> <span class="o">==</span> <span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">)):</span>
+              <span class="ow">and</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">offset</span> <span class="o">==</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">)):</span>
             <span class="n">first</span> <span class="o">=</span> <span class="n">Transform</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span>
                               <span class="n">propagate_gsparams</span><span class="o">=</span><span class="n">propagate_gsparams</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">ChromaticConvolution</span><span class="p">(</span> <span class="p">[</span><span class="n">first</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">o</span> <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span> <span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">ChromaticTransformation</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span>
-                                           <span class="n">propagate_gsparams</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ChromaticTransformation</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">,</span>
+                                           <span class="n">propagate_gsparams</span><span class="o">=</span><span class="n">propagate_gsparams</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">Transformation</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="p">)</span></div>
 
@@ -283,8 +294,10 @@
 <span class="sd">    Parameters:</span>
 <span class="sd">        obj:                The object to be transformed.</span>
 <span class="sd">        jac:                A list, tuple or numpy array ( dudx, dudy, dvdx, dvdy ) describing</span>
-<span class="sd">                            the Jacobian of the transformation. [default: (1,0,0,1)]</span>
-<span class="sd">        offset:             A galsim.PositionD giving the offset by which to shift the profile.</span>
+<span class="sd">                            the Jacobian of the transformation.  Use None to indicate that the</span>
+<span class="sd">                            Jacobian is the 2x2 unit matrix.  [default: None]</span>
+<span class="sd">        offset:             A galsim.PositionD or tuple giving the offset by which to shift the</span>
+<span class="sd">                            profile. [default: (0.,0.)]</span>
 <span class="sd">        flux_ratio:         A factor by which to multiply the surface brightness of the object.</span>
 <span class="sd">                            (Technically, not necessarily the flux.  See above.) [default: 1]</span>
 <span class="sd">        gsparams:           An optional `GSParams` argument. [default: None]</span>
@@ -304,10 +317,17 @@
 <span class="sd">    be set when initializing obj, NOT when creating the Transform (at which point the accuracy and</span>
 <span class="sd">    threshold parameters will simply be ignored).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+    <span class="n">unit_jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
                  <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">propagate_gsparams</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jac</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">jac</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">=</span> <span class="n">offset</span><span class="o">.</span><span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span> <span class="o">=</span> <span class="n">offset</span><span class="o">.</span><span class="n">y</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux_ratio</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">=</span> <span class="n">propagate_gsparams</span>
@@ -316,14 +336,24 @@
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Transformation</span><span class="p">):</span>
             <span class="c1"># Combine the two affine transformations into one.</span>
-            <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fwd_normal</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="n">dx</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="n">dy</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">jac</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">_has_offset</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">dx1</span><span class="p">,</span> <span class="n">dy1</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">_dy</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dx1</span><span class="p">,</span> <span class="n">dy1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fwd_normal</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">_dy</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">+=</span> <span class="n">dx1</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span> <span class="o">+=</span> <span class="n">dy1</span>
+            <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_jac</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">jac</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span> <span class="o">*=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_flux_ratio</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">original</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_original</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">obj</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_offset</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">!=</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_det</span><span class="o">==</span><span class="mf">0.</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Attempt to Transform with degenerate matrix&quot;</span><span class="p">);</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">original</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -335,13 +365,13 @@
     <span class="k">def</span> <span class="nf">jac</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The Jacobian of the transforamtion.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unit_jac</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">offset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The offset of the transformation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
+        <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">flux_ratio</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -355,10 +385,9 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_sbp</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">,</span>
-                                       <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBTransform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_sbp</span><span class="p">,</span> <span class="n">_jac</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -366,15 +395,13 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
             <span class="k">return</span> <span class="n">BaseCorrelatedNoise</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">rng</span><span class="p">,</span>
-                    <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span>
-                               <span class="p">(</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">),</span>
+                    <span class="n">_Transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">,</span>
                                <span class="n">flux_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Transformation.withGSParams"><a class="viewcode-back" href="../../transform.html#galsim.Transformation.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+<div class="viewcode-block" id="Transformation.withGSParams"><a class="viewcode-back" href="../../transform.html#galsim.Transformation.withGSParams">[docs]</a>    <span class="k">def</span> <span class="nf">withGSParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a version of the current object with the given gsparams</span>
 
 <span class="sd">        .. note::</span>
@@ -385,9 +412,9 @@
         <span class="k">if</span> <span class="n">gsparams</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span>
         <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">copy</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">:</span>
-            <span class="n">ret</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">withGSParams</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
@@ -401,57 +428,55 @@
                  <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Transformation&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
-                     <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Transformation&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jac</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
                      <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="s1">&#39;galsim.Transformation(</span><span class="si">%r</span><span class="s1">, jac=</span><span class="si">%r</span><span class="s1">, offset=</span><span class="si">%r</span><span class="s1">, flux_ratio=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">, &#39;</span>
                 <span class="s1">&#39;propagate_gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="p">)</span><span class="o">%</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">,</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_propagate_gsparams</span><span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_str_from_jac</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">jac</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">JacobianWCS</span>
         <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">dudx</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">dudy</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">dvdx</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">dvdy</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="c1"># Figure out the shear/rotate/dilate calls that are equivalent.</span>
-            <span class="n">jac</span> <span class="o">=</span> <span class="n">JacobianWCS</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">)</span>
-            <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">flip</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">getDecomposition</span><span class="p">()</span>
-            <span class="n">s</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="n">flip</span><span class="p">:</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Special value indicating to just use transform.</span>
-            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">theta</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.e-12</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.rotate(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="n">theta</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">if</span> <span class="n">shear</span><span class="o">.</span><span class="n">g</span> <span class="o">&gt;</span> <span class="mf">1.e-12</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.shear(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="n">shear</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scale</span><span class="o">-</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.e-12</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.expand(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="n">scale</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="c1"># If flip or there are two components, then revert to transform as simpler.</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.transform(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">)</span>
+        <span class="c1"># Figure out the shear/rotate/dilate calls that are equivalent.</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="n">JacobianWCS</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">)</span>
+        <span class="n">scale</span><span class="p">,</span> <span class="n">shear</span><span class="p">,</span> <span class="n">theta</span><span class="p">,</span> <span class="n">flip</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">getDecomposition</span><span class="p">()</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">flip</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Special value indicating to just use transform.</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">theta</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.e-12</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="c1"># If nothing is large enough to show up above, give full detail of transform</span>
-                <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.transform(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">s</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.rotate(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="n">theta</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">shear</span><span class="o">.</span><span class="n">g</span> <span class="o">&gt;</span> <span class="mf">1.e-12</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.shear(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="n">shear</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">scale</span><span class="o">-</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.e-12</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.expand(</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="n">scale</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># If flip or there are two components, then revert to transform as simpler.</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.transform(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If nothing is large enough to show up above, give full detail of transform</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;.transform(</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">original</span><span class="p">)</span>
-        <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str_from_jac</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;.shift(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str_from_jac</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;.shift(</span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">_dy</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span>
             <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39; * </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux_ratio</span>
         <span class="k">return</span> <span class="n">s</span>
@@ -462,6 +487,8 @@
     <span class="c1"># Some lazy properties to calculate things as needed.</span>
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_det</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>     <span class="c1"># jac is (1,0,0,1)</span>
                 <span class="k">return</span> <span class="mf">1.</span>
@@ -472,7 +499,7 @@
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_invdet</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_det</span>
+        <span class="k">return</span> <span class="mf">1.</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">1.</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_det</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_invjac</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -493,37 +520,34 @@
     <span class="c1"># Some helper attributes to make fwd and inv transformation quicker</span>
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_fwd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ident</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwd_diag</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ident</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwd_diag</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwd_normal</span><span class="p">)</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_fwdT</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ident</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwd_diag</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ident</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwd_diag</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwdT_normal</span><span class="p">)</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_inv</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ident</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv_diag</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ident</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv_diag</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv_normal</span><span class="p">)</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_kfactor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">==</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kf_nophase</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">WeakMethod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_kf_phase</span><span class="p">)</span>
@@ -574,8 +598,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_scaling</span>
 
     <span class="k">def</span> <span class="nf">_kf_phase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kx</span><span class="p">,</span> <span class="n">ky</span><span class="p">):</span>
-        <span class="n">kx</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">x</span>
-        <span class="n">ky</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">kx</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span>
+        <span class="n">ky</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span>
         <span class="n">kx</span> <span class="o">+=</span> <span class="n">ky</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_scaling</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">kx</span><span class="p">)</span>
 
@@ -593,10 +617,13 @@
 
     <span class="k">def</span> <span class="nf">_major_minor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_major&quot;</span><span class="p">):</span>
-            <span class="n">h1</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">h2</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_major</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">h1</span><span class="o">+</span><span class="n">h2</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_minor</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">h1</span><span class="o">-</span><span class="n">h2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_major</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minor</span> <span class="o">=</span> <span class="mf">1.</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">h1</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">h2</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_major</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">h1</span><span class="o">+</span><span class="n">h2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_minor</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">h1</span><span class="o">-</span><span class="n">h2</span><span class="p">)</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">_maxk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -611,8 +638,8 @@
         <span class="c1">#     stepk = Pi/R</span>
         <span class="c1">#     R &lt;- R + |shift|</span>
         <span class="c1">#     stepk &lt;- Pi/(Pi/stepk + |shift|)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">!=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">):</span>
-            <span class="n">dr</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">!=</span>  <span class="mf">0.</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="n">dr</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span><span class="p">)</span>
             <span class="n">stepk</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">stepk</span> <span class="o">+</span> <span class="n">dr</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">stepk</span>
 
@@ -623,9 +650,9 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_is_axisymmetric</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">is_axisymmetric</span> <span class="ow">and</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">==</span> <span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">))</span>
+                    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="ow">and</span>
+                                           <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]))</span> <span class="ow">and</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_is_analytic_x</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -638,9 +665,10 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">cen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">centroid</span>
-        <span class="n">cen</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwd</span><span class="p">(</span><span class="n">cen</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">cen</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
-        <span class="n">cen</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
-        <span class="k">return</span> <span class="n">cen</span>
+        <span class="n">cenx</span><span class="p">,</span> <span class="n">ceny</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fwd</span><span class="p">(</span><span class="n">cen</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">cen</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+        <span class="n">cenx</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span>
+        <span class="n">ceny</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span>
+        <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">cenx</span><span class="p">,</span><span class="n">ceny</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_positive_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -650,72 +678,121 @@
     <span class="k">def</span> <span class="nf">_negative_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_scaling</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">negative_flux</span>
 
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_flux_per_photon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_flux_per_photon</span><span class="p">()</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_amp_scaling</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">max_sb</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
-        <span class="n">pos</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
-        <span class="n">inv_pos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">pos</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">pos</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span>
+        <span class="n">inv_pos</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_inv</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_xValue</span><span class="p">(</span><span class="n">inv_pos</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_amp_scaling</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
-        <span class="n">fwdT_kpos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwdT</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">kpos</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
+        <span class="n">fwdT_kpos</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_fwdT</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">kpos</span><span class="o">.</span><span class="n">y</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_kValue</span><span class="p">(</span><span class="n">fwdT_kpos</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kfactor</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">kpos</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">==</span> <span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jac</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_drawReal</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span> <span class="o">!=</span> <span class="mf">1.</span><span class="p">:</span>
-                <span class="n">image</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_ratio</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># TODO: Refactor the C++ draw function to allow this to be implemented in python</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">offset</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_offset</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">x1</span> <span class="o">=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">+</span> <span class="n">jac</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span>
+                <span class="n">y1</span> <span class="o">=</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span> <span class="o">+</span> <span class="n">jac</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span>
+            <span class="n">dx</span> <span class="o">+=</span> <span class="n">x1</span>
+            <span class="n">dy</span> <span class="o">+=</span> <span class="n">y1</span>
+        <span class="n">flux_scaling</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_scaling</span>
+        <span class="n">jac</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_drawReal</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
     <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_shoot</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fwd</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
-        <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">x</span>
-        <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">y</span>
+        <span class="n">photons</span><span class="o">.</span><span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span>
+        <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span>
         <span class="n">photons</span><span class="o">.</span><span class="n">scaleFlux</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux_scaling</span><span class="p">)</span>
 
-    <span class="nd">@doc_inherit</span>
-    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">jac1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_jac</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_original</span><span class="o">.</span><span class="n">_drawKImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">jac1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_offset</span><span class="p">:</span>
+            <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">_galsim</span><span class="o">.</span><span class="n">ApplyKImagePhases</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">,</span>
+                                      <span class="bp">self</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_scaling</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux_scaling</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">kvalue_accuracy</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux_scaling</span></div>
 
 
-<div class="viewcode-block" id="_Transform"><a class="viewcode-back" href="../../transform.html#galsim._Transform">[docs]</a><span class="k">def</span> <span class="nf">_Transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">1.</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span>
-               <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="_Transform"><a class="viewcode-back" href="../../transform.html#galsim._Transform">[docs]</a><span class="k">def</span> <span class="nf">_Transform</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_ratio</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Approximately equivalent to Transform, but without some of the sanity checks (such as</span>
-<span class="sd">    checking for chromatic options).</span>
+<span class="sd">    checking for chromatic options) or setting a new gsparams.</span>
 
 <span class="sd">    For a `ChromaticObject`, you must use the regular `Transform`.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        obj:                The object to be transformed.</span>
+<span class="sd">        jac:                A 2x2 numpy array describing the Jacobian of the transformation.</span>
+<span class="sd">                            Use None to indicate that the Jacobian is the 2x2 unit matrix.</span>
+<span class="sd">                            [default: None]</span>
+<span class="sd">        offset:             The offset to apply. [default (0.,0.)]</span>
+<span class="sd">        flux_ratio:         A factor by which to multiply the surface brightness of the object.</span>
+<span class="sd">                            [default: 1.]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">Transformation</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">jac</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">)</span></div>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">Transformation</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">Transformation</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">gsparams</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_propagate_gsparams</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="n">jac</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="n">ret</span><span class="o">.</span><span class="n">_dy</span> <span class="o">=</span> <span class="n">offset</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Transformation</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">_has_offset</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dx1</span><span class="p">,</span> <span class="n">dy1</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">_dy</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dx1</span><span class="p">,</span> <span class="n">dy1</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_fwd_normal</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">_dx</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">_dy</span><span class="p">)</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_dx</span> <span class="o">+=</span> <span class="n">dx1</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_dy</span> <span class="o">+=</span> <span class="n">dy1</span>
+        <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_jac</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_jac</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">_jac</span> <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">_jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">ret</span><span class="o">.</span><span class="n">_jac</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">jac</span><span class="p">)</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_flux_ratio</span> <span class="o">=</span> <span class="n">flux_ratio</span> <span class="o">*</span> <span class="n">obj</span><span class="o">.</span><span class="n">_flux_ratio</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">_original</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_flux_ratio</span> <span class="o">=</span> <span class="n">flux_ratio</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">_original</span> <span class="o">=</span> <span class="n">obj</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">_has_offset</span> <span class="o">=</span> <span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">_dx</span> <span class="o">!=</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="n">ret</span><span class="o">.</span><span class="n">_dy</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -723,7 +800,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Errors and Warnings &mdash; GalSim 2.2.4 documentation</title>
+  <title>Errors and Warnings &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The Config Module" href="config.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -102,7 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -110,6 +114,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -144,18 +149,20 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
       <li>Errors and Warnings</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/errors.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -176,9 +183,9 @@ occurrence:</p>
 <dl class="simple">
 <dt><a class="reference internal" href="#galsim.GalSimError" title="galsim.GalSimError"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalSimError</span></code></a></dt><dd><p>This is the base class for all other GalSim exceptions.  So you can catch this
 exception if you want to catch just the exceptions raised by GalSim.  It is
-roughly analagous to a <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>.</p>
+roughly analogous to a <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>.</p>
 </dd>
-<dt><a class="reference internal" href="#galsim.GalSimValueError" title="galsim.GalSimValueError"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalSimValueError</span></code></a></dt><dd><p>This indicates that your provided an invalid value for an argument to a function.
+<dt><a class="reference internal" href="#galsim.GalSimValueError" title="galsim.GalSimValueError"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalSimValueError</span></code></a></dt><dd><p>This indicates that you provided an invalid value for an argument to a function.
 It includes attributes that tell you about what value you provided and sometimes
 about the allowed values.</p>
 </dd>
@@ -186,7 +193,7 @@ about the allowed values.</p>
 or <a class="reference internal" href="catalog.html#galsim.Catalog" title="galsim.Catalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Catalog</span></code></a>) with an invalid key.</p>
 </dd>
 <dt><a class="reference internal" href="#galsim.GalSimIndexError" title="galsim.GalSimIndexError"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalSimIndexError</span></code></a></dt><dd><p>This indicates that you tried to access some list-like object (e.g. <a class="reference internal" href="real_gal.html#galsim.RealGalaxyCatalog" title="galsim.RealGalaxyCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxyCatalog</span></code></a>)
-with an invalue index.</p>
+with an invalid index.</p>
 </dd>
 <dt><a class="reference internal" href="#galsim.GalSimRangeError" title="galsim.GalSimRangeError"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalSimRangeError</span></code></a></dt><dd><p>This indicates that you provided a value that is outside of the allowed range.  It
 includes attributes indicating what value you provided and what the allowed range is.</p>
@@ -215,7 +222,7 @@ attributes that tell you both the size that was required and how much memory it 
 have used, so you can decide whether you want to adjust some parameters of your
 simulation or to adjust the object’s <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> options.</p>
 </dd>
-<dt><a class="reference internal" href="#galsim.GalSimConfigError" title="galsim.GalSimConfigError"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalSimConfigError</span></code></a></dt><dd><p>This indicates that there was some kind of failure processing an configuration file.</p>
+<dt><a class="reference internal" href="#galsim.GalSimConfigError" title="galsim.GalSimConfigError"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalSimConfigError</span></code></a></dt><dd><p>This indicates that there was some kind of failure processing a configuration file.</p>
 </dd>
 <dt><a class="reference internal" href="#galsim.GalSimConfigValueError" title="galsim.GalSimConfigValueError"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GalSimConfigValueError</span></code></a></dt><dd><p>This indicates that some parameter in your configuration file is an invalid value.</p>
 </dd>
@@ -436,29 +443,29 @@ currently implemented.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="config.html" class="btn btn-neutral float-right" title="The Config Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="misc.html" class="btn btn-neutral float-left" title="Miscellaneous Utilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="config.html" class="btn btn-neutral float-right" title="The Config Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="misc.html" class="btn btn-neutral float-left" title="Miscellaneous Utilities" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -466,7 +473,6 @@ currently implemented.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.zernike &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.zernike &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.zernike</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -471,7 +478,7 @@
 
 <span class="k">def</span> <span class="nf">__noll_coef_array_gradx</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">obscuration</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">noll_to_zern</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
     <span class="c1"># Gradient of Zernike with radial coefficient n has radial coefficient n-1.</span>
     <span class="c1"># Next line computes the largest j for which radial coefficient is n-1.</span>
@@ -487,7 +494,7 @@
 
 <span class="k">def</span> <span class="nf">__noll_coef_array_grady</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">obscuration</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
     <span class="n">n</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">noll_to_zern</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
     <span class="c1"># Gradient of Zernike with radial coefficient n has radial coefficient n-1.</span>
     <span class="c1"># Next line computes the largest j for which radial coefficient is n-1.</span>
@@ -559,6 +566,49 @@
         <span class="n">out</span><span class="p">[</span><span class="n">m</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">norm</span> <span class="o">*</span> <span class="n">_Q</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">eps</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">out</span>
 <span class="n">_annular_zern_rho_coefs</span> <span class="o">=</span> <span class="n">LRU_Cache</span><span class="p">(</span><span class="n">__annular_zern_rho_coefs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">describe_zernike</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a human-readable string describing the jth (unit circle) Zernike mode as a bivariate</span>
+<span class="sd">    polynomial in x and y.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        j:      Zernike mode Noll index</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        string description of jth mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Z</span> <span class="o">=</span> <span class="n">Zernike</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">j</span><span class="o">+</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">noll_to_zern</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+    <span class="n">var</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">m</span><span class="o">==</span><span class="mi">0</span> <span class="k">else</span> <span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">Z</span><span class="o">.</span><span class="n">_coef_array_xy</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+    <span class="n">first</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;sqrt(</span><span class="si">{}</span><span class="s2">) * (&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndenumerate</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">first</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot; + &quot;</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">ival</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">ival</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;x&quot;</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;^&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;y&quot;</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;^&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;)&quot;</span>
+    <span class="c1"># Clean up some special cases</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;(-1x&quot;</span><span class="p">,</span> <span class="s2">&quot;(-x&quot;</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;(-1y&quot;</span><span class="p">,</span> <span class="s2">&quot;(-y&quot;</span><span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;+ -&quot;</span><span class="p">,</span> <span class="s2">&quot;- &quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">out</span> <span class="o">==</span> <span class="s2">&quot;sqrt(1) * ()&quot;</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;sqrt(1) * (1)&quot;</span>
+    <span class="k">return</span> <span class="n">out</span>
 
 
 <div class="viewcode-block" id="Zernike"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike">[docs]</a><span class="k">class</span> <span class="nc">Zernike</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -635,11 +685,23 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add Zernikes with inconsistent R_outer&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">!=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">R_inner</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add Zernikes with inconsistent R_inner&quot;</span><span class="p">)</span>
-        <span class="n">n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">coef</span><span class="p">))</span>
-        <span class="n">newCoef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-        <span class="n">newCoef</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
-        <span class="n">newCoef</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">coef</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">coef</span>
-        <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="s1">&#39;coef&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">coef</span><span class="p">))</span>
+            <span class="n">newCoef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">newCoef</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">coef</span>
+            <span class="n">newCoef</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">rhs</span><span class="o">.</span><span class="n">coef</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">coef</span>
+            <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="n">R_outer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">R_inner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">s1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coef_array_xy</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">s2</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">_coef_array_xy</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">sout</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">s1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">max</span><span class="p">(</span><span class="n">s1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">s2</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">Zernike</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">Zernike</span><span class="p">)</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_coef_array_xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">sout</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_coef_array_xy</span><span class="p">[:</span><span class="n">s1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span><span class="n">s1</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coef_array_xy</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_coef_array_xy</span><span class="p">[:</span><span class="n">s2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:</span><span class="n">s2</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">_coef_array_xy</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span>
+            <span class="k">return</span> <span class="n">ret</span></div>
 
 <div class="viewcode-block" id="Zernike.__sub__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__sub__">[docs]</a>    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Subtract two Zernikes.</span>
@@ -661,7 +723,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Real</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Real</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">rhs</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s1">&#39;coef&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">rhs</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">coef</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="n">Zernike</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">Zernike</span><span class="p">)</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">_coef_array_xy</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_coef_array_xy</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span>
+                <span class="k">return</span> <span class="n">ret</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rhs</span><span class="p">,</span> <span class="n">Zernike</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">!=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">R_outer</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply Zernikes with inconsistent R_outer&quot;</span><span class="p">)</span>
@@ -683,33 +752,10 @@
             <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndenumerate</span><span class="p">(</span><span class="n">sxy</span><span class="p">):</span>
                 <span class="n">newXY</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">rxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="n">rxy</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span> <span class="o">+=</span> <span class="n">c</span><span class="o">*</span><span class="n">rxy</span>
 
-            <span class="c1"># Each multiplier has adjustments for R_outer present, leading to the new coefficients</span>
-            <span class="c1"># having adjustments for R_outer^2.  So unadjust by 1 factor of R_outer here.</span>
-            <span class="n">adjustedXY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">newXY</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
-                <span class="n">n</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
-                <span class="n">adjustedXY</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*=</span> <span class="n">norm</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
-                    <span class="n">adjustedXY</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">norm</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span>
-
-            <span class="c1"># We now have the XY coefficients for the product polynomial in newXY.  What we want,</span>
-            <span class="c1"># however, is the contribution from each Zernike term.  We can use lstsq and knowledge</span>
-            <span class="c1"># of each individual Zernike term&#39;s xy contribution (from _noll_coef_array_xy) to solve</span>
-            <span class="c1"># for the appropriate coefficients.</span>
-            <span class="n">obscuration</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span>
-            <span class="n">nca</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span>
-                <span class="n">_noll_coef_array_xy</span><span class="p">(</span><span class="n">jTarget</span><span class="p">,</span> <span class="n">obscuration</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">jTarget</span><span class="p">),</span>
-                <span class="n">adjustedXY</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
-                <span class="n">rcond</span><span class="o">=-</span><span class="mf">1.</span>
-            <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">newCoef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">nca</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-            <span class="n">newCoef</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
-            <span class="n">newCoef</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">nca</span>
-            <span class="n">ret</span> <span class="o">=</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">newCoef</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="p">)</span>
-            <span class="c1"># We&#39;ve already computed the XY coefficients for the product, so insert those now</span>
-            <span class="c1"># instead of waiting on the lazy_property to compute them again.</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">Zernike</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">Zernike</span><span class="p">)</span>
             <span class="n">ret</span><span class="o">.</span><span class="n">_coef_array_xy</span> <span class="o">=</span> <span class="n">newXY</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">R_inner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span>
             <span class="k">return</span> <span class="n">ret</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Cannot multiply Zernike by type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">rhs</span><span class="p">)))</span></div>
@@ -717,6 +763,38 @@
 <div class="viewcode-block" id="Zernike.__rmul__"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike.__rmul__">[docs]</a>    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Equivalent to obj * rhs.  See `__mul__` for details.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">*</span><span class="n">rhs</span></div>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">coef</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Zernike series coefficients.</span>
+
+<span class="sd">        Note that coef[i] corresponds to Z_i under the Noll index convention, and coef[0] is</span>
+<span class="sd">        ignored.  (I.e., coef[1] is &#39;piston&#39;, coef[4] is &#39;defocus&#39;, ...).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Given _coef_array_xy, we can solve for the Zernike coefficients using lstsq to project</span>
+        <span class="c1"># _coef_array_xy onto each individual Zernike term&#39;s xy contribution</span>
+        <span class="c1"># (from _noll_coef_array_xy).</span>
+
+        <span class="c1"># Start by adjusting xy array to account for R_outer != 1.</span>
+        <span class="n">adjustedXY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_coef_array_xy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_coef_array_xy</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">norm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">power</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+            <span class="n">adjustedXY</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">*=</span> <span class="n">norm</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+                <span class="n">adjustedXY</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="n">i</span><span class="p">]</span> <span class="o">*=</span> <span class="n">norm</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="n">nTarget</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="o">*</span><span class="n">adjustedXY</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>  <span class="c1"># Maximum radial degree</span>
+        <span class="n">jTarget</span> <span class="o">=</span> <span class="p">(</span><span class="n">nTarget</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">nTarget</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span>  <span class="c1"># Largest Noll index with above radial degree</span>
+        <span class="n">nca</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span>
+            <span class="n">_noll_coef_array_xy</span><span class="p">(</span><span class="n">jTarget</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">R_inner</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">R_outer</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">jTarget</span><span class="p">),</span>
+            <span class="n">adjustedXY</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span>
+            <span class="n">rcond</span><span class="o">=-</span><span class="mf">1.</span>
+        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">nca</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">coef</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">coef</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">nca</span>
+        <span class="k">return</span> <span class="n">coef</span>
 
     <span class="nd">@lazy_property</span>
     <span class="k">def</span> <span class="nf">hessian</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -979,20 +1057,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1000,7 +1083,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

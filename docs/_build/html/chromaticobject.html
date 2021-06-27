@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Chromatic Profiles &mdash; GalSim 2.2.4 documentation</title>
+  <title>Chromatic Profiles &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Spectral Correlated Noise" href="spectral.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -108,7 +112,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -116,6 +120,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -150,11 +155,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="chromatic.html">Wavelength-dependent Profiles</a> &raquo;</li>
         
@@ -163,7 +170,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/chromaticobject.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -295,6 +302,38 @@ the flux ratio for that wavelength, or an <a class="reference internal" href="se
 </dd></dl>
 
 <dl class="py method">
+<dt id="galsim.ChromaticObject.applyTo">
+<code class="sig-name descname">applyTo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">photon_array</span></em>, <em class="sig-param"><span class="n">local_wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.applyTo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.applyTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the chromatic profile as a convolution to an existing photon array.</p>
+<p>This method allows instances of this class to duck type as a PhotonOp, so one can apply it
+in a photon_ops list.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>photon_array</strong> – A <a class="reference internal" href="photon_array.html#galsim.PhotonArray" title="galsim.PhotonArray"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonArray</span></code></a> to apply the operator to.</p></li>
+<li><p><strong>local_wcs</strong> – A <a class="reference internal" href="wcs.html#galsim.wcs.LocalWCS" title="galsim.wcs.LocalWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LocalWCS</span></code></a> instance defining the local WCS for the current photon
+bundle in case the operator needs this information.  [default: None]</p></li>
+<li><p><strong>rng</strong> – A random number generator to use to effect the convolution.
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.ChromaticObject.atRedshift">
+<code class="sig-name descname">atRedshift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">redshift</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.atRedshift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.atRedshift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different redshift.</p>
+<p>This will both adjust the SED to have the given redshift and set a <code class="docutils literal notranslate"><span class="pre">redshift</span></code> attribute
+with the given value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the object with the new redshift</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="galsim.ChromaticObject.calculateCentroid">
 <code class="sig-name descname">calculateCentroid</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.calculateCentroid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.calculateCentroid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine the centroid of the wavelength-integrated surface brightness profile.</p>
@@ -375,7 +414,7 @@ nanometers and the return value the scale for that wavelength.</p>
 
 <dl class="py method">
 <dt id="galsim.ChromaticObject.drawImage">
-<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'trapezoidal'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.drawImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'quadratic'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base implementation for drawing an image of a <a class="reference internal" href="#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
 <p>Some subclasses may choose to override this for specific efficiency gains.  For instance,
 most GalSim use cases will probably finish with a convolution, in which case
@@ -391,12 +430,12 @@ associated with <code class="docutils literal notranslate"><span class="pre">sel
 <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.integ.ContinuousIntegrator</span></code></a> will be used instead.  This latter case by default will
 evaluate the integrand at 250 equally-spaced wavelengths between <code class="docutils literal notranslate"><span class="pre">bandpass.blue_limit</span></code>
 and <code class="docutils literal notranslate"><span class="pre">bandpass.red_limit</span></code>.</p>
-<p>By default, the above two integrators will use the <code class="docutils literal notranslate"><span class="pre">rule</span></code> <a class="reference internal" href="integ.html#galsim.integ.trapzRule" title="galsim.integ.trapzRule"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.integ.trapzRule</span></code></a>
+<p>By default, the above two integrators will use the <code class="docutils literal notranslate"><span class="pre">rule</span></code> <a class="reference internal" href="integ.html#galsim.integ.quadRule" title="galsim.integ.quadRule"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.integ.quadRule</span></code></a>
 for integration.  The midpoint rule for integration can be specified instead by passing an
-integrator that has been initialized with the <code class="docutils literal notranslate"><span class="pre">rule</span></code> set to <a class="reference internal" href="integ.html#galsim.integ.midptRule" title="galsim.integ.midptRule"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.integ.midptRule</span></code></a>.
+integrator that has been initialized with the <code class="docutils literal notranslate"><span class="pre">rule</span></code> set to <a class="reference internal" href="integ.html#galsim.integ.midptRule" title="galsim.integ.midptRule"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.integ.midptRule</span></code></a>.
 When creating a <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a>, the number of samples <code class="docutils literal notranslate"><span class="pre">N</span></code> is also an argument.
 For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">integrator</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ContinuousIntegrator</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">integ</span><span class="o">.</span><span class="n">midptRule</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">integrator</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">integ</span><span class="o">.</span><span class="n">ContinuousIntegrator</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">integ</span><span class="o">.</span><span class="n">midptRule</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">chromatic_obj</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -415,11 +454,11 @@ integrate.</p></li>
 for details.)  [default: None]</p></li>
 <li><p><strong>integrator</strong> – When doing the exact evaluation of the profile, this argument should
 be one of the image integrators from galsim.integ, or a string
-‘trapezoidal’ or ‘midpoint’, in which case the routine will use a
-<a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on whether or
-not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘trapezoidal’,
+‘trapezoidal’, ‘midpoint’, or ‘quadratic’, in which case the routine
+will use a <a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on
+whether or not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘quadratic’,
 which will try to select an appropriate integrator using the
-trapezoidal integration rule automatically.]</p></li>
+quadratic integration rule automatically.]</p></li>
 <li><p><strong>**kwargs</strong> – For all other kwarg options, see <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a></p></li>
 </ul>
 </dd>
@@ -431,7 +470,7 @@ trapezoidal integration rule automatically.]</p></li>
 
 <dl class="py method">
 <dt id="galsim.ChromaticObject.drawKImage">
-<code class="sig-name descname">drawKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'trapezoidal'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.drawKImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawKImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'quadratic'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.drawKImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.drawKImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base implementation for drawing the Fourier transform of a <a class="reference internal" href="#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>.</p>
 <p>The task of drawKImage() in a chromatic context is exactly analogous to the task of
 <a class="reference internal" href="#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">drawImage</span></code></a> in a chromatic context: to integrate the <code class="docutils literal notranslate"><span class="pre">sed</span> <span class="pre">*</span> <span class="pre">bandpass</span></code> weighted Fourier
@@ -448,10 +487,10 @@ then it will be resized appropriately based on the profile’s size.
 [default: None]</p></li>
 <li><p><strong>integrator</strong> – When doing the exact evaluation of the profile, this argument should be
 one of the image integrators from galsim.integ, or a string
-‘trapezoidal’ or ‘midpoint’, in which case the routine will use a
-<a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on whether or not
-the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘trapezoidal’, which will try to
-select an appropriate integrator using the trapezoidal integration rule
+‘trapezoidal’, ‘midpoint’, or ‘quadratic’, in which case the routine will
+use a <a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on whether or
+not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘quadratic’, which will try
+to select an appropriate integrator using the quadratic integration rule
 automatically.]</p></li>
 <li><p><strong>**kwargs</strong> – For all other kwarg options, see <a class="reference internal" href="gsobject.html#galsim.GSObject.drawKImage" title="galsim.GSObject.drawKImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawKImage</span></code></a>.</p></li>
 </ul>
@@ -644,6 +683,12 @@ and the return value the magnification for that wavelength.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="galsim.ChromaticObject.redshift">
+<em class="property">property </em><code class="sig-name descname">redshift</code><a class="headerlink" href="#galsim.ChromaticObject.redshift" title="Permalink to this definition">¶</a></dt>
+<dd><p>The redshift of the object.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="galsim.ChromaticObject.resize_multiplier_cache">
 <em class="property">static </em><code class="sig-name descname">resize_multiplier_cache</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">maxsize</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.resize_multiplier_cache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.resize_multiplier_cache" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resize the cache (default size=10) containing the integral over the product of an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>
@@ -706,8 +751,8 @@ the shear for that wavelength, returned as a <a class="reference internal" href=
 <p>For a wavelength-independent shift, you may supply <code class="docutils literal notranslate"><span class="pre">dx,dy</span></code> as either two arguments, as a
 tuple, or as a PositionD or PositionI object.</p>
 <p>For a wavelength-dependent shift, you may supply two functions of wavelength in nanometers
-which will be interpreted as <code class="docutils literal notranslate"><span class="pre">dx(wave)</span></code> and <code class="docutils literal notranslate"><span class="pre">dy(wave)</span></code>, or a single function of wavelength
-in nanometers that returns either a 2-tuple, PositionD, or PositionI.</p>
+which will be interpreted as <code class="docutils literal notranslate"><span class="pre">dx(wave)</span></code> and <code class="docutils literal notranslate"><span class="pre">dy(wave)</span></code>, or a single function of
+wavelength in nanometers that returns either a 2-tuple, PositionD, or PositionI.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -789,7 +834,7 @@ wavelength <code class="docutils literal notranslate"><span class="pre">waveleng
 
 <dl class="py method">
 <dt id="galsim.ChromaticObject.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticObject.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticObject.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -927,7 +972,7 @@ Building this is quite fast, so we do it on the fly in <a class="reference inter
 
 <dl class="py method">
 <dt id="galsim.ChromaticAtmosphere.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAtmosphere.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAtmosphere.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAtmosphere.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAtmosphere.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -967,6 +1012,18 @@ point source multiplied by an <a class="reference internal" href="sed.html#galsi
 <span class="gp">&gt;&gt;&gt; </span><span class="n">final_star</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span> <span class="o">=</span> <span class="n">bp</span><span class="p">,</span> <span class="o">...</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When geometric_shooting is False (the default), the photon shooting implementation is
+only approximately correct with respect to the wavelength dependence.  It is also
+not particularly fast, since it generates three optical screens to span the wavelength
+range and shoots from these (with a subsequent adjustment to improve the accuracy
+of this approximation).  We expect that most users who want to use photon shooting in
+conjunction with this class will prefer to make an InterpolatedChromaticObject
+(by calling <code class="docutils literal notranslate"><span class="pre">psf.interpolate(...)</span></code>), especially if it is a good approximation to
+use the same optical PSF for a whole exposure or CCD image, so the setup time for
+the interpolation is able to be amortized for many objects.</p>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -982,6 +1039,10 @@ size and format of this array is described in the OpticalPSF docstring.</p></li>
 [default: galsim.arcsec]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument.  See the docstring for <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for
 details. [default: None]</p></li>
+<li><p><strong>geometric_shooting</strong> – If True, then when drawing using photon shooting, use geometric
+optics approximation where the photon angles are derived from the
+phase screen gradient.  If False, then first draw using Fourier
+optics and then shoot from the derived InterpolatedImage. [default: False]</p></li>
 <li><p><strong>**kwargs</strong> – Any other keyword arguments to be passed to OpticalPSF, for example,
 related to struts, obscuration, oversampling, etc.  See OpticalPSF
 docstring for a complete list of options.</p></li>
@@ -1007,7 +1068,7 @@ docstring for a complete list of options.</p></li>
 
 <dl class="py method">
 <dt id="galsim.ChromaticOpticalPSF.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticOpticalPSF.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticOpticalPSF.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticOpticalPSF.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticOpticalPSF.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1065,7 +1126,7 @@ options.</p></li>
 
 <dl class="py method">
 <dt id="galsim.ChromaticAiry.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAiry.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAiry.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAiry.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAiry.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1313,7 +1374,7 @@ object should be correct, at the possible expense of other features.
 </dl>
 <dl class="py method">
 <dt id="galsim.InterpolatedChromaticObject.drawImage">
-<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'trapezoidal'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.drawImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'quadratic'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw an image as seen through a particular bandpass using the stored interpolated
 images at the specified wavelengths.</p>
 <p>This integration will take place using interpolation between stored images that were
@@ -1326,7 +1387,8 @@ integrate.</p></li>
 <li><p><strong>image</strong> – Optionally, the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> to draw onto.  (See <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>
 for details.)  [default: None]</p></li>
 <li><p><strong>integrator</strong> – The integration algorithm to use, given as a string.  Either
-‘midpoint’ or ‘trapezoidal’ is allowed. [default: ‘trapezoidal’]</p></li>
+‘midpoint’, ‘trapezoidal’, or ‘quadratic’ is allowed.
+[default: ‘quadratic’]</p></li>
 <li><p><strong>**kwargs</strong> – For all other kwarg options, see <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p></li>
 </ul>
 </dd>
@@ -1358,7 +1420,7 @@ for details.)  [default: None]</p></li>
 
 <dl class="py method">
 <dt id="galsim.InterpolatedChromaticObject.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#InterpolatedChromaticObject.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.InterpolatedChromaticObject.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1399,8 +1461,21 @@ would not want to do this. [default: True]</p></li>
 </dd>
 </dl>
 <dl class="py method">
+<dt id="galsim.ChromaticSum.atRedshift">
+<code class="sig-name descname">atRedshift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">redshift</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.atRedshift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.atRedshift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different redshift.</p>
+<p>This will both adjust the SED to have the given redshift and set a <code class="docutils literal notranslate"><span class="pre">redshift</span></code> attribute
+with the given value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the object with the new redshift</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="galsim.ChromaticSum.drawImage">
-<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'trapezoidal'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.drawImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'quadratic'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Slightly optimized draw method for <a class="reference internal" href="#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> instances.</p>
 <p>Draws each summand individually and add resulting images together.  This might waste time if
 two or more summands are separable and have the same <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, and another summand with a
@@ -1417,11 +1492,11 @@ integrate.</p></li>
 for details.)  [default: None]</p></li>
 <li><p><strong>integrator</strong> – When doing the exact evaluation of the profile, this argument should
 be one of the image integrators from galsim.integ, or a string
-‘trapezoidal’ or ‘midpoint’, in which case the routine will use a
-<a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on whether or
-not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘trapezoidal’,
+‘trapezoidal’, ‘midpoint’, ‘quadratic’, in which case the routine will
+use a <a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on whether
+or not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘quadratic’,
 which will try to select an appropriate integrator using the
-trapezoidal integration rule automatically.]</p></li>
+quadratic integration rule automatically.]</p></li>
 <li><p><strong>**kwargs</strong> – For all other kwarg options, see <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p></li>
 </ul>
 </dd>
@@ -1459,7 +1534,7 @@ trapezoidal integration rule automatically.]</p></li>
 
 <dl class="py method">
 <dt id="galsim.ChromaticSum.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticSum.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticSum.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1515,7 +1590,7 @@ would not want to do this. [default: True]</p></li>
 </dl>
 <dl class="py method">
 <dt id="galsim.ChromaticConvolution.drawImage">
-<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'trapezoidal'</span></em>, <em class="sig-param"><span class="n">iimult</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.drawImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'quadratic'</span></em>, <em class="sig-param"><span class="n">iimult</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Optimized draw method for the <a class="reference internal" href="#galsim.ChromaticConvolution" title="galsim.ChromaticConvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticConvolution</span></code></a> class.</p>
 <p>Works by finding sums of profiles which include separable portions, which can then be
 integrated before doing any convolutions, which are pushed to the end.</p>
@@ -1535,11 +1610,11 @@ integrate.</p></li>
 for details.)  [default: None]</p></li>
 <li><p><strong>integrator</strong> – When doing the exact evaluation of the profile, this argument should
 be one of the image integrators from galsim.integ, or a string
-‘trapezoidal’ or ‘midpoint’, in which case the routine will use a
-<a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on whether or
-not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘trapezoidal’,
+‘trapezoidal’, ‘midpoint’, or ‘quadratic’, in which case the routine
+will use a <a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on
+whether or not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘quadratic’,
 which will try to select an appropriate integrator using the
-trapezoidal integration rule automatically.]</p></li>
+quadratic integration rule automatically.]</p></li>
 <li><p><strong>iimult</strong> – Oversample any intermediate <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> created to hold
 effective profiles by this amount. [default: None]</p></li>
 <li><p><strong>**kwargs</strong> – For all other kwarg options, see <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p></li>
@@ -1592,7 +1667,7 @@ and Bandpasses) used by <a class="reference internal" href="#galsim.ChromaticCon
 
 <dl class="py method">
 <dt id="galsim.ChromaticConvolution.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticConvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticConvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1645,7 +1720,7 @@ would not want to do this. [default: True]</p></li>
 
 <dl class="py method">
 <dt id="galsim.ChromaticDeconvolution.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticDeconvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticDeconvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticDeconvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticDeconvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1699,7 +1774,7 @@ would not want to do this. [default: True]</p></li>
 
 <dl class="py method">
 <dt id="galsim.ChromaticAutoConvolution.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoConvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoConvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoConvolution.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoConvolution.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1756,7 +1831,7 @@ would not want to do this. [default: True]</p></li>
 
 <dl class="py method">
 <dt id="galsim.ChromaticAutoCorrelation.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoCorrelation.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticAutoCorrelation.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticAutoCorrelation.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1766,7 +1841,7 @@ those component objects will also have their gsparams updated to the new value.<
 
 <dl class="py class">
 <dt id="galsim.ChromaticTransformation">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">ChromaticTransformation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">jac</span><span class="o">=</span><span class="default_value">array([[1.0, 0.0], [0.0, 1.0]])</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">0.0, 0.0</span></em>, <em class="sig-param"><span class="n">flux_ratio</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">propagate_gsparams</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">ChromaticTransformation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">jac</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">offset</span><span class="o">=</span><span class="default_value">(0.0, 0.0)</span></em>, <em class="sig-param"><span class="n">flux_ratio</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">redshift</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">propagate_gsparams</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.chromatic.ChromaticObject</span></code></p>
 <p>A class for modeling a wavelength-dependent affine transformation of a <a class="reference internal" href="#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>
 instance.</p>
@@ -1783,11 +1858,13 @@ described by (dudx,dudy,dvdx,dvdy) and (dx,dy) respectively.</p>
 <li><p><strong>jac</strong> – A list or tuple (dudx, dudy, dvdx, dvdy), or a numpy.array object
 [[dudx, dudy], [dvdx, dvdy]] describing the Jacobian to apply.  May
 also be a function of wavelength returning a numpy array.
-[default: (1,0,0,1)]</p></li>
+Use None to indicate that the Jacobian is the 2x2 unit matrix.
+[default: None]</p></li>
 <li><p><strong>offset</strong> – A galsim.PositionD or list or tuple or numpy array giving the offset
 (dx,dy) by which to shift the profile.  May also be a function of
-wavelength returning a numpy array.  [default: (0,0)]</p></li>
+wavelength returning a numpy array.  [default: None]</p></li>
 <li><p><strong>flux_ratio</strong> – A factor by which to multiply the flux of the object. [default: 1]</p></li>
+<li><p><strong>redshift</strong> – A redshift to apply to the wavelength when evaluating. [default: None]</p></li>
 <li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument.  See the docstring for <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for
 details. [default: None]</p></li>
 <li><p><strong>propagate_gsparams</strong> – Whether to propagate gsparams to each of the components.  This
@@ -1798,7 +1875,7 @@ would not want to do this. [default: True]</p></li>
 </dl>
 <dl class="py method">
 <dt id="galsim.ChromaticTransformation.drawImage">
-<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'trapezoidal'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.drawImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drawImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">image</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">integrator</span><span class="o">=</span><span class="default_value">'quadratic'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.drawImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.drawImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>See <a class="reference internal" href="#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ChromaticObject.drawImage</span></code></a> for a full description.</p>
 <p>This version usually just calls that one, but if the transformed object (self.original) is
 an <a class="reference internal" href="#galsim.InterpolatedChromaticObject" title="galsim.InterpolatedChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedChromaticObject</span></code></a>, and the transformation is achromatic, then it will still
@@ -1812,14 +1889,14 @@ integrate.</p></li>
 for details.)  [default: None]</p></li>
 <li><p><strong>integrator</strong> – When doing the exact evaluation of the profile, this argument should
 be one of the image integrators from galsim.integ, or a string
-‘trapezoidal’ or ‘midpoint’, in which case the routine will use a
-<a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on whether or
-not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘trapezoidal’,
+‘trapezoidal’, ‘midpoint’, ‘quadratic’, in which case the routine will
+use a <a class="reference internal" href="integ.html#galsim.integ.SampleIntegrator" title="galsim.integ.SampleIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIntegrator</span></code></a> or <a class="reference internal" href="integ.html#galsim.integ.ContinuousIntegrator" title="galsim.integ.ContinuousIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContinuousIntegrator</span></code></a> depending on whether
+or not the object has a <code class="docutils literal notranslate"><span class="pre">wave_list</span></code>.  [default: ‘quadratic’,
 which will try to select an appropriate integrator using the
-trapezoidal integration rule automatically.]
+quadratic integration rule automatically.]
 If the object being transformed is an <a class="reference internal" href="#galsim.InterpolatedChromaticObject" title="galsim.InterpolatedChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedChromaticObject</span></code></a>,
-then <code class="docutils literal notranslate"><span class="pre">integrator</span></code> can only be a string, either ‘midpoint’ or
-‘trapezoidal’.</p></li>
+then <code class="docutils literal notranslate"><span class="pre">integrator</span></code> can only be a string, either ‘midpoint’,
+‘trapezoidal’, or ‘quadratic’.</p></li>
 <li><p><strong>**kwargs</strong> – For all other kwarg options, see <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p></li>
 </ul>
 </dd>
@@ -1857,7 +1934,7 @@ then <code class="docutils literal notranslate"><span class="pre">integrator</sp
 
 <dl class="py method">
 <dt id="galsim.ChromaticTransformation.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticTransformation.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticTransformation.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1915,7 +1992,7 @@ would not want to do this. [default: True]</p></li>
 
 <dl class="py method">
 <dt id="galsim.ChromaticFourierSqrtProfile.withGSParams">
-<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticFourierSqrtProfile.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.withGSParams" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">withGSParams</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/chromatic.html#ChromaticFourierSqrtProfile.withGSParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.ChromaticFourierSqrtProfile.withGSParams" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a version of the current object with the given gsparams</p>
 <p>Note: if this object wraps other objects (e.g. Convolution, Sum, Transformation, etc.)
 those component objects will also have their gsparams updated to the new value.</p>
@@ -1930,29 +2007,29 @@ those component objects will also have their gsparams updated to the new value.<
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="spectral.html" class="btn btn-neutral float-right" title="Spectral Correlated Noise" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="bandpass.html" class="btn btn-neutral float-left" title="Bandpass Filters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="spectral.html" class="btn btn-neutral float-right" title="Spectral Correlated Noise" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="bandpass.html" class="btn btn-neutral float-left" title="Bandpass Filters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1960,7 +2037,6 @@ those component objects will also have their gsparams updated to the new value.<
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

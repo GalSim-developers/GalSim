@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.fitswcs &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.fitswcs &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.fitswcs</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -188,12 +195,13 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">CelestialWCS</span>
-<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">_PositionD</span>
 <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">radians</span><span class="p">,</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">AngleUnit</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">fits</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimNotImplementedError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span><span class="p">,</span> <span class="n">galsim_warn</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">horner2d</span>
 
 <span class="c1">#########################################################################################</span>
 <span class="c1">#</span>
@@ -262,8 +270,6 @@
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;file_name&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dir&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;hdu&quot;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span> <span class="p">:</span> <span class="n">PositionD</span><span class="p">,</span>
                     <span class="s2">&quot;compression&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
-    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
                  <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -286,7 +292,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">hdu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, hdu=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">hdu</span>
-            <span class="k">if</span> <span class="n">compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">compression</span> <span class="o">!=</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, compression=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">compression</span>
             <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
@@ -314,22 +320,26 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">wcs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_from_header</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">header</span><span class="p">)</span>
-                <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="c1"># When parsing ZPX files, astropy raises a very unhelpful error message.</span>
-                    <span class="c1"># Ignore that (ValueError in that case, but ignore any similarly mundane error)</span>
-                    <span class="c1"># and turn it into a more appropriate OSError.</span>
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                    <span class="c1"># Not sure if this can still trigger.  There used to be input files that</span>
+                    <span class="c1"># caused various errors in astropy, but that no longer seems to be true</span>
+                    <span class="c1"># with astropy 4.x.  Leave this check here though, so the user can potentially</span>
+                    <span class="c1"># get a more comprehensible error message if astropy fails.</span>
                     <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Astropy failed to read WCS from </span><span class="si">%s</span><span class="s2">. Original error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
                                   <span class="n">file_name</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># New kind of error starting in astropy 2.0.5 (I think).  Sometimes, it</span>
                     <span class="c1"># gets through the above, but doesn&#39;t actually load the right WCS.</span>
                     <span class="c1"># E.g. ZPX gets marked as just a ZPN.</span>
-                    <span class="k">if</span> <span class="s1">&#39;CTYPE1&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="ow">and</span> <span class="s1">&#39;CTYPE2&#39;</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
-                        <span class="k">if</span> <span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">ctype</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">or</span>
-                            <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">ctype</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-                            <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Astropy failed to read WCS from </span><span class="si">%s</span><span class="s2">. Converted </span><span class="si">%s</span><span class="s2">-&gt;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
-                                          <span class="n">file_name</span><span class="p">,</span> <span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">],</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]),</span>
-                                          <span class="n">wcs</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">ctype</span><span class="p">))</span>
+                    <span class="c1"># As of version 4.0, ZPX is now the only one known to not work.  TPV has</span>
+                    <span class="c1"># a similar behavior, but we can make it work by an adjustment to the header</span>
+                    <span class="c1"># in _load_from_header.</span>
+                    <span class="k">if</span> <span class="s1">&#39;ZPX&#39;</span> <span class="ow">in</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;ZPX&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wcs</span><span class="o">.</span><span class="n">wcs</span><span class="o">.</span><span class="n">ctype</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                        <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span>
+                            <span class="s2">&quot;Cannot read WCS in </span><span class="si">%s</span><span class="s2"> with astropy. &quot;</span><span class="o">%</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span> <span class="o">+</span>
+                            <span class="s2">&quot;As of astropy version 4.0.1, ZPX WCS&#39;s were still not being &quot;</span> <span class="o">+</span>
+                            <span class="s2">&quot;correctly read by astropy.wcs. If you believe this has been &quot;</span> <span class="o">+</span>
+                            <span class="s2">&quot;fixed, please open a GalSim issue to remove this check.&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -348,6 +358,9 @@
 
     <span class="k">def</span> <span class="nf">_load_from_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
         <span class="kn">import</span> <span class="nn">astropy.wcs</span>
+        <span class="k">if</span> <span class="s1">&#39;TAN&#39;</span> <span class="ow">in</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;PV1_1&#39;</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
+            <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span><span class="s1">&#39;TPV&#39;</span><span class="p">)</span>
+            <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span><span class="s1">&#39;TPV&#39;</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
             <span class="c1"># The constructor might emit warnings if it wants to fix the header</span>
             <span class="c1"># information (e.g. RADECSYS -&gt; RADESYSa).  We&#39;d rather ignore these</span>
@@ -428,7 +441,7 @@
     <span class="k">def</span> <span class="nf">_readHeader</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GS_X0&quot;</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
         <span class="n">y0</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GS_Y0&quot;</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">AstropyWCS</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">y0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">AstropyWCS</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">_PositionD</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">y0</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">AstropyWCS</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">AstropyWCS</span><span class="p">)</span>
@@ -506,8 +519,6 @@
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;file_name&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dir&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;hdu&quot;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span> <span class="p">:</span> <span class="n">PositionD</span><span class="p">,</span>
                     <span class="s2">&quot;compression&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
-    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
                  <span class="n">wcsinfo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -524,7 +535,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">hdu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, hdu=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">hdu</span>
-            <span class="k">if</span> <span class="n">compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">compression</span> <span class="o">!=</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, compression=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">compression</span>
             <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
@@ -629,7 +640,7 @@
         <span class="c1"># PyAst understands.  All we need to do is change the names of the CTYPE values.</span>
         <span class="k">if</span> <span class="p">(</span> <span class="s1">&#39;CTYPE1&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">)</span> <span class="ow">and</span>
              <span class="s1">&#39;CTYPE2&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">)</span> <span class="ow">and</span>
-             <span class="s1">&#39;PV1_10&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="p">):</span>
+             <span class="s1">&#39;PV1_1&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="p">):</span>
             <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span><span class="s1">&#39;TPV&#39;</span><span class="p">)</span>
             <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;CTYPE2&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span><span class="s1">&#39;TPV&#39;</span><span class="p">)</span>
 
@@ -712,7 +723,7 @@
     <span class="k">def</span> <span class="nf">_readHeader</span><span class="p">(</span><span class="n">header</span><span class="p">):</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GS_X0&quot;</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
         <span class="n">y0</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;GS_Y0&quot;</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">PyAstWCS</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">y0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">PyAstWCS</span><span class="p">(</span><span class="n">header</span><span class="o">=</span><span class="n">header</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">_PositionD</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">y0</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="n">PyAstWCS</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">PyAstWCS</span><span class="p">)</span>
@@ -775,8 +786,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;file_name&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dir&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span> <span class="p">:</span> <span class="n">PositionD</span> <span class="p">}</span>
-    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
@@ -988,7 +997,7 @@
         <span class="n">file</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;GS_FILE&quot;</span><span class="p">]</span>
         <span class="n">x0</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;GS_X0&quot;</span><span class="p">]</span>
         <span class="n">y0</span> <span class="o">=</span> <span class="n">header</span><span class="p">[</span><span class="s2">&quot;GS_Y0&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">WcsToolsWCS</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">y0</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">WcsToolsWCS</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="n">_PositionD</span><span class="p">(</span><span class="n">x0</span><span class="p">,</span><span class="n">y0</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># The copy module version of copying the dict works fine here.</span>
@@ -1005,6 +1014,7 @@
         <span class="k">return</span> <span class="s2">&quot;galsim.WcsToolsWCS(</span><span class="si">%r</span><span class="s2">, origin=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">origin</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="GSFitsWCS"><a class="viewcode-back" href="../../wcs.html#galsim.GSFitsWCS">[docs]</a><span class="k">class</span> <span class="nc">GSFitsWCS</span><span class="p">(</span><span class="n">CelestialWCS</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This WCS uses a GalSim implementation to read a WCS from a FITS file.</span>
@@ -1049,17 +1059,16 @@
     <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;file_name&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
     <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dir&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;hdu&quot;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;origin&quot;</span> <span class="p">:</span> <span class="n">PositionD</span><span class="p">,</span>
                     <span class="s2">&quot;compression&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
-    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
-                 <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+                 <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_doiter</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="c1"># Note: _data is not intended for end-user use.  It enables the equivalent of a</span>
         <span class="c1">#       private constructor of GSFitsWCS by the function TanWCS.  The details of its</span>
         <span class="c1">#       use are intentionally not documented above.</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_color</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># Write something useful here (see below). This is just used for the str.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_doiter</span> <span class="o">=</span> <span class="n">_doiter</span>
 
         <span class="c1"># If _data is given, copy the data and we&#39;re done.</span>
         <span class="k">if</span> <span class="n">_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1070,14 +1079,16 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">pv</span> <span class="o">=</span> <span class="n">_data</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ab</span> <span class="o">=</span> <span class="n">_data</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">abp</span> <span class="o">=</span> <span class="n">_data</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span> <span class="s1">&#39;TPV&#39;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span> <span class="s1">&#39;TPV&#39;</span><span class="p">,</span> <span class="s1">&#39;TNX&#39;</span><span class="p">,</span> <span class="s1">&#39;TAN-SIP&#39;</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="s1">&#39;gnomonic&#39;</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;STG&#39;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;STG&#39;</span><span class="p">,</span> <span class="s1">&#39;STG-SIP&#39;</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="s1">&#39;stereographic&#39;</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;ZEA&#39;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ZEA&#39;</span><span class="p">,</span> <span class="s1">&#39;ZEA-SIP&#39;</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="s1">&#39;lambert&#39;</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;ARC&#39;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ARC&#39;</span><span class="p">,</span> <span class="s1">&#39;ARC-SIP&#39;</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="s1">&#39;postel&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid wcs_type in _data&quot;</span><span class="p">)</span>
             <span class="k">return</span>
 
         <span class="c1"># Read the file if given.</span>
@@ -1089,7 +1100,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">hdu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, hdu=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">hdu</span>
-            <span class="k">if</span> <span class="n">compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">compression</span> <span class="o">!=</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, compression=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">compression</span>
             <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
@@ -1116,13 +1127,13 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">crpix</span> <span class="o">+=</span> <span class="p">[</span> <span class="n">origin</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">origin</span><span class="o">.</span><span class="n">y</span> <span class="p">]</span>
 
     <span class="c1"># The origin is a required attribute/property, since it is used by some functions like</span>
-    <span class="c1"># withOrigin to get the current origin value.  We don&#39;t use it in this class, though, so</span>
+    <span class="c1"># shiftOrigin to get the current origin value.  We don&#39;t use it in this class, though, so</span>
     <span class="c1"># just make origin a dummy property that returns 0,0.</span>
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">origin</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The origin in image coordinates of the WCS function.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_read_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">AngleUnit</span>
@@ -1143,16 +1154,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">=</span> <span class="n">ctype1</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span> <span class="s1">&#39;TPV&#39;</span><span class="p">,</span> <span class="s1">&#39;TNX&#39;</span><span class="p">,</span> <span class="s1">&#39;TAN-SIP&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="s1">&#39;gnomonic&#39;</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;STG&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;STG&#39;</span><span class="p">,</span> <span class="s1">&#39;STG-SIP&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="s1">&#39;stereographic&#39;</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;ZEA&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ZEA&#39;</span><span class="p">,</span> <span class="s1">&#39;ZEA-SIP&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="s1">&#39;lambert&#39;</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;ARC&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;ARC&#39;</span><span class="p">,</span> <span class="s1">&#39;ARC-SIP&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="s1">&#39;postel&#39;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;GSFitsWCS cannot read files using given wcs_type.&quot;</span><span class="p">,</span>
                                    <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span><span class="p">,</span>
-                                   <span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span> <span class="s1">&#39;TPV&#39;</span><span class="p">,</span> <span class="s1">&#39;TNX&#39;</span><span class="p">,</span> <span class="s1">&#39;TAN-SIP&#39;</span><span class="p">,</span> <span class="s1">&#39;STG&#39;</span><span class="p">,</span> <span class="s1">&#39;ZEA&#39;</span><span class="p">,</span> <span class="s1">&#39;ARC&#39;</span><span class="p">))</span>
+                                   <span class="p">(</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span> <span class="s1">&#39;TPV&#39;</span><span class="p">,</span> <span class="s1">&#39;TNX&#39;</span><span class="p">,</span> <span class="s1">&#39;TAN-SIP&#39;</span><span class="p">,</span> <span class="s1">&#39;STG&#39;</span><span class="p">,</span> <span class="s1">&#39;STG-SIP&#39;</span><span class="p">,</span> <span class="s1">&#39;ZEA&#39;</span><span class="p">,</span>
+                                    <span class="s1">&#39;ZEA-SIP&#39;</span><span class="p">,</span> <span class="s1">&#39;ARC&#39;</span><span class="p">,</span> <span class="s1">&#39;ARC-SIP&#39;</span><span class="p">))</span>
         <span class="n">crval1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRVAL1&#39;</span><span class="p">])</span>
         <span class="n">crval2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRVAL2&#39;</span><span class="p">])</span>
         <span class="n">crpix1</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;CRPIX1&#39;</span><span class="p">])</span>
@@ -1204,7 +1216,7 @@
         <span class="c1"># There was an older proposed standard that used TAN with PV values, which is used by</span>
         <span class="c1"># SCamp, so we want to support it if possible.  The standard is now called TPV, so</span>
         <span class="c1"># use that for our wcs_type if we see the PV values with TAN.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;TAN&#39;</span> <span class="ow">and</span> <span class="s1">&#39;PV1_10&#39;</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;TAN&#39;</span> <span class="ow">and</span> <span class="s1">&#39;PV1_1&#39;</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">=</span> <span class="s1">&#39;TPV&#39;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">pv</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1214,7 +1226,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_read_tpv</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;TNX&#39;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_read_tnx</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="o">==</span> <span class="s1">&#39;TAN-SIP&#39;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">wcs_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;TAN-SIP&#39;</span><span class="p">,</span> <span class="s1">&#39;STG-SIP&#39;</span><span class="p">,</span> <span class="s1">&#39;ZEA-SIP&#39;</span><span class="p">,</span> <span class="s1">&#39;ARC-SIP&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_read_sip</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 
         <span class="c1"># I think the CUNIT specification applies to the CD matrix as well, but I couldn&#39;t actually</span>
@@ -1229,38 +1241,44 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">[</span><span class="mi">1</span><span class="p">,:]</span> <span class="o">*=</span> <span class="mf">1.</span> <span class="o">*</span> <span class="n">dec_units</span> <span class="o">/</span> <span class="n">degrees</span>
 
     <span class="k">def</span> <span class="nf">_read_tpv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+        <span class="c1"># See http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html for details about how</span>
+        <span class="c1"># the TPV standard is defined.</span>
 
-        <span class="c1"># Strangely, the PV values skip k==3.</span>
-        <span class="c1"># Well, the reason is that it is for coefficients of r = sqrt(u^2+v^2).</span>
-        <span class="c1"># But no one seems to use it, so it is almost always skipped.</span>
-        <span class="n">pv1</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PV1_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="mi">3</span> <span class="p">]</span>
-        <span class="n">pv2</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PV2_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="mi">3</span> <span class="p">]</span>
-
-        <span class="c1"># In fact, the standard allows up to PVi_39, which is for r^7.  And all</span>
-        <span class="c1"># unlisted values have defaults of 0 (except PVi_1, which defaults to 1).</span>
-        <span class="c1"># A better implementation would check how high up the numbers go and build</span>
-        <span class="c1"># the appropriate matrix, but since it is usually up to PVi_10, so far</span>
-        <span class="c1"># we just implement that.</span>
-        <span class="c1"># See http://fits.gsfc.nasa.gov/registry/tpvwcs/tpv.html for details.</span>
-        <span class="k">if</span> <span class="p">(</span> <span class="s1">&#39;PV1_3&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;PV1_3&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="ow">or</span>
-             <span class="s1">&#39;PV1_11&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;PV1_11&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="ow">or</span>
-             <span class="s1">&#39;PV2_3&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;PV1_3&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="ow">or</span>
-             <span class="s1">&#39;PV2_11&#39;</span> <span class="ow">in</span> <span class="n">header</span> <span class="ow">and</span> <span class="n">header</span><span class="p">[</span><span class="s1">&#39;PV1_11&#39;</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.0</span> <span class="p">):</span> <span class="c1"># pragma: no cover</span>
+        <span class="c1"># The standard includes an option to have odd powers of r, which kind of screws</span>
+        <span class="c1"># up the numbering of these coefficients.  We don&#39;t implement these terms, so</span>
+        <span class="c1"># before going further, check to make sure none are present.</span>
+        <span class="n">odd_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">39</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">((</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;PV</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">),</span> <span class="mf">0.</span><span class="p">)</span> <span class="o">!=</span> <span class="mf">0.</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">odd_indices</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">GalSimNotImplementedError</span><span class="p">(</span><span class="s2">&quot;TPV not implemented for odd powers of r&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;PV1_12&#39;</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span> <span class="c1"># pragma: no cover</span>
-            <span class="k">raise</span> <span class="n">GalSimNotImplementedError</span><span class="p">(</span><span class="s2">&quot;TPV not implemented past 3rd order terms&quot;</span><span class="p">)</span>
+
+        <span class="n">pv1</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;PV1_</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">k</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">odd_indices</span> <span class="p">]</span>
+        <span class="n">pv2</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;PV2_</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">k</span><span class="p">,</span> <span class="mf">0.</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">odd_indices</span> <span class="p">]</span>
+
+        <span class="n">maxk</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">pv1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">pv2</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="c1"># maxk = (order+1) * (order+2) / 2 - 1</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">maxk</span><span class="o">+</span><span class="mi">1</span><span class="p">))))</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
 
         <span class="c1"># Another strange thing is that the two matrices are defined in the opposite order</span>
-        <span class="c1"># with respect to their element ordering.  And remember that we skipped k=3 in the</span>
-        <span class="c1"># original reading, so indices 3..9 here were originally called PVi_4..10</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="p">[</span> <span class="p">[</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="p">],</span>
-                                <span class="p">[</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span>   <span class="mf">0.</span>   <span class="p">],</span>
-                                <span class="p">[</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span>   <span class="mf">0.</span>  <span class="p">,</span>   <span class="mf">0.</span>   <span class="p">],</span>
-                                <span class="p">[</span> <span class="n">pv1</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span>   <span class="mf">0.</span>  <span class="p">,</span>   <span class="mf">0.</span>  <span class="p">,</span>   <span class="mf">0.</span>   <span class="p">]</span> <span class="p">],</span>
-                              <span class="p">[</span> <span class="p">[</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="p">],</span>
-                                <span class="p">[</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span>   <span class="mf">0.</span>   <span class="p">],</span>
-                                <span class="p">[</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span>   <span class="mf">0.</span>  <span class="p">,</span>   <span class="mf">0.</span>   <span class="p">],</span>
-                                <span class="p">[</span> <span class="n">pv2</span><span class="p">[</span><span class="mi">9</span><span class="p">],</span>   <span class="mf">0.</span>  <span class="p">,</span>   <span class="mf">0.</span>  <span class="p">,</span>   <span class="mf">0.</span>   <span class="p">]</span> <span class="p">]</span> <span class="p">]</span> <span class="p">)</span>
+        <span class="c1"># with respect to their element ordering.  But at least now, without the odd terms,</span>
+        <span class="c1"># we can just proceed in order in the k indices.  So what we call k=3..9 here were</span>
+        <span class="c1"># originally PVi_4..10.</span>
+        <span class="c1"># For reference, here is what it would look like for order = 3:</span>
+        <span class="c1"># self.pv = np.array( [ [ [ pv1[0], pv1[2], pv1[5], pv1[9] ],</span>
+        <span class="c1">#                         [ pv1[1], pv1[4], pv1[8],   0.   ],</span>
+        <span class="c1">#                         [ pv1[3], pv1[7],   0.  ,   0.   ],</span>
+        <span class="c1">#                         [ pv1[6],   0.  ,   0.  ,   0.   ] ],</span>
+        <span class="c1">#                       [ [ pv2[0], pv2[1], pv2[3], pv2[6] ],</span>
+        <span class="c1">#                         [ pv2[2], pv2[4], pv2[7],   0.   ],</span>
+        <span class="c1">#                         [ pv2[5], pv2[8],   0.  ,   0.   ],</span>
+        <span class="c1">#                         [ pv2[9],   0.  ,   0.  ,   0.   ] ] ] )</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">N</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">i</span> <span class="o">=</span> <span class="n">N</span><span class="o">-</span><span class="n">j</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">pv1</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">pv2</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+                <span class="n">k</span> <span class="o">=</span> <span class="n">k</span><span class="o">+</span><span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">_read_sip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
         <span class="n">a_order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;A_ORDER&#39;</span><span class="p">])</span>
@@ -1272,6 +1290,8 @@
         <span class="n">b</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;B_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="mf">0.</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># Standard A,B are a differential calculation.  It&#39;s more convenient to</span>
+        <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># keep this as an absolute calculation like PV does.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
 
         <span class="c1"># The reverse transformation is not required to be there.</span>
@@ -1285,6 +1305,8 @@
             <span class="n">bp</span> <span class="o">=</span> <span class="p">[</span> <span class="nb">float</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;BP_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">),</span><span class="mf">0.</span><span class="p">))</span>
                     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="p">]</span>
             <span class="n">bp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bp</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">ap</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">bp</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">abp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">ap</span><span class="p">,</span> <span class="n">bp</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">_read_tnx</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
@@ -1444,25 +1466,20 @@
             <span class="n">pv2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">xm</span><span class="o">.</span><span class="n">T</span> <span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">pv</span><span class="p">,</span> <span class="n">ym</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">pv2</span>
 
-    <span class="k">def</span> <span class="nf">_apply_pv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-        <span class="c1"># Do this in C++ layer for speed.</span>
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="n">_galsim</span><span class="o">.</span><span class="n">ApplyPV</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">),</span> <span class="mi">4</span><span class="p">,</span> <span class="n">u</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span>
-
-    <span class="k">def</span> <span class="nf">_apply_ab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="c1"># Do this in C++ layer for speed.</span>
-        <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="n">dy</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="n">_galsim</span><span class="o">.</span><span class="n">ApplyPV</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">dx</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">dy</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">x</span><span class="o">+</span><span class="n">dx</span><span class="p">,</span> <span class="n">y</span><span class="o">+</span><span class="n">dy</span>
+    <span class="k">def</span> <span class="nf">_apply_ab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ab</span><span class="p">):</span>
+        <span class="c1"># Note: this is used for both pv and ab, since the action is the same.</span>
+        <span class="c1"># They just occur at two different places in the calculation.</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="n">horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">triangle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">y1</span> <span class="o">=</span> <span class="n">horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">triangle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span>
 
     <span class="k">def</span> <span class="nf">_apply_cd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="c1"># Do this in C++ layer for speed.</span>
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="n">_galsim</span><span class="o">.</span><span class="n">ApplyCD</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+        <span class="n">_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_cd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">ApplyCD</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">,</span> <span class="n">_cd</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
 
     <span class="k">def</span> <span class="nf">_uv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
@@ -1476,14 +1493,14 @@
         <span class="n">y</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crpix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_ab</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_ab</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">)</span>
 
         <span class="c1"># This converts to (u,v) in the tangent plane</span>
         <span class="c1"># Expanding this out is a bit faster than using np.dot for 2x2 matrix.</span>
         <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_cd</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_pv</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_ab</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">)</span>
 
         <span class="c1"># Convert (u,v) from degrees to radians</span>
         <span class="c1"># Also, the FITS standard defines u,v backwards relative to our standard.</span>
@@ -1507,41 +1524,40 @@
             <span class="k">assert</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span>
             <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span>
 
-    <span class="k">def</span> <span class="nf">_invert_pv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
-        <span class="c1"># Do this in C++ layer for speed.</span>
+    <span class="k">def</span> <span class="nf">_invert_ab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">ab</span><span class="p">,</span> <span class="n">abp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># This is used both for inverting (u,v) = PV (u&#39;,v&#39;)</span>
+        <span class="c1"># and for inverting (x,y) = AB (x&#39;,y&#39;)</span>
+        <span class="c1"># Here (and in C++) the notation is (u,v) = AB(x,y), even though both (u,v) and (x,y)</span>
+        <span class="c1"># in this context are either in CCD coordinates (normally called x,y) or tangent plane</span>
+        <span class="c1"># coordinates (normally called u,v).</span>
+        <span class="c1"># abp is an optional set of coefficients to make a good guess for x,y</span>
+
+        <span class="n">uu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>  <span class="c1"># Don&#39;t overwrite the given u,v, since we need it at the end</span>
+        <span class="n">vv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>  <span class="c1"># to check it we were provided scalars or arrays.</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>    <span class="c1"># Start with x,y = u,v.</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>    <span class="c1"># This may be updated below if abp is provided.</span>
+
+        <span class="n">nab</span> <span class="o">=</span> <span class="n">ab</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">nabp</span> <span class="o">=</span> <span class="n">abp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">abp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
+        <span class="n">nx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+        <span class="n">_uu</span> <span class="o">=</span> <span class="n">uu</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_vv</span> <span class="o">=</span> <span class="n">vv</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_ab</span> <span class="o">=</span> <span class="n">ab</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_abp</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">abp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">abp</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
+            <span class="n">_galsim</span><span class="o">.</span><span class="n">InvertAB</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">nab</span><span class="p">,</span> <span class="n">_uu</span><span class="p">,</span> <span class="n">_vv</span><span class="p">,</span> <span class="n">_ab</span><span class="p">,</span> <span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_doiter</span><span class="p">,</span> <span class="n">nabp</span><span class="p">,</span> <span class="n">_abp</span><span class="p">)</span>
+
+        <span class="c1"># Return the right type for u,v</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-                <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">InvertPV</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">invpvu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
-            <span class="n">invpvv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)):</span>
-                <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-                    <span class="n">uu</span><span class="p">,</span> <span class="n">vv</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">InvertPV</span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
-                <span class="n">invpvu</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">uu</span>
-                <span class="n">invpvv</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">vv</span>
-            <span class="k">return</span> <span class="n">invpvu</span><span class="p">,</span> <span class="n">invpvv</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
 
-    <span class="k">def</span> <span class="nf">_invert_ab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="c1"># Do this in C++ layer for speed.</span>
-        <span class="n">abp_data</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-            <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-                <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">InvertAB</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">abp_data</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">invabx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-            <span class="n">invaby</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
-                <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-                    <span class="n">xx</span><span class="p">,</span> <span class="n">yy</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">InvertAB</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                                              <span class="n">abp_data</span><span class="p">)</span>
-                <span class="n">invabx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">xx</span>
-                <span class="n">invaby</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">yy</span>
-            <span class="k">return</span> <span class="n">invabx</span><span class="p">,</span> <span class="n">invaby</span>
 
     <span class="k">def</span> <span class="nf">_xy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">project_rad</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">)</span>
@@ -1552,7 +1568,7 @@
         <span class="n">v</span> <span class="o">*=</span> <span class="n">factor</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_invert_pv</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_invert_ab</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;cdinv&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">cdinv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cd</span><span class="p">)</span>
@@ -1561,7 +1577,7 @@
         <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdinv</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdinv</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">v</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_invert_ab</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_invert_ab</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">,</span> <span class="n">abp</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="p">)</span>
 
         <span class="n">x</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crpix</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">y</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crpix</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -1602,7 +1618,7 @@
             <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
             <span class="n">xpow</span> <span class="o">=</span> <span class="n">x</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">ypow</span> <span class="o">=</span> <span class="n">y</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">p1</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">,</span> <span class="n">ypow</span><span class="p">),</span> <span class="n">xpow</span><span class="p">)</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">,</span> <span class="n">ypow</span><span class="p">),</span> <span class="n">xpow</span><span class="p">)</span>
 
             <span class="n">dxpow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">dypow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
@@ -1610,7 +1626,6 @@
             <span class="n">dypow</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span> <span class="o">*</span> <span class="n">ypow</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">j1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">,</span> <span class="n">ypow</span><span class="p">),</span> <span class="n">dxpow</span><span class="p">)</span> <span class="p">,</span>
                                 <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">,</span> <span class="n">dypow</span><span class="p">),</span> <span class="n">xpow</span><span class="p">)</span> <span class="p">])</span>
-            <span class="n">j1</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
             <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">j1</span><span class="p">,</span><span class="n">jac</span><span class="p">)</span>
 
         <span class="c1"># The jacobian here is just the cd matrix.</span>
@@ -1621,18 +1636,19 @@
             <span class="c1"># Now we apply the distortion terms</span>
             <span class="n">u</span> <span class="o">=</span> <span class="n">p2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
             <span class="n">v</span> <span class="o">=</span> <span class="n">p2</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">usq</span> <span class="o">=</span> <span class="n">u</span><span class="o">*</span><span class="n">u</span>
-            <span class="n">vsq</span> <span class="o">=</span> <span class="n">v</span><span class="o">*</span><span class="n">v</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
 
-            <span class="n">upow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">usq</span><span class="p">,</span> <span class="n">usq</span><span class="o">*</span><span class="n">u</span> <span class="p">])</span>
-            <span class="n">vpow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">vsq</span><span class="p">,</span> <span class="n">vsq</span><span class="o">*</span><span class="n">v</span> <span class="p">])</span>
+            <span class="n">upow</span> <span class="o">=</span> <span class="n">u</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">vpow</span> <span class="o">=</span> <span class="n">v</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
 
             <span class="n">p2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">,</span> <span class="n">vpow</span><span class="p">),</span> <span class="n">upow</span><span class="p">)</span>
 
             <span class="c1"># The columns of the jacobian for this step are the same function with dupow</span>
             <span class="c1"># or dvpow.</span>
-            <span class="n">dupow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="o">*</span><span class="n">u</span><span class="p">,</span> <span class="mf">3.</span><span class="o">*</span><span class="n">usq</span> <span class="p">])</span>
-            <span class="n">dvpow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="o">*</span><span class="n">v</span><span class="p">,</span> <span class="mf">3.</span><span class="o">*</span><span class="n">vsq</span> <span class="p">])</span>
+            <span class="n">dupow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">dvpow</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">dupow</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span> <span class="o">*</span> <span class="n">upow</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">dvpow</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">order</span><span class="p">)</span><span class="o">+</span><span class="mf">1.</span><span class="p">)</span> <span class="o">*</span> <span class="n">vpow</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
             <span class="n">j1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">([</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">,</span> <span class="n">vpow</span><span class="p">),</span> <span class="n">dupow</span><span class="p">)</span> <span class="p">,</span>
                                 <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">,</span> <span class="n">dvpow</span><span class="p">),</span> <span class="n">upow</span><span class="p">)</span> <span class="p">])</span>
             <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">j1</span><span class="p">,</span><span class="n">jac</span><span class="p">)</span>
@@ -1674,38 +1690,48 @@
         <span class="n">header</span><span class="p">[</span><span class="s2">&quot;CRVAL1&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">ra</span> <span class="o">/</span> <span class="n">degrees</span>
         <span class="n">header</span><span class="p">[</span><span class="s2">&quot;CRVAL2&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center</span><span class="o">.</span><span class="n">dec</span> <span class="o">/</span> <span class="n">degrees</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
             <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">odd_indices</span> <span class="o">=</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">39</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
                     <span class="n">i</span> <span class="o">=</span> <span class="n">n</span><span class="o">-</span><span class="n">j</span>
                     <span class="n">header</span><span class="p">[</span><span class="s2">&quot;PV1_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
                     <span class="n">header</span><span class="p">[</span><span class="s2">&quot;PV2_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
                     <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
-                    <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span> <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">odd_indices</span><span class="p">:</span> <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
             <span class="n">header</span><span class="p">[</span><span class="s2">&quot;A_ORDER&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">order</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
-                        <span class="n">header</span><span class="p">[</span><span class="s2">&quot;A_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+                    <span class="n">aij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">j</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">aij</span> <span class="o">-=</span> <span class="mi">1</span>  <span class="c1"># Turn back into standard form.</span>
+                    <span class="k">if</span> <span class="n">aij</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                        <span class="n">header</span><span class="p">[</span><span class="s2">&quot;A_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="n">aij</span>
             <span class="n">header</span><span class="p">[</span><span class="s2">&quot;B_ORDER&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">order</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
-                        <span class="n">header</span><span class="p">[</span><span class="s2">&quot;B_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+                    <span class="n">bij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ab</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="n">bij</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">bij</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                        <span class="n">header</span><span class="p">[</span><span class="s2">&quot;B_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="n">bij</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">order</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">-</span><span class="mi">1</span>
             <span class="n">header</span><span class="p">[</span><span class="s2">&quot;AP_ORDER&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">order</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
-                        <span class="n">header</span><span class="p">[</span><span class="s2">&quot;AP_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+                    <span class="n">apij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">j</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span> <span class="n">apij</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">apij</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                        <span class="n">header</span><span class="p">[</span><span class="s2">&quot;AP_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="n">apij</span>
             <span class="n">header</span><span class="p">[</span><span class="s2">&quot;BP_ORDER&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">order</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
-                        <span class="n">header</span><span class="p">[</span><span class="s2">&quot;BP_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span>
+                    <span class="n">bpij</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abp</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span> <span class="n">bpij</span> <span class="o">-=</span> <span class="mi">1</span>
+                    <span class="k">if</span> <span class="n">bpij</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+                        <span class="n">header</span><span class="p">[</span><span class="s2">&quot;BP_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="s2">&quot;_&quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="o">=</span> <span class="n">bpij</span>
         <span class="k">return</span> <span class="n">header</span>
 
     <span class="nd">@staticmethod</span>
@@ -1826,6 +1852,7 @@
 
 <span class="p">]</span>
 
+
 <div class="viewcode-block" id="FitsWCS"><a class="viewcode-back" href="../../wcs.html#galsim.FitsWCS">[docs]</a><span class="k">def</span> <span class="nf">FitsWCS</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hdu</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span>
             <span class="n">text_file</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">suppress_warning</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;This factory function will try to read the WCS from a FITS file and return a WCS that will</span>
@@ -1858,11 +1885,11 @@
 <span class="sd">                          text file with the header information (like the .head file output from</span>
 <span class="sd">                          SCamp).  In this case you should set ``text_file = True`` to tell GalSim</span>
 <span class="sd">                          to parse the file this way.  [default: False]</span>
-<span class="sd">        suppress_warning: Should a warning be emitted if none of the real FITS WCS classes</span>
-<span class="sd">                          are able to successfully read the file, and we have to reset to</span>
-<span class="sd">                          an `AffineTransform` instead?  [default: False]</span>
-<span class="sd">                          (Note: this is set to True when this function is implicitly called from</span>
-<span class="sd">                          one of the galsim.fits.read* functions.)</span>
+<span class="sd">        suppress_warning: Whether to suppress a warning that the WCS could not be read from the</span>
+<span class="sd">                          FITS header, so the WCS defaulted to either a `PixelScale` or</span>
+<span class="sd">                          `AffineTransform`. [default: False]</span>
+<span class="sd">                          (Note: this is (by default) set to True when this function is implicitly</span>
+<span class="sd">                          called from one of the galsim.fits.read* functions.)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">AffineTransform</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">,</span> <span class="n">OffsetWCS</span>
 
@@ -1881,7 +1908,13 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="n">fits</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">):</span>
         <span class="n">header</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">FitsHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="s1">&#39;CTYPE1&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">header</span> <span class="ow">and</span> <span class="s1">&#39;CDELT1&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">header</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_warning</span><span class="p">:</span>
+            <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;No WCS information found in </span><span class="si">%r</span><span class="s2">. Defaulting to PixelScale(1.0)&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">file_name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
+
     <span class="c1"># For linear WCS specifications, AffineTransformation should work.</span>
+    <span class="c1"># Note: Most files will have CTYPE1,2, but old style with only CDELT1,2 sometimes omits it.</span>
     <span class="k">if</span> <span class="n">header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CTYPE1&#39;</span><span class="p">,</span> <span class="s1">&#39;LINEAR&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;LINEAR&#39;</span><span class="p">:</span>
         <span class="n">wcs</span> <span class="o">=</span> <span class="n">AffineTransform</span><span class="o">.</span><span class="n">_readHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
         <span class="c1"># Convert to PixelScale if possible.</span>
@@ -1897,7 +1930,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">wcs</span> <span class="o">=</span> <span class="n">wcs_type</span><span class="o">.</span><span class="n">_readHeader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
             <span class="c1"># Give it a better tag for the repr if appropriate.</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">wcs</span><span class="p">,</span><span class="s1">&#39;_tag&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">file_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;header&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">wcs</span><span class="p">,</span><span class="s1">&#39;_tag&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">file_name</span> <span class="o">!=</span> <span class="s1">&#39;header&#39;</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="kn">import</span> <span class="nn">os</span>
                     <span class="n">wcs</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span><span class="n">file_name</span><span class="p">))</span>
@@ -1905,14 +1938,14 @@
                     <span class="n">wcs</span><span class="o">.</span><span class="n">_tag</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">hdu</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">wcs</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, hdu=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">hdu</span>
-                <span class="k">if</span> <span class="n">compression</span> <span class="ow">is</span> <span class="ow">not</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">compression</span> <span class="o">!=</span> <span class="s1">&#39;auto&#39;</span><span class="p">:</span>
                     <span class="n">wcs</span><span class="o">.</span><span class="n">_tag</span> <span class="o">+=</span> <span class="s1">&#39;, compression=</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">compression</span>
             <span class="k">return</span> <span class="n">wcs</span>
         <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
             <span class="k">raise</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="k">pass</span>
-    <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Finally, this one is really the last resort, since it only reads in the linear part of the</span>
         <span class="c1"># WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_warning</span><span class="p">:</span>
@@ -1923,30 +1956,176 @@
 <span class="c1"># Let this function work like a class in config.</span>
 <span class="n">FitsWCS</span><span class="o">.</span><span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;file_name&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
 <span class="n">FitsWCS</span><span class="o">.</span><span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;dir&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;hdu&quot;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;compression&quot;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;text_file&#39;</span> <span class="p">:</span> <span class="nb">bool</span> <span class="p">}</span>
-<span class="n">FitsWCS</span><span class="o">.</span><span class="n">_single_params</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="n">FitsWCS</span><span class="o">.</span><span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">False</span>
 
+<div class="viewcode-block" id="FittedSIPWCS"><a class="viewcode-back" href="../../wcs.html#galsim.FittedSIPWCS">[docs]</a><span class="k">def</span> <span class="nf">FittedSIPWCS</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">wcs_type</span><span class="o">=</span><span class="s1">&#39;TAN&#39;</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A WCS constructed from a list of reference celestial and image</span>
+<span class="sd">    coordinates.</span>
 
+<span class="sd">    Parameters:</span>
+<span class="sd">        x:         Image x-coordinates of reference stars in pixels</span>
+<span class="sd">        y:         Image y-coordinates of reference stars in pixels</span>
+<span class="sd">        ra:        Right ascension of reference stars in radians</span>
+<span class="sd">        dec:       Declination of reference stars in radians</span>
+<span class="sd">        wcs_type:  The type of the tangent plane projection to use.  Should be</span>
+<span class="sd">                   one of [&#39;TAN&#39;, &#39;STG&#39;, &#39;ZEA&#39;, or &#39;ARC&#39;].  [default: &#39;TAN&#39;]</span>
+<span class="sd">        order:     The order of the Simple Imaging Polynomial (SIP) used to</span>
+<span class="sd">                   describe the WCS distortion.  SIP coefficients kick in when</span>
+<span class="sd">                   order &gt;= 2.  If you supply order=1, then just fit a WCS</span>
+<span class="sd">                   without any SIP coefficients.  [default: 3]</span>
+<span class="sd">        center:    A `CelestialCoord` defining the location on the sphere where</span>
+<span class="sd">                   the tangent plane is centered.  [default: None, which means</span>
+<span class="sd">                   use the average position of the list of reference stars]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">least_squares</span>
+    <span class="kn">from</span> <span class="nn">.celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
+
+    <span class="k">if</span> <span class="n">order</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Illegal SIP order&quot;</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+
+    <span class="n">nstar</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="c1"># Make sure we have enough stars.</span>
+    <span class="c1"># We need 1 star for crpix, 2 more for cd, and then</span>
+    <span class="c1"># (order+2)*(order+1)/2 - 3 for ab.  The total is then (order+1)*(order+2)/2</span>
+    <span class="n">nrequire</span> <span class="o">=</span> <span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="k">if</span> <span class="n">nstar</span> <span class="o">&lt;</span> <span class="n">nrequire</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span>
+            <span class="s2">&quot;Require at least </span><span class="si">{:0}</span><span class="s2"> stars for SIP order </span><span class="si">{:1}</span><span class="s2">&quot;</span>
+            <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nrequire</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Use deprojected 3D mean of ra/dec unit sphere points as center</span>
+        <span class="n">wx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ra</span><span class="p">))</span>
+        <span class="n">wy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ra</span><span class="p">))</span>
+        <span class="n">wz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">))</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">CelestialCoord</span><span class="o">.</span><span class="n">from_xyz</span><span class="p">(</span><span class="n">wx</span><span class="p">,</span> <span class="n">wy</span><span class="p">,</span> <span class="n">wz</span><span class="p">)</span>
+
+    <span class="c1"># Project radec onto uv so we can linearly fit the CRPIX and CD matrix</span>
+    <span class="c1"># initial guesses</span>
+    <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">center</span><span class="o">.</span><span class="n">project_rad</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">)</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">broadcast_arrays</span><span class="p">(</span><span class="mf">1.</span><span class="p">,</span> <span class="o">-</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">r</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">crpix_guess</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cd_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+    <span class="c1"># SIP coefficient initial guesses are just 0.0</span>
+    <span class="n">ab_guess</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span> <span class="o">&lt;=</span> <span class="n">order</span><span class="p">):</span>
+                <span class="n">ab_guess</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+    <span class="n">ab_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ab_guess</span><span class="p">)</span>
+    <span class="n">guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">crpix_guess</span><span class="p">,</span> <span class="n">cd_guess</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">ab_guess</span><span class="o">.</span><span class="n">ravel</span><span class="p">()])</span>
+
+    <span class="k">def</span> <span class="nf">_getWCS</span><span class="p">(</span><span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">crpix</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">ab</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">abp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">doiter</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">_data</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">wcs_type</span> <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">wcs_type</span><span class="o">+</span><span class="s1">&#39;-SIP&#39;</span><span class="p">,</span>
+            <span class="n">crpix</span><span class="p">,</span>
+            <span class="n">cd</span><span class="p">,</span>
+            <span class="n">center</span><span class="p">,</span>
+            <span class="kc">None</span><span class="p">,</span> <span class="c1"># pv, unused</span>
+            <span class="n">ab</span><span class="p">,</span>
+            <span class="n">abp</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">GSFitsWCS</span><span class="p">(</span><span class="n">_data</span><span class="o">=</span><span class="n">_data</span><span class="p">,</span> <span class="n">_doiter</span><span class="o">=</span><span class="n">doiter</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_decodeSIP</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span> <span class="o">&gt;</span> <span class="n">order</span><span class="p">):</span>
+                    <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                    <span class="n">b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">a</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+                    <span class="n">b</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">params</span><span class="p">[</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span>
+                    <span class="n">k</span> <span class="o">+=</span> <span class="mi">2</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>  <span class="c1"># GSFitsWCS wants these with the identity included.</span>
+        <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">ab</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">ab</span>
+
+    <span class="k">def</span> <span class="nf">_abLoss</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+        <span class="n">crpix</span> <span class="o">=</span> <span class="n">params</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">cd</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">ab</span> <span class="o">=</span> <span class="n">_decodeSIP</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">params</span><span class="p">[</span><span class="mi">6</span><span class="p">:])</span>
+        <span class="n">wcs</span> <span class="o">=</span> <span class="n">_getWCS</span><span class="p">(</span><span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">crpix</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">ab</span><span class="p">)</span>
+        <span class="n">ra_p</span><span class="p">,</span> <span class="n">dec_p</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">xyToradec</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;rad&#39;</span><span class="p">)</span>
+        <span class="n">u_p</span><span class="p">,</span> <span class="n">v_p</span> <span class="o">=</span> <span class="n">center</span><span class="o">.</span><span class="n">project_rad</span><span class="p">(</span><span class="n">ra_p</span><span class="p">,</span> <span class="n">dec_p</span><span class="p">)</span>
+        <span class="n">resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">u</span><span class="o">-</span><span class="n">u_p</span><span class="p">,</span> <span class="n">v</span><span class="o">-</span><span class="n">v_p</span><span class="p">])</span>
+        <span class="n">resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">resid</span><span class="p">)</span><span class="o">*</span><span class="mi">3600</span><span class="o">*</span><span class="mf">1e6</span>  <span class="c1"># Work in microarcseconds</span>
+        <span class="k">return</span> <span class="n">resid</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">least_squares</span><span class="p">(</span>
+        <span class="n">_abLoss</span><span class="p">,</span>
+        <span class="n">guess</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># rmse = np.sqrt(2*result.cost/len(u))</span>
+    <span class="c1"># print(f&quot;rmse: {rmse:.2f} microarcsec&quot;)</span>
+    <span class="n">crpix</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">cd</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">ab</span> <span class="o">=</span> <span class="n">_decodeSIP</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="mi">6</span><span class="p">:])</span>
+
+    <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_getWCS</span><span class="p">(</span><span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">crpix</span><span class="p">,</span> <span class="n">cd</span><span class="p">)</span>
+
+    <span class="c1"># Now go back holding crpix, cd, and ab constant, and solve for inverse</span>
+    <span class="c1"># coefficients abp</span>
+    <span class="c1"># ABP SIP coefficient initial guesses are just 0.0</span>
+    <span class="n">abp_guess</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span> <span class="o">&lt;=</span> <span class="n">order</span><span class="p">):</span>
+                <span class="n">abp_guess</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+    <span class="n">abp_guess</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">abp_guess</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_abpLoss</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">crpix</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">ab</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="n">abp</span> <span class="o">=</span> <span class="n">_decodeSIP</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">wcs</span> <span class="o">=</span> <span class="n">_getWCS</span><span class="p">(</span><span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">crpix</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">ab</span><span class="p">,</span> <span class="n">abp</span><span class="p">)</span>
+        <span class="n">x_p</span><span class="p">,</span> <span class="n">y_p</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">radecToxy</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">&#39;rad&#39;</span><span class="p">)</span>
+        <span class="n">resid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">x</span><span class="o">-</span><span class="n">x_p</span><span class="p">,</span> <span class="n">y</span><span class="o">-</span><span class="n">y_p</span><span class="p">])</span><span class="o">*</span><span class="mf">1e6</span>  <span class="c1"># work in micropixels</span>
+        <span class="k">return</span> <span class="n">resid</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">least_squares</span><span class="p">(</span>
+        <span class="n">_abpLoss</span><span class="p">,</span> <span class="n">abp_guess</span><span class="p">,</span>
+        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">crpix</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">ab</span><span class="p">,</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># rmse = np.sqrt(2*result.cost/len(u))</span>
+    <span class="c1"># print(f&quot;rmse: {rmse:.2f} micropixels&quot;)</span>
+    <span class="n">abp</span> <span class="o">=</span> <span class="n">_decodeSIP</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_getWCS</span><span class="p">(</span><span class="n">wcs_type</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">crpix</span><span class="p">,</span> <span class="n">cd</span><span class="p">,</span> <span class="n">ab</span><span class="p">,</span> <span class="n">abp</span><span class="p">,</span> <span class="n">doiter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1954,7 +2133,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

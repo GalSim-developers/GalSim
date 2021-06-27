@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.utilities &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.utilities &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.utilities</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -185,8 +192,6 @@
 <span class="c1">#</span>
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
-<span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">iteritems</span>
-<span class="kn">from</span> <span class="nn">builtins</span> <span class="kn">import</span> <span class="nb">range</span><span class="p">,</span> <span class="nb">object</span>
 <span class="kn">import</span> <span class="nn">weakref</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -194,6 +199,10 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimRangeError</span>
 <span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">galsim_warn</span>
+
+<span class="c1"># Python 2/3 compatible definition of basestring without past.builtins</span>
+<span class="c1"># (Based on this SO answer: https://stackoverflow.com/a/33699705/1332281)</span>
+<span class="n">basestring</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="sa">u</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="isinteger"><a class="viewcode-back" href="../../misc.html#galsim.utilities.isinteger">[docs]</a><span class="k">def</span> <span class="nf">isinteger</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -324,7 +333,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        a `Position` instance, possibly also with other values if ``others`` is given.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span>
+    <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span><span class="p">,</span> <span class="n">PositionI</span><span class="p">,</span> <span class="n">_PositionD</span><span class="p">,</span> <span class="n">_PositionI</span>
     <span class="k">def</span> <span class="nf">canindex</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span> <span class="n">arg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">arg</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span> <span class="k">return</span> <span class="kc">False</span>
@@ -374,9 +383,9 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Received unexpected keyword arguments: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">integer</span><span class="p">:</span>
-        <span class="n">pos</span> <span class="o">=</span> <span class="n">PositionI</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_PositionI</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="nb">int</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">pos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="n">pos</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">),</span><span class="nb">float</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">other_vals</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">pos</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">other_vals</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -418,7 +427,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">AttributeDict</span><span class="p">):</span>
                 <span class="n">v</span><span class="o">.</span><span class="n">_write</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{0}{1}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">k</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
@@ -525,7 +534,9 @@
 
 <span class="k">def</span> <span class="nf">_lin_approx_err</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear</span>
-<span class="sd">    approximation.&quot;&quot;&quot;</span>
+<span class="sd">    approximation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">trapz</span>
     <span class="n">xleft</span><span class="p">,</span> <span class="n">xright</span> <span class="o">=</span> <span class="n">x</span><span class="p">[:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
     <span class="n">fleft</span><span class="p">,</span> <span class="n">fright</span> <span class="o">=</span> <span class="n">f</span><span class="p">[:</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">:]</span>
     <span class="n">xi</span><span class="p">,</span> <span class="n">fi</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -533,7 +544,7 @@
     <span class="n">mright</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">fi</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">xi</span><span class="p">)</span>
     <span class="n">f2left</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">mleft</span><span class="o">*</span><span class="p">(</span><span class="n">xleft</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">f2right</span> <span class="o">=</span> <span class="n">fi</span><span class="o">+</span><span class="n">mright</span><span class="o">*</span><span class="p">(</span><span class="n">xright</span><span class="o">-</span><span class="n">xi</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fleft</span><span class="o">-</span><span class="n">f2left</span><span class="p">),</span> <span class="n">xleft</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fright</span><span class="o">-</span><span class="n">f2right</span><span class="p">),</span> <span class="n">xright</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">trapz</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fleft</span><span class="o">-</span><span class="n">f2left</span><span class="p">),</span> <span class="n">xleft</span><span class="p">),</span> <span class="n">trapz</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fright</span><span class="o">-</span><span class="n">f2right</span><span class="p">),</span> <span class="n">xright</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_exact_lin_approx_split</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
     <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Split a tabulated function into a two-part piecewise linear approximation by exactly</span>
@@ -603,6 +614,7 @@
 <span class="sd">        a tuple of lists (x_new, y_new) with the thinned tabulation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">heapq</span> <span class="kn">import</span> <span class="n">heappush</span><span class="p">,</span> <span class="n">heappop</span>
+    <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">trapz</span>
 
     <span class="n">split_fn</span> <span class="o">=</span> <span class="n">_lin_approx_split</span> <span class="k">if</span> <span class="n">fast_search</span> <span class="k">else</span> <span class="n">_exact_lin_approx_split</span>
 
@@ -622,7 +634,7 @@
         <span class="c1"># Nothing to do</span>
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">f</span>
 
-    <span class="n">total_integ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">total_integ</span> <span class="o">=</span> <span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="n">x</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">total_integ</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">])</span>
     <span class="n">thresh</span> <span class="o">=</span> <span class="n">total_integ</span> <span class="o">*</span> <span class="n">rel_err</span>
@@ -653,7 +665,7 @@
         <span class="c1"># That means k1 is the smallest value we can use that will work as the ending value.</span>
 
         <span class="c1"># Subtract the error so far from thresh</span>
-        <span class="n">thresh</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[:</span><span class="n">k0</span><span class="p">]),</span><span class="n">x</span><span class="p">[:</span><span class="n">k0</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k1</span><span class="p">:]),</span><span class="n">x</span><span class="p">[</span><span class="n">k1</span><span class="p">:])</span>
+        <span class="n">thresh</span> <span class="o">-=</span> <span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[:</span><span class="n">k0</span><span class="p">]),</span><span class="n">x</span><span class="p">[:</span><span class="n">k0</span><span class="p">])</span> <span class="o">+</span> <span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k1</span><span class="p">:]),</span><span class="n">x</span><span class="p">[</span><span class="n">k1</span><span class="p">:])</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># +1 since end of range is given as one-past-the-end.</span>
         <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
@@ -710,6 +722,7 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        a tuple of lists (x_new, y_new) with the thinned tabulation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">trapz</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 
@@ -727,7 +740,7 @@
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">f</span>
 
     <span class="c1"># Start by calculating the complete integral of |f|</span>
-    <span class="n">total_integ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">total_integ</span> <span class="o">=</span> <span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">),</span><span class="n">x</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">total_integ</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">]),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">f</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="p">])</span>
     <span class="n">thresh</span> <span class="o">=</span> <span class="n">rel_err</span> <span class="o">*</span> <span class="n">total_integ</span>
@@ -753,7 +766,7 @@
         <span class="c1"># That means k1 is the smallest value we can use that will work as the ending value.</span>
 
         <span class="c1"># Subtract the error so far from thresh</span>
-        <span class="n">thresh</span> <span class="o">-=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[:</span><span class="n">k0</span><span class="p">]),</span><span class="n">x</span><span class="p">[:</span><span class="n">k0</span><span class="p">])</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k1</span><span class="p">:]),</span><span class="n">x</span><span class="p">[</span><span class="n">k1</span><span class="p">:])</span>
+        <span class="n">thresh</span> <span class="o">-=</span> <span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[:</span><span class="n">k0</span><span class="p">]),</span><span class="n">x</span><span class="p">[:</span><span class="n">k0</span><span class="p">])</span> <span class="o">+</span> <span class="n">trapz</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k1</span><span class="p">:]),</span><span class="n">x</span><span class="p">[</span><span class="n">k1</span><span class="p">:])</span>
 
         <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># +1 since end of range is given as one-past-the-end.</span>
         <span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
@@ -772,14 +785,14 @@
         <span class="c1"># with a linear approxmation based on the points at k0 and k1+1.</span>
         <span class="n">lin_f</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="n">k0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">f</span><span class="p">[</span><span class="n">k0</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">])</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">])</span>
         <span class="c1"># Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.</span>
-        <span class="n">err_integ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">lin_f</span><span class="p">),</span> <span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">err_integ</span> <span class="o">=</span> <span class="n">trapz</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">lin_f</span><span class="p">),</span> <span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">])</span>
         <span class="c1"># If the integral of the difference is &lt; thresh * (dx/x_range), we can skip this item.</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">err_integ</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">thresh</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">k1</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">])</span> <span class="o">/</span> <span class="n">x_range</span><span class="p">:</span>
             <span class="c1"># OK to skip item k1</span>
             <span class="n">k1</span> <span class="o">=</span> <span class="n">k1</span> <span class="o">+</span> <span class="mi">1</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Also ok to keep if its own relative error is less than rel_err</span>
-            <span class="n">true_integ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trapz</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">true_integ</span> <span class="o">=</span> <span class="n">trapz</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="n">k0</span><span class="p">:</span><span class="n">k1</span><span class="o">+</span><span class="mi">2</span><span class="p">])</span>
             <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">err_integ</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">rel_err</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">true_integ</span><span class="p">):</span>
                 <span class="c1"># OK to skip item k1</span>
                 <span class="n">k1</span> <span class="o">=</span> <span class="n">k1</span> <span class="o">+</span> <span class="mi">1</span>
@@ -819,16 +832,18 @@
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-        <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coef</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;coef must be 1-dimensional&quot;</span><span class="p">,</span> <span class="n">coef</span><span class="p">)</span>
     <span class="n">_horner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="_horner"><a class="viewcode-back" href="../../misc.html#galsim.utilities._horner">[docs]</a><span class="k">def</span> <span class="nf">_horner</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">coef</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to `horner`, but ``x``, ``coeff``, and ``result`` must be contiguous arrays</span>
-<span class="sd">    with dtype == float.</span>
+    <span class="sd">&quot;&quot;&quot;Equivalent to `horner`, but ``x``, ``coef``, and ``result`` must be contiguous arrays.</span>
+
+<span class="sd">    In particular, ``result`` must be already allocated as an array in which to put the answer.</span>
+<span class="sd">    This is the thing that is returned from the regular `horner`.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        x:      A numpy array of values at which to evaluate the polynomial.</span>
@@ -836,7 +851,10 @@
 <span class="sd">        result: Numpy array into which to write the result.  Must be same shape as x.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
-        <span class="n">_galsim</span><span class="o">.</span><span class="n">Horner</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">coef</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">coef</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_coef</span> <span class="o">=</span> <span class="n">coef</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">Horner</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">_coef</span><span class="p">,</span> <span class="n">coef</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">_result</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">coef</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">trim_zeros</span><span class="p">(</span><span class="n">coef</span><span class="p">,</span> <span class="n">trim</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>  <span class="c1"># trim only from the back</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coef</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -873,13 +891,12 @@
         <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">coefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-        <span class="n">coefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">coefs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="s2">&quot;x and y are not the same size&quot;</span><span class="p">,</span>
-                                            <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="s2">&quot;x and y are not the same shape&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">coefs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;coefs must be 2-dimensional&quot;</span><span class="p">,</span> <span class="n">coefs</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">triangle</span> <span class="ow">and</span> <span class="n">coefs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">coefs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
@@ -889,8 +906,12 @@
     <span class="k">return</span> <span class="n">result</span></div>
 
 <div class="viewcode-block" id="_horner2d"><a class="viewcode-back" href="../../misc.html#galsim.utilities._horner2d">[docs]</a><span class="k">def</span> <span class="nf">_horner2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">coefs</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">temp</span><span class="p">,</span> <span class="n">triangle</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Equivalent to `horner2d`, but ``x``, ``y``, ``coeff``, ``result``, and ``temp``</span>
-<span class="sd">    must be contiguous arrays with dtype == float.</span>
+    <span class="sd">&quot;&quot;&quot;Equivalent to `horner2d`, but ``x``, ``y``, ``coefs``, ``result``, and ``temp``</span>
+<span class="sd">    must be contiguous arrays.</span>
+
+<span class="sd">    In particular, ``result`` must be already allocated as an array in which to put the answer.</span>
+<span class="sd">    This is the thing that is returned from the regular `horner`.  In addition, ``temp`` must</span>
+<span class="sd">    be allocated for the function to use as temporary work space.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        x:          A numpy array of the x values at which to evaluate the polynomial.</span>
@@ -906,9 +927,12 @@
     <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
         <span class="c1"># Note: the c++ implementation doesn&#39;t need to care about triangle.</span>
         <span class="c1"># It is able to trivially account for the zeros without special handling.</span>
-        <span class="n">_galsim</span><span class="o">.</span><span class="n">Horner2D</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">y</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
-                         <span class="n">coefs</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">coefs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coefs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-                         <span class="n">result</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">temp</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">_x</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_coefs</span> <span class="o">=</span> <span class="n">coefs</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_temp</span> <span class="o">=</span> <span class="n">temp</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">_galsim</span><span class="o">.</span><span class="n">Horner2D</span><span class="p">(</span><span class="n">_x</span><span class="p">,</span> <span class="n">_y</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">_coefs</span><span class="p">,</span> <span class="n">coefs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">coefs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">_result</span><span class="p">,</span> <span class="n">_temp</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">triangle</span><span class="p">:</span>
             <span class="n">result</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
@@ -975,7 +999,7 @@
 <span class="sd">        `interleaveImages`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">Image</span>
-    <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+    <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">_PositionD</span>
     <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">JacobianWCS</span><span class="p">,</span> <span class="n">PixelScale</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="nb">int</span><span class="p">):</span>
         <span class="n">n1</span><span class="p">,</span><span class="n">n2</span> <span class="o">=</span> <span class="n">N</span><span class="p">,</span><span class="n">N</span>
@@ -1001,7 +1025,7 @@
             <span class="c1"># DX[i&#39;] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n</span>
             <span class="c1">#    i  = -n DX[i&#39;] + 0.5*(n-1)</span>
             <span class="n">dx</span><span class="p">,</span><span class="n">dy</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">/</span><span class="n">n1</span><span class="o">+</span><span class="mf">0.5</span><span class="p">,</span><span class="o">-</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span><span class="o">/</span><span class="n">n2</span><span class="o">+</span><span class="mf">0.5</span>
-            <span class="n">offset</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">)</span>
             <span class="n">img_arr</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="p">[</span><span class="n">j</span><span class="p">::</span><span class="n">n2</span><span class="p">,</span><span class="n">i</span><span class="p">::</span><span class="n">n1</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
             <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="p">(</span><span class="n">img_arr</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">conserve_flux</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
@@ -1010,7 +1034,7 @@
             <span class="n">offsets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
 
     <span class="n">wcs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span>
-    <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isUniform</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">wcs</span><span class="o">.</span><span class="n">_isUniform</span><span class="p">:</span>
         <span class="n">jac</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">jacobian</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">im_list</span><span class="p">:</span>
             <span class="n">img_wcs</span> <span class="o">=</span> <span class="n">JacobianWCS</span><span class="p">(</span><span class="n">jac</span><span class="o">.</span><span class="n">dudx</span><span class="o">*</span><span class="n">n1</span><span class="p">,</span><span class="n">jac</span><span class="o">.</span><span class="n">dudy</span><span class="o">*</span><span class="n">n2</span><span class="p">,</span><span class="n">jac</span><span class="o">.</span><span class="n">dvdx</span><span class="o">*</span><span class="n">n1</span><span class="p">,</span><span class="n">jac</span><span class="o">.</span><span class="n">dvdy</span><span class="o">*</span><span class="n">n2</span><span class="p">)</span>
@@ -1191,7 +1215,7 @@
         <span class="n">img</span> <span class="o">/=</span> <span class="mf">1.0</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">im_list</span><span class="p">)</span>
 
     <span class="c1"># Assign an appropriate WCS for the output</span>
-    <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isUniform</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">wcs</span><span class="o">.</span><span class="n">_isUniform</span><span class="p">:</span>
         <span class="n">jac</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">jacobian</span><span class="p">()</span>
         <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span> <span class="o">=</span> <span class="n">jac</span><span class="o">.</span><span class="n">dudx</span><span class="p">,</span> <span class="n">jac</span><span class="o">.</span><span class="n">dudy</span><span class="p">,</span> <span class="n">jac</span><span class="o">.</span><span class="n">dvdx</span><span class="p">,</span> <span class="n">jac</span><span class="o">.</span><span class="n">dvdy</span>
         <span class="n">img_wcs</span> <span class="o">=</span> <span class="n">JacobianWCS</span><span class="p">(</span><span class="mf">1.</span><span class="o">*</span><span class="n">dudx</span><span class="o">/</span><span class="n">n1</span><span class="p">,</span><span class="mf">1.</span><span class="o">*</span><span class="n">dudy</span><span class="o">/</span><span class="n">n2</span><span class="p">,</span><span class="mf">1.</span><span class="o">*</span><span class="n">dvdx</span><span class="o">/</span><span class="n">n1</span><span class="p">,</span><span class="mf">1.</span><span class="o">*</span><span class="n">dvdy</span><span class="o">/</span><span class="n">n2</span><span class="p">)</span>
@@ -1202,17 +1226,16 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">img</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">img_wcs</span>
 
-    <span class="k">elif</span> <span class="n">suppress_warnings</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">suppress_warnings</span><span class="p">:</span>
         <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Interleaved image could not be assigned a WCS automatically.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Assign a possibly non-trivial origin and warn if individual image have different origins.</span>
     <span class="n">orig</span> <span class="o">=</span> <span class="n">im_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">origin</span>
     <span class="n">img</span><span class="o">.</span><span class="n">setOrigin</span><span class="p">(</span><span class="n">orig</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">im_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">im</span><span class="o">.</span><span class="n">origin</span><span class="o">==</span><span class="n">orig</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">origin</span> <span class="o">!=</span> <span class="n">orig</span> <span class="k">for</span> <span class="n">im</span> <span class="ow">in</span> <span class="n">im_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">suppress_warnings</span><span class="p">:</span>
             <span class="n">galsim_warn</span><span class="p">(</span><span class="s2">&quot;Images in im_list have multiple values for origin. Assigning the &quot;</span>
                         <span class="s2">&quot;origin of the first Image instance in im_list to the interleaved image.&quot;</span><span class="p">)</span>
-            <span class="k">break</span>
 
     <span class="k">return</span> <span class="n">img</span></div>
 
@@ -1240,10 +1263,18 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_function</span><span class="p">,</span> <span class="n">maxsize</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
         <span class="c1"># Link layout:     [PREV, NEXT, KEY, RESULT]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">root</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">user_function</span> <span class="o">=</span> <span class="n">user_function</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">=</span> <span class="n">maxsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
+    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cache</span>
+        <span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">maxsize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span>
         <span class="n">last</span> <span class="o">=</span> <span class="n">root</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">maxsize</span><span class="p">):</span>
             <span class="n">key</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
@@ -1288,7 +1319,7 @@
 <span class="sd">        Parameters:</span>
 <span class="sd">            maxsize:    The new maximum number of inputs to cache.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">oldsize</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="p">)</span>
+        <span class="n">oldsize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span>
         <span class="k">if</span> <span class="n">maxsize</span> <span class="o">==</span> <span class="n">oldsize</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1309,7 +1340,8 @@
                     <span class="n">key</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
                     <span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">,</span> <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
                     <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span>
-                    <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span></div></div>
+                    <span class="n">root</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">link</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">maxsize</span> <span class="o">=</span> <span class="n">maxsize</span></div></div>
 
 
 <div class="viewcode-block" id="printoptions"><a class="viewcode-back" href="../../misc.html#galsim.utilities.printoptions">[docs]</a><span class="nd">@contextmanager</span>
@@ -1410,7 +1442,7 @@
     <span class="c1"># Loop through broadcast range</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
         <span class="n">out</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="n">dol</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dol</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">scalar_string</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
                 <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
                 <span class="k">continue</span>
@@ -1425,7 +1457,7 @@
                 <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
             <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
                 <span class="k">raise</span>
-            <span class="k">except</span><span class="p">:</span> <span class="c1"># pragma: no cover</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;Cannot broadcast kwarg </span><span class="si">{0}</span><span class="s2">=</span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">dol</span><span class="o">=</span><span class="n">dol</span><span class="p">)</span>
         <span class="k">yield</span> <span class="n">out</span></div>
@@ -1453,7 +1485,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable2D</span>
     <span class="n">array</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">array</span>
-    <span class="n">nx</span><span class="p">,</span> <span class="n">ny</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">scale</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span>
 
     <span class="c1"># The structure function can be derived from the correlation function B(r) as:</span>
@@ -1488,28 +1520,29 @@
     <span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
     <span class="kn">from</span> <span class="nn">.chromatic</span> <span class="kn">import</span> <span class="n">ChromaticObject</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                      <span class="p">(</span><span class="n">SED</span><span class="p">,</span> <span class="n">Bandpass</span><span class="p">,</span> <span class="n">ChromaticObject</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">)):</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
             <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Single input argument must be an SED, Bandpass, GSObject, &quot;</span>
-                            <span class="s2">&quot;ChromaticObject or a (possibly mixed) list of them.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Single input argument must be a list or tuple&quot;</span><span class="p">)</span>
 
-    <span class="n">blue_limit</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">red_limit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
-    <span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;blue_limit&#39;</span><span class="p">):</span>
-            <span class="n">blue_limit</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;red_limit&#39;</span><span class="p">):</span>
-            <span class="n">red_limit</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">red_limit</span><span class="p">)</span>
-        <span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">union1d</span><span class="p">(</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span>
-    <span class="n">wave_list</span> <span class="o">=</span> <span class="n">wave_list</span><span class="p">[(</span><span class="n">wave_list</span> <span class="o">&gt;=</span> <span class="n">blue_limit</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">wave_list</span> <span class="o">&lt;=</span> <span class="n">red_limit</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">wave_list</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;blue_limit&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;red_limit&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+
+    <span class="n">blue_limit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;blue_limit&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">])</span>
+    <span class="n">red_limit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;red_limit&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">])</span>
     <span class="k">if</span> <span class="n">blue_limit</span> <span class="o">&gt;</span> <span class="n">red_limit</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;Empty wave_list intersection.&quot;</span><span class="p">)</span>
-    <span class="c1"># Make sure both limits are included.</span>
+
+    <span class="n">waves</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">wave_list</span><span class="p">)</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">args</span><span class="p">]</span>
+    <span class="n">waves</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span><span class="p">[(</span><span class="n">blue_limit</span> <span class="o">&lt;=</span> <span class="n">w</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">w</span> <span class="o">&lt;=</span> <span class="n">red_limit</span><span class="p">)]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">waves</span><span class="p">]</span>
+    <span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">union1d</span><span class="p">(</span><span class="n">waves</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">waves</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">waves</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">union1d</span><span class="p">(</span><span class="n">wave_list</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="c1"># Make sure both limits are included in final list</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wave_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="n">wave_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">blue_limit</span> <span class="ow">or</span> <span class="n">wave_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">red_limit</span><span class="p">):</span>
         <span class="n">wave_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">union1d</span><span class="p">([</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span><span class="p">],</span> <span class="n">wave_list</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">wave_list</span><span class="p">,</span> <span class="n">blue_limit</span><span class="p">,</span> <span class="n">red_limit</span></div>
@@ -1570,7 +1603,7 @@
                 <span class="n">new_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
                                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">)</span>
                                    <span class="k">else</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">(</span><span class="o">*</span><span class="n">inner_args</span><span class="p">,</span> <span class="o">**</span><span class="n">inner_kwargs</span><span class="p">))</span>
-                                   <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">iteritems</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)])</span>
+                                   <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()])</span>
                 <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">new_args</span><span class="p">,</span> <span class="o">**</span><span class="n">new_kwargs</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">fff</span>
     <span class="k">return</span> <span class="n">ff</span></div>
@@ -1586,17 +1619,21 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        Whatever the string evaluates to.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Python 2 and 3 have a different syntax for exec with globals() dict.</span>
-    <span class="c1"># The exec_ function lets us use the Python 3 syntax even in Python 2.</span>
-    <span class="kn">from</span> <span class="nn">future.utils</span> <span class="kn">import</span> <span class="n">exec_</span>
     <span class="n">gdict</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-    <span class="n">exec_</span><span class="p">(</span><span class="s1">&#39;import galsim&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
-    <span class="n">exec_</span><span class="p">(</span><span class="s1">&#39;import numpy&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
-    <span class="n">exec_</span><span class="p">(</span><span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
-    <span class="n">exec_</span><span class="p">(</span><span class="s1">&#39;import math&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
-    <span class="n">exec_</span><span class="p">(</span><span class="s1">&#39;import coord&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import galsim&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import numpy&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import numpy as np&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import math&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import coord&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">other_modules</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (We don&#39;t use this.)</span>
-        <span class="n">exec_</span><span class="p">(</span><span class="s1">&#39;import &#39;</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+        <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import &#39;</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+
+    <span class="c1"># A few other things that show up in reprs, so useful to import here.</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray&#39;</span><span class="p">,</span>
+         <span class="n">gdict</span><span class="p">)</span>
+    <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;from astropy.units import Unit&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="binomial"><a class="viewcode-back" href="../../misc.html#galsim.utilities.binomial">[docs]</a><span class="k">def</span> <span class="nf">binomial</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
@@ -1642,9 +1679,9 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict with entries for [M0, Mx, My, Mxx, Myy, Mxy]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+    <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">_PositionD</span>
     <span class="k">if</span> <span class="n">origin</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">origin</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">_PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">a</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">offset</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">origin</span> <span class="o">-</span> <span class="n">origin</span>
     <span class="n">xgrid</span><span class="p">,</span> <span class="n">ygrid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="n">offset</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
@@ -1927,9 +1964,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">f</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="vm">__func__</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">weakref</span><span class="o">.</span><span class="n">ref</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="vm">__self__</span><span class="p">)</span>
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span> <span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Method called on dead object&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># If the reference is dead, self.c() will be None, so this will raise an</span>
+            <span class="c1"># AttributeError: &#39;NoneType&#39; object has no attribute ...</span>
+            <span class="c1"># Hopefully the method itself won&#39;t raise an AttributeError for anything else.</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="p">(),</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Method called on dead object&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="ensure_dir"><a class="viewcode-back" href="../../misc.html#galsim.utilities.ensure_dir">[docs]</a><span class="k">def</span> <span class="nf">ensure_dir</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -1941,7 +1982,6 @@
 <span class="sd">    Parameter:</span>
 <span class="sd">        target:     The file name for which to ensure that all necessary directories exist.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">_ERR_FILE_EXISTS</span><span class="o">=</span><span class="mi">17</span>
     <span class="nb">dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">dir</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span> <span class="k">return</span>
@@ -1957,7 +1997,7 @@
             <span class="k">if</span> <span class="n">err</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">_ERR_FILE_EXISTS</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">err</span>
 
-    <span class="k">elif</span> <span class="n">exists</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">elif</span> <span class="n">exists</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;tried to make directory &#39;</span><span class="si">%s</span><span class="s2">&#39; &quot;</span>
                       <span class="s2">&quot;but a non-directory file of that &quot;</span>
                       <span class="s2">&quot;name already exists&quot;</span> <span class="o">%</span> <span class="nb">dir</span><span class="p">)</span></div>
@@ -1979,20 +2019,20 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        a `PositionD` from x and y that is out-of-bounds of bounds.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+    <span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">_PositionD</span>
     <span class="k">if</span> <span class="n">grid</span><span class="p">:</span>
         <span class="c1"># It&#39;s enough to check corners for grid input</span>
         <span class="k">for</span> <span class="n">x_</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
             <span class="k">for</span> <span class="n">y_</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y</span><span class="p">)):</span>
                 <span class="k">if</span> <span class="p">(</span><span class="n">x_</span> <span class="o">&lt;</span> <span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span> <span class="ow">or</span> <span class="n">x_</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="o">.</span><span class="n">xmax</span> <span class="ow">or</span>
                     <span class="n">y_</span> <span class="o">&lt;</span> <span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span> <span class="ow">or</span> <span class="n">y_</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="o">.</span><span class="n">ymax</span><span class="p">):</span>
-                    <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">x_</span><span class="p">,</span> <span class="n">y_</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">x_</span><span class="p">,</span> <span class="n">y_</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Faster to check all points than to iterate through them one-by-one?</span>
         <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">x</span> <span class="o">&lt;</span> <span class="n">bounds</span><span class="o">.</span><span class="n">xmin</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="o">.</span><span class="n">xmax</span><span class="p">)</span> <span class="o">|</span>
                      <span class="p">(</span><span class="n">y</span> <span class="o">&lt;</span> <span class="n">bounds</span><span class="o">.</span><span class="n">ymin</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">y</span> <span class="o">&gt;</span> <span class="n">bounds</span><span class="o">.</span><span class="n">ymax</span><span class="p">))</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="n">y</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
+            <span class="k">return</span> <span class="n">_PositionD</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]],</span> <span class="n">y</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]])</span>
     <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span><span class="s2">&quot;No out-of-bounds position&quot;</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">set_omp_threads</span><span class="p">(</span><span class="n">num_threads</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -2032,26 +2072,38 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Unable to use multiple threads, since OpenMP is not enabled.&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">num_threads</span>
+
+<span class="k">def</span> <span class="nf">get_omp_threads</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get the current number of OpenMP threads to be used in the C++ layer.</span>
+
+<span class="sd">    :returns: num_threads</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">GetOMPThreads</span><span class="p">()</span>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -2059,7 +2111,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

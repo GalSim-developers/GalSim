@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Interfacing with FITS Files &mdash; GalSim 2.2.4 documentation</title>
+  <title>Interfacing with FITS Files &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Integration" href="integ.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -120,7 +124,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -128,6 +132,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -162,11 +167,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="utilities.html">Helper Functions and Classes</a> &raquo;</li>
         
@@ -175,7 +182,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/fits.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -204,13 +211,13 @@ useful for connecting GalSim objects with the AstroPy API.  However, they used t
 important for providing a stable API across different PyFITS and then AstroPy versions.
 For instance, now the <code class="docutils literal notranslate"><span class="pre">astropy.io.fits.Header</span></code> API is very similar to our own <a class="reference internal" href="#galsim.fits.FitsHeader" title="galsim.fits.FitsHeader"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitsHeader</span></code></a>,
 but we used to have many checks for different PyFITS and AstroPy versions to call things in
-different ways while maintaining a intuitive front-end user interface.</p>
+different ways while maintaining an intuitive front-end user interface.</p>
 </div>
 <div class="section" id="reading-fits-files">
 <h2>Reading FITS Files<a class="headerlink" href="#reading-fits-files" title="Permalink to this headline">¶</a></h2>
 <dl class="py function">
 <dt id="galsim.fits.read">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">read_header</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.read" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">read_header</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">suppress_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> from a FITS file or HDUList.</p>
 <p>The normal usage for this function is to read a fits file and return the image contained
 therein, automatically decompressing it if necessary.  However, you may also pass it
@@ -218,9 +225,11 @@ an HDUList, in which case it will select the indicated hdu (with the <code class
 from that.</p>
 <p>Not all FITS pixel types are supported – only <code class="docutils literal notranslate"><span class="pre">short</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">short</span></code>,
 <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
-<p>If the FITS header has keywords that start with <code class="docutils literal notranslate"><span class="pre">GS_</span></code> keywords, these will be used to
-initialize the bounding box and WCS.  If not, the bounding box will have <code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at
-<code class="docutils literal notranslate"><span class="pre">(1,1)</span></code> and the scale will be set to 1.0.</p>
+<p>If the FITS header has keywords that start with <code class="docutils literal notranslate"><span class="pre">GS_</span></code>, these will be used to initialize the
+bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+in the FITS header.  cf. <a class="reference internal" href="wcs.html#galsim.wcs.readFromFitsHeader" title="galsim.wcs.readFromFitsHeader"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.wcs.readFromFitsHeader</span></code></a>.  The default bounding box will have
+<code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at <code class="docutils literal notranslate"><span class="pre">(1,1)</span></code>.  The default WCS, if there is no WCS information in the FITS
+file, will be PixelScale(1.0).</p>
 <p>This function is called as <code class="docutils literal notranslate"><span class="pre">im</span> <span class="pre">=</span> <span class="pre">galsim.fits.read(...)</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -259,6 +268,9 @@ want.)]</p></li>
 <p>[default: ‘auto’]</p>
 </p></li>
 <li><p><strong>read_header</strong> – Whether to read the header and store it as image.header.[default: False]</p></li>
+<li><p><strong>suppress_warning</strong> – Whether to suppress a warning that the WCS could not be read from the
+FITS header, so the WCS defaulted to either a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or
+<a class="reference internal" href="wcs.html#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>. [default: True]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -269,7 +281,7 @@ want.)]</p></li>
 
 <dl class="py function">
 <dt id="galsim.fits.readMulti">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readMulti</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">read_headers</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readMulti" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readMulti</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">read_headers</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">suppress_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readMulti" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances from a FITS file or HDUList.</p>
 <p>The normal usage for this function is to read a fits file and return a list of all the images
 contained therein, automatically decompressing them if necessary.  However, you may also pass
@@ -277,9 +289,25 @@ it an HDUList, in which case it will build the images from these directly.</p>
 <p>Not all FITS pixel types are supported – only <code class="docutils literal notranslate"><span class="pre">short</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">short</span></code>,
 <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
 <p>If the FITS header has keywords that start with <code class="docutils literal notranslate"><span class="pre">GS_</span></code>, these will be used to initialize the
-bounding box and WCS.  If not, the bounding box will have <code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at <code class="docutils literal notranslate"><span class="pre">(1,1)</span></code> and the
-scale will be set to 1.0.</p>
+bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+in the FITS header.  cf. <a class="reference internal" href="wcs.html#galsim.wcs.readFromFitsHeader" title="galsim.wcs.readFromFitsHeader"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.wcs.readFromFitsHeader</span></code></a>.  The default bounding box will have
+<code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at <code class="docutils literal notranslate"><span class="pre">(1,1)</span></code>.  The default WCS, if there is no WCS information in the FITS
+file, will be PixelScale(1.0).</p>
 <p>This function is called as <code class="docutils literal notranslate"><span class="pre">im</span> <span class="pre">=</span> <span class="pre">galsim.fits.readMulti(...)</span></code></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function along with <a class="reference internal" href="#galsim.fits.writeMulti" title="galsim.fits.writeMulti"><code class="xref any py py-func docutils literal notranslate"><span class="pre">writeMulti</span></code></a> can be used to effect the equivalent of a simple
+version of fpack or funpack. To Rice compress a fits file, you can call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;some_image_file.fits&#39;</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readMulti</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">fname</span><span class="o">+</span><span class="s1">&#39;.fz&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To uncompress:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;some_image_file.fits.fz&#39;</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readMulti</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">fname</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -311,6 +339,9 @@ already include it. [default: None]</p></li>
 <p>[default: ‘auto’]</p>
 </p></li>
 <li><p><strong>read_headers</strong> – Whether to read the headers and store them as image.header.[default: False]</p></li>
+<li><p><strong>suppress_warning</strong> – Whether to suppress a warning that the WCS could not be read from the
+FITS header, so the WCS defaulted to either a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or
+<a class="reference internal" href="wcs.html#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>. [default: True]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -321,13 +352,15 @@ already include it. [default: None]</p></li>
 
 <dl class="py function">
 <dt id="galsim.fits.readCube">
-<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readCube</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readCube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readCube" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">readCube</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em>, <em class="sig-param"><span class="n">suppress_warning</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#readCube"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.readCube" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a Python list of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances from a FITS data cube.</p>
 <p>Not all FITS pixel types are supported – only <code class="docutils literal notranslate"><span class="pre">short</span></code>, <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">short</span></code>,
 <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, and <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
 <p>If the FITS header has keywords that start with <code class="docutils literal notranslate"><span class="pre">GS_</span></code>, these will be used to initialize the
-bounding boxes and WCS’s.  If not, the bounding boxes will have <code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at <code class="docutils literal notranslate"><span class="pre">(1,1)</span></code>
-and the scale will be set to 1.0.</p>
+bounding box and WCS.  If these are absent, the code will try to read whatever WCS is given
+in the FITS header.  cf. <a class="reference internal" href="wcs.html#galsim.wcs.readFromFitsHeader" title="galsim.wcs.readFromFitsHeader"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.wcs.readFromFitsHeader</span></code></a>.  The default bounding box will have
+<code class="docutils literal notranslate"><span class="pre">(xmin,ymin)</span></code> at <code class="docutils literal notranslate"><span class="pre">(1,1)</span></code>.  The default WCS, if there is no WCS information in the FITS
+file, will be PixelScale(1.0).</p>
 <p>This function is called as <code class="docutils literal notranslate"><span class="pre">image_list</span> <span class="pre">=</span> <span class="pre">galsim.fits.readCube(...)</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -365,6 +398,9 @@ want.)]</p></li>
 </ul>
 <p>[default: ‘auto’]</p>
 </p></li>
+<li><p><strong>suppress_warning</strong> – Whether to suppress a warning that the WCS could not be read from the
+FITS header, so the WCS defaulted to either a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a> or
+<a class="reference internal" href="wcs.html#galsim.AffineTransform" title="galsim.AffineTransform"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AffineTransform</span></code></a>. [default: True]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -500,6 +536,20 @@ that case, the user is responsible for calling either
 <code class="sig-prename descclassname">galsim.fits.</code><code class="sig-name descname">writeMulti</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_list</span></em>, <em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">hdu_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">clobber</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">'auto'</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#writeMulti"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.writeMulti" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write a Python list of images to a multi-extension FITS file.</p>
 <p>The details of how the images are written to file depends on the arguments.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function along with <a class="reference internal" href="#galsim.fits.readMulti" title="galsim.fits.readMulti"><code class="xref any py py-func docutils literal notranslate"><span class="pre">readMulti</span></code></a> can be used to effect the equivalent of a simple
+version of fpack or funpack. To Rice compress a fits file, you can call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;some_image_file.fits&#39;</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readMulti</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">fname</span><span class="o">+</span><span class="s1">&#39;.fz&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To uncompress:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fname</span> <span class="o">=</span> <span class="s1">&#39;some_image_file.fits.fz&#39;</span>
+<span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">writeMulti</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">fits</span><span class="o">.</span><span class="n">readMulti</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">read_headers</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">fname</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -835,6 +885,24 @@ overwritten with the new entry? [default: True]</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt id="galsim.fits.FitsHeader.iteritems">
+<code class="sig-name descname">iteritems</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.iteritems"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.iteritems" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synonym for self.items()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.fits.FitsHeader.iterkeys">
+<code class="sig-name descname">iterkeys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.iterkeys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.iterkeys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synonym for self.keys()</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.fits.FitsHeader.itervalues">
+<code class="sig-name descname">itervalues</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.itervalues"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.itervalues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Synonym for self.values()</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="galsim.fits.FitsHeader.keys">
 <code class="sig-name descname">keys</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/fits.html#FitsHeader.keys"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.fits.FitsHeader.keys" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get all header keys.  Works like dict.keys</p>
@@ -896,29 +964,29 @@ the current items will ber overwritten.</p>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="integ.html" class="btn btn-neutral float-right" title="Integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="interpolant.html" class="btn btn-neutral float-left" title="Interpolants" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="integ.html" class="btn btn-neutral float-right" title="Integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="interpolant.html" class="btn btn-neutral float-left" title="Interpolants" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -926,7 +994,6 @@ the current items will ber overwritten.</p>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

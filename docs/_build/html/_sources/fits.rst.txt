@@ -16,7 +16,7 @@ We also have a wrapper around the FITS header information to make it work more l
     important for providing a stable API across different PyFITS and then AstroPy versions.
     For instance, now the ``astropy.io.fits.Header`` API is very similar to our own `FitsHeader`,
     but we used to have many checks for different PyFITS and AstroPy versions to call things in
-    different ways while maintaining a intuitive front-end user interface.
+    different ways while maintaining an intuitive front-end user interface.
 
 
 Reading FITS Files
@@ -48,4 +48,3 @@ FITS Headers
 
 .. autoclass:: galsim.fits.FitsHeader
     :members:
-

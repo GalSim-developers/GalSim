@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.sensor &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.sensor &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.sensor</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -193,7 +200,7 @@
 <span class="kn">from</span> <span class="nn">.table</span> <span class="kn">import</span> <span class="n">LookupTable</span>
 <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">UniformDeviate</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meta_data</span>
-<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">,</span> <span class="n">convert_cpp_errors</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimUndefinedBoundsError</span>
 
 <div class="viewcode-block" id="Sensor"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor">[docs]</a><span class="k">class</span> <span class="nc">Sensor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -218,7 +225,7 @@
 <span class="sd">        Parameters:</span>
 <span class="sd">            photons:        A `PhotonArray` instance describing the incident photons.</span>
 <span class="sd">            image:          The `Image` into which the photons should be accumuated.</span>
-<span class="sd">            orig_center:    The `Position` of the image center in the original image coordinates.</span>
+<span class="sd">            orig_center:    The `Position` of the (0,0) point in the original image coordinates.</span>
 <span class="sd">                            [default: (0,0)]</span>
 <span class="sd">            resume:         Resume accumulating on the same image as a previous call to accumulate.</span>
 <span class="sd">                            In the base class, this has no effect, but it can provide an efficiency</span>
@@ -230,6 +237,35 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">image</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
             <span class="k">raise</span> <span class="n">GalSimUndefinedBoundsError</span><span class="p">(</span><span class="s2">&quot;Calling accumulate on image with undefined bounds&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">photons</span><span class="o">.</span><span class="n">addTo</span><span class="p">(</span><span class="n">image</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Sensor.calculate_pixel_areas"><a class="viewcode-back" href="../../sensor.html#galsim.Sensor.calculate_pixel_areas">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_pixel_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">use_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the pixel areas according to the given sensor.</span>
+
+<span class="sd">        If the pixels are all the same size, then this should just return 1.0.</span>
+
+<span class="sd">        But if the pixels vary in size, it should return an Image with the pixel areas</span>
+<span class="sd">        relative to the nominal pixel size. The input image gives the flux values if relevant</span>
+<span class="sd">        (e.g. to set the current levels of the brighter-fatter distortions).</span>
+
+<span class="sd">        The returned image will have the same size and bounds as the input image, and will have</span>
+<span class="sd">        for its flux values the net pixel area for each pixel according to the sensor model.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            image:          The `Image` with the current flux values.</span>
+<span class="sd">            orig_center:    The `Position` of the (0,0) point in the original image coordinates.</span>
+<span class="sd">                            [default: (0,0)]</span>
+<span class="sd">            use_flux:       Whether to properly handle the current flux in the image (True) or</span>
+<span class="sd">                            to just calculate the pixel areas for a zero-flux image (False).</span>
+<span class="sd">                            [default: True]</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            either 1.0 or an `Image` with the pixel areas</span>
+<span class="sd">            (The base class return 1.0.)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mf">1.</span></div>
+
+    <span class="k">def</span> <span class="nf">updateRNG</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="k">pass</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;galsim.Sensor()&#39;</span>
@@ -252,21 +288,24 @@
 <span class="sd">    into account the repulsion of previously accumulated electrons (known as the brighter-fatter</span>
 <span class="sd">    effect).</span>
 
-<span class="sd">    There are currently three sensors shipped with GalSim, which you can specify as the ``name``</span>
-<span class="sd">    parameter mentioned below.</span>
+<span class="sd">    There are currently four up-to-date sensors shipped with GalSim, which you can specify as the</span>
+<span class="sd">    ``name`` parameter mentioned below. The _50_ indicates 50V back-bias.</span>
 
-<span class="sd">        lsst_itl_8</span>
+<span class="sd">        lsst_itl_50_8</span>
 <span class="sd">                    The ITL sensor being used for LSST, using 8 points along each side of the</span>
 <span class="sd">                    pixel boundaries.</span>
 
-<span class="sd">        lsst_itl_32</span>
+<span class="sd">        lsst_itl_50_32</span>
 <span class="sd">                    The ITL sensor being used for LSST, using 32 points along each side of the</span>
 <span class="sd">                    pixel boundaries.  (This is more accurate than the lsst_itl_8, but slower.)</span>
 
-<span class="sd">        lsst_etv_32</span>
-<span class="sd">                    The ETV sensor being used for LSST, using 32 points along each side of the</span>
-<span class="sd">                    pixel boundaries.  (This file is still somewhat preliminary and may be</span>
-<span class="sd">                    updated in the future.)</span>
+<span class="sd">        lsst_e2v_50_8</span>
+<span class="sd">                    The E2V sensor being used for LSST, using 8 points along each side of the</span>
+<span class="sd">                    pixel boundaries. </span>
+
+<span class="sd">        lsst_e2v_50_32</span>
+<span class="sd">                    The E2V sensor being used for LSST, using 32 points along each side of the</span>
+<span class="sd">                    pixel boundaries.  (This is more accurate than the lsst_e2v_8, but slower.)</span>
 
 <span class="sd">    The SiliconSensor model is asymmetric in the behavior along rows and columns in the CCD.</span>
 <span class="sd">    The traditional meaning of (x,y) is (col,row), and the brighter-fatter effect is stronger</span>
@@ -295,7 +334,7 @@
 <span class="sd">                            that are in the ``galsim.meta_data.share_dir/sensors`` directory.</span>
 <span class="sd">                            name.cfg should be the file used to simulate the pixel distortions,</span>
 <span class="sd">                            and name.dat should containt the distorted pixel information.</span>
-<span class="sd">                            [default: &#39;lsst_itl_8&#39;]</span>
+<span class="sd">                            [default: &#39;lsst_itl_50_8&#39;]</span>
 <span class="sd">        strength:           Set the strength of the brighter-fatter effect relative to the</span>
 <span class="sd">                            amount specified by the Poisson simulation results.  [default: 1]</span>
 <span class="sd">        rng:                A `BaseDeviate` object to use for the random number generation</span>
@@ -316,7 +355,12 @@
 <span class="sd">        transpose:          Transpose the meaning of (x,y) so the brighter-fatter effect is</span>
 <span class="sd">                            stronger along the x direction. [default: False]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;lsst_itl_8&#39;</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffusion_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">qdist</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;name&#39;</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s1">&#39;strength&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;diffusion_factor&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="s1">&#39;qdist&#39;</span> <span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s1">&#39;nrecalc&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;transpose&#39;</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+                    <span class="s1">&#39;treering_func&#39;</span> <span class="p">:</span> <span class="n">LookupTable</span><span class="p">,</span> <span class="s1">&#39;treering_center&#39;</span> <span class="p">:</span> <span class="n">PositionD</span> <span class="p">}</span>
+    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;lsst_itl_50_8&#39;</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diffusion_factor</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">qdist</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
                  <span class="n">nrecalc</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">treering_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">treering_center</span><span class="o">=</span><span class="n">PositionD</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
                  <span class="n">transpose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -375,12 +419,15 @@
             <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Vertex file </span><span class="si">%s</span><span class="s2"> does not match config file </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span>
                           <span class="bp">self</span><span class="o">.</span><span class="n">vertex_file</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config_file</span><span class="p">))</span>
 
-        <span class="k">with</span> <span class="n">convert_cpp_errors</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Silicon</span><span class="p">(</span><span class="n">NumVertices</span><span class="p">,</span> <span class="n">num_elec</span><span class="p">,</span> <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qdist</span><span class="p">,</span> <span class="n">nrecalc</span><span class="p">,</span>
-                                            <span class="n">diff_step</span><span class="p">,</span> <span class="n">PixelSize</span><span class="p">,</span> <span class="n">SensorThickness</span><span class="p">,</span>
-                                            <span class="n">vertex_data</span><span class="o">.</span><span class="n">ctypes</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                                            <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">treering_center</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span>
-                                            <span class="bp">self</span><span class="o">.</span><span class="n">abs_length_table</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span><span class="p">)</span>
+        <span class="n">_vertex_data</span> <span class="o">=</span> <span class="n">vertex_data</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">Silicon</span><span class="p">(</span><span class="n">NumVertices</span><span class="p">,</span> <span class="n">num_elec</span><span class="p">,</span> <span class="n">Nx</span><span class="p">,</span> <span class="n">Ny</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">qdist</span><span class="p">,</span> <span class="n">nrecalc</span><span class="p">,</span>
+                                        <span class="n">diff_step</span><span class="p">,</span> <span class="n">PixelSize</span><span class="p">,</span> <span class="n">SensorThickness</span><span class="p">,</span>
+                                        <span class="n">_vertex_data</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">treering_func</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">treering_center</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span>
+                                        <span class="bp">self</span><span class="o">.</span><span class="n">abs_length_table</span><span class="o">.</span><span class="n">_tab</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transpose</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">updateRNG</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.SiliconSensor(</span><span class="si">%r</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
@@ -429,7 +476,7 @@
 <span class="sd">        Parameters:</span>
 <span class="sd">            photons:        A `PhotonArray` instance describing the incident photons</span>
 <span class="sd">            image:          The `Image` into which the photons should be accumuated.</span>
-<span class="sd">            orig_center:    The `Position` of the image center in the original image coordinates.</span>
+<span class="sd">            orig_center:    The `Position` of the (0,0) point in the original image coordinates.</span>
 <span class="sd">                            [default: (0,0)]</span>
 <span class="sd">            resume:         Resume accumulating on the same image as a previous call to accumulate.</span>
 <span class="sd">                            This skips an initial (slow) calculation at the start of the</span>
@@ -453,7 +500,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">_pa</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rng</span><span class="o">.</span><span class="n">_rng</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span>
                                         <span class="n">resume</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="SiliconSensor.calculate_pixel_areas"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor.calculate_pixel_areas">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_pixel_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)):</span>
+<div class="viewcode-block" id="SiliconSensor.calculate_pixel_areas"><a class="viewcode-back" href="../../sensor.html#galsim.SiliconSensor.calculate_pixel_areas">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_pixel_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">=</span><span class="n">PositionI</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">use_flux</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create an image with the corresponding pixel areas according to the `SiliconSensor`</span>
 <span class="sd">        model.</span>
 
@@ -469,8 +516,12 @@
 
 <span class="sd">        Parameters:</span>
 <span class="sd">            image:          The `Image` with the current flux values.</span>
-<span class="sd">            orig_center:    The `Position` of the image center in the original image coordinates.</span>
+<span class="sd">            orig_center:    The `Position` of the (0,0) point in the original image coordinates.</span>
 <span class="sd">                            [default: (0,0)]</span>
+<span class="sd">            use_flux:       Whether to properly handle the current flux in the image (True) or</span>
+<span class="sd">                            to just calculate the pixel areas for a zero-flux image (False).</span>
+<span class="sd">                            [default: True]  (Note that use_flux=True potentially uses a lot of</span>
+<span class="sd">                            memory!)</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            an `Image` with the pixel areas</span>
@@ -478,7 +529,7 @@
         <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
         <span class="n">area_image</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">area_image</span><span class="o">.</span><span class="n">wcs</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">fill_with_pixel_areas</span><span class="p">(</span><span class="n">area_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_silicon</span><span class="o">.</span><span class="n">fill_with_pixel_areas</span><span class="p">(</span><span class="n">area_image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">orig_center</span><span class="o">.</span><span class="n">_p</span><span class="p">,</span> <span class="n">use_flux</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">area_image</span></div>
 
     <span class="k">def</span> <span class="nf">_read_config_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
@@ -580,20 +631,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -601,7 +657,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

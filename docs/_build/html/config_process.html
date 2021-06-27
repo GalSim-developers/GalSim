@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Config Processing From Python &mdash; GalSim 2.2.4 documentation</title>
+  <title>Config Processing From Python &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The HSM Module" href="hsm.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -120,7 +124,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -128,6 +132,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -162,11 +167,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="config.html">The Config Module</a> &raquo;</li>
         
@@ -175,7 +182,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/config_process.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -191,7 +198,7 @@
             
   <div class="section" id="config-processing-from-python">
 <h1>Config Processing From Python<a class="headerlink" href="#config-processing-from-python" title="Permalink to this headline">¶</a></h1>
-<p>It is aslo possible to run the config processing from a Python script, rather than using
+<p>It is also possible to run the config processing from a Python script, rather than using
 <a class="reference internal" href="config_galsim.html#the-galsim-executable"><span class="std std-ref">The galsim Executable</span></a>.  An example of this can be found in
 <a class="reference download internal" download="" href="_downloads/6ad302df39711687604bb7971a0b3f9b/demo8.py"><code class="xref download docutils literal notranslate"><span class="pre">demo8</span></code></a>.</p>
 <div class="section" id="running-the-whole-script">
@@ -251,7 +258,7 @@ the copy semantics once here.</p>
 
 <dl class="py function">
 <dt id="galsim.config.ImportModules">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ImportModules</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ImportModules"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImportModules" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">ImportModules</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">gdict</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/process.html#ImportModules"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.ImportModules" title="Permalink to this definition">¶</a></dt>
 <dd><p>Import any modules listed in config[‘modules’].</p>
 <p>These won’t be brought into the running scope of the config processing, but any side
 effects of the import statements will persist.  In particular, these are allowed to
@@ -374,11 +381,14 @@ Note: t==0 indicates that this file was skipped.</p>
 
 <dl class="py function">
 <dt id="galsim.config.GetNFiles">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetNFiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#GetNFiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetNFiles" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetNFiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#GetNFiles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetNFiles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of files that will be made, based on the information in the config dict.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>config</strong> – The configuration dict.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the number of files</p>
@@ -388,7 +398,7 @@ Note: t==0 indicates that this file was skipped.</p>
 
 <dl class="py function">
 <dt id="galsim.config.GetNImagesForFile">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetNImagesForFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">file_num</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#GetNImagesForFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetNImagesForFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetNImagesForFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">file_num</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#GetNImagesForFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetNImagesForFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of images that will be made for the file number file_num, based on the
 information in the config dict.</p>
 <dl class="field-list simple">
@@ -396,6 +406,7 @@ information in the config dict.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – The configuration dict.</p></li>
 <li><p><strong>file_num</strong> – The current file number.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -406,7 +417,7 @@ information in the config dict.</p>
 
 <dl class="py function">
 <dt id="galsim.config.GetNObjForFile">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetNObjForFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">file_num</span></em>, <em class="sig-param"><span class="n">image_num</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#GetNObjForFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetNObjForFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetNObjForFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">file_num</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/output.html#GetNObjForFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetNObjForFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects that will be made for each image built as part of the file file_num,
 which starts at image number image_num, based on the information in the config dict.</p>
 <dl class="field-list simple">
@@ -415,6 +426,7 @@ which starts at image number image_num, based on the information in the config d
 <li><p><strong>config</strong> – The configuration dict.</p></li>
 <li><p><strong>file_num</strong> – The current file number.</p></li>
 <li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -547,7 +559,7 @@ the provided image size.</p>
 
 <dl class="py function">
 <dt id="galsim.config.GetNObjForImage">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetNObjForImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">image_num</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#GetNObjForImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetNObjForImage" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetNObjForImage</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/image.html#GetNObjForImage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetNObjForImage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the number of objects that will be made for the image number image_num based on
 the information in the config dict.</p>
 <dl class="field-list simple">
@@ -555,6 +567,7 @@ the information in the config dict.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – The configuration dict.</p></li>
 <li><p><strong>image_num</strong> – The current image number.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -614,7 +627,7 @@ to bring everything up to that level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – The configuration dict</p></li>
+<li><p><strong>config</strong> – The (base) configuration dict</p></li>
 <li><p><strong>im</strong> – The image onto which to add the sky</p></li>
 </ul>
 </dd>
@@ -628,7 +641,7 @@ to bring everything up to that level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – The configuration dict</p></li>
+<li><p><strong>config</strong> – The (base) configuration dict</p></li>
 <li><p><strong>im</strong> – The image onto which to add the noise</p></li>
 <li><p><strong>current_var</strong> – The current noise variance present in the image already [default: 0]</p></li>
 <li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
@@ -639,11 +652,15 @@ to bring everything up to that level.</p>
 
 <dl class="py function">
 <dt id="galsim.config.CalculateNoiseVariance">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">CalculateNoiseVariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#CalculateNoiseVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.CalculateNoiseVariance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">CalculateNoiseVariance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">full</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#CalculateNoiseVariance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.CalculateNoiseVariance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the noise variance from the noise specified in the noise dict.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>config</strong> – The configuration dict</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The (base) configuration dict</p></li>
+<li><p><strong>full</strong> – If the noise is variable across the image, return the full image with the
+noise variance at every pixel.  Otherwise, just return the value at the center.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>the noise variance</p>
@@ -659,7 +676,7 @@ Typically, this is used for building a weight map, which is typically the invers
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – The configuration dict</p></li>
+<li><p><strong>config</strong> – The (base) configuration dict</p></li>
 <li><p><strong>im</strong> – The image onto which to add the variance values</p></li>
 <li><p><strong>include_obj_var</strong> – Whether to add the variance from the object photons for noise
 models that have a component based on the number of photons.
@@ -676,7 +693,7 @@ contribution to the noise variance.  [default: False]</p></li>
 
 <dl class="py function">
 <dt id="galsim.config.GetSky">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetSky</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#GetSky"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetSky" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetSky</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">full</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/noise.html#GetSky"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetSky" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parse the sky information and return either a float value for the sky level per pixel
 or an image, as needed.</p>
 <p>If an image is required (because wcs is not uniform) then it will use the presence of
@@ -685,13 +702,17 @@ a current image_pos, then we are doing a stamp.  Otherwise a full image.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>config</strong> – The configuration dict</p></li>
+<li><p><strong>config</strong> – The configuration field with the sky specification, which can be either
+base[‘image’] or base[‘image’][‘noise’]</p></li>
 <li><p><strong>base</strong> – The base configuration dict</p></li>
 <li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+<li><p><strong>full</strong> – If the sky level is variable across the image, return the full
+image with the sky at every pixel.  Otherwise, just return the
+sky at the image center.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>sky, either a float value or an Image.</p>
+<dd class="field-even"><p>sky, either a float value or an Image.  (The latter only if full=True)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -725,7 +746,7 @@ automatic sizing.]</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>the tuple (images, current_vars).  Both are lists.</p>
+<dd class="field-even"><p>the tuple (images, current_vars).  Both are themselves tuples.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -762,8 +783,8 @@ the stamp size and position in either image or world coordinates.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> – A configuration dict.</p></li>
-<li><p><strong>xsize</strong> – The size of the stamp in the x-dimension. [may be None]</p></li>
-<li><p><strong>ysize</strong> – The size of the stamp in the y-dimension. [may be None]</p></li>
+<li><p><strong>xsize</strong> – The size of the stamp in the x-dimension. [may be 0 if unknown]</p></li>
+<li><p><strong>ysize</strong> – The size of the stamp in the y-dimension. [may be 0 if unknown]</p></li>
 <li><p><strong>image_pos</strong> – The position of the stamp in image coordinates. [may be None]</p></li>
 <li><p><strong>world_pos</strong> – The position of the stamp in world coordinates. [may be None]</p></li>
 <li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
@@ -829,7 +850,7 @@ e.g. you can add add_to_image=True or setup_only=True if these are helpful.</p>
 </div>
 <div class="section" id="building-objects">
 <h2>Building Objects<a class="headerlink" href="#building-objects" title="Permalink to this headline">¶</a></h2>
-<p>The following functions are relevant to building individual objectss as specified by a config
+<p>The following functions are relevant to building individual objects as specified by a config
 dict:</p>
 <dl class="py function">
 <dt id="galsim.config.BuildGSObject">
@@ -1104,8 +1125,7 @@ used by multiple processes if appropriate. [default: False]</p></li>
 <p>Some input items are relevant for determining the number of objects in a file or image.
 This means we need to have them processed before splitting up jobs over multiple processes
 (since the seed increments based on the number of objects).  So this function builds
-the input items that have a getNObjects() method using the _nobject_only construction
-argument and returns the number of objects.</p>
+the input items that have a getNObjects() method and returns the number of objects.</p>
 <dl class="simple">
 <dt>Caveat: This function tries each input type in galsim.config.valid_input_types in</dt><dd><p>order and returns the nobjects for the first one that works.  If multiple input
 items have nobjects and they are inconsistent, this function may return a
@@ -1160,7 +1180,7 @@ normally would have been by the first level of processing in a <code class="docu
 
 <dl class="py function">
 <dt id="galsim.config.GetInputObj">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetInputObj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_type</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">param_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#GetInputObj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetInputObj" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">GetInputObj</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_type</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">param_name</span></em>, <em class="sig-param"><span class="n">num</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/input.html#GetInputObj"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.GetInputObj" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the input object needed for generating a particular value</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1170,6 +1190,7 @@ normally would have been by the first level of processing in a <code class="docu
 <li><p><strong>base</strong> – The base config dict</p></li>
 <li><p><strong>param_name</strong> – The type of value that we are trying to construct (only used for
 error messages).</p></li>
+<li><p><strong>num</strong> – Which number in the list of this key, if needed. [default: 0]</p></li>
 </ul>
 </dd>
 </dl>
@@ -1767,29 +1788,29 @@ dict of parameters that includes ‘obj_num’.</p></li>
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="hsm.html" class="btn btn-neutral float-right" title="The HSM Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="config_galsim.html" class="btn btn-neutral float-left" title="The galsim Executable" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="hsm.html" class="btn btn-neutral float-right" title="The HSM Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="config_galsim.html" class="btn btn-neutral float-left" title="The galsim Executable" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1797,7 +1818,6 @@ dict of parameters that includes ‘obj_num’.</p></li>
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

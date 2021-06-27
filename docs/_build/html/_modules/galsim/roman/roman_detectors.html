@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.wfirst.wfirst_detectors &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.roman.roman_detectors &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,15 +147,17 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
-      <li>galsim.wfirst.wfirst_detectors</li>
+      <li>galsim.roman.roman_detectors</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -165,8 +172,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <h1>Source code for galsim.wfirst.wfirst_detectors</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+  <h1>Source code for galsim.roman.roman_detectors</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -184,10 +191,10 @@
 <span class="c1">#    and/or other materials provided with the distribution.</span>
 <span class="c1">#</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">@file wfirst_detectors.py</span>
+<span class="sd">@file roman_detectors.py</span>
 
-<span class="sd">Part of the WFIRST module.  This file includes helper routines to apply image defects that are</span>
-<span class="sd">specific to WFIRST.</span>
+<span class="sd">Part of the Roman Space Telescope module.  This file includes helper routines to apply image</span>
+<span class="sd">defects that are specific to Roman.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -198,13 +205,13 @@
 <span class="k">def</span> <span class="nf">NLfunc</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="n">nonlinearity_beta</span><span class="o">*</span><span class="p">(</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
-<div class="viewcode-block" id="applyNonlinearity"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.applyNonlinearity">[docs]</a><span class="k">def</span> <span class="nf">applyNonlinearity</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
+<div class="viewcode-block" id="applyNonlinearity"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyNonlinearity">[docs]</a><span class="k">def</span> <span class="nf">applyNonlinearity</span><span class="p">(</span><span class="n">img</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Applies the WFIRST nonlinearity function to the supplied image ``im``.</span>
+<span class="sd">    Applies the Roman nonlinearity function to the supplied image ``im``.</span>
 
 <span class="sd">    For more information about nonlinearity, see the docstring for galsim.Image.applyNonlinearity.</span>
 <span class="sd">    Unlike that routine, this one does not require any arguments, since it uses the nonlinearity</span>
-<span class="sd">    function defined within the WFIRST module.</span>
+<span class="sd">    function defined within the Roman module.</span>
 
 <span class="sd">    After calling this method, the Image instance ``img`` is transformed to include the</span>
 <span class="sd">    nonlinearity.</span>
@@ -214,14 +221,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">img</span><span class="o">.</span><span class="n">applyNonlinearity</span><span class="p">(</span><span class="n">NLfunc</span><span class="o">=</span><span class="n">NLfunc</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="addReciprocityFailure"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.addReciprocityFailure">[docs]</a><span class="k">def</span> <span class="nf">addReciprocityFailure</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
+<div class="viewcode-block" id="addReciprocityFailure"><a class="viewcode-back" href="../../../roman.html#galsim.roman.addReciprocityFailure">[docs]</a><span class="k">def</span> <span class="nf">addReciprocityFailure</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">reciprocity_alpha</span>
     <span class="n">img</span><span class="o">.</span><span class="n">addReciprocityFailure</span><span class="p">(</span><span class="n">exp_time</span><span class="o">=</span><span class="n">exptime</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">reciprocity_alpha</span><span class="p">,</span> <span class="n">base_flux</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span></div>
 
 <span class="c1"># Note: Formatted doc strings don&#39;t work if put in the normal place.  Unless the function is</span>
 <span class="c1"># actually called, the formatting statement is never executed.  So put it here instead.</span>
 <span class="n">addReciprocityFailure</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">Accounts for the reciprocity failure for the WFIRST directors and includes it in the original</span>
+<span class="s2">Accounts for the reciprocity failure for the Roman directors and includes it in the original</span>
 <span class="s2">Image ``img`` directly.</span>
 
 <span class="s2">For more information about reciprocity failure, see the docstring for</span>
@@ -233,18 +240,18 @@
 <span class="s2">    img:            The Image to be transformed.</span>
 <span class="s2">    exptime:        The exposure time (t) in seconds, which goes into the expression for</span>
 <span class="s2">                    reciprocity failure given in the docstring.  If None, then the routine</span>
-<span class="s2">                    will use the default WFIRST exposure time in galsim.wfirst.exptime.</span>
+<span class="s2">                    will use the default Roman exposure time in galsim.roman.exptime.</span>
 <span class="s2">                    [default: </span><span class="si">{exptime}</span><span class="s2">]</span>
 <span class="s2">&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="applyIPC"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.applyIPC">[docs]</a><span class="k">def</span> <span class="nf">applyIPC</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="s1">&#39;extend&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="applyIPC"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyIPC">[docs]</a><span class="k">def</span> <span class="nf">applyIPC</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="s1">&#39;extend&#39;</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Applies the effect of interpixel capacitance (IPC) to the Image instance.</span>
 
 <span class="sd">    For more information about IPC, see the docstring for galsim.Image.applyIPC.  Unlike that</span>
 <span class="sd">    routine, this one does not need the IPC kernel to be specified, since it uses the IPC kernel</span>
-<span class="sd">    defined within the WFIRST module.</span>
+<span class="sd">    defined within the Roman module.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        img:                The Image to be transformed.</span>
@@ -260,11 +267,11 @@
     <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">ipc_kernel</span>
     <span class="n">img</span><span class="o">.</span><span class="n">applyIPC</span><span class="p">(</span><span class="n">ipc_kernel</span><span class="p">,</span> <span class="n">edge_treatment</span><span class="o">=</span><span class="n">edge_treatment</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="n">fill_value</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="applyPersistence"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.applyPersistence">[docs]</a><span class="k">def</span> <span class="nf">applyPersistence</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fermi&#39;</span><span class="p">):</span>
+<div class="viewcode-block" id="applyPersistence"><a class="viewcode-back" href="../../../roman.html#galsim.roman.applyPersistence">[docs]</a><span class="k">def</span> <span class="nf">applyPersistence</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fermi&#39;</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimValueError</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">,</span><span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;In wfirst.applyPersistence, prev_exposures must be a list of Image instances&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;In roman.applyPersistence, prev_exposures must be a list of Image instances&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;linear&#39;</span><span class="p">:</span>
 
@@ -348,7 +355,7 @@
     <span class="k">return</span> <span class="n">y</span>
 
 <span class="c1"># Again, need to put the doc outside the function to get formatting to work.</span>
-<div class="viewcode-block" id="allDetectorEffects"><a class="viewcode-back" href="../../../wfirst.html#galsim.wfirst.allDetectorEffects">[docs]</a><span class="k">def</span> <span class="nf">allDetectorEffects</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="o">=</span><span class="p">(),</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
+<div class="viewcode-block" id="allDetectorEffects"><a class="viewcode-back" href="../../../roman.html#galsim.roman.allDetectorEffects">[docs]</a><span class="k">def</span> <span class="nf">allDetectorEffects</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="o">=</span><span class="p">(),</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">):</span>
     <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exptime</span><span class="p">,</span> <span class="n">dark_current</span><span class="p">,</span> <span class="n">read_noise</span><span class="p">,</span> <span class="n">gain</span>
     <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">BaseDeviate</span><span class="p">,</span> <span class="n">PoissonNoise</span><span class="p">,</span> <span class="n">DeviateNoise</span><span class="p">,</span> <span class="n">GaussianNoise</span><span class="p">,</span> <span class="n">PoissonDeviate</span>
 
@@ -363,7 +370,7 @@
     <span class="c1"># Quantize: have an integer number of photons in every pixel after inclusion of sky noise.</span>
     <span class="n">img</span><span class="o">.</span><span class="n">quantize</span><span class="p">()</span>
 
-    <span class="c1"># Reciprocity failure (use WFIRST routine, with the supplied exposure time).</span>
+    <span class="c1"># Reciprocity failure (use Roman routine, with the supplied exposure time).</span>
     <span class="n">addReciprocityFailure</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="n">exptime</span><span class="p">)</span>
 
     <span class="c1"># Dark current (use exposure time).</span>
@@ -371,16 +378,16 @@
     <span class="n">dark_noise</span> <span class="o">=</span> <span class="n">DeviateNoise</span><span class="p">(</span><span class="n">PoissonDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">total_dark_current</span><span class="p">))</span>
     <span class="n">img</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">dark_noise</span><span class="p">)</span>
 
-    <span class="c1"># Persistence (use WFIRST H4RG-lo fermi model)</span>
+    <span class="c1"># Persistence (use Roman H4RG-lo fermi model)</span>
     <span class="n">prev_exposures</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">prev_exposures</span><span class="p">)</span>
     <span class="n">applyPersistence</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">prev_exposures</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;fermi&#39;</span><span class="p">)</span>
     <span class="c1"># Update the &#39;prev_exposures&#39; queue.</span>
     <span class="n">prev_exposures</span> <span class="o">=</span> <span class="p">[</span><span class="n">img</span><span class="o">.</span><span class="n">copy</span><span class="p">()]</span> <span class="o">+</span> <span class="n">prev_exposures</span><span class="p">[:]</span>
 
-    <span class="c1"># Nonlinearity (use WFIRST routine).</span>
+    <span class="c1"># Nonlinearity (use Roman routine).</span>
     <span class="n">applyNonlinearity</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 
-    <span class="c1"># IPC (use WFIRST routine).</span>
+    <span class="c1"># IPC (use Roman routine).</span>
     <span class="n">applyIPC</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
 
     <span class="c1"># Read noise.</span>
@@ -396,13 +403,13 @@
     <span class="k">return</span> <span class="n">prev_exposures</span></div>
 
 <span class="n">allDetectorEffects</span><span class="o">.</span><span class="vm">__doc__</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">This utility applies all sources of noise and detector effects for WFIRST that are implemented</span>
+<span class="s2">This utility applies all sources of noise and detector effects for Roman that are implemented</span>
 <span class="s2">in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +</span>
 <span class="s2">background), dark current, and read noise.  The detector effects that are included are</span>
 <span class="s2">reciprocity failure, quantization, persistence, nonlinearity, and interpixel capacitance. It</span>
 <span class="s2">also includes the necessary factors of gain.  In short, the user should be able to pass in an</span>
 <span class="s2">Image with all sources of signal (background plus astronomical objects), and the Image will be</span>
-<span class="s2">modified to include all subsequent steps in the image generation process for WFIRST that are</span>
+<span class="s2">modified to include all subsequent steps in the image generation process for Roman that are</span>
 <span class="s2">implemented in GalSim. However, to include the effect of persistence, the user needs to provide</span>
 <span class="s2">a list of recent exposures (without the readout effects) and the routine</span>
 <span class="s2">returns an updated list of recent exposures.</span>
@@ -413,7 +420,7 @@
 <span class="s2">                    the recent exposure being the first element. [default: ()]</span>
 <span class="s2">    rng:            An optional galsim.BaseDeviate to use for the addition of noise.  If</span>
 <span class="s2">                    None, a new one will be initialized.  [default: None]</span>
-<span class="s2">    exptime:        The exposure time, in seconds.  If None, then the WFIRST default</span>
+<span class="s2">    exptime:        The exposure time, in seconds.  If None, then the Roman default</span>
 <span class="s2">                    exposure time will be used.  [default: </span><span class="si">{exptime}</span><span class="s2">]</span>
 
 <span class="s2">Returns:</span>
@@ -426,20 +433,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -447,7 +459,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Photon Arrays &mdash; GalSim 2.2.4 documentation</title>
+  <title>Photon Arrays &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script src="_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Sensor Models" href="sensor.html" />
@@ -61,7 +64,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -78,6 +81,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -99,7 +103,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="photon.html">Photon Shooting</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Photon Arrays</a></li>
 <li class="toctree-l2"><a class="reference internal" href="sensor.html">Sensor Models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="surface.html">Surface Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="photon_ops.html">Photon Operators</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
@@ -107,7 +111,7 @@
 <li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
@@ -115,6 +119,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -149,11 +154,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="index.html">Docs</a> &raquo;</li>
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="photon.html">Photon Shooting</a> &raquo;</li>
         
@@ -162,7 +169,7 @@
     
       <li class="wy-breadcrumbs-aside">
         
-            
+          
             <a href="_sources/photon_array.rst.txt" rel="nofollow"> View page source</a>
           
         
@@ -186,21 +193,30 @@ a detector.</p>
 <p>A PhotonArray object is not typically constructed directly by the user.  Rather, it is
 typically constructed as the return value of the <a class="reference internal" href="gsobject.html#galsim.GSObject.shoot" title="galsim.GSObject.shoot"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.shoot</span></code></a> method.
 At this point, the photons only have x,y,flux values.</p>
-<p>Then there are a number of <a class="reference internal" href="surface.html#surface-operators"><span class="std std-ref">Surface Operators</span></a>, which perform various modifications to the
-photons such as giving them wavelengths (<a class="reference internal" href="surface.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> or inclination angles
-(<a class="reference internal" href="surface.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a>) or move them around according to the effect of differential chromatic
-refraction (DCR; <a class="reference internal" href="surface.html#galsim.PhotonDCR" title="galsim.PhotonDCR"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonDCR</span></code></a>).</p>
+<p>Then there are a number of <a class="reference internal" href="photon_ops.html#photon-operators"><span class="std std-ref">Photon Operators</span></a>, which perform various modifications to the
+photons such as giving them wavelengths (<a class="reference internal" href="photon_ops.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> or inclination angles
+(<a class="reference internal" href="photon_ops.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a>) or move them around according to the effect of differential chromatic
+refraction (DCR; <a class="reference internal" href="photon_ops.html#galsim.PhotonDCR" title="galsim.PhotonDCR"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonDCR</span></code></a>).</p>
 <p>One could also add functionality to remove some photons due to fringing or vignetting,
 but these are not yet implemented.</p>
 <p>A PhotonArray instance has the following attributes, each of which is a numpy array:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>x</strong> – The incidence x position at the top of the detector</p></li>
-<li><p><strong>y</strong> – The incidence y position at the top of the detector</p></li>
-<li><p><strong>flux</strong> – The flux of the photons</p></li>
-<li><p><strong>dxdz</strong> – The tangent of the inclination angles in the x direction</p></li>
-<li><p><strong>dydz</strong> – The tangent of the inclination angles in the y direction</p></li>
+<li><p><strong>x</strong> – The incidence x position of the photons in image coordinates (pixels),
+typically measured at the top of the detector.</p></li>
+<li><p><strong>y</strong> – The incidence y position of the photons in image coordinates (pixels),
+typically measured at the top of the detector.</p></li>
+<li><p><strong>flux</strong> – The flux of the photons in units of photons. Typically, these are all 1,
+but see the note below for reasons some photons might have flux != 1.</p></li>
+<li><p><strong>dxdz</strong> – The tangent of the inclination angles in the x direction.  Note that we define
+the +z direction as towards towards the dielectric medium of the detector and
+-z as towards vacuum; consequently, a photon with increasing x in time has
+positive dxdz.</p></li>
+<li><p><strong>dydz</strong> – The tangent of the inclination angles in the y direction.  Note that we define
+the +z direction as towards towards the dielectric medium of the detector and
+-z as towards vacuum; consequently, a photon with increasing y in time has
+positive dydz.</p></li>
 <li><p><strong>wavelength  The wavelength of the photons</strong> (<em>in nm</em>)</p></li>
 </ul>
 </dd>
@@ -307,6 +323,32 @@ Photons past the edges of the image are discarded.</p>
 <dt id="galsim.PhotonArray.flux">
 <em class="property">property </em><code class="sig-name descname">flux</code><a class="headerlink" href="#galsim.PhotonArray.flux" title="Permalink to this definition">¶</a></dt>
 <dd><p>The flux of the photons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.PhotonArray.fromArrays">
+<em class="property">classmethod </em><code class="sig-name descname">fromArrays</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">flux</span></em>, <em class="sig-param"><span class="n">dxdz</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dydz</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wavelength</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">is_corr</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#PhotonArray.fromArrays"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PhotonArray.fromArrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a PhotonArray from pre-allocated numpy arrays without any copying.</p>
+<p>The normal PhotonArray constructor always allocates new arrays and copies any provided
+initial values into those new arrays.  This class method, by constrast, constructs a
+PhotonArray that references existing numpy arrays, so that any PhotonOps or photon shooting
+of GSObjects applied to the resulting PhotonArray will also be reflected in the original
+arrays.</p>
+<p>Note that the input arrays must all be the same length, have dtype float64 and be
+c_contiguous.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – X values.</p></li>
+<li><p><strong>y</strong> – X values.</p></li>
+<li><p><strong>flux</strong> – Flux values.</p></li>
+<li><p><strong>dxdz</strong> – Optionally, the initial dxdz values. [default: None]</p></li>
+<li><p><strong>dydz</strong> – Optionally, the initial dydz values. [default: None]</p></li>
+<li><p><strong>wavelength</strong> – Optionally, the initial wavelength values (in nm). [default: None]</p></li>
+<li><p><strong>is_corr</strong> – Whether or not the photons are correlated. [default: False]</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -444,13 +486,15 @@ set for this <a class="reference internal" href="#galsim.PhotonArray" title="gal
 <dl class="py method">
 <dt id="galsim.PhotonArray.x">
 <em class="property">property </em><code class="sig-name descname">x</code><a class="headerlink" href="#galsim.PhotonArray.x" title="Permalink to this definition">¶</a></dt>
-<dd><p>The incidence x position at the top of the detector.</p>
+<dd><p>The incidence x position in image coordinates (pixels), typically at the top of
+the detector.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.PhotonArray.y">
 <em class="property">property </em><code class="sig-name descname">y</code><a class="headerlink" href="#galsim.PhotonArray.y" title="Permalink to this definition">¶</a></dt>
-<dd><p>The incidence y position at the top of the detector.</p>
+<dd><p>The incidence y position in image coordinates (pixels), typically at the top of
+the detector.</p>
 </dd></dl>
 
 </dd></dl>
@@ -462,29 +506,29 @@ set for this <a class="reference internal" href="#galsim.PhotonArray" title="gal
            
           </div>
           <footer>
-  
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="sensor.html" class="btn btn-neutral float-right" title="Sensor Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="photon.html" class="btn btn-neutral float-left" title="Photon Shooting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
+        <a href="sensor.html" class="btn btn-neutral float-right" title="Sensor Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="photon.html" class="btn btn-neutral float-left" title="Photon Shooting" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -492,7 +536,6 @@ set for this <a class="reference internal" href="#galsim.PhotonArray" title="gal
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

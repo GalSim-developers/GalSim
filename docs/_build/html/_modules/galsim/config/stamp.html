@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.config.stamp &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.config.stamp &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.config.stamp</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -196,6 +203,7 @@
 <span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">CheckAllParams</span>
 <span class="kn">from</span> <span class="nn">.noise</span> <span class="kn">import</span> <span class="n">CalculateNoiseVariance</span><span class="p">,</span> <span class="n">AddSky</span><span class="p">,</span> <span class="n">AddNoise</span>
 <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">BuildWCS</span>
+<span class="kn">from</span> <span class="nn">.photon_ops</span> <span class="kn">import</span> <span class="n">BuildPhotonOps</span>
 <span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
 <span class="kn">from</span> <span class="nn">..image</span> <span class="kn">import</span> <span class="n">Image</span><span class="p">,</span> <span class="n">ImageF</span>
 <span class="kn">from</span> <span class="nn">..wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
@@ -205,6 +213,8 @@
 <span class="kn">from</span> <span class="nn">..angle</span> <span class="kn">import</span> <span class="n">arcsec</span>
 <span class="kn">from</span> <span class="nn">..gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
 <span class="kn">from</span> <span class="nn">..convolve</span> <span class="kn">import</span> <span class="n">Convolve</span>
+<span class="kn">from</span> <span class="nn">..chromatic</span> <span class="kn">import</span> <span class="n">ChromaticObject</span>
+<span class="kn">from</span> <span class="nn">..bandpass</span> <span class="kn">import</span> <span class="n">Bandpass</span>
 
 <span class="c1"># This file handles the building of postage stamps to place onto a larger image.</span>
 <span class="c1"># There is only one type of stamp currently, called Basic, which builds a galaxy from</span>
@@ -242,11 +252,15 @@
 <span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        the tuple (images, current_vars).  Both are lists.</span>
+<span class="sd">        the tuple (images, current_vars).  Both are themselves tuples.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;image </span><span class="si">%d</span><span class="s1">: BuildStamps nobjects = </span><span class="si">%d</span><span class="s1">: obj = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span>
                  <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">nobjects</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nobjects</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;No stamps were built, since nstamps == 0.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(),</span> <span class="p">()</span>
 
     <span class="c1"># Figure out how many processes we will use for building the stamps:</span>
     <span class="k">if</span> <span class="n">nobjects</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">&#39;image&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">and</span> <span class="s1">&#39;nproc&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">]:</span>
@@ -374,8 +388,8 @@
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        config:         A configuration dict.</span>
-<span class="sd">        xsize:          The size of the stamp in the x-dimension. [may be None]</span>
-<span class="sd">        ysize:          The size of the stamp in the y-dimension. [may be None]</span>
+<span class="sd">        xsize:          The size of the stamp in the x-dimension. [may be 0 if unknown]</span>
+<span class="sd">        ysize:          The size of the stamp in the y-dimension. [may be 0 if unknown]</span>
 <span class="sd">        image_pos:      The position of the stamp in image coordinates. [may be None]</span>
 <span class="sd">        world_pos:      The position of the stamp in world coordinates. [may be None]</span>
 <span class="sd">        logger:         If given, a logger object to log progress. [default: None]</span>
@@ -387,9 +401,9 @@
 
 
 <span class="c1"># Ignore these when parsing the parameters for specific stamp types:</span>
-<span class="n">stamp_ignore</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;xsize&#39;</span><span class="p">,</span> <span class="s1">&#39;ysize&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span>
+<span class="n">stamp_ignore</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;xsize&#39;</span><span class="p">,</span> <span class="s1">&#39;ysize&#39;</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">,</span> <span class="s1">&#39;image_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;world_pos&#39;</span><span class="p">,</span> <span class="s1">&#39;sky_pos&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="s1">&#39;retry_failures&#39;</span><span class="p">,</span> <span class="s1">&#39;gsparams&#39;</span><span class="p">,</span> <span class="s1">&#39;draw_method&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;poisson_flux&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;n_photons&#39;</span><span class="p">,</span> <span class="s1">&#39;max_extra_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;poisson_flux&#39;</span><span class="p">,</span> <span class="s1">&#39;photon_ops&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="s1">&#39;reject&#39;</span><span class="p">,</span> <span class="s1">&#39;min_flux_frac&#39;</span><span class="p">,</span> <span class="s1">&#39;min_snr&#39;</span><span class="p">,</span> <span class="s1">&#39;max_snr&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;quick_skip&#39;</span><span class="p">,</span> <span class="s1">&#39;obj_rng&#39;</span><span class="p">,</span> <span class="s1">&#39;index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;rng_num&#39;</span><span class="p">]</span>
 
@@ -417,7 +431,8 @@
     <span class="n">stamp</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;stamp&#39;</span><span class="p">]</span>
     <span class="n">stamp_type</span> <span class="o">=</span> <span class="n">stamp</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">stamp_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_stamp_types</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid stamp.type.&quot;</span><span class="p">,</span> <span class="n">stamp_type</span><span class="p">,</span> <span class="n">valid_stamp_types</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Invalid stamp.type.&quot;</span><span class="p">,</span> <span class="n">stamp_type</span><span class="p">,</span>
+                                     <span class="nb">list</span><span class="p">(</span><span class="n">valid_stamp_types</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
     <span class="n">builder</span> <span class="o">=</span> <span class="n">valid_stamp_types</span><span class="p">[</span><span class="n">stamp_type</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">builder</span><span class="o">.</span><span class="n">quickSkip</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
@@ -491,6 +506,8 @@
 
             <span class="c1"># Draw the object on the postage stamp</span>
             <span class="n">im</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="c1"># Store the final version of the current profile for reference.</span>
+            <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_prof&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prof</span>
 
             <span class="c1"># Update the drawn image according to the SNR if desired.</span>
             <span class="n">scale_factor</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">getSNRScale</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
@@ -522,7 +539,7 @@
             <span class="n">current_var</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">whiten</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">im</span><span class="p">,</span> <span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">current_var</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: whitening noise brought current var to </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
-                                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">current_var</span><span class="p">)</span>
+                                <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">current_var</span><span class="p">)</span>
 
             <span class="c1"># Sometimes, depending on the image type, we go on to do the rest of the noise as well.</span>
             <span class="k">if</span> <span class="n">do_noise</span><span class="p">:</span>
@@ -531,7 +548,7 @@
         <span class="k">except</span> <span class="n">SkipThisObject</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span> <span class="o">!=</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Caught SkipThisObject: e = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">,</span><span class="n">e</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Skipping object </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">obj_num</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Skipping object </span><span class="si">%d</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">obj_num</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">msg</span><span class="p">)</span>
             <span class="c1"># If xsize, ysize != 0, then this makes a blank stamp for this object.</span>
             <span class="c1"># Otherwise, it&#39;s just None here.</span>
             <span class="n">im</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">makeStamp</span><span class="p">(</span><span class="n">stamp</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
@@ -621,8 +638,14 @@
     <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
     <span class="k">if</span> <span class="s1">&#39;wcs&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="s1">&#39;scale&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;wcs&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">local</span><span class="p">(</span><span class="n">image_pos</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_pos&#39;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">and</span> <span class="s1">&#39;rng&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="s2">&quot;method=&#39;phot&#39;&quot;</span><span class="p">)</span>
+    <span class="n">sensor</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sensor&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">or</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;rng&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="c1"># Note: use the image.noise rng_num, in case stamp is doing a non-standard cadence.</span>
+        <span class="c1"># The cadence specified in the noise field is what to use for photon shooting.</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;image&#39;</span><span class="p">,{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;noise&#39;</span><span class="p">,{})</span>
+        <span class="n">noise</span> <span class="o">=</span> <span class="n">noise</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="p">{}</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">noise</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="s2">&quot;method=&#39;phot&#39;&quot;</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span>
 
     <span class="c1"># Check validity of extra phot options:</span>
     <span class="n">max_extra_noise</span> <span class="o">=</span> <span class="kc">None</span>
@@ -656,17 +679,32 @@
         <span class="n">max_extra_noise</span> <span class="o">*=</span> <span class="n">noise_var</span>
         <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;max_extra_noise&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">max_extra_noise</span>
 
+    <span class="n">bandpass</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bandpass&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bandpass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;bandpass&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bandpass</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">ChromaticObject</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Drawing chromatic object requires specifying bandpass&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;photon_ops&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;photon_ops&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">BuildPhotonOps</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;photon_ops&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sensor</span><span class="o">.</span><span class="n">updateRNG</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;sensor&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sensor</span>
+
     <span class="k">if</span> <span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
-        <span class="c1"># Don&#39;t output the full image array.  Use str(image) for that kwarg.</span>
-        <span class="n">alt_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span><span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">],</span><span class="n">Image</span><span class="p">)</span> <span class="k">else</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+        <span class="c1"># Don&#39;t output the full image array.  Use str(image) for that kwarg.  And Bandpass.</span>
+        <span class="n">alt_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">],(</span><span class="n">Image</span><span class="p">,</span><span class="n">Bandpass</span><span class="p">))</span>
+                               <span class="k">else</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
                            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">])</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: drawImage kwargs = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">alt_kwargs</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: prof = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">prof</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">image</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="c1"># pragma: no cover</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: prof = </span><span class="si">%r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">prof</span><span class="p">)</span>
         <span class="k">raise</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: added_flux = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">image</span><span class="o">.</span><span class="n">added_flux</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">image</span></div>
 
 <div class="viewcode-block" id="ParseWorldPos"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ParseWorldPos">[docs]</a><span class="k">def</span> <span class="nf">ParseWorldPos</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
@@ -706,7 +744,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">param</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">param_name</span><span class="p">]</span>
     <span class="n">wcs</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;wcs&#39;</span><span class="p">,</span> <span class="n">PixelScale</span><span class="p">(</span><span class="mf">1.0</span><span class="p">))</span> <span class="c1"># should be here, but just in case...</span>
-    <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isCelestial</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">_isCelestial</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
@@ -811,7 +849,7 @@
 
         <span class="c1"># Add 1 to the seed here so the first object has a different rng than the file or image.</span>
         <span class="n">seed</span> <span class="o">=</span> <span class="n">SetupConfigRNG</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">seed_offset</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: seed = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">seed</span><span class="p">)</span></div>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: seed = </span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">seed</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="StampBuilder.locateStamp"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.locateStamp">[docs]</a>    <span class="k">def</span> <span class="nf">locateStamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">xsize</span><span class="p">,</span> <span class="n">ysize</span><span class="p">,</span> <span class="n">image_pos</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Determine where and how large the stamp should be.</span>
@@ -832,8 +870,8 @@
 
 <span class="sd">        @param config       The configuration dict for the stamp field.</span>
 <span class="sd">        @param base         The base configuration dict.</span>
-<span class="sd">        @param xsize        The size of the stamp in the x-dimension. [may be None]</span>
-<span class="sd">        @param ysize        The size of the stamp in the y-dimension. [may be None]</span>
+<span class="sd">        @param xsize        The size of the stamp in the x-dimension. [may be 0 if unknown]</span>
+<span class="sd">        @param ysize        The size of the stamp in the y-dimension. [may be 0 if unknown]</span>
 <span class="sd">        @param image_pos    The position of the stamp in image coordinates. [may be None]</span>
 <span class="sd">        @param world_pos    The position of the stamp in world coordinates. [may be None]</span>
 <span class="sd">        @param logger       A logger object to log progress.</span>
@@ -848,30 +886,33 @@
         <span class="k">if</span> <span class="n">xsize</span><span class="p">:</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_xsize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xsize</span>
         <span class="k">if</span> <span class="n">ysize</span><span class="p">:</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_ysize&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ysize</span>
 
+        <span class="c1"># If we have either image_pos or world_pos, calculate the other.</span>
         <span class="k">if</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Calculate and save the position relative to the image center</span>
-            <span class="k">if</span> <span class="n">wcs</span><span class="o">.</span><span class="n">isCelestial</span><span class="p">():</span>
-                <span class="c1"># Wherever we use the world position, we expect a Euclidean position, not a</span>
-                <span class="c1"># CelestialCoord.  So if it is the latter, project it onto a tangent plane at the</span>
-                <span class="c1"># image center.</span>
-                <span class="n">world_center</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">]))</span>
-                <span class="n">world_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">,</span> <span class="n">project_center</span><span class="o">=</span><span class="n">world_center</span><span class="p">,</span>
-                                                <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">world_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
-
+            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="c1"># Calculate and save the position relative to the image center</span>
             <span class="n">image_pos</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">world_pos</span><span class="p">)</span>
 
-        <span class="c1"># Wherever we use the world position, we expect a Euclidean position, not a</span>
-        <span class="c1"># CelestialCoord.  So if it is the latter, project it onto a tangent plane at the</span>
-        <span class="c1"># image center.</span>
+        <span class="c1"># If the world_pos is a CelestialCoord, then we also call it sky_pos.</span>
+        <span class="c1"># If the world_pos is not celestial, or the user wants to override it for some reason,</span>
+        <span class="c1"># then the user may optionally define a sky_pos value, which gets saved as base[&#39;sky_pos&#39;].</span>
+        <span class="c1"># This may be useful for things that need to know where in the sky the pointing is,</span>
+        <span class="c1"># even if the WCS is not a CelestialWCS.</span>
+        <span class="k">if</span> <span class="s1">&#39;sky_pos&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;sky_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;sky_pos&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">):</span>
+            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;sky_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">world_pos</span>
+
+        <span class="c1"># Sometimes we need a &quot;world&quot; position as flat position, rather than a CelestialCoord.</span>
+        <span class="c1"># This is called uv_pos.  If the WCS is a EuclideanWCS, then uv_pos = world_pos.</span>
+        <span class="c1"># If the WCS is a CelestialWCS, then sky_pos = world_pos, and we calculate uv_pos as</span>
+        <span class="c1"># the tangent-plane projection.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">):</span>
             <span class="c1"># Then project this position relative to the image center.</span>
             <span class="n">world_center</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;world_center&#39;</span><span class="p">,</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_center&#39;</span><span class="p">]))</span>
             <span class="n">u</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">world_center</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">&#39;gnomonic&#39;</span><span class="p">)</span>
-            <span class="n">world_pos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">u</span><span class="o">/</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">v</span><span class="o">/</span><span class="n">arcsec</span><span class="p">)</span>
+            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;uv_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">u</span><span class="o">/</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">v</span><span class="o">/</span><span class="n">arcsec</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;uv_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">world_pos</span>
 
         <span class="k">if</span> <span class="n">image_pos</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># The image_pos refers to the location of the true center of the image, which is</span>
@@ -903,12 +944,12 @@
         <span class="n">base</span><span class="p">[</span><span class="s1">&#39;world_pos&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">world_pos</span>
 
         <span class="k">if</span> <span class="n">xsize</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: xsize,ysize = </span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">xsize</span><span class="p">,</span><span class="n">ysize</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: image_pos = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">image_pos</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: xsize,ysize = </span><span class="si">%s</span><span class="s1">,</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">xsize</span><span class="p">,</span><span class="n">ysize</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: image_pos = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">image_pos</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">world_pos</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: world_pos = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">world_pos</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: world_pos = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">world_pos</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">stamp_center</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_center = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">stamp_center</span><span class="p">)</span></div>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_center = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">stamp_center</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="StampBuilder.getSkip"><a class="viewcode-back" href="../../../config_stamp.html#galsim.config.StampBuilder.getSkip">[docs]</a>    <span class="k">def</span> <span class="nf">getSkip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initial check of whether to skip this object based on the stamp.skip field.</span>
@@ -922,7 +963,7 @@
         <span class="k">if</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">skip</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;obj </span><span class="si">%d</span><span class="s2">: stamp.skip = True&quot;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">])</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;obj </span><span class="si">%d</span><span class="s2">: stamp.skip = True&quot;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">skip</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">skip</span></div>
@@ -1032,7 +1073,7 @@
         <span class="n">offset</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">]</span>
         <span class="k">if</span> <span class="s1">&#39;offset&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">offset</span> <span class="o">+=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;offset&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_offset = </span><span class="si">%s</span><span class="s1">, offset = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: stamp_offset = </span><span class="si">%s</span><span class="s1">, offset = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span>
                      <span class="n">base</span><span class="p">[</span><span class="s1">&#39;stamp_offset&#39;</span><span class="p">],</span> <span class="n">offset</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">offset</span></div>
 
@@ -1075,7 +1116,7 @@
             <span class="n">overlap</span> <span class="o">=</span> <span class="n">bounds</span> <span class="o">&amp;</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;current_image&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">bounds</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">overlap</span><span class="o">.</span><span class="n">isDefined</span><span class="p">():</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: skip drawing object because its image will be entirely off &#39;</span>
-                            <span class="s1">&#39;the main image.&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">])</span>
+                            <span class="s1">&#39;the main image.&#39;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
                 <span class="k">return</span> <span class="kc">True</span>
 
         <span class="k">return</span> <span class="kc">False</span></div>
@@ -1169,11 +1210,6 @@
             <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;Need to specify noise level when using </span><span class="si">%s</span><span class="s2">.signal_to_noise&quot;</span><span class="o">%</span><span class="n">key</span><span class="p">)</span>
         <span class="n">sn_target</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;signal_to_noise&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># In case noise variance is an image</span>
-            <span class="n">noise_var</span> <span class="o">=</span> <span class="n">noise_var</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-            <span class="k">pass</span>
 
         <span class="c1"># Now determine what flux we need to get our desired S/N</span>
         <span class="c1"># There are lots of definitions of S/N, but here is the one used by Great08</span>
@@ -1249,7 +1285,7 @@
 
         <span class="k">if</span> <span class="s1">&#39;reject&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;reject&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: reject evaluated to True&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">])</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: reject evaluated to True&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
                 <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="s1">&#39;min_flux_frac&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
@@ -1263,7 +1299,7 @@
                          <span class="n">measured_flux</span> <span class="o">/</span> <span class="n">expected_flux</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">measured_flux</span> <span class="o">&lt;</span> <span class="n">min_flux_frac</span> <span class="o">*</span> <span class="n">expected_flux</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Object </span><span class="si">%d</span><span class="s1">: Measured flux = </span><span class="si">%f</span><span class="s1"> &lt; </span><span class="si">%s</span><span class="s1"> * </span><span class="si">%f</span><span class="s1">.&#39;</span><span class="p">,</span>
-                               <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span> <span class="n">measured_flux</span><span class="p">,</span> <span class="n">min_flux_frac</span><span class="p">,</span> <span class="n">expected_flux</span><span class="p">)</span>
+                               <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">measured_flux</span><span class="p">,</span> <span class="n">min_flux_frac</span><span class="p">,</span> <span class="n">expected_flux</span><span class="p">)</span>
                 <span class="k">return</span> <span class="kc">True</span>
         <span class="k">if</span> <span class="s1">&#39;min_snr&#39;</span> <span class="ow">in</span> <span class="n">config</span> <span class="ow">or</span> <span class="s1">&#39;max_snr&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prof</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
@@ -1278,13 +1314,13 @@
                 <span class="n">min_snr</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;min_snr&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">snr</span> <span class="o">&lt;</span> <span class="n">min_snr</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Object </span><span class="si">%d</span><span class="s1">: Measured snr = </span><span class="si">%f</span><span class="s1"> &lt; </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="p">,</span>
-                                   <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span> <span class="n">snr</span><span class="p">,</span> <span class="n">min_snr</span><span class="p">)</span>
+                                   <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">snr</span><span class="p">,</span> <span class="n">min_snr</span><span class="p">)</span>
                     <span class="k">return</span> <span class="kc">True</span>
             <span class="k">if</span> <span class="s1">&#39;max_snr&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
                 <span class="n">max_snr</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;max_snr&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">if</span> <span class="n">snr</span> <span class="o">&gt;</span> <span class="n">max_snr</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Object </span><span class="si">%d</span><span class="s1">: Measured snr = </span><span class="si">%f</span><span class="s1"> &gt; </span><span class="si">%s</span><span class="s1">.&#39;</span><span class="p">,</span>
-                                   <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span> <span class="n">snr</span><span class="p">,</span> <span class="n">max_snr</span><span class="p">)</span>
+                                   <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">snr</span><span class="p">,</span> <span class="n">max_snr</span><span class="p">)</span>
                     <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
@@ -1361,20 +1397,25 @@
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1382,7 +1423,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {

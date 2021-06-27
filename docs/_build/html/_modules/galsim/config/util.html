@@ -1,39 +1,42 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.config.util &mdash; GalSim 2.2.4 documentation</title>
+  <title>galsim.config.util &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
   
 
   
   
-  
+
   
 
   
-  <script type="text/javascript" src="../../../_static/js/modernizr.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/language_data.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="../../../_static/js/theme.js"></script>
 
     
-
-  
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
@@ -59,7 +62,7 @@
             
             
               <div class="version">
-                2.2
+                2.3
               </div>
             
           
@@ -76,6 +79,7 @@
           
         </div>
 
+        
         <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
             
@@ -100,7 +104,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../wfirst.html">The WFIRST Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
 </ul>
@@ -108,6 +112,7 @@
             
           
         </div>
+        
       </div>
     </nav>
 
@@ -142,11 +147,13 @@
 
 
 
+
+
 <div role="navigation" aria-label="breadcrumbs navigation">
 
   <ul class="wy-breadcrumbs">
     
-      <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
         
           <li><a href="../../index.html">Module code</a> &raquo;</li>
         
@@ -166,7 +173,7 @@
            <div itemprop="articleBody">
             
   <h1>Source code for galsim.config.util</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2012-2019 by the GalSim developers team on GitHub</span>
+<span></span><span class="c1"># Copyright (c) 2012-2021 by the GalSim developers team on GitHub</span>
 <span class="c1"># https://github.com/GalSim-developers</span>
 <span class="c1">#</span>
 <span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
@@ -186,11 +193,17 @@
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">BaseManager</span>
 
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">SimpleGenerator</span>
 <span class="kn">from</span> <span class="nn">..random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
 <span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+
+<span class="n">max_queue_size</span> <span class="o">=</span> <span class="mi">32767</span>  <span class="c1"># This is where multiprocessing.Queue starts to have trouble.</span>
+                        <span class="c1"># We make it a settable parameter here really for unit testing.</span>
+                        <span class="c1"># I don&#39;t think there is any reason for end users to want to set this.</span>
 
 <div class="viewcode-block" id="MergeConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MergeConfig">[docs]</a><span class="k">def</span> <span class="nf">MergeConfig</span><span class="p">(</span><span class="n">config1</span><span class="p">,</span> <span class="n">config2</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -236,19 +249,24 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">import</span> <span class="nn">yaml</span>
 
-    <span class="c1"># cf. coldfix&#39;s answer here:</span>
-    <span class="c1"># http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts</span>
-    <span class="k">class</span> <span class="nc">OrderedLoader</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">):</span>
-        <span class="k">pass</span>
-    <span class="k">def</span> <span class="nf">construct_mapping</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
-        <span class="n">loader</span><span class="o">.</span><span class="n">flatten_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">construct_pairs</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
-    <span class="n">OrderedLoader</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span>
-        <span class="n">yaml</span><span class="o">.</span><span class="n">resolver</span><span class="o">.</span><span class="n">BaseResolver</span><span class="o">.</span><span class="n">DEFAULT_MAPPING_TAG</span><span class="p">,</span>
-        <span class="n">construct_mapping</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">6</span><span class="p">):</span>
+        <span class="c1"># cf. coldfix&#39;s answer here:</span>
+        <span class="c1"># http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts</span>
+        <span class="k">class</span> <span class="nc">OrderedLoader</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">def</span> <span class="nf">construct_mapping</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+            <span class="n">loader</span><span class="o">.</span><span class="n">flatten_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">loader</span><span class="o">.</span><span class="n">construct_pairs</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+        <span class="n">OrderedLoader</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span>
+            <span class="n">yaml</span><span class="o">.</span><span class="n">resolver</span><span class="o">.</span><span class="n">BaseResolver</span><span class="o">.</span><span class="n">DEFAULT_MAPPING_TAG</span><span class="p">,</span>
+            <span class="n">construct_mapping</span><span class="p">)</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">OrderedLoader</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># In python 3.6 and later, regular dicts are ordered, so just use that.</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">all_config</span> <span class="o">=</span> <span class="p">[</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load_all</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">OrderedLoader</span><span class="p">)</span> <span class="p">]</span>
+        <span class="n">all_config</span> <span class="o">=</span> <span class="p">[</span> <span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load_all</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span> <span class="n">loader</span><span class="p">)</span> <span class="p">]</span>
 
     <span class="c1"># If there is only 1 yaml document, then it is of course used for the configuration.</span>
     <span class="c1"># If there are multiple yaml documents, then the first one defines a common starting</span>
@@ -338,7 +356,8 @@
     <span class="c1"># Recurse to lower levels, if any</span>
     <span class="n">force</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># If lower levels removed anything, then force removal at this level as well.</span>
     <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span> <span class="k">continue</span>  <span class="c1"># These are our own implementation details, not the normal dict.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;_&#39;</span><span class="p">:</span>
+            <span class="k">continue</span>  <span class="c1"># These are our own implementation details, not the normal dict.</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span><span class="nb">list</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span>
                 <span class="n">force</span> <span class="o">=</span> <span class="n">RemoveCurrent</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">keep_safe</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">index_key</span><span class="p">)</span> <span class="ow">or</span> <span class="n">force</span>
@@ -375,19 +394,52 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.process</span> <span class="kn">import</span> <span class="n">top_level_fields</span><span class="p">,</span> <span class="n">rng_fields</span>
 
-    <span class="kn">import</span> <span class="nn">copy</span>
-    <span class="n">config1</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="c1"># Start with a shallow copy of the regular things that aren&#39;t one of our special fields.</span>
+    <span class="c1"># Make sure not to copy the input_manager if there is one, since using it isn&#39;t thread safe.</span>
+    <span class="n">galsim_fields</span> <span class="o">=</span> <span class="n">top_level_fields</span> <span class="o">+</span> <span class="n">rng_fields</span>
+    <span class="n">config1</span> <span class="o">=</span> <span class="p">{</span> <span class="n">k</span><span class="p">:</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">galsim_fields</span> <span class="ow">and</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;_input_manager&#39;</span> <span class="p">}</span>
 
-    <span class="c1"># Make sure the input_manager isn&#39;t in the copy</span>
-    <span class="n">config1</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_input_manager&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">recursive_copy</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+        <span class="c1"># copy the given dict, skipping any current leading underscore fields.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># Use type(d) rather than dict comprehension, since in python 2.7, 3.5, this may</span>
+            <span class="c1"># be an OrderedDict, and we want to preserve that.</span>
+            <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">d</span><span class="p">)([(</span><span class="n">k</span><span class="p">,</span><span class="n">recursive_copy</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)])</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">recursive_copy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">d</span>
 
-    <span class="c1"># Now deepcopy all the regular config fields to make sure things like current don&#39;t</span>
-    <span class="c1"># get clobbered by two processes writing to the same dict.  Also the rngs.</span>
-    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">top_level_fields</span> <span class="o">+</span> <span class="n">rng_fields</span><span class="p">:</span>
+    <span class="c1"># Now copy all the regular config fields to make sure things like current don&#39;t</span>
+    <span class="c1"># get clobbered by two processes writing to the same dict.  Keep any current items</span>
+    <span class="c1"># that are already here, since they should be safe, but remove leading underscore items.</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">top_level_fields</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">config1</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">recursive_copy</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
+
+    <span class="c1"># And deep copy any rng fields:</span>
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">rng_fields</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
             <span class="n">config1</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">field</span><span class="p">])</span>
 
     <span class="k">return</span> <span class="n">config1</span></div>
+
+<span class="k">class</span> <span class="nc">SafeManager</span><span class="p">(</span><span class="n">BaseManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;There are a few places we need a Manager object.  This one uses the &#39;fork&#39; context,</span>
+<span class="sd">    rather than whatever the default is on your system (which may be fork or may be spawn).</span>
+
+<span class="sd">    Starting in python 3.8, the spawn context started becoming more popular.  It&#39;s supposed to</span>
+<span class="sd">    be safer, but it wants to pickle a lot of things that aren&#39;t picklable, so it doesn&#39;t work.</span>
+<span class="sd">    Using this as the base class instead, should work.  And doing it it one place means that we</span>
+<span class="sd">    only have one place to change this is there is a different strategy that works better.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">get_context</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">ctx</span><span class="o">=</span><span class="n">get_context</span><span class="p">(</span><span class="s1">&#39;fork&#39;</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
 
 <div class="viewcode-block" id="GetLoggerProxy"><a class="viewcode-back" href="../../../config_process.html#galsim.config.GetLoggerProxy">[docs]</a><span class="k">def</span> <span class="nf">GetLoggerProxy</span><span class="p">(</span><span class="n">logger</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Make a proxy for the given logger that can be passed into multiprocessing Processes</span>
@@ -399,9 +451,8 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        a proxy for the given logger</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">BaseManager</span>
     <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
-        <span class="k">class</span> <span class="nc">LoggerManager</span><span class="p">(</span><span class="n">BaseManager</span><span class="p">):</span> <span class="k">pass</span>
+        <span class="k">class</span> <span class="nc">LoggerManager</span><span class="p">(</span><span class="n">SafeManager</span><span class="p">):</span> <span class="k">pass</span>
         <span class="n">logger_generator</span> <span class="o">=</span> <span class="n">SimpleGenerator</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
         <span class="n">LoggerManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;logger&#39;</span><span class="p">,</span> <span class="n">callable</span> <span class="o">=</span> <span class="n">logger_generator</span><span class="p">)</span>
         <span class="n">logger_manager</span> <span class="o">=</span> <span class="n">LoggerManager</span><span class="p">()</span>
@@ -429,36 +480,40 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span><span class="o">.</span><span class="n">logger</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logger</span>
+        <span class="c1"># When multiprocessing, it is faster to check if the level is enabled locally, rather than</span>
+        <span class="c1"># communicating over the pipe to ask the base logger if it isEnabledFor a given level.</span>
+        <span class="c1"># If the logger is None, use more than the top logging level (CRITICAL).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">getEffectiveLevel</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="k">else</span> <span class="n">logging</span><span class="o">.</span><span class="n">CRITICAL</span><span class="o">+</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">getEffectiveLevel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span>
 
     <span class="k">def</span> <span class="fm">__bool__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
     <span class="n">__nonzero__</span> <span class="o">=</span> <span class="fm">__bool__</span>
 
     <span class="k">def</span> <span class="nf">debug</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">warning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lvl</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">lvl</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">lvl</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">level</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">isEnabledFor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span></div>
+    <span class="k">def</span> <span class="nf">isEnabledFor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">level</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span></div>
 
 
 <div class="viewcode-block" id="UpdateNProc"><a class="viewcode-back" href="../../../config_process.html#galsim.config.UpdateNProc">[docs]</a><span class="k">def</span> <span class="nf">UpdateNProc</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">ntot</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -487,7 +542,7 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;ncpu = </span><span class="si">%d</span><span class="s2">.&quot;</span><span class="p">,</span><span class="n">nproc</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
             <span class="k">raise</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;nproc &lt;= 0, but unable to determine number of cpus.&quot;</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Caught error: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using single process&quot;</span><span class="p">)</span>
@@ -762,6 +817,40 @@
         <span class="n">SetInConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
 
+<span class="k">class</span> <span class="nc">single_threaded</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A context manager that turns off (or down) OpenMP threading e.g. during multiprocessing.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        num_threads:    The number of threads you want during the context [default: 1]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Get the current number of threads here, so we can set it back when we&#39;re done.</span>
+        <span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">get_omp_threads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">orig_num_threads</span> <span class="o">=</span> <span class="n">get_omp_threads</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">temp_num_threads</span> <span class="o">=</span> <span class="n">num_threads</span>
+
+        <span class="c1"># If threadpoolctl is installed, use that too, since it will set blas libraries to</span>
+        <span class="c1"># be single threaded too. This makes it so you don&#39;t need to set the environment</span>
+        <span class="c1"># variables OPENBLAS_NUM_THREAD=1 or MKL_NUM_THREADS=1, etc.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">threadpoolctl</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tpl</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># pragma: no cover  (Not installed on Travis currently.)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tpl</span> <span class="o">=</span> <span class="n">threadpoolctl</span><span class="o">.</span><span class="n">threadpool_limits</span><span class="p">(</span><span class="n">num_threads</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">set_omp_threads</span>
+        <span class="n">set_omp_threads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">temp_num_threads</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">set_omp_threads</span>
+        <span class="n">set_omp_threads</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">orig_num_threads</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tpl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tpl</span><span class="o">.</span><span class="n">unregister</span><span class="p">()</span>
+
+
 <div class="viewcode-block" id="MultiProcess"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MultiProcess">[docs]</a><span class="k">def</span> <span class="nf">MultiProcess</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">job_func</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">done_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">except_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">except_abort</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A helper function for performing a task using multiprocessing.</span>
@@ -874,13 +963,14 @@
     <span class="k">if</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using </span><span class="si">%d</span><span class="s2"> processes for </span><span class="si">%s</span><span class="s2"> processing&quot;</span><span class="p">,</span><span class="n">nproc</span><span class="p">,</span><span class="n">item</span><span class="p">)</span>
 
-        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span><span class="p">,</span> <span class="n">current_process</span>
-        <span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">BaseManager</span>
-
-        <span class="c1"># Send the tasks to the task_queue.</span>
-        <span class="n">task_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
-            <span class="n">task_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">current_process</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">0</span><span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span><span class="p">,</span> <span class="n">Queue</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">get_context</span>
+            <span class="n">ctx</span> <span class="o">=</span> <span class="n">get_context</span><span class="p">(</span><span class="s1">&#39;fork&#39;</span><span class="p">)</span>
+            <span class="n">Process</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Process</span>
+            <span class="n">Queue</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">Queue</span>
 
         <span class="c1"># Temporarily mark that we are multiprocessing, so we know not to start another</span>
         <span class="c1"># round of multiprocessing later.</span>
@@ -893,73 +983,98 @@
         <span class="c1"># processes can emit logging information safely.</span>
         <span class="n">logger_proxy</span> <span class="o">=</span> <span class="n">GetLoggerProxy</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
 
-        <span class="c1"># Run the tasks.</span>
-        <span class="c1"># Each Process command starts up a parallel process that will keep checking the queue</span>
-        <span class="c1"># for a new task. If there is one there, it grabs it and does it. If not, it waits</span>
-        <span class="c1"># until there is one to grab. When it finds a &#39;STOP&#39;, it shuts down.</span>
-        <span class="n">results_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">()</span>
-        <span class="n">p_list</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
-            <span class="c1"># The process name is actually the default name that Process would generate on its</span>
-            <span class="c1"># own for the first time we do this. But after that, if we start another round of</span>
-            <span class="c1"># multiprocessing, then it just keeps incrementing the numbers, rather than starting</span>
-            <span class="c1"># over at Process-1.  As far as I can tell, it&#39;s not actually spawning more</span>
-            <span class="c1"># processes, so for the sake of the logging output, we name the processes explicitly.</span>
-            <span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">worker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger_proxy</span><span class="p">),</span>
-                        <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Process-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
-            <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
-            <span class="n">p_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="c1"># We need to set the number of OpenMP threads to 1 during multiprocessing, otherwise</span>
+        <span class="c1"># it may spawn e.g. 64 threads in each of 64 processes, which tends to be bad.</span>
+        <span class="k">with</span> <span class="n">single_threaded</span><span class="p">():</span>
 
-        <span class="n">raise_error</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="c1"># Send the tasks to the task_queue.</span>
+            <span class="n">ntasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ntasks</span> <span class="o">&gt;</span> <span class="n">max_queue_size</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;len(tasks) = </span><span class="si">%d</span><span class="s2"> is more than max_queue_size = </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span>
+                            <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">),</span><span class="n">max_queue_size</span><span class="p">)</span>
+                <span class="n">njoin</span> <span class="o">=</span> <span class="p">(</span><span class="n">ntasks</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">max_queue_size</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">new_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">ntasks</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="n">njoin</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">[</span><span class="n">job</span> <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">[</span><span class="n">njoin</span><span class="o">*</span><span class="n">k</span> <span class="p">:</span> <span class="nb">min</span><span class="p">(</span><span class="n">njoin</span><span class="o">*</span><span class="p">(</span><span class="n">k</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">ntasks</span><span class="p">)]</span> <span class="k">for</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">task</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">new_size</span><span class="p">)</span>
+                <span class="p">]</span>
+                <span class="n">ntasks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tasks</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Joined in groups of </span><span class="si">%d</span><span class="s2">: new len(tasks) = </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">njoin</span><span class="p">,</span><span class="n">ntasks</span><span class="p">)</span>
+            <span class="n">task_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="n">ntasks</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">tasks</span><span class="p">:</span>
+                <span class="n">task_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="c1"># In the meanwhile, the main process keeps going.  We pull each set of images off of the</span>
-            <span class="c1"># results_queue and put them in the appropriate place in the lists.</span>
-            <span class="c1"># This loop is happening while the other processes are still working on their tasks.</span>
-            <span class="n">results</span> <span class="o">=</span> <span class="p">[</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">njobs</span><span class="p">)</span> <span class="p">]</span>
-            <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">njobs</span><span class="p">):</span>
-                <span class="n">res</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">proc</span> <span class="o">=</span> <span class="n">results_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
-                    <span class="c1"># res is really the exception, e</span>
-                    <span class="c1"># t is really the traceback</span>
-                    <span class="c1"># k is the index for the job that failed</span>
-                    <span class="k">if</span> <span class="n">except_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
-                        <span class="n">except_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="n">except_abort</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>
-                        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
-                            <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-                        <span class="n">raise_error</span> <span class="o">=</span> <span class="n">res</span>
-                        <span class="k">break</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># The normal case</span>
-                    <span class="k">if</span> <span class="n">done_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
-                        <span class="n">done_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
-                    <span class="n">results</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
-
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Caught a fatal exception during multiprocessing:</span><span class="se">\n</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
-            <span class="c1"># Clear any unclaimed jobs that are still in the queue</span>
-            <span class="k">while</span> <span class="ow">not</span> <span class="n">task_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
-                <span class="n">task_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
-            <span class="c1"># And terminate any jobs that might still be running.</span>
+            <span class="c1"># Run the tasks.</span>
+            <span class="c1"># Each Process command starts up a parallel process that will keep checking the queue</span>
+            <span class="c1"># for a new task. If there is one there, it grabs it and does it. If not, it waits</span>
+            <span class="c1"># until there is one to grab. When it finds a &#39;STOP&#39;, it shuts down.</span>
+            <span class="n">results_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="p">(</span><span class="n">ntasks</span><span class="p">)</span>
+            <span class="n">p_list</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
-                <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
-            <span class="n">raise_error</span> <span class="o">=</span> <span class="n">e</span>
+                <span class="c1"># The process name is actually the default name that Process would generate on its</span>
+                <span class="c1"># own for the first time we do this. But after that, if we start another round of</span>
+                <span class="c1"># multiprocessing, then it just keeps incrementing the numbers, rather than starting</span>
+                <span class="c1"># over at Process-1.  As far as I can tell, it&#39;s not actually spawning more</span>
+                <span class="c1"># processes, so for the sake of the logging output, we name the processes explicitly.</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">worker</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">task_queue</span><span class="p">,</span> <span class="n">results_queue</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">logger_proxy</span><span class="p">),</span>
+                            <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Process-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="n">p_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
 
-        <span class="k">finally</span><span class="p">:</span>
-            <span class="c1"># Stop the processes</span>
-            <span class="c1"># Once you are done with the processes, putting nproc &#39;STOP&#39;s will stop them all.</span>
-            <span class="c1"># This is important, because the program will keep running as long as there are running</span>
-            <span class="c1"># processes, even if the main process gets to the end.  So you do want to make sure to</span>
-            <span class="c1"># add those &#39;STOP&#39;s at some point!</span>
-            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
-                <span class="n">task_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;STOP&#39;</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
-                <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
-            <span class="n">task_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">raise_error</span> <span class="o">=</span> <span class="kc">None</span>
 
-            <span class="k">del</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_nproc&#39;</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># In the meanwhile, the main process keeps going.  We pull each set of images off</span>
+                <span class="c1"># of the results_queue and put them in the appropriate place in the lists.</span>
+                <span class="c1"># This loop is happening while the other processes are still working on their tasks.</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="p">[</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">njobs</span><span class="p">)</span> <span class="p">]</span>
+                <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">njobs</span><span class="p">):</span>
+                    <span class="n">res</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">proc</span> <span class="o">=</span> <span class="n">results_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="ne">Exception</span><span class="p">):</span>
+                        <span class="c1"># res is really the exception, e</span>
+                        <span class="c1"># t is really the traceback</span>
+                        <span class="c1"># k is the index for the job that failed</span>
+                        <span class="k">if</span> <span class="n">except_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
+                            <span class="n">except_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">except_abort</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="ne">KeyboardInterrupt</span><span class="p">):</span>
+                            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                                <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                            <span class="n">raise_error</span> <span class="o">=</span> <span class="n">res</span>
+                            <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># The normal case</span>
+                        <span class="k">if</span> <span class="n">done_func</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># pragma: no branch</span>
+                            <span class="n">done_func</span><span class="p">(</span><span class="n">logger</span><span class="p">,</span> <span class="n">proc</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">res</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+                        <span class="n">results</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+
+            <span class="k">except</span> <span class="ne">BaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                <span class="c1"># I&#39;m actually not sure how to make this happen.  We do a good job of catching</span>
+                <span class="c1"># all the normal kinds of exceptions that might occur and dealing with them cleanly.</span>
+                <span class="c1"># However, if something happens that we didn&#39;t anticipate, this should make an</span>
+                <span class="c1"># attempt to clean up the task queue and worker before raising the error further.</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Caught a fatal exception during multiprocessing:</span><span class="se">\n</span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
+                <span class="c1"># Clear any unclaimed jobs that are still in the queue</span>
+                <span class="k">while</span> <span class="ow">not</span> <span class="n">task_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+                    <span class="n">task_queue</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+                <span class="c1"># And terminate any jobs that might still be running.</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                    <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                <span class="n">raise_error</span> <span class="o">=</span> <span class="n">e</span>
+
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="c1"># Stop the processes</span>
+                <span class="c1"># Once you are done with the processes, putting nproc &#39;STOP&#39;s will stop them all.</span>
+                <span class="c1"># This is important, because the program will keep running as long as there are</span>
+                <span class="c1"># running processes, even if the main process gets to the end.  So you do want to</span>
+                <span class="c1"># make sure to add those &#39;STOP&#39;s at some point!</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                    <span class="n">task_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">&#39;STOP&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nproc</span><span class="p">):</span>
+                    <span class="n">p_list</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+                <span class="n">task_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">del</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;current_nproc&#39;</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">raise_error</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">raise_error</span>
@@ -1130,26 +1245,43 @@
             <span class="k">break</span>
     <span class="k">return</span> <span class="n">ret</span></div>
 
+<span class="k">def</span> <span class="nf">get_cls_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the _req_params, _opt_params, _single_params, and _takes_rng definitions</span>
+<span class="sd">    from the given class (or function, but usually class).</span>
+
+<span class="sd">    This handles the defaults of empty dict or list or False as appropriate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="s1">&#39;_req_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="s1">&#39;_opt_params&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">single</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="s1">&#39;_single_params&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">takes_rng</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span><span class="s1">&#39;_takes_rng&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">takes_rng</span>
 </pre></div>
 
            </div>
            
           </div>
           <footer>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2019, GalSim-developers
+        &#169; Copyright 2019, GalSim-developers.
 
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
 </footer>
-
         </div>
       </div>
 
@@ -1157,7 +1289,6 @@
 
   </div>
   
-
 
   <script type="text/javascript">
       jQuery(function () {
