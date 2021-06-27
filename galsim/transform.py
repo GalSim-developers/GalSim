@@ -210,8 +210,8 @@ class Transformation(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBTransform(self._original._sbp,
-                                   0 if self._jac is None else self._jac.ctypes.data,
+        _jac = 0 if self._jac is None else self._jac.__array_interface__['data'][0]
+        return _galsim.SBTransform(self._original._sbp, _jac,
                                    self._dx, self._dy, self._flux_ratio, self.gsparams._gsp)
 
     @lazy_property

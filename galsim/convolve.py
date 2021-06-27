@@ -399,9 +399,9 @@ class Convolution(GSObject):
             self.obj_list[0]._drawReal(image, jac, offset, flux_scaling)
         elif len(self.obj_list) == 2:
             try:
+                _jac = 0 if jac is None else jac.__array_interface__['data'][0]
                 dx,dy = offset
-                self._sbp.draw(image._image, image.scale, 0 if jac is None else jac.ctypes.data,
-                               dx, dy, flux_scaling)
+                self._sbp.draw(image._image, image.scale, _jac, dx, dy, flux_scaling)
             except (AttributeError, RuntimeError):
                 raise GalSimError(
                     "At least one profile in %s does not implement real-space convolution"%self)

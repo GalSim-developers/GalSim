@@ -1301,7 +1301,10 @@ class GSFitsWCS(CelestialWCS):
     def _apply_cd(self, x, y):
         # Do this in C++ layer for speed.
         nx = len(x.ravel())
-        _galsim.ApplyCD(nx, x.ctypes.data, y.ctypes.data, self.cd.ctypes.data)
+        _x = x.__array_interface__['data'][0]
+        _y = y.__array_interface__['data'][0]
+        _cd = self.cd.__array_interface__['data'][0]
+        _galsim.ApplyCD(nx, _x, _y, _cd)
         return x, y
 
     def _uv(self, x, y):
@@ -1363,10 +1366,14 @@ class GSFitsWCS(CelestialWCS):
         nab = ab.shape[1]
         nabp = abp.shape[1] if abp is not None else 0
         nx = len(x.ravel())
+        _uu = uu.__array_interface__['data'][0]
+        _vv = vv.__array_interface__['data'][0]
+        _x = x.__array_interface__['data'][0]
+        _y = y.__array_interface__['data'][0]
+        _ab = ab.__array_interface__['data'][0]
+        _abp = 0 if abp is None else abp.__array_interface__['data'][0]
         with convert_cpp_errors():
-            _galsim.InvertAB(nx, nab, uu.ctypes.data, vv.ctypes.data, ab.ctypes.data,
-                             x.ravel().ctypes.data, y.ravel().ctypes.data, self._doiter,
-                             nabp, abp.ctypes.data if abp is not None else 0)
+            _galsim.InvertAB(nx, nab, _uu, _vv, _ab, _x, _y, self._doiter, nabp, _abp)
 
         # Return the right type for u,v
         try:

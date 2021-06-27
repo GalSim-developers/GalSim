@@ -690,8 +690,8 @@ class InterpolatedImage(GSObject):
 
     def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
         dx,dy = offset
-        self._sbp.draw(image._image, image.scale, 0 if jac is None else jac.ctypes.data,
-                       dx, dy, flux_scaling)
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.draw(image._image, image.scale, _jac, dx, dy, flux_scaling)
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
@@ -968,9 +968,9 @@ class InterpolatedKImage(GSObject):
 
         scale = self.kimage.scale
         jac = np.array((1./scale, 0., 0., 1./scale))
+        _jac = jac.__array_interface__['data'][0]
         if scale != 1.:
-            return _galsim.SBTransform(self._sbiki, jac.ctypes.data, 0., 0.,
-                                       scale**2, self.gsparams._gsp)
+            return _galsim.SBTransform(self._sbiki, _jac, 0., 0., scale**2, self.gsparams._gsp)
         else:
             return self._sbiki
 

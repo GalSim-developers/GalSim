@@ -107,8 +107,10 @@ def hankel(func, k, nu=0, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
         raise GalSimValueError("k must be >= 0",k)
     if nu < 0:
         raise GalSimValueError("nu must be >= 0",k)
+    _k = k.__array_interface__['data'][0]
+    _res = res.__array_interface__['data'][0]
     with convert_cpp_errors():
-        _galsim.PyHankel(func, k.ctypes.data, res.ctypes.data, N, nu, rmax, rel_err, abs_err)
+        _galsim.PyHankel(func, _k, _res, N, nu, rmax, rel_err, abs_err)
     return res
 
 class IntegrationRule(object):

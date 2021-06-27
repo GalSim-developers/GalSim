@@ -162,7 +162,8 @@ class Interpolant(object):
             dimen = len(x.shape)
             if dimen > 1:
                 raise GalSimValueError("Input x must be 1-dimensional", x)
-            self._i.xvalMany(xx.ctypes.data, len(xx))
+            _xx = xx.__array_interface__['data'][0]
+            self._i.xvalMany(_xx, len(xx))
             return xx
 
     def kval(self, k):
@@ -184,7 +185,8 @@ class Interpolant(object):
             dimen = len(k.shape)
             if dimen > 1:
                 raise GalSimValueError("Input k must be 1-dimensional", k)
-            self._i.uvalMany(u.ctypes.data, len(u))
+            _u = u.__array_interface__['data'][0]
+            self._i.uvalMany(_u, len(u))
             return u
 
     # Sub-classes should define _i property, repr, and str

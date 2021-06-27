@@ -110,8 +110,8 @@ class Shapelet(GSObject):
 
     @lazy_property
     def _sbp(self):
-        return _galsim.SBShapelet(self._sigma, self._order, self._bvec.ctypes.data,
-                                  self.gsparams._gsp)
+        _bvec = self._bvec.__array_interface__['data'][0]
+        return _galsim.SBShapelet(self._sigma, self._order, _bvec, self.gsparams._gsp)
 
     @classmethod
     def size(cls, order):
@@ -232,9 +232,9 @@ class Shapelet(GSObject):
         return self._sbp.kValue(kpos._p)
 
     def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
         dx,dy = offset
-        self._sbp.draw(image._image, image.scale, 0 if jac is None else jac.ctypes.data,
-                       dx, dy, flux_scaling)
+        self._sbp.draw(image._image, image.scale, _jac, dx, dy, flux_scaling)
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
@@ -291,7 +291,8 @@ class Shapelet(GSObject):
         # Make it double precision if it is not.
         image = Image(image, dtype=np.float64, copy=False)
 
-        _galsim.ShapeletFitImage(ret._sigma, ret._order, ret._bvec.ctypes.data,
+        _bvec = ret._bvec.__array_interface__['data'][0]
+        _galsim.ShapeletFitImage(ret._sigma, ret._order, _bvec,
                                  image._image, image.scale, center._p)
 
         if normalization.lower() == "flux" or normalization.lower() == "f":
