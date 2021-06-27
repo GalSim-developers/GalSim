@@ -1589,8 +1589,8 @@ class PhaseScreenPSF(GSObject):
             self.second_kick._shoot(p2, rng)
             photons.convolve(p2, rng)
 
-    def _drawKImage(self, image):
-        self._ii._drawKImage(image)
+    def _drawKImage(self, image, jac=None):
+        self._ii._drawKImage(image, jac)
 
     @property
     def img(self):
@@ -2053,8 +2053,8 @@ class OpticalPSF(GSObject):
     def _shoot(self, photons, rng):
         self._psf._shoot(photons, rng)
 
-    def _drawKImage(self, image):
-        self._psf._drawKImage(image)
+    def _drawKImage(self, image, jac=None):
+        self._psf._drawKImage(image, jac)
 
     @doc_inherit
     def withFlux(self, flux):

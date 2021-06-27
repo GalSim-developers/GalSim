@@ -199,6 +199,6 @@ class FourierSqrtProfile(GSObject):
     def _kValue(self, pos):
         return np.sqrt(self.orig_obj._kValue(pos))
 
-    def _drawKImage(self, image):
-        self.orig_obj._drawKImage(image)
+    def _drawKImage(self, image, jac=None):
+        self.orig_obj._drawKImage(image, jac)
         image.array[:,:] = np.sqrt(image.array)

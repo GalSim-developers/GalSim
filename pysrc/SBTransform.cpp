@@ -30,10 +30,30 @@ namespace galsim {
         return new SBTransform(sbin, jac, Position<double>(cenx,ceny), ampScaling, gsparams);
     }
 
+    template <typename T>
+    void _ApplyKImagePhases(ImageView<std::complex<T> > image, double imscale, size_t ijac,
+                            double cenx, double ceny, double fluxScaling)
+    {
+        const double* jac = reinterpret_cast<const double*>(ijac);
+        ApplyKImagePhases(image, imscale, jac, cenx, ceny, fluxScaling);
+    }
+
+    template <typename T>
+    static void WrapTemplates(PY_MODULE& _galsim)
+    {
+        typedef void (*phase_func)(ImageView<std::complex<T> >,
+                                   double, size_t, double, double, double);
+        GALSIM_DOT def("ApplyKImagePhases", phase_func(&_ApplyKImagePhases));
+    }
+
     void pyExportSBTransform(PY_MODULE& _galsim)
     {
         py::class_<SBTransform, BP_BASES(SBProfile)>(GALSIM_COMMA "SBTransform" BP_NOINIT)
             .def(PY_INIT(&MakeSBT));
+
+        WrapTemplates<float>(_galsim);
+        WrapTemplates<double>(_galsim);
     }
+
 
 } // namespace galsim

@@ -50,11 +50,6 @@ class DeltaFunction(GSObject):
         self._gsparams = GSParams.check(gsparams)
         self._flux = float(flux)
 
-    @property
-    def _sbp(self):
-        # NB. I only need this until compound and transform are reimplemented in Python...
-        return _galsim.SBDeltaFunction(self._flux, self.gsparams._gsp)
-
     def __eq__(self, other):
         return (self is other or
                 (isinstance(other, DeltaFunction) and
@@ -101,7 +96,7 @@ class DeltaFunction(GSObject):
         photons.y = 0.
         photons.flux = flux_per_photon
 
-    def _drawKImage(self, image):
+    def _drawKImage(self, image, jac=None):
         image.array[:,:] = self.flux
 
     @doc_inherit

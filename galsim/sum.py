@@ -342,12 +342,12 @@ class Sum(GSObject):
         if len(self.obj_list) > 1:
             photons.setCorrelated()
 
-    def _drawKImage(self, image):
-        self.obj_list[0]._drawKImage(image)
+    def _drawKImage(self, image, jac=None):
+        self.obj_list[0]._drawKImage(image, jac)
         if len(self.obj_list) > 1:
             im1 = image.copy()
             for obj in self.obj_list[1:]:
-                obj._drawKImage(im1)
+                obj._drawKImage(im1, jac)
                 image += im1
 
     def __getstate__(self):

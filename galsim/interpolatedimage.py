@@ -693,8 +693,9 @@ class InterpolatedImage(GSObject):
         _jac = 0 if jac is None else jac.__array_interface__['data'][0]
         self._sbp.draw(image._image, image.scale, _jac, dx, dy, flux_scaling)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
+    def _drawKImage(self, image, jac=None):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.drawK(image._image, image.scale, _jac)
 
 
 def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
@@ -1040,9 +1041,9 @@ class InterpolatedKImage(GSObject):
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
-
+    def _drawKImage(self, image, jac=None):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.drawK(image._image, image.scale, _jac)
 
 
 def _InterpolatedKImage(kimage, k_interpolant, gsparams):

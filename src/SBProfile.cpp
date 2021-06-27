@@ -368,18 +368,47 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk) const
+    void SBProfile::drawK(ImageView<std::complex<T> > image, double imscale, double* jac) const
     {
         dbg<<"Start drawK: \n";
+        dbg<<"bounds = "<<image.getBounds()<<std::endl;
+        dbg<<"imscale = "<<imscale<<std::endl;
         assert(_pimpl.get());
         assert(image.getStep() == 1);
 
-        const int xmin = image.getXMin();
-        const int ymin = image.getYMin();
-        const int izero = xmin < 0 ? -xmin : 0;
-        const int jzero = ymin < 0 ? -ymin : 0;
+        int xmin = image.getXMin();
+        int ymin = image.getYMin();
+        double x0 = xmin*imscale;
+        int izero = xmin < 0 ? -xmin : 0;
+        double y0 = ymin*imscale;
+        int jzero = ymin < 0 ? -ymin : 0;
 
-        _pimpl->fillKImage(image.view(), xmin*dk, dk, izero, ymin*dk, dk, jzero);
+        if (!jac) {
+            dbg<<"no jac\n";
+            _pimpl->fillKImage(image, x0, imscale, izero, y0, imscale, jzero);
+        } else if (jac[1] == 0. && jac[2] == 0.) {
+            double mA = jac[0];
+            double mD = jac[3];
+            dbg<<"diag jac: "<<mA<<','<<mD<<std::endl;
+            double new_x0 = x0 * mA;
+            double new_y0 = y0 * mD;
+            double dx = imscale * mA;
+            double dy = imscale * mD;
+            _pimpl->fillKImage(image, new_x0, dx, izero, new_y0, dy, jzero);
+        } else {
+            double mA = jac[0];
+            double mB = jac[1];
+            double mC = jac[2];
+            double mD = jac[3];
+            dbg<<"jac = "<<mA<<','<<mB<<','<<mC<<','<<mD<<std::endl;
+            double new_x0 = mA*x0 + mC*y0;
+            double new_y0 = mB*x0 + mD*y0;
+            double dx = mA * imscale;
+            double dxy = mC * imscale;
+            double dy = mD * imscale;
+            double dyx = mB * imscale;
+            _pimpl->fillKImage(image, new_x0, dx, dxy, new_y0, dy, dyx);
+        }
     }
 
     // The type of T (real or complex) determines whether the call-back is to
@@ -551,8 +580,10 @@ namespace galsim {
     template void SBProfile::draw(ImageView<double> image, double dx,
                                   double* jac, double xoff, double yoff, double flux_ratio) const;
 
-    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk) const;
-    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;
+    template void SBProfile::drawK(ImageView<std::complex<float> > image, double dk,
+                                   double* jac) const;
+    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk,
+                                   double* jac) const;
 
     template void SBProfile::SBProfileImpl::defaultFillXImage(
         ImageView<double> im,

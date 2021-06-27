@@ -208,8 +208,9 @@ class InclinedExponential(GSObject):
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
+    def _drawKImage(self, image, jac=None):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.drawK(image._image, image.scale, _jac)
 
     @doc_inherit
     def withFlux(self, flux):
@@ -461,8 +462,9 @@ class InclinedSersic(GSObject):
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
+    def _drawKImage(self, image, jac=None):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.drawK(image._image, image.scale, _jac)
 
     @doc_inherit
     def withFlux(self, flux):

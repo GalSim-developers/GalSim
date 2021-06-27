@@ -421,12 +421,12 @@ class Convolution(GSObject):
             obj._shoot(p1, rng)
             photons.convolve(p1, rng)
 
-    def _drawKImage(self, image):
-        self.obj_list[0]._drawKImage(image)
+    def _drawKImage(self, image, jac=None):
+        self.obj_list[0]._drawKImage(image, jac)
         if len(self.obj_list) > 1:
             im1 = image.copy()
             for obj in self.obj_list[1:]:
-                obj._drawKImage(im1)
+                obj._drawKImage(im1, jac)
                 image *= im1
 
     def __getstate__(self):
@@ -620,12 +620,15 @@ class Deconvolution(GSObject):
         else:
             return 1./kval
 
-    def _drawKImage(self, image):
-        self.orig_obj._drawKImage(image)
+    def _drawKImage(self, image, jac=None):
+        self.orig_obj._drawKImage(image, jac)
         do_inverse = np.abs(image.array) > self._min_acc_kvalue
         image.array[do_inverse] = 1./image.array[do_inverse]
         image.array[~do_inverse] = self._inv_min_acc_kvalue
         kx,ky = image.get_pixel_centers()
+        if jac is not None:
+            # N.B. The jacobian is transposed in k space.  This is not a typo.
+            kx,ky = (jac[0,0] * kx + jac[1,0] * ky), (jac[0,1] * kx + jac[1,1] * ky)
         ksq = (kx**2 + ky**2) * image.scale**2
         # Set to zero outside of nominal maxk so as not to amplify high frequencies.
         image.array[ksq > self.maxk**2] = 0.

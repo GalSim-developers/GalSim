@@ -236,8 +236,9 @@ class Shapelet(GSObject):
         dx,dy = offset
         self._sbp.draw(image._image, image.scale, _jac, dx, dy, flux_scaling)
 
-    def _drawKImage(self, image):
-        self._sbp.drawK(image._image, image.scale)
+    def _drawKImage(self, image, jac=None):
+        _jac = 0 if jac is None else jac.__array_interface__['data'][0]
+        self._sbp.drawK(image._image, image.scale, _jac)
 
     @classmethod
     def fit(cls, sigma, order, image, center=None, normalization='flux', gsparams=None):
