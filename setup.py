@@ -895,6 +895,17 @@ class my_build_ext(build_ext):
         # Now run the normal build function.
         build_ext.build_extensions(self)
 
+    def run(self):
+        # `python setup.py develop` (used implicitly by `pip install -e .`) only calls
+        # `build_ext`, unlike `install` which calls `build` and all its related
+        # sub-commands. Linking -lgalsim fails, since `build_clib` isn't calld.
+        # This override ensures that `build_clib` command is run before the
+        # pysrc stuff is linked.
+        # cf. https://github.com/pypa/pip/issues/4523
+
+        self.run_command("build_clib")
+        build_ext.run(self)
+
 
 class my_install(install):
     user_options = install.user_options + [('njobs=', 'j', "Number of jobs to use for compiling")]
