@@ -1483,10 +1483,6 @@ class PhaseScreenPSF(GSObject):
 
         self._finalized = True
 
-    @property
-    def _sbp(self):
-        return self._ii._sbp
-
     def __getstate__(self):
         d = self.__dict__.copy()
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
@@ -1994,10 +1990,6 @@ class OpticalPSF(GSObject):
         return hash(("galsim.OpticalPSF", self._lam, self._aper, self._screen,
                      self._flux, self._interpolant, self._scale_unit, self._force_stepk,
                      self._force_maxk, self._ii_pad_factor, self._fft_sign, self._gsparams))
-
-    @property
-    def _sbp(self):
-        return self._psf._sbp
 
     def __getstate__(self):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
