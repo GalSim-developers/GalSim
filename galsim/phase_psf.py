@@ -1547,8 +1547,8 @@ class PhaseScreenPSF(GSObject):
         self._prepareDraw()
         return self._ii._kValue(kpos)
 
-    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
-        self._ii._drawReal(image, jac, xoff, yoff, flux_scaling)
+    def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
+        self._ii._drawReal(image, jac, offset, flux_scaling)
 
     def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
@@ -2047,8 +2047,8 @@ class OpticalPSF(GSObject):
     def _kValue(self, kpos):
         return self._psf._kValue(kpos)
 
-    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
-        self._psf._drawReal(image, jac, xoff, yoff, flux_scaling)
+    def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
+        self._psf._drawReal(image, jac, offset, flux_scaling)
 
     def _shoot(self, photons, rng):
         self._psf._shoot(photons, rng)

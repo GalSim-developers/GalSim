@@ -296,12 +296,12 @@ class Sum(GSObject):
         kv_list = [obj.kValue(pos) for obj in self.obj_list]
         return np.sum(kv_list)
 
-    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
-        self.obj_list[0]._drawReal(image, jac, xoff, yoff, flux_scaling)
+    def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
+        self.obj_list[0]._drawReal(image, jac, offset, flux_scaling)
         if len(self.obj_list) > 1:
             im1 = image.copy()
             for obj in self.obj_list[1:]:
-                obj._drawReal(im1, jac, xoff, yoff, flux_scaling)
+                obj._drawReal(im1, jac, offset, flux_scaling)
                 image += im1
 
     def _shoot(self, photons, rng):

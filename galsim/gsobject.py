@@ -1068,20 +1068,21 @@ class GSObject(object):
         offset = parse_pos_args(args, kwargs, 'dx', 'dy')
         return Transform(self, offset=offset)
 
-    def _shift(self, offset):
+    def _shift(self, dx, dy):
         """Equivalent to `shift`, but without the overhead of sanity checks or option
-        to give the shift as (dx,dy).
+        to give the shift as a PositionD.
 
         Also, it won't propagate any noise attribute.
 
         Parameters:
-            offset:     The shift to apply, given as a `PositionD`
+            dx:         The x-component of the shift to apply
+            dy:         The y-component of the shift to apply
 
         Returns:
             the shifted object.
         """
         from .transform import _Transform
-        new_obj = _Transform(self, offset=offset)
+        new_obj = _Transform(self, offset=(dx,dy))
         return new_obj
 
     def atRedshift(self, redshift):
@@ -1858,7 +1859,7 @@ class GSObject(object):
                 image.array[:,:] = im1.array
             return im1.array.sum(dtype=float)
 
-    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
+    def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
         """A version of `drawReal` without the sanity checks or some options.
 
         This is nearly equivalent to the regular ``drawReal(image, add_to_image=False)``, but

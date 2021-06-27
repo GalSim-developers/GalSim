@@ -231,9 +231,10 @@ class Shapelet(GSObject):
     def _kValue(self, kpos):
         return self._sbp.kValue(kpos._p)
 
-    def _drawReal(self, image, jac=None, xoff=0., yoff=0., flux_scaling=1.):
+    def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
+        dx,dy = offset
         self._sbp.draw(image._image, image.scale, 0 if jac is None else jac.ctypes.data,
-                       xoff, yoff, flux_scaling)
+                       dx, dy, flux_scaling)
 
     def _drawKImage(self, image):
         self._sbp.drawK(image._image, image.scale)
