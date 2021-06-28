@@ -1351,6 +1351,6 @@ def test_horner_complex():
     np.testing.assert_almost_equal(result, np.polynomial.polynomial.polyval([3.9+2.1j],coef[0]))
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
         testfn()

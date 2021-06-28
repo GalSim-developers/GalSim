@@ -1661,6 +1661,6 @@ def test_quintic_glagn():
 
 if __name__ == "__main__":
     setup()
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
         testfn()
