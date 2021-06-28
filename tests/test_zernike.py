@@ -211,17 +211,23 @@ def test_Zernike_rotate():
             R = galsim.zernike.zernikeRotMatrix(jmax, theta)
             rotCoefs = np.dot(R, coefs)
             Zrot = galsim.zernike.Zernike(rotCoefs, R_outer=R_outer, R_inner=R_inner)
+            print('j,theta: ',jmax,theta)
+            print('Z: ',Z.evalPolar(rhos, thetas))
+            print('Zrot: ',Zrot.evalPolar(rhos, thetas+theta))
+            print('max diff= ',np.max(np.abs(Zrot.evalPolar(rhos, thetas+theta)-Z.evalPolar(rhos, thetas))))
             np.testing.assert_allclose(
                 Z.evalPolar(rhos, thetas),
                 Zrot.evalPolar(rhos, thetas+theta),
-                atol=1e-13, rtol=0
+                atol=1e-12, rtol=0
             )
 
             Zrot2 = Z.rotate(theta)
+            print('Zrot2: ',Zrot2.evalPolar(rhos, thetas+theta))
+            print('max diff= ',np.max(np.abs(Zrot2.evalPolar(rhos, thetas+theta)-Z.evalPolar(rhos, thetas))))
             np.testing.assert_allclose(
                 Z.evalPolar(rhos, thetas),
                 Zrot2.evalPolar(rhos, thetas+theta),
-                atol=1e-13, rtol=0
+                atol=1e-12, rtol=0
             )
 
 
