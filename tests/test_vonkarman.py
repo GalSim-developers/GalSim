@@ -388,7 +388,7 @@ if __name__ == "__main__":
         pr = cProfile.Profile()
         pr.enable()
 
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
         testfn()
     if args.benchmark:

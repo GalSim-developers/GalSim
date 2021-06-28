@@ -315,7 +315,7 @@ def test_check():
     args.force = True
     do_download = check_existing(target, unpack_dir, meta1, args, logger)
     assert do_download is True
-    
+
     args.force = False
     with mock.patch('galsim.download_cosmos.get_input', return_value='y'):
         do_download = check_existing(target, unpack_dir, meta1, args, logger)
@@ -676,6 +676,6 @@ def test_full():
 
 
 if __name__ == "__main__":
-    testfns = [v for k, v in vars().items() if k[:5] == 'test_']
+    testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
         testfn()
