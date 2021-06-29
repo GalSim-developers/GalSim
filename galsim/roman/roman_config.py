@@ -235,12 +235,15 @@ class RomanSCAImageBuilder(ScatteredImageBuilder):
             logger.debug('Adding thermal background: %s',tb)
             sky_image += thermal_backgrounds[self.filter] * self.exptime
 
-        # The image up to here is an expectation value.  Realize it as an integer/m
+        # The image up to here is an expectation value.
+        # Realize it as an integer number of photons.
         poisson_noise = PoissonNoise(rng)
         if self.draw_method == 'phot':
             logger.debug("Adding poisson noise to sky photons")
             sky_image1 = sky_image.copy()
             sky_image1.addNoise(poisson_noise)
+            image.quantize()  # In case any profiles used InterpolatedImage, in which case
+                              # the image won't necessarily be integers.
             image += sky_image1
         else:
             logger.debug("Adding poisson noise")
