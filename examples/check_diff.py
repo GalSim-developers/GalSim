@@ -20,11 +20,12 @@
 from __future__ import print_function
 import sys
 import subprocess
+import numpy as np
 
 def same(file_name1, file_name2):
     cmd = "diff -q %s %s"%(file_name1, file_name2)
     p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-    diff_output = p.stdout.read()
+    diff_output = p.stdout.read().decode()
     if len(diff_output) > 0:
         print(diff_output.strip())
     return (len(diff_output) == 0)
@@ -34,16 +35,13 @@ def report_txt(file_name1, file_name2):
     # NB. No -q here:
     cmd = "diff %s %s"%(file_name1, file_name2)
     p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-    diff_output = p.stdout.read()
+    diff_output = p.stdout.read().decode()
     print(diff_output.strip())
 
 
 def report(file_name1, file_name2):
     try:
-        try:
-            import astropy.io.fits as pyfits
-        except:
-            import pyfits
+        import astropy.io.fits as pyfits
     except ImportError as e:
         print('Unable to import pyfits')
         # Then /usr/bin/env python doesn't have pyfits installed.  Oh well.
@@ -81,6 +79,12 @@ def report(file_name1, file_name2):
             print('    HDU %d shows differences in %d pixels'%(hdu, (d0!=d1).sum()))
             print('    The maximum absolute difference is %e.'%(abs(d0-d1).max()))
             print('    The maximum relative difference is %e.'%(abs((d0-d1)/(d0+1.e-10)).max()))
+            w = np.where(d0 != d1)
+            if len(w) == 2 and len(w[0]) < 10:
+                print('    The positions where there are differences are:')
+                print('         i  \t j  \t    im1    \t    im2')
+                for i,j in zip(*w):
+                    print('        %d\t%d\t%f\t%f'%(i,j,d0[i,j],d1[i,j]))
 
 
 if __name__ == "__main__":
