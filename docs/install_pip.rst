@@ -231,12 +231,6 @@ We require Eigen version >= 3.0.  The version we download automatically is
 3.2.8 and 3.0.4, so probably any 3.x version will work.  However, if you have
 trouble with another version, try upgrading to 3.3.4 or later.
 
-Note: Prior to version 2.0, GalSim used TMV for the linear algebra back end.
-This is still an option if you prefer (e.g. it may be faster for some use
-cases, since it can use an optimized BLAS library on your system), but to
-use TMV, you need to use the SCons installation option described below.
-(cf. `Installing With SCons`)
-
 
 Installing Eigen yourself
 ^^^^^^^^^^^^^^^^^^^^^^^^^
