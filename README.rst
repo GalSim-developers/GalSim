@@ -128,10 +128,8 @@ files in subdirectories of the ``examples/`` directory, so they would not work
 correctly from other locations.
 
 A completely parallel sequence of configuration files, called ``demo1.yaml`` ...
-``demo11.yaml``, demonstrates how to make the same set of simulations using
-config files that are parsed by the executable ``bin/galsim``.  (There are no
-corresponding .yaml files for demo12 and demo13 yet, because some of the
-functionality cannot yet be carried out using config files.)
+``demo13.yaml``, demonstrates how to make the same set of simulations using
+config files that are parsed by the executable ``bin/galsim``.
 
 Two other scripts in the ``examples/`` directory that may be of interest, but
 are not part of the GalSim tutorial series, are ``make_coadd.py``, which
@@ -169,7 +167,8 @@ Currently, GalSim has the following capabilities:
   methods only.
 
 * Can handle wavelength-dependent profiles and integrate over filter
-  bandpasses appropriately.
+  bandpasses appropriately, including handling wavlengths properly when
+  photon shooting.
 
 * Can apply shear, magnification, dilation, or rotation to a galaxy profile
   including lensing-based models from a power spectrum or NFW halo profile.
@@ -210,18 +209,15 @@ Planned future development
 We plan to add the following additional capabilities in future versions of
 GalSim:
 
-* Wavelength-dependent photon shooting.  Currently, the chromatic functionality
-  is only available for FFT rendering, which is quite slow.  For most use
-  cases, photon shooting should be orders of magnitude faster, so this is
-  a near-term priority to get done.  (cf. Issue #540)
-
 * Simulating more sophisticated detector defects and image artifacts.  E.g.
   vignetting, fringing, cosmic rays, saturation, bleeding, ... (cf. Issues
   #553, #828)
 
 * Proper modeling of extinction due to dust. (cf. Issues #541, #550)
 
-* Various speed improvements.  (cf. Issues #205, #566, #875, #935)
+* More kinds of realistic galaxies. (cf. Issues #669, #795, #808)
+
+* Various speed improvements.  (cf. Issues #205, #566, #875)
 
 There are many others as well.  Please see
 
