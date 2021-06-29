@@ -3,7 +3,7 @@ Installation Instructions
 
 GalSim is a python module that has much of its implementation in C++ for
 improved computational efficiency.  GalSim supports both Python 2 and
-Python 3.  It is regularly tested on Python versions (2.7, 3.6, 3.7, 3.8).
+Python 3.  It is regularly tested on Python versions (2.7, 3.6, 3.7, 3.8, 3.9).
 
 System requirements: GalSim currently only supports Linux and Mac OSX.
 Possibly other POSIX-compliant systems, but we specifically do not
@@ -21,7 +21,7 @@ which will install the latest official release of GalSim.
 Note that you may need to use sudo with the above command if you are installing
 into system directories.  If you do not have write privileges for the directory
 it is trying to install into, you can use the --user flag to install into a
-local directory instead.  (Normally something like $HOME/Library/Python/2.7
+local directory instead.  (Normally something like $HOME/Library/Python/3.8
 or $HOME/.local, depending on your system.)
 
 If you would rather install from source (e.g. to work on a development branch),
