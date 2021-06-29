@@ -64,7 +64,7 @@
 # - obj type: RomanPSF
 # - image type: RomanSCA
 # - draw_method=phot in conjunction with chromatic objects
-# - multiple random seeds (particular so one can repeat the same values for multiple images)
+# - Multiple random seeds (particular so one can repeat the same values for multiple images)
 # - rng_num specification in various fields
 # - Multiple inputs of the same type.  Use num to specify which item in the list to use each time.
 
