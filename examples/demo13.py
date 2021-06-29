@@ -211,6 +211,10 @@ def main(argv):
         # Set up the full image for the galaxies
         full_image = galsim.ImageF(roman.n_pix, roman.n_pix, wcs=wcs)
 
+        # Also separately build up the sky image, which we need to get the noise right,
+        # even though we'll subtract off the expectation of the sky image.
+        sky_image = galsim.ImageF(roman.n_pix, roman.n_pix, wcs=wcs)
+
         # We have one rng for image-level stuff, and two others for the stars and galaxies.
         # There are simpler ways to do this in a python script (e.g. probably only need 2
         # rngs, not 3), but this way of setting it up matches the way the config file initializes
@@ -228,27 +232,18 @@ def main(argv):
         # >1 to account for the amount of stray light that is expected.  If we do not provide a date
         # for the observation, then it will assume that it's the vernal equinox (sun at (0,0) in
         # ecliptic coordinates) in 2025.
-        SCA_cent_pos = wcs.toWorld(full_image.true_center)
+        SCA_cent_pos = wcs.toWorld(sky_image.true_center)
         sky_level = roman.getSkyLevel(bandpass, world_pos=SCA_cent_pos)
         sky_level *= (1.0 + roman.stray_light_fraction)
 
         # Note that makeSkyImage() takes a bit of time. If you do not care about the variable pixel
         # scale, you could simply compute an approximate sky level in e-/pix by multiplying
-        # sky_level by roman.pixel_scale**2, and add that to full_image.
-        wcs.makeSkyImage(full_image, sky_level)
+        # sky_level by roman.pixel_scale**2, and add that to sky_image.
+        wcs.makeSkyImage(sky_image, sky_level)
 
         # The other background is the expected thermal backgrounds in this band.
         # These are provided in e-/pix/s, so we have to multiply by the exposure time.
-        full_image += roman.thermal_backgrounds[filter_name]*roman.exptime
-
-        # Save the current state as the expected value of the background, so we can subtract
-        # it off later.
-        sky_image = full_image.copy()
-
-        # So far these are technically expectation values, so use Poisson noise to convert to
-        # the realized number of electrons.
-        poisson_noise = galsim.PoissonNoise(image_rng)
-        full_image.addNoise(poisson_noise)
+        sky_image += roman.thermal_backgrounds[filter_name]*roman.exptime
 
         # Draw the galaxies and stars into the image.
         # We want (most of) the object properties to be the same for all the filters.
@@ -349,17 +344,25 @@ def main(argv):
         logger.info('All objects have been drawn for filter %s.',filter_name)
         logger.info('Adding the noise and detector non-idealities.')
 
+        # At this point in the image generation process, an integer number of photons gets
+        # detected.  Because of how GalSim's photon shooting works for InterpolatedImage
+        # (used implicitly in the PSF implementation), the image has non-integral values at this
+        # point.  So the first thing we do is quantize that to an integer number of photons.
+        full_image.quantize()
+
+        # Add the sky image.  Note: the galaxies already have Poisson noise because we are photon
+        # shooting, but the sky image does not.  We want to preserve the expectation value of the
+        # sky image (to subtract it off below), so we need a copy, which we can add noise to.
+        poisson_noise = galsim.PoissonNoise(image_rng)
+        sky_image_realized = sky_image.copy()
+        sky_image_realized.addNoise(poisson_noise)
+        full_image += sky_image_realized
+
         # Now that all sources of signal (from astronomical objects and background) have been added
         # to the image, we can start adding noise and detector effects.  There is a utility,
         # galsim.roman.allDetectorEffects(), that can apply ALL implemented noise and detector
         # effects in the proper order.  Here we step through the process and explain these in a bit
         # more detail without using that utility.
-
-        # At this point in the image generation process, an integer number of photons gets
-        # detected, unless any of the pre-noise values were > 2^30. That's when our Poisson
-        # implementation switches over to the Gaussian approximation, which won't necessarily
-        # produce integers.  This situation does not arise in practice for this demo, but if it did,
-        # we could use full_image.quantize() to enforce integer pixel values.
 
         # The subsequent steps account for the non-ideality of the detectors.
 
