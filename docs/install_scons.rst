@@ -2,8 +2,10 @@ Installing With SCons
 =====================
 
 Prior to version 2.0, GalSim installation used SCons.  This installation
-mode is still supported, but is not recommended unless you have difficulties
-with the pip or conda installation methods.
+mode is still supported, but is not recommended.  Indeed this release
+(v2.3) will be the last to continue to support the SCons installation method.
+If you are still using it, you are advised to switch to either the pip or
+setup.py method instead.
 
 .. note::
 
@@ -14,7 +16,11 @@ with the pip or conda installation methods.
     (2) using Boost.Python instead of PyBind11 for the wrapping the C++ code
         to be called from Python.
 
-    If you need either of these options, then you should use the SCons installation.
+    Both of these options (along with the SCons installation method in general)
+    will no longer be available after the current release series (v2.3.x).
+    If this will cause hardship for you, please open an issue and describe
+    your use case and why you think the setup.py installation method will not
+    work for you.
 
 
 Software required before building GalSim
