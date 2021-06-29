@@ -537,9 +537,14 @@ Demo 13
 -------
 
 :download:`demo13.py <../examples/demo13.py>`
+:download:`demo13.yaml <../examples/demo13.yaml>`
 
-This script introduces non-idealities arising from NIR detectors, in particular those that will be
-observed and accounted for in the Roman Space Telescope. Three such non-ideal effects are
+This script is intended to produce a relatively realistic scene of galaxies and stars as will
+be observed by the Roman Space Telescope, including the Roman PSF, WCS, and various NIR detector
+effects.
+
+It introduces several non-idealities arising from NIR detectors, in particular those that will
+be observed and accounted for in the Roman Space Telescope. Three such non-ideal effects are
 demonstrated, in the order in which they are introduced in the detectors:
 
 1. Reciprocity failure: Flux-dependent sensitivity of the detector.
@@ -548,9 +553,11 @@ demonstrated, in the order in which they are introduced in the detectors:
 3. Interpixel capacitance: Influence of charge in a pixel on the voltage reading of neighboring
    ones.
 
-The purpose of the demo is two-fold: (1) to show the effects of detector non-idealities on images
-from NIR detectors, and (2) to illustrate the full image generation process, including all sources
-of noise at appropriate stages.
+It also uses chromatic photon shooting, which is generally a more efficient way to simulate
+scenes with many faint galaxies.  The default FFT method for drawing chromatically is fairly
+slow, since it needs to integrate the image over the bandpass.  With photon shooting, the
+photons are assigned wavelengths according to the SED of the galaxy, and then each photon has
+the appropriate application of the chromatic PSF according to the wavelength.
 
 **New features in the Python file**:
 
@@ -567,8 +574,14 @@ of noise at appropriate stages.
 
 **New features in the YAML file**:
 
-This demo currently does not have a YAML version.  The config processing of chromatic objects and
-of the Roman functionality have not been implemented yet.
+- Top-level field modules
+- obj type: RomanPSF
+- image type: RomanSCA
+- draw_method=phot in conjunction with chromatic objects
+- Multiple random seeds (particular so one can repeat the same values for multiple images)
+- rng_num specification in various fields
+- Multiple inputs of the same type.  Use num to specify which item in the list to use each time.
+
 
 Advanced Simulations
 --------------------
