@@ -28,7 +28,7 @@
 namespace galsim {
 
     // Defined in RealSpaceConvolve.cpp
-    double PUBLIC_API RealSpaceConvolve(
+    PUBLIC_API double RealSpaceConvolve(
         const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
         const GSParams& gsparams);
 

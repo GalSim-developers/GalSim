@@ -36,8 +36,8 @@ namespace math {
     using std::lgamma;
 #else
     // But if not using c++11, then we need to implement it ourselves.
-    double PUBLIC_API tgamma(double x);
-    double PUBLIC_API lgamma(double x);
+    PUBLIC_API double tgamma(double x);
+    PUBLIC_API double lgamma(double x);
 #endif
 
     // This specific function is what boost calls gamma_p:
@@ -46,7 +46,7 @@ namespace math {
     //
     // Wolfram calls it the Regularized Gamma Function:
     // cf. http://mathworld.wolfram.com/RegularizedGammaFunction.html
-    double PUBLIC_API gamma_p(double a, double x);
+    PUBLIC_API double gamma_p(double a, double x);
 
 
 } }

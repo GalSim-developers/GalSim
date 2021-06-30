@@ -378,15 +378,15 @@ namespace galsim {
     { im.view() *= x; return im; }
 
     // Specialize variants that can be sped up using SSE
-    ImageView<float> PUBLIC_API operator*=(ImageView<float> im, float x);
-    ImageView<std::complex<float> > PUBLIC_API operator*=(
+    PUBLIC_API ImageView<float> operator*=(ImageView<float> im, float x);
+    PUBLIC_API ImageView<std::complex<float> > operator*=(
         ImageView<std::complex<float> > im, float x);
-    ImageView<std::complex<float> > PUBLIC_API operator*=(
+    PUBLIC_API ImageView<std::complex<float> > operator*=(
         ImageView<std::complex<float> > im, std::complex<float> x);
-    ImageView<double> PUBLIC_API operator*=(ImageView<double> im, double x);
-    ImageView<std::complex<double> > PUBLIC_API operator*=(
+    PUBLIC_API ImageView<double> operator*=(ImageView<double> im, double x);
+    PUBLIC_API ImageView<std::complex<double> > operator*=(
         ImageView<std::complex<double> > im, double x);
-    ImageView<std::complex<double> > PUBLIC_API operator*=(
+    PUBLIC_API ImageView<std::complex<double> > operator*=(
         ImageView<std::complex<double> > im, std::complex<double> x);
 
 
@@ -551,16 +551,16 @@ namespace galsim {
     { im.view() *= im2; return im; }
 
     // Specialize variants that can be sped up using SSE
-    ImageView<float> PUBLIC_API operator*=(ImageView<float> im1, const BaseImage<float>& im2);
-    ImageView<std::complex<float> > PUBLIC_API operator*=(
+    PUBLIC_API ImageView<float> operator*=(ImageView<float> im1, const BaseImage<float>& im2);
+    PUBLIC_API ImageView<std::complex<float> > operator*=(
         ImageView<std::complex<float> > im1, const BaseImage<float>& im2);
-    ImageView<std::complex<float> > PUBLIC_API operator*=(
+    PUBLIC_API ImageView<std::complex<float> > operator*=(
         ImageView<std::complex<float> > im1, const BaseImage<std::complex<float> >& im2);
 
-    ImageView<double> PUBLIC_API operator*=(ImageView<double> im1, const BaseImage<double>& im2);
-    ImageView<std::complex<double> > PUBLIC_API operator*=(
+    PUBLIC_API ImageView<double> operator*=(ImageView<double> im1, const BaseImage<double>& im2);
+    PUBLIC_API ImageView<std::complex<double> > operator*=(
         ImageView<std::complex<double> > im1, const BaseImage<double>& im2);
-    ImageView<std::complex<double> > PUBLIC_API operator*=(
+    PUBLIC_API ImageView<std::complex<double> > operator*=(
         ImageView<std::complex<double> > im1, const BaseImage<std::complex<double> >& im2);
 
 

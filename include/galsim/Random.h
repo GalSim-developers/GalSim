@@ -39,7 +39,7 @@ namespace galsim {
 
     // Function for applying deviates to an image... Used as a method for all Deviates below.
     template <typename D, typename T>
-    static void PUBLIC_API ApplyDeviateToImage(D& dev, ImageView<T>& data)
+    static void ApplyDeviateToImage(D& dev, ImageView<T>& data)
     {
         // Typedef for image row iterable
         typedef typename ImageView<T>::iterator ImIter;

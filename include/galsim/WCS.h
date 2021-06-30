@@ -23,9 +23,9 @@
 
 namespace galsim {
 
-    void PUBLIC_API ApplyCD(
+    PUBLIC_API void ApplyCD(
         int n, double* x, double* y, const double* cd);
-    void PUBLIC_API InvertAB(
+    PUBLIC_API void InvertAB(
         int n, int nab, const double* u, const double* v, const double* ab,
         double* x, double* y, bool doiter, int nabp, const double* abp);
 

@@ -30,11 +30,11 @@ namespace galsim {
 namespace math {
 
     // sinc(x) is defined here as sin(Pi x) / (Pi x)
-    double PUBLIC_API sinc(double x);
+    PUBLIC_API double sinc(double x);
 
     // Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
     // does not have pi multiplying t.
-    double PUBLIC_API Si(double x);
+    PUBLIC_API double Si(double x);
 
 }
 }

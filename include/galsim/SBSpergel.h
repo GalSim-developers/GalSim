@@ -43,7 +43,7 @@ namespace galsim {
 
     }
 
-    double PUBLIC_API SpergelCalculateHLR(double nu);
+    PUBLIC_API double SpergelCalculateHLR(double nu);
 
     /**
      * @brief Spergel Surface Brightness Profile.

@@ -30,7 +30,7 @@
 namespace galsim {
 
     template <typename T>
-    void PUBLIC_API ApplyKImagePhases(
+    PUBLIC_API void ApplyKImagePhases(
         ImageView<std::complex<T> > image, double imscale, const double* jac,
         double cenx, double ceny, double fluxScaling);
 

@@ -28,7 +28,7 @@ namespace math {
     // Use Horner's method to evaluate polynomial
     // result[i] = coef[0] + coef[1]*x[i] + coef[2]*x[i]**2 + ...
     // The result array should already be allocated and have the same size as x.
-    void PUBLIC_API Horner(
+    PUBLIC_API void Horner(
         const double* x, const int nx, const double* coef, const int nc, double* result);
 
     // 2D version of Horner's method
@@ -38,7 +38,7 @@ namespace math {
     //             + ...
     // The result array should already be allocated and have the same size as x and y.
     // This also requires a temporary array of the same size as well.
-    void PUBLIC_API Horner2D(
+    PUBLIC_API void Horner2D(
         const double* x, const double* y, const int nx,
         const double* coef, const int ncx, const int ncy,
         double* result, double* temp);

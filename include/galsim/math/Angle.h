@@ -27,7 +27,7 @@ namespace math {
 
     // A function to compute sin and cos in one statement, possibly more efficiently than
     // doing the two trig functions separately.
-    void PUBLIC_API sincos(double theta, double& sint, double& cost);
+    PUBLIC_API void sincos(double theta, double& sint, double& cost);
 
 }}
 

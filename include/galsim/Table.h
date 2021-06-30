@@ -35,7 +35,7 @@
 namespace galsim {
 
     // Used by LookupTable2D in Python.  Defined in Table.cpp
-    void PUBLIC_API WrapArrayToPeriod(double* x, int n, double x0, double period);
+    PUBLIC_API void WrapArrayToPeriod(double* x, int n, double x0, double period);
 
     class PUBLIC_API Interpolant;
 

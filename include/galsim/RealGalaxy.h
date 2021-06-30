@@ -30,7 +30,7 @@
 
 namespace galsim {
 
-    void PUBLIC_API ComputeCRGCoefficients(
+    PUBLIC_API void ComputeCRGCoefficients(
         std::complex<double>* coef, std::complex<double>* Sigma,
         const double* w, const std::complex<double>* kimgs,
         const std::complex<double>* psf_eff_kimgs,

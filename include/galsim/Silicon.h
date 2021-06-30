@@ -80,8 +80,8 @@ namespace galsim
         ImageAlloc<double> _delta;
     };
 
-    int PUBLIC_API SetOMPThreads(int num_threads);
-    int PUBLIC_API GetOMPThreads();
+    PUBLIC_API int SetOMPThreads(int num_threads);
+    PUBLIC_API int GetOMPThreads();
 
 }
 

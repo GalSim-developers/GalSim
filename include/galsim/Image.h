@@ -815,14 +815,14 @@ namespace galsim {
      * @brief A helper function that will return the smallest 2^n or 3x2^n value that is
      * even and >= the input integer.
      */
-    int PUBLIC_API goodFFTSize(int input);
+    PUBLIC_API int goodFFTSize(int input);
 
 
     /**
      *  @brief Perform a 2D FFT from real space to k-space.
      */
     template <typename T>
-    void PUBLIC_API rfft(
+    PUBLIC_API void rfft(
         const BaseImage<T>& in, ImageView<std::complex<double> > out,
         bool shift_in=true, bool shift_out=true);
 
@@ -830,7 +830,7 @@ namespace galsim {
      *  @brief Perform a 2D inverse FFT from k-space to real space.
      */
     template <typename T>
-    void PUBLIC_API irfft(
+    PUBLIC_API void irfft(
         const BaseImage<T>& in, ImageView<double> out,
         bool shift_in=true, bool shift_out=true);
 
@@ -838,7 +838,7 @@ namespace galsim {
      *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
      */
     template <typename T>
-    void PUBLIC_API cfft(
+    PUBLIC_API void cfft(
         const BaseImage<T>& in, ImageView<std::complex<double> > out,
         bool inverse, bool shift_in=true, bool shift_out=true);
 
@@ -848,7 +848,7 @@ namespace galsim {
      *  This is used to alias the data of a k-space image before doing the FFT to real space.
      */
     template <typename T>
-    void PUBLIC_API wrapImage(
+    PUBLIC_API void wrapImage(
         ImageView<T> im, const Bounds<int>& bounds, bool hermx, bool hermy);
 
     /**
@@ -857,7 +857,7 @@ namespace galsim {
      *  Note that if an element is zero, then this function quietly returns its inverse as zero.
      */
     template <typename T>
-    void PUBLIC_API invertImage(ImageView<T> im);
+    PUBLIC_API void invertImage(ImageView<T> im);
 
 
 

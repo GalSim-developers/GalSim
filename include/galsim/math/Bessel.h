@@ -30,17 +30,17 @@ namespace galsim {
 namespace math {
 
     // Functions defined in src/Bessel.cpp
-    double PUBLIC_API cyl_bessel_j(double nu, double x);
-    double PUBLIC_API cyl_bessel_y(double nu, double x);
-    double PUBLIC_API cyl_bessel_k(double nu, double x);
-    double PUBLIC_API cyl_bessel_i(double nu, double x);
+    PUBLIC_API double cyl_bessel_j(double nu, double x);
+    PUBLIC_API double cyl_bessel_y(double nu, double x);
+    PUBLIC_API double cyl_bessel_k(double nu, double x);
+    PUBLIC_API double cyl_bessel_i(double nu, double x);
 
     // These are in math.h, but we put them here for better namespace encapsulation.
-    double PUBLIC_API j0(double x);
-    double PUBLIC_API j1(double x);
+    PUBLIC_API double j0(double x);
+    PUBLIC_API double j1(double x);
 
-    double PUBLIC_API getBesselRoot0(int s);
-    double PUBLIC_API getBesselRoot(double nu, int s);
+    PUBLIC_API double getBesselRoot0(int s);
+    PUBLIC_API double getBesselRoot(double nu, int s);
 
 } }
 

@@ -29,10 +29,10 @@
 
 namespace galsim {
 
-    double PUBLIC_API fact(int i);
-    double PUBLIC_API sqrtfact(int i);
-    double PUBLIC_API binom(int i,int j);
-    double PUBLIC_API sqrtn(int i);
+    PUBLIC_API double fact(int i);
+    PUBLIC_API double sqrtfact(int i);
+    PUBLIC_API double binom(int i,int j);
+    PUBLIC_API double sqrtn(int i);
 
 }
 

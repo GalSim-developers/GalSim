@@ -442,13 +442,13 @@ namespace galsim {
         shared_ptr<VectorXd> _v;
     };
 
-    std::ostream& PUBLIC_API operator<<(std::ostream& os, const LVector& lv);
-    std::istream& PUBLIC_API operator>>(std::istream& is, LVector& lv);
+    PUBLIC_API std::ostream& operator<<(std::ostream& os, const LVector& lv);
+    PUBLIC_API std::istream& operator>>(std::istream& is, LVector& lv);
 
     // This function finds the innermost radius at which the integrated flux
     // of the LVector's shape crosses the specified threshold, using the first
     // maxP monopole terms (or all, if maxP omitted)
-    extern double PUBLIC_API fluxRadius(const LVector& lv, double threshold, int maxP=-1);
+    PUBLIC_API double fluxRadius(const LVector& lv, double threshold, int maxP=-1);
 
 }
 

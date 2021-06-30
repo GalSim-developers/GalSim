@@ -28,7 +28,7 @@ namespace math {
     // Detect if a floating point number is NaN
     // Note: don't use isnan for function name, since this might be a macro from math.h.
     template <typename T>
-    bool PUBLIC_API isNan(T x);
+    PUBLIC_API bool isNan(T x);
 
 }}
 

@@ -28,7 +28,7 @@
 
 namespace galsim {
 
-    double PUBLIC_API CalculateSizeContainingFlux(
+    PUBLIC_API double CalculateSizeContainingFlux(
         const BaseImage<double>& im, double target_flux);
 
     /**

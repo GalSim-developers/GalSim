@@ -153,7 +153,7 @@ namespace galsim {
 
     };
 
-    std::ostream& PUBLIC_API operator<<(std::ostream& os, const GSParams& gsp);
+    PUBLIC_API std::ostream& operator<<(std::ostream& os, const GSParams& gsp);
 
     struct GSParamsPtr
     {

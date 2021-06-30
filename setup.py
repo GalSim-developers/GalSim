@@ -1213,15 +1213,15 @@ version_h_text = """
 
 namespace galsim {
     // Compiled versions of the above #define values.
-    extern int PUBLIC_API major_version();
-    extern int PUBLIC_API minor_version();
-    extern int PUBLIC_API revision();
+    PUBLIC_API int major_version();
+    PUBLIC_API int minor_version();
+    PUBLIC_API int revision();
 
     // Returns string of the form "1.4.2"
-    extern std::string PUBLIC_API version();
+    PUBLIC_API std::string version();
 
     // Checks if the compiled library version matches the #define values in this header file.
-    inline bool PUBLIC_API check_version() {
+    inline bool check_version() {
         // Same code as version(), but inline, so we get the above values to compare
         // to the values compiled into the library.
         std::ostringstream oss;

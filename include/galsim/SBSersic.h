@@ -27,9 +27,9 @@
 
 namespace galsim {
 
-    double PUBLIC_API SersicHLR(double n, double flux_fraction);
-    double PUBLIC_API SersicIntegratedFlux(double n, double r);
-    double PUBLIC_API SersicTruncatedScale(double n, double hlr, double trunc);
+    PUBLIC_API double SersicHLR(double n, double flux_fraction);
+    PUBLIC_API double SersicIntegratedFlux(double n, double r);
+    PUBLIC_API double SersicTruncatedScale(double n, double hlr, double trunc);
 
     namespace sbp {
 
