@@ -365,16 +365,21 @@ changes slightly, it will usually be fairly simple to update to the new syntax.
 
 We provide the appropriate header files to use in the installed python library
 location in the ``include`` directory.  These files precisely specify the
-available API for a given release.
+available C++-layer API for a given release.
 
-The compiled library file is not by default installed.  The functions are included
+The compiled library file for linking user C++ code is not installed by the default
+pip or setup.py installation procedure.  The relevant functions are included
 in the Python module file, called ``_galsim.so``, but this file is often not usable
-for linking your own C++ code.  For this purpose, you will need an extra step to
-build a shared library that has the C++-layer functions.  Specifically, if you set
-an environment variable, ``GALSIM_BUILD_SHARED``, then the setup.py installation
-will build the shared library as well::
+for linking your own C++ code.
+
+For this purpose, you will need to perform an extra step to build a shared library
+that has the C++-layer functions.  Specifically, if you set an environment variable,
+``GALSIM_BUILD_SHARED``, then the setup.py installation will build the shared
+library as well::
 
     GALSIM_BUILD_SHARED=1 python setup.py install
 
-The built shared library will be located in ``build/shared_clib/``.  You should
-copy this file to some appropriate directory where your C++ code will be able to link to it.
+The built shared library will be located in ``build/shared_clib/``.  The library file
+is named ``libgalsim.M.m.dylib`` on OSX or ``libgalsim.M.m.so`` on Linux, where M,m
+are the major and minor version numbers for the release.  You should copy this file
+to some appropriate directory where your C++ code will be able to link to it.
