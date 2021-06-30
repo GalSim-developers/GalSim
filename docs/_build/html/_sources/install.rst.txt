@@ -3,7 +3,7 @@ Installation Instructions
 
 GalSim is a python module that has much of its implementation in C++ for
 improved computational efficiency.  GalSim supports both Python 2 and
-Python 3.  It is regularly tested on Python versions (2.7, 3.5, 3.6).
+Python 3.  It is regularly tested on Python versions (2.7, 3.6, 3.7, 3.8, 3.9).
 
 System requirements: GalSim currently only supports Linux and Mac OSX.
 Possibly other POSIX-compliant systems, but we specifically do not
@@ -14,34 +14,33 @@ The usual way to install GalSim is now (starting with version 2.0) simply::
     pip install galsim
 
 which will install the latest official release of GalSim.
-For complete details, see
-
-.. toctree::
-    :maxdepth: 1
-
-    install_pip.rst
+For complete details, see `Installing With Pip`.
 
 Another option If you use Anaconda Python is to use ``conda``::
 
     conda install -c conda-forge galsim
 
-For more information, see
-
-.. toctree::
-    :maxdepth: 1
-
-    install_conda.rst
+For more information, see `Installing With Conda`.
 
 Finally, there is a legacy option to use SCons, which was the only
 installation method prior to version 2.0.  This installation mode is still
 supported, but is not recommended unless you have difficulties with the pip
 or conda installation methods.
 
-For details about this method, see
+.. warning::
+
+    This (v2.3) is the last GalSim release which will support the legacy SCons
+    installation method.  If you are still using it, you are advised to switch
+    to the above setup.py-based method instead.
+
+For details about this method, see `Installing With SCons`.
+
 
 .. toctree::
     :maxdepth: 1
 
+    install_pip.rst
+    install_conda.rst
     install_scons.rst
 
 Running tests

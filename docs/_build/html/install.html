@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Installation Instructions &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>Installation Instructions &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -183,11 +184,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="installation-instructions">
+  <section id="installation-instructions">
 <h1>Installation Instructions<a class="headerlink" href="#installation-instructions" title="Permalink to this headline">¶</a></h1>
 <p>GalSim is a python module that has much of its implementation in C++ for
 improved computational efficiency.  GalSim supports both Python 2 and
-Python 3.  It is regularly tested on Python versions (2.7, 3.5, 3.6).</p>
+Python 3.  It is regularly tested on Python versions (2.7, 3.6, 3.7, 3.8, 3.9).</p>
 <p>System requirements: GalSim currently only supports Linux and Mac OSX.
 Possibly other POSIX-compliant systems, but we specifically do not
 currently support Windows.</p>
@@ -196,33 +197,31 @@ currently support Windows.</p>
 </pre></div>
 </div>
 <p>which will install the latest official release of GalSim.
-For complete details, see</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="install_pip.html">Installing With Pip</a></li>
-</ul>
-</div>
+For complete details, see <a class="reference internal" href="install_pip.html#installing-with-pip"><span class="std std-ref">Installing With Pip</span></a>.</p>
 <p>Another option If you use Anaconda Python is to use <code class="docutils literal notranslate"><span class="pre">conda</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">galsim</span>
 </pre></div>
 </div>
-<p>For more information, see</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="install_conda.html">Installing With Conda</a></li>
-</ul>
-</div>
+<p>For more information, see <a class="reference internal" href="install_conda.html#installing-with-conda"><span class="std std-ref">Installing With Conda</span></a>.</p>
 <p>Finally, there is a legacy option to use SCons, which was the only
 installation method prior to version 2.0.  This installation mode is still
 supported, but is not recommended unless you have difficulties with the pip
 or conda installation methods.</p>
-<p>For details about this method, see</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This (v2.3) is the last GalSim release which will support the legacy SCons
+installation method.  If you are still using it, you are advised to switch
+to the above setup.py-based method instead.</p>
+</div>
+<p>For details about this method, see <a class="reference internal" href="install_scons.html#installing-with-scons"><span class="std std-ref">Installing With SCons</span></a>.</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="install_pip.html">Installing With Pip</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install_conda.html">Installing With Conda</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install_scons.html">Installing With SCons</a></li>
 </ul>
 </div>
-<div class="section" id="running-tests">
+<section id="running-tests">
 <h2>Running tests<a class="headerlink" href="#running-tests" title="Permalink to this headline">¶</a></h2>
 <p>The simplest way to run our test suite by typing:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">test</span>
@@ -269,8 +268,8 @@ test run using <code class="docutils literal notranslate"><span class="pre">pyte
 the file name means run <strong>all</strong> the tests including the slow ones that we normally
 skip.)</p>
 </div>
-</div>
-<div class="section" id="running-example-scripts">
+</section>
+<section id="running-example-scripts">
 <h2>Running example scripts<a class="headerlink" href="#running-example-scripts" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">examples</span></code> directory has a series of demo scripts:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">demo1</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="n">demo2</span><span class="o">.</span><span class="n">py</span><span class="p">,</span> <span class="o">...</span>
@@ -296,8 +295,8 @@ learning the config file usage of GalSim.</p>
 <p>All demo scripts are designed to be run in the <code class="docutils literal notranslate"><span class="pre">GalSim/examples</span></code> directory.
 Some of them access files in subdirectories of the <code class="docutils literal notranslate"><span class="pre">examples</span></code> directory, so they
 would not work correctly from other locations.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

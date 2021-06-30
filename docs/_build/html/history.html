@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Revision History &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>Revision History &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -204,9 +205,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="revision-history">
+  <section id="revision-history">
 <h1>Revision History<a class="headerlink" href="#revision-history" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="changes-from-v2-2-to-v2-3">
+<section id="changes-from-v2-2-to-v2-3">
 <h2>Changes from v2.2 to v2.3<a class="headerlink" href="#changes-from-v2-2-to-v2-3" title="Permalink to this headline">¶</a></h2>
 <p>This release mostly focuses on improvements needed for LSST Rubin simulations
 for the Dark Energy Science Collaboration and ones needed for Roman Space
@@ -233,7 +234,7 @@ can help you find mitigation strategies.</p>
 <p>A full list of changes in this release are below.  The numbers in parentheses
 are GalSim issue or pull request numbers where the change was implemented.</p>
 <p>cf. <a class="reference external" href="https://github.com/GalSim-developers/GalSim/milestone/20?closed=1">https://github.com/GalSim-developers/GalSim/milestone/20?closed=1</a></p>
-<div class="section" id="dependency-changes">
+<section id="dependency-changes">
 <h3>Dependency Changes<a class="headerlink" href="#dependency-changes" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Removed future as a dependency. (#1082)</p></li>
@@ -241,8 +242,8 @@ are GalSim issue or pull request numbers where the change was implemented.</p>
 download the eigen code directly if it cannot find eigen installed on
 your system. (#1086)</p></li>
 </ul>
-</div>
-<div class="section" id="api-changes">
+</section>
+<section id="api-changes">
 <h3>API Changes<a class="headerlink" href="#api-changes" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Deprecated the rng parameter to <a class="reference internal" href="photon_ops.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> and <a class="reference internal" href="photon_ops.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a>
@@ -298,8 +299,8 @@ PSF equation.  The new default value of ‘+’ produces a profile that is
 180 degrees rotated compared to the former behavior.  To revive the
 former behavior, set <code class="docutils literal notranslate"><span class="pre">fft_sign='-'</span></code>. (#1104)</p></li>
 </ul>
-</div>
-<div class="section" id="config-updates">
+</section>
+<section id="config-updates">
 <h3>Config Updates<a class="headerlink" href="#config-updates" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added ability to draw chromatic objects with config files. (#510)</p></li>
@@ -323,8 +324,8 @@ to do this. (#1095)</p></li>
 modules field. (#1121)</p></li>
 <li><p>Added Roman config types: RomanSCA, RomanBandpass, and RomanPSF. (#1121)</p></li>
 </ul>
-</div>
-<div class="section" id="new-features">
+</section>
+<section id="new-features">
 <h3>New Features<a class="headerlink" href="#new-features" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added atRedshift method for ChromaticObject. (#510)</p></li>
@@ -364,8 +365,8 @@ easier to rescale the fluxes to a different telescope than HST. (#1121)</p></li>
 <li><p>Added zernike.describe_zernike to construct an algebraic string describing
 circular Zernike terms in the Cartesian basis. (#1104)</p></li>
 </ul>
-</div>
-<div class="section" id="performance-improvements">
+</section>
+<section id="performance-improvements">
 <h3>Performance Improvements<a class="headerlink" href="#performance-improvements" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Implemented Transformation._drawReal and _drawKImage in python to provide
@@ -388,8 +389,8 @@ resulting Zernike series without knowing its coefficients. (#1124)</p></li>
 <li><p>Removed some small bits of overhead in some “leading underscore” methods
 (e.g. _drawReal, _Transform, _shift, etc.) to make them faster. (#1126)</p></li>
 </ul>
-</div>
-<div class="section" id="bug-fixes">
+</section>
+<section id="bug-fixes">
 <h3>Bug Fixes<a class="headerlink" href="#bug-fixes" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed horner and horner2d when inputs are complex. (#1054)</p></li>
@@ -402,16 +403,16 @@ information in each hdu. (#1091)</p></li>
 <li><p>Improved the accuracy of stepk for Kolmogorov profiles, especially when
 folding_threshold is very small. (#1110)</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="older-versions">
+</section>
+</section>
+<section id="older-versions">
 <h2>Older Versions<a class="headerlink" href="#older-versions" title="Permalink to this headline">¶</a></h2>
 <p>Below is a summary of the major changes with each new tagged version of GalSim.
 Each version may also include various other minor changes and bug fixes not
 listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.</p>
-<div class="section" id="v2-2">
+<section id="v2-2">
 <h3>v2.2<a class="headerlink" href="#v2-2" title="Permalink to this headline">¶</a></h3>
 <p><em>Deprecated Features</em></p>
 <ul class="simple">
@@ -464,8 +465,8 @@ given in parentheses.</p>
 <li><p>Fixed slight error in the realized flux of some profiles when using photon shooting. (#1036)</p></li>
 <li><p>Fixed error in <a class="reference internal" href="gal.html#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> class when n is very, very close to 0.5. (#1041)</p></li>
 </ul>
-</div>
-<div class="section" id="v2-1">
+</section>
+<section id="v2-1">
 <h3>v2.1<a class="headerlink" href="#v2-1" title="Permalink to this headline">¶</a></h3>
 <p><em>Deprecated Features</em></p>
 <ul class="simple">
@@ -494,8 +495,8 @@ and range_division_for_extreama. (#993)</p></li>
 <li><p>Switched to yaml.safe_load to avoid PyYAML v5.0 warnings (#1025)</p></li>
 <li><p>Fixed cases where numpy objected to subtracting floats from ints. (#1025)</p></li>
 </ul>
-</div>
-<div class="section" id="v2-0">
+</section>
+<section id="v2-0">
 <h3>v2.0<a class="headerlink" href="#v2-0" title="Permalink to this headline">¶</a></h3>
 <p><em>Installation Changes</em></p>
 <ul class="simple">
@@ -532,8 +533,8 @@ and range_division_for_extreama. (#993)</p></li>
 <li><p>Changed the type of warnings raised by GalSim to GalSimWarning. (#755)</p></li>
 <li><p>Added the withGSParams() method for all GSObjects. (#968)</p></li>
 </ul>
-</div>
-<div class="section" id="v1-6">
+</section>
+<section id="v1-6">
 <h3>v1.6<a class="headerlink" href="#v1-6" title="Permalink to this headline">¶</a></h3>
 <p><em>API Changes</em></p>
 <ul class="simple">
@@ -569,8 +570,8 @@ getConvergence, getMagnification, and getLensing. (#855)</p></li>
 <li><p>Added SiliconSensor.calculate_pixel_area. (#963)</p></li>
 <li><p>Added transpose option in SiliconSensor. (#963)</p></li>
 </ul>
-</div>
-<div class="section" id="v1-5">
+</section>
+<section id="v1-5">
 <h3>v1.5<a class="headerlink" href="#v1-5" title="Permalink to this headline">¶</a></h3>
 <p><em>API Changes</em></p>
 <ul class="simple">
@@ -714,8 +715,8 @@ like galsim.config.BuildGSObject.  (#820)</p></li>
 <li><p>Added skip option in stamp field. (#865)</p></li>
 <li><p>Added ‘:field’ syntax for templates. (#865)</p></li>
 </ul>
-</div>
-<div class="section" id="v1-4">
+</section>
+<section id="v1-4">
 <h3>v1.4<a class="headerlink" href="#v1-4" title="Permalink to this headline">¶</a></h3>
 <p><em>API Changes</em></p>
 <ul class="simple">
@@ -796,8 +797,8 @@ single element. (#763)</p></li>
 <li><p>Added a new ‘stamp’ top level field. (#691)</p></li>
 <li><p>Added new stamp type=Ring to effect ring tests. (#698)</p></li>
 </ul>
-</div>
-<div class="section" id="v1-3">
+</section>
+<section id="v1-3">
 <h3>v1.3<a class="headerlink" href="#v1-3" title="Permalink to this headline">¶</a></h3>
 <p><em>Installation Changes</em></p>
 <ul class="simple">
@@ -883,8 +884,8 @@ of similar (same SED, same Bandpass, same PSF) chromatic profiles. (#670)</p></l
 <li><p>Added lam, diam, scale_units options to Airy and OpticalPSF types. (#618)</p></li>
 <li><p>Added TopHat type. (#639)</p></li>
 </ul>
-</div>
-<div class="section" id="v1-2">
+</section>
+<section id="v1-2">
 <h3>v1.2<a class="headerlink" href="#v1-2" title="Permalink to this headline">¶</a></h3>
 <p><em>New Features</em></p>
 <ul class="simple">
@@ -929,8 +930,8 @@ to being a part of the description of the noise. (#529)</p></li>
 <li><p>Added RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, and
 RandomChi2 random number generators. (#537)</p></li>
 </ul>
-</div>
-<div class="section" id="v1-1">
+</section>
+<section id="v1-1">
 <h3>v1.1<a class="headerlink" href="#v1-1" title="Permalink to this headline">¶</a></h3>
 <p><em>Non-backward-compatible API changes</em></p>
 <ul class="simple">
@@ -992,8 +993,8 @@ rather than ‘obj_num’. (#487)</p></li>
 and allow all of the options that exist for image.draw_method. (#535)</p></li>
 <li><p>Added an index item for Ring objects. (#536)</p></li>
 </ul>
-</div>
-<div class="section" id="v1-0">
+</section>
+<section id="v1-0">
 <h3>v1.0<a class="headerlink" href="#v1-0" title="Permalink to this headline">¶</a></h3>
 <p><em>Notable bug fixes and improvements</em></p>
 <ul class="simple">
@@ -1036,8 +1037,8 @@ galsim.des explicitly or load with galsim -m des … (#460)</p></li>
 <li><p>Added signal_to_noise option for PSFs when there is no galaxy. (#459)</p></li>
 <li><p>Added output.skip and output.noclobber options. (#474)</p></li>
 </ul>
-</div>
-<div class="section" id="v0-5">
+</section>
+<section id="v0-5">
 <h3>v0.5<a class="headerlink" href="#v0-5" title="Permalink to this headline">¶</a></h3>
 <p><em>New features</em></p>
 <ul class="simple">
@@ -1078,8 +1079,8 @@ image_pos, and added a new sky_pos item. (#380)</p></li>
 <li><p>Fixed bug in draw routine for shifted objects. (#380)</p></li>
 <li><p>Fixed bug in the generation of correlated noise fields. (#352)</p></li>
 </ul>
-</div>
-<div class="section" id="v0-4">
+</section>
+<section id="v0-4">
 <h3>v0.4<a class="headerlink" href="#v0-4" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Added ability to pad images for InterpolatedImage or RealGalaxy with either
@@ -1099,8 +1100,8 @@ class. (#305)</p></li>
 <li><p>Made a new Noise hierarchy for CCDNoise (no longer a BaseDeviate),
 GaussianNoise, PoissonNoise, DeviateNoise. (#349)</p></li>
 </ul>
-</div>
-<div class="section" id="v0-3">
+</section>
+<section id="v0-3">
 <h3>v0.3<a class="headerlink" href="#v0-3" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Fixed several bugs in the Sersic class that had been causing ringing.
@@ -1118,8 +1119,8 @@ to handle weight and bad pixel maps for the input Images; and to run ~2-3
 times faster. (#331, #332)</p></li>
 <li><p>Fixed bug in config RandomCircle when using inner_radius option.</p></li>
 </ul>
-</div>
-<div class="section" id="v0-2">
+</section>
+<section id="v0-2">
 <h3>v0.2<a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p>Significant revamping and commenting of demos, including both python and
@@ -1132,13 +1133,13 @@ config files (#291, #295).</p></li>
 numpy.int32 types), and made Image handling generally more robust (#293, #294).</p></li>
 <li><p>Fixed bug in wrapping of angles (now not automatic – use wrap() explicitly).</p></li>
 </ul>
-</div>
-<div class="section" id="v0-1">
+</section>
+<section id="v0-1">
 <h3>v0.1<a class="headerlink" href="#v0-1" title="Permalink to this headline">¶</a></h3>
 <p>Initial version of GalSim with most of the basic functionality.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>

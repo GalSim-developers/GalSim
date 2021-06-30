@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Units &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>Units &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -182,9 +183,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="units">
+  <section id="units">
 <h1>Units<a class="headerlink" href="#units" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="size-units">
+<section id="size-units">
 <h2>Size Units<a class="headerlink" href="#size-units" title="Permalink to this headline">¶</a></h2>
 <p>GalSim models surface brightnesses of objects in sky coordinates.  The physical size of a
 galaxy in light years or kpc is not really relevant to its appearance in the sky.  Rather,
@@ -217,8 +218,8 @@ fundamental scale radius for an <a class="reference internal" href="psf.html#gal
 not particularly convenient to use for the image pixel scale.  The <a class="reference internal" href="psf.html#galsim.Airy" title="galsim.Airy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Airy</span></code></a> constructor thus takes
 another parameter, <code class="docutils literal notranslate"><span class="pre">scale_unit</span></code>, which defaults to arcsec to specify the unit you want to
 convert this angle to.</p>
-</div>
-<div class="section" id="flux-units">
+</section>
+<section id="flux-units">
 <h2>Flux Units<a class="headerlink" href="#flux-units" title="Permalink to this headline">¶</a></h2>
 <p>The units for the <code class="docutils literal notranslate"><span class="pre">flux</span></code> of a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> are nominally photons/cm^2/s, and the units for an
 image are ADUs (analog-to-digital units).  There are thus four conversion factors to apply to
@@ -238,8 +239,8 @@ photons.</p>
 <p>However, if you prefer to think of your flux as having physical units, then you can declare
 the appropriate telescope collecting area (<code class="docutils literal notranslate"><span class="pre">area</span></code>), the exposure time (<code class="docutils literal notranslate"><span class="pre">exptime</span></code>), and the
 total effective gain (<code class="docutils literal notranslate"><span class="pre">gain</span></code>) as arguments to <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a>.</p>
-</div>
-<div class="section" id="sed-units">
+</section>
+<section id="sed-units">
 <h2>SED Units<a class="headerlink" href="#sed-units" title="Permalink to this headline">¶</a></h2>
 <p>These details matter more when working with <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> instances, where the flux
 normalization is handled with an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> object.  The units of an input <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a> can be any of
@@ -269,8 +270,8 @@ photons/cm^2/s.  If you trust your SED, you can then just draw with the appropri
 as observed through a particular <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> (probably in ADU) and then ignore all of these
 parameters when you are drawing.  This is possible using the methods <a class="reference internal" href="sed.html#galsim.SED.withFlux" title="galsim.SED.withFlux"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SED.withFlux</span></code></a> or
 <a class="reference internal" href="sed.html#galsim.SED.withMagnitude" title="galsim.SED.withMagnitude"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SED.withMagnitude</span></code></a>.</p>
-</div>
-<div class="section" id="angles">
+</section>
+<section id="angles">
 <h2>Angles<a class="headerlink" href="#angles" title="Permalink to this headline">¶</a></h2>
 <p>For nearly all angular values, we require the argument to be an <a class="reference internal" href="#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance.
 We use the <code class="docutils literal notranslate"><span class="pre">LSSTDESC.Coord</span></code> package for this (and its <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> class):</p>
@@ -754,8 +755,8 @@ equivalent to ‘rad’.</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

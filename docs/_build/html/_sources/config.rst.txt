@@ -86,6 +86,7 @@ case the default of ``flux=1`` is used.
     :maxdepth: 1
 
     config_top
+    config_values
     config_special
     config_galsim
     config_process

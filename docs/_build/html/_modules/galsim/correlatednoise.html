@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.correlatednoise &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>galsim.correlatednoise &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -1129,7 +1129,7 @@
     <span class="c1"># Quickest to create Gaussian rng each time needed, so do that here...</span>
     <span class="c1"># Note sigma scaling: 1/sqrt(2) needed so &lt;|gaussvec|**2&gt; = product(shape)</span>
     <span class="c1"># shape needed because of the asymmetry in the 1/N^2 division in the NumPy FFT/iFFT</span>
-    <span class="n">gd</span> <span class="o">=</span> <span class="n">GaussianDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="o">.</span><span class="mi">5</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">gd</span> <span class="o">=</span> <span class="n">GaussianDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">.5</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
     <span class="c1"># Fill a couple of arrays with this noise</span>
     <span class="n">gvec_real</span> <span class="o">=</span> <span class="n">utilities</span><span class="o">.</span><span class="n">rand_arr</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">gd</span><span class="p">)</span>

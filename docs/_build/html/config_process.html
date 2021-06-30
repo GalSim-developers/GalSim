@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Config Processing From Python &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>Config Processing From Python &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -105,6 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
 <li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
@@ -196,12 +198,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="config-processing-from-python">
+  <section id="config-processing-from-python">
 <h1>Config Processing From Python<a class="headerlink" href="#config-processing-from-python" title="Permalink to this headline">¶</a></h1>
 <p>It is also possible to run the config processing from a Python script, rather than using
 <a class="reference internal" href="config_galsim.html#the-galsim-executable"><span class="std std-ref">The galsim Executable</span></a>.  An example of this can be found in
 <a class="reference download internal" download="" href="_downloads/6ad302df39711687604bb7971a0b3f9b/demo8.py"><code class="xref download docutils literal notranslate"><span class="pre">demo8</span></code></a>.</p>
-<div class="section" id="running-the-whole-script">
+<section id="running-the-whole-script">
 <h2>Running the Whole Script<a class="headerlink" href="#running-the-whole-script" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are relevant to running the whole config script from Python:</p>
 <dl class="py function">
@@ -332,8 +334,8 @@ or just report errors and continue on (False). [default: False]</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="building-files">
+</section>
+<section id="building-files">
 <h2>Building Files<a class="headerlink" href="#building-files" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are relevant to building one or more files as specified by a config
 dict:</p>
@@ -463,8 +465,8 @@ start_obj_num items in the config dict.)</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="building-images">
+</section>
+<section id="building-images">
 <h2>Building Images<a class="headerlink" href="#building-images" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are relevant to building one or more images as specified by a config
 dict:</p>
@@ -717,8 +719,8 @@ sky at the image center.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="building-stamps">
+</section>
+<section id="building-stamps">
 <h2>Building Stamps<a class="headerlink" href="#building-stamps" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are relevant to building one or more stamps as specified by a config
 dict:</p>
@@ -847,8 +849,8 @@ e.g. you can add add_to_image=True or setup_only=True if these are helpful.</p>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="building-objects">
+</section>
+<section id="building-objects">
 <h2>Building Objects<a class="headerlink" href="#building-objects" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are relevant to building individual objects as specified by a config
 dict:</p>
@@ -924,8 +926,8 @@ The constructor takes an optional message that will be output to the logger if
 logging is active.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="generating-values">
+</section>
+<section id="generating-values">
 <h2>Generating Values<a class="headerlink" href="#generating-values" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are relevant to generating and accessing individual values as specified by
 a config dict:</p>
@@ -1087,8 +1089,8 @@ Normally, this is just ‘world_pos’.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="using-input-fields">
+</section>
+<section id="using-input-fields">
 <h2>Using Input Fields<a class="headerlink" href="#using-input-fields" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are relevant to processing and using input fields in a config dict:</p>
 <dl class="py function">
@@ -1196,8 +1198,8 @@ error messages).</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="processing-extra-outputs">
+</section>
+<section id="processing-extra-outputs">
 <h2>Processing Extra Outputs<a class="headerlink" href="#processing-extra-outputs" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are relevant to processing extra output fields in a config dict:</p>
 <dl class="py function">
@@ -1338,8 +1340,8 @@ had a problem.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="config-utilities">
+</section>
+<section id="config-utilities">
 <h2>Config Utilities<a class="headerlink" href="#config-utilities" title="Permalink to this headline">¶</a></h2>
 <p>The following functions are used internally by the various <code class="docutils literal notranslate"><span class="pre">galsim.config</span></code> functions,
 but they might be useful for some users.</p>
@@ -1780,8 +1782,8 @@ dict of parameters that includes ‘obj_num’.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

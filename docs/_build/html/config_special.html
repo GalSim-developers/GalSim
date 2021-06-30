@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Special Fields &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>Special Fields &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -105,6 +106,7 @@
 <li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Special Fields</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#modules">modules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#eval-variables">eval_variables</a></li>
@@ -195,11 +197,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="special-fields">
+  <section id="special-fields">
 <h1>Special Fields<a class="headerlink" href="#special-fields" title="Permalink to this headline">¶</a></h1>
 <p>There are a couple of other top level fields that act more in a support role, rather than being
 part of the main processing.</p>
-<div class="section" id="modules">
+<section id="modules">
 <h2>modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
 <p>Almost all aspects of the file building can be customized by the user if the existing GalSim
 types do not do precisely what you need.  How to do this is described in the pages about
@@ -217,8 +219,8 @@ need to be located in a directory in <code class="docutils literal notranslate">
 <li><p><a class="reference download internal" download="" href="_downloads/3e7227e22c28523dea1e62a3876fb445/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a></p></li>
 </ul>
 <p>for some examples of this field.</p>
-</div>
-<div class="section" id="eval-variables">
+</section>
+<section id="eval-variables">
 <h2>eval_variables<a class="headerlink" href="#eval-variables" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes, it can be useful to define some configuration parameters right at the top of the
 config file that might be used farther down in the file somewhere to highlight them.
@@ -233,8 +235,8 @@ items, but they can be placed separately from those evaluations.</p>
 <li><p><a class="reference download internal" download="" href="_downloads/d5ef2e30b6c3574e6f3623a21cde6c18/draw_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">draw_psf.yaml</span></code></a></p></li>
 <li><p><a class="reference download internal" download="" href="_downloads/3e7227e22c28523dea1e62a3876fb445/cgc.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc.yaml</span></code></a></p></li>
 </ul>
-</div>
-<div class="section" id="template">
+</section>
+<section id="template">
 <h2>template<a class="headerlink" href="#template" title="Permalink to this headline">¶</a></h2>
 <p>This feature directs the config processing to first load in some other file (or specific
 field with that file) and then possibly modify some components of that dict.</p>
@@ -309,16 +311,16 @@ E.g. To have a bulge plus disk that have the same kinds of parameters, except th
 <li><p><a class="reference download internal" download="" href="_downloads/3d94c558e887c78d847b4cf11813b989/cgc_psf.yaml"><code class="xref download docutils literal notranslate"><span class="pre">cgc_psf.yaml</span></code></a></p></li>
 </ul>
 <p>for examples of this feature.</p>
-</div>
-</div>
-<div class="section" id="special-specifications">
+</section>
+</section>
+<section id="special-specifications">
 <h1>Special Specifications<a class="headerlink" href="#special-specifications" title="Permalink to this headline">¶</a></h1>
 <p>A few specifications may be used almost anywhere in the config to adjust how the values in those
 fields are processed.  They are automatically propagated to lower levels in the dictionary.
 For instance, if you set <code class="docutils literal notranslate"><span class="pre">index_key</span> <span class="pre">:</span> <span class="pre">image_num</span></code> in the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field, then all values
 generated for any aspect of the psf will be constant for a whole image and only change
 when the processing goes on to the next image.</p>
-<div class="section" id="index-key">
+<section id="index-key">
 <h2>index_key<a class="headerlink" href="#index-key" title="Permalink to this headline">¶</a></h2>
 <p>This specifies the cadence on which to generate a new value for each non-constant value.
 There are default cadences for each of the major top-level fields, but if you want to specify
@@ -333,13 +335,13 @@ a different cadence for some value or field, then you can override it.</p>
 </ul>
 </div></blockquote>
 <p>It is also possible for a custom module to add additional valid values here by adding to <code class="docutils literal notranslate"><span class="pre">galsim.config.valid_index_keys</span></code>, which is a list of strings, which are allowed.</p>
-</div>
-<div class="section" id="rng-index-key">
+</section>
+<section id="rng-index-key">
 <h2>rng_index_key<a class="headerlink" href="#rng-index-key" title="Permalink to this headline">¶</a></h2>
 <p>Each <code class="docutils literal notranslate"><span class="pre">index_key</span></code> has its own random number generator to use for generating values that need an rng object.  Normally you want these to match up, but this lets you specify to use the rng for a different key than is used for the actual sequencing.</p>
 <p>For instance, if you set <code class="docutils literal notranslate"><span class="pre">rng_index_key</span> <span class="pre">=</span> <span class="pre">'image_num'</span></code> for a <code class="docutils literal notranslate"><span class="pre">gal</span></code> value, then it will use the rng normally used for image_num items, but it will still generate a new value for each obj_num.</p>
-</div>
-<div class="section" id="rng-num">
+</section>
+<section id="rng-num">
 <h2>rng_num<a class="headerlink" href="#rng-num" title="Permalink to this headline">¶</a></h2>
 <p>Normally you specify a single random number seed, which spawns a sequence of rng objects that
 update according to the above index keys.  So an rng for each object is stored in <code class="docutils literal notranslate"><span class="pre">obj_num_rng</span></code>,
@@ -350,8 +352,8 @@ repeat.  For instance, this may be useful to have some galaxy properties repeat 
 exposures, while other properties of the observations are different for each exposure.</p>
 <p>You would specify which random number you want to use from such a list using <code class="docutils literal notranslate"><span class="pre">rng_num</span></code> in a
 field. See the description of <code class="docutils literal notranslate"><span class="pre">random_seed</span></code> in  <a class="reference internal" href="config_image.html#image-field-attributes"><span class="std std-ref">Image Field Attributes</span></a> for more information.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Shared Data &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>Shared Data &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -184,7 +185,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="shared-data">
+  <section id="shared-data">
 <h1>Shared Data<a class="headerlink" href="#shared-data" title="Permalink to this headline">¶</a></h1>
 <p>GalSim includes some ancillary data along with the installed code.  They are installed in
 the sub-directory <code class="docutils literal notranslate"><span class="pre">share</span></code> wherever your GalSim module is installed.</p>
@@ -211,7 +212,7 @@ that open files that might be in the <code class="docutils literal notranslate">
 name to the given file name when trying to open the file.</p>
 <p>The following files are distributed in the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory.  In each case, we provide the
 command you would typically use to load the file with the appropriate GalSim class or function.</p>
-<div class="section" id="shared-sed-files">
+<section id="shared-sed-files">
 <h2>Shared SED files<a class="headerlink" href="#shared-sed-files" title="Permalink to this headline">¶</a></h2>
 <dl>
 <dt>vega.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SED('vega.txt',</span> <span class="pre">wave_type='nm',</span> <span class="pre">flux_type='flam')</span></code></p>
@@ -268,8 +269,8 @@ with fast_search=False.  See devel/modules/getSEDs.py for details.</p>
 <blockquote>
 <div><p>GalSim/devel/getSEDs.py</p>
 </div></blockquote>
-</div>
-<div class="section" id="shared-bandpass-files">
+</section>
+<section id="shared-bandpass-files">
 <h2>Shared Bandpass files<a class="headerlink" href="#shared-bandpass-files" title="Permalink to this headline">¶</a></h2>
 <dl>
 <dt>ACS_wfc_F435W.dat</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.Bandpass('ACS_wfc_F435W.dat',</span> <span class="pre">wave_type='nm')</span></code></p>
@@ -381,8 +382,8 @@ with fast_search=False.</p>
 <li><p>GalSim/devel/getWFC3Bandpass.py</p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="shared-sensor-models">
+</section>
+<section id="shared-sensor-models">
 <h2>Shared Sensor models<a class="headerlink" href="#shared-sensor-models" title="Permalink to this headline">¶</a></h2>
 <dl>
 <dt>lsst_itl_8</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.SiliconSensor('lsst_itl_8')</span></code></p>
@@ -399,15 +400,15 @@ pixel boundaries.  (This file is still somewhat preliminary and may be
 updated in the future.)</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="shared-hst-noise-model">
+</section>
+<section id="shared-hst-noise-model">
 <h2>Shared HST noise model<a class="headerlink" href="#shared-hst-noise-model" title="Permalink to this headline">¶</a></h2>
 <dl class="simple">
 <dt>acs_I_unrot_sci_20_cf.fits</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.getCOSMOSNoise()</span></code></p>
 </dd>
 </dl>
-</div>
-<div class="section" id="shared-roman-st-files">
+</section>
+<section id="shared-roman-st-files">
 <h2>Shared Roman ST files<a class="headerlink" href="#shared-roman-st-files" title="Permalink to this headline">¶</a></h2>
 <dl>
 <dt>Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727_01.txt</dt><dd><p>Use <code class="docutils literal notranslate"><span class="pre">galsim.roman.getPSF(1,</span> <span class="pre">bandpass)</span></code></p>
@@ -479,8 +480,8 @@ Relevant for bands F184 and W149</p>
 <p>Roman ST WCS information for all SCAs.</p>
 </dd>
 </dl>
-</div>
-<div class="section" id="shared-cosmos-files">
+</section>
+<section id="shared-cosmos-files">
 <h2>Shared COSMOS files<a class="headerlink" href="#shared-cosmos-files" title="Permalink to this headline">¶</a></h2>
 <p>These files are not shipped with GalSim, but can be installed into the <code class="docutils literal notranslate"><span class="pre">share</span></code> directory
 by the executable <code class="docutils literal notranslate"><span class="pre">galsim_download_cosmos</span></code>.  See <a class="reference internal" href="real_gal.html#downloading-the-cosmos-catalog"><span class="std std-ref">Downloading the COSMOS Catalog</span></a> for details.</p>
@@ -502,8 +503,8 @@ F814W &lt; 25.2 sample.</p>
 F814W &lt; 23.5 sample.</p>
 </dd>
 </dl>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

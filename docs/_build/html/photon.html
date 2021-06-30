@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Photon Shooting &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>Photon Shooting &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -181,15 +182,16 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="photon-shooting">
+  <section id="photon-shooting">
 <h1>Photon Shooting<a class="headerlink" href="#photon-shooting" title="Permalink to this headline">¶</a></h1>
 <p>Photon shooting was used successfully to generate the simulated images for the GREAT08 and GREAT10
 weak lensing challenges. The objects were convolutions of elliptical Sersic-profile galaxies with
 Moffat-profile PSFs. GalSim extends this technique to enable photon shooting for nearly all of its
 possible objects, except for deconvolutions.</p>
-<p>When we “shoot” a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>, <span class="math notranslate nohighlight">\(N_\gamma\)</span> photons are created with fluxes <span class="math notranslate nohighlight">\(f_i\)</span> and
+<p>When we “shoot” a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>,
+<span class="math notranslate nohighlight">\(N_\gamma\)</span> photons are created with fluxes <span class="math notranslate nohighlight">\(f_i\)</span> and
 positions <span class="math notranslate nohighlight">\(x_i\)</span>.  The total photon flux within any region has an expectation value of the
-integrated surface brightness of the <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> in that region, and the total photon flux in any
+integrated surface brightness of the object in that region, and the total photon flux in any
 two regions are uncorrelated.  The actual realized flux in each region is distributed according
 to Poisson statistics of the number of photons that actually fall in the region.</p>
 <p>We allow for non-uniform <span class="math notranslate nohighlight">\(f_i\)</span> values primarily so that we can represent negative values of
@@ -198,13 +200,14 @@ regions (as will any interpolant that approximates band-limited behavior), and t
 interpolated images that have negative pixel values, such as might arise from using empirical,
 noisy galaxy images.</p>
 <p>The basic way to activate photon shooting is to use <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code> when calling the
-<a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method.  This will switch over to photon shooting, and the resulting
+<a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> or <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject.drawImage" title="galsim.ChromaticObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ChromaticObject.drawImage</span></code></a> method.
+This will switch over to photon shooting, and the resulting
 image will have photon shot noise included from the finite number of photons being shot.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This method necessarily accounts for integration over the pixel by summing the photons that
-are incident in each.  This means that if your <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> surface brightness profile already
-includes the pixel convolution, then you will get the wrong answer.  These profiles should
+are incident in each.  This means that if your surface brightness profile already
+includes the pixel convolution, then you will get the wrong answer.  Such profiles should
 normally use <code class="docutils literal notranslate"><span class="pre">method='no_pixel'</span></code>.  This kind of profile is often the result of PSF estimation
 codes, so some care is required if you intend to use photon shooting with PSFs that come from
 measurements of real data.</p>
@@ -283,7 +286,7 @@ does not apply any photon operators or accumulate onto the <a class="reference i
 <li class="toctree-l1"><a class="reference internal" href="photon_ops.html">Photon Operators</a></li>
 </ul>
 </div>
-</div>
+</section>
 
 
            </div>

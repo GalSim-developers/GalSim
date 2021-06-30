@@ -6,9 +6,10 @@ weak lensing challenges. The objects were convolutions of elliptical Sersic-prof
 Moffat-profile PSFs. GalSim extends this technique to enable photon shooting for nearly all of its
 possible objects, except for deconvolutions.
 
-When we "shoot" a `GSObject`, :math:`N_\gamma` photons are created with fluxes :math:`f_i` and
+When we "shoot" a `GSObject` or `ChromaticObject`,
+:math:`N_\gamma` photons are created with fluxes :math:`f_i` and
 positions :math:`x_i`.  The total photon flux within any region has an expectation value of the
-integrated surface brightness of the `GSObject` in that region, and the total photon flux in any
+integrated surface brightness of the object in that region, and the total photon flux in any
 two regions are uncorrelated.  The actual realized flux in each region is distributed according
 to Poisson statistics of the number of photons that actually fall in the region.
 
@@ -19,13 +20,15 @@ interpolated images that have negative pixel values, such as might arise from us
 noisy galaxy images.
 
 The basic way to activate photon shooting is to use ``method='phot'`` when calling the
-`GSObject.drawImage` method.  This will switch over to photon shooting, and the resulting
+`GSObject.drawImage` or `ChromaticObject.drawImage` method.
+This will switch over to photon shooting, and the resulting
 image will have photon shot noise included from the finite number of photons being shot.
 
 .. note::
+
     This method necessarily accounts for integration over the pixel by summing the photons that
-    are incident in each.  This means that if your `GSObject` surface brightness profile already
-    includes the pixel convolution, then you will get the wrong answer.  These profiles should
+    are incident in each.  This means that if your surface brightness profile already
+    includes the pixel convolution, then you will get the wrong answer.  Such profiles should
     normally use ``method='no_pixel'``.  This kind of profile is often the result of PSF estimation
     codes, so some care is required if you intend to use photon shooting with PSFs that come from
     measurements of real data.

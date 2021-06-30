@@ -4,10 +4,11 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Installing With SCons &mdash; GalSim 2.3.0-rc.1 documentation</title>
+  <title>Installing With SCons &mdash; GalSim 2.3.0-rc.2 documentation</title>
   
 
   
@@ -211,11 +212,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="installing-with-scons">
+  <section id="installing-with-scons">
 <h1>Installing With SCons<a class="headerlink" href="#installing-with-scons" title="Permalink to this headline">¶</a></h1>
 <p>Prior to version 2.0, GalSim installation used SCons.  This installation
-mode is still supported, but is not recommended unless you have difficulties
-with the pip or conda installation methods.</p>
+mode is still supported, but is not recommended.  Indeed this release
+(v2.3) will be the last to continue to support the SCons installation method.
+If you are still using it, you are advised to switch to either the pip or
+setup.py method instead.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Two options that are available with the SCons installation method,
@@ -225,13 +228,17 @@ but not the other methods, are:</p>
 <li><p>using Boost.Python instead of PyBind11 for the wrapping the C++ code
 to be called from Python.</p></li>
 </ol>
-<p>If you need either of these options, then you should use the SCons installation.</p>
+<p>Both of these options (along with the SCons installation method in general)
+will no longer be available after the current release series (v2.3.x).
+If this will cause hardship for you, please open an issue and describe
+your use case and why you think the setup.py installation method will not
+work for you.</p>
 </div>
-<div class="section" id="software-required-before-building-galsim">
+<section id="software-required-before-building-galsim">
 <h2>Software required before building GalSim<a class="headerlink" href="#software-required-before-building-galsim" title="Permalink to this headline">¶</a></h2>
 <p>Please note: Mac users who want to use fink can skip down to Section 5.ii and
 use that to satisfy all dependencies before installing.</p>
-<div class="section" id="python-2-7-3-4-3-5-or-3-6-series">
+<section id="python-2-7-3-4-3-5-or-3-6-series">
 <h3>Python (2.7, 3.4, 3.5, or 3.6 series)<a class="headerlink" href="#python-2-7-3-4-3-5-or-3-6-series" title="Permalink to this headline">¶</a></h3>
 <p>The interface to the GalSim code is via the Python package <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, and its
 associated modules. Therefore you must have Python installed on your system.
@@ -239,8 +246,8 @@ Python is free, and available from a number of sources online (see below).
 Currently GalSim supports Python versions 2.7, 3.4, 3.5, and 3.6.  It is likely
 that other Python 3.x versions are compatible, but these are the only ones
 being actively tested.</p>
-</div>
-<div class="section" id="scons">
+</section>
+<section id="scons">
 <h3>SCons<a class="headerlink" href="#scons" title="Permalink to this headline">¶</a></h3>
 <p>You can download SCons from:</p>
 <p><a class="reference external" href="http://www.scons.org">http://www.scons.org</a></p>
@@ -252,8 +259,8 @@ if it is installed, and if so which version, by typing:</p>
 </pre></div>
 </div>
 <p>See Section 5 for some more suggestions about installing this on your platform.</p>
-</div>
-<div class="section" id="fftw">
+</section>
+<section id="fftw">
 <h3>FFTW<a class="headerlink" href="#fftw" title="Permalink to this headline">¶</a></h3>
 <p>You can download FFTW from:</p>
 <p><a class="reference external" href="http://www.fftw.org">http://www.fftw.org</a></p>
@@ -261,8 +268,8 @@ if it is installed, and if so which version, by typing:</p>
 to them during the build. We require version 3 (or greater presumably), which
 is often distributed as fftw3.  See Section 5 for some suggestions about
 installing this on your platform.</p>
-</div>
-<div class="section" id="tmv-version-0-72">
+</section>
+<section id="tmv-version-0-72">
 <h3>TMV (version &gt;= 0.72)<a class="headerlink" href="#tmv-version-0-72" title="Permalink to this headline">¶</a></h3>
 <p>GalSim can use either Eigen or TMV for its linear algebra routines.  See
 the appropriate section in <a class="reference internal" href="install.html#installation-instructions"><span class="std std-ref">Installation Instructions</span></a> if you want to use Eigen.
@@ -279,8 +286,8 @@ INSTALL file for full details. Also note, you may not need to specify the
 installation directory if you are comfortable installing it into <code class="docutils literal notranslate"><span class="pre">/usr/local</span></code>.
 However, if you are trying to install it into a system directory then you need
 to use sudo scons install [PREFIX=&lt;installdir&gt;].</p>
-</div>
-<div class="section" id="boost-c">
+</section>
+<section id="boost-c">
 <h3>Boost C++<a class="headerlink" href="#boost-c" title="Permalink to this headline">¶</a></h3>
 <p>GalSim can use either PyBind11 or Boost for wrapping the C++ code to use in
 Python.  See the appropriate section in <a class="reference internal" href="install.html#installation-instructions"><span class="std std-ref">Installation Instructions</span></a> if you want to use PyBind11.
@@ -344,8 +351,8 @@ it detected the wrong one]</p>
 </dl>
 </li>
 </ul>
-</div>
-<div class="section" id="python-dependencies">
+</section>
+<section id="python-dependencies">
 <h3>Python dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h3>
 <p>The normal way in which you can install all the required python dependencies
 is with pip:</p>
@@ -393,9 +400,9 @@ each package individually using pip, you can do:</p>
 </div>
 <p>In all cases, you may need to precede the above commands with <code class="docutils literal notranslate"><span class="pre">sudo</span></code> or
 add <code class="docutils literal notranslate"><span class="pre">--user</span></code> to the end as you normally do when pip installing on your system.</p>
-</div>
-</div>
-<div class="section" id="installing-the-galsim-python-package">
+</section>
+</section>
+<section id="installing-the-galsim-python-package">
 <h2>Installing the GalSim Python package<a class="headerlink" href="#installing-the-galsim-python-package" title="Permalink to this headline">¶</a></h2>
 <p>Once you have installed all the dependencies described above, you are ready to
 build GalSim. From the GalSim base directory (in which this file is found) type:</p>
@@ -516,8 +523,8 @@ about the same problem.</p>
 GalSim Github page at <a class="reference external" href="https://github.com/GalSim-developers/GalSim/issues">https://github.com/GalSim-developers/GalSim/issues</a>
 explaining what your particular problem is, and hopefully someone can help
 you figure out a solution.</p>
-</div>
-<div class="section" id="running-tests-and-installing-example-executables">
+</section>
+<section id="running-tests-and-installing-example-executables">
 <h2>Running tests and installing example executables<a class="headerlink" href="#running-tests-and-installing-example-executables" title="Permalink to this headline">¶</a></h2>
 <p>You can run our test suite by typing:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scons</span> <span class="n">tests</span>
@@ -544,10 +551,10 @@ plugins (serially!), you can still do this via:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scons</span> <span class="n">tests</span> <span class="o">-</span><span class="n">j1</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="platform-specific-notes">
+</section>
+<section id="platform-specific-notes">
 <h2>Platform-specific notes<a class="headerlink" href="#platform-specific-notes" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="linux">
+<section id="linux">
 <h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
 <p>The vast majority of Linux distributions provide installable packages for most
 of our dependencies. In many cases, however, it is also necessary to install
@@ -557,8 +564,8 @@ version of Python that Boost is built against must be the same as that you
 intend to use for running GalSim.</p>
 <p>The solution may be to install Boost C++ manually. This can be done by following
 the instructions of Section 1.v), above.</p>
-</div>
-<div class="section" id="mac-osx">
+</section>
+<section id="mac-osx">
 <h3>Mac OSX<a class="headerlink" href="#mac-osx" title="Permalink to this headline">¶</a></h3>
 <p>a) Use of Fink – the <code class="docutils literal notranslate"><span class="pre">fink</span></code> (<a class="reference external" href="http://www.finkproject.org">http://www.finkproject.org</a>) package management
 software is popular with Mac users.  Once it is installed, you can get either
@@ -599,7 +606,7 @@ and <code class="docutils literal notranslate"><span class="pre">galsim</span> <
 then you cannot use the fink-installed GalSim.  However, the process above will
 have installed all the prerequisites.  So <code class="docutils literal notranslate"><span class="pre">fink</span> <span class="pre">uninstall</span> <span class="pre">galsim</span></code> will leave
 you able to install GalSim using the main branch with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scons</span> <span class="n">TMV_DIR</span><span class="o">=/</span><span class="n">sw</span> <span class="n">PYTHON</span><span class="o">=/</span><span class="n">sw</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python2</span><span class="o">.</span><span class="mi">7</span> <span class="n">BOOST_DIR</span><span class="o">=/</span><span class="n">sw</span><span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">boost</span><span class="o">-</span><span class="mi">1_58</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scons</span> <span class="n">TMV_DIR</span><span class="o">=/</span><span class="n">sw</span> <span class="n">PYTHON</span><span class="o">=/</span><span class="n">sw</span><span class="o">/</span><span class="nb">bin</span><span class="o">/</span><span class="n">python2</span><span class="mf">.7</span> <span class="n">BOOST_DIR</span><span class="o">=/</span><span class="n">sw</span><span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">boost</span><span class="o">-</span><span class="mi">1_58</span>
 </pre></div>
 </div>
 <p>from within the repository base directory.</p>
@@ -616,7 +623,7 @@ chosen Python.</p>
 <p>For the system Python, you can use fink for Boost, but you will want a
 different package than the boost1.58.python27 that gets installed using
 <code class="docutils literal notranslate"><span class="pre">fink</span> <span class="pre">install</span> <span class="pre">galsim</span></code> above:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fink</span> <span class="n">install</span> <span class="n">scons</span> <span class="n">fftw3</span> <span class="n">tmv0</span> <span class="n">boost1</span><span class="o">.</span><span class="mi">58</span><span class="o">-</span><span class="n">systempython</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">fink</span> <span class="n">install</span> <span class="n">scons</span> <span class="n">fftw3</span> <span class="n">tmv0</span> <span class="n">boost1</span><span class="mf">.58</span><span class="o">-</span><span class="n">systempython</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">future</span>
 <span class="n">scons</span> <span class="n">TMV_DIR</span><span class="o">=/</span><span class="n">sw</span> <span class="n">BOOST_DIR</span><span class="o">=/</span><span class="n">sw</span><span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">boost</span><span class="o">-</span><span class="mi">1_58</span>
 </pre></div>
@@ -663,15 +670,15 @@ should be installable via:</p>
 <span class="n">brew</span> <span class="n">install</span> <span class="n">gal</span><span class="o">-</span><span class="n">sim</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="docker">
+</section>
+<section id="docker">
 <h3>Docker<a class="headerlink" href="#docker" title="Permalink to this headline">¶</a></h3>
 <p>Karen Ng has created a Docker file for containerizing GalSim.  See her repo:</p>
 <p><a class="reference external" href="https://github.com/karenyyng/GalSim_dockerfile">https://github.com/karenyyng/GalSim_dockerfile</a></p>
 <p>for instructions about how to either use her image or create your own.</p>
-</div>
-</div>
-<div class="section" id="more-scons-options">
+</section>
+</section>
+<section id="more-scons-options">
 <h2>More SCons options<a class="headerlink" href="#more-scons-options" title="Permalink to this headline">¶</a></h2>
 <p>Here is a fairly complete list of the options you can pass to SCons to control
 the build process. The options are listed with their default value. You change
@@ -685,7 +692,7 @@ You can list these options from the command line with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">scons</span> <span class="o">-</span><span class="n">h</span>
 </pre></div>
 </div>
-<div class="section" id="basic-flags-about-the-c-compilation-default-values-in-parentheses">
+<section id="basic-flags-about-the-c-compilation-default-values-in-parentheses">
 <h3>Basic flags about the C++ compilation (default values in parentheses)<a class="headerlink" href="#basic-flags-about-the-c-compilation-default-values-in-parentheses" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">CXX</span></code> (g++) specifies which C++ compiler to use.</p></li>
@@ -713,8 +720,8 @@ like gdb easier.  Probably end users will never need to use this.</p></li>
 planning to use GalSim with.  If you choose not to use the default here,
 then you need to remember to use the correct Python version</p></li>
 </ul>
-</div>
-<div class="section" id="flags-about-where-to-install-the-library-and-modules">
+</section>
+<section id="flags-about-where-to-install-the-library-and-modules">
 <h3>Flags about where to install the library and modules<a class="headerlink" href="#flags-about-where-to-install-the-library-and-modules" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">PREFIX</span></code> (/usr/local) specifies where to install the library when running
@@ -727,8 +734,8 @@ into a staging area first before copying over to the final location.)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">WITH_UPS</span></code> (False) specified whether to install the ups directory for use
 with EUPS.</p></li>
 </ul>
-</div>
-<div class="section" id="flags-that-specify-where-to-look-for-external-libraries">
+</section>
+<section id="flags-that-specify-where-to-look-for-external-libraries">
 <h3>Flags that specify where to look for external libraries<a class="headerlink" href="#flags-that-specify-where-to-look-for-external-libraries" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">FFTW_DIR</span></code> (‘’) specifies the root location of FFTW. The header files should
@@ -805,8 +812,8 @@ of SCons.  cf. DYLD_LIBRARY_PATH for why this may be useful.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">LD_LIBRARY_PATH</span></code> (‘’) Set the LD_LIBRARY_PATH inside of SCons.
 cf. DYLD_LIBRARY_PATH for why this may be useful.</p></li>
 </ul>
-</div>
-<div class="section" id="miscellaneous-flags">
+</section>
+<section id="miscellaneous-flags">
 <h3>Miscellaneous flags<a class="headerlink" href="#miscellaneous-flags" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">PYTEST</span></code> (pytest) specifies which version of pytest you want to use
@@ -829,9 +836,9 @@ than the ones listed here.  Normally, another name would indicate a typo, so
 we catch it and let you know.  But if you want to use other scons options
 that we did not list here, you would want to also set this to True.</p></li>
 </ul>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
            </div>
