@@ -24,6 +24,14 @@ development.  For details of algorithms and code validation, please see
 
     http://adsabs.harvard.edu/abs/2015A%26C....10..121R
 
+The GalSim version numbering tries to follow `Semantic Versioning <https://semver.org/>`_
+This means that releases are numbered as M.m.r, where M is a major version number,
+m is the minor version, and r is the revision (or patch or bugfix) number.
+
+The public API is preserved within a given major version number.  So code that works
+with version 2.2.3 (say) should continue to work for all subsequent 2.x.x versions.
+Minor versions indicate new features being added to the API.  Revision versions
+don't add any new features, but fix bugs in the previous release.
 
 Basic Installation
 ==================

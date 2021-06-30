@@ -97,5 +97,3 @@ For a list of all the available ``output`` types, see `Config Output Field`.
     config_image
     config_input
     config_output
-    config_values
-

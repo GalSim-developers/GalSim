@@ -36,14 +36,20 @@ you can do::
 Either of these installation methods should handle most of the required
 dependencies for you if you do not have them already installed on your machine.
 In particular, all of the python dependencies should be automatically installed
-for you.  See section 2 below if you have trouble with any of these.
+for you.  See `Installing Python Dependencies` if you have trouble with any of these.
 
 FFTW is not directly pip installable, so if the above installation fails,
-you may need to install it separately. See section 3 below for more details
+you may need to install it separately. See `Installing FFTW` for more details
 about how to do this.
 
-Finally, a version of Eigen can be installed by pip, but you might prefer to
-install this manually.  See section 4 below for more details.
+Eigen is also not pip installable, but it is a header-only library, so it doesn't
+require any installation.  Therefore, if you don't have it it locally in a place where
+setup.py can find it, a version of Eigen will be downloaded directly.
+See `Installing Eigen` for more details.
+
+Finally, while GalSim is officially a Python package, there are some users who
+use the compiled C++ library directly, rather than via the Python interface.
+See `Installing the C++ Shared Library` for information about this possibility.
 
 Installing Python Dependencies
 ------------------------------
@@ -334,3 +340,41 @@ If you use MacPorts, Eigen can be installed with::
 
 This will put it into the /opt/local/include directory on your system. GalSim
 knows to look here, so there is nothing additional you need to do.
+
+
+Installing the C++ Shared Library
+---------------------------------
+
+GalSim is first and foremost a Python package.  However, it uses C++ functions behind
+the scenes to implement many of the numerically intensive operations.
+Some users have found it useful to link directly to the GalSim C++ library
+with their own C++ code.  This use case is supported, but at a lower level of
+API guarantees than we make for the Python code.
+
+The official public API is really only the python-layer classes and functions.
+We strive to hew closely to the `Semantic Versioning <https://semver.org/>`_
+specifications about maintaining backwards compatibility within major release cycles,
+so user code that uses only the public API should continue to work correctly until a
+major version upgrade.
+
+This is *NOT* guaranteed for the C++ API.  These are officially implementation
+details in support of the Python API.  However, in practice, the C++ function
+signatures rarely change very much.  So for the most part, you can expect your
+code to continue to work for updated GalSim versions.  Or if a function signature
+changes slightly, it will usually be fairly simple to update to the new syntax.
+
+We provide the appropriate header files to use in the installed python library
+location in the ``include`` directory.  These files precisely specify the
+available API for a given release.
+
+The compiled library file is not by default installed.  The functions are included
+in the Python module file, called ``_galsim.so``, but this file is often not usable
+for linking your own C++ code.  For this purpose, you will need an extra step to
+build a shared library that has the C++-layer functions.  Specifically, if you set
+an environment variable, ``GALSIM_BUILD_SHARED``, then the setup.py installation
+will build the shared library as well::
+
+    GALSIM_BUILD_SHARED=1 python setup.py install
+
+The built shared library will be located in ``build/shared_clib/``.  You should
+copy this file to some appropriate directory where your C++ code will be able to link to it.
