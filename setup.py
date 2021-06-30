@@ -1142,19 +1142,20 @@ class my_test(test):
             import pytest
             pytest.main(['--version'])
             errno = pytest.main(pytest_args + test_files)
-            if errno != 0:
-                raise RuntimeError("Some Python tests failed")
+            py_err = errno != 0
         else:
             # Alternate method calls pytest executable.  But the above code seems to work.
             p = subprocess.Popen(['pytest'] + pytest_args + test_files)
             p.communicate()
-            if p.returncode != 0:
-                raise RuntimeError("Some Python tests failed")
+            py_err = p.returncode != 0
         os.chdir(original_dir)
         print("All python tests passed.")
 
         # Build and run the C++ tests
         self.run_cpp_tests()
+
+        if py_err:
+            raise RuntimeError("Some Python tests failed")
 
 
 lib=("galsim", {'sources' : cpp_sources,
