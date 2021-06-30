@@ -1029,10 +1029,10 @@ def test_flat():
     # Mean should be close to target counts
     np.testing.assert_allclose(mean, counts_total, rtol=toler)
     # Variance is a bit less than the mean due to B/F.
-    np.testing.assert_allclose(var, 0.93 * counts_total, rtol=toler)
+    np.testing.assert_allclose(var, 0.93 * counts_total, rtol=1.5*toler)
     # 01 and 10 covariances are significant.
     np.testing.assert_allclose(cov01, 0.03 * counts_total, rtol=30*toler)
-    np.testing.assert_allclose(cov10, 0.015 * counts_total, rtol=60*toler)
+    np.testing.assert_allclose(cov10, 0.015 * counts_total, rtol=65*toler)
     # The rest are small
     np.testing.assert_allclose(cov11a / counts_total, 0., atol=2*toler)
     np.testing.assert_allclose(cov11b / counts_total, 0., atol=2*toler)
@@ -1129,4 +1129,3 @@ if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
         testfn()
-    
