@@ -1013,7 +1013,7 @@ class my_build_ext(build_ext):
         build_ext.run(self)
 
         # If requested, also build the shared library.
-        if os.environ.get('GALSIM_BUILD_SHARED', False):
+        if int(os.environ.get('GALSIM_BUILD_SHARED', 0)):
             self.run_command("build_shared_clib")
 
 
@@ -1131,31 +1131,30 @@ class my_test(test):
         print("All C++ tests passed.")
 
     def run_tests(self):
-        njobs = parse_njobs(self.njobs, 'pytest', 'test')
-        pytest_args = ['-n=%d'%njobs, '--timeout=60']
 
-        original_dir = os.getcwd()
-        os.chdir('tests')
-        test_files = glob.glob('test*.py')
+        if int(os.environ.get('GALSIM_TEST_PY', 1)):
+            njobs = parse_njobs(self.njobs, 'pytest', 'test')
+            pytest_args = ['-n=%d'%njobs, '--timeout=60']
+            original_dir = os.getcwd()
+            os.chdir('tests')
+            test_files = glob.glob('test*.py')
 
-        if True:
             import pytest
             pytest.main(['--version'])
             errno = pytest.main(pytest_args + test_files)
             py_err = errno != 0
-        else:
-            # Alternate method calls pytest executable.  But the above code seems to work.
-            p = subprocess.Popen(['pytest'] + pytest_args + test_files)
-            p.communicate()
-            py_err = p.returncode != 0
-        os.chdir(original_dir)
-        print("All python tests passed.")
+
+            os.chdir(original_dir)
 
         # Build and run the C++ tests
-        self.run_cpp_tests()
+        if int(os.environ.get('GALSIM_TEST_CPP', 1)):
+            self.run_cpp_tests()
 
-        if py_err:
-            raise RuntimeError("Some Python tests failed")
+        if int(os.environ.get('GALSIM_TEST_PY', 1)):
+            if py_err:
+                raise RuntimeError("Some Python tests failed")
+            else:
+                print("All python tests passed.")
 
 
 lib=("galsim", {'sources' : cpp_sources,

@@ -176,6 +176,28 @@ jobs:
                 cd ..  # N.B. This seems to happen automatically if omitted.
                        # Less confusing to include it explicitly.
 
+            - name: Check shared library
+              if: matrix.py == 3.9
+              run: |
+                # On one system (arbitrarily py3.9), check the shared library creation and link.
+                GALSIM_BUILD_SHARED=1 python setup.py install
+
+                # These directories/files should now exist.
+                echo "Look for the shared library:"
+                test -d build/shared_clib
+                ls build/shared_clib
+                ls build/shared_clib/libgalsim.*
+
+                # For now, use `python setup.py test` to test linking to the shared library.
+                # We run some C++ tests there, and we use the shared library for linking.
+                # Caveats:
+                #  1. The C++ tests are not very comprehensive, so it won't catch all errors.
+                #  2. Apparently setup.py test is deprecated.  I'm getting warnings when I run
+                #     it that indicate it may go away at some point.  So whenever that happens,
+                #     we'll have to revisit this test to find another way to build and run
+                #     the C++ tests.
+                python setup.py test
+
             - name: Upload coverage to codecov
               run: |
                 cd tests
