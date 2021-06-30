@@ -40,11 +40,8 @@ In particular, all of the python dependencies should be automatically installed
 for you.
 
 FFTW is not directly pip installable, so if the above installation fails,
-you may need to install it separately.
+you may need to install it separately.  See the link below for details
 about how to do this.
-
-Fianlly, a version of Eigen can be installed by pip, but you might prefer to
-install this manually.
 
 For complete details, see:
 
@@ -67,10 +64,9 @@ SCons Installation
 
 Prior to version 2.0, GalSim installation used SCons.  This installation
 mode is still supported, but is not recommended unless you have difficulties
-with the pip or conda installation methods.
+with the pip or conda installation methods.  Th GalSim 2.3.x release series
+will be the last to support the SCons installation method.
 
 For details about this methos, see:
 
 http://galsim-developers.github.io/GalSim/docs/_build/html/install_scons.html
-
-
