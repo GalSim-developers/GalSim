@@ -77,6 +77,11 @@ jobs:
               with:
                 python-version: ${{ matrix.py }}
 
+            - name: Set up ccache
+              uses: hendrikmuhs/ccache-action@v1
+              with:
+                key: ${{ matrix.os }}-${{ matrix.py }}-${{ matrix.CXX }}
+
             - name: Cache pip
               uses: actions/cache@v2
               with:
