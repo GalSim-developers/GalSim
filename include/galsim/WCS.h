@@ -19,11 +19,15 @@
 #ifndef GalSim_WCS_H
 #define GalSim_WCS_H
 
+#include "Std.h"
+
 namespace galsim {
 
-    void ApplyCD(int n, double* x, double* y, const double* cd);
-    void InvertAB(int n, int nab, const double* u, const double* v, const double* ab,
-                  double* x, double* y, bool doiter, int nabp, const double* abp);
+    PUBLIC_API void ApplyCD(
+        int n, double* x, double* y, const double* cd);
+    PUBLIC_API void InvertAB(
+        int n, int nab, const double* u, const double* v, const double* ab,
+        double* x, double* y, bool doiter, int nabp, const double* abp);
 
 }
 

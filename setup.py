@@ -1090,14 +1090,20 @@ version_h_text = """
 #include <string>
 #include <sstream>
 
+#if defined(__GNUC__)
+#define PUBLIC_API __attribute__ ((visibility ("default")))
+#else
+#define PUBLIC_API
+#endif
+
 namespace galsim {
     // Compiled versions of the above #define values.
-    extern int major_version();
-    extern int minor_version();
-    extern int revision();
+    PUBLIC_API int major_version();
+    PUBLIC_API int minor_version();
+    PUBLIC_API int revision();
 
     // Returns string of the form "1.4.2"
-    extern std::string version();
+    PUBLIC_API std::string version();
 
     // Checks if the compiled library version matches the #define values in this header file.
     inline bool check_version() {

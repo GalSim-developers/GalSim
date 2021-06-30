@@ -30,8 +30,9 @@
 namespace galsim {
 
     template <typename T>
-    void ApplyKImagePhases(ImageView<std::complex<T> > image, double imscale, const double* jac,
-                           double cenx, double ceny, double fluxScaling);
+    PUBLIC_API void ApplyKImagePhases(
+        ImageView<std::complex<T> > image, double imscale, const double* jac,
+        double cenx, double ceny, double fluxScaling);
 
     /**
      * @brief An affine transformation of another SBProfile.
@@ -42,7 +43,7 @@ namespace galsim {
      * plus a 2-element Positon object `cen` for the shift, and a flux scaling,
      * in addition to the scaling implicit in the matrix M = abs(det(M)).
      */
-    class SBTransform : public SBProfile
+    class PUBLIC_API SBTransform : public SBProfile
     {
     public:
         /**

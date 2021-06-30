@@ -32,7 +32,7 @@ namespace galsim {
         const int max_SK_cache = 100;
     }
 
-    class SBSecondKick : public SBProfile
+    class PUBLIC_API SBSecondKick : public SBProfile
     {
     public:
         /**

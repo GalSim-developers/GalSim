@@ -36,7 +36,7 @@ namespace galsim {
      * Note that the DeltaFunction SBP cannot be drawn by itself. Instead,
      * it should be applied as part of a convolution first.
      */
-    class SBDeltaFunction : public SBProfile
+    class PUBLIC_API SBDeltaFunction : public SBProfile
     {
     public:
         /**

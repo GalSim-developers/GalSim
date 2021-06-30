@@ -27,9 +27,9 @@
 
 namespace galsim {
 
-    double SersicHLR(double n, double flux_fraction);
-    double SersicIntegratedFlux(double n, double r);
-    double SersicTruncatedScale(double n, double hlr, double trunc);
+    PUBLIC_API double SersicHLR(double n, double flux_fraction);
+    PUBLIC_API double SersicIntegratedFlux(double n, double r);
+    PUBLIC_API double SersicTruncatedScale(double n, double hlr, double trunc);
 
     namespace sbp {
 
@@ -82,7 +82,7 @@ namespace galsim {
      * (SBExponential), n=0.5 (SBGaussian).  These special cases use several simplifications in
      * all calculations, whereas for general n, the Fourier transform must be treated numerically.
      */
-    class SBSersic : public SBProfile
+    class PUBLIC_API SBSersic : public SBProfile
     {
     public:
 

@@ -34,7 +34,7 @@ namespace galsim {
     //! @cond
 
     /// @brief Exception class thrown by Solve
-    class SolveError : public std::runtime_error
+    class PUBLIC_API SolveError : public std::runtime_error
     {
     public:
         SolveError(const std::string m) : std::runtime_error("Solve error: "+m) {}
@@ -128,7 +128,7 @@ namespace galsim {
      * @endcode
      */
     template <class F, class T=double>
-    class Solve
+    class PUBLIC_API Solve
     {
     private:
         const F&  func;

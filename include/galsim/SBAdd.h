@@ -32,7 +32,7 @@ namespace galsim {
      *
      * The SBAdd class can be used to add arbitrary numbers of SBProfiles together.
      */
-    class SBAdd : public SBProfile
+    class PUBLIC_API SBAdd : public SBProfile
     {
     public:
 

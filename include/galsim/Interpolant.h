@@ -38,7 +38,7 @@ namespace galsim {
      * @brief Class to interface an interpolant to the `OneDimensionalDeviate` class for
      * photon-shooting
      */
-    class InterpolantFunction: public FluxDensity {
+    class PUBLIC_API InterpolantFunction: public FluxDensity {
     public:
         InterpolantFunction(const Interpolant& interp): _interp(interp) {}
         double operator()(double x) const; // returns the xval() of the `Interpolant`
@@ -56,7 +56,7 @@ namespace galsim {
      *
      * All Interpolants are assumed symmetric so that frequency-domain values are real.
      */
-    class Interpolant
+    class PUBLIC_API Interpolant
     {
     public:
         /**
@@ -221,7 +221,7 @@ namespace galsim {
      * give a large but finite urange.
      *
      */
-    class Delta : public Interpolant
+    class PUBLIC_API Delta : public Interpolant
     {
     public:
         /**
@@ -262,7 +262,7 @@ namespace galsim {
      *
      * Tolerance determines how far onto sinc wiggles the uval will go.  Very far, by default!
      */
-    class Nearest : public Interpolant
+    class PUBLIC_API Nearest : public Interpolant
     {
     public:
         /**
@@ -298,7 +298,7 @@ namespace galsim {
      * used as a k-space interpolant, but is extremely slow.  The usual compromise between sinc
      * accuracy vs. speed is the Lanczos interpolant (see its documentation for details).
      */
-    class SincInterpolant : public Interpolant
+    class PUBLIC_API SincInterpolant : public Interpolant
     {
     public:
         /**
@@ -331,7 +331,7 @@ namespace galsim {
      * which case the linear interpolant is quite efficient (but not necessarily the best choice in
      * terms of accuracy).
      */
-    class Linear : public Interpolant
+    class PUBLIC_API Linear : public Interpolant
     {
     public:
         /**
@@ -366,7 +366,7 @@ namespace galsim {
      * The cubic interpolant is a reasonable choice for a four-point interpolant for
      * SBInterpolatedImage.   (See paper by Bernstein & Gruen, http://arxiv.org/abs/1401.2636.)
      */
-    class Cubic : public Interpolant
+    class PUBLIC_API Cubic : public Interpolant
     {
     public:
         /**
@@ -412,7 +412,7 @@ namespace galsim {
      * See paper by Bernstein & Gruen, http://arxiv.org/abs/1401.2636.
      */
 
-    class Quintic : public Interpolant
+    class PUBLIC_API Quintic : public Interpolant
     {
     public:
         /**
@@ -468,7 +468,7 @@ namespace galsim {
      * approximately conserves the value of constant (DC) input data (accurate to better than
      * 1.e-5 when used in two dimensions).
      */
-    class Lanczos : public Interpolant
+    class PUBLIC_API Lanczos : public Interpolant
     {
     public:
         /**

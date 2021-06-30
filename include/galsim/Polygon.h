@@ -35,7 +35,7 @@ namespace galsim {
     // For these purposes, we use Point as an alias for Position<double>
     typedef Position<double> Point;
 
-    class Polygon
+    class PUBLIC_API Polygon
     {
     public:
         Polygon() : _sorted(false), _area(0.0), _npoints(0) {}

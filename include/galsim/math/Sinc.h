@@ -24,15 +24,17 @@
  * @brief Contains the sinc function as well as the integral of sin(t)/t
  */
 
+#include "Std.h"
+
 namespace galsim {
 namespace math {
 
     // sinc(x) is defined here as sin(Pi x) / (Pi x)
-    double sinc(double x);
+    PUBLIC_API double sinc(double x);
 
     // Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
     // does not have pi multiplying t.
-    double Si(double x);
+    PUBLIC_API double Si(double x);
 
 }
 }

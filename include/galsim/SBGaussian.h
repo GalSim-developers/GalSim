@@ -36,7 +36,7 @@ namespace galsim {
      * The maxK() and stepK() are for the SBGaussian are chosen to extend to 4 sigma in both
      * real and k domains, or more if needed to reach the `folding_threshold` spec.
      */
-    class SBGaussian : public SBProfile
+    class PUBLIC_API SBGaussian : public SBProfile
     {
     public:
         /**

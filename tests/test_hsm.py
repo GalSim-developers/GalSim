@@ -851,7 +851,7 @@ def test_headers():
     assert os.path.isfile(os.path.join(include_dir, 'galsim', 'hsm', 'PSFCorr.h'))
 
     fam_signature = """
-    void FindAdaptiveMomView(
+    PUBLIC_API void FindAdaptiveMomView(
         ShapeData& results,
         const BaseImage<T> &object_image, const BaseImage<int> &object_mask_image,
         double guess_sig = 5.0, double precision = 1.0e-6,
@@ -860,7 +860,7 @@ def test_headers():
         const HSMParams& hsmparams=HSMParams());"""
 
     esv_signature = """
-    void EstimateShearView(
+    PUBLIC_API void EstimateShearView(
         ShapeData& results,
         const BaseImage<T> &gal_image, const BaseImage<U> &PSF_image,
         const BaseImage<int> &gal_mask_image,

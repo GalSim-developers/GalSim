@@ -20,12 +20,14 @@
 #ifndef GalSim_Math_Angle_H
 #define GalSim_Math_Angle_H
 
+#include "Std.h"
+
 namespace galsim {
 namespace math {
 
     // A function to compute sin and cos in one statement, possibly more efficiently than
     // doing the two trig functions separately.
-    void sincos(double theta, double& sint, double& cost);
+    PUBLIC_API void sincos(double theta, double& sint, double& cost);
 
 }}
 

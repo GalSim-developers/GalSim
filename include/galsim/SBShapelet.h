@@ -29,7 +29,7 @@
 namespace galsim {
 
     /// @brief Class for describing polar shapelet surface brightness profiles.
-    class SBShapelet : public SBProfile
+    class PUBLIC_API SBShapelet : public SBProfile
     {
     public:
         /**
@@ -62,8 +62,9 @@ namespace galsim {
     };
 
     template <typename T>
-    void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image,
-                          double image_scale, const Position<double>& center);
+    PUBLIC_API void ShapeletFitImage(
+        double sigma, LVector& bvec, const BaseImage<T>& image,
+        double image_scale, const Position<double>& center);
 }
 
 #endif

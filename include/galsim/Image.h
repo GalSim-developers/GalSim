@@ -65,7 +65,7 @@ namespace galsim {
     /**
      *  @brief Exception class usually thrown by images.
      */
-    class ImageError : public std::runtime_error {
+    class PUBLIC_API ImageError : public std::runtime_error {
     public:
         ImageError(const std::string& m) : std::runtime_error("Image Error: " + m) {}
 
@@ -74,7 +74,7 @@ namespace galsim {
     /**
      *  @brief Exception class thrown when out-of-bounds pixels are accessed on an image.
      */
-    class ImageBoundsError : public ImageError {
+    class PUBLIC_API ImageBoundsError : public ImageError {
     public:
         ImageBoundsError(const std::string& m) :
             ImageError("Access to out-of-bounds pixel " + m) {}
@@ -87,11 +87,11 @@ namespace galsim {
     //! @endcond
 
 
-    template <typename T> class AssignableToImage;
-    template <typename T> class BaseImage;
-    template <typename T> class ImageAlloc;
-    template <typename T> class ImageView;
-    template <typename T> class ConstImageView;
+    template <typename T> class PUBLIC_API AssignableToImage;
+    template <typename T> class PUBLIC_API BaseImage;
+    template <typename T> class PUBLIC_API ImageAlloc;
+    template <typename T> class PUBLIC_API ImageView;
+    template <typename T> class PUBLIC_API ConstImageView;
 
     template <typename T1>
     class ReturnSecond
@@ -108,7 +108,7 @@ namespace galsim {
      *  and various composite types that are used to make im3 = im1 + im2 efficient.
      */
     template <typename T>
-    class AssignableToImage
+    class PUBLIC_API AssignableToImage
     {
     public:
 
@@ -165,7 +165,7 @@ namespace galsim {
      *  of the various image types can be used without requiring any casts.
      */
     template <typename T>
-    class BaseImage : public AssignableToImage<T>
+    class PUBLIC_API BaseImage : public AssignableToImage<T>
     {
     public:
 
@@ -407,7 +407,7 @@ namespace galsim {
      *  Read-only only refers to the data values.  The bounds may be changed.
      */
     template <typename T>
-    class ConstImageView : public BaseImage<T>
+    class PUBLIC_API ConstImageView : public BaseImage<T>
     {
     public:
 
@@ -464,7 +464,7 @@ namespace galsim {
      *  to provide a shared_ptr explicitly to set up the ownership.
      */
     template <typename T>
-    class ImageView : public BaseImage<T>
+    class PUBLIC_API ImageView : public BaseImage<T>
     {
     public:
 
@@ -624,7 +624,7 @@ namespace galsim {
      *  explicitly instantiated in Image.cpp.
      */
     template <typename T>
-    class ImageAlloc : public BaseImage<T>
+    class PUBLIC_API ImageAlloc : public BaseImage<T>
     {
     public:
 
@@ -815,29 +815,32 @@ namespace galsim {
      * @brief A helper function that will return the smallest 2^n or 3x2^n value that is
      * even and >= the input integer.
      */
-    int goodFFTSize(int input);
+    PUBLIC_API int goodFFTSize(int input);
 
 
     /**
      *  @brief Perform a 2D FFT from real space to k-space.
      */
     template <typename T>
-    void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
-             bool shift_in=true, bool shift_out=true);
+    PUBLIC_API void rfft(
+        const BaseImage<T>& in, ImageView<std::complex<double> > out,
+        bool shift_in=true, bool shift_out=true);
 
     /**
      *  @brief Perform a 2D inverse FFT from k-space to real space.
      */
     template <typename T>
-    void irfft(const BaseImage<T>& in, ImageView<double> out,
-               bool shift_in=true, bool shift_out=true);
+    PUBLIC_API void irfft(
+        const BaseImage<T>& in, ImageView<double> out,
+        bool shift_in=true, bool shift_out=true);
 
     /**
      *  @brief Perform a 2D FFT from complex space to k-space or the inverse.
      */
     template <typename T>
-    void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
-              bool inverse, bool shift_in=true, bool shift_out=true);
+    PUBLIC_API void cfft(
+        const BaseImage<T>& in, ImageView<std::complex<double> > out,
+        bool inverse, bool shift_in=true, bool shift_out=true);
 
     /**
      *  @brief Wrap the full image onto a subset of the image and return that subset.
@@ -845,7 +848,8 @@ namespace galsim {
      *  This is used to alias the data of a k-space image before doing the FFT to real space.
      */
     template <typename T>
-    void wrapImage(ImageView<T> im, const Bounds<int>& bounds, bool hermx, bool hermy);
+    PUBLIC_API void wrapImage(
+        ImageView<T> im, const Bounds<int>& bounds, bool hermx, bool hermy);
 
     /**
      *  @brief Set each element to its inverse: im(i,j) = 1/im(i,j)
@@ -853,7 +857,7 @@ namespace galsim {
      *  Note that if an element is zero, then this function quietly returns its inverse as zero.
      */
     template <typename T>
-    void invertImage(ImageView<T> im);
+    PUBLIC_API void invertImage(ImageView<T> im);
 
 
 

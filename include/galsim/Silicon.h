@@ -35,7 +35,7 @@
 namespace galsim
 {
 
-    class Silicon
+    class PUBLIC_API Silicon
     {
     public:
         Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
@@ -80,8 +80,8 @@ namespace galsim
         ImageAlloc<double> _delta;
     };
 
-    int SetOMPThreads(int num_threads);
-    int GetOMPThreads();
+    PUBLIC_API int SetOMPThreads(int num_threads);
+    PUBLIC_API int GetOMPThreads();
 
 }
 

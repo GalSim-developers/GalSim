@@ -32,7 +32,7 @@ namespace galsim {
         const int max_vonKarman_cache = 100;
     }
 
-    class SBVonKarman : public SBProfile
+    class PUBLIC_API SBVonKarman : public SBProfile
     {
     public:
         /**

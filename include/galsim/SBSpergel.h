@@ -43,7 +43,7 @@ namespace galsim {
 
     }
 
-    double SpergelCalculateHLR(double nu);
+    PUBLIC_API double SpergelCalculateHLR(double nu);
 
     /**
      * @brief Spergel Surface Brightness Profile.
@@ -58,7 +58,7 @@ namespace galsim {
      *   D. N. Spergel, "ANALYTICAL GALAXY PROFILES FOR PHOTOMETRIC AND LENSING ANALYSIS,""
      *   ASTROPHYS J SUPPL S 191(1), 58-65 (2010) [doi:10.1088/0067-0049/191/1/58].
      */
-    class SBSpergel : public SBProfile
+    class PUBLIC_API SBSpergel : public SBProfile
     {
     public:
         /**

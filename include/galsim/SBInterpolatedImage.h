@@ -28,7 +28,8 @@
 
 namespace galsim {
 
-    double CalculateSizeContainingFlux(const BaseImage<double>& im, double target_flux);
+    PUBLIC_API double CalculateSizeContainingFlux(
+        const BaseImage<double>& im, double target_flux);
 
     /**
      * @brief Surface Brightness Profile represented by interpolation over one or more data
@@ -63,7 +64,7 @@ namespace galsim {
      * InterpolatedImage class takes care of converting between these units and the arcsec units
      * that are usually desired.
      */
-    class SBInterpolatedImage : public SBProfile
+    class PUBLIC_API SBInterpolatedImage : public SBProfile
     {
     public:
         /**
@@ -125,7 +126,7 @@ namespace galsim {
         void operator=(const SBInterpolatedImage& rhs);
     };
 
-    class SBInterpolatedKImage : public SBProfile
+    class PUBLIC_API SBInterpolatedKImage : public SBProfile
     {
     public:
         /**

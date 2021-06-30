@@ -38,7 +38,7 @@ namespace galsim {
      * Note that the position angle is always zero. A profile with a different position angle can be
      * obtained through the rotate() method of the corresponding Python class.
      */
-    class SBInclinedExponential : public SBProfile
+    class PUBLIC_API SBInclinedExponential : public SBProfile
     {
     public:
 

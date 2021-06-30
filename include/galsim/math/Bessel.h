@@ -24,21 +24,23 @@
  * @brief Contains implementations of some bessel functions ported from netlib.
  */
 
+#include "Std.h"
+
 namespace galsim {
 namespace math {
 
     // Functions defined in src/Bessel.cpp
-    double cyl_bessel_j(double nu, double x);
-    double cyl_bessel_y(double nu, double x);
-    double cyl_bessel_k(double nu, double x);
-    double cyl_bessel_i(double nu, double x);
+    PUBLIC_API double cyl_bessel_j(double nu, double x);
+    PUBLIC_API double cyl_bessel_y(double nu, double x);
+    PUBLIC_API double cyl_bessel_k(double nu, double x);
+    PUBLIC_API double cyl_bessel_i(double nu, double x);
 
     // These are in math.h, but we put them here for better namespace encapsulation.
-    double j0(double x);
-    double j1(double x);
+    PUBLIC_API double j0(double x);
+    PUBLIC_API double j1(double x);
 
-    double getBesselRoot0(int s);
-    double getBesselRoot(double nu, int s);
+    PUBLIC_API double getBesselRoot0(int s);
+    PUBLIC_API double getBesselRoot(double nu, int s);
 
 } }
 

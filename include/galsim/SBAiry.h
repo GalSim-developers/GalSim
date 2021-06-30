@@ -44,7 +44,7 @@ namespace galsim {
      * Note x & y are in units of lambda/D here.  Integral over area will give unity in this
      * normalization.
      */
-    class SBAiry : public SBProfile
+    class PUBLIC_API SBAiry : public SBProfile
     {
     public:
         /**

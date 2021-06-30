@@ -24,6 +24,8 @@
  * @brief Contains an implementation of the incomplete Gamma function ported from netlib
  */
 
+#include "Std.h"
+
 namespace galsim {
 namespace math {
 
@@ -34,8 +36,8 @@ namespace math {
     using std::lgamma;
 #else
     // But if not using c++11, then we need to implement it ourselves.
-    double tgamma(double x);
-    double lgamma(double x);
+    PUBLIC_API double tgamma(double x);
+    PUBLIC_API double lgamma(double x);
 #endif
 
     // This specific function is what boost calls gamma_p:
@@ -44,7 +46,7 @@ namespace math {
     //
     // Wolfram calls it the Regularized Gamma Function:
     // cf. http://mathworld.wolfram.com/RegularizedGammaFunction.html
-    double gamma_p(double a, double x);
+    PUBLIC_API double gamma_p(double a, double x);
 
 
 } }

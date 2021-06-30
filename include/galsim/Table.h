@@ -35,14 +35,14 @@
 namespace galsim {
 
     // Used by LookupTable2D in Python.  Defined in Table.cpp
-    void WrapArrayToPeriod(double* x, int n, double x0, double period);
+    PUBLIC_API void WrapArrayToPeriod(double* x, int n, double x0, double period);
 
-    class Interpolant;
+    class PUBLIC_API Interpolant;
 
     /**
      * @brief A class to represent lookup tables for a function y = f(x).
      */
-    class Table :
+    class PUBLIC_API Table :
         public FluxDensity
     {
     public:
@@ -85,7 +85,7 @@ namespace galsim {
     // This version keeps its own storage of the arg/val arrays.
     // Use it by successively adding entries, which must be in increasing order of x.
     // Then when done, call finalize() to build up the lookup table.
-    class TableBuilder:
+    class PUBLIC_API TableBuilder:
         public Table
     {
     public:
@@ -123,7 +123,7 @@ namespace galsim {
     /**
      * @brief A class to represent lookup tables for a function z = f(x, y).
      */
-    class Table2D
+    class PUBLIC_API Table2D
     {
     public:
         enum interpolant { linear, floor, ceil, nearest, spline, gsinterp };

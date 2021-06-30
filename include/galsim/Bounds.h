@@ -44,7 +44,7 @@ namespace galsim {
 
     /// @brief Class for storing 2d position vectors in an (x, y) format.
     template <class T>
-    class Position
+    class PUBLIC_API Position
     {
     public:
         /// @brief Publicly visible x & y attributes of the position.
@@ -125,7 +125,6 @@ namespace galsim {
     inline std::istream& operator>>(std::istream& is, Position<T>& p)
     { p.read(is); return is; }
 
-    template <class T>
     /**
      * @brief Class for storing image bounds, essentially the vertices of a rectangle.
      *
@@ -138,7 +137,8 @@ namespace galsim {
      *
      * Rectangle is undefined if min>max in either direction.
      */
-    class Bounds
+    template <class T>
+    class PUBLIC_API Bounds
     {
     public:
         /// @brief Constructor using four scalar positions (xmin, xmax, ymin, ymax).
