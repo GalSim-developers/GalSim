@@ -624,7 +624,7 @@ def GetCompilerVersion(env):
         lines = [l.decode() for l in p.stdout.readlines()]
 
         # Check if g++ is a symlink for something else:
-        if compilertype is 'g++':
+        if compilertype == 'g++':
             if 'clang' in lines[0]:
                 print('Detected clang++ masquerading as g++')
                 compilertype = 'clang++'
@@ -632,7 +632,7 @@ def GetCompilerVersion(env):
                 linenum=1
 
         # Check if c++ is a symlink for something else:
-        if compilertype is 'c++':
+        if compilertype == 'c++':
             if 'clang' in lines[0]:
                 print('Detected clang++ masquerading as c++')
                 compilertype = 'clang++'

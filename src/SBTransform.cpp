@@ -848,7 +848,6 @@ namespace galsim {
         dbg<<"Start ApplyKImagePhases: \n";
         dbg<<"bounds = "<<image.getBounds()<<std::endl;
         dbg<<"imscale = "<<imscale<<std::endl;
-        assert(_pimpl.get());
         assert(image.getStep() == 1);
 
         int xmin = image.getXMin();

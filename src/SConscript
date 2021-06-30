@@ -19,6 +19,7 @@ except Exception as e:
 vi = re.split('\.|-',version)
 version_info = tuple([int(x) for x in vi if x.isdigit()])
 full_version_info = version_info
+version_info = version_info[:3]
 if len(full_version_info) == 2:
     full_version_info = version_info + (0,)
 
@@ -51,7 +52,7 @@ namespace galsim {
         return oss.str() == version();
     }
 }
-"""%full_version_info
+"""%full_version_info[:3]
 
 with open(version_h_file, 'w') as f:
     f.write(version_h_text)
