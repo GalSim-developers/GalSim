@@ -50,6 +50,11 @@
 #include <sys/time.h>
 #endif
 
+#if defined(__GNUC__)
+#define PUBLIC_API __attribute__ ((visibility ("default")))
+#else
+#define PUBLIC_API
+#endif
 
 // A nice memory checker if you need to track down some memory problem.
 #ifdef MEM_TEST

@@ -38,7 +38,7 @@ namespace galsim {
      * @brief Surface Brightness Profile for a Kolmogorov turbulent spectrum.
      *
      */
-    class SBKolmogorov : public SBProfile
+    class PUBLIC_API SBKolmogorov : public SBProfile
     {
     public:
         /**

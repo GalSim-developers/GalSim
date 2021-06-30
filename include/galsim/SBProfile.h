@@ -46,7 +46,7 @@ namespace galsim {
     //! @cond
 
     /// @brief Exception class thrown by SBProfiles.
-    class SBError : public std::runtime_error
+    class PUBLIC_API SBError : public std::runtime_error
     {
     public:
         SBError(const std::string& m) : std::runtime_error("SB Error: " + m) {}
@@ -54,7 +54,7 @@ namespace galsim {
 
     //! @endcond
 
-    class SBTransform;
+    class PUBLIC_API SBTransform;
 
     /**
      * @brief A base class representing all of the 2D surface brightness profiles that we know how
@@ -102,7 +102,7 @@ namespace galsim {
      * with that of the rhs profile.
      *
      */
-    class SBProfile
+    class PUBLIC_API SBProfile
     {
     public:
 

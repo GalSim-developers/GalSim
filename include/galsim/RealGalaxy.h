@@ -26,13 +26,15 @@
  */
 
 #include <complex>
+#include "Std.h"
 
 namespace galsim {
 
-    void ComputeCRGCoefficients(std::complex<double>* coef, std::complex<double>* Sigma,
-                                const double* w, const std::complex<double>* kimgs,
-                                const std::complex<double>* psf_eff_kimgs,
-                                const int nsed, const int nband, const int nkx, const int nky);
+    void PUBLIC_API ComputeCRGCoefficients(
+        std::complex<double>* coef, std::complex<double>* Sigma,
+        const double* w, const std::complex<double>* kimgs,
+        const std::complex<double>* psf_eff_kimgs,
+        const int nsed, const int nband, const int nkx, const int nky);
 }
 
 #endif

@@ -25,12 +25,14 @@
 #ifndef GalSim_BinomFactH
 #define GalSim_BinomFactH
 
+#include "Std.h"
+
 namespace galsim {
 
-    double fact(int i);
-    double sqrtfact(int i);
-    double binom(int i,int j);
-    double sqrtn(int i);
+    double PUBLIC_API fact(int i);
+    double PUBLIC_API sqrtfact(int i);
+    double PUBLIC_API binom(int i,int j);
+    double PUBLIC_API sqrtn(int i);
 
 }
 

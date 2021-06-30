@@ -20,13 +20,15 @@
 #ifndef GalSim_Math_Nan_H
 #define GalSim_Math_Nan_H
 
+#include "Std.h"
+
 namespace galsim {
 namespace math {
 
     // Detect if a floating point number is NaN
     // Note: don't use isnan for function name, since this might be a macro from math.h.
     template <typename T>
-    bool isNan(T x);
+    bool PUBLIC_API isNan(T x);
 
 }}
 

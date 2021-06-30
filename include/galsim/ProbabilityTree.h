@@ -47,7 +47,7 @@ namespace galsim {
      * The `find()` method will now return random draws with near-optimal speed.
      */
     template <class FluxData>
-    class ProbabilityTree :
+    class PUBLIC_API ProbabilityTree :
         //! @cond  This keeps doxygen from adding vector to our list of classes.
         private std::vector<shared_ptr<FluxData> >
         //! @endcond

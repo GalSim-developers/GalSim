@@ -20,13 +20,16 @@
 #ifndef GalSim_Horner_H
 #define GalSim_Horner_H
 
+#include "Std.h"
+
 namespace galsim {
 namespace math {
 
     // Use Horner's method to evaluate polynomial
     // result[i] = coef[0] + coef[1]*x[i] + coef[2]*x[i]**2 + ...
     // The result array should already be allocated and have the same size as x.
-    void Horner(const double* x, const int nx, const double* coef, const int nc, double* result);
+    void PUBLIC_API Horner(
+        const double* x, const int nx, const double* coef, const int nc, double* result);
 
     // 2D version of Horner's method
     // result[i] = coef[0,0] + coef[0,1]*y[i] + coef[0,2]*y[i]**2 + ...
@@ -35,9 +38,10 @@ namespace math {
     //             + ...
     // The result array should already be allocated and have the same size as x and y.
     // This also requires a temporary array of the same size as well.
-    void Horner2D(const double* x, const double* y, const int nx,
-                  const double* coef, const int ncx, const int ncy,
-                  double* result, double* temp);
+    void PUBLIC_API Horner2D(
+        const double* x, const double* y, const int nx,
+        const double* coef, const int ncx, const int ncy,
+        double* result, double* temp);
 
 } }
 

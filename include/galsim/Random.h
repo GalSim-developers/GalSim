@@ -39,7 +39,7 @@ namespace galsim {
 
     // Function for applying deviates to an image... Used as a method for all Deviates below.
     template <typename D, typename T>
-    static void ApplyDeviateToImage(D& dev, ImageView<T>& data)
+    static void PUBLIC_API ApplyDeviateToImage(D& dev, ImageView<T>& data)
     {
         // Typedef for image row iterable
         typedef typename ImageView<T>::iterator ImIter;
@@ -78,7 +78,7 @@ namespace galsim {
      * rather than one of the derived classes other than construct it and change the
      * seed, and use it as an argument to pass to other Deviate constructors.
      */
-    class BaseDeviate
+    class PUBLIC_API BaseDeviate
     {
     public:
         /**
@@ -242,7 +242,7 @@ namespace galsim {
     /**
      * @brief Pseudo-random number generator with uniform distribution in interval [0.,1.).
      */
-    class UniformDeviate : public BaseDeviate
+    class PUBLIC_API UniformDeviate : public BaseDeviate
     {
     public:
         /** @brief Construct and seed a new UniformDeviate, using the provided value as seed.
@@ -296,7 +296,7 @@ namespace galsim {
     /**
      * @brief Pseudo-random number generator with Gaussian distribution.
      */
-    class GaussianDeviate : public BaseDeviate
+    class PUBLIC_API GaussianDeviate : public BaseDeviate
     {
     public:
 
@@ -406,7 +406,7 @@ namespace galsim {
     /**
      * @brief A Binomial deviate for N trials each of probability p.
      */
-    class BinomialDeviate : public BaseDeviate
+    class PUBLIC_API BinomialDeviate : public BaseDeviate
     {
     public:
 
@@ -503,7 +503,7 @@ namespace galsim {
     /**
      * @brief A Poisson deviate with specified mean.
      */
-    class PoissonDeviate : public BaseDeviate
+    class PUBLIC_API PoissonDeviate : public BaseDeviate
     {
     public:
 
@@ -600,7 +600,7 @@ namespace galsim {
      * in the notation adopted in the Wikipedia article).  The Weibull distribution is a real valued
      * distribution producing deviates >= 0.
      */
-    class WeibullDeviate : public BaseDeviate
+    class PUBLIC_API WeibullDeviate : public BaseDeviate
     {
     public:
 
@@ -703,7 +703,7 @@ namespace galsim {
      * (Note: we use the k, theta notation.  If you prefer alpha, beta, use k=alpha, theta=1/beta.)
      * The Gamma distribution is a real valued distribution producing deviates >= 0.
      */
-    class GammaDeviate : public BaseDeviate
+    class PUBLIC_API GammaDeviate : public BaseDeviate
     {
     public:
 
@@ -808,7 +808,7 @@ namespace galsim {
      * random routine this class calls the notation is k=n for the number of degrees of freedom).
      * The Chi^2 distribution is a real valued distribution producing deviates >= 0.
      */
-    class Chi2Deviate : public BaseDeviate
+    class PUBLIC_API Chi2Deviate : public BaseDeviate
     {
     public:
 

@@ -235,7 +235,7 @@ namespace hsm {
      * @brief Exception class thrown by the adaptive moment and shape measurement routines in the
      * hsm namespace
      */
-    class HSMError : public std::runtime_error {
+    class PUBLIC_API HSMError : public std::runtime_error {
     public:
         HSMError(const std::string& m) : std::runtime_error(m) {}
     };
@@ -411,7 +411,7 @@ namespace hsm {
      *                             measurement routines, as an HSMParams object.
      */
     template <typename T, typename U>
-    void EstimateShearView(
+    void PUBLIC_API EstimateShearView(
         ShapeData& results,
         const BaseImage<T> &gal_image, const BaseImage<U> &PSF_image,
         const BaseImage<int> &gal_mask_image,
@@ -446,7 +446,7 @@ namespace hsm {
      *                              measurement routines, as an HSMParams object.
      */
     template <typename T>
-    void FindAdaptiveMomView(
+    void PUBLIC_API FindAdaptiveMomView(
         ShapeData& results,
         const BaseImage<T> &object_image, const BaseImage<int> &object_mask_image,
         double guess_sig = 5.0, double precision = 1.0e-6,
@@ -474,7 +474,7 @@ namespace hsm {
      *                         measurement routines, as an HSMParams object.
      * @return A status flag that should be zero if the measurement was successful.
      */
-    unsigned int general_shear_estimator(
+    unsigned int PUBLIC_API general_shear_estimator(
         ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
         ObjectData& gal_data, ObjectData& PSF_data,
         const char* shear_est, unsigned long flags,
@@ -503,7 +503,7 @@ namespace hsm {
      * @param[in] hsmparams Optional argument to specify parameters to be used for shape
      *                      measurement routines, as an HSMParams object.
      */
-    void find_ellipmom_2(
+    void PUBLIC_API find_ellipmom_2(
         ConstImageView<double> data, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double convergence_threshold,
         int& num_iter, const HSMParams& hsmparams);

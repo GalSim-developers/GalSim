@@ -46,7 +46,7 @@ namespace galsim {
      * as a slightly faster alternative. If no truncation radius will be applied and n=1, the
      * SBInclinedExponential class can be used as a much faster alternative.
      */
-    class SBInclinedSersic : public SBProfile
+    class PUBLIC_API SBInclinedSersic : public SBProfile
     {
     public:
         /**

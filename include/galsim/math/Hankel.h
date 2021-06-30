@@ -21,14 +21,17 @@
 #define GalSim_Hankel_H
 
 #include <functional>
+#include "Std.h"
 
 namespace galsim {
 namespace math {
 
-    double hankel_trunc(const std::function<double(double)> f, double k, double nu, double maxr,
-                        double relerr=1.e-6, double abserr=1.e-12, int nzeros=10);
-    double hankel_inf(const std::function<double(double)> f, double k, double nu,
-                      double relerr=1.e-6, double abserr=1.e-12, int nzeros=10);
+    double PUBLIC_API hankel_trunc(
+        const std::function<double(double)> f, double k, double nu, double maxr,
+        double relerr=1.e-6, double abserr=1.e-12, int nzeros=10);
+    double PUBLIC_API hankel_inf(
+        const std::function<double(double)> f, double k, double nu,
+        double relerr=1.e-6, double abserr=1.e-12, int nzeros=10);
 
 }
 }

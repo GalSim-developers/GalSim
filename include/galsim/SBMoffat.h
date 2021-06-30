@@ -27,7 +27,7 @@
 
 namespace galsim {
 
-    double MoffatCalculateScaleRadiusFromHLR(double re, double rm, double beta);
+    double PUBLIC_API MoffatCalculateScaleRadiusFromHLR(double re, double rm, double beta);
 
     /**
      * @brief Surface Brightness for the Moffat Profile (an approximate description of ground-based
@@ -37,7 +37,7 @@ namespace galsim {
      * SBProfile representation of a Moffat profile also includes an optional truncation beyond a
      * given radius.
      */
-    class SBMoffat : public SBProfile
+    class PUBLIC_API SBMoffat : public SBProfile
     {
     public:
 

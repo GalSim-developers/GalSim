@@ -37,7 +37,7 @@ namespace galsim {
      * Functions derived from this interface can be integrated by `Int.h` and
      * can be sampled by `OneDimensionalDeviate`.
      */
-    class FluxDensity: public std::unary_function<double,double>
+    class PUBLIC_API FluxDensity: public std::unary_function<double,double>
     {
     public:
         /// @brief virtual destructor for base class
@@ -73,7 +73,7 @@ namespace galsim {
      *
      * See the `OneDimensionalDeviate` docstrings for more information.
      */
-    class Interval
+    class PUBLIC_API Interval
     {
     public:
         /**
@@ -221,7 +221,7 @@ namespace galsim {
      * - The function is smooth enough to be integrated over the interval with standard basic
      *   methods.
      */
-    class OneDimensionalDeviate
+    class PUBLIC_API OneDimensionalDeviate
     {
     public:
         /**

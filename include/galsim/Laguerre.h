@@ -56,7 +56,7 @@ namespace galsim {
     // First define an index taking p & q of the eigenfunction, and
     // derived vector and matrix classes which can be indexed this way.
 
-    class PQIndex {
+    class PUBLIC_API PQIndex {
         // Index vectors/matrices of Laguerre coefficients using the
         // p & q quantum numbers (or others).
         // When we want to store the coefficients as a complex array,
@@ -187,7 +187,7 @@ namespace galsim {
     // So when you change b_qp, you are also changing b_pq.
 
     // Reference to a pq-indexed complex element of an LVector:
-    class LVectorReference
+    class PUBLIC_API LVectorReference
     {
     public:
         operator std::complex<double>() const
@@ -219,7 +219,7 @@ namespace galsim {
         friend class LVector;
     };
 
-    class LVector
+    class PUBLIC_API LVector
     {
     public:
         // Construct/destruct:
@@ -442,13 +442,13 @@ namespace galsim {
         shared_ptr<VectorXd> _v;
     };
 
-    std::ostream& operator<<(std::ostream& os, const LVector& lv);
-    std::istream& operator>>(std::istream& is, LVector& lv);
+    std::ostream& PUBLIC_API operator<<(std::ostream& os, const LVector& lv);
+    std::istream& PUBLIC_API operator>>(std::istream& is, LVector& lv);
 
     // This function finds the innermost radius at which the integrated flux
     // of the LVector's shape crosses the specified threshold, using the first
     // maxP monopole terms (or all, if maxP omitted)
-    extern double fluxRadius(const LVector& lv, double threshold, int maxP=-1);
+    extern double PUBLIC_API fluxRadius(const LVector& lv, double threshold, int maxP=-1);
 
 }
 

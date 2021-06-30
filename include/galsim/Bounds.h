@@ -44,7 +44,7 @@ namespace galsim {
 
     /// @brief Class for storing 2d position vectors in an (x, y) format.
     template <class T>
-    class Position
+    class PUBLIC_API Position
     {
     public:
         /// @brief Publicly visible x & y attributes of the position.
@@ -138,7 +138,7 @@ namespace galsim {
      *
      * Rectangle is undefined if min>max in either direction.
      */
-    class Bounds
+    class PUBLIC_API Bounds
     {
     public:
         /// @brief Constructor using four scalar positions (xmin, xmax, ymin, ymax).

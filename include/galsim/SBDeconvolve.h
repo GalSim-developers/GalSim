@@ -36,7 +36,7 @@ namespace galsim {
      * @param[in] gsparams  GSParams object storing constants that control the accuracy of
      *                      image operations and rendering, if different from the default.
      */
-    class SBDeconvolve : public SBProfile
+    class PUBLIC_API SBDeconvolve : public SBProfile
     {
     public:
         /// @brief Constructor.

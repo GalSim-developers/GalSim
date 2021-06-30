@@ -41,7 +41,7 @@ namespace galsim {
      * special case of the Sersic profile, but is given a separate class since the Fourier transform
      * has closed form and can be generated without lookup tables.
      */
-    class SBExponential : public SBProfile
+    class PUBLIC_API SBExponential : public SBProfile
     {
     public:
         /**

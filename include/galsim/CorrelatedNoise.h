@@ -41,8 +41,9 @@ namespace galsim {
      *
      * For an example of this function in use, see `galsim/correlatednoise.py`.
      */
-    void calculateCovarianceMatrix(ImageView<double>& cov, const SBProfile& sbp,
-                                   const Bounds<int>& bounds, double dx);
+    void PUBLIC_API calculateCovarianceMatrix(
+        ImageView<double>& cov, const SBProfile& sbp,
+        const Bounds<int>& bounds, double dx);
 
 }
 #endif

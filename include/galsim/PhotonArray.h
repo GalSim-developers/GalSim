@@ -40,7 +40,7 @@ namespace galsim {
      * It is the intention that fluxes of photons be nearly equal in absolute value so that noise
      * statistics can be estimated by counting number of positive and negative photons.
      */
-    class PhotonArray
+    class PUBLIC_API PhotonArray
     {
     public:
         /**

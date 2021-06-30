@@ -28,7 +28,7 @@
 namespace galsim {
 
     // Defined in RealSpaceConvolve.cpp
-    double RealSpaceConvolve(
+    double PUBLIC_API RealSpaceConvolve(
         const SBProfile& p1, const SBProfile& p2, const Position<double>& pos, double flux,
         const GSParams& gsparams);
 
@@ -66,7 +66,7 @@ namespace galsim {
      * can be quicker to use real-space convolution instead.
      *
      */
-    class SBConvolve : public SBProfile
+    class PUBLIC_API SBConvolve : public SBProfile
     {
     public:
         /**
@@ -102,7 +102,7 @@ namespace galsim {
 
     // A special case of a convolution of a profile with itself, which allows for some
     // efficiency gains over SBConvolve(s,s)
-    class SBAutoConvolve : public SBProfile
+    class PUBLIC_API SBAutoConvolve : public SBProfile
     {
     public:
         /**
@@ -138,7 +138,7 @@ namespace galsim {
 
     // A special case of the autocorrelation of profile (i.e. with itself), primarily used by the
     // correlated noise models
-    class SBAutoCorrelate : public SBProfile
+    class PUBLIC_API SBAutoCorrelate : public SBProfile
     {
     public:
         /**

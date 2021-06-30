@@ -35,7 +35,7 @@ namespace galsim {
      * Brightness integration) across rectangular pixels of the same dimensions.  This class is
      * therefore useful for pixelating SBProfiles.
      */
-    class SBBox : public SBProfile
+    class PUBLIC_API SBBox : public SBProfile
     {
     public:
         /**
@@ -76,7 +76,7 @@ namespace galsim {
      * The tophat function is much like the boxcar, but a circular plateau, rather than
      * a rectangle.  It is defined by a radius and a flux.
      */
-    class SBTopHat : public SBProfile
+    class PUBLIC_API SBTopHat : public SBProfile
     {
     public:
         /**
