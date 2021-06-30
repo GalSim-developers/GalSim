@@ -857,8 +857,114 @@ class my_build_clib(build_clib):
             build_info['cflags'] = build_info.get('cflags',[]) + cflags
             build_info['lflags'] = build_info.get('lflags',[]) + lflags
 
-        # Now run the normal build function.
+        self.do_build_libraries(libraries)
+
+    def do_build_libraries(self, libraries):
+        # This version just calls the setuptools build_libraries function.
+        # We'll change this for build_shared_clib below.
         build_clib.build_libraries(self, libraries)
+
+class my_build_shared_clib(my_build_clib):
+
+    def do_build_libraries(self, libraries):
+        from distutils.errors import DistutilsSetupError
+        from distutils import log
+        from setuptools.dep_util import newer_pairwise_group
+        from distutils.ccompiler import CCompiler
+
+        # Most of this is the setuptools version of the build_libraries function.
+        # We just change the final link command to build a shared library that can be linked
+        # to C++ programs that just want the C++ library.
+        for (lib_name, build_info) in libraries:
+            sources = build_info.get('sources')
+            if sources is None or not isinstance(sources, (list, tuple)):
+                raise DistutilsSetupError(
+                       "in 'libraries' option (library '%s'), "
+                       "'sources' must be present and must be "
+                       "a list of source filenames" % lib_name)
+            sources = list(sources)
+
+            log.info("building '%s' library", lib_name)
+
+            # Make sure everything is the correct type.
+            # obj_deps should be a dictionary of keys as sources
+            # and a list/tuple of files that are its dependencies.
+            obj_deps = build_info.get('obj_deps', dict())
+            if not isinstance(obj_deps, dict):
+                raise DistutilsSetupError(
+                    "in 'libraries' option (library '%s'), "
+                    "'obj_deps' must be a dictionary of "
+                    "type 'source: list'" % lib_name)
+            dependencies = []
+
+            # Get the global dependencies that are specified by the '' key.
+            # These will go into every source's dependency list.
+            global_deps = obj_deps.get('', list())
+            if not isinstance(global_deps, (list, tuple)):
+                raise DistutilsSetupError(
+                    "in 'libraries' option (library '%s'), "
+                    "'obj_deps' must be a dictionary of "
+                    "type 'source: list'" % lib_name)
+
+            # Build the list to be used by newer_pairwise_group
+            # each source will be auto-added to its dependencies.
+            for source in sources:
+                src_deps = [source]
+                src_deps.extend(global_deps)
+                extra_deps = obj_deps.get(source, list())
+                if not isinstance(extra_deps, (list, tuple)):
+                    raise DistutilsSetupError(
+                        "in 'libraries' option (library '%s'), "
+                        "'obj_deps' must be a dictionary of "
+                        "type 'source: list'" % lib_name)
+                src_deps.extend(extra_deps)
+                dependencies.append(src_deps)
+
+            expected_objects = self.compiler.object_filenames(
+                sources,
+                output_dir=self.build_temp,
+            )
+
+            if (
+                newer_pairwise_group(dependencies, expected_objects)
+                != ([], [])
+            ):
+                # First, compile the source code to object files in the library
+                # directory.  (This should probably change to putting object
+                # files in a temporary build directory.)
+                macros = build_info.get('macros')
+                include_dirs = build_info.get('include_dirs')
+                cflags = build_info.get('cflags')
+                self.compiler.compile(
+                    sources,
+                    output_dir=self.build_temp,
+                    macros=macros,
+                    include_dirs=include_dirs,
+                    extra_postargs=cflags,
+                    debug=self.debug
+                )
+
+            ###
+            ###
+            ### This is the one bit that is changed from the setuptools version.
+            ### The original used self.compiler.create_static_lib
+            ###
+            ###
+            output_name = self.compiler.library_filename(lib_name, lib_type="shared")
+            version_str = '{}.{}'.format(*version_info[:2])
+            if sys.platform == "darwin":
+                # .so -> .dylib
+                output_name = output_name[:-2] + version_str + '.dylib'
+                orig_linker_so = self.compiler.linker_so
+                assert orig_linker_so[1] == '-bundle'
+                dylib_linker_so = orig_linker_so.copy()
+                dylib_linker_so[1] = '-dynamiclib'
+                self.compiler.set_executable('linker_so', dylib_linker_so)
+            else:
+                # Just add the version bit
+                output_name = output_name[:-2] + version_str + '.so'
+            self.compiler.link(CCompiler.SHARED_OBJECT, expected_objects, output_name,
+                               output_dir='build/shared_clib', debug=self.debug)
 
 
 # Make a subclass of build_ext so we can add to the -I list.
@@ -905,6 +1011,10 @@ class my_build_ext(build_ext):
 
         self.run_command("build_clib")
         build_ext.run(self)
+
+        # If requested, also build the shared library.
+        if os.environ.get('GALSIM_BUILD_SHARED', False):
+            self.run_command("build_shared_clib")
 
 
 class my_install(install):
@@ -976,6 +1086,11 @@ class my_test(test):
         fftw_libpath, fftw_libname = os.path.split(fftw_lib)
         if fftw_libpath != '':
             library_dirs.append(fftw_libpath)
+
+        # Use the shared library when building the c++ executables to make sure it works.
+        self.run_command("build_shared_clib")
+        library_dirs.append('build/shared_clib')
+
         libraries.append(fftw_libname.split('.')[0][3:])
         # Check for conda libraries that might host OpenMP
         env = dict(os.environ)
@@ -1139,6 +1254,7 @@ dist = setup(name="GalSim",
     tests_require=test_dep,
     cmdclass = {'build_ext': my_build_ext,
                 'build_clib': my_build_clib,
+                'build_shared_clib': my_build_shared_clib,
                 'install': my_install,
                 'install_scripts': my_install_scripts,
                 'easy_install': my_easy_install,
