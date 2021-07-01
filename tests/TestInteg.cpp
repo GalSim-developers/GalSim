@@ -27,6 +27,11 @@ const double test_mock_inf = 2.e10;     // number large enough to get interprete
                                         // integration routines
 // Note: all "true" answers in the below tests are found using Wolfram Alpha.
 
+// C++-11 equivalent of old std::ptr_fun
+template <typename F>
+inline std::function<F> ptr_fun(const F& f)
+{ return std::function<F>(f); }
+
 // A simple Gaussian that works as a functional object
 class Gauss : public std::unary_function<double,double>
 {
@@ -90,27 +95,27 @@ void TestGaussian()
 void TestOscillatory()
 {
     Log("Start TestOscillatory()");
-    double test1 = galsim::integ::int1d(std::ptr_fun(osc_func), -1., 1.,
+    double test1 = galsim::integ::int1d(ptr_fun(osc_func), -1., 1.,
                                         test_rel_err, test_abs_err);
     AssertClose(test1, 0.30182513444548879567, test_rel_err, test_abs_err);
 
-    double test2 = galsim::integ::int1d(std::ptr_fun(osc_func), 0., 20.,
+    double test2 = galsim::integ::int1d(ptr_fun(osc_func), 0., 20.,
                                         test_rel_err, test_abs_err);
     AssertClose(test2, 0.27051358019041255485, test_rel_err, test_abs_err);
 
-    double test3 = galsim::integ::int1d(std::ptr_fun(osc_func), -15., -14.,
+    double test3 = galsim::integ::int1d(ptr_fun(osc_func), -15., -14.,
                                         test_rel_err, test_abs_err);
     AssertClose(test3, 7.81648378350593176887e-9, test_rel_err, test_abs_err);
 
-    double test4 = galsim::integ::int1d(std::ptr_fun(osc_func), 0., test_mock_inf,
+    double test4 = galsim::integ::int1d(ptr_fun(osc_func), 0., test_mock_inf,
                                         test_rel_err, test_abs_err);
     AssertClose(test4, 0.27051358016221414426, test_rel_err, test_abs_err);
 
-    double test5 = galsim::integ::int1d(std::ptr_fun(osc_func), -test_mock_inf, 5.4,
+    double test5 = galsim::integ::int1d(ptr_fun(osc_func), -test_mock_inf, 5.4,
                                         test_rel_err, test_abs_err);
     AssertClose(test5, 0.5413229824941895221, test_rel_err, test_abs_err);
 
-    double test6 = galsim::integ::int1d(std::ptr_fun(osc_func), -test_mock_inf, test_mock_inf,
+    double test6 = galsim::integ::int1d(ptr_fun(osc_func), -test_mock_inf, test_mock_inf,
                                         test_rel_err, test_abs_err);
     AssertClose(test6, 0.54102716032442828852, test_rel_err, test_abs_err);
 }
@@ -148,7 +153,7 @@ void TestPole()
 void Test2d()
 {
     Log("Start Test2d()");
-    double test1 = galsim::integ::int2d(std::ptr_fun(twod_func),0.,1.,0.,1.,
+    double test1 = galsim::integ::int2d(ptr_fun(twod_func),0.,1.,0.,1.,
                                         test_rel_err, test_abs_err);
     AssertClose(test1, 1.75, test_rel_err, test_abs_err);
 }
