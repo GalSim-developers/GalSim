@@ -202,7 +202,7 @@ jobs:
                 #     it that indicate it may go away at some point.  So whenever that happens,
                 #     we'll have to revisit this test to find another way to build and run
                 #     the C++ tests.
-                python setup.py test
+                GALSIM_TEST_PY=0 python setup.py test
 
             - name: Upload coverage to codecov
               run: |
