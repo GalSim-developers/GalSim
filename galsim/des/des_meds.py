@@ -284,7 +284,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             dvdrow[i] = obj.wcs[i].dvdy
 
             # check if we are running out of memory
-            if sys.getsizeof(vec) > MAX_MEMORY:  # pragma: no cover
+            if sys.getsizeof(vec,0) > MAX_MEMORY:  # pragma: no cover
                 raise GalSimError(
                     "Running out of memory > %1.0fGB - you can increase the limit by changing "
                     "galsim.des_meds.MAX_MEMORY"%(MAX_MEMORY/1.e9))
