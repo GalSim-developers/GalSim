@@ -81,11 +81,6 @@ if len(glob.glob('build/*/galsim/wfirst')) > 0:
     import shutil
     shutil.rmtree(d[0])
 
-# If we build with debug, undefine NDEBUG flag
-undef_macros = []
-if "--debug" in sys.argv:
-    undef_macros+=['NDEBUG']
-
 copt =  {
     'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-openmp'],
@@ -109,10 +104,19 @@ lopt =  {
     'unknown' : [],
 }
 
+# If we build with debug, undefine NDEBUG flag
+# Note: setuptools stopped allowing --debug, so if we need this, we'll need to find another
+# mechanism.
+undef_macros = []
 if "--debug" in sys.argv:
+    undef_macros+=['NDEBUG']
     for name in copt.keys():
         if name != 'unknown':
             copt[name].append('-g')
+
+# Verbose is the default for setuptools logging, but if it's on the command line, we take it
+# to mean that we should also be verbose.
+if "--debug" in sys.argv or "--verbose" in sys.argv:
     debug = True
 
 local_tmp = 'tmp'
