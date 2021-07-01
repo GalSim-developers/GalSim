@@ -747,6 +747,10 @@ namespace galsim {
         double integ_step(double x1, double f1, double x2, double f2, int i) const {
             throw std::runtime_error("integration not implemented for gsinterp Tables");
         }
+        double integ_prod_step(double x1, double f1, double x2, double f2, int i, double xfact,
+                               double g1, double g2) const {
+            throw std::runtime_error("integration not implemented for gsinterp Tables");
+        }
 
     private:
         const Interpolant* _gsinterp;
