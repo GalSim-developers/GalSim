@@ -455,6 +455,12 @@ def test_silicon_area():
         #print(nx,ny,poisson_area,galsim_area)
         np.testing.assert_almost_equal(poisson_area/100.0, galsim_area, decimal=3)
 
+    np.testing.assert_almost_equal(area_image(0,0), 0.9286634530274507)   # matches original code
+    np.testing.assert_almost_equal(area_image(1,0), 1.003792278324485)    # original code produces 1.0048448350598456
+    np.testing.assert_almost_equal(area_image(-1,0), 1.0038164327563435)  # original code produces 1.004847964722863
+    np.testing.assert_almost_equal(area_image(0,1), 1.012152175488738)    # original code produces 1.0123441514017317
+    np.testing.assert_almost_equal(area_image(0,-1), 1.0121635282119203)  # original code produces 1.0123564581448614
+
     # Draw a smallish but very bright Gaussian image
     obj = galsim.Gaussian(flux=5.e5, sigma=0.2)
     im = obj.drawImage(nx=17, ny=17, scale=0.3, dtype=float)
