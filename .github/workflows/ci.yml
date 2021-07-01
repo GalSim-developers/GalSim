@@ -182,9 +182,10 @@ jobs:
                        # Less confusing to include it explicitly.
 
             - name: Check shared library
-              if: matrix.py == 3.9
+              if: matrix.py == 3.8
               run: |
-                # On one system (arbitrarily py3.9), check the shared library creation and link.
+                # On a few systems (arbitrarily py3.8, where we also chec mac and clang),
+                # check the shared library creation and link.
                 GALSIM_BUILD_SHARED=1 python setup.py install
 
                 # These directories/files should now exist.
