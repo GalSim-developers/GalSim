@@ -201,21 +201,28 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
 
 # Check for the fftw3 library in some likely places
 def find_fftw_lib(output=False):
+    import distutils.sysconfig
+
     if debug: output = True
     try_libdirs = []
-    lib_ext = '.so'
 
     # Start with the explicit FFTW_DIR, if present.
     if 'FFTW_DIR' in os.environ:
         try_libdirs.append(os.environ['FFTW_DIR'])
         try_libdirs.append(os.path.join(os.environ['FFTW_DIR'],'lib'))
 
+    # Add the python system library directory.
+    try_libdirs.append(distutils.sysconfig.get_config_var('LIBDIR'))
+
+    # If using Anaconda, add their lib dir in case fftw is installed there.
+    # (With envs, this might be different than the sysconfig LIBDIR.)
+    if 'CONDA_PREFIX' in os.environ:
+        try_libdirs.append(os.path.join(os.environ['CONDA_PREFIX'],'lib'))
+
     # Try some standard locations where things get installed
-    if 'posix' in os.name.lower():
-        try_libdirs.extend(['/usr/local/lib', '/usr/lib'])
-    if 'darwin' in platform.system().lower():
-        try_libdirs.extend(['/usr/local/lib', '/usr/lib', '/sw/lib', '/opt/local/lib'])
-        lib_ext = '.dylib'
+    try_libdirs.extend(['/usr/local/lib', '/usr/lib'])
+    if sys.platform == "darwin":
+        try_libdirs.extend(['/sw/lib', '/opt/local/lib'])
 
     # Check the directories in LD_LIBRARY_PATH.  This doesn't work on OSX >= 10.11
     for path in ['LIBRARY_PATH', 'LD_LIBRARY_PATH', 'DYLD_LIBRARY_PATH']:
@@ -233,6 +240,10 @@ def find_fftw_lib(output=False):
     except ImportError:
         pass
 
+    if sys.platform == "darwin":
+        lib_ext = '.dylib'
+    else:
+        lib_ext = '.so'
     name = 'libfftw3' + lib_ext
     if output: print("Looking for ",name)
     tried_dirs = set()  # Keep track, so we don't try the same thing twice.
@@ -291,29 +302,34 @@ def find_eigen_dir(output=False):
     import distutils.sysconfig
 
     try_dirs = []
+
+    # Start with a user-specified directory.
     if 'EIGEN_DIR' in os.environ:
         try_dirs.append(os.environ['EIGEN_DIR'])
         try_dirs.append(os.path.join(os.environ['EIGEN_DIR'], 'include'))
-    # This is where conda will install it.
+
+    # Add the python system include directory.
     try_dirs.append(distutils.sysconfig.get_config_var('INCLUDEDIR'))
-    if 'posix' in os.name.lower():
-        try_dirs.extend(['/usr/local/include', '/usr/include'])
-    if 'darwin' in platform.system().lower():
-        try_dirs.extend(['/usr/local/include', '/usr/include', '/sw/include',
-                            '/opt/local/include'])
+
+    # If using Anaconda, add their lib dir in case fftw is installed there.
+    # (With envs, this might be different than the sysconfig LIBDIR.)
+    if 'CONDA_PREFIX' in os.environ:
+        try_dirs.append(os.path.join(os.environ['CONDA_PREFIX'],'lib'))
+
+    # Some standard install locations:
+    try_dirs.extend(['/usr/local/include', '/usr/include'])
+    if sys.platform == "darwin":
+        try_dirs.extend(['/sw/include', '/opt/local/include'])
+
+    # Also if there is a C_INCLUDE_PATH, check those dirs.
     for path in ['C_INCLUDE_PATH']:
         if path in os.environ:
             for dir in os.environ[path].split(':'):
                 try_dirs.append(dir)
+
+    # Finally, (last resort) check our own download of eigen.
     if os.path.isdir('downloaded_eigen'):
         try_dirs.extend(glob.glob(os.path.join('downloaded_eigen','*')))
-    # eigency is a python package that bundles the Eigen header files, so if that's there,
-    # can use that.
-    try:
-        import eigency
-        try_dirs.append(eigency.get_includes()[2])
-    except ImportError:
-        pass
 
     if output: print("Looking for Eigen:")
     for dir in try_dirs:
