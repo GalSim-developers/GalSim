@@ -28,14 +28,15 @@ import sys
 import logging
 import shutil
 
+import galsim
+
 from galsim_test_helpers import *
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
+# Some tests fail intermittently on PyPy 3.6 (i.e. pypy on GHA), although they seem to work
+# on the conda-forge pypy 3.7.
+# So for now, just mark skip them for GHA runs.
+
+pypy36 = ('PyPy' in sys.version) and ('3.6' in sys.version)
 
 def remove_dir(dir_name):
     """Remove a directory in ../examples
@@ -218,6 +219,7 @@ def test_demo8():
     assert check_same('output/bpd_single.fits', 'output_yaml/bpd_single.fits')
     assert check_same('output/bpd_multi.fits', 'output_yaml/bpd_multi.fits')
 
+@unittest.skipIf(pypy36, 'Skip on PyPy 3.6')
 @timer
 @in_examples
 def test_demo9():
