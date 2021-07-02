@@ -854,7 +854,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 # This loop is happening while the other processes are still working on their tasks.
                 results = [ None for k in range(njobs) ]
                 for kk in range(njobs):
-                    res, k, t, proc = results_queue.get(timeout=300)
+                    res, k, t, proc = results_queue.get(timeout=1000)
                     if isinstance(res, Exception):
                         # res is really the exception, e
                         # t is really the traceback
