@@ -378,6 +378,12 @@ def UpdateNProc(nproc, ntot, config, logger=None):
         logger.debug("Already multiprocessing.  Ignoring image.nproc")
         nproc = 1
 
+    # Third, pypy multiprocessing in Python 3.6 seems to be flaky with multiprocessing,
+    # so don't use multiple processes on that sysem.
+    if nproc != 1 and 'PyPy' in sys.version and '3.6' in sys.version:  # pragma: no cover
+        logger.warning("PyPy 3.6 multiprocessing is unreliable.  Ignoring nproc.")
+        nproc = 1
+
     # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
     # It just looks bad to have 3 images processed with 8 processes or something like that.
     if nproc > ntot:

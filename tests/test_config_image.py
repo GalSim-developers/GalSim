@@ -28,7 +28,6 @@ import warnings
 import galsim
 from galsim_test_helpers import *
 
-
 @timer
 def test_single():
     """Test the default image type = Single and stamp type = Basic
@@ -505,7 +504,8 @@ def test_reject():
     except (ValueError,IndexError,galsim.GalSimError):
         pass
     #print(cl.output)
-    assert re.search("Process-.: Exception caught when building stamp",cl.output)
+    if galsim.config.UpdateNProc(2, nimages, config) > 1:
+        assert re.search("Process-.: Exception caught when building stamp",cl.output)
 
     try:
         with CaptureLog() as cl:
@@ -513,7 +513,8 @@ def test_reject():
     except (ValueError,IndexError,galsim.GalSimError):
         pass
     #print(cl.output)
-    assert re.search("Process-.: Exception caught when building image",cl.output)
+    if galsim.config.UpdateNProc(2, nimages, config) > 1:
+        assert re.search("Process-.: Exception caught when building image",cl.output)
 
     # Finally, if all images give errors, BuildFiles will not raise an exception, but will just
     # report that no files were written.

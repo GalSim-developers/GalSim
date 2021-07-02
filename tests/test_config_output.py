@@ -117,7 +117,8 @@ def test_fits():
     config = galsim.config.CopyConfig(config1)
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : 10})
-    assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
+    if galsim.config.UpdateNProc(10, 6, config) > 1:
+        assert 'There are only 6 jobs to do.  Reducing nproc to 6' in cl.output
 
     # There is a feature that we reduce the number of tasks to be < 32767 to avoid problems
     # with the multiprocessing.Queue overflowing.  That 32767 number is a settable paramter,
@@ -129,7 +130,8 @@ def test_fits():
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger, new_params={'output.nproc' : 2})
     print(cl.output)
-    assert 'len(tasks) = 6 is more than max_queue_size = 4' in cl.output
+    if galsim.config.UpdateNProc(10, 6, config) > 1:
+        assert 'len(tasks) = 6 is more than max_queue_size = 4' in cl.output
     for k in range(nfiles):
         file_name = 'output_fits/test_fits_%d.fits'%k
         im2 = galsim.fits.read(file_name)
@@ -148,7 +150,8 @@ def test_fits():
     # by CaptureLog.  I tried for a while to figure out how to get it to capture the proxied
     # logs and couldn't get it working.  So this just checks for an info log before the
     # multithreading starts.  But with a regular logger, there really is profiling output.
-    assert "Starting separate profiling for each of the" in cl.output
+    if galsim.config.UpdateNProc(10, 6, config) > 1:
+        assert "Starting separate profiling for each of the" in cl.output
 
     # Check some public API utility functions
     assert galsim.config.GetNFiles(config) == 6
@@ -1199,16 +1202,17 @@ def test_retry_io():
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     #print(cl.output)
-    assert re.search("Process-.: Exception caught for file 0 = output/test_flaky_fits_0.fits",
-                     cl.output)
-    assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
-    assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
-    assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", cl.output)
-    assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", cl.output)
-    assert re.search("Process-.: File 4 = output/test_flaky_fits_4.fits", cl.output)
-    assert re.search("Process-.: Exception caught for file 5 = output/test_flaky_fits_5.fits",
-                     cl.output)
-    assert "File output/test_flaky_fits_5.fits not written! Continuing on..." in cl.output
+    if galsim.config.UpdateNProc(2, nfiles, config) > 1:
+        assert re.search("Process-.: Exception caught for file 0 = output/test_flaky_fits_0.fits",
+                         cl.output)
+        assert "File output/test_flaky_fits_0.fits not written! Continuing on..." in cl.output
+        assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
+        assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", cl.output)
+        assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", cl.output)
+        assert re.search("Process-.: File 4 = output/test_flaky_fits_4.fits", cl.output)
+        assert re.search("Process-.: Exception caught for file 5 = output/test_flaky_fits_5.fits",
+                         cl.output)
+        assert "File output/test_flaky_fits_5.fits not written! Continuing on..." in cl.output
 
     # But with except_abort = True, it will stop after the first failure
     del config['output']['nproc']  # Otherwise which file fails in non-deterministic.

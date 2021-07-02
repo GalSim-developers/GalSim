@@ -28,14 +28,9 @@ import sys
 import logging
 import shutil
 
-from galsim_test_helpers import *
+import galsim
 
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
+from galsim_test_helpers import *
 
 def remove_dir(dir_name):
     """Remove a directory in ../examples
