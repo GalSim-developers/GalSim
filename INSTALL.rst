@@ -9,6 +9,10 @@ System requirements: GalSim currently only supports Linux and Mac OSX.
 Possibly other POSIX-compliant systems, but we specifically do not
 currently support Windows.
 
+WARNING: The GalSim 2.3.x release series will be the last to support
+Python 2.7, as it is currently past its end-of-life.  Please migrate to
+Python 3 in order to be able to use future versions of GalSim.
+
 Pip Installation
 ----------------
 
@@ -64,7 +68,7 @@ SCons Installation
 
 Prior to version 2.0, GalSim installation used SCons.  This installation
 mode is still supported, but is not recommended unless you have difficulties
-with the pip or conda installation methods.  Th GalSim 2.3.x release series
+with the pip or conda installation methods.  The GalSim 2.3.x release series
 will be the last to support the SCons installation method.
 
 For details about this methos, see:

@@ -9,9 +9,9 @@
 
 GalSim is open-source software for simulating images of astronomical objects
 (stars, galaxies) in a variety of ways.  The bulk of the calculations are
-carried out in C++, and the user interface is in python.  In addition, the code
+carried out in C++, and the user interface is in Python.  In addition, the code
 can operate directly on "config" files, for those users who prefer not to work
-in python.  The impetus for the software package was a weak lensing community
+in Python.  The impetus for the software package was a weak lensing community
 data challenge, called GREAT3:
 
     http://great3challenge.info/
@@ -196,7 +196,7 @@ Currently, GalSim has the following capabilities:
   using various compressions including gzip, bzip2, and rice.
 
 * Can carry out nearly any simulation that a user might want using two parallel
-  methods: directly using python code, or by specifying the simulation
+  methods: directly using Python code, or by specifying the simulation
   properties in an input configuration script.  See the demo scripts in
   the examples/ directory for examples of each.
 

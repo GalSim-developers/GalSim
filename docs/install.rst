@@ -5,6 +5,17 @@ GalSim is a python module that has much of its implementation in C++ for
 improved computational efficiency.  GalSim supports both Python 2 and
 Python 3.  It is regularly tested on Python versions (2.7, 3.6, 3.7, 3.8, 3.9).
 
+.. warning::
+
+    This (v2.3) is the last GalSim release which will support Python 2.7,
+    as it is currently past its end-of-life.  Please migrate to Python 3
+    in order to be able to use future versions of GalSim.
+
+It also seems to work on PyPy (both via conda-forge and the GitHub Actions
+setup), although we don't consider this an officially supported system.
+If you use GalSim with PyPy and experience any problems, we would appreciate
+hearing about them.  Please open an issue describing any problems you find.
+
 System requirements: GalSim currently only supports Linux and Mac OSX.
 Possibly other POSIX-compliant systems, but we specifically do not
 currently support Windows.
