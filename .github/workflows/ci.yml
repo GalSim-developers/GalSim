@@ -15,12 +15,6 @@ jobs:
     build:
         runs-on: ${{ matrix.os }}
 
-        # Runs marked experimental don't stop immediately if a step fails.
-        # Unfortunately, it still marks the run as a failure, unlike Travis's allow_failures
-        # option.  So for now, we have to just disable the pypy experimental run.
-        # cf. https://github.com/actions/toolkit/issues/399
-        #continue-on-error: ${{ matrix.experimental }}
-
         strategy:
             matrix:
                 # First all python versions in basic linux
@@ -28,7 +22,6 @@ jobs:
                 py: [ 2.7, 3.6, 3.7, 3.8, 3.9 ]
                 CC: [ gcc ]
                 CXX: [ g++ ]
-                experimental: [ false ]
 
                 # Add some other particular combinations to test
                 include:
@@ -40,21 +33,18 @@ jobs:
                       py: 3.8
                       CC: cc
                       CXX: c++
-                      experimental: false
 
                     # Check one with clang compiler
                     - os: ubuntu-latest
                       py: 3.8
                       CC: clang
                       CXX: clang++
-                      experimental: false
 
-                    # Try pypy
+                    # And a pypy system.
                     - os: ubuntu-latest
                       py: pypy3
-                      CC: cc
-                      CXX: c++
-                      experimental: true
+                      CC: gcc
+                      CXX: g++
 
         steps:
             - uses: actions/checkout@v2
