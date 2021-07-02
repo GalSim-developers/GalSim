@@ -3107,7 +3107,11 @@ def test_int_args():
     # Before fixing #1024, this took about 0.5 sec.
     # Now it usually takes about 0.04 sec.  Testing at 0.25 seems like a reasonable midpoint.
     print('Time = ',t1-t0)
-    assert t1-t0 < 0.25
+    if __name__ == '__main__':
+        # Don't include this in regular unit tests, since it's not really something we need
+        # to guarantee.  This timing estimate is appropriate for my laptop, but maybe not
+        # all systems.  It also fails for pypy on GHA for some reason.
+        assert t1-t0 < 0.25
 
     posi = galsim.PositionI(5,6)
     posd = galsim.PositionD(5,6)
