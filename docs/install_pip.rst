@@ -373,11 +373,9 @@ in the Python module file, called ``_galsim.so``, but this file is often not usa
 for linking your own C++ code.
 
 For this purpose, you will need to perform an extra step to build a shared library
-that has the C++-layer functions.  Specifically, if you set an environment variable,
-``GALSIM_BUILD_SHARED``, then the setup.py installation will build the shared
-library as well::
+that has the C++-layer functions.  Run the following command::
 
-    GALSIM_BUILD_SHARED=1 python setup.py install
+    python setup.py build_shared_clib
 
 The built shared library will be located in ``build/shared_clib/``.  The library file
 is named ``libgalsim.M.m.dylib`` on OSX or ``libgalsim.M.m.so`` on Linux, where M,m
