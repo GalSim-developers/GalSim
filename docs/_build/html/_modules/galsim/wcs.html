@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.wcs &mdash; GalSim 2.3.0-rc.2 documentation</title>
+  <title>galsim.wcs &mdash; GalSim 2.3.0 documentation</title>
   
 
   
@@ -2638,8 +2638,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_funcs</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_initialize_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">import</span> <span class="nn">galsim</span>
         <span class="k">global</span> <span class="n">galsim</span>  <span class="c1"># Because if a user&#39;s function used galsim, it&#39;s probably at global scope.</span>
+        <span class="kn">import</span> <span class="nn">galsim</span>
         <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ufunc</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_uses_color</span><span class="p">:</span>
@@ -2911,8 +2911,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_initialize_funcs</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_initialize_funcs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="kn">import</span> <span class="nn">galsim</span>
         <span class="k">global</span> <span class="n">galsim</span>  <span class="c1"># Because if a user&#39;s function used galsim, it&#39;s probably at global scope.</span>
+        <span class="kn">import</span> <span class="nn">galsim</span>
         <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utilities</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_dec_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_ra_func</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>

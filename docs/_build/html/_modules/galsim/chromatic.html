@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.chromatic &mdash; GalSim 2.3.0-rc.2 documentation</title>
+  <title>galsim.chromatic &mdash; GalSim 2.3.0 documentation</title>
   
 
   
@@ -2735,34 +2735,40 @@
         <span class="c1"># the inseparable terms on which to do integration first, and then finish with convolution</span>
         <span class="c1"># last.</span>
 
-        <span class="c1"># Here is the logic to turn int((g1 h1 + g2 h2) * f3) -&gt; g1 * int(h1 f3) + g2 * int(h2 f3)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ChromaticSum</span><span class="p">):</span>
-                <span class="c1"># say obj.obj_list = [A,B,C], where obj is a ChromaticSum object</span>
-                <span class="c1"># Assemble temporary list of convolutants excluding the ChromaticSum in question.</span>
-                <span class="n">tmplist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span>
-                <span class="k">del</span> <span class="n">tmplist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># remove ChromaticSum object from obj_list</span>
-                <span class="n">tmplist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># Append first summand, i.e., A, to convolutants</span>
-                <span class="c1"># now draw this image</span>
-                <span class="n">tmpobj</span> <span class="o">=</span> <span class="n">ChromaticConvolution</span><span class="p">(</span><span class="n">tmplist</span><span class="p">)</span>
-                <span class="n">add_to_image</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;add_to_image&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-                <span class="n">image</span> <span class="o">=</span> <span class="n">tmpobj</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span>
-                                         <span class="n">iimult</span><span class="o">=</span><span class="n">iimult</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="n">add_to_image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                <span class="c1"># Now add in the rest of the summands in turn, i.e., B and C</span>
-                <span class="k">for</span> <span class="n">summand</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">phot</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span>
+
+        <span class="c1"># This optimization is not actually helpful when photon shooting.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">phot</span><span class="p">:</span>
+            <span class="c1"># Here is the logic to turn</span>
+            <span class="c1">#   int((g1 h1 + g2 h2) * f3)</span>
+            <span class="c1">#   -&gt; g1 * int(h1 f3) + g2 * int(h2 f3)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">ChromaticSum</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">phot</span><span class="p">:</span>
+                    <span class="c1"># say obj.obj_list = [A,B,C], where obj is a ChromaticSum object</span>
+                    <span class="c1"># Assemble temporary list of convolutants excluding the ChromaticSum in question.</span>
                     <span class="n">tmplist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span>
-                    <span class="k">del</span> <span class="n">tmplist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                    <span class="n">tmplist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">summand</span><span class="p">)</span>
+                    <span class="k">del</span> <span class="n">tmplist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># remove ChromaticSum object from obj_list</span>
+                    <span class="n">tmplist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>  <span class="c1"># Append first summand, i.e., A, to convolutants</span>
+                    <span class="c1"># now draw this image</span>
                     <span class="n">tmpobj</span> <span class="o">=</span> <span class="n">ChromaticConvolution</span><span class="p">(</span><span class="n">tmplist</span><span class="p">)</span>
-                    <span class="c1"># add to previously started image</span>
-                    <span class="n">_remove_setup_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="n">add_to_image</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;add_to_image&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
                     <span class="n">image</span> <span class="o">=</span> <span class="n">tmpobj</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span>
-                                             <span class="n">iimult</span><span class="o">=</span><span class="n">iimult</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-                <span class="c1"># Return the image here, breaking the loop early.  If there are two ChromaticSum</span>
-                <span class="c1"># instances in obj_list, then the above procedure will repeat in the recursion,</span>
-                <span class="c1"># effectively distributing the multiplication over both sums.</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_last_wcs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span>
-                <span class="k">return</span> <span class="n">image</span>
+                                            <span class="n">iimult</span><span class="o">=</span><span class="n">iimult</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="n">add_to_image</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="c1"># Now add in the rest of the summands in turn, i.e., B and C</span>
+                    <span class="k">for</span> <span class="n">summand</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">obj_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                        <span class="n">tmplist</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span><span class="p">)</span>
+                        <span class="k">del</span> <span class="n">tmplist</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                        <span class="n">tmplist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">summand</span><span class="p">)</span>
+                        <span class="n">tmpobj</span> <span class="o">=</span> <span class="n">ChromaticConvolution</span><span class="p">(</span><span class="n">tmplist</span><span class="p">)</span>
+                        <span class="c1"># add to previously started image</span>
+                        <span class="n">_remove_setup_kwargs</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+                        <span class="n">image</span> <span class="o">=</span> <span class="n">tmpobj</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">image</span><span class="o">=</span><span class="n">image</span><span class="p">,</span> <span class="n">integrator</span><span class="o">=</span><span class="n">integrator</span><span class="p">,</span>
+                                                <span class="n">iimult</span><span class="o">=</span><span class="n">iimult</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="c1"># Return the image here, breaking the loop early.  If there are two ChromaticSum</span>
+                    <span class="c1"># instances in obj_list, then the above procedure will repeat in the recursion,</span>
+                    <span class="c1"># effectively distributing the multiplication over both sums.</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_last_wcs</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">wcs</span>
+                    <span class="k">return</span> <span class="n">image</span>
 
         <span class="c1"># If program gets this far, the objects in obj_list should be atomic (non-ChromaticSum</span>
         <span class="c1"># and non-ChromaticConvolution).  (The latter case was dealt with in the constructor.)</span>
@@ -2775,7 +2781,7 @@
         <span class="c1"># If we are photon shooting, then we can move all non-spectral objects to the photon_ops</span>
         <span class="c1"># list and deal with them that way.  This both more accurate and more efficient for most</span>
         <span class="c1"># chromatic PSFs.</span>
-        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;method&#39;</span><span class="p">,</span> <span class="s1">&#39;auto&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">phot</span><span class="p">:</span>
             <span class="n">psfs</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">dimensionless</span><span class="p">]</span>
             <span class="n">gals</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obj_list</span> <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">spectral</span><span class="p">]</span>
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">gals</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>  <span class="c1"># Should have been checked by constructor.</span>

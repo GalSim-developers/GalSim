@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.des.des_meds &mdash; GalSim 2.3.0-rc.2 documentation</title>
+  <title>galsim.des.des_meds &mdash; GalSim 2.3.0 documentation</title>
   
 
   
@@ -459,7 +459,7 @@
             <span class="n">dvdrow</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">wcs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">dvdy</span>
 
             <span class="c1"># check if we are running out of memory</span>
-            <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">vec</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_MEMORY</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+            <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">MAX_MEMORY</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
                 <span class="k">raise</span> <span class="n">GalSimError</span><span class="p">(</span>
                     <span class="s2">&quot;Running out of memory &gt; </span><span class="si">%1.0f</span><span class="s2">GB - you can increase the limit by changing &quot;</span>
                     <span class="s2">&quot;galsim.des_meds.MAX_MEMORY&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">MAX_MEMORY</span><span class="o">/</span><span class="mf">1.e9</span><span class="p">))</span>

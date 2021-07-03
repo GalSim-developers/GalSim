@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Revision History &mdash; GalSim 2.3.0-rc.2 documentation</title>
+  <title>Revision History &mdash; GalSim 2.3.0 documentation</title>
   
 
   
@@ -249,21 +249,16 @@ your system. (#1086)</p></li>
 <li><p>Deprecated the rng parameter to <a class="reference internal" href="photon_ops.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> and <a class="reference internal" href="photon_ops.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a>
 constructors.  Now they will use the rng that you provide to drawImage or
 whatever else you are using to apply these photon operators. (#540)</p></li>
-<li><p>Changed the WCS method name withOrigin to shiftOrigin for non-local WCS
-types.  The functionality hasn’t changed, but the name withOrigin is
-only really appropriate for LocalWCS types.  When the WCS already has a
-non-zero origin, then the action takes in really to shift the origin, not
-set a new value. (#1073)</p></li>
+<li><p>Deprecated withOrigin method for non-local WCS types in favor of the new
+method shiftOrigin.  This has the same functionality, but the name is
+more in line with the actual action of the function.  For local WCS types,
+shiftOrigin is equivalent to withOrigin, which still exists as a valid
+name for this action. (#1073)</p></li>
 <li><p>The numerical details of the Kolmogorov class were updated to use a more
 precise version of a constant from Racine (1996).  Technically this changes
 the definition of the Kolmogorov profile at the 6th decimal place.  So if
 you carefully tuned an r0 value to 6 decimal places for some purpose, this
 might break that. (#1084)</p></li>
-<li><p>Deprecated withOrigin method for non-local WCS types in favor of the new
-method shiftOrigin.  This has the same functionality, but the name is
-more in line with the actual action of the function.  For local WCS types,
-shiftOrigin is equivalent to withOrigin, which still exists as a valid
-name for this action. (#1085)</p></li>
 <li><p>Deprecated galsim.wfirst module.  Now called galsim.roman. (#1088)</p></li>
 <li><p>Changed the default ii_pad_factor for PhaseScreenPSF and OpticalPSF to 1.5.
 The old default of 4.0 (matching the InterpolatedImage default) is not
@@ -353,8 +348,8 @@ in world coordinates for a particular observation. (#1094)</p></li>
 <li><p>Added <a class="reference internal" href="table.html#galsim.LookupTable.integrate" title="galsim.LookupTable.integrate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LookupTable.integrate</span></code></a> and <a class="reference internal" href="table.html#galsim.LookupTable.integrate_product" title="galsim.LookupTable.integrate_product"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LookupTable.integrate_product</span></code></a>, along
 with <a class="reference internal" href="table.html#galsim.trapz" title="galsim.trapz"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.trapz</span></code></a> as a drop in replacement for <code class="docutils literal notranslate"><span class="pre">numpy.trapz</span></code>, which
 is often somewhat faster. (#1098)</p></li>
-<li><p>Added galsim.integ.hankel function. (#1099)</p></li>
-<li><p>Added galsim.bessel.jv_root function. (#1099)</p></li>
+<li><p>Added <a class="reference internal" href="integ.html#galsim.integ.hankel" title="galsim.integ.hankel"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.integ.hankel</span></code></a> function. (#1099)</p></li>
+<li><p>Added <a class="reference internal" href="bessel.html#galsim.bessel.jv_root" title="galsim.bessel.jv_root"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.bessel.jv_root</span></code></a> function. (#1099)</p></li>
 <li><p>Added support for TPV WCS files with order &gt; 3. (#1101)</p></li>
 <li><p>Added galsim.UserScreen for arbitrary user-supplied phase screens (#1102)</p></li>
 <li><p>Added option to emit WCS warnings when reading a file via <a class="reference internal" href="fits.html#galsim.fits.read" title="galsim.fits.read"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.fits.read</span></code></a>

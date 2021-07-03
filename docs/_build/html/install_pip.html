@@ -8,7 +8,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Installing With Pip &mdash; GalSim 2.3.0-rc.2 documentation</title>
+  <title>Installing With Pip &mdash; GalSim 2.3.0 documentation</title>
   
 
   
@@ -522,18 +522,20 @@ code to continue to work for updated GalSim versions.  Or if a function signatur
 changes slightly, it will usually be fairly simple to update to the new syntax.</p>
 <p>We provide the appropriate header files to use in the installed python library
 location in the <code class="docutils literal notranslate"><span class="pre">include</span></code> directory.  These files precisely specify the
-available API for a given release.</p>
-<p>The compiled library file is not by default installed.  The functions are included
+available C++-layer API for a given release.</p>
+<p>The compiled library file for linking user C++ code is not installed by the default
+pip or setup.py installation procedure.  The relevant functions are included
 in the Python module file, called <code class="docutils literal notranslate"><span class="pre">_galsim.so</span></code>, but this file is often not usable
-for linking your own C++ code.  For this purpose, you will need an extra step to
-build a shared library that has the C++-layer functions.  Specifically, if you set
-an environment variable, <code class="docutils literal notranslate"><span class="pre">GALSIM_BUILD_SHARED</span></code>, then the setup.py installation
-will build the shared library as well:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GALSIM_BUILD_SHARED</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+for linking your own C++ code.</p>
+<p>For this purpose, you will need to perform an extra step to build a shared library
+that has the C++-layer functions.  Run the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">build_shared_clib</span>
 </pre></div>
 </div>
-<p>The built shared library will be located in <code class="docutils literal notranslate"><span class="pre">build/shared_clib/</span></code>.  You should
-copy this file to some appropriate directory where your C++ code will be able to link to it.</p>
+<p>The built shared library will be located in <code class="docutils literal notranslate"><span class="pre">build/shared_clib/</span></code>.  The library file
+is named <code class="docutils literal notranslate"><span class="pre">libgalsim.M.m.dylib</span></code> on OSX or <code class="docutils literal notranslate"><span class="pre">libgalsim.M.m.so</span></code> on Linux, where M,m
+are the major and minor version numbers for the release.  You should copy this file
+to some appropriate directory where your C++ code will be able to link to it.</p>
 </section>
 </section>
 

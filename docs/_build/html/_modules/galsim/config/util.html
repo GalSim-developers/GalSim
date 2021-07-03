@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.config.util &mdash; GalSim 2.3.0-rc.2 documentation</title>
+  <title>galsim.config.util &mdash; GalSim 2.3.0 documentation</title>
   
 
   
@@ -551,6 +551,12 @@
     <span class="c1"># Second, make sure we aren&#39;t already in a multiprocessing mode</span>
     <span class="k">if</span> <span class="n">nproc</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">&#39;current_nproc&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Already multiprocessing.  Ignoring image.nproc&quot;</span><span class="p">)</span>
+        <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Third, pypy multiprocessing in Python 3.6 seems to be flaky with multiprocessing,</span>
+    <span class="c1"># so don&#39;t use multiple processes on that sysem.</span>
+    <span class="k">if</span> <span class="n">nproc</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="s1">&#39;PyPy&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">version</span> <span class="ow">and</span> <span class="s1">&#39;3.6&#39;</span> <span class="ow">in</span> <span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;PyPy 3.6 multiprocessing is unreliable.  Ignoring nproc.&quot;</span><span class="p">)</span>
         <span class="n">nproc</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="c1"># Finally, don&#39;t try to use more processes than jobs.  It wouldn&#39;t fail or anything.</span>
