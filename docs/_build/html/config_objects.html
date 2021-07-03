@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Config Objects &mdash; GalSim 2.3.0 documentation</title>
@@ -204,7 +203,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="config-objects">
+  <div class="section" id="config-objects">
 <h1>Config Objects<a class="headerlink" href="#config-objects" title="Permalink to this headline">¶</a></h1>
 <p>GalSim defines a number of object types, which correspond to the GSObject types in the python code.
 Some are designed to be appropriate for describing PSFs and others for describing galaxies.
@@ -220,7 +219,7 @@ bullet items for each type defined below.</p>
 sometimes just galaxies), regardless of what type they are.</p>
 <p>And finally, it is possible to define your own object type,
 which we describe in <a class="reference internal" href="#custom-object-types"><span class="std std-ref">Custom Object Types</span></a>.</p>
-<section id="psf-types">
+<div class="section" id="psf-types">
 <h2>PSF Types<a class="headerlink" href="#psf-types" title="Permalink to this headline">¶</a></h2>
 <ul>
 <li><p>‘Moffat’  A Moffat profile: <span class="math notranslate nohighlight">\(I(r) \sim (1 + (r/r_0)^2)^{-\beta}\)</span>, where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.</p>
@@ -307,8 +306,8 @@ which we describe in <a class="reference internal" href="#custom-object-types"><
 </dl>
 </li>
 </ul>
-</section>
-<section id="galaxy-types">
+</div>
+<div class="section" id="galaxy-types">
 <h2>Galaxy Types<a class="headerlink" href="#galaxy-types" title="Permalink to this headline">¶</a></h2>
 <ul>
 <li><p>‘Exponential’  A radial exponential profile: <span class="math notranslate nohighlight">\(I(r) \sim \exp(-r/r_0)\)</span>, where <span class="math notranslate nohighlight">\(r_0\)</span> is the <code class="docutils literal notranslate"><span class="pre">scale_radius</span></code>.</p>
@@ -415,8 +414,8 @@ which we describe in <a class="reference internal" href="#custom-object-types"><
 </div></blockquote>
 </li>
 </ul>
-</section>
-<section id="generic-types">
+</div>
+<div class="section" id="generic-types">
 <h2>Generic Types<a class="headerlink" href="#generic-types" title="Permalink to this headline">¶</a></h2>
 <ul>
 <li><p>‘Gaussian’  A circular Gaussian profile: <span class="math notranslate nohighlight">\(I(r) \sim \exp(-r^2 / (2 \sigma^2))\)</span>.  This is not all that appropriate for either PSFs or galaxies, but as it is extremely simple, it is often useful for very basic testing, as many measured properties of the profile have analytic values.</p>
@@ -496,8 +495,8 @@ Heaviside function and <span class="math notranslate nohighlight">\(r\)</span> i
 </div></blockquote>
 </li>
 </ul>
-</section>
-<section id="other-attributes">
+</div>
+<div class="section" id="other-attributes">
 <h2>Other Attributes<a class="headerlink" href="#other-attributes" title="Permalink to this headline">¶</a></h2>
 <p>There are a number of transformation attributes that are always allowed for any object type.
 Some of these operations do not commute with each other, so the order is important.
@@ -530,8 +529,8 @@ and not for <code class="docutils literal notranslate"><span class="pre">psf</sp
 <span class="math notranslate nohighlight">\(S = \sum W(x,y) I(x,y) / \sum W(x,y)\)</span> where <span class="math notranslate nohighlight">\(W(x,y)\)</span> is taken to be a matched filter, so <span class="math notranslate nohighlight">\(W(x,y) = I(x,y)\)</span>. (Note: This currently requires <code class="docutils literal notranslate"><span class="pre">draw_method</span> <span class="pre">=</span> <span class="pre">'fft'</span></code>.  It is a bit trickier to do this for photon shooting, and we have not enabled that yet.)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">redshift</span></code> = <em>float_value</em> (optional)  The redshift of the galaxy.  This is required when using ‘NFWHaloShear’ or ‘NFWHaloMagnification’.</p></li>
 </ul>
-</section>
-<section id="custom-object-types">
+</div>
+<div class="section" id="custom-object-types">
 <h2>Custom Object Types<a class="headerlink" href="#custom-object-types" title="Permalink to this headline">¶</a></h2>
 <p>To define your own object type, you will need to write an importable Python module
 (typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
@@ -693,8 +692,8 @@ It may also be helpful to look at the GalSim implementation of some of the inclu
 <dd><p>Build an OpticalPSF.</p>
 </dd></dl>
 
-</section>
-<section id="sed-field">
+</div>
+<div class="section" id="sed-field">
 <h2>SED Field<a class="headerlink" href="#sed-field" title="Permalink to this headline">¶</a></h2>
 <p>If you want your object to have a non-trivial wavelength dependence, you can include an
 <code class="docutils literal notranslate"><span class="pre">sed</span></code> parameter to define its <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.  Currently, there is only one defined
@@ -780,8 +779,8 @@ input type here.  (If it uses more than one, this may be a list.)
         <span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

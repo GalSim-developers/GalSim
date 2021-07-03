@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>The galsim Executable &mdash; GalSim 2.3.0 documentation</title>
@@ -192,7 +191,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="the-galsim-executable">
+  <div class="section" id="the-galsim-executable">
 <h1>The galsim Executable<a class="headerlink" href="#the-galsim-executable" title="Permalink to this headline">¶</a></h1>
 <p>The normal way to run a GalSim simulation using a config file is <code class="docutils literal notranslate"><span class="pre">galsim</span> <span class="pre">config.yaml</span></code>, where
 <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> is the name of the config file to be parsed.  For instance, to run demo1 (given
@@ -200,7 +199,7 @@ above), you would type:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span> <span class="n">demo1</span><span class="o">.</span><span class="n">yaml</span>
 </pre></div>
 </div>
-<section id="changing-or-adding-parameters">
+<div class="section" id="changing-or-adding-parameters">
 <h2>Changing or adding parameters<a class="headerlink" href="#changing-or-adding-parameters" title="Permalink to this headline">¶</a></h2>
 <p>Sometimes it is convenient to be able to change some of the configuration parameters from the
 command line, rather than edit the config file.  For instance, you might want to make a number
@@ -217,8 +216,8 @@ file, one could do:</p>
 </div>
 <p>Notice that the <code class="docutils literal notranslate"><span class="pre">.</span></code> is used to separate levels within the config hierarchy.
 So <code class="docutils literal notranslate"><span class="pre">gal.flux</span></code> represents <code class="docutils literal notranslate"><span class="pre">config['gal']['flux']</span></code>.</p>
-</section>
-<section id="splitting-up-a-config-job">
+</div>
+<div class="section" id="splitting-up-a-config-job">
 <h2>Splitting up a config job<a class="headerlink" href="#splitting-up-a-config-job" title="Permalink to this headline">¶</a></h2>
 <p>For large simulations, one will typically want to split the job up into multiple smaller jobs,
 each of which can be run on a single node or core.  The natural way to split this up is by
@@ -234,8 +233,8 @@ with <code class="docutils literal notranslate"><span class="pre">-n</span></cod
 <span class="n">galsim</span> <span class="n">config</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">n</span> <span class="mi">5</span> <span class="o">-</span><span class="n">j</span> <span class="mi">5</span>
 </pre></div>
 </div>
-</section>
-<section id="other-command-line-options">
+</div>
+<div class="section" id="other-command-line-options">
 <h2>Other command line options<a class="headerlink" href="#other-command-line-options" title="Permalink to this headline">¶</a></h2>
 <p>There are few other command line options that we describe here for completeness.</p>
 <ul class="simple">
@@ -264,8 +263,8 @@ diagnosing where a simulation is spending most of its computation time.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">-x</span></code> or <code class="docutils literal notranslate"><span class="pre">--except_abort</span></code> aborts the whole job whenever any file raises an exception rather than continuing on. (new in version 1.5)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">--version</span></code> shows the version of GalSim.</p></li>
 </ul>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

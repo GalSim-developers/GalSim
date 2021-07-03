@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Config Values &mdash; GalSim 2.3.0 documentation</title>
@@ -208,7 +207,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="config-values">
+  <div class="section" id="config-values">
 <h1>Config Values<a class="headerlink" href="#config-values" title="Permalink to this headline">¶</a></h1>
 <p>There are seven kinds of values that are used within the configuration apparatus, which we
 have been designating using the following italic names:</p>
@@ -232,7 +231,7 @@ value.</p>
 to evaluate a string.  The <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a> is described in its own section.</p>
 <p>In addition to all of these, you can also write your own <a class="reference internal" href="#custom-value-types"><span class="std std-ref">Custom Value Types</span></a>
 and register them to be used by the config parser.</p>
-<section id="float-value">
+<div class="section" id="float-value">
 <h2>float_value<a class="headerlink" href="#float-value" title="Permalink to this headline">¶</a></h2>
 <p>Options are:</p>
 <ul>
@@ -413,8 +412,8 @@ repeat starting with <code class="docutils literal notranslate"><span class="pre
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="int-value">
+</div>
+<div class="section" id="int-value">
 <h2>int_value<a class="headerlink" href="#int-value" title="Permalink to this headline">¶</a></h2>
 <p>Options are:</p>
 <ul>
@@ -538,8 +537,8 @@ repeat starting with <code class="docutils literal notranslate"><span class="pre
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="bool-value">
+</div>
+<div class="section" id="bool-value">
 <h2>bool_value<a class="headerlink" href="#bool-value" title="Permalink to this headline">¶</a></h2>
 <p>Options are:</p>
 <ul>
@@ -629,8 +628,8 @@ would normally be used for random booleans with a different probability of True.
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="str-value">
+</div>
+<div class="section" id="str-value">
 <h2>str_value<a class="headerlink" href="#str-value" title="Permalink to this headline">¶</a></h2>
 <p>Options are:</p>
 <ul>
@@ -708,8 +707,8 @@ would normally be used for random booleans with a different probability of True.
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="angle-value">
+</div>
+<div class="section" id="angle-value">
 <h2>angle_value<a class="headerlink" href="#angle-value" title="Permalink to this headline">¶</a></h2>
 <p>These represent <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> values.</p>
 <p>Options are:</p>
@@ -767,8 +766,8 @@ would normally be used for random booleans with a different probability of True.
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="shear-value">
+</div>
+<div class="section" id="shear-value">
 <h2>shear_value<a class="headerlink" href="#shear-value" title="Permalink to this headline">¶</a></h2>
 <p>These represent <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> values.</p>
 <p>Options are:</p>
@@ -892,8 +891,8 @@ observer (perhaps within the telescope).</p>
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="pos-value">
+</div>
+<div class="section" id="pos-value">
 <h2>pos_value<a class="headerlink" href="#pos-value" title="Permalink to this headline">¶</a></h2>
 <p>These represent <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> values, usually for a location on the image.</p>
 <p>Options are:</p>
@@ -966,8 +965,8 @@ preferentially pick locations near the center of the circle.</p>
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="sky-value">
+</div>
+<div class="section" id="sky-value">
 <h2>sky_value<a class="headerlink" href="#sky-value" title="Permalink to this headline">¶</a></h2>
 <p>These represent <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> values for a location in the sky.</p>
 <p>Options are:</p>
@@ -995,8 +994,8 @@ preferentially pick locations near the center of the circle.</p>
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="table-value">
+</div>
+<div class="section" id="table-value">
 <h2>table_value<a class="headerlink" href="#table-value" title="Permalink to this headline">¶</a></h2>
 <p>These represent <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> values to provide some kind of unary function, although in some
 cases you may be able to provide a regular function instead, e.g. via an Eval type using a lambda
@@ -1045,8 +1044,8 @@ ordinates.</p></li>
 </li>
 <li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
 </ul>
-</section>
-<section id="eval-type">
+</div>
+<div class="section" id="eval-type">
 <h2>Eval type<a class="headerlink" href="#eval-type" title="Permalink to this headline">¶</a></h2>
 <p>Every kind of value has ‘Eval’ as one of its allowed types.  This works a little bit differently
 than the other types, so we describe it here in its own section.</p>
@@ -1057,7 +1056,7 @@ yourself or perhaps be clearer as to how the number was formed.  For example, th
 calculates <code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> using lambda = 800 nm, D = 4 m, converting the result into arcsec.
 If you later wanted to change to a 6.5m telescope, it would be very clear what to change,
 as opposed to if the value were listed as 0.041253.</p>
-<section id="preset-variables">
+<div class="section" id="preset-variables">
 <h3>Preset variables<a class="headerlink" href="#preset-variables" title="Permalink to this headline">¶</a></h3>
 <p>The ‘Eval’ type gets even more powerful when you use variables.  The file demo10.yaml has some
 examples that use the <code class="docutils literal notranslate"><span class="pre">pos</span></code> variable, the position of the galaxy relative to the center of the
@@ -1186,8 +1185,8 @@ position on the image.</p>
 </div></blockquote>
 </li>
 </ul>
-</section>
-<section id="available-modules">
+</div>
+<div class="section" id="available-modules">
 <h3>Available Modules<a class="headerlink" href="#available-modules" title="Permalink to this headline">¶</a></h3>
 <p>Python modules that GalSim will import for you to use:</p>
 <ul class="simple">
@@ -1197,8 +1196,8 @@ position on the image.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">galsim</span></code> (obviously)</p></li>
 <li><p>Anything in the <code class="docutils literal notranslate"><span class="pre">modules</span></code> field of your configuration file.</p></li>
 </ul>
-</section>
-<section id="user-defined-variables">
+</div>
+<div class="section" id="user-defined-variables">
 <h3>User-defined variables<a class="headerlink" href="#user-defined-variables" title="Permalink to this headline">¶</a></h3>
 <p>It is also possible to define your own variables to use in your expression simply by
 defining more attributes in addition to <code class="docutils literal notranslate"><span class="pre">str</span></code>.  The first letter of the attribute
@@ -1236,8 +1235,8 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
 <li><p>‘d’ = <code class="docutils literal notranslate"><span class="pre">dict</span></code>  (This takes a dict as a literal, rather than evaluating it.)</p></li>
 <li><p>‘l’ = <code class="docutils literal notranslate"><span class="pre">list</span></code>  (Similarly, this allows for a literal list in the config file.)</p></li>
 </ul>
-</section>
-<section id="the-eval-variables-field">
+</div>
+<div class="section" id="the-eval-variables-field">
 <h3>The eval-variables field<a class="headerlink" href="#the-eval-variables-field" title="Permalink to this headline">¶</a></h3>
 <p>Sometimes it is useful to have the same variable used by multiple Eval calculations.  For such cases, Eval will look for a top-level field called <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code>.  If this field is present, then anything defined there will be accessible in all Eval calculations in addition to whatever variables are defined for each specific Eval item.</p>
 <p>This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> before it before any value.  Then later, you can refer to the value by that name preceded by a <code class="docutils literal notranslate"><span class="pre">*</span></code>, rather than write the value again.  This can lead to more maintainable config files.  E.g. demo10.yaml uses this functionality for <code class="docutils literal notranslate"><span class="pre">num_in_ring</span></code>, since the value is needed in two different calculations.</p>
@@ -1261,8 +1260,8 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
     <span class="nt">theta </span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span> <span class="nv">Random</span> <span class="p p-Indicator">}</span>
 </pre></div>
 </div>
-</section>
-<section id="module-defined-variables">
+</div>
+<div class="section" id="module-defined-variables">
 <h3>Module-defined variables<a class="headerlink" href="#module-defined-variables" title="Permalink to this headline">¶</a></h3>
 <p>If you are using any user-defined modules (loaded in the <code class="docutils literal notranslate"><span class="pre">modules</span></code> field), then they are
 allowed to add to the list of <a class="reference internal" href="#preset-variables"><span class="std std-ref">Preset variables</span></a>. The mechanism for this is to append items
@@ -1281,8 +1280,8 @@ to add it when your module is imported.</p>
 </div>
 <p>Then any subsequent Eval field could use this variable as a local variable, just like the
 ones listed in <a class="reference internal" href="#preset-variables"><span class="std std-ref">Preset variables</span></a>.</p>
-</section>
-<section id="shorthand-notation">
+</div>
+<div class="section" id="shorthand-notation">
 <h3>Shorthand notation<a class="headerlink" href="#shorthand-notation" title="Permalink to this headline">¶</a></h3>
 <p>It can be a bit cumbersome at times to write out a full dict with <code class="docutils literal notranslate"><span class="pre">type</span> <span class="pre">:</span> <span class="pre">Eval</span></code> and the
 <code class="docutils literal notranslate"><span class="pre">str</span></code> item you want to evaluate.  To streamline this, we also allow for a shorthand notation
@@ -1305,9 +1304,9 @@ So for the above example of a half pixel shift in some random direction, you cou
 <p>In many situations, this shorthand notation aids readability.  However, because there is
 no dict, you cannot define any variables with this notation.  If you need to define any
 variables, you will need to use the regular dict notation.</p>
-</section>
-</section>
-<section id="custom-value-types">
+</div>
+</div>
+<div class="section" id="custom-value-types">
 <h2>Custom Value Types<a class="headerlink" href="#custom-value-types" title="Permalink to this headline">¶</a></h2>
 <p>To define your own value type, you will need to write an importable Python module
 (typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
@@ -1431,8 +1430,8 @@ of valid value types.</p>
 <li><p><a class="reference download internal" download="" href="_downloads/63439d5c29c2bf8116006cbfd597cf1e/excluded_random.py"><code class="xref download docutils literal notranslate"><span class="pre">excluded_random.py</span></code></a></p></li>
 <li><p><a class="reference download internal" download="" href="_downloads/f7da6f537e4ea271cac073d7468fe0ad/great3_reject.py"><code class="xref download docutils literal notranslate"><span class="pre">great3_reject</span></code></a></p></li>
 </ul>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

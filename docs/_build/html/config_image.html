@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Config Image Field &mdash; GalSim 2.3.0 documentation</title>
@@ -205,10 +204,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="config-image-field">
+  <div class="section" id="config-image-field">
 <h1>Config Image Field<a class="headerlink" href="#config-image-field" title="Permalink to this headline">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">image</span></code> field defines some properties about how to draw the images.</p>
-<section id="image-field-attributes">
+<div class="section" id="image-field-attributes">
 <h2>Image Field Attributes<a class="headerlink" href="#image-field-attributes" title="Permalink to this headline">¶</a></h2>
 <p>Some attributes that are allowed for all image types are:</p>
 <ul>
@@ -228,8 +227,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">bandpass</span></code> See <a class="reference internal" href="#bandpass-field"><span class="std std-ref">Bandpass Field</span></a> below.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">sensor</span></code>  See <a class="reference internal" href="#sensor-field"><span class="std std-ref">Sensor Field</span></a> below.</p></li>
 </ul>
-</section>
-<section id="image-types">
+</div>
+<div class="section" id="image-types">
 <h2>Image Types<a class="headerlink" href="#image-types" title="Permalink to this headline">¶</a></h2>
 <p>The default image type is ‘Single’, which means that the image contains just a single
 postage stamp.  Other types are possible (and common) that draw more than one postage stamp
@@ -279,8 +278,8 @@ The image types defined by GalSim are:</p>
 </div></blockquote>
 </li>
 </ul>
-</section>
-<section id="custom-image-types">
+</div>
+<div class="section" id="custom-image-types">
 <h2>Custom Image Types<a class="headerlink" href="#custom-image-types" title="Permalink to this headline">¶</a></h2>
 <p>To define your own image type, you will need to write an importable Python module
 (typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
@@ -518,8 +517,8 @@ implementation of the included image types (click on the <code class="docutils l
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.image.ImageBuilder</span></code></p>
 </dd></dl>
 
-</section>
-<section id="noise">
+</div>
+<div class="section" id="noise">
 <h2>Noise<a class="headerlink" href="#noise" title="Permalink to this headline">¶</a></h2>
 <p>Typically, you will want to add noise to the image.  The noise attribute should be a dict
 with a <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute to define what kind of noise should be added.  The noise types
@@ -705,8 +704,8 @@ input type here.  (If it uses more than one, this may be a list.)
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.noise.NoiseBuilder</span></code></p>
 </dd></dl>
 
-</section>
-<section id="wcs-field">
+</div>
+<div class="section" id="wcs-field">
 <h2>WCS Field<a class="headerlink" href="#wcs-field" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> attribute mentioned above is the usual way to define the connection between
 pixel coordinates and sky coordinates.  However, one can define a more complicated relationship,
@@ -892,8 +891,8 @@ which we make from ra, dec paramters.</p>
 <p>Select a wcs from a list</p>
 </dd></dl>
 
-</section>
-<section id="bandpass-field">
+</div>
+<div class="section" id="bandpass-field">
 <h2>Bandpass Field<a class="headerlink" href="#bandpass-field" title="Permalink to this headline">¶</a></h2>
 <p>If you want to draw chromatic objects, then you also need to define the <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bandpass</span></code></a> to use
 for the image in a <code class="docutils literal notranslate"><span class="pre">image.bandpass</span></code> field.  Currently, there is only one defined
@@ -976,8 +975,8 @@ input type here.  (If it uses more than one, this may be a list.)
         <span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
-</section>
-<section id="sensor-field">
+</div>
+<div class="section" id="sensor-field">
 <h2>Sensor Field<a class="headerlink" href="#sensor-field" title="Permalink to this headline">¶</a></h2>
 <p>When drawing with <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>, one can use a <a class="reference internal" href="sensor.html#galsim.Sensor" title="galsim.Sensor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sensor</span></code></a> to model the conversion of photons
 to electrons and then the accumulation of these electrons in the pixels.</p>
@@ -1076,8 +1075,8 @@ input type here.  (If it uses more than one, this may be a list.)
         <span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

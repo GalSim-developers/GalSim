@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Overview &mdash; GalSim 2.3.0 documentation</title>
@@ -188,7 +187,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="overview">
+  <div class="section" id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <a class="reference external image-reference" href="https://github.com/GalSim-developers/GalSim"><img alt="https://github.com/GalSim-developers/GalSim/workflows/GalSim%20CI/badge.svg" src="https://github.com/GalSim-developers/GalSim/workflows/GalSim%20CI/badge.svg" /></a>
 <a class="reference external image-reference" href="https://codecov.io/gh/GalSim-developers/GalSim"><img alt="https://codecov.io/gh/GalSim-developers/GalSim/branch/master/graph/badge.svg" src="https://codecov.io/gh/GalSim-developers/GalSim/branch/master/graph/badge.svg" /></a>
@@ -218,7 +217,7 @@ m is the minor version, and r is the revision (or patch or bugfix) number.</p>
 with version 2.2.3 (say) should continue to work for all subsequent 2.x.x versions.
 Minor versions indicate new features being added to the API.  Revision versions
 don’t add any new features, but fix bugs in the previous release.</p>
-<section id="basic-installation">
+<div class="section" id="basic-installation">
 <h2>Basic Installation<a class="headerlink" href="#basic-installation" title="Permalink to this headline">¶</a></h2>
 <p>Normally, to install GalSim, you should just need to run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">galsim</span>
@@ -233,8 +232,8 @@ pip installable, so you may need to install before running this command.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">galsim</span>
 </pre></div>
 </div>
-</section>
-<section id="source-distribution">
+</div>
+<div class="section" id="source-distribution">
 <h2>Source Distribution<a class="headerlink" href="#source-distribution" title="Permalink to this headline">¶</a></h2>
 <p>To get the latest version of the code, you can grab the tarball (or zip file) from</p>
 <p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/releases/">https://github.com/GalSim-developers/GalSim/releases/</a></p>
@@ -249,8 +248,8 @@ pip installable, so you may need to install before running this command.</p>
 See <a class="reference internal" href="install.html#installation-instructions"><span class="std std-ref">Installation Instructions</span></a> (in INSTALL.rst) for more information.</p>
 <p>The code is licensed under a BSD-style license.  See the file LICENSE for more
 details.</p>
-</section>
-<section id="keeping-up-to-date-with-galsim">
+</div>
+<div class="section" id="keeping-up-to-date-with-galsim">
 <h2>Keeping up-to-date with GalSim<a class="headerlink" href="#keeping-up-to-date-with-galsim" title="Permalink to this headline">¶</a></h2>
 <p>There is a GalSim mailing list, organized through the Google Group
 galsim-announce.  Members of the group will receive news and updates about the
@@ -269,8 +268,8 @@ in the confirmation request, but you may be asked for a Google Account login.</p
 </pre></div>
 </div>
 <p>You should receive notification that your unsubscription was successful.</p>
-</section>
-<section id="how-to-communicate-with-the-galsim-developers">
+</div>
+<div class="section" id="how-to-communicate-with-the-galsim-developers">
 <h2>How to communicate with the GalSim developers<a class="headerlink" href="#how-to-communicate-with-the-galsim-developers" title="Permalink to this headline">¶</a></h2>
 <p>Currently, the lead developers for GalSim are:</p>
 <blockquote>
@@ -292,8 +291,8 @@ repository</a>.  We also accept
 pull requests if you have something you’d like to contribute to the code base.</p>
 <p>If none of these communication avenues seem appropriate, you can also contact
 us directly at the above email addresses.</p>
-</section>
-<section id="demonstration-scripts">
+</div>
+<div class="section" id="demonstration-scripts">
 <h2>Demonstration scripts<a class="headerlink" href="#demonstration-scripts" title="Permalink to this headline">¶</a></h2>
 <p>There are a number of scripts in <code class="docutils literal notranslate"><span class="pre">examples/</span></code> that demonstrate how the code can
 be used.  These are called <code class="docutils literal notranslate"><span class="pre">demo1.py</span></code> … <code class="docutils literal notranslate"><span class="pre">demo13.py</span></code>.  You can run them by
@@ -312,8 +311,8 @@ PSF code by making a movie of a time-variable PSF and wavefront.</p>
 <p>As the project develops through further versions, and adds further
 capabilities to the software, more demo scripts may be added to <code class="docutils literal notranslate"><span class="pre">examples/</span></code>
 to illustrate what GalSim can do.</p>
-</section>
-<section id="summary-of-current-capabilities">
+</div>
+<div class="section" id="summary-of-current-capabilities">
 <h2>Summary of current capabilities<a class="headerlink" href="#summary-of-current-capabilities" title="Permalink to this headline">¶</a></h2>
 <p>Currently, GalSim has the following capabilities:</p>
 <ul>
@@ -358,7 +357,7 @@ brighter-fatter effect, etc.</p></li>
 <li><p>Has a module that is particularly meant to simulate images for the Roman
 Space Telescope.</p></li>
 </ul>
-<section id="planned-future-development">
+<div class="section" id="planned-future-development">
 <h3>Planned future development<a class="headerlink" href="#planned-future-development" title="Permalink to this headline">¶</a></h3>
 <p>We plan to add the following additional capabilities in future versions of
 GalSim:</p>
@@ -375,9 +374,9 @@ vignetting, fringing, cosmic rays, saturation, bleeding, … (cf. Issues
 <p>for a list of the current open issues.  And feel free to add an issue if there
 is something useful that you think should be possible, but is not currently
 implemented.</p>
-</section>
-</section>
-</section>
+</div>
+</div>
+</div>
 
 
            </div>

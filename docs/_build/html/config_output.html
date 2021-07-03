@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Config Output Field &mdash; GalSim 2.3.0 documentation</title>
@@ -203,7 +202,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="config-output-field">
+  <div class="section" id="config-output-field">
 <h1>Config Output Field<a class="headerlink" href="#config-output-field" title="Permalink to this headline">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">output</span></code> field indicates where to write the output files and what kind of output format
 they should be.</p>
@@ -235,7 +234,7 @@ create threads, you should install (via pip or conda) the <code class="docutils 
 If this package is installed, GalSim will use it to turn off threading for all of the
 possible backends used by numpy.</p>
 </div>
-<section id="output-field-attributes">
+<div class="section" id="output-field-attributes">
 <h2>Output Field Attributes<a class="headerlink" href="#output-field-attributes" title="Permalink to this headline">¶</a></h2>
 <p>All output types use the following attributes to specify the location and number
 of output files, or aspects of how to build and write the output files.</p>
@@ -248,8 +247,8 @@ of output files, or aspects of how to build and write the output files.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">noclobber</span></code> = <em>bool_value</em> (default = False) Specify whether to skip building files that already exist.  This may be useful if you are running close to the memory limit on your machine with multiprocessing.  e.g. You could use <code class="docutils literal notranslate"><span class="pre">nproc</span></code> &gt; 1 for a first run using multiprocessing, and then run again with <code class="docutils literal notranslate"><span class="pre">nproc</span></code> = 1 and <code class="docutils literal notranslate"><span class="pre">noclobber</span></code> = True to clean up any files that failed from insufficient memory during the multiprocessing run.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">retry_io</span></code> = <em>int_value</em> (default = 0) How many times to retry the write command if there is any kind of failure.  Some systems have trouble with multiple concurrent writes to disk, so if you are doing a big parallel job, this can be helpful.  If this is &gt; 0, then after an IOError exception on the write command, the code will wait an increasing number of seconds (starting with 1 for the first failure), and then try again up to this many times.</p></li>
 </ul>
-</section>
-<section id="output-types">
+</div>
+<div class="section" id="output-types">
 <h2>Output Types<a class="headerlink" href="#output-types" title="Permalink to this headline">¶</a></h2>
 <p>The default output type is ‘Fits’, which means to write a FITS file with the constructed
 image in the first HDU.  But other types are possible, which are specified as usual with a
@@ -272,8 +271,8 @@ The output types defined by GalSim are:</p>
 </div></blockquote>
 </li>
 </ul>
-</section>
-<section id="custom-output-types">
+</div>
+<div class="section" id="custom-output-types">
 <h2>Custom Output Types<a class="headerlink" href="#custom-output-types" title="Permalink to this headline">¶</a></h2>
 <p>To define your own output type, you will need to write an importable Python module
 (typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
@@ -536,8 +535,8 @@ which is used by <a class="reference download internal" download="" href="_downl
 <p>Builder class for constructing and writing MultiFits output types.</p>
 </dd></dl>
 
-</section>
-<section id="extra-outputs">
+</div>
+<div class="section" id="extra-outputs">
 <h2>Extra Outputs<a class="headerlink" href="#extra-outputs" title="Permalink to this headline">¶</a></h2>
 <p>In addition to the fields for defining the main output file(s), there may also be fields
 specifying optional “extra” outputs.  Either extra files to be written, or sometimes extra HDUs
@@ -596,8 +595,8 @@ of parameters defining how they should be built or where they should be written.
 </div></blockquote>
 </li>
 </ul>
-</section>
-<section id="adding-your-own-extra-output-type">
+</div>
+<div class="section" id="adding-your-own-extra-output-type">
 <h2>Adding your own Extra Output Type<a class="headerlink" href="#adding-your-own-extra-output-type" title="Permalink to this headline">¶</a></h2>
 <p>You can also add your own extra output type in a similar fashion as the other custom types that
 you can define.  (cf. e.g. [Custom Output Types](#custom-output-types))  As usual, you would
@@ -907,8 +906,8 @@ would be appropriate to do something with here.  So this is mostly just a placeh
 when we eventually add defects, saturation, etc.</p>
 </dd></dl>
 
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

@@ -4,8 +4,7 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <title>Config Stamp Field &mdash; GalSim 2.3.0 documentation</title>
@@ -202,12 +201,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <section id="config-stamp-field">
+  <div class="section" id="config-stamp-field">
 <h1>Config Stamp Field<a class="headerlink" href="#config-stamp-field" title="Permalink to this headline">¶</a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field defines some properties about how to draw the postage-stamp images of each
 object.  It is often unneccessary to explicitly include this top-level field.  The default
 <code class="docutils literal notranslate"><span class="pre">stamp</span></code> type, called ‘Basic’, is often what you want.</p>
-<section id="stamp-field-attributes">
+<div class="section" id="stamp-field-attributes">
 <h2>Stamp Field Attributes<a class="headerlink" href="#stamp-field-attributes" title="Permalink to this headline">¶</a></h2>
 <p>Some attributes that are allowed for all stamp types are:</p>
 <ul>
@@ -241,8 +240,8 @@ object.  It is often unneccessary to explicitly include this top-level field.  T
 <li><p><code class="docutils literal notranslate"><span class="pre">obj_rng</span></code> = <em>bool_value</em> (default=True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">photon_ops</span></code>  See <a class="reference internal" href="#photon-operators-list"><span class="std std-ref">Photon Operators List</span></a> below.</p></li>
 </ul>
-</section>
-<section id="stamp-types">
+</div>
+<div class="section" id="stamp-types">
 <h2>Stamp Types<a class="headerlink" href="#stamp-types" title="Permalink to this headline">¶</a></h2>
 <p>The default stamp type is ‘Basic’, which constructs a galaxy object based on the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field
 (if present) and a PSF object from the <code class="docutils literal notranslate"><span class="pre">psf</span></code> field (again, if present), convolves them
@@ -279,8 +278,8 @@ See <a class="reference download internal" download="" href="_downloads/3e7227e2
 </div></blockquote>
 </li>
 </ul>
-</section>
-<section id="custom-stamp-types">
+</div>
+<div class="section" id="custom-stamp-types">
 <h2>Custom Stamp Types<a class="headerlink" href="#custom-stamp-types" title="Permalink to this headline">¶</a></h2>
 <p>To define your own stamp type, you will need to write an importable Python module
 (typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
@@ -724,8 +723,8 @@ of valid stamp types.</p>
 It specializes the setup, buildProfile, reject, and makeTasks functions.</p>
 </dd></dl>
 
-</section>
-<section id="photon-operators-list">
+</div>
+<div class="section" id="photon-operators-list">
 <h2>Photon Operators List<a class="headerlink" href="#photon-operators-list" title="Permalink to this headline">¶</a></h2>
 <p>When drawing with <code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>, there are a number of operators you can apply to the
 photon array before accumulating the photons on the sensor.  You can specify these using
@@ -876,8 +875,8 @@ input type here.  (If it uses more than one, this may be a list.)
             <span class="l l-Scalar l-Scalar-Plain">...</span>
 </pre></div>
 </div>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
