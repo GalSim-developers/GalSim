@@ -1,6 +1,14 @@
 name: Build
 
-on: [push, pull_request]
+# To publish on every pull request
+# on: [push, pull_request]
+# To publish when a (published) GitHub Release is created, use the following:
+on:
+  push:
+  pull_request:
+  release:
+    types:
+      - published
 
 jobs:
   build_wheels:
@@ -8,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04]
+        os: [ubuntu-20.04, macos-10.15]
 
     steps:
       - uses: actions/checkout@v2
@@ -23,6 +31,7 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel
+          CIBW_BEFORE_ALL_MACOS: brew install fftw
 
       - uses: actions/upload-artifact@v2
         with:
