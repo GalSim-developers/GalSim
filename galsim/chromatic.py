@@ -2560,34 +2560,40 @@ class ChromaticConvolution(ChromaticObject):
         # the inseparable terms on which to do integration first, and then finish with convolution
         # last.
 
-        # Here is the logic to turn int((g1 h1 + g2 h2) * f3) -> g1 * int(h1 f3) + g2 * int(h2 f3)
-        for i, obj in enumerate(self.obj_list):
-            if isinstance(obj, ChromaticSum):
-                # say obj.obj_list = [A,B,C], where obj is a ChromaticSum object
-                # Assemble temporary list of convolutants excluding the ChromaticSum in question.
-                tmplist = list(self.obj_list)
-                del tmplist[i]  # remove ChromaticSum object from obj_list
-                tmplist.append(obj.obj_list[0])  # Append first summand, i.e., A, to convolutants
-                # now draw this image
-                tmpobj = ChromaticConvolution(tmplist)
-                add_to_image = kwargs.pop('add_to_image', False)
-                image = tmpobj.drawImage(bandpass, image=image, integrator=integrator,
-                                         iimult=iimult, add_to_image=add_to_image, **kwargs)
-                # Now add in the rest of the summands in turn, i.e., B and C
-                for summand in obj.obj_list[1:]:
+        phot = kwargs.get('method', 'auto') == 'phot'
+
+        # This optimization is not actually helpful when photon shooting.
+        if not phot:
+            # Here is the logic to turn
+            #   int((g1 h1 + g2 h2) * f3)
+            #   -> g1 * int(h1 f3) + g2 * int(h2 f3)
+            for i, obj in enumerate(self.obj_list):
+                if isinstance(obj, ChromaticSum) and not phot:
+                    # say obj.obj_list = [A,B,C], where obj is a ChromaticSum object
+                    # Assemble temporary list of convolutants excluding the ChromaticSum in question.
                     tmplist = list(self.obj_list)
-                    del tmplist[i]
-                    tmplist.append(summand)
+                    del tmplist[i]  # remove ChromaticSum object from obj_list
+                    tmplist.append(obj.obj_list[0])  # Append first summand, i.e., A, to convolutants
+                    # now draw this image
                     tmpobj = ChromaticConvolution(tmplist)
-                    # add to previously started image
-                    _remove_setup_kwargs(kwargs)
+                    add_to_image = kwargs.pop('add_to_image', False)
                     image = tmpobj.drawImage(bandpass, image=image, integrator=integrator,
-                                             iimult=iimult, add_to_image=True, **kwargs)
-                # Return the image here, breaking the loop early.  If there are two ChromaticSum
-                # instances in obj_list, then the above procedure will repeat in the recursion,
-                # effectively distributing the multiplication over both sums.
-                self._last_wcs = image.wcs
-                return image
+                                            iimult=iimult, add_to_image=add_to_image, **kwargs)
+                    # Now add in the rest of the summands in turn, i.e., B and C
+                    for summand in obj.obj_list[1:]:
+                        tmplist = list(self.obj_list)
+                        del tmplist[i]
+                        tmplist.append(summand)
+                        tmpobj = ChromaticConvolution(tmplist)
+                        # add to previously started image
+                        _remove_setup_kwargs(kwargs)
+                        image = tmpobj.drawImage(bandpass, image=image, integrator=integrator,
+                                                iimult=iimult, add_to_image=True, **kwargs)
+                    # Return the image here, breaking the loop early.  If there are two ChromaticSum
+                    # instances in obj_list, then the above procedure will repeat in the recursion,
+                    # effectively distributing the multiplication over both sums.
+                    self._last_wcs = image.wcs
+                    return image
 
         # If program gets this far, the objects in obj_list should be atomic (non-ChromaticSum
         # and non-ChromaticConvolution).  (The latter case was dealt with in the constructor.)
@@ -2600,7 +2606,7 @@ class ChromaticConvolution(ChromaticObject):
         # If we are photon shooting, then we can move all non-spectral objects to the photon_ops
         # list and deal with them that way.  This both more accurate and more efficient for most
         # chromatic PSFs.
-        if kwargs.get('method', 'auto') == 'phot':
+        if phot:
             psfs = [obj for obj in self.obj_list if obj.dimensionless]
             gals = [obj for obj in self.obj_list if obj.spectral]
             assert len(gals) == 1  # Should have been checked by constructor.
