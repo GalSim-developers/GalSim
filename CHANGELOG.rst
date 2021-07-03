@@ -46,21 +46,16 @@ API Changes
 - Deprecated the rng parameter to `WavelengthSampler` and `FRatioAngles`
   constructors.  Now they will use the rng that you provide to drawImage or
   whatever else you are using to apply these photon operators. (#540)
-- Changed the WCS method name withOrigin to shiftOrigin for non-local WCS
-  types.  The functionality hasn't changed, but the name withOrigin is
-  only really appropriate for LocalWCS types.  When the WCS already has a
-  non-zero origin, then the action takes in really to shift the origin, not
-  set a new value. (#1073)
+- Deprecated withOrigin method for non-local WCS types in favor of the new
+  method shiftOrigin.  This has the same functionality, but the name is
+  more in line with the actual action of the function.  For local WCS types,
+  shiftOrigin is equivalent to withOrigin, which still exists as a valid
+  name for this action. (#1073)
 - The numerical details of the Kolmogorov class were updated to use a more
   precise version of a constant from Racine (1996).  Technically this changes
   the definition of the Kolmogorov profile at the 6th decimal place.  So if
   you carefully tuned an r0 value to 6 decimal places for some purpose, this
   might break that. (#1084)
-- Deprecated withOrigin method for non-local WCS types in favor of the new
-  method shiftOrigin.  This has the same functionality, but the name is
-  more in line with the actual action of the function.  For local WCS types,
-  shiftOrigin is equivalent to withOrigin, which still exists as a valid
-  name for this action. (#1085)
 - Deprecated galsim.wfirst module.  Now called galsim.roman. (#1088)
 - Changed the default ii_pad_factor for PhaseScreenPSF and OpticalPSF to 1.5.
   The old default of 4.0 (matching the InterpolatedImage default) is not
@@ -150,8 +145,8 @@ New Features
 - Added `LookupTable.integrate` and `LookupTable.integrate_product`, along
   with `galsim.trapz` as a drop in replacement for ``numpy.trapz``, which
   is often somewhat faster. (#1098)
-- Added galsim.integ.hankel function. (#1099)
-- Added galsim.bessel.jv_root function. (#1099)
+- Added `galsim.integ.hankel` function. (#1099)
+- Added `galsim.bessel.jv_root` function. (#1099)
 - Added support for TPV WCS files with order > 3. (#1101)
 - Added galsim.UserScreen for arbitrary user-supplied phase screens (#1102)
 - Added option to emit WCS warnings when reading a file via `galsim.fits.read`
