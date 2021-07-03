@@ -2568,7 +2568,7 @@ class ChromaticConvolution(ChromaticObject):
             #   int((g1 h1 + g2 h2) * f3)
             #   -> g1 * int(h1 f3) + g2 * int(h2 f3)
             for i, obj in enumerate(self.obj_list):
-                if isinstance(obj, ChromaticSum) and not phot:
+                if isinstance(obj, ChromaticSum):
                     # say obj.obj_list = [A,B,C], where obj is a ChromaticSum object
                     # Assemble temporary list of convolutants excluding the ChromaticSum in question.
                     tmplist = list(self.obj_list)
