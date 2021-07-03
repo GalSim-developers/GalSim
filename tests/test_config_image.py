@@ -28,12 +28,6 @@ import warnings
 import galsim
 from galsim_test_helpers import *
 
-# Some tests fail intermittently on PyPy 3.6 (i.e. pypy on GHA), although they seem to work
-# on the conda-forge pypy 3.7.
-# So for now, just mark skip them for GHA runs.
-
-pypy36 = ('PyPy' in sys.version) and ('3.6' in sys.version)
-
 @timer
 def test_single():
     """Test the default image type = Single and stamp type = Basic
@@ -332,7 +326,6 @@ def test_phot():
         galsim.config.BuildImage(config)
 
 
-@unittest.skipIf(pypy36, 'Skip on PyPy 3.6')
 @timer
 def test_reject():
     """Test various ways that objects can be rejected.
@@ -1184,7 +1177,6 @@ def test_scattered_whiten():
     im2 = galsim.config.BuildImage(config)
 
 
-@unittest.skipIf(pypy36, 'Skip on PyPy 3.6')
 @timer
 def test_tiled():
     """Test image type = Tiled
