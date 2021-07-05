@@ -24,7 +24,7 @@ from .bandpass import Bandpass
 from .position import Position, PositionD, _PositionD
 from .utilities import lazy_property, doc_inherit
 from .gsparams import GSParams
-from .phase_psf import OpticalPSF
+from .phase_psf import OpticalPSF, Aperture
 from .table import _LookupTable
 from . import utilities
 from . import integ
@@ -3209,12 +3209,34 @@ class ChromaticOpticalPSF(ChromaticObject):
                                 'trefoil1', 'trefoil2', 'spher']):
             if ab in kwargs:
                 self.aberrations[i+2] = kwargs.pop(ab)
-        if 'fft_sign' in kwargs:
-            fft_sign = kwargs['fft_sign']
-            if fft_sign not in ['+', '-']:
-                raise GalSimValueError("Invalid fft_sign", fft_sign, allowed_values=['+','-'])
 
-        self.kwargs = kwargs
+        self.fft_sign = kwargs.pop('fft_sign', '+')
+        if self.fft_sign not in ['+', '-']:
+            raise GalSimValueError("Invalid fft_sign", self.fft_sign, allowed_values=['+','-'])
+
+        self.geometric_shooting = kwargs.pop('geometric_shooting', False)
+
+        # All kwargs left should be relevant for the Aperture.
+        # If the pupil plane image is given, then we can make the aperture now to use at all
+        # wavelengths.  Otherwise, we need to make it anew for each wavelength.
+        if 'aper' in kwargs:
+            # Then the aperture is given explicitly.
+            self._aper = kwargs.pop('aper')
+            if kwargs:
+                raise TypeError("Invalid kwargs provided in conjunction with aper: %s."%(
+                                tuple(kwargs.keys())))
+            self._kwargs = {}
+        elif 'pupil_plane_im' in kwargs:
+            # Then the aperture is not wavelength dependent. Make it now.
+            self._aper = Aperture(self.diam, lam=self.lam, gsparams=self._gsparams, **kwargs)
+            self._kwargs = {}
+        else:
+            self._aper = None
+            self._kwargs = kwargs
+
+        # This will be the stepk and maxk values at self.lam.  But wait until the first time
+        # we call evaluateAtWavelength to compute them.
+        self._stepk = self._maxk = None
 
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
@@ -3245,12 +3267,16 @@ class ChromaticOpticalPSF(ChromaticObject):
                  np.array_equal(self.aberrations, other.aberrations) and
                  self.scale_unit == other.scale_unit and
                  self.gsparams == other.gsparams and
-                 self.kwargs == other.kwargs))
+                 self.fft_sign == other.fft_sign and
+                 self.geometric_shooting == other.geometric_shooting and
+                 self._aper == other._aper and
+                 self._kwargs == other._kwargs))
 
     def __hash__(self):
         return hash(("galsim.ChromaticOpticalPSF", self.lam, self.lam_over_diam,
                      tuple(self.aberrations), self.scale_unit, self.gsparams,
-                     frozenset(self.kwargs.items())))
+                     self.fft_sign, self.geometric_shooting, self._aper,
+                     frozenset(self._kwargs.items())))
 
     def __repr__(self):
         from .angle import arcsec
@@ -3258,8 +3284,15 @@ class ChromaticOpticalPSF(ChromaticObject):
                 self.lam, self.lam_over_diam, self.aberrations.tolist())
         if self.scale_unit != arcsec:
             s += ', scale_unit=%r'%self.scale_unit
-        for k,v in self.kwargs.items():
-            s += ', %s=%r'%(k,v)
+        if self.fft_sign == '-':
+            s += ', fft_sign="-"'
+        if self.geometric_shooting:
+            s += ', geometric_shooting=True'
+        if self._aper is not None:
+            s += ', aper=%r'%self._aper
+        else:
+            for k,v in self._kwargs.items():
+                s += ', %s=%r'%(k,v)
         s += ', gsparams=%r'%self.gsparams
         s += ')'
         return s
@@ -3275,6 +3308,21 @@ class ChromaticOpticalPSF(ChromaticObject):
         Parameters:
              wave:  Wavelength in nanometers.
         """
+        if self._aper is not None:
+            # If aperture is not wavelength-dependent (i.e. given as an image) then we can use
+            # the same aperture for each wavelength and save making gratuitous copies of a
+            # large numpy array, which will be identical each time.
+            aper = self._aper
+        else:
+            # Otherwise we need to make the apeture anew each time.
+            # XXX: This is pretty slow.  Maybe should provide an option to use a single
+            #      apeture at the canonical wavelength when using geometric apertures?
+            # Note: oversampling and pad_factor need different defaults than Aperture defaults.
+            oversampling = self._kwargs.pop('oversampling', 1.5)
+            pad_factor = self._kwargs.pop('oversampling', 1.5)
+            aper = Aperture(diam=self.diam, lam=wave, gsparams=self._gsparams,
+                            oversampling=oversampling, pad_factor=pad_factor, **self._kwargs)
+
         # The aberrations were in units of wavelength for the fiducial wavelength, so we have to
         # convert to units of waves for *this* wavelength.
         wave_factor = self.lam / wave
@@ -3282,17 +3330,17 @@ class ChromaticOpticalPSF(ChromaticObject):
         # stepk and maxk also scale basically with this ratio, and they are fairly slow to
         # calculate, so once we've done this once, store the results and just rescale all future
         # versions with this factor.
-        if hasattr(self, '_stepk'):
+        if self._stepk is not None:
             return OpticalPSF(
                     lam=wave, diam=self.diam,
                     aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
                     _force_stepk=self._stepk*wave_factor, _force_maxk=self._maxk*wave_factor,
-                    gsparams=self.gsparams, **self.kwargs)
+                    gsparams=self.gsparams, aper=aper)
         else:
             ret = OpticalPSF(
                     lam=wave, diam=self.diam,
                     aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
-                    gsparams=self.gsparams, **self.kwargs)
+                    gsparams=self.gsparams, aper=aper)
             self._stepk = ret.stepk / wave_factor
             self._maxk = ret.maxk / wave_factor
             return ret
@@ -3301,7 +3349,7 @@ class ChromaticOpticalPSF(ChromaticObject):
         from .photon_array import PhotonArray
         from .random import UniformDeviate
 
-        if self.kwargs.get('geometric_shooting',False):
+        if self.geometric_shooting:
             # In the geometric shooting approximation, the lambda factors out, and this
             # becomes the same kind of calculation we did for ChromaticAiry.
             # Use the mean wavelength for the base profile.

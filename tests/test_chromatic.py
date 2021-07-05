@@ -1953,12 +1953,23 @@ def test_ChromaticOpticalPSF():
                                      obscuration=obscuration, nstruts=nstruts)
     do_pickle(psf)
 
+    # Test some other valid initialization options
+    pupil_plane_im = os.path.join('Optics_comparison_images', 'sample_pupil_rolled.fits')
+    psf2 = galsim.ChromaticOpticalPSF(lam=lam, diam=diam,
+                                      astig1=0.2, astig2=-0.1, coma1=0.03, coma2=0.04,
+                                      fft_sign='-', geometric_shooting=True,
+                                      pupil_plane_im=pupil_plane_im)
+    do_pickle(psf2)
+
+    # And some invalid options.
     with assert_raises(galsim.GalSimIncompatibleValuesError):
         galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations, lam_over_diam=0.02)
-
     with assert_raises(galsim.GalSimValueError):
         galsim.ChromaticOpticalPSF(lam=lam, diam=diam, fft_sign=0)
+    with assert_raises(TypeError):
+        galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aper=psf2._aper, obscuration=0.3)
 
+    # We will compare to this reference image below.  Make it if it doesn't exist yet.
     if not os.path.isfile(os.path.join(refdir, 'r_exact.fits')):
         import warnings
         warnings.warn("Could not find file r_exact.fits, so generating it from scratch.  This "

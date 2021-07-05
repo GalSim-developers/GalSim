@@ -307,7 +307,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
        options that were passed in.  Users will not directly interact with this routine.
     """
     from .. import OpticalPSF, ChromaticOpticalPSF
-    from . import diameter, obscuration
+    from . import diameter
     from ..bandpass import Bandpass
     from .roman_bandpass import getBandpasses
 
@@ -337,8 +337,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     if wavelength is None:
         PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
                                   diam=diameter, aberrations=use_aberrations,
-                                  obscuration=obscuration, aper=aper,
-                                  gsparams=gsparams)
+                                  aper=aper, gsparams=gsparams)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
             bp_dict = getBandpasses()
@@ -349,8 +348,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
         tmp_aberrations = use_aberrations * zemax_wavelength / wavelength
         PSF = OpticalPSF(lam=wavelength, diam=diameter,
                          aberrations=tmp_aberrations,
-                         obscuration=obscuration, aper=aper,
-                         gsparams=gsparams)
+                         aper=aper, gsparams=gsparams)
 
     return PSF
 
