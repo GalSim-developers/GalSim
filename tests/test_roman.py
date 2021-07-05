@@ -672,6 +672,11 @@ def test_roman_psfs():
         err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
         'wavelength disagree.')
 
+    # Make sure the interpolated version isn't gratuitously copying the aperture.  It should be
+    # able to use the same aperture object for each wavelength.
+    for obj in psf_int.objs[1:]:
+        assert obj._aper is psf_int.objs[0]._aper
+
     # Check some invalid inputs.
     with assert_raises(TypeError):
         galsim.roman.getPSF(SCA=use_sca, bandpass='Z087', n_waves=2, wavelength='Z087')
