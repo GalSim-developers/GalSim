@@ -1195,33 +1195,40 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Don't interpolate an interpolation.  Go back to the original.
         self.deinterpolated = original.deinterpolated
-        self._build_objs()
 
-    def _build_objs(self):
-        # Make the objects between which we are going to interpolate.  Note that these do not have
-        # to be saved for later, unlike the images.
-        self._objs = [ self.deinterpolated.evaluateAtWavelength(wave) for wave in self.waves ]
+    # Note: We don't always need all of these, so only calculate them if needed.
+    # E.g. if photon shooting, pretty much only need objs.
+    @lazy_property
+    def objs(self):
+        return [ self.deinterpolated.evaluateAtWavelength(wave) for wave in self.waves ]
 
+    @lazy_property
+    def stepk_vals(self):
+        return np.array([ obj.stepk for obj in self.objs ])
+
+    @lazy_property
+    def maxk_vals(self):
+        return np.array([ obj.maxk for obj in self.objs ])
+
+    @lazy_property
+    def ims(self):
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
         # array of images that is being stored.
-        nyquist_scale_vals = [ obj.nyquist_scale for obj in self._objs ]
+        nyquist_scale_vals = [ obj.nyquist_scale for obj in self.objs ]
         scale = np.min(nyquist_scale_vals) / self.oversample
 
         # Find the suggested image size for each object given the choice of scale, and use the
         # maximum just to be safe.
-        possible_im_sizes = [ obj.getGoodImageSize(scale) for obj in self._objs ]
+        possible_im_sizes = [ obj.getGoodImageSize(scale) for obj in self.objs ]
         im_size = np.max(possible_im_sizes)
 
-        # Find the stepk and maxk values for each object.  These will be used later on, so that we
-        # can force these values when instantiating InterpolatedImages before drawing.
-        self.stepk_vals = np.array([ obj.stepk for obj in self._objs ])
-        self.maxk_vals = np.array([ obj.maxk for obj in self._objs ])
+        # Note that `no_pixel` is used (we want the object on its own, without a pixel response).
+        return [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel')
+                 for obj in self.objs ]
 
-        # Finally, now that we have an image scale and size, draw all the images.  Note that
-        # `no_pixel` is used (we want the object on its own, without a pixel response).
-        self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel')
-                     for obj in self._objs ]
-        self.fluxes = [ obj.flux for obj in self._objs ]
+    @lazy_property
+    def fluxes(self):
+        return [ obj.flux for obj in self.objs ]
 
     @property
     def gsparams(self):
@@ -1235,7 +1242,6 @@ class InterpolatedChromaticObject(ChromaticObject):
         from copy import copy
         ret = copy(self)
         ret.deinterpolated = self.deinterpolated.withGSParams(gsparams, **kwargs)
-        ret._build_objs()
         return ret
 
     def __eq__(self, other):
@@ -1301,7 +1307,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         k = np.searchsorted(self.waves, wave)
         if k >= len(self.waves) or (k > 0 and wave-self.waves[k-1] < self.waves[k]-wave):
             k = k - 1
-        return self.waves[k], self._objs[k]
+        return self.waves[k], self.objs[k]
 
     def evaluateAtWavelength(self, wave):
         """
@@ -1352,7 +1358,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         use_k = k - (u<f0).astype(int)  # The second term is either 0 or 1.
 
         # Draw photons from the saved profiles according to when we have selected to use each one.
-        for kk, obj in enumerate(self._objs):
+        for kk, obj in enumerate(self.objs):
             use = (use_k == kk)  # True for each photon where this is the object to shoot from
             temp = PhotonArray(np.sum(use))
             obj._shoot(temp, rng)
