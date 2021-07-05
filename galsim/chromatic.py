@@ -3205,10 +3205,10 @@ class ChromaticOpticalPSF(ChromaticObject):
 
         # Pop named aberrations from kwargs so aberrations=[0,0,0,0,1] means the same as
         # defocus=1 (w/ all other named aberrations 0).
-        for i, ab in enumerate(['defocus', 'astig1', 'astig2', 'coma1', 'coma2', 'trefoil1',
-                                'trefoil2', 'spher']):
+        for i, ab in enumerate(['tip', 'tilt', 'defocus', 'astig1', 'astig2', 'coma1', 'coma2',
+                                'trefoil1', 'trefoil2', 'spher']):
             if ab in kwargs:
-                self.aberrations[i+4] = kwargs.pop(ab)
+                self.aberrations[i+2] = kwargs.pop(ab)
         if 'fft_sign' in kwargs:
             fft_sign = kwargs['fft_sign']
             if fft_sign not in ['+', '-']:
