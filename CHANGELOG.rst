@@ -199,4 +199,4 @@ Bug Fixes
 Changes from v2.3.0 to v2.3.1
 =============================
 
-- Fixed some problems with the shared library build.
+- Fixed some problems with the shared library build. (#1128)
