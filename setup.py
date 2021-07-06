@@ -896,6 +896,9 @@ class my_build_shared_clib(my_build_clib):
         from setuptools.dep_util import newer_pairwise_group
         from distutils.ccompiler import CCompiler
 
+        builder = self.distribution.get_command_obj('build_ext')
+        cflags, lflags = fix_compiler(self.compiler, 1)
+
         # Most of this is the setuptools version of the build_libraries function.
         # We just change the final link command to build a shared library that can be linked
         # to C++ programs that just want the C++ library.
@@ -974,11 +977,12 @@ class my_build_shared_clib(my_build_clib):
             ### The original used self.compiler.create_static_lib
             ###
             ###
-            output_name = self.compiler.library_filename(lib_name, lib_type="shared")
+            lib_name = self.compiler.library_filename(lib_name, lib_type="shared")
             version_str = '{}.{}'.format(*version_info[:2])
             if sys.platform == "darwin":
                 # .so -> .dylib
-                output_name = output_name[:-2] + version_str + '.dylib'
+                lib_name = lib_name.replace('so','dylib')
+                full_lib_name = lib_name[:-5] + version_str + '.dylib'
                 orig_linker_so = self.compiler.linker_so
                 assert orig_linker_so[1] == '-bundle'
                 dylib_linker_so = orig_linker_so.copy()
@@ -986,9 +990,49 @@ class my_build_shared_clib(my_build_clib):
                 self.compiler.set_executable('linker_so', dylib_linker_so)
             else:
                 # Just add the version bit
-                output_name = output_name[:-2] + version_str + '.so'
-            self.compiler.link(CCompiler.SHARED_OBJECT, expected_objects, output_name,
-                               output_dir='build/shared_clib', debug=self.debug)
+                full_lib_name = lib_name[:-2] + version_str + '.so'
+
+            libraries = builder.get_libraries(ext)
+            print('initial libraries = ',libraries)
+
+            library_dirs = ext.library_dirs
+            print('initial library_dirs = ',library_dirs)
+
+            # Link to fftw library
+            fftw_lib = find_fftw_lib()
+            fftw_libpath, fftw_libname = os.path.split(fftw_lib)
+            if fftw_libpath != '':
+                library_dirs.append(fftw_libpath)
+            libraries.append(fftw_libname.split('.')[0][3:])
+
+            # Check for conda libraries that might host OpenMP
+            env = dict(os.environ)
+            if 'CONDA_PREFIX' in env:
+                library_dirs.append(env['CONDA_PREFIX']+'/lib')
+
+            if sys.platform == 'darwin':
+                # Set the compatibility version on macos
+                lflags.extend(['-Wl,-compatibility_version,%s.%s'%version_info[:2],
+                               '-Wl,-current_version,%s.%s.%s'%version_info ])
+
+            output_dir = os.path.join('build','shared_clib')
+            self.compiler.link(CCompiler.SHARED_OBJECT, expected_objects, full_lib_name,
+                               libraries=libraries,
+                               library_dirs=library_dirs,
+                               runtime_library_dirs=ext.runtime_library_dirs,
+                               extra_postargs=ext.extra_link_args + lflags,
+                               output_dir=output_dir, debug=self.debug)
+
+            # Also make the non-versionful one
+            full_lib_name_with_dir = os.path.join(output_dir, full_lib_name)
+            lib_name_with_dir = os.path.join(output_dir, lib_name)
+            print('Versioned library: ',full_lib_name_with_dir)
+            print('Un-versioned library: ',lib_name_with_dir)
+            if not os.path.exists(lib_name_with_dir):
+                # This is slightly confusing.
+                # The target needs the dir, but the source cannot include the dir or it
+                # will try to link to build/shared_clib/build/shared_clib/libgalsim...
+                os.symlink(full_lib_name, lib_name_with_dir)
 
 
 # Make a subclass of build_ext so we can add to the -I list.
@@ -1088,7 +1132,6 @@ class my_test(test):
     def run_cpp_tests(self):
         builder = self.distribution.get_command_obj('build_ext')
         compiler = builder.compiler
-        cflags, lflags = fix_compiler(compiler, False)
 
         ext = builder.extensions[0]
         objects = compiler.compile(test_sources,
@@ -1096,7 +1139,6 @@ class my_test(test):
                 macros=ext.define_macros,
                 include_dirs=ext.include_dirs,
                 debug=builder.debug,
-                extra_postargs=ext.extra_compile_args + cflags,
                 depends=ext.depends)
 
         if ext.extra_objects:
@@ -1104,18 +1146,12 @@ class my_test(test):
 
         libraries = builder.get_libraries(ext)
         libraries.append('galsim')
-
         library_dirs = ext.library_dirs
-        fftw_lib = find_fftw_lib()
-        fftw_libpath, fftw_libname = os.path.split(fftw_lib)
-        if fftw_libpath != '':
-            library_dirs.append(fftw_libpath)
 
         # Use the shared library when building the c++ executables to make sure it works.
         self.run_command("build_shared_clib")
         library_dirs.append('build/shared_clib')
 
-        libraries.append(fftw_libname.split('.')[0][3:])
         # Check for conda libraries that might host OpenMP
         env = dict(os.environ)
         if 'CONDA_PREFIX' in env:
@@ -1128,7 +1164,6 @@ class my_test(test):
                 libraries=libraries,
                 library_dirs=library_dirs,
                 runtime_library_dirs=ext.runtime_library_dirs,
-                extra_postargs=ext.extra_link_args + lflags,
                 debug=builder.debug,
                 target_lang='c++')
 
