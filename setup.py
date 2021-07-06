@@ -998,10 +998,6 @@ class my_build_shared_clib(my_build_clib):
             library_dirs = ext.library_dirs
             print('initial library_dirs = ',library_dirs)
 
-            # Add the dir and lib for the static galsim library:
-            library_dirs.append(self.build_clib)
-            libraries.append('galsim')
-
             # Link to fftw library
             fftw_lib = find_fftw_lib()
             fftw_libpath, fftw_libname = os.path.split(fftw_lib)
