@@ -1135,12 +1135,14 @@ class my_test(test):
     def run_cpp_tests(self):
         builder = self.distribution.get_command_obj('build_ext')
         compiler = builder.compiler
+        cflags, lflags = fix_compiler(compiler, 1)
 
         ext = builder.extensions[0]
         objects = compiler.compile(test_sources,
                 output_dir=builder.build_temp,
                 macros=ext.define_macros,
                 include_dirs=ext.include_dirs,
+                extra_postargs=cflags,
                 debug=builder.debug,
                 depends=ext.depends)
 
