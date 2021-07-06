@@ -490,6 +490,10 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None):
                 cpp = 'g++'
             else:
                 cpp = 'c++'
+        # Finally, if GALSIM_CXX is in the environment, let that take precedence.
+        # (I don't know if it's safe to use a user's CXX always, so make sure the user really
+        # meant to direct GalSim to use some other compiler by requiring the GALSIM prefix.)
+        cpp = os.environ('GALSIM_CXX', cpp)
         cmd = [cpp] + compiler.linker_so[1:] + lflags + [o_name,'-o',exe_name]
         if debug:
             print('cmd = ',' '.join(cmd))
