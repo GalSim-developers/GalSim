@@ -73,14 +73,6 @@ test_sources = all_files_from('tests', '.cpp')
 headers = all_files_from('include')
 shared_data = all_files_from('share')
 
-# TODO: Remove this bit when we release 2.3.0 officially.
-#       But for now on main, the wfirst directory can stick around and cause problems.
-if len(glob.glob('build/*/galsim/wfirst')) > 0:
-    d = glob.glob('build/*/galsim/wfirst')
-    print('Removing obsolete wfirst dir: ',d[0])
-    import shutil
-    shutil.rmtree(d[0])
-
 copt =  {
     'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-openmp'],
