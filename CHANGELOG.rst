@@ -194,3 +194,9 @@ Bug Fixes
   information in each hdu. (#1091)
 - Improved the accuracy of stepk for Kolmogorov profiles, especially when
   folding_threshold is very small. (#1110)
+
+
+Changes from v2.3.0 to v2.3.1
+=============================
+
+- Fixed some problems with the shared library build.
