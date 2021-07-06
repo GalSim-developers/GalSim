@@ -1014,6 +1014,9 @@ class my_build_shared_clib(my_build_clib):
                 # Set the compatibility version on macos
                 lflags.extend(['-Wl,-compatibility_version,%s.%s'%version_info[:2],
                                '-Wl,-current_version,%s.%s.%s'%version_info ])
+                # Also add rpath specification for fftw
+                if fftw_libpath != '':
+                    lflags.append('-Wl,-rpath,' + fftw_libpath)
 
             output_dir = os.path.join('build','shared_clib')
             self.compiler.link(CCompiler.SHARED_OBJECT, expected_objects, full_lib_name,
