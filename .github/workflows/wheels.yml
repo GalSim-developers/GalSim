@@ -30,7 +30,7 @@ jobs:
   build_sdist:
     # Just need to build sdist on a single machine
     runs-on: ubuntu-latest
-    python-version: 3.8
+    py: 3.8
 
     steps:
       - uses: actions/checkout@v2
