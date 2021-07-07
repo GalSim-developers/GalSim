@@ -1,4 +1,4 @@
-name: Build
+name: Build wheels and sdist and upload to PyPI
 
 on:
   workflow_dispatch:
@@ -26,3 +26,37 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
+
+  build_sdist:
+    # Just need to build sdist on a single machine
+    runs-on: ubuntu-latest
+    python-version: 3.8
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - name: Install fftw
+        run: |
+          yum install -y fftw-devel
+      - name: Install dependencies
+        run: |
+          python -m pip install -U pip
+          pip install -U numpy seuptools
+          pip install -U -r requirements.txt
+
+      - uses: actions/download-artifact@v2
+        with:
+          path: ./dist
+
+      - name: Build sdist
+        run: |
+          python setup.py sdist
+          ls -l dist
+          tar tvfz dist/GalSim-*.tar.gz
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+            user: rmjarvis
+            password: ${{ secrets.PYPI_PASSWORD }}
+            verbose: true
