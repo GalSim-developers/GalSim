@@ -225,6 +225,8 @@ override the default.</p></li>
 </dd>
 <dt><a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a></dt><dd><p>Class implementing optical aberrations using Zernike polynomial expansions in the wavefront.</p>
 </dd>
+<dt><a class="reference internal" href="#galsim.UserScreen" title="galsim.UserScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UserScreen</span></code></a></dt><dd><p>Class implementing a user-defined phase screen.</p>
+</dd>
 <dt><a class="reference internal" href="#galsim.PhaseScreenList" title="galsim.PhaseScreenList"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenList</span></code></a></dt><dd><p>Python sequence type to hold multiple phase screens, for instance to simulate turbulence at
 different altitudes, or self-consistently model atmospheric and optical phase aberrations.
 A key method is <a class="reference internal" href="#galsim.PhaseScreenList.makePSF" title="galsim.PhaseScreenList.makePSF"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">PhaseScreenList.makePSF</span></code></a>, which will take the list of phase screens, add
@@ -779,6 +781,70 @@ be a scalar or an iterable.  The shapes of u and v must match.</p></li>
 be a scalar or an iterable.  The shapes of u and v must match.</p></li>
 <li><p><strong>t</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
 <li><p><strong>theta</strong> – Ignored for <a class="reference internal" href="#galsim.OpticalScreen" title="galsim.OpticalScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalScreen</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Arrays dWdu and dWdv of wavefront lag or lead gradient in nm/m.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.UserScreen">
+<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">UserScreen</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">table</span></em>, <em class="sig-param"><span class="n">diam</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">obscuration</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#UserScreen"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UserScreen" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a (static) user-defined phase screen.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>table</strong> – LookupTable2D instance representing the wavefront as a function on the
+entrance pupil.  Units are (meters, meters) -&gt; nanometers.</p></li>
+<li><p><strong>diam</strong> – Diameter of entrance pupil in meters.  If None, then use the length of the
+larger side of the LookupTable2D rectangle in <code class="docutils literal notranslate"><span class="pre">table</span></code>.  This keyword is only
+used to compute a value for stepk, and thus has no effect on the
+<code class="docutils literal notranslate"><span class="pre">wavefront()</span></code> or <code class="docutils literal notranslate"><span class="pre">wavefront_gradient()</span></code> methods.</p></li>
+<li><p><strong>obscuration</strong> – Optional fractional circular obscuration of pupil.  Like <code class="docutils literal notranslate"><span class="pre">diam</span></code>, only used
+for computing a value for stepk.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.UserScreen.wavefront">
+<code class="sig-name descname">wavefront</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em>, <em class="sig-param"><span class="n">t</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">theta</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#UserScreen.wavefront"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UserScreen.wavefront" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate wavefront from lookup table.</p>
+<p>Wavefront here indicates the distance by which the physical wavefront lags or leads the
+ideal plane wave.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>t</strong> – Ignored for <a class="reference internal" href="#galsim.UserScreen" title="galsim.UserScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UserScreen</span></code></a>.</p></li>
+<li><p><strong>theta</strong> – Ignored for <a class="reference internal" href="#galsim.UserScreen" title="galsim.UserScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UserScreen</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Array of wavefront lag or lead in nanometers.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.UserScreen.wavefront_gradient">
+<code class="sig-name descname">wavefront_gradient</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">u</span></em>, <em class="sig-param"><span class="n">v</span></em>, <em class="sig-param"><span class="n">t</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">theta</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/phase_screens.html#UserScreen.wavefront_gradient"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UserScreen.wavefront_gradient" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate gradient of wavefront from lookup table.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> – Horizontal pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>v</strong> – Vertical pupil coordinate (in meters) at which to evaluate wavefront.  Can
+be a scalar or an iterable.  The shapes of u and v must match.</p></li>
+<li><p><strong>t</strong> – Ignored for <a class="reference internal" href="#galsim.UserScreen" title="galsim.UserScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UserScreen</span></code></a>.</p></li>
+<li><p><strong>theta</strong> – Ignored for <a class="reference internal" href="#galsim.UserScreen" title="galsim.UserScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UserScreen</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

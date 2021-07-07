@@ -42,6 +42,9 @@ The main classes of note are:
 `OpticalScreen`
     Class implementing optical aberrations using Zernike polynomial expansions in the wavefront.
 
+`UserScreen`
+    Class implementing a user-defined phase screen.
+
 `PhaseScreenList`
     Python sequence type to hold multiple phase screens, for instance to simulate turbulence at
     different altitudes, or self-consistently model atmospheric and optical phase aberrations.
@@ -80,6 +83,9 @@ The main classes of note are:
     :members:
 
 .. autoclass:: galsim.OpticalScreen
+    :members:
+
+.. autoclass:: galsim.UserScreen
     :members:
 
 .. autoclass:: galsim.PhaseScreenList

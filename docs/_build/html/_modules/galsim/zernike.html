@@ -568,7 +568,7 @@
 <span class="n">_annular_zern_rho_coefs</span> <span class="o">=</span> <span class="n">LRU_Cache</span><span class="p">(</span><span class="n">__annular_zern_rho_coefs</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">describe_zernike</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+<div class="viewcode-block" id="describe_zernike"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.describe_zernike">[docs]</a><span class="k">def</span> <span class="nf">describe_zernike</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Create a human-readable string describing the jth (unit circle) Zernike mode as a bivariate</span>
 <span class="sd">    polynomial in x and y.</span>
 
@@ -608,7 +608,7 @@
     <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;+ -&quot;</span><span class="p">,</span> <span class="s2">&quot;- &quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">out</span> <span class="o">==</span> <span class="s2">&quot;sqrt(1) * ()&quot;</span><span class="p">:</span>
         <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;sqrt(1) * (1)&quot;</span>
-    <span class="k">return</span> <span class="n">out</span>
+    <span class="k">return</span> <span class="n">out</span></div>
 
 
 <div class="viewcode-block" id="Zernike"><a class="viewcode-back" href="../../zernike.html#galsim.zernike.Zernike">[docs]</a><span class="k">class</span> <span class="nc">Zernike</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
