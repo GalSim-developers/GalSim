@@ -18,20 +18,28 @@ Checklist for making a new release:
     python setup.py install
 - Generate current docs
     update_docs
-- Commit and push new docs.  (Assuming there were any changes from the last time this was done.)
+- Commit and push new docs.
     git add docs/_build
     git commit -m "update docs"
-- Cherry pick this commit back on master.
-- Tag the current version
-    git tag -a vM.m.r -m "vM.m.r"
-    git push --tags
-- Get the current version onto pip.  (Maybe check again that the current version is installed!)
-    rm -r GalSim.egg-info
-    python setup.py sdist
-    tar tvfz dist/GalSim-M.m.r.tar.gz
-    twine upload dist/GalSim-M.m.r.tar.gz
-    pip install -UI galsim  (To test that it worked)
+- Make a release
+  - On GitHub page, go to Code - Tags - Releases
+      (https://github.com/GalSim-developers/GalSim/releases)
+  - Draft a new release
+  - Set tag version vM.m.r
+  - Set target releases/M.m
+  - Set title Version M.m.r
+  - For text, probably links to CHANGELOG and full docs
+  - Publish Release
+- Check the twine upload
+  - On GitHub page, go to Actions
+  - Build wheels and sdist and upload to PyPI
+  - Should see an action that started automatically when publishing the release.
+  - Check the logs to make sure things seem to have completed correctly.
+- Once that action is complete, check pip locally
+  - pip install -U galsim
 - Back in master, update version number to M.(m+1) (i.e. no .r)
+- Cherry-pick any commits that were needed on releases/2.3 that are relevant for main branch.
+  - Note: no need to cherry-pick "update docs" commits.
 - Move the CHANGELOG information into docs/history.rst and clear out the current CHANGELOG.rst
   file for the next version.
 - Email galsim-announce list about the new version.
