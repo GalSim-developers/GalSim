@@ -13,6 +13,95 @@ listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
+v2.3
+----
+
+*Dependency Changes*
+
+- Removed future as a dependency. (#1082)
+- Download eigen automatically if not found on your system. (#1086)
+
+
+*API Changes*
+
+- Deprecated the ``rng`` parameter of `WavelengthSampler` and `FRatioAngles`. (#540)
+- Deprecated ``withOrigin`` method for non-local WCS types. (#1073)
+- Updated numerical details of the `Kolmogorov` class. (#1084)
+- Changed ``galsim.wfirst`` module to ``galsim.roman``. (#1088)
+- Changed default ``ii_pad_factor`` for `PhaseScreenPSF`, `OpticalPSF` to 1.5. (#1089)
+- Deprecated the ``high_accuracy`` and ``approximate_struts`` parameters for the
+  `galsim.roman.getPSF` function. (#1089)
+- Changed ``surface_ops`` parameter to `GSObject.drawImage` to ``photon_ops``. (#1093)
+- Added logger option to some config functions and methods. (#1095)
+- Deprecated ``galsim.integ.trapz`` and ``galsim.integ.midpt``. (#1098)
+- Changed the convention for the ``f`` array passed to the `LookupTable2D`
+  constructor to be the transpose of what it was. (#1103)
+- Changed the behavior of `PhaseScreenPSF`, `OpticalPSF`, and
+  `ChromaticOpticalPSF` by adding the kwarg ``fft_sign``. (#1104)
+
+
+*Config Updates*
+
+- Added ability to draw chromatic objects with config files. (#510)
+- Added demo12.yaml and demo13.yaml to the demo suite. (#510, #1121)
+- Fixed a issues with using a ``Current`` item before it was parsed. (#1083)
+- Added value-type-specific type names (e.g. ``Random_float``, etc.) (#1083)
+- Fixed a subtle issue in ``Eval`` string processing. (#1083)
+- Added ``photon_ops`` and ``sensor`` as options in the stamp processing. (#1093)
+- Removed the ``_nobjects_only`` mechanism from input objects. (#1095)
+- Allowed ``Eval`` fields to use any modules that are listed in the top-level
+  ``modules`` field. (#1121)
+- Added Roman config types: ``RomanSCA``, ``RomanBandpass``, and ``RomanPSF``. (#1121)
+
+
+*New Features*
+
+- Added ``atRedshift`` method for `ChromaticObject`. (#510)
+- Added `galsim.utilities.pickle_shared` context. (#1057)
+- Added ``force_stepk`` option to `VonKarman`. (#1059)
+- Added `Refraction` and `FocusDepth` photon ops. (#1065, #1069)
+- Updated LSST sensor files to match new lab measurements and use improved
+  Poisson code calculations. (#1077, #1081)
+- Added `GSObject.makePhot` method. (#1078)
+- Added individual kwargs syntax to `GSObject.withGSParams`. (#1089)
+- Added ``pupil_bin`` option to the `galsim.roman.getPSF` function. (#1089)
+- Added `FittedSIPWCS`. (#1092)
+- Extended `GSFitsWCS` to support -SIP distortions for non-TAN WCSs. (#1092)
+- Added ``wcs`` option to `galsim.roman.getPSF`. (#1094)
+- Added `Position.shear` method. (#1090)
+- Added `LookupTable.integrate`, `LookupTable.integrate_product`, and `galsim.trapz`. (#1098)
+- Added `galsim.integ.hankel` function. (#1099)
+- Added `galsim.bessel.jv_root` function. (#1099)
+- Added support for TPV WCS files with order > 3. (#1101)
+- Added `UserScreen` for arbitrary user-supplied phase screens (#1102)
+- Added `galsim.zernike.describe_zernike`. (#1104)
+- Added option to emit WCS warnings when reading a file via `galsim.fits.read`. (#1120)
+- Added ``area`` and ``exptime`` parameters to `COSMOSCatalog` constructor. (#1121)
+
+
+*Performance Improvements*
+
+- Implemented ``Transformation._drawReal`` and ``Transformation._drawKImage`` in python. (#934)
+- Sped up the draw routines for `InterpolatedImage`. (#935)
+- Improved the quality and speed of Roman PSFs. (#1089)
+- Sped up `GSFitsWCS` calculations for SIP and PV distorted WCSs. (#1092)
+- Various speed improvements in config processing. (#1095, #1098)
+- Sped up `SED.calculateFlux` and some other SED and Bandpass calculations. (#1098)
+- Sped up the Hankel transforms in several classes. (#1099)
+- Improved the accuracy of ``stepk`` for `Kolmogorov` profiles. (#1110)
+- Sped up Zernike arithmetic. (#1124)
+- Removed some overhead in some "leading underscore" methods. (#1126)
+
+
+*Bug Fixes*
+
+- Fixed `horner` and `horner2d` when inputs are complex. (#1054)
+- Fixed `VonKarman` integration to be more reliable. (#1058)
+- Fixed minor bug in repr of `OpticalPSF` class. (#1061)
+- Fixed bug in `RandomKnots` when multiplied by an SED. (#1064)
+- Fixed bug in `galsim.fits.writeMulti` not writing headers. (#1091)
+
+
 v2.2
 ----
 
