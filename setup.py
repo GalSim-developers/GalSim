@@ -264,6 +264,18 @@ def find_fftw_lib(output=False):
                     return libpath
                 except OSError:
                     pass
+
+    # If we didn't find it anywhere, but the user has set FFTW_DIR, trust it.
+    if 'FFTW_DIR' in os.environ:
+        libpath = os.path.join(os.environ['FFTW_DIR'], name)
+        print("WARNING:")
+        print("Could not find an installed fftw3 library named %s"%(name))
+        print("Trusting the provided FFTW_DIR=%s for the library location."%(libpath))
+        print("If this is incorrect, you may have errors later when linking.")
+        return libpath
+
+    # Last ditch attempt.  Use ctypes.util.find_library, which sometimes manages to find it
+    # when the above attempts fail.
     try:
         libpath = ctypes.util.find_library('fftw3')
         if libpath == None:
