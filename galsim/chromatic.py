@@ -1324,8 +1324,9 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         w = photons.wavelength
         if np.any((w < self.waves[0]) | (w > self.waves[-1])):
+            bad_waves = [ww for ww in w if (ww < self.waves[0]) or (ww > self.waves[-1])]
             raise GalSimRangeError("Shooting photons outside the interpolated wave_list",
-                                   w, self.waves[0], self.waves[-1])
+                                   bad_waves, self.waves[0], self.waves[-1])
 
         k = np.searchsorted(self.waves, w)
         k[k==0] = 1  # if k == 0, then w == min(waves). Using k=1 instead is fine for this.
