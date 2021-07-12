@@ -182,16 +182,12 @@ def test_demo7():
     config = galsim.config.ReadConfig('demo7.yaml', logger=logger)[0]
     print('Running demo7.yaml')
     galsim.config.Process(config, logger=logger, except_abort=True)
-    # gzip class in python 2.6 doesn't implement context correctly.  So do that one manually,
-    # even though with gzip.open(...) as f_in would work fine on 2.7+
-    f_in = gzip.open('output/cube_phot.fits.gz', 'rb')
-    with open('output/cube_phot.fits', 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
-    f_in.close()
-    f_in = gzip.open('output_yaml/cube_phot.fits.gz', 'rb')
-    with open('output_yaml/cube_phot.fits', 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
-    f_in.close()
+    with gzip.open('output/cube_phot.fits.gz', 'rb') as f_in:
+        with open('output/cube_phot.fits', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    with gzip.open('output_yaml/cube_phot.fits.gz', 'rb') as f_in:
+        with open('output_yaml/cube_phot.fits', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
     assert check_same('output/cube_phot.fits', 'output_yaml/cube_phot.fits')
 
 @timer
