@@ -22,10 +22,7 @@ A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 import os, sys, tarfile, subprocess, shutil, json
 import argparse
 import logging
-try:
-    from urllib2 import urlopen
-except ImportError:
-    from urllib.request import urlopen
+from urllib.request import urlopen
 
 try:
     # Python 2 version

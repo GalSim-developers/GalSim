@@ -19,6 +19,7 @@
 import numpy as np
 import os
 import sys
+import math
 
 import galsim
 from galsim_test_helpers import *
@@ -856,16 +857,8 @@ def test_weibull():
     vals = [w() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
-    try:
-        import math
-        gammaFactor1 = math.gamma(1.+1./wA)
-        gammaFactor2 = math.gamma(1.+2./wA)
-    except:
-        # gamma was introduced in python 2.7, so these are the correct answers for the
-        # current wA.  Need to change this if wA is chagned.
-        # (Values obtained from Wolfram Alpha.)
-        gammaFactor1 = 0.906402477055477
-        gammaFactor2 = 0.886226925452758
+    gammaFactor1 = math.gamma(1.+1./wA)
+    gammaFactor2 = math.gamma(1.+2./wA)
     mu = wB * gammaFactor1
     v = wB**2 * gammaFactor2 - mu**2
     print('mean = ',mean,'  true mean = ',mu)

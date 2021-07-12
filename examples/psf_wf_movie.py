@@ -25,21 +25,16 @@ import warnings
 import numpy as np
 import galsim
 
-try:
-    import matplotlib
-    from matplotlib.figure import Figure
-    from matplotlib.backends.backend_agg import FigureCanvasAgg
-    import matplotlib.animation as anim
-except ImportError:
-    raise ImportError("This demo requires matplotlib!")
+import matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+import matplotlib.animation as anim
+
 from distutils.version import LooseVersion
 if LooseVersion(matplotlib.__version__) < LooseVersion('1.2'):
     raise RuntimeError("This demo requires matplotlib version 1.2 or greater!")
 
-try:
-    from astropy.utils.console import ProgressBar
-except ImportError:
-    raise ImportError("This demo requires astropy!")
+from astropy.utils.console import ProgressBar
 
 def make_movie(args):
     """Actually make the movie of the atmosphere given command line arguments stored in `args`.

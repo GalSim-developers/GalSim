@@ -18,14 +18,10 @@
 
 import os
 import numpy as np
+import pickle
 
 import galsim
 from galsim_test_helpers import *
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 
 imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images.
@@ -1266,34 +1262,27 @@ def test_shared_memory():
                                 mp_context=ctx)
         psf = atm.makePSF(diam=1.1, lam=1000.0)
         kmax = psf.screen_kmax
-        pool = Pool(
-            None,
-            initializer=galsim.phase_screens.initWorker,
-            initargs=galsim.phase_screens.initWorkerArgs()
+        with Pool(None,
+                  initializer=galsim.phase_screens.initWorker,
+                  initargs=galsim.phase_screens.initWorkerArgs()
+                 ) as pool:
+            results = []
+            for _ in range(10):
+                results.append(pool.apply_async(atm[0].instantiate, kwds={'kmax':kmax}))
+            for r in results:
+                r.wait()
+
+    ctx = mp.get_context("spawn")
+    with assert_raises(galsim.GalSimNotImplementedError):
+        atm = galsim.Atmosphere(
+            screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng,
+            mp_context=ctx
         )
-        results = []
-        for _ in range(10):
-            results.append(pool.apply_async(atm[0].instantiate, kwds={'kmax':kmax}))
-        for r in results:
-            r.wait()
-        pool.close()
-
-
-    if sys.version_info >= (3,4):
-        ctx = mp.get_context("spawn")
-        with assert_raises(galsim.GalSimNotImplementedError):
-            atm = galsim.Atmosphere(
-                screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng,
-                mp_context=ctx
-            )
 
     # Atm ctor can't catch alpha != 1.0 error when trying to use shared memory with mp_context=None,
     # but initWorkerArgs can.
     atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, time_step=0.01, rng=rng)
-    if sys.version_info >= (3,4):
-        Pool = mp.get_context(None).Pool
-    else:
-        from multiprocessing import Pool
+    Pool = mp.get_context(None).Pool
     with assert_raises(galsim.GalSimNotImplementedError):
         pool = Pool(
             None,
@@ -1337,11 +1326,8 @@ def test_pickle():
     screen_scale = 0.1
     kmax = 1
 
-    if sys.version_info >= (3,4):
-        import multiprocessing as mp
-        ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
-    else:
-        ctxs = [None]  # Only supported ctx on py27
+    import multiprocessing as mp
+    ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
 
     for ctx in ctxs:
         kwargs = dict(r0_500=r0_500, L0=L0, speed=speeds, direction=directions,

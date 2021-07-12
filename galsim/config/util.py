@@ -667,7 +667,7 @@ class single_threaded(object):
             import threadpoolctl
         except ImportError:
             self.tpl = None
-        else:  # pragma: no cover  (Not installed on Travis currently.)
+        else:  # pragma: no cover  (Not installed on GHA currently.)
             self.tpl = threadpoolctl.threadpool_limits(num_threads)
 
     def __enter__(self):
@@ -738,6 +738,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
     # with the kwargs from the list of jobs.
     # Each job also carries with it its index in the original list of all jobs.
     def worker(task_queue, results_queue, config, logger):
+        from io import StringIO
+
         proc = current_process().name
 
         # The logger object passed in here is a proxy object.  This means that all the arguments
@@ -776,10 +778,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         logger.debug('%s: Received STOP', proc)
         if pr is not None:
             pr.disable()
-            try:
-                from StringIO import StringIO
-            except ImportError:
-                from io import StringIO
             s = StringIO()
             sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid
                              # alias for this that is backwards compatible to older versions

@@ -166,6 +166,8 @@ def make_logger(args):
 def process_config(all_config, args, logger):
     """Process the config dict according to the command-line specifications.
     """
+    from io import StringIO
+
     # If requested, load the profiler
     if args.profile:
         import cProfile, pstats, io
@@ -200,10 +202,6 @@ def process_config(all_config, args, logger):
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
         pr.disable()
-        try:
-            from StringIO import StringIO
-        except ImportError:
-            from io import StringIO
         pr.dump_stats(root + '.pstats')
         s = StringIO()
         sortby = 'time'  # Note: This is now called tottime, but time seems to be a valid

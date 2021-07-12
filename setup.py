@@ -23,10 +23,7 @@ import types
 import subprocess
 import re
 import tempfile
-try:
-    import urllib2
-except ImportError:
-    import urllib.request as urllib2
+import urllib.request as urllib2
 import tarfile
 import shutil
 

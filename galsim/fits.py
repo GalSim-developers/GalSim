@@ -90,7 +90,7 @@ class _ReadFile:
             raise NotImplementedError()
         return hdu_list, fin
 
-    # Note: the above gzip_call function succeeds on travis, so the rest don't get run.
+    # Note: the above gzip_call function succeeds on GHA, so the rest don't get run.
     # Omit them from the coverage test.
     def gzip_in_mem(self, file): # pragma: no cover
         import gzip

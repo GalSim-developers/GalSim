@@ -23,14 +23,7 @@ Generates a 10 x 10 grid of galaxy postage stamps, each of size 48 pixels.
 """
 import os
 import numpy as np
-# This machinery lets us run Python examples even though they aren't positioned
-# properly to find galsim as a package in the current directory.
-try:
-    import galsim
-except ImportError:
-    path, filename = os.path.split(__file__)
-    sys.path.append(os.path.abspath(os.path.join(path, "..", "..")))
-    import galsim
+import galsim
 
 # Some fixed parameter values for the catalogue
 
