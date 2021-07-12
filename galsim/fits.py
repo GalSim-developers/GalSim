@@ -59,7 +59,14 @@ def _parse_compression(compression, file_name):
 # function: _read_file(file, file_compress)
 class _ReadFile:
 
-    # There are several methods available for each of gzip and bzip2.  Each is its own function.
+    # There are two methods available for each of gzip and bzip2. Each is its own function.
+    # 1. The _call functions call out to an external program.  gunzip, bunzip2 as appropriate.
+    # 2. The _in_mem functions use the corresponding python modules to do things in memory.
+    #
+    # As of commit 2e2d643b47fa27dbdcfcb1ba7bd, the write functions were generally faster using
+    # the in memory functions, but the reads were faster with the external functions.
+    # cf. GalSim/devel/time_zip.py for details about the timing tests.
+
     def gunzip_call(self, file):
         # cf. http://bugs.python.org/issue7471
         import subprocess
@@ -90,9 +97,7 @@ class _ReadFile:
             raise NotImplementedError()
         return hdu_list, fin
 
-    # Note: the above gzip_call function succeeds on GHA, so the rest don't get run.
-    # Omit them from the coverage test.
-    def gzip_in_mem(self, file): # pragma: no cover
+    def gzip_in_mem(self, file):
         import gzip
         from ._pyfits import pyfits
         fin = gzip.open(file, 'rb')
@@ -158,7 +163,7 @@ class _ReadFile:
             hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
-            # Before trying all the gzip options, first make sure the file exists and is readable.
+            # First make sure the file exists and is readable.
             # The easiest way to do this is to try to open it.  Just let the open command return
             # its normal error message if the file doesn't exist or cannot be opened.
             with open(file) as fid: pass
@@ -195,8 +200,20 @@ class _WriteFile:
     # kwargs to use for the writeto function
     kw = {'output_verify' : 'silentfix+ignore'}
 
-    # There are several methods available for each of gzip and bzip2.  Each is its own function.
-    def gzip_call(self, hdu_list, file):
+    # There are two methods available for each of gzip and bzip2. Each is its own function.
+    # 1. The _call functions call out to an external program.  gzip, bzip2 as appropriate.
+    # 2. The _in_mem functions use the corresponding python modules to do things in memory.
+    #
+    # As of commit 2e2d643b47fa27dbdcfcb1ba7bd, the write functions were generally faster using
+    # the in memory functions, but the reads were faster with the external functions.
+    # cf. GalSim/devel/time_zip.py for details about the timing tests.
+    #
+    # As a result, we no longer try multple functions here (as we still do in _ReadFile).
+    # If the timing status chages, the above mentioned commit has the old code, which first tried
+    # the external function and the reverted to the in-memory version if that failed.
+
+    # No longer used, but preserved for timing tests to see if we should revisit this.
+    def gzip_call(self, hdu_list, file):  # pragma: no cover
         import subprocess
         with open(file, 'wb') as fout:
             try:
@@ -213,7 +230,7 @@ class _WriteFile:
                 raise OSError("Error running gzip. Return code = %s"%p.returncode)
             p.wait()
 
-    def gzip_in_mem(self, hdu_list, file):  # pragma: no cover
+    def gzip_in_mem(self, hdu_list, file):
         import gzip
         import io
         # The compression routines work better if we first write to an internal buffer
@@ -226,7 +243,7 @@ class _WriteFile:
         with gzip.open(file, 'wb') as fout:
             fout.write(data)
 
-    def bzip2_call(self, hdu_list, file):
+    def bzip2_call(self, hdu_list, file):  # pragma: no cover
         import subprocess
         with open(file, 'wb') as fout:
             try:
@@ -242,7 +259,7 @@ class _WriteFile:
                 raise OSError("Error running bzip2. Return code = %s"%p.returncode)
             p.wait()
 
-    def bz2_in_mem(self, hdu_list, file):  # pragma: no cover
+    def bz2_in_mem(self, hdu_list, file):
         import bz2
         import io
         buf = io.BytesIO()
@@ -250,18 +267,6 @@ class _WriteFile:
         data = buf.getvalue()
         with bz2.BZ2File(file, 'wb') as fout:
             fout.write(data)
-
-    def __init__(self):
-        # Again, we used to have a number of methods here for gzip and bzip2, but now only two.
-        # We first try using a command-line call to either gzip or bzip2.  But if that doesn't
-        # work, we use either the gzip or bz2 module in memory, which is usually not quite as
-        # fast, but should always work.
-        self.gz_index = 0
-        self.bz2_index = 0
-        self.gz_methods = [self.gzip_call, self.gzip_in_mem]
-        self.bz2_methods = [self.bzip2_call, self.bz2_in_mem]
-        self.gz = self.gz_methods[0]
-        self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
         from .utilities import ensure_dir
@@ -278,29 +283,9 @@ class _WriteFile:
         if not file_compress:
             hdu_list.writeto(file, **self.kw)
         elif file_compress == 'gzip':
-            while self.gz_index < len(self.gz_methods):
-                try:
-                    return self.gz(hdu_list, file)
-                except (ImportError, NotImplementedError):  # pragma: no cover
-                    if self.gz_index == len(self.gz_methods)-1:
-                        raise
-                    else:
-                        self.gz_index += 1
-                        self.gz = self.gz_methods[self.gz_index]
-            else:  # pragma: no cover
-                raise GalSimError("None of the options for gzipping were successful.")
+            return self.gzip_in_mem(hdu_list, file)
         elif file_compress == 'bzip2':
-            while self.bz2_index < len(self.bz2_methods):
-                try:
-                    return self.bz2(hdu_list, file)
-                except (ImportError, NotImplementedError):  # pragma: no cover
-                    if self.bz2_index == len(self.bz2_methods)-1:
-                        raise
-                    else:
-                        self.bz2_index += 1
-                        self.bz2 = self.bz2_methods[self.bz2_index]
-            else:  # pragma: no cover
-                raise GalSimError("None of the options for bzipping were successful.")
+            return self.bz2_in_mem(hdu_list, file)
         else:  # pragma: no cover  (can't get here from public API)
             raise GalSimValueError("Unknown file_compression", file_compress, ('gzip', 'bzip2'))
 
