@@ -138,16 +138,6 @@ void TestPole()
 
     double test4 = galsim::integ::int1d(powm2, 1., test_mock_inf, test_rel_err, test_abs_err);
     AssertClose(test4, 1., test_rel_err, test_abs_err);
-
-#if 0
-    // This works if everything uses the same compiler.  But boost testing may have
-    // been installed with a different compiler, in which case it is unable to catch
-    // exceptions thrown from GalSim.  So we skip this test normally.
-    // (Developers working on the integrator should reenable this during development.)
-    BOOST_CHECK_THROW(
-        galsim::integ::int1d(powm2, 0., 1., test_rel_err, test_abs_err),
-        galsim::integ::IntFailure);
-#endif
 }
 
 void Test2d()
