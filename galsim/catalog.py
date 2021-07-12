@@ -18,6 +18,7 @@
 
 import os
 import numpy as np
+import pickle
 
 from .errors import GalSimValueError, GalSimKeyError, GalSimIndexError
 from .utilities import lazy_property
@@ -267,10 +268,6 @@ class Dict(object):
         self.key_split = key_split
 
         if file_type == 'PICKLE':
-            try:
-                import cPickle as pickle
-            except ImportError:
-                import pickle
             with open(self.file_name, 'rb') as f:
                 self.dict = pickle.load(f)
         elif file_type == 'YAML':

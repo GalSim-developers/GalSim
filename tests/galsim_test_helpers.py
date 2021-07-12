@@ -393,22 +393,15 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
     from numbers import Integral, Real, Complex
-    try:
-        import cPickle as pickle
-    except ImportError:
-        import pickle
+    import pickle
     import copy
     # In case the repr uses these:
     from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray
     from astropy.units import Unit
+    import astropy.io.fits
+    from distutils.version import LooseVersion
+    from collections.abc import Hashable
 
-    try:
-        import astropy.io.fits
-        from distutils.version import LooseVersion
-        if LooseVersion(astropy.__version__) < LooseVersion('1.0.6'):
-            irreprable = True
-    except ImportError:
-        import pyfits
     print('Try pickling ',str(obj1))
 
     #print('pickled obj1 = ',pickle.dumps(obj1))
@@ -427,10 +420,6 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     assert object() != f1
 
     # Test the hash values are equal for two equivalent objects.
-    try:
-        from collections.abc import Hashable
-    except ImportError:
-        from collections import Hashable
     if isinstance(obj1, Hashable):
         #print('hash = ',hash(obj1),hash(obj2))
         assert hash(obj1) == hash(obj2)
@@ -543,10 +532,8 @@ def all_obj_diff(objs, check_hash=True):
     """ Helper function that verifies that each element in `objs` is unique and, if hashable,
     produces a unique hash."""
 
-    try:
-        from collections.abc import Hashable
-    except ImportError:
-        from collections import Hashable
+    from collections.abc import Hashable
+    from collections import Counter
     # Check that all objects are unique.
     # Would like to use `assert len(objs) == len(set(objs))` here, but this requires that the
     # elements of objs are hashable (and that they have unique hashes!, which is what we're trying
@@ -571,11 +558,6 @@ def all_obj_diff(objs, check_hash=True):
     try:
         assert len(hashes) == len(set(hashes))
     except AssertionError as e:
-        try:
-            # Only valid in 2.7, but only needed if we have an error to provide more information.
-            from collections import Counter
-        except ImportError:
-            raise e
         for k, v in Counter(hashes).items():
             if v <= 1:
                 continue
@@ -620,16 +602,14 @@ class CaptureLog(object):
 
     """
     def __init__(self, level=3):
+        from io import StringIO
+
         logging_levels = { 0: logging.CRITICAL,
                            1: logging.WARNING,
                            2: logging.INFO,
                            3: logging.DEBUG }
         self.logger = logging.getLogger('CaptureLog')
         self.logger.setLevel(logging_levels[level])
-        try:
-            from StringIO import StringIO
-        except ImportError:
-            from io import StringIO
         self.stream = StringIO()
         self.handler = logging.StreamHandler(self.stream)
         self.logger.addHandler(self.handler)

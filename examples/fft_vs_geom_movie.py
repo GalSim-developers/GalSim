@@ -40,34 +40,21 @@ To see a larger list of available options and defaults, use
 
 import os
 import numpy as np
+from contextlib import ExitStack
+
 import galsim
 
-try:
-    import matplotlib
-    from matplotlib.figure import Figure
-    from matplotlib.backends.backend_agg import FigureCanvasAgg
-    import matplotlib.animation as anim
-except ImportError:
-    raise ImportError("This demo requires matplotlib!")
+# matplotlib and astropy are required.  Let these raise errors if not installed.
+import matplotlib
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_agg import FigureCanvasAgg
+import matplotlib.animation as anim
+
 from distutils.version import LooseVersion
 if LooseVersion(matplotlib.__version__) < LooseVersion('1.2'):
     raise RuntimeError("This demo requires matplotlib version 1.2 or greater!")
 
-try:
-    from contextlib import ExitStack
-except ImportError:
-    # ExitStack was introduced in python 3.3, so need to do something else in python 2.7.
-    # Really just need a dummy context manager, not the real ExitStack, so this is vv simple.
-    class ExitStack():
-        def __enter__(self):
-            return None
-        def __exit__(self, exc_type, exc_value, traceback):
-            return False
-
-try:
-    from astropy.utils.console import ProgressBar
-except ImportError:
-    raise ImportError("This demo requires astropy!")
+from astropy.utils.console import ProgressBar
 
 def make_movie(args):
     rng = galsim.BaseDeviate(args.seed)

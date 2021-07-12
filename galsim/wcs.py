@@ -2288,10 +2288,7 @@ def _writeFuncToHeader(func, letter, header):
         # I got the starting point for this code from:
         #     http://stackoverflow.com/questions/1253528/
         # In particular, marshal can serialize arbitrary code. (!)
-        try:
-            import cPickle as pickle
-        except ImportError:
-            import pickle
+        import pickle
         import types, marshal, base64
         if type(func) == types.FunctionType:
             code = marshal.dumps(func.__code__)
@@ -2360,10 +2357,7 @@ def _makecell(value):  # pragma: no cover
 
 def _readFuncFromHeader(letter, header):
     # This undoes the process of _writeFuncToHeader.  See the comments in that code for details.
-    try:
-        import cPickle as pickle
-    except ImportError:
-        import pickle
+    import pickle
     import types, marshal, base64
     if 'GS_'+letter+'_STR' in header:
         # Read in a regular string

@@ -22,6 +22,7 @@ import os
 import sys
 import warnings
 
+# We don't require astroplan.  So check if it's installed.
 try:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore")
