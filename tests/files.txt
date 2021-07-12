@@ -1,3 +1,0 @@
-TestImage.cpp
-TestInteg.cpp
-TestVersion.cpp

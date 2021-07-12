@@ -28,26 +28,12 @@ Another option If you use Anaconda Python is to use ``conda``::
 
 For more information, see `Installing With Conda`.
 
-Finally, there is a legacy option to use SCons, which was the only
-installation method prior to version 2.0.  This installation mode is still
-supported, but is not recommended unless you have difficulties with the pip
-or conda installation methods.
-
-.. warning::
-
-    This (v2.3) is the last GalSim release which will support the legacy SCons
-    installation method.  If you are still using it, you are advised to switch
-    to the above setup.py-based method instead.
-
-For details about this method, see `Installing With SCons`.
-
 
 .. toctree::
     :maxdepth: 1
 
     install_pip.rst
     install_conda.rst
-    install_scons.rst
 
 Running tests
 =============
