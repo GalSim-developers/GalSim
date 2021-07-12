@@ -229,7 +229,7 @@ namespace galsim {
         // Empirically, it is vaguely linearish in ln(maxsb) vs. sqrt(cosi), so we use that for
         // the interpolation.
         double sc = sqrt(std::abs(_cosi));
-        maxsb *= std::exp((1.-sc)*std::log((_r0 * math::tgamma(_n) ) / _h0*_n));
+        maxsb *= std::exp((1.-sc)*std::log((_r0 * std::tgamma(_n) ) / _h0*_n));
 
         // Err on the side of overestimating by multiplying by conservative_factor,
         // which was found to work for the worst-case scenario

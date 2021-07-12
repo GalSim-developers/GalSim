@@ -289,7 +289,7 @@ namespace galsim {
         _n(n), _trunc(trunc), _gsparams(gsparams),
         _invn(1./_n), _inv2n(0.5*_invn),
         _trunc_sq(_trunc*_trunc), _truncated(_trunc > 0.),
-        _gamma2n(math::tgamma(2.*_n)),
+        _gamma2n(std::tgamma(2.*_n)),
         _maxk(0.), _stepk(0.), _re(0.), _flux(0.),
         _ft(Table::spline),
         _kderiv2(0.), _kderiv4(0.)
@@ -393,14 +393,14 @@ namespace galsim {
         double gamma6n;
         double gamma8n;
         if (!_truncated) {
-            gamma4n = math::tgamma(4.*_n);
-            gamma6n = math::tgamma(6.*_n);
-            gamma8n = math::tgamma(8.*_n);
+            gamma4n = std::tgamma(4.*_n);
+            gamma6n = std::tgamma(6.*_n);
+            gamma8n = std::tgamma(8.*_n);
         } else {
             double z = std::pow(_trunc, 1./_n);
-            gamma4n = math::gamma_p(4.*_n, z) * math::tgamma(4.*_n);
-            gamma6n = math::gamma_p(6.*_n, z) * math::tgamma(6.*_n);
-            gamma8n = math::gamma_p(8.*_n, z) * math::tgamma(8.*_n);
+            gamma4n = math::gamma_p(4.*_n, z) * std::tgamma(4.*_n);
+            gamma6n = math::gamma_p(6.*_n, z) * std::tgamma(6.*_n);
+            gamma8n = math::gamma_p(8.*_n, z) * std::tgamma(8.*_n);
         }
         // The quadratic term of small-k expansion:
         _kderiv2 = -gamma4n / (4.*_gamma2n) / getFluxFraction();
@@ -545,7 +545,7 @@ namespace galsim {
         // Provide z = r^1/n, rather than r.
         double operator()(double z) const
         {
-            double f = (1.-math::gamma_p(_2n, z)) * math::tgamma(_2n);
+            double f = (1.-math::gamma_p(_2n, z)) * std::tgamma(_2n);
             xdbg<<"func("<<z<<") = "<<f<<"-"<<_target<<" = "<< f-_target<<std::endl;
             return f - _target;
         }
@@ -664,7 +664,7 @@ namespace galsim {
 
     double SersicHLR(double n, double flux_fraction)
     {
-        double b = CalculateB(n, 1./n, math::tgamma(2*n), flux_fraction);
+        double b = CalculateB(n, 1./n, std::tgamma(2*n), flux_fraction);
         return std::pow(b,n);
     }
 
@@ -681,7 +681,7 @@ namespace galsim {
             double f2 = math::gamma_p(_2n, _x*b);
             // Solve for f1 = f2/2
             xdbg<<"func("<<b<<") = 2*"<<f1<<" - "<<f2<<" = "<< 2.*f1-f2<<std::endl;
-            return (2.*f1-f2) * math::tgamma(_2n);
+            return (2.*f1-f2) * std::tgamma(_2n);
         }
     private:
         double _2n;
@@ -770,7 +770,7 @@ namespace galsim {
     double SersicTruncatedScale(double n, double hlr, double trunc)
     {
         double invn = 1./n;
-        double b = CalculateB(n, invn, math::tgamma(2*n), 1.);
+        double b = CalculateB(n, invn, std::tgamma(2*n), 1.);
         return hlr * CalculateTruncatedScale(n, invn, b, trunc/hlr);
     }
 
