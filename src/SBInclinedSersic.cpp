@@ -17,10 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-// #define DEBUGLOGGING
-// #define VERBOSITY_LEVEL 1
-
-#include "galsim/IgnoreWarnings.h"
+//#define DEBUGLOGGING
 
 #include "SBInclinedSersic.h"
 #include "SBInclinedSersicImpl.h"
