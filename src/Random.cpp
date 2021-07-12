@@ -34,6 +34,15 @@
 // Undefine this to use Boost.Random from the local distribution.
 #define DIVERT_BOOST_RANDOM
 
+// A midpath option is to use the boost 1.48 version of the below files, but
+// use a local, just in case you have some weird OS-specific problem.
+// When copying over the relevant boost files, we short circuited some tests
+// for old systems and such to avoid copying scads of files.  So if you need
+// any of these for some reason on your system, you can define this macro
+// and it will use your system's installed boost headers for everything other
+// than the actual random number code.
+//#define USE_BOOST
+
 #ifdef DIVERT_BOOST_RANDOM
 #include "galsim/boost1_48_0/random/mersenne_twister.hpp"
 #include "galsim/boost1_48_0/random/normal_distribution.hpp"
