@@ -26,7 +26,8 @@
 #include <cstring>  // For memcpy
 #include "Random.h"
 
-#include "galsim/IgnoreWarnings.h"
+// XXX: Do we still need this?
+//#include "galsim/IgnoreWarnings.h"
 
 // Variable defined to use a private copy of Boost.Random, modified
 // to avoid any reference to Boost.Random elements that might be on
