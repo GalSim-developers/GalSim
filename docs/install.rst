@@ -1,15 +1,10 @@
 Installation Instructions
 #########################
 
-GalSim is a python module that has much of its implementation in C++ for
-improved computational efficiency.  GalSim supports both Python 2 and
-Python 3.  It is regularly tested on Python versions (2.7, 3.6, 3.7, 3.8, 3.9).
-
-.. warning::
-
-    This (v2.3) is the last GalSim release which will support Python 2.7,
-    as it is currently past its end-of-life.  Please migrate to Python 3
-    in order to be able to use future versions of GalSim.
+GalSim is a Python module that has much of its implementation in C++ for
+improved computational efficiency.
+It is regularly tested on Python versions 3.7, 3.8, and 3.9 on both linux
+and mac os.
 
 It also seems to work on PyPy (both via conda-forge and the GitHub Actions
 setup), although we don't consider this an officially supported system.
@@ -61,7 +56,7 @@ The simplest way to run our test suite by typing::
 
     python setup.py test
 
-This should run all the python-layer tests with pytest and also compile and
+This should run all the Python-layer tests with pytest and also compile and
 run the C++ test suite.
 
 There are a number of packages that are used by the tests, but which are not
@@ -74,7 +69,7 @@ automatically by the above command, but you can install them manually via::
 
 By default, the tests will run in parallel using the pytest plugins
 ``pytest-xdist`` and ``pytest-timeout`` (to manage how much time each test is
-allowed to run).  If you want to run the python tests in serial instead,
+allowed to run).  If you want to run the Python tests in serial instead,
 you can do this via::
 
     python setup.py test -j1
