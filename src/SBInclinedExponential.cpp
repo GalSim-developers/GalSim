@@ -24,8 +24,6 @@
 
 #include "galsim/IgnoreWarnings.h"
 
-#define BOOST_NO_CXX11_SMART_PTR
-
 #include "SBInclinedExponential.h"
 #include "SBInclinedExponentialImpl.h"
 #include "integ/Int.h"
