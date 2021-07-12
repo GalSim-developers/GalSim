@@ -242,8 +242,6 @@ class AtmosphericScreen(object):
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, r0_500=0.2, L0=25.0,
                  vx=0.0, vy=0.0, alpha=1.0, time_step=None, rng=None, suppress_warning=False,
                  mp_context=None):
-        if mp_context is not None:
-            assert sys.version_info >= (3,4), "Use of mp_context requires Python version >= 3.4"
         if (alpha != 1.0 and time_step is None):
             raise GalSimIncompatibleValuesError(
                 "No time_step provided when alpha != 1.0", alpha=alpha, time_step=time_step)
@@ -280,10 +278,8 @@ class AtmosphericScreen(object):
         self.reversible = self.alpha == 1.0
 
         # Use shared memory for screens.  Allocate it here; fill it in on demand.
-        # Shared memory implementation depends on python version.
-        if sys.version_info >= (3,4):
-            if not isinstance(mp_context, multiprocessing.context.BaseContext):
-                mp_context = multiprocessing.get_context(mp_context)
+        if not isinstance(mp_context, multiprocessing.context.BaseContext):
+            mp_context = multiprocessing.get_context(mp_context)
         self.mp_context = mp_context
 
         # A unique id for this screen, created in the parent process, that can be used to find the
@@ -300,13 +296,10 @@ class AtmosphericScreen(object):
         instantiated=False, refcount=1,
         f=None, x=None, y=None, **kwargs
     ):
-        if ctx is not None:
-            RawArray = ctx.RawArray
-            RawValue = ctx.RawValue
-            Lock = ctx.Lock
-        else:
-            from multiprocessing.sharedctypes import RawArray, RawValue
-            from multiprocessing import Lock
+        RawArray = ctx.RawArray
+        RawValue = ctx.RawValue
+        Lock = ctx.Lock
+
         _objDict = {
             'f':RawArray('d', (npix+1)*(npix+1)),
             'x':RawArray('d', npix+1),
