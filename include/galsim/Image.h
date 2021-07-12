@@ -277,13 +277,6 @@ namespace galsim {
          */
         void shift(const Position<int>& delta) { this->_bounds.shift(delta); }
 
-        /**
-         *  @brief Return the bounding box of the image.
-         */
-        // (Repeat this here for the sake of the boost python wrapping, so we don't have to
-        // wrap AssignableToImage.)
-        const Bounds<int>& getBounds() const { return this->_bounds; }
-
         //@{
         /**
          *  @brief Convenience accessors for the bounding box corners.
