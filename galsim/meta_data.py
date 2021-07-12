@@ -16,10 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-# Note: This version of meta_data.py is correct for the setup.py installations, but not for
-# SCons installations, which install into PREFIX/share/galsim using whatever PREFIX is specified.
-# So `scons isntall` will overwrite this file with the correct values.
-
 import os
 
 if 'GALSIM_SHARE_DIR' in os.environ: # pragma: no cover  (Only tested in a subprocess)

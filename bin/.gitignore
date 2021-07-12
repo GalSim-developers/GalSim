@@ -1,9 +1,0 @@
-
-# Everything
-*
-
-# Except for:
-!.gitignore
-!SConscript
-!*.py
-

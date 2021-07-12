@@ -62,15 +62,3 @@ The conda installation method will install all of the dependencies for you.
 But if you want more information, see:
 
 http://galsim-developers.github.io/GalSim/docs/_build/html/install_conda.html
-
-SCons Installation
-------------------
-
-Prior to version 2.0, GalSim installation used SCons.  This installation
-mode is still supported, but is not recommended unless you have difficulties
-with the pip or conda installation methods.  The GalSim 2.3.x release series
-will be the last to support the SCons installation method.
-
-For details about this methos, see:
-
-http://galsim-developers.github.io/GalSim/docs/_build/html/install_scons.html
