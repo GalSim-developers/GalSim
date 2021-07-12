@@ -32,7 +32,7 @@ namespace galsim {
         // Constrain range of allowed Spergel index nu.  Spergel (2010) Table 1 lists values of nu
         // from -0.9 to +0.85. I've found that nu = -0.9 is too tricky for the GKP integrator to
         // handle, however, so I'm setting the lower range to -0.85 instead.  The upper limit is
-        // set by the boost::math::cyl_bessel_k function, which I found runs into overflow errors
+        // set by the math::cyl_bessel_k function, which I found runs into overflow errors
         // for nu larger than about 4.0.
 
         const double minimum_spergel_nu = -0.85;

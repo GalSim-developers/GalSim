@@ -46,37 +46,6 @@ namespace math {
     // Defined in BesselJ.cpp
     double dcsevl(double x, const double* cs, int n);
 
-#if not (__cplusplus >= 201103L)
-    double tgamma(double x)
-    {
-        double g = dgamma(x);
-#ifdef TEST
-        double g2 = boost::math::tgamma(x);
-        if (std::abs(g-g2) > 1.e-6) {
-            std::cerr<<"tgamma("<<x<<") = "<<g2<<"  =? "<<g<<std::endl;
-            throw std::runtime_error("tgamma doesn't agree with boost tgamma");
-        }
-        // We don't normally use x < 1, so test those too.
-        if (x>1) tgamma(1./x);
-#endif
-        return g;
-    }
-
-    double lgamma(double x)
-    {
-        double g = dlngam(x);
-#ifdef TEST
-        double g2 = boost::math::lgamma(x);
-        if (std::abs(g-g2) > 1.e-6) {
-            std::cerr<<"lgamma("<<x<<") = "<<g2<<"  =? "<<g<<std::endl;
-            throw std::runtime_error("lgamma doesn't agree with boost lgamma");
-        }
-        if (x>1) lgamma(1./x);
-#endif
-        return g;
-    }
-#endif
-
     double gamma_p(double a, double x)
     {
         // This specific function is what boost calls gamma_p:
@@ -421,10 +390,10 @@ namespace math {
         double aeps = a - ainta;
 
         if (x == 0.)
-            return (ainta > 0. || aeps != 0.) ? 1. / math::tgamma(a+1.) : 0.;
+            return (ainta > 0. || aeps != 0.) ? 1. / std::tgamma(a+1.) : 0.;
 
         if (x <= 1.) {
-            double algap1 = (a >= -0.5 || aeps != 0.) ? math::lgamma(a+1.) : 0.;
+            double algap1 = (a >= -0.5 || aeps != 0.) ? std::lgamma(a+1.) : 0.;
             double sgngam = (a < 0. && int(std::floor(a)) % 2 == 1) ? -1 : 1.;
             return d9gmit(a, x, algap1, sgngam);
         }
@@ -438,7 +407,7 @@ namespace math {
             return std::pow(x,-a);
 
         double alng = d9lgic(a, x);
-        double algap1 = math::lgamma(a+1.);
+        double algap1 = std::lgamma(a+1.);
         double sgngam = (a < 0. && int(std::floor(a)) % 2 == 1) ? -1 : 1.;
         double t = std::log((std::abs(a))) + alng - algap1;
         if (t > alneps) {
@@ -489,7 +458,7 @@ namespace math {
         assert(x > 0.);
         assert(a >= x);
 
-        double algap1 = math::lgamma(a+1.);
+        double algap1 = std::lgamma(a+1.);
         double ax = a + x;
         double a1x = ax + 1.;
         double r = 0.;
@@ -566,7 +535,7 @@ namespace math {
         if (a >= -0.5)
             return std::exp(-algap1 + std::log(s));
 
-        double algs = -math::lgamma(aeps + 1.) + std::log(s);
+        double algs = -std::lgamma(aeps + 1.) + std::log(s);
         s = 1.;
         int m = -ma - 1;
         if (m != 0) {

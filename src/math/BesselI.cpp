@@ -184,7 +184,7 @@ namespace math {
         double inu;
         if (series) {
             //     SERIES FOR (X/2)**2.LE.NU+1
-            double gln = math::lgamma(fn+1);
+            double gln = std::lgamma(fn+1);
             double xo2l = std::log(xo2);
             double arg = fn * xo2l - gln;
             if (arg < -elim) return 0.;
