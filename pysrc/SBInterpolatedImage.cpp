@@ -22,22 +22,18 @@
 
 namespace galsim {
 
-    void pyExportSBInterpolatedImage(PY_MODULE& _galsim)
+    void pyExportSBInterpolatedImage(py::module& _galsim)
     {
-        py::class_<SBInterpolatedImage, BP_BASES(SBProfile)> pySBInterpolatedImage(
-            GALSIM_COMMA "SBInterpolatedImage" BP_NOINIT);
-        pySBInterpolatedImage
+        py::class_<SBInterpolatedImage, SBProfile>(_galsim, "SBInterpolatedImage")
             .def(py::init<const BaseImage<double>&, const Bounds<int>&, const Bounds<int>&,
                  const Interpolant&, const Interpolant&, double, double, GSParams>())
             .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK);
 
-        py::class_<SBInterpolatedKImage, BP_BASES(SBProfile)> pySBInterpolatedKImage(
-            GALSIM_COMMA "SBInterpolatedKImage" BP_NOINIT);
-        pySBInterpolatedKImage
+        py::class_<SBInterpolatedKImage, SBProfile>(_galsim, "SBInterpolatedKImage")
             .def(py::init<const BaseImage<std::complex<double> > &,
                  double, const Interpolant&, GSParams>());
 
-        GALSIM_DOT def("CalculateSizeContainingFlux", &CalculateSizeContainingFlux);
+        _galsim.def("CalculateSizeContainingFlux", &CalculateSizeContainingFlux);
     }
 
 } // namespace galsim

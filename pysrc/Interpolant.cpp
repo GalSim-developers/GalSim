@@ -35,9 +35,9 @@ namespace galsim {
         interp.uvalMany(vals, N);
     }
 
-    void pyExportInterpolant(PY_MODULE& _galsim)
+    void pyExportInterpolant(py::module& _galsim)
     {
-        py::class_<Interpolant BP_NONCOPYABLE>(GALSIM_COMMA "Interpolant" BP_NOINIT)
+        py::class_<Interpolant >(_galsim, "Interpolant")
             .def("xval", &Interpolant::xval)
             .def("uval", &Interpolant::uval)
             .def("xvalMany", &XvalMany)
@@ -46,25 +46,25 @@ namespace galsim {
             .def("getNegativeFlux", &Interpolant::getNegativeFlux)
             .def("urange", &Interpolant::urange);
 
-        py::class_<Delta, BP_BASES(Interpolant)>(GALSIM_COMMA "Delta" BP_NOINIT)
+        py::class_<Delta, Interpolant>(_galsim, "Delta")
             .def(py::init<GSParams>());
 
-        py::class_<Nearest, BP_BASES(Interpolant)>(GALSIM_COMMA "Nearest" BP_NOINIT)
+        py::class_<Nearest, Interpolant>(_galsim, "Nearest")
             .def(py::init<GSParams>());
 
-        py::class_<SincInterpolant, BP_BASES(Interpolant)>(GALSIM_COMMA "SincInterpolant" BP_NOINIT)
+        py::class_<SincInterpolant, Interpolant>(_galsim, "SincInterpolant")
             .def(py::init<GSParams>());
 
-        py::class_<Lanczos, BP_BASES(Interpolant)>(GALSIM_COMMA "Lanczos" BP_NOINIT)
+        py::class_<Lanczos, Interpolant>(_galsim, "Lanczos")
             .def(py::init<int,bool,GSParams>());
 
-        py::class_<Linear, BP_BASES(Interpolant)>(GALSIM_COMMA "Linear" BP_NOINIT)
+        py::class_<Linear, Interpolant>(_galsim, "Linear")
             .def(py::init<GSParams>());
 
-        py::class_<Cubic, BP_BASES(Interpolant)>(GALSIM_COMMA "Cubic" BP_NOINIT)
+        py::class_<Cubic, Interpolant>(_galsim, "Cubic")
             .def(py::init<GSParams>());
 
-        py::class_<Quintic, BP_BASES(Interpolant)>(GALSIM_COMMA "Quintic" BP_NOINIT)
+        py::class_<Quintic, Interpolant>(_galsim, "Quintic")
             .def(py::init<GSParams>());
     }
 

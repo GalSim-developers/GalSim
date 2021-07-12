@@ -22,25 +22,15 @@
 
 namespace galsim {
 
-#ifdef USE_BOOST
-    static SBAdd* construct(const py::object& iterable, GSParams gsparams)
-    {
-        py::stl_input_iterator<SBProfile> iter(iterable), end;
-        std::list<SBProfile> plist;
-        for(; iter != end; ++iter) plist.push_back(*iter);
-        return new SBAdd(plist, gsparams);
-    }
-#else
     static SBAdd* construct(const std::list<SBProfile>& plist, GSParams gsparams)
     {
         return new SBAdd(plist, gsparams);
     }
-#endif
 
-    void pyExportSBAdd(PY_MODULE& _galsim)
+    void pyExportSBAdd(py::module& _galsim)
     {
-        py::class_<SBAdd, BP_BASES(SBProfile)>(GALSIM_COMMA "SBAdd" BP_NOINIT)
-            .def(PY_INIT(&construct));
+        py::class_<SBAdd, SBProfile>(_galsim, "SBAdd")
+            .def(py::init(&construct));
     }
 
 } // namespace galsim

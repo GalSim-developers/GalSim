@@ -39,17 +39,17 @@ namespace galsim {
     }
 
     template <typename T>
-    static void WrapTemplates(PY_MODULE& _galsim)
+    static void WrapTemplates(py::module& _galsim)
     {
         typedef void (*phase_func)(ImageView<std::complex<T> >,
                                    double, size_t, double, double, double);
-        GALSIM_DOT def("ApplyKImagePhases", phase_func(&_ApplyKImagePhases));
+        _galsim.def("ApplyKImagePhases", phase_func(&_ApplyKImagePhases));
     }
 
-    void pyExportSBTransform(PY_MODULE& _galsim)
+    void pyExportSBTransform(py::module& _galsim)
     {
-        py::class_<SBTransform, BP_BASES(SBProfile)>(GALSIM_COMMA "SBTransform" BP_NOINIT)
-            .def(PY_INIT(&MakeSBT));
+        py::class_<SBTransform, SBProfile>(_galsim, "SBTransform")
+            .def(py::init(&MakeSBT));
 
         WrapTemplates<float>(_galsim);
         WrapTemplates<double>(_galsim);

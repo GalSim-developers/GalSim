@@ -22,11 +22,11 @@
 
 namespace galsim {
 
-    void pyExportSBBox(PY_MODULE& _galsim)
+    void pyExportSBBox(py::module& _galsim)
     {
-        py::class_<SBBox, BP_BASES(SBProfile)>(GALSIM_COMMA "SBBox" BP_NOINIT)
+        py::class_<SBBox, SBProfile>(_galsim, "SBBox")
             .def(py::init<double,double,double,GSParams>());
-        py::class_<SBTopHat, BP_BASES(SBProfile)>(GALSIM_COMMA "SBTopHat" BP_NOINIT)
+        py::class_<SBTopHat, SBProfile>(_galsim, "SBTopHat")
             .def(py::init<double,double,GSParams>());
     }
 

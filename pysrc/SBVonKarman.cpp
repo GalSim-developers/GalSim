@@ -22,14 +22,13 @@
 
 namespace galsim {
 
-    void pyExportSBVonKarman(PY_MODULE& _galsim)
+    void pyExportSBVonKarman(py::module& _galsim)
     {
-        py::class_<SBVonKarman, BP_BASES(SBProfile)>(GALSIM_COMMA "SBVonKarman" BP_NOINIT)
+        py::class_<SBVonKarman, SBProfile>(_galsim, "SBVonKarman")
             .def(py::init<double,double,double,double,double,bool,GSParams,double>())
             .def("getDelta", &SBVonKarman::getDelta)
             .def("getHalfLightRadius", &SBVonKarman::getHalfLightRadius)
-            .def("structureFunction", &SBVonKarman::structureFunction)
-            ;
+            .def("structureFunction", &SBVonKarman::structureFunction);
     }
 
 } // namespace galsim

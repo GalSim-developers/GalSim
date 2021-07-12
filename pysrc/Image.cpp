@@ -33,33 +33,31 @@ namespace galsim {
     }
 
     template <typename T>
-    static void WrapImage(PY_MODULE& _galsim, const std::string& suffix)
+    static void WrapImage(py::module& _galsim, const std::string& suffix)
     {
-        py::class_<BaseImage<T> BP_NONCOPYABLE>(
-            GALSIM_COMMA ("BaseImage" + suffix).c_str() BP_NOINIT);
+        py::class_<BaseImage<T> >(_galsim, ("BaseImage" + suffix).c_str());
 
         typedef ImageView<T>* (*Make_func)(size_t, int, int, const Bounds<int>&);
-        py::class_<ImageView<T>, BP_BASES(BaseImage<T>)>(
-            GALSIM_COMMA ("ImageView" + suffix).c_str() BP_NOINIT)
-            .def(PY_INIT((Make_func)&MakeFromArray));
+        py::class_<ImageView<T>, BaseImage<T> >(_galsim, ("ImageView" + suffix).c_str())
+            .def(py::init((Make_func)&MakeFromArray));
 
         typedef void (*rfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
                                        bool, bool);
         typedef void (*irfft_func_type)(const BaseImage<T>&, ImageView<double>, bool, bool);
         typedef void (*cfft_func_type)(const BaseImage<T>&, ImageView<std::complex<double> >,
                                        bool, bool, bool);
-        GALSIM_DOT def("rfft", rfft_func_type(&rfft));
-        GALSIM_DOT def("irfft", irfft_func_type(&irfft));
-        GALSIM_DOT def("cfft", cfft_func_type(&cfft));
+        _galsim.def("rfft", rfft_func_type(&rfft));
+        _galsim.def("irfft", irfft_func_type(&irfft));
+        _galsim.def("cfft", cfft_func_type(&cfft));
 
         typedef void (*wrap_func_type)(ImageView<T>, const Bounds<int>&, bool, bool);
-        GALSIM_DOT def("wrapImage", wrap_func_type(&wrapImage));
+        _galsim.def("wrapImage", wrap_func_type(&wrapImage));
 
         typedef void (*invert_func_type)(ImageView<T>);
-        GALSIM_DOT def("invertImage", invert_func_type(&invertImage));
+        _galsim.def("invertImage", invert_func_type(&invertImage));
     }
 
-    void pyExportImage(PY_MODULE& _galsim)
+    void pyExportImage(py::module& _galsim)
     {
         WrapImage<uint16_t>(_galsim, "US");
         WrapImage<uint32_t>(_galsim, "UI");
@@ -70,7 +68,7 @@ namespace galsim {
         WrapImage<std::complex<double> >(_galsim, "CD");
         WrapImage<std::complex<float> >(_galsim, "CF");
 
-        GALSIM_DOT def("goodFFTSize", &goodFFTSize);
+        _galsim.def("goodFFTSize", &goodFFTSize);
     }
 
 } // namespace galsim

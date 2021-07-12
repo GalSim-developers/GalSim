@@ -22,13 +22,12 @@
 
 namespace galsim {
 
-    void pyExportSBSecondKick(PY_MODULE& _galsim)
+    void pyExportSBSecondKick(py::module& _galsim)
     {
-        py::class_<SBSecondKick, BP_BASES(SBProfile)>(GALSIM_COMMA "SBSecondKick" BP_NOINIT)
+        py::class_<SBSecondKick, SBProfile>(_galsim, "SBSecondKick")
             .def(py::init<double,double,double,GSParams>())
             .def("getDelta", &SBSecondKick::getDelta)
-            .def("structureFunction", &SBSecondKick::structureFunction)
-            ;
+            .def("structureFunction", &SBSecondKick::structureFunction);
     }
 
 } // namespace galsim

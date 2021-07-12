@@ -45,12 +45,12 @@ namespace galsim {
         return new SBShapelet(sigma, bvec, gsparams);
     }
 
-    void pyExportSBShapelet(PY_MODULE& _galsim)
+    void pyExportSBShapelet(py::module& _galsim)
     {
-        py::class_<SBShapelet, BP_BASES(SBProfile)>(GALSIM_COMMA "SBShapelet" BP_NOINIT)
-            .def(PY_INIT(&construct));
+        py::class_<SBShapelet, SBProfile>(_galsim, "SBShapelet")
+            .def(py::init(&construct));
 
-        GALSIM_DOT def("ShapeletFitImage", &fit);
+        _galsim.def("ShapeletFitImage", &fit);
     }
 
 } // namespace galsim

@@ -23,16 +23,16 @@
 namespace galsim {
 namespace math {
 
-    void pyExportBessel(PY_MODULE& _galsim)
+    void pyExportBessel(py::module& _galsim)
     {
-        GALSIM_DOT def("j0_root", &getBesselRoot0);
-        GALSIM_DOT def("jv_root", &getBesselRoot);
-        GALSIM_DOT def("j0", &j0);
-        GALSIM_DOT def("j1", &j1);
-        GALSIM_DOT def("jv", &cyl_bessel_j);
-        GALSIM_DOT def("yv", &cyl_bessel_y);
-        GALSIM_DOT def("iv", &cyl_bessel_i);
-        GALSIM_DOT def("kv", &cyl_bessel_k);
+        _galsim.def("j0_root", &getBesselRoot0);
+        _galsim.def("jv_root", &getBesselRoot);
+        _galsim.def("j0", &j0);
+        _galsim.def("j1", &j1);
+        _galsim.def("jv", &cyl_bessel_j);
+        _galsim.def("yv", &cyl_bessel_y);
+        _galsim.def("iv", &cyl_bessel_i);
+        _galsim.def("kv", &cyl_bessel_k);
     }
 
 } // namespace math

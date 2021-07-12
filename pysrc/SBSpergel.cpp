@@ -22,14 +22,14 @@
 
 namespace galsim {
 
-    void pyExportSBSpergel(PY_MODULE& _galsim)
+    void pyExportSBSpergel(py::module& _galsim)
     {
-        py::class_<SBSpergel, BP_BASES(SBProfile)>(GALSIM_COMMA "SBSpergel" BP_NOINIT)
+        py::class_<SBSpergel, SBProfile>(_galsim, "SBSpergel")
             .def(py::init<double,double,double, GSParams>())
             .def("calculateIntegratedFlux", &SBSpergel::calculateIntegratedFlux)
             .def("calculateFluxRadius", &SBSpergel::calculateFluxRadius);
 
-        GALSIM_DOT def("SpergelCalculateHLR", &SpergelCalculateHLR);
+        _galsim.def("SpergelCalculateHLR", &SpergelCalculateHLR);
     }
 
 } // namespace galsim
