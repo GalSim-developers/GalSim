@@ -159,14 +159,7 @@ namespace galsim {
         xdbg<<"fillKValue with bvec = "<<bvec<<std::endl;
         MatrixXcd psi_k(val.size(),bvec.size());
         LVector::kBasis(kx,ky,psi_k,bvec.getOrder(),sigma);
-#ifdef USE_TMV
-        // Note: the explicit cast to Vector<complex<double> > shouldn't be necessary.
-        // But not doing so fails for Apple's default BLAS library.  It should be a pretty
-        // minimal efficiency difference, so we always do the explicit cast to be safe.
-        val = psi_k * VectorXcd(bvec.rVector());
-#else
         val = psi_k * bvec.rVector();
-#endif
     }
 
     template <typename T>
@@ -350,14 +343,7 @@ namespace galsim {
         MatrixXd psi(npts,bvec.size());
         LVector::basis(x,y,psi,bvec.getOrder(),sigma);
         // I = psi * b
-#ifdef USE_TMV
-        // TMV solves this by writing b = I/psi.
-        // We use QRP in case the psi matrix is close to singular (although it shouldn't be).
-        psi.divideUsing(tmv::QRP);
-        bvec.rVector() = I/psi;
-#else
         bvec.rVector() = psi.colPivHouseholderQr().solve(I);
-#endif
         xdbg<<"Done FitImage: bvec = "<<bvec<<std::endl;
     }
 

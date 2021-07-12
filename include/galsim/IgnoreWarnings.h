@@ -45,13 +45,6 @@
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 
-// For 32-bit machines, g++ -O2 optimization in some TMV calculations uses an optimization
-// that is technically not known to not overflow 32 bit integers.  In fact, it is totally
-// fine to use, but we need to remove a warning about it in this file for gcc >= 4.5
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 5)
-#pragma GCC diagnostic ignored "-Wstrict-overflow"
-#endif
-
 // This is a bug in boost that was apparently fixed in 1.62.  But I don't think we much
 // care about this, so we just disable it regardless of which boost is being used.
 #if defined(__GNUC__) && __GNUC__ >= 6

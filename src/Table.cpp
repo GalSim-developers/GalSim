@@ -24,11 +24,6 @@
 #include <iostream>
 #include <deque>
 
-#ifdef USE_TMV
-#include "TMV.h"
-#include "TMV_SymBand.h"
-#endif
-
 #include "fmath/fmath.hpp"  // For SSE
 
 #include "Table.h"
@@ -647,9 +642,6 @@ namespace galsim {
          *
          * The system we solve is equation [7].  In our adopted notation u_i are the diagonals
          * of the matrix M, and h_i the off-diagonals.  y'' is z_i and the rhs = v_i.
-         *
-         * For table sizes larger than the fully trivial (2 or 3 elements), we use the
-         * symmetric tridiagonal matrix solution capabilities of MJ's TMV library.
          */
         // Set up the 2nd-derivative table for splines
         _y2.resize(_n);
@@ -666,25 +658,7 @@ namespace galsim {
                         (_vals[1] - _vals[0]) / (_args[1] - _args[0])) / (_args[2] - _args[0]);
 
         } else {
-            // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
-
-#ifdef USE_TMV
-            tmv::SymBandMatrix<double> M(_n-2, 1);
-            for (int i=1; i<=_n-3; i++){
-                M(i, i-1) = _args[i+1] - _args[i];
-            }
-            tmv::Vector<double> rhs(_n-2);
-            for (int i=1; i<=_n-2; i++){
-                M(i-1, i-1) = 2. * (_args[i+1] - _args[i-1]);
-                rhs(i-1) = 6. * ( (_vals[i+1] - _vals[i]) / (_args[i+1] - _args[i]) -
-                                  (_vals[i] - _vals[i-1]) / (_args[i] - _args[i-1]) );
-            }
-            tmv::Vector<double> solution(_n-2);
-            solution = rhs / M;   // solve the tridiagonal system of equations
-            for (int i=1; i<=_n-2; i++) {
-                _y2[i] = solution[i-1];
-            }
-#else
+            // For 4 or more points we used to use the TMV symmetric tridiagonal matrix solver.
             // Eigen doesn't have a BandMatrix class (at least not one that is functional)
             // But in this case, the band matrix is so simple and stable (diagonal dominant)
             // that we can just use the Thomas algorithm to solve it directly.
@@ -708,7 +682,6 @@ namespace galsim {
             for (int i=_n-3; i>0; --i) {
                 _y2[i] -= c[i-1] * _y2[i+1];
             }
-#endif
         }
     }
 
