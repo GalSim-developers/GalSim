@@ -23,7 +23,7 @@ http://stackoverflow.com/questions/4814970/subprocess-check-output-doesnt-seem-t
 
 To use it do the following::
 
-    >>> import galsim.fds_test as fds
+    >>> import fds_test as fds
     >>> ...
     >>> try:
     >>>     [... Code that might raise OSError ...]
