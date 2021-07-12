@@ -20,9 +20,7 @@
 // See https://www.dropbox.com/s/z6h14bgd199czsi/Inclined_Exponential.pdf?dl=0
 // for a write-up of much of the math involved in this file.
 
-// #define DEBUGLOGGING
-
-#include "galsim/IgnoreWarnings.h"
+//#define DEBUGLOGGING
 
 #include "SBInclinedExponential.h"
 #include "SBInclinedExponentialImpl.h"
@@ -83,8 +81,6 @@ namespace galsim {
         dbg<<"flux = "<<_flux<<std::endl;
 
         // Now set up, using this value of cosi
-
-        double cosi_squared = _cosi*_cosi;
 
         xdbg<<"_half_pi_h_sini_over_r = "<<_half_pi_h_sini_over_r<<std::endl;
         xdbg<<"_cosi = "<<_cosi<<std::endl;
