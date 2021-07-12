@@ -97,7 +97,7 @@ class _ReadFile:
             raise NotImplementedError()
         return hdu_list, fin
 
-    def gzip_in_mem(self, file):
+    def gzip_in_mem(self, file): # pragma: no cover
         import gzip
         from ._pyfits import pyfits
         fin = gzip.open(file, 'rb')
@@ -318,12 +318,10 @@ def _check_hdu(hdu, pyfits_compress, header_only=False):
     """
     from ._pyfits import pyfits
     # Check for fixable verify errors
-    try:
-        hdu.header
-        if not header_only:
-            hdu.data
-    except pyfits.VerifyError:
-        hdu.verify('fix')
+    # Astropy will automatically fix any errors it finds by just accessing the header and data.
+    hdu.header
+    if not header_only:
+        hdu.data
 
     # Check that the specified compression is right for the given hdu type.
     if pyfits_compress:

@@ -74,24 +74,8 @@ def ReadYaml(config_file):
     """
     import yaml
 
-    if sys.version_info < (3,6):
-        # cf. coldfix's answer here:
-        # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
-        class OrderedLoader(yaml.SafeLoader):
-            pass
-        def construct_mapping(loader, node):
-            loader.flatten_mapping(node)
-            return OrderedDict(loader.construct_pairs(node))
-        OrderedLoader.add_constructor(
-            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-            construct_mapping)
-        loader = OrderedLoader
-    else:
-        # In python 3.6 and later, regular dicts are ordered, so just use that.
-        loader = yaml.SafeLoader
-
     with open(config_file) as f:
-        all_config = [ c for c in yaml.load_all(f.read(), loader) ]
+        all_config = [ c for c in yaml.load_all(f.read(), yaml.SafeLoader) ]
 
     # If there is only 1 yaml document, then it is of course used for the configuration.
     # If there are multiple yaml documents, then the first one defines a common starting
@@ -259,11 +243,8 @@ class SafeManager(BaseManager):
     only have one place to change this is there is a different strategy that works better.
     """
     def __init__(self):
-        if sys.version_info >= (3,0):
-            from multiprocessing import get_context
-            super(SafeManager, self).__init__(ctx=get_context('fork'))
-        else:
-            super(SafeManager, self).__init__()
+        from multiprocessing import get_context
+        super(SafeManager, self).__init__(ctx=get_context('fork'))
 
 
 def GetLoggerProxy(logger):
@@ -793,13 +774,10 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         logger.warning("Using %d processes for %s processing",nproc,item)
 
         from multiprocessing import current_process
-        if sys.version_info < (3,0):
-            from multiprocessing import Process, Queue
-        else:
-            from multiprocessing import get_context
-            ctx = get_context('fork')
-            Process = ctx.Process
-            Queue = ctx.Queue
+        from multiprocessing import get_context
+        ctx = get_context('fork')
+        Process = ctx.Process
+        Queue = ctx.Queue
 
         # Temporarily mark that we are multiprocessing, so we know not to start another
         # round of multiprocessing later.

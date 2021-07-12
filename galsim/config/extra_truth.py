@@ -40,25 +40,6 @@ class TruthBuilder(ExtraOutputBuilder):
     """Build an output truth catalog with user-defined columns, typically taken from
     current values of various quantities for each constructed object.
     """
-    def initialize(self, data, scratch, config, base, logger):
-        # Call the base class initialize first.
-        super(TruthBuilder,self).initialize(data,scratch,config,base,logger)
-
-        # Warn if the config dict isn't an OrderedDict.
-        cols = config['columns']
-        if (sys.version_info < (3,6) and logger and not hasattr(cols, '__reversed__')
-                and not config.get('_warned',False)):
-            # If config doesn't have a __reversed__ attribute, then it's not an OrderedDict.
-            # Probably it's just a regular dict.  So warn the user that the columns are in
-            # arbitrary order.
-            # (This was the simplest difference I could find between dict and OrderedDict that
-            #  seemed relevant.)
-            # And note that starting in 3.6, the regular dict is ordered, so don't bother
-            # with this check.
-            logger.warning('The config dict is not an OrderedDict.  The columns in the output '
-                           'truth catalog will be in arbitrary order.')
-            config['_warned'] = True
-
     # The function to call at the end of building each stamp
     def processStamp(self, obj_num, config, base, logger):
         cols = config['columns']
