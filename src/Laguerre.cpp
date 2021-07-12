@@ -27,12 +27,8 @@
 #include "Solve.h"
 #include "math/Angle.h"
 
-#ifdef USE_TMV
-#define MatrixXT tmv::Matrix<T>
-#else
 using Eigen::Dynamic;
 #define MatrixXT Eigen::Matrix<T,Dynamic,Dynamic>
-#endif
 
 namespace galsim {
 
@@ -161,13 +157,8 @@ namespace galsim {
         const VectorXd& x, const VectorXd& y,
         MatrixXd& psi, int order, double sigma)
     {
-#ifdef USE_TMV
-        xassert(y.size() == x.size() && psi.nrows() == x.size());
-        xassert(psi.ncols()==PQIndex::size(order));
-#else
         xassert(y.size() == x.size() && psi.rows() == x.size());
         xassert(psi.cols()==PQIndex::size(order));
-#endif
         CalculateBasis(x, y, 0, psi, order, sigma);
     }
 
@@ -185,13 +176,8 @@ namespace galsim {
         const VectorXd& invsig,
         MatrixXd& psi, int order, double sigma)
     {
-#ifdef USE_TMV
-        xassert(y.size() == x.size() && psi.nrows() == x.size() && invsig.size() == x.size());
-        xassert(psi.ncols()==PQIndex::size(order));
-#else
         xassert(y.size() == x.size() && psi.rows() == x.size() && invsig.size() == x.size());
         xassert(psi.cols()==PQIndex::size(order));
-#endif
         CalculateBasis(x, y, &invsig, psi, order, sigma);
     }
 
@@ -209,13 +195,8 @@ namespace galsim {
         const VectorXd& kx, const VectorXd& ky,
         MatrixXcd& psi_k, int order, double sigma)
     {
-#ifdef USE_TMV
-        xassert(ky.size() == kx.size() && psi_k.nrows() == kx.size());
-        xassert(psi_k.ncols()==PQIndex::size(order));
-#else
         xassert(ky.size() == kx.size() && psi_k.rows() == kx.size());
         xassert(psi_k.cols()==PQIndex::size(order));
-#endif
         CalculateBasis(kx, ky, 0, psi_k, order, sigma);
     }
 
@@ -261,11 +242,7 @@ namespace galsim {
         MatrixXT& psi, int order, double sigma)
     {
         assert (y.size()==x.size());
-#ifdef USE_TMV
-        xassert (psi.nrows()==x.size() && psi.ncols()==PQIndex::size(order));
-#else
         xassert (psi.rows()==x.size() && psi.cols()==PQIndex::size(order));
-#endif
 
         const int N=order;
         const int npts_full = x.size();
@@ -292,98 +269,52 @@ namespace galsim {
 
             // Cast arguments as diagonal matrices so we can access
             // vectorized element-by-element multiplication
-#ifdef USE_TMV
-            tmv::ConstVectorView<double> X = x.subVector(ilo,ihi);
-            tmv::ConstVectorView<double> Y = y.subVector(ilo,ihi);
-#else
             Eigen::VectorBlock<const VectorXd> X = x.segment(ilo,ihi-ilo);
             Eigen::VectorBlock<const VectorXd> Y = y.segment(ilo,ihi-ilo);
-#endif
 
             // Get the appropriate portion of our temporary matrices.
-#ifdef USE_TMV
-            tmv::VectorView<double> Rsq = Rsq_full.subVector(0,npts);
-            tmv::MatrixView<double> A = A_full.rowRange(0,npts);
-            tmv::MatrixView<double> tmp = tmp_full.rowRange(0,npts);
-#else
             Eigen::VectorBlock<VectorXd> Rsq = Rsq_full.segment(0,npts);
             Eigen::Block<MatrixXd> A = A_full.topRows(npts);
             Eigen::Block<MatrixXd> tmp = tmp_full.topRows(npts);
-#endif
 
             // We need rsq values twice, so store them here.
-#ifdef USE_TMV
-            Rsq = ElemProd(X,X);
-            Rsq += ElemProd(Y,Y);
-#else
             Rsq.array() = X.array() * X.array();
             Rsq.array() += Y.array() * Y.array();
-#endif
 
             // This matrix will keep track of real & imag parts
             // of prefactor * exp(-r^2/2) (x+iy)^m / sqrt(m!)
 
             // Build the Gaussian factor
-#ifdef USE_TMV
-            for (int i=0; i<npts; i++) A.ref(i,0) = std::exp(-0.5*Rsq(i));
-#else
             for (int i=0; i<npts; i++) A.coeffRef(i,0) = std::exp(-0.5*Rsq(i));
-#endif
             BasisHelper<T>::applyPrefactor(A.col(0),sigma);
             A.col(1).setZero();
 
             // Put 1/sigma factor into every point if doing a design matrix:
-#ifdef USE_TMV
-            if (invsig) A.col(0) *= tmv::DiagMatrixViewOf(invsig->subVector(ilo,ihi));
-#else
             if (invsig) A.col(0).array() *= invsig->segment(ilo,ihi-ilo).array();
-#endif
 
             // Assign the m=0 column first:
-#ifdef USE_TMV
-            psi.col(PQIndex(0,0).rIndex(), ilo,ihi) = A.col(0);
-#else
             psi.col(PQIndex(0,0).rIndex()).segment(ilo,ihi-ilo) = A.col(0).cast<T>();
-#endif
 
             // Then ascend m's at q=0:
             for (int m=1; m<=N; m++) {
                 int rIndex = PQIndex(m,0).rIndex();
                 // Multiply by (X+iY)/sqrt(m), including a factor 2 first time through
-#ifdef USE_TMV
-                tmp = DiagMatrixViewOf(Y) * A;
-                A = DiagMatrixViewOf(X) * A;
-#else
                 tmp = Y.asDiagonal() * A;
                 A = X.asDiagonal() * A;
-#endif
                 A.col(0) += tmp.col(1);
                 A.col(1) -= tmp.col(0);
                 A *= m==1 ? 2. : 1./sqrtn(m);
 
-#ifdef USE_TMV
-                psi.subMatrix(ilo,ihi,rIndex,rIndex+2) = BasisHelper<T>::Asign(m%4) * A;
-#else
                 psi.block(ilo,rIndex,ihi-ilo,2) = BasisHelper<T>::Asign(m%4) * A;
-#endif
             }
 
             // Make three Vectors to hold Lmq's during recurrence calculations
-#ifdef USE_TMV
-            shared_ptr<tmv::VectorView<double> > Lmq(
-                new tmv::VectorView<double>(Lmq_full.subVector(0,npts)));
-            shared_ptr<tmv::VectorView<double> > Lmqm1(
-                new tmv::VectorView<double>(Lmqm1_full.subVector(0,npts)));
-            shared_ptr<tmv::VectorView<double> > Lmqm2(
-                new tmv::VectorView<double>(Lmqm2_full.subVector(0,npts)));
-#else
             shared_ptr<Eigen::VectorBlock<VectorXd> > Lmq(
                 new Eigen::VectorBlock<VectorXd>(Lmq_full.segment(0,npts)));
             shared_ptr<Eigen::VectorBlock<VectorXd> > Lmqm1(
                 new Eigen::VectorBlock<VectorXd>(Lmqm1_full.segment(0,npts)));
             shared_ptr<Eigen::VectorBlock<VectorXd> > Lmqm2(
                 new Eigen::VectorBlock<VectorXd>(Lmqm2_full.segment(0,npts)));
-#endif
 
             for (int m=0; m<=N; m++) {
                 PQIndex pq(m,0);
@@ -397,31 +328,16 @@ namespace galsim {
                     const int q = pq.getQ();
                     const int iQ = pq.rIndex();
 
-#ifdef USE_TMV
-                    Lmqm1->setAllTo(1.); // This is Lm0.
-                    *Lmq = Rsq;
-                    Lmq->addToAll(-(p+q-1.));
-#else
                     Lmqm1->setConstant(1.);
                     Lmq->array()  = Rsq.array() - (p+q-1.);
-#endif
                     *Lmq *= BasisHelper<T>::Lsign(1.) / (sqrtn(p)*sqrtn(q));
 
                     if (m==0) {
-#ifdef USE_TMV
-                        psi.col(iQ,ilo,ihi) = DiagMatrixViewOf(*Lmq) * psi.col(iQ0,ilo,ihi);
-#else
                         psi.col(iQ).segment(ilo,ihi-ilo) = Lmq->asDiagonal() *
                             psi.col(iQ0).segment(ilo,ihi-ilo);
-#endif
                     } else {
-#ifdef USE_TMV
-                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = DiagMatrixViewOf(*Lmq) *
-                            psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
-#else
                         psi.block(ilo,iQ,ihi-ilo,2) = Lmq->asDiagonal() *
                             psi.block(ilo,iQ0,ihi-ilo,2);
-#endif
                     }
                 }
 
@@ -439,31 +355,16 @@ namespace galsim {
                     Lmqm1.swap(Lmq);
 
                     double invsqrtpq = 1./sqrtn(p)/sqrtn(q);
-#ifdef USE_TMV
-                    *Lmq = Rsq;
-                    Lmq->addToAll(-(p+q-1.));
-                    *Lmq = BasisHelper<T>::Lsign(invsqrtpq) * ElemProd(*Lmq, *Lmqm1);
-#else
                     Lmq->array() = Rsq.array() - (p+q-1.);
                     Lmq->array() *= BasisHelper<T>::Lsign(invsqrtpq) * Lmqm1->array();
-#endif
                     *Lmq -= (sqrtn(p-1)*sqrtn(q-1)*invsqrtpq) * (*Lmqm2);
 
                     if (m==0) {
-#ifdef USE_TMV
-                        psi.col(iQ,ilo,ihi) = DiagMatrixViewOf(*Lmq) * psi.col(iQ0,ilo,ihi);
-#else
                         psi.col(iQ).segment(ilo,ihi-ilo) = Lmq->asDiagonal() *
                             psi.col(iQ0).segment(ilo,ihi-ilo);
-#endif
                     } else {
-#ifdef USE_TMV
-                        psi.subMatrix(ilo,ihi,iQ,iQ+2) = DiagMatrixViewOf(*Lmq) *
-                            psi.subMatrix(ilo,ihi,iQ0,iQ0+2);
-#else
                         psi.block(ilo,iQ,ihi-ilo,2) = Lmq->asDiagonal() *
                             psi.block(ilo,iQ0,ihi-ilo,2);
-#endif
                     }
                 }
             }

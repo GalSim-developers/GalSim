@@ -25,13 +25,6 @@
 #include <string>
 #include <iostream>
 #include <sstream>
-#ifdef USE_TMV
-#include "TMV.h"
-typedef tmv::Vector<double> VectorXd;
-typedef tmv::Matrix<double> MatrixXd;
-typedef tmv::Vector<std::complex<double> > VectorXcd;
-typedef tmv::Matrix<std::complex<double> > MatrixXcd;
-#else
 #if defined(__GNUC__) && __GNUC__ >= 6
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
 #endif
@@ -40,7 +33,6 @@ using Eigen::VectorXd;
 using Eigen::MatrixXd;
 using Eigen::VectorXcd;
 using Eigen::MatrixXcd;
-#endif
 
 #include "Std.h"
 
@@ -360,11 +352,7 @@ namespace galsim {
 
         // Inner product of the real values.
         double dot(const LVector& rhs) const {
-#ifdef USE_TMV
-            return (*_v)*(*rhs._v);
-#else
             return _v->dot(*rhs._v);
-#endif
         }
 
         // write to an ostream

@@ -49,19 +49,12 @@ damages of any kind.
 #include <string>
 #include <fftw3.h>
 
-#ifdef USE_TMV
-#define TMV_NDEBUG
-#include "TMV.h"
-typedef tmv::Matrix<double> MatrixXd;
-typedef tmv::Vector<double> VectorXd;
-#else
 #if defined(__GNUC__) && __GNUC__ >= 6
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
 #endif
 #include "Eigen/Dense"
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
-#endif
 
 #include "hsm/PSFCorr.h"
 #include "math/Nan.h"
@@ -543,14 +536,10 @@ namespace hsm {
         qho1d_wf_1(nx, (double)xmin - x0, 1., max_order, sigma, psi_x);
         qho1d_wf_1(ny, (double)ymin - y0, 1., max_order, sigma, psi_y);
 
-#ifdef USE_TMV
-        tmv::ConstMatrixView<double> mdata(data.getData(),nx,ny,sx,sy,tmv::NonConj);
-#else
         using Eigen::Dynamic;
         using Eigen::Stride;
         Eigen::Map<const MatrixXd,0,Stride<Dynamic,Dynamic> > mdata(
             data.getData(),nx,ny, Stride<Dynamic,Dynamic>(sy,sx));
-#endif
 
         moments = psi_x.transpose() * mdata * psi_y;
     }
@@ -748,11 +737,7 @@ namespace hsm {
             const double* imageptr = data.getPtr(ix1,y);
             const int step = data.getStep();
             double x_x0 = ix1 - x0;
-#ifdef USE_TMV
-            const double* mxxptr = Minv_xx__x_x0__x_x0.cptr() + ix1-xmin;
-#else
             const double* mxxptr = Minv_xx__x_x0__x_x0.data() + ix1-xmin;
-#endif
             for(int x=ix1;x<=ix2;++x,x_x0+=1.,imageptr+=step) {
                 /* Compute displacement from weight centroid, then
                  * get elliptical radius and weight.
