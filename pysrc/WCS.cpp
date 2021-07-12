@@ -43,10 +43,10 @@ namespace galsim {
         InvertAB(n, nab, u, v, ab, x, y, doiter, nabp, abp);
     }
 
-    void pyExportWCS(PY_MODULE& _galsim)
+    void pyExportWCS(py::module& _galsim)
     {
-        GALSIM_DOT def("ApplyCD", &CallApplyCD);
-        GALSIM_DOT def("InvertAB", &CallInvertAB);
+        _galsim.def("ApplyCD", &CallApplyCD);
+        _galsim.def("InvertAB", &CallInvertAB);
     }
 
 } // namespace galsim

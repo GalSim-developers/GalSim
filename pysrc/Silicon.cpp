@@ -46,16 +46,16 @@ namespace galsim {
                            treeRingTable, treeRingCenter, abs_length_table, transpose);
     }
 
-    void pyExportSilicon(PY_MODULE& _galsim)
+    void pyExportSilicon(py::module& _galsim)
     {
-        py::class_<Silicon> pySilicon(GALSIM_COMMA "Silicon" BP_NOINIT);
-        pySilicon.def(PY_INIT(&MakeSilicon));
+        py::class_<Silicon> pySilicon(_galsim, "Silicon");
+        pySilicon.def(py::init(&MakeSilicon));
 
         WrapTemplates<double>(pySilicon);
         WrapTemplates<float>(pySilicon);
 
-        GALSIM_DOT def("SetOMPThreads", &SetOMPThreads);
-        GALSIM_DOT def("GetOMPThreads", &GetOMPThreads);
+        _galsim.def("SetOMPThreads", &SetOMPThreads);
+        _galsim.def("GetOMPThreads", &GetOMPThreads);
     }
 
 } // namespace galsim

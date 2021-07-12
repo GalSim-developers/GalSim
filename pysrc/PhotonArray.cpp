@@ -43,11 +43,11 @@ namespace galsim {
         return new PhotonArray(N, x, y, flux, dxdz, dydz, wave, is_corr);
     }
 
-    void pyExportPhotonArray(PY_MODULE& _galsim)
+    void pyExportPhotonArray(py::module& _galsim)
     {
-        py::class_<PhotonArray> pyPhotonArray(GALSIM_COMMA "PhotonArray" BP_NOINIT);
+        py::class_<PhotonArray> pyPhotonArray(_galsim, "PhotonArray");
         pyPhotonArray
-            .def(PY_INIT(&construct))
+            .def(py::init(&construct))
             .def("convolve", &PhotonArray::convolve);
         WrapTemplates<double>(pyPhotonArray);
         WrapTemplates<float>(pyPhotonArray);

@@ -37,7 +37,7 @@ namespace integ {
     public:
         PyFunc(const py::function& func) : _func(func) {}
         double operator()(double x) const
-        { return PY_CAST<double>(_func(x)); }
+        { return py::cast<double>(_func(x)); }
     private:
         const py::function& _func;
     };
@@ -77,10 +77,10 @@ namespace integ {
         }
     }
 
-    void pyExportInteg(PY_MODULE& _galsim)
+    void pyExportInteg(py::module& _galsim)
     {
-        GALSIM_DOT def("PyInt1d", &PyInt1d);
-        GALSIM_DOT def("PyHankel", &PyHankel);
+        _galsim.def("PyInt1d", &PyInt1d);
+        _galsim.def("PyHankel", &PyHankel);
     }
 
 } // namespace integ

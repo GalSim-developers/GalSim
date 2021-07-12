@@ -22,9 +22,9 @@
 
 namespace galsim {
 
-    void pyExportSBExponential(PY_MODULE& _galsim)
+    void pyExportSBExponential(py::module& _galsim)
     {
-        py::class_<SBExponential, BP_BASES(SBProfile)>(GALSIM_COMMA "SBExponential" BP_NOINIT)
+        py::class_<SBExponential, SBProfile>(_galsim, "SBExponential")
             .def(py::init<double,double,GSParams>());
     }
 

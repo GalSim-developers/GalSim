@@ -101,7 +101,8 @@ namespace galsim {
         table2d.interpMany(x, y, vals, N);
     }
 
-    static void InterpGrid(const Table2D& table2d, size_t ix, size_t iy, size_t ivals, int Nx, int Ny)
+    static void InterpGrid(const Table2D& table2d, size_t ix, size_t iy, size_t ivals,
+                           int Nx, int Ny)
     {
         const double* x = reinterpret_cast<const double*>(ix);
         const double* y = reinterpret_cast<const double*>(iy);
@@ -142,20 +143,20 @@ namespace galsim {
     }
 
 
-    void pyExportTable(PY_MODULE& _galsim)
+    void pyExportTable(py::module& _galsim)
     {
-        py::class_<Table>(GALSIM_COMMA "_LookupTable" BP_NOINIT)
-            .def(PY_INIT(&MakeTable))
-            .def(PY_INIT(&MakeGSInterpTable))
+        py::class_<Table>(_galsim, "_LookupTable")
+            .def(py::init(&MakeTable))
+            .def(py::init(&MakeGSInterpTable))
             .def("interp", &Table::lookup)
             .def("interpMany", &InterpMany)
             .def("integrate", &Table::integrate)
             .def("integrate_product", &Table::integrateProduct);
 
-        py::class_<Table2D>(GALSIM_COMMA "_LookupTable2D" BP_NOINIT)
-            .def(PY_INIT(&MakeTable2D))
-            .def(PY_INIT(&MakeSplineTable2D))
-            .def(PY_INIT(&MakeGSInterpTable2D))
+        py::class_<Table2D>(_galsim, "_LookupTable2D")
+            .def(py::init(&MakeTable2D))
+            .def(py::init(&MakeSplineTable2D))
+            .def(py::init(&MakeGSInterpTable2D))
             .def("interp", &Table2D::lookup)
             .def("interpMany", &InterpMany2D)
             .def("interpGrid", &InterpGrid)
@@ -163,7 +164,7 @@ namespace galsim {
             .def("gradientMany", &GradientMany)
             .def("gradientGrid", &GradientGrid);
 
-        GALSIM_DOT def("WrapArrayToPeriod", &_WrapArrayToPeriod);
+        _galsim.def("WrapArrayToPeriod", &_WrapArrayToPeriod);
     }
 
 } // namespace galsim

@@ -42,10 +42,10 @@ namespace math {
         Horner2D(x, y, nx, coef, ncx, ncy, result, temp);
     }
 
-    void pyExportHorner(PY_MODULE& _galsim)
+    void pyExportHorner(py::module& _galsim)
     {
-        GALSIM_DOT def("Horner", &_Horner);
-        GALSIM_DOT def("Horner2D", &_Horner2D);
+        _galsim.def("Horner", &_Horner);
+        _galsim.def("Horner2D", &_Horner2D);
     }
 
 } // namespace math

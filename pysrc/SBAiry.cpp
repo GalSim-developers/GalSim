@@ -22,9 +22,9 @@
 
 namespace galsim {
 
-    void pyExportSBAiry(PY_MODULE& _galsim)
+    void pyExportSBAiry(py::module& _galsim)
     {
-        py::class_<SBAiry, BP_BASES(SBProfile)>(GALSIM_COMMA "SBAiry" BP_NOINIT)
+        py::class_<SBAiry, SBProfile>(_galsim, "SBAiry")
             .def(py::init<double,double,double,GSParams>());
     }
 

@@ -22,9 +22,9 @@
 
 namespace galsim {
 
-    void pyExportSBKolmogorov(PY_MODULE& _galsim)
+    void pyExportSBKolmogorov(py::module& _galsim)
     {
-        py::class_<SBKolmogorov, BP_BASES(SBProfile)>(GALSIM_COMMA "SBKolmogorov" BP_NOINIT)
+        py::class_<SBKolmogorov, SBProfile>(_galsim, "SBKolmogorov")
             .def(py::init<double,double,GSParams>());
     }
 
