@@ -1193,13 +1193,10 @@ def test_shared_memory():
         r0_500s.append(r0_500*weights[i]**(-3./5))
     rng2 = rng.duplicate()
 
-    if sys.version_info >= (3,4):
-        if __name__ == "__main__":
-            ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
-        else:
-            ctxs = [None, mp.get_context("fork")]
+    if __name__ == "__main__":
+        ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
     else:
-        ctxs = [None]  # Only supported ctx on py27
+        ctxs = [None, mp.get_context("fork")]
 
     for ctx in ctxs:
         atmPar = galsim.Atmosphere(
@@ -1219,29 +1216,24 @@ def test_shared_memory():
         psf = atmPar.makePSF(diam=1.1, lam=1000.0)
         kmax = psf.screen_kmax
 
-        if sys.version_info >= (3,4):
-            if ctx in (None, "forkserver"):
-                Pool = mp.get_context(ctx).Pool
-            else:
-                Pool = ctx.Pool
+        if ctx in (None, "forkserver"):
+            Pool = mp.get_context(ctx).Pool
         else:
-            from multiprocessing import Pool
-        # Block below would be prettier using Pool context manager, but not available in py2.7
-        pool = Pool(
-            None,
-            initializer=galsim.phase_screens.initWorker,
-            initargs=galsim.phase_screens.initWorkerArgs()
-        )
-        # Instantiate using the pool:
-        atmPar.instantiate(pool=pool, kmax=kmax)
+            Pool = ctx.Pool
+        with Pool(None,
+                  initializer=galsim.phase_screens.initWorker,
+                  initargs=galsim.phase_screens.initWorkerArgs()
+                 ) as pool:
 
-        resultsParallel = []
-        for i in range(10):
-            resultsParallel.append(pool.apply_async(dummyWork, (i, atmPar)))
-        for r in resultsParallel:
-            r.wait()
-        resultsParallel = [r.get() for r in resultsParallel]
-        pool.close()
+            # Instantiate using the pool:
+            atmPar.instantiate(pool=pool, kmax=kmax)
+
+            resultsParallel = []
+            for i in range(10):
+                resultsParallel.append(pool.apply_async(dummyWork, (i, atmPar)))
+            for r in resultsParallel:
+                r.wait()
+            resultsParallel = [r.get() for r in resultsParallel]
 
         # Serial comparison, also reinstantiate the atm here without using the pool
         atmSer.instantiate(pool=None, kmax=kmax)
