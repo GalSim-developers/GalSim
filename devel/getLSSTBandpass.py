@@ -20,7 +20,6 @@ Grab LSST Bandpasses from the web, and then thin with rel_err = 1.e-3.  Note tha
 this script, which are the files GALSIM_DIR/share/bandpasses/LSST_?.dat, are already included in the
 repository.  This script just lets users know where these files came from and how they were altered.
 """
-from __future__ import print_function
 try:
     from urllib2 import urlopen
 except:

@@ -16,16 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 
-from __future__ import print_function
 import os
 import numpy as np
-path, filename = os.path.split(__file__)
-datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-try:
-    import galsim
-except ImportError:
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
+import galsim
 
 # liberal use of globals here...
 zenith_angle = 30 * galsim.degrees

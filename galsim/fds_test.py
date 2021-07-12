@@ -39,7 +39,6 @@ You can also keep track of the number of open files and pipes with::
     >>> print 'files, pipes = ',fds.openFiles()
 """
 
-from __future__ import print_function
 import builtins
 
 openfiles = set()

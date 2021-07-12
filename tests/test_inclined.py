@@ -16,11 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-"""This file contains tests for the InclinedExponential and InclinedSersic classes.
-"""
-
-from __future__ import print_function
-
 from copy import deepcopy
 import os
 import sys

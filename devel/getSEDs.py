@@ -21,7 +21,6 @@ Note that the outputs of this script, which are the files GALSIM_DIR/share/SEDs/
 already included in the repository.  This script just lets users know where these files came from
 and how they were downloaded and altered.
 """
-from __future__ import print_function
 try:
     from urllib2 import urlopen
     from StringIO import StringIO

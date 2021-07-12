@@ -39,8 +39,6 @@ would probably want to draw these with no noise on individual postage stamps or 
 that.
 """
 
-from __future__ import print_function
-
 import galsim
 import os
 import sys

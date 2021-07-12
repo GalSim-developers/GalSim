@@ -16,8 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-from __future__ import print_function
-
 import galsim
 from galsim_test_helpers import *
 

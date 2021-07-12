@@ -18,7 +18,6 @@
 
 # A simple exponential fitter that we can use to time the k-space drawing function
 
-from __future__ import print_function
 import galsim
 import scipy.optimize
 import numpy

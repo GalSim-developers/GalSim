@@ -16,8 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-from __future__ import print_function
-
 from .input import InputLoader, GetInputObj, RegisterInputType
 from .value import GetCurrentValue, CheckAllParams, GetAllParams, RegisterValueType
 from .util import LoggerWrapper
