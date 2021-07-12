@@ -22,7 +22,6 @@
 # run in scons tests, but we let it run in Travis to accurately report the
 # coverage of the config files, which otherwise come out rather low.
 
-from __future__ import print_function
 import os
 import sys
 import logging

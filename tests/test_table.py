@@ -16,14 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-"""@brief Tests of the LookupTable class.
 
-Compares interpolated values a LookupTable that were created using a previous version of
-the code (commit: e267f058351899f1f820adf4d6ab409d5b2605d5), using the
-script devutils/external/make_table_testarrays.py
-"""
-
-from __future__ import print_function
 import os
 import numpy as np
 import time
@@ -52,6 +45,10 @@ interps = [ 'linear', 'spline', 'floor', 'ceil', 'nearest' ]
 @timer
 def test_table():
     """Test the spline tabulation of the k space Cubic interpolant.
+
+    Compares interpolated values a LookupTable that were created using a previous version of
+    the code (commit: e267f058351899f1f820adf4d6ab409d5b2605d5), using the
+    script devutils/external/make_table_testarrays.py
     """
     for interp in interps:
         table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)

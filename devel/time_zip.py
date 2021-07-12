@@ -19,7 +19,6 @@
 """Time the different ways to zip and unzip and image
 """
 
-from __future__ import print_function
 import numpy as np
 import os
 import sys

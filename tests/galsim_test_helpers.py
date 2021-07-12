@@ -16,20 +16,13 @@
 #    and/or other materials provided with the distribution.
 #
 
-from __future__ import print_function
 import numpy as np
 import os
 import sys
 import logging
 import coord
 import copy
-
-path, filename = os.path.split(__file__)
-try:
-    import galsim
-except ImportError:
-    sys.path.append(os.path.abspath(os.path.join(path, "..")))
-    import galsim
+import galsim
 
 
 # This file has some helper functions that are used by tests from multiple files to help

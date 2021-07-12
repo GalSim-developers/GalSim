@@ -19,7 +19,6 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
-from __future__ import print_function
 import os, sys, tarfile, subprocess, shutil, json
 import argparse
 import logging

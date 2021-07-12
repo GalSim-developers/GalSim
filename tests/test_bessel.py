@@ -15,10 +15,7 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""Unit tests for integration routines at the Python layer.
-"""
 
-from __future__ import print_function
 import numpy as np
 import warnings
 

@@ -22,7 +22,6 @@
 #  - Surface layer ops, including wavelength, angles
 #  - Silicon sensor to get brighter-fatter
 
-from __future__ import print_function
 import galsim
 import time
 import os

@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-from __future__ import print_function
 import galsim
 import cProfile, pstats
 import numpy as np

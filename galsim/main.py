@@ -20,7 +20,6 @@ The main driver program for making images of galaxies whose parameters are speci
 in a configuration file.
 """
 
-from __future__ import print_function
 import sys
 import os
 import logging
