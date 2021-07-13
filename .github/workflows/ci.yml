@@ -150,7 +150,7 @@ jobs:
                 pip install -U pandas matplotlib astroplan
 
             - name: Install CPython-only dependencies
-              if: matrix.py != pypy3
+              if: matrix.py != 'pypy3'
               run:
                 # The only one left that doesn't seem to work right on pypy is starlink-pyast.
                 pip install -U starlink-pyast
