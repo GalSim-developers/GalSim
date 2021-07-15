@@ -1324,7 +1324,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         w = photons.wavelength
         if np.any((w < self.waves[0]) | (w > self.waves[-1])):
-            bad_waves = [ww for ww in w if (ww < self.waves[0]) or (ww > self.waves[-1])]
+            bad_waves = [w for w in photons.wavelength if w < self.waves[0] or w > self.waves[-1]]
             raise GalSimRangeError("Shooting photons outside the interpolated wave_list",
                                    bad_waves, self.waves[0], self.waves[-1])
 
@@ -1399,8 +1399,9 @@ class InterpolatedChromaticObject(ChromaticObject):
         if np.any((wave_list < self.waves[0]) | (wave_list > self.waves[-1])):  # pragma: no cover
             # MJ: I'm pretty sure it's impossible to hit this.
             #     But just in case I'm wrong, I'm leaving it here but with pragma: no cover.
+            bad_waves = [w for w in wave_list if w < self.waves[0] or w > self.waves[-1]]
             raise GalSimRangeError("Requested wavelength is outside the allowed range.",
-                                   wave_list, self.waves[0], self.waves[-1])
+                                   bad_waves, self.waves[0], self.waves[-1])
 
         # weights are the weights to use at each of the given wavelengths for the integration.
         weights = rule.calculateWeights(wave_list, bandpass)
