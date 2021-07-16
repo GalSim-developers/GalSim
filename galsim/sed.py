@@ -1020,7 +1020,16 @@ class SED(object):
 
         ret = np.empty(nphotons)
         dev.generate(ret)
-        ret *= (1. + self.redshift)
+
+        if self.redshift != 0:
+            ret *= (1. + self.redshift)
+            # Rarely, with the redshift round trip, this can produce wavelengths < blue_limit.
+            # If this happens, set those values equal to blue_limit.
+            # I'm not sure if the red limit overrun can happen (we didn't see any in the use case
+            # that noticed the blue overruns), but it seems prudent to also correct any of these
+            # that may occur too.  Plus it's not noticeably slower using clip to do both at once.
+            np.clip(ret, sed.blue_limit, sed.red_limit, out=ret)
+
         return ret
 
     def __eq__(self, other):
