@@ -1028,7 +1028,8 @@ class SED(object):
             # I'm not sure if the red limit overrun can happen (we didn't see any in the use case
             # that noticed the blue overruns), but it seems prudent to also correct any of these
             # that may occur too.  Plus it's not noticeably slower using clip to do both at once.
-            np.clip(ret, sed.blue_limit, sed.red_limit, out=ret)
+            if bandpass is not None:
+                np.clip(ret, bandpass.blue_limit, bandpass.red_limit, out=ret)
 
         return ret
 
