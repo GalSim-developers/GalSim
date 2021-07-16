@@ -912,6 +912,45 @@ def test_SED_sampleWavelength():
     np.testing.assert_almost_equal(cdf1, cdf2, 2,
                                    "Sampled CDF does not match input redshifted SED.")
 
+@timer
+def test_sampleWavelength_limits():
+    # Troxel ran across a rare bug where the sampleWavelength could sometimes produce values
+    # that were just below the blue limit of a bandpass.  This would then cause a RangeError
+    # when drawing.
+    #
+    # e.g. galsim.errors.GalSimRangeError: Shooting photons outside the interpolated wave_list
+    #      Value [1604.9999999999998] not in range [1605.0, 2090.0]
+    #
+    # Clearly this is a floating point accuracy issue.  The difference is of order 1.e-16.
+    #
+    # The problem sees to be that sampleWavelength samples in the rest frame, and then multiplies
+    # by (1+z) at the end to get bac to the intended range.  That divide and multiply
+    # is not guaranteed to roundtrip properly, and you can get errors of order epsilon.
+    import galsim.roman
+
+    # N.B. I tried a bunch of random values for z, seed until one of them failed the assert below.
+    # Even with the extrme SED concentration, this failure mode was still pretty rare.
+    # But with these values, this test failed on commit e4e2c5d32ec4f925791f7cb8
+    z = 2.0655996529385448
+    seed = 1579718864
+
+    bp = galsim.roman.getBandpasses()['F184']
+    blue = bp.blue_limit
+    red = bp.red_limit
+    # Concentrate the SED right near the blue limit at the observed redshift.
+    w1 = blue / (1.+z) - 1.e-12
+    w2 = blue / (1.+z) + 1.e-12
+    w3 = blue / (1.+z) + 2.e-12
+    w4 = red / (1.+z)
+    sed = galsim.SED(galsim.LookupTable([w1,w2,w3,w4], [1,1,1.e-200,1.e-200], 'linear'),
+                     wave_type='nm', flux_type='flambda', redshift=z)
+
+    rng = galsim.BaseDeviate(seed)
+    waves = sed.sampleWavelength(10**6, bp, rng=rng)
+    print('min waves = ',waves.min())
+    print('max waves = ',waves.max())
+    print('blue = ',blue)
+    assert waves.min() >= blue
 
 @timer
 def test_fnu_vs_flambda():
