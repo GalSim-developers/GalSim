@@ -467,65 +467,13 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # Even if we're not actually doing the test, still make the repr to check for syntax errors.
         repr(obj1)
 
-    # Try perturbing obj1 pickling arguments and verify that inequality results.
-    # Generally, only objects pickled with __getinitargs__, i.e. old-style classes, reveal
-    # anything about what construction attributes may be important to check for assessing equality.
-    # (Even in this case, it's possible that an argument supplied by __getinitargs__ isn't actually
-    # important for assessing equality, though this doesn't appear to be the case for GalSim so
-    # far.)  Our strategy below is to loop through all arguments returned by __getinitargs__ and
-    # attempt to perturb them a bit after inferring their type, and checking that the object
-    # constructed with the perturbed argument list then compares inequally to the original object.
-
-    try:
-        args = obj1.__getinitargs__()
-    except Exception:
-        pass
-    else:
-        classname = type(obj1).__name__
-        for i in range(len(args)):
-            #print("Attempting arg {0}\n".format(i))
-            newargs = list(args)
-            if isinstance(args[i], bool):
-                newargs[i] = not args[i]
-            elif isinstance(args[i], Integral):
-                newargs[i] = args[i] + 2
-            elif isinstance(args[i], Real):
-                newargs[i] = args[i] * 1.0134 + 0.018374
-            elif isinstance(args[i], Complex):
-                newargs[i] = args[i] * (1.0134 + 0.0193j) + (0.9981 - 0.013439j)
-            elif isinstance(args[i], ndarray):
-                if args[i].dtype.kind in ['i','u']:
-                    newargs[i] = args[i] * 2 + 1
-                else:
-                    newargs[i] = args[i] * 1.0134 + 0.018374
-            elif isinstance(args[i], galsim.GSParams):
-                newargs[i] = galsim.GSParams(folding_threshold=5.1e-3, maxk_threshold=1.1e-3)
-            elif args[i] is None:
-                continue
-            else:
-                #print("Unknown type: {0}\n".format(args[i]))
-                continue
-            # Special case: flux_untruncated doesn't change anything if trunc == 0.
-            if classname == 'SBSersic' and i == 5 and args[4] == 0.:
-                continue
-            # Special case: can't change size of LVector or PhotonArray without changing array
-            if classname in ['LVector', 'PhotonArray'] and i == 0 or i == 2:
-                continue
-            with galsim.utilities.printoptions(precision=18, threshold=np.inf):
-                try:
-                    if classname in galsim._galsim.__dict__:
-                        eval_str = 'galsim._galsim.' + classname + repr(tuple(newargs))
-                    else:
-                        eval_str = 'galsim.' + classname + repr(tuple(newargs))
-                    obj6 = eval(eval_str)
-                except Exception as e:
-                    print('caught exception: ',e)
-                    print('eval_str = ',eval_str)
-                    raise TypeError("{0} not `eval`able!".format(
-                            classname + repr(tuple(newargs))))
-                else:
-                    assert obj1 != obj6
-                    #print("SUCCESS\n")
+    # Historical note:
+    # We used to have a test here where we perturbed the construction arguments to make sure
+    # that objects that should be different really are different.
+    # However, that used `__getinitargs__`, which we've moved away from using for pickle, so
+    # none of our classes get checked this way anymore.  So we removed this section.
+    # This means that this inequality test has to be done manually via all_obj_diff.
+    # See releases v2.3 or earlier for the old way we did this.
 
 
 def all_obj_diff(objs, check_hash=True):
