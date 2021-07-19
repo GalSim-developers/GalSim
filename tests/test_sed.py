@@ -924,7 +924,7 @@ def test_sampleWavelength_limits():
     # Clearly this is a floating point accuracy issue.  The difference is of order 1.e-16.
     #
     # The problem sees to be that sampleWavelength samples in the rest frame, and then multiplies
-    # by (1+z) at the end to get bac to the intended range.  That divide and multiply
+    # by (1+z) at the end to get back to the intended range.  That divide and multiply
     # is not guaranteed to roundtrip properly, and you can get errors of order epsilon.
     import galsim.roman
 
