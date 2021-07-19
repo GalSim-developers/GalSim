@@ -24,7 +24,7 @@ from . import integ
 from . import utilities
 from .errors import GalSimRangeError, GalSimIncompatibleValuesError
 
-class Cosmology(object):
+class Cosmology:
     """Basic cosmology calculations.
 
     Cosmology calculates expansion function E(a) and angular diameter distances Da(z) for a
@@ -107,7 +107,7 @@ class Cosmology(object):
                     d = np.sin(rk*d)/rk
             return d/(1+z)
 
-class NFWHalo(object):
+class NFWHalo:
     """Class describing NFW halos.
 
     This class computes the lensing fields shear and convergence of a spherically symmetric NFW

@@ -333,7 +333,7 @@ def GetFinalExtraOutput(key, config, main_data=[], logger=None):
     field = config['output'][key]
     return config['extra_builder'][key].ensureFinalized(field, config, main_data, logger)
 
-class ExtraOutputBuilder(object):
+class ExtraOutputBuilder:
     """A base class for building some kind of extra output object along with the main output.
 
     The base class doesn't do anything, but it defines the function signatures that a derived

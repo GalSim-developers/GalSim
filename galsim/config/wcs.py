@@ -109,7 +109,7 @@ def BuildWCS(config, key, base, logger=None):
     return wcs
 
 
-class WCSBuilder(object):
+class WCSBuilder:
     """A base class for building WCS objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.

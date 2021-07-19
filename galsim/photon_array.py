@@ -30,7 +30,7 @@ from .errors import GalSimIncompatibleValuesError, galsim_warn
 
 # Add on more methods in the python layer
 
-class PhotonArray(object):
+class PhotonArray:
     """The PhotonArray class encapsulates the concept of a collection of photons incident on
     a detector.
 
@@ -516,7 +516,7 @@ class PhotonArray(object):
         return photons
 
 
-class PhotonOp(object):
+class PhotonOp:
     """A base class for photon operators, which just defines the interface.
 
     Photon operators are designed to apply some physical effect to a bundle of photons.  They

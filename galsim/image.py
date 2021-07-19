@@ -37,7 +37,7 @@ from .errors import GalSimUndefinedBoundsError, GalSimIncompatibleValuesError, c
 alt_int32 = (np.array([0], dtype=np.int16) + np.array([0], dtype=np.int32)).dtype.type
 
 
-class Image(object):
+class Image:
     """A class for storing image data along with the pixel scale or WCS information
 
     The Image class encapsulates all the relevant information about an image including a NumPy array

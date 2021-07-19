@@ -376,7 +376,7 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
                                      list(valid_output_types.keys()))
 
 
-class OutputBuilder(object):
+class OutputBuilder:
     """A base class for building and writing the output objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.

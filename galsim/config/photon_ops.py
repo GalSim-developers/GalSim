@@ -119,7 +119,7 @@ def BuildPhotonOp(config, key, base, logger=None):
     return op
 
 
-class PhotonOpBuilder(object):
+class PhotonOpBuilder:
     """A base class for building PhotonOp objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.

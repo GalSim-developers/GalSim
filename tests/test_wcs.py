@@ -1511,7 +1511,7 @@ def radial_v(x, y):
     rho_over_r = 1 + a * (x*x+y*y)/(r0*r0)
     return y * rho_over_r
 
-class Cubic(object):
+class Cubic:
     """A class that can act as a function, implementing a cubic radial function.  """
     def __init__(self, a, r0, whichuv):
         self._a = a

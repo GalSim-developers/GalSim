@@ -30,7 +30,7 @@ import sys
 from .errors import GalSimError, GalSimValueError, GalSimIncompatibleValuesError
 
 
-class PowerSpectrumEstimator(object):
+class PowerSpectrumEstimator:
     """Class for estimating the shear power spectrum from gridded shears.
 
     This class stores all the data used in power spectrum estimation that is fixed with the geometry

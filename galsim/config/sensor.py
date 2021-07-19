@@ -91,7 +91,7 @@ def BuildSensor(config, key, base, logger=None):
     return sensor
 
 
-class SensorBuilder(object):
+class SensorBuilder:
     """A base class for building Sensor objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.

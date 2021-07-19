@@ -204,7 +204,7 @@ def test_names():
     assert link_dir == os.path.join(galsim.meta_data.share_dir, 'COSMOS_25.2_training_sample')
 
 
-class fake_urlopen(object):
+class fake_urlopen:
     err = None
 
     # We don't want to actually check things on the internet.  So this class fakes

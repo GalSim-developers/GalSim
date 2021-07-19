@@ -22,7 +22,7 @@ from .image import Image
 from . import _galsim
 from .errors import GalSimValueError
 
-class BaseCDModel(object):
+class BaseCDModel:
     """Base class for the most generic, i.e. no with symmetries or distance scaling relationships
     assumed, pixel boundary charge deflection model (as per Antilogus et al 2014).
     """

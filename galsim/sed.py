@@ -29,7 +29,7 @@ from .utilities import WeakMethod, lazy_property, combine_wave_list, basestring
 from .errors import GalSimError, GalSimValueError, GalSimRangeError, GalSimSEDError
 from .errors import GalSimIncompatibleValuesError
 
-class SED(object):
+class SED:
     """Object to represent the spectral energy distributions of stars and galaxies.
 
     SEDs are callable, usually returning the flux density in photons/nm/cm^2/s as a function of

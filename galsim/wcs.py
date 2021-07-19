@@ -26,7 +26,7 @@ from .errors import GalSimError, GalSimIncompatibleValuesError, GalSimNotImpleme
 from .errors import GalSimValueError
 from .utilities import doc_inherit, lazy_property
 
-class BaseWCS(object):
+class BaseWCS:
     """The base class for all other kinds of WCS transformations.
 
     All the functions the user will typically need are defined here.  Most subclasses just

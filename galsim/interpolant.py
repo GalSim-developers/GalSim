@@ -24,7 +24,7 @@ from .gsparams import GSParams
 from .utilities import lazy_property
 from .errors import GalSimValueError
 
-class Interpolant(object):
+class Interpolant:
     """A base class that defines how interpolation should be done.
 
     An Interpolant is needed for an `InterpolatedImage` to define how interpolation should be done

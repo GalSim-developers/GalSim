@@ -18,7 +18,7 @@
 
 from . import _galsim
 
-class Position(object):
+class Position:
     """A class for representing 2D positions on the plane.
 
     Position is a base class for two slightly different kinds of positions:

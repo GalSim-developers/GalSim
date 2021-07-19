@@ -1106,7 +1106,7 @@ def test_retry_io():
     """Test the retry_io option
     """
     # Make a class that mimics writeMulti, except that it fails about 1/3 of the time.
-    class FlakyWriter(object):
+    class FlakyWriter:
         def __init__(self, rng):
             self.ud = galsim.UniformDeviate(rng)
         def writeFile(self, *args, **kwargs):

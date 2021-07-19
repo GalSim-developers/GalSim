@@ -574,7 +574,7 @@ def ParseWorldPos(config, param_name, base, logger):
     else:
         return ParseValue(config, param_name, base, PositionD)[0]
 
-class StampBuilder(object):
+class StampBuilder:
     """A base class for building stamp images of individual objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.

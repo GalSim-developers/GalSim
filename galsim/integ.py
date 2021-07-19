@@ -113,7 +113,7 @@ def hankel(func, k, nu=0, rmax=None, rel_err=1.e-6, abs_err=1.e-12):
         _galsim.PyHankel(func, _k, _res, N, nu, rmax, rel_err, abs_err)
     return res
 
-class IntegrationRule(object):
+class IntegrationRule:
     """A class that can be used to integrate something more complicated than a normal
     scalar function.
 
@@ -227,7 +227,7 @@ trapzRule = TrapzRule()  #: For convenience, an instance of `TrapzRule`
 quadRule = QuadRule()    #: For convenience, an instance of `QuadRule`
 
 
-class ImageIntegrator(object):
+class ImageIntegrator:
     """A base class for integrators used by `ChromaticObject` to integrate the drawn images
     over wavelengthh using a `Bandpass` as a weight function.
     """

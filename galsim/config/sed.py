@@ -85,7 +85,7 @@ def BuildSED(config, key, base, logger=None):
     return sed, safe
 
 
-class SEDBuilder(object):
+class SEDBuilder:
     """A base class for building SED objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.

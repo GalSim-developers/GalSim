@@ -58,7 +58,7 @@ def theoryToObserved(gamma1, gamma2, kappa):
     mu = 1./((1.-kappa)**2 - (gamma1**2 + gamma2**2))
     return g1, g2, mu
 
-class PowerSpectrum(object):
+class PowerSpectrum:
     r"""Class to represent a lensing shear field according to some power spectrum :math:`P(k)`.
 
     **General considerations**:
@@ -1105,7 +1105,7 @@ class PowerSpectrum(object):
 
         return lut_g1(pos_x, pos_y), lut_g2(pos_x, pos_y), lut_mu(pos_x, pos_y)+1
 
-class PowerSpectrumRealizer(object):
+class PowerSpectrumRealizer:
     """Class for generating realizations of power spectra with any area and pixel size.
 
     This class is not one that end-users should expect to interact with.  It is designed to quickly

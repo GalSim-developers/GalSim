@@ -64,7 +64,7 @@ def symmetrizeNoise(self, noise, order=4):
 Image.whitenNoise = whitenNoise
 Image.symmetrizeNoise = symmetrizeNoise
 
-class BaseCorrelatedNoise(object):
+class BaseCorrelatedNoise:
     """A Base Class describing 2D correlated Gaussian random noise fields.
 
     A BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
@@ -1524,7 +1524,7 @@ class UncorrelatedNoise(BaseCorrelatedNoise):
         return "galsim.UncorrelatedNoise(variance=%r, wcs=%s)"%(self.variance, self.wcs)
 
 
-class CovarianceSpectrum(object):
+class CovarianceSpectrum:
     """Class to hold a `ChromaticSum` noise covariance spectrum (which is a generalization of a
     power spectrum or equivalently a correlation function).
 

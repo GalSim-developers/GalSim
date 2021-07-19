@@ -86,7 +86,7 @@ def BuildBandpass(config, key, base, logger=None):
     return bandpass, safe
 
 
-class BandpassBuilder(object):
+class BandpassBuilder:
     """A base class for building Bandpass objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.

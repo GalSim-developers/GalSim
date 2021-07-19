@@ -394,7 +394,7 @@ def test_SED_atRedshift():
 
 @timer
 def test_combine_wave_list():
-    class A(object):
+    class A:
         def __init__(self, wave_list):
             self.wave_list = wave_list
             if self.wave_list:

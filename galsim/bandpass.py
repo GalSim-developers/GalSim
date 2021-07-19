@@ -27,7 +27,7 @@ from . import meta_data
 from .utilities import WeakMethod, combine_wave_list, basestring
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 
-class Bandpass(object):
+class Bandpass:
     """Simple bandpass object, which models the transmission fraction of incident light as a
     function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and
     refracting optics, filters, CCD quantum efficiency), or some intermediate piece thereof.

@@ -446,7 +446,7 @@ class RealGalaxy(GSObject):
         self._conv._drawKImage(image, jac)
 
 
-class RealGalaxyCatalog(object):
+class RealGalaxyCatalog:
     """Class containing a catalog with information about real galaxy training data.
 
     The RealGalaxyCatalog class reads in and stores information about a specific training sample of

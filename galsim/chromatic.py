@@ -31,7 +31,7 @@ from . import integ
 from .errors import GalSimError, GalSimRangeError, GalSimSEDError, GalSimValueError
 from .errors import GalSimIncompatibleValuesError, GalSimNotImplementedError, galsim_warn
 
-class ChromaticObject(object):
+class ChromaticObject:
     """Base class for defining wavelength-dependent objects.
 
     This class primarily serves as the base class for chromatic subclasses.  See the docstrings for

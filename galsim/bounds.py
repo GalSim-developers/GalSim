@@ -22,7 +22,7 @@ from . import _galsim
 from .position import Position, PositionI, PositionD, _PositionD, _PositionI
 from .errors import GalSimUndefinedBoundsError
 
-class Bounds(object):
+class Bounds:
     """A class for representing image bounds as 2D rectangles.
 
     Bounds is a base class for two slightly different kinds of bounds:

@@ -98,7 +98,7 @@ Image.addNoise = addNoise
 Image.addNoiseSNR = addNoiseSNR
 
 
-class BaseNoise(object):
+class BaseNoise:
     """Base class for all noise classes.
 
     This class should not be constructed directly.  Rather, you should instantiate one of the
