@@ -691,7 +691,7 @@ class DistDeviate(BaseDeviate):
 
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
-            self.__function = function # Save the inputs to be used in repr
+            self._function = function # Save the inputs to be used in repr
             import os.path
             if os.path.isfile(function):
                 if interpolant is None:
@@ -716,7 +716,7 @@ class DistDeviate(BaseDeviate):
                     raise GalSimValueError(
                         "String function must either be a valid filename or something that "
                         "can eval to a function of x.\n"
-                        "Caught error: {0}".format(e), self.__function)
+                        "Caught error: {0}".format(e), self._function)
         else:
             # Check that the function is actually a function
             if not hasattr(function, '__call__'):
@@ -739,7 +739,7 @@ class DistDeviate(BaseDeviate):
                         "python callable function",
                         function=function, x_min=x_min, x_max=x_max)
 
-            self.__function = function # Save the inputs to be used in repr
+            self._function = function # Save the inputs to be used in repr
 
         # Compute the probability distribution function, pdf(x)
         if (npoints is None and isinstance(function, LookupTable) and
@@ -817,10 +817,6 @@ class DistDeviate(BaseDeviate):
         BaseDeviate.generate(self, p)
         array += self._inverse_cdf(p)
 
-    @property
-    def _function(self):
-        return self.__function if isinstance(self.__function, str) else self.__function
-
     def __repr__(self):
         return ('galsim.DistDeviate(seed=%r, function=%r, x_min=%r, x_max=%r, interpolant=%r, '
                 'npoints=%r)')%(self._seed_repr(), self._function, self._xmin, self._xmax,
@@ -838,12 +834,6 @@ class DistDeviate(BaseDeviate):
                  self._xmax == other._xmax and
                  self._interpolant == other._interpolant and
                  self._npoints == other._npoints))
-
-    # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
-    # original function parameter, which may be a string or a file name.
-    def __getinitargs__(self):
-        return (self.serialize(), self._function, self._xmin, self._xmax,
-                self._interpolant, self._npoints)
 
 
 def permute(rng, *args):
