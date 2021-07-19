@@ -1499,10 +1499,10 @@ def test_multihdu_readin():
             err_msg='Did not get right shape image after reading real_kimage from HDU')
 
     # Check for exception with invalid HDU.
-    assert_raises((OSError, IOError), galsim.InterpolatedImage, infile, hdu=37)
-    assert_raises((OSError, IOError), galsim.InterpolatedKImage,
+    assert_raises(OSError, galsim.InterpolatedImage, infile, hdu=37)
+    assert_raises(OSError, galsim.InterpolatedKImage,
                   real_kimage=infile, imag_kimage=infile, real_hdu=37, imag_hdu=1)
-    assert_raises((OSError, IOError), galsim.InterpolatedKImage,
+    assert_raises(OSError, galsim.InterpolatedKImage,
                   real_kimage=infile, imag_kimage=infile, real_hdu=1, imag_hdu=37)
 
 

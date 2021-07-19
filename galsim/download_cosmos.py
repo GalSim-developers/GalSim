@@ -284,8 +284,8 @@ def download(do_download, url, target, meta, args, logger):
                     next_dot += file_size/100.
         logger.info("Download complete.")
         logger.info("")
-    except (IOError, OSError) as e:
-        # Try to give a reasonable suggestion for some common IOErrors.
+    except OSError as e:
+        # Try to give a reasonable suggestion for some common OSErrors.
         logger.error("\n\nOSError: %s",str(e))
         if 'Permission denied' in str(e):
             logger.error("Rerun using sudo %s",script_name)

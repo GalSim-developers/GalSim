@@ -1037,7 +1037,7 @@ def RetryIO(func, args, ntries, file_name, logger):
         itry += 1
         try:
             ret = func(*args)
-        except (IOError, OSError) as e:
+        except OSError as e:
             if itry == ntries:
                 # Then this was the last try.  Just re-raise the exception.
                 raise

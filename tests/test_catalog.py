@@ -58,8 +58,8 @@ def test_ascii_catalog():
     # Check construction errors
     assert_raises(galsim.GalSimValueError, galsim.Catalog, 'catalog.txt', file_type='invalid')
     assert_raises(ValueError, galsim.Catalog, 'catalog3.txt', 'config_input', comments="#%")
-    assert_raises((IOError, OSError), galsim.Catalog, 'catalog.txt')  # Wrong dir
-    assert_raises((IOError, OSError), galsim.Catalog, 'invalid.txt', 'config_input')
+    assert_raises(OSError, galsim.Catalog, 'catalog.txt')  # Wrong dir
+    assert_raises(OSError, galsim.Catalog, 'invalid.txt', 'config_input')
 
     # Check indexing errors
     assert_raises(IndexError, cat.get, -1, 11)
@@ -91,8 +91,8 @@ def test_fits_catalog():
 
     # Check construction errors
     assert_raises(galsim.GalSimValueError, galsim.Catalog, 'catalog.fits', file_type='invalid')
-    assert_raises((IOError, OSError), galsim.Catalog, 'catalog.fits')  # Wrong dir
-    assert_raises((IOError, OSError), galsim.Catalog, 'invalid.fits', 'config_input')
+    assert_raises(OSError, galsim.Catalog, 'catalog.fits')  # Wrong dir
+    assert_raises(OSError, galsim.Catalog, 'invalid.fits', 'config_input')
 
     # Check indexing errors
     assert_raises(IndexError, cat.get, -1, 'angle2')
@@ -182,7 +182,7 @@ def test_basic_dict():
         galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='invalid')
     with assert_raises(galsim.GalSimValueError):
         galsim.Dict(dir='config_input', file_name='dict.txt')
-    with assert_raises((IOError, OSError)):
+    with assert_raises(OSError):
         galsim.Catalog('invalid.yaml', 'config_input')
 
     # Check some dict equivalences.

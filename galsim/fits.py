@@ -46,7 +46,7 @@ def _parse_compression(compression, file_name):
             if file_name.lower().endswith('.fz'): pyfits_compress = 'RICE_1'
             elif file_name.lower().endswith('.gz'): file_compress = 'gzip'
             elif file_name.lower().endswith('.bz2'): file_compress = 'bzip2'
-            else:  # pragma: no cover  (Not sure why Travis thinks this isn't covered.)
+            else:  # pragma: no cover  (Not sure why codecov thinks this isn't covered.)
                 pass
     else:
         raise GalSimValueError("Invalid compression", compression,

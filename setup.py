@@ -430,7 +430,7 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None):
             print('Output was:')
             print('   ',b'   '.join(lines).decode())
         returncode = p.returncode
-    except (IOError,OSError) as e:
+    except OSError as e:
         if debug:
             print('Trying compile command:')
             print(cmd)
@@ -455,7 +455,7 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None):
             print('Output was:')
             print('   ',b'   '.join(lines).decode())
         returncode = p.returncode
-    except (IOError,OSError) as e:
+    except OSError as e:
         if debug:
             print('Trying link command:')
             print(' '.join(cmd))
@@ -507,7 +507,7 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None):
                 print('Output was:')
                 print('   ',b'   '.join(lines).decode())
             returncode = p.returncode
-        except (IOError,OSError) as e:
+        except OSError as e:
             if debug:
                 print('Trying to link using command:')
                 print(' '.join(cmd))
