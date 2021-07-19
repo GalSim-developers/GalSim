@@ -38,7 +38,7 @@ def _str_array(a):
     with np.printoptions(threshold=5, edgeitems=2, linewidth=1000):
         return repr(a)
 
-class LookupTable(object):
+class LookupTable:
     """
     LookupTable represents a lookup table to store function values that may be slow to calculate,
     for which interpolating from a lookup table is sufficiently accurate.
@@ -563,7 +563,7 @@ def trapz(f, x):
         return 0.
 
 
-class LookupTable2D(object):
+class LookupTable2D:
     """
     LookupTable2D represents a 2-dimensional lookup table to store function values that may be slow
     to calculate, for which interpolating from a lookup table is sufficiently accurate.  A

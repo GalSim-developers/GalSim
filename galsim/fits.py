@@ -1068,7 +1068,7 @@ def readFile(file_name, dir=None, hdu=None, compression='auto'):
 ##############################################################################################
 
 
-class FitsHeader(object):
+class FitsHeader:
     """A class storing key/value pairs from a FITS Header
 
     This class works a lot like the regular read() function, but rather than returning

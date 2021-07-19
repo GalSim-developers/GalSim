@@ -31,7 +31,7 @@ from ..config import InputLoader, RegisterInputType, RegisterObjectType
 from ..config import GetAllParams, GetInputObj
 
 
-class DES_PSFEx(object):
+class DES_PSFEx:
     r"""Class that handles DES files describing interpolated principal component images
     of the PSF.  These are usually stored as \*_psfcat.psf files.
 

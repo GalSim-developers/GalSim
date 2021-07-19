@@ -350,7 +350,7 @@ def GetInputObj(input_type, config, base, param_name, num=0):
     return base['_input_objs'][input_type][num]
 
 
-class InputLoader(object):
+class InputLoader:
     """Define how to load a particular input type.
 
     The base class is often sufficient for simple types, but you may derive from it and

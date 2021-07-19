@@ -401,7 +401,7 @@ def MakeImageTasks(config, jobs, logger):
     return valid_image_types[image_type].makeTasks(image, config, jobs, logger)
 
 
-class ImageBuilder(object):
+class ImageBuilder:
     """A base class for building full images.
 
     The base class defines the call signatures of the methods that any derived class should follow.

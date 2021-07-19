@@ -406,7 +406,7 @@ def test_great3():
 @in_examples
 def test_psf_wf_movie():
     # Mock a command-line arguments object so we can run in the current process
-    class Args(object):
+    class Args:
         seed = 1
         r0_500 = 0.2
         nlayers = 3
@@ -443,7 +443,7 @@ def test_psf_wf_movie():
 @in_examples
 def test_fft_vs_geom_movie():
     # Mock a command-line arguments object so we can run in the current process
-    class Args(object):
+    class Args:
         seed = 1
         n = 10
         jmax = 15

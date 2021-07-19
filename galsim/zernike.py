@@ -436,7 +436,7 @@ def describe_zernike(j):
     return out
 
 
-class Zernike(object):
+class Zernike:
     r"""A class to represent a Zernike polynomial series
     (http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials).
 

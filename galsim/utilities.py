@@ -1609,7 +1609,7 @@ def check_share_file(filename, subdir):
         return False, ''
 
 
-class lazy_property(object):
+class lazy_property:
     """
     This decorator will act similarly to @property, but will be efficient for multiple access
     to values that require some significant calculation.
@@ -1640,7 +1640,7 @@ class lazy_property(object):
         setattr(obj, self.func_name, value)
         return value
 
-class doc_inherit(object):
+class doc_inherit:
     '''
     This decorator will grab a doc string from a base class version of a method.
     Useful if the subclass doesn't change anything about the method API, but just has
@@ -1648,7 +1648,7 @@ class doc_inherit(object):
 
     Usage::
 
-        class Base(object):
+        class Base:
             def some_method(self):
                 """A nice description of the functionality
                 """
@@ -1732,7 +1732,7 @@ def nCr(n, r):
     else:
         return 0
 
-class WeakMethod(object):
+class WeakMethod:
     """Wrap a method in a weakref.
 
     This is useful if you want to specialize a function if certain conditions hold.

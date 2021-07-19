@@ -43,7 +43,7 @@ EMPTY_JAC_diag    = 1
 EMPTY_JAC_offdiag = 0
 EMPTY_SHIFT = 0
 
-class MultiExposureObject(object):
+class MultiExposureObject:
     """
     A class containing exposures for single object, along with other information.
 

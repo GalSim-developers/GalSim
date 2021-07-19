@@ -21,7 +21,7 @@ import numpy as np
 from .angle import Angle, _Angle, radians
 from .errors import GalSimRangeError, GalSimIncompatibleValuesError
 
-class Shear(object):
+class Shear:
     r"""A class to represent shears in a variety of ways.
 
     The Shear object can be initialized in a variety of ways to represent shape distortions.

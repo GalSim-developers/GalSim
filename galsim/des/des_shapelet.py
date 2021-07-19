@@ -26,7 +26,7 @@ from ..gsparams import GSParams
 from ..config import InputLoader, RegisterInputType, RegisterObjectType
 from ..config import GetAllParams, GetInputObj, SkipThisObject
 
-class DES_Shapelet(object):
+class DES_Shapelet:
     """Class that handles DES files describing interpolated polar shapelet decompositions.
     These are stored as ``*_fitpsf.fits`` files.  They are not used in DES anymore, so this
     class is at best of historical interest

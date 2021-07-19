@@ -88,7 +88,7 @@ galsim.config.RegisterWCSType('DES_SlowLocal', DES_SlowLocalWCSBuilder())
 # the name SlowLocal.)  Now we'll do a version that reads in all the wcs files at the start
 # using an input field and selects from them randomly for each stamp.
 
-class DES_FullFieldWCS(object):
+class DES_FullFieldWCS:
     """A class for storing a set of WCS objects read from DES images.
 
     @param dir      The directory with the image files

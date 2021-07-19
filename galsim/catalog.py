@@ -23,7 +23,7 @@ import pickle
 from .errors import GalSimValueError, GalSimKeyError, GalSimIndexError
 from .utilities import lazy_property
 
-class Catalog(object):
+class Catalog:
     """A class storing the data from an input catalog.
 
     Each row corresponds to a different object to be built, and each column stores some item of
@@ -195,7 +195,7 @@ class Catalog(object):
     def __hash__(self): return hash(repr(self))
 
 
-class Dict(object):
+class Dict:
     """A class that reads a python dict from a file.
 
     After construction, it behaves like a regular python dict, with one exception.
@@ -346,7 +346,7 @@ class Dict(object):
 
 
 
-class OutputCatalog(object):
+class OutputCatalog:
     """A class for building up a catalog for output, typically storing truth information
     about a simulation.
 

@@ -27,7 +27,7 @@ from .random import UniformDeviate
 from . import meta_data
 from .errors import GalSimUndefinedBoundsError
 
-class Sensor(object):
+class Sensor:
     """
     The base class for other sensor models, and also an implementation of the simplest possible
     sensor model that just converts each photon into an electron and drops it in the appropriate

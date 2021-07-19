@@ -55,7 +55,7 @@ N_SIGMA_DEPTH = 5    # use 5-sigma (point source) as the measure of depth
 PSF_DRAW_KWARGS = dict(nx=20, ny=20, scale=0.2, method='no_pixel')
 
 
-class CoaddMocker(object):
+class CoaddMocker:
     """Interface specification for classes that know how to mock up an effective
     PSF and variance for a particular coaddition algorithm.
     """
@@ -78,7 +78,7 @@ class CoaddMocker(object):
         slice(None)
 
 
-class DirectCoaddMocker(object):
+class DirectCoaddMocker:
     """Coadd mocker for direct coaddition: simply adding images with some weight.
     """
 
@@ -97,7 +97,7 @@ class DirectCoaddMocker(object):
         return fwhms < cutoff
 
 
-class PSFMatchedCoaddMocker(object):
+class PSFMatchedCoaddMocker:
     """Coadd mocker for PSF-matched coaddition, in which each exposure's
     PSF is convolved with a kernel that matches it to the worst input PSF.
     """
@@ -124,7 +124,7 @@ class PSFMatchedCoaddMocker(object):
         return fwhms < cutoff
 
 
-class KaiserCoaddMocker(object):
+class KaiserCoaddMocker:
     """Coadd mocker for optimal coaddition in Fourier space;
     see http://adsabs.harvard.edu/abs/2015arXiv151206879Z.
     """
@@ -145,7 +145,7 @@ class KaiserCoaddMocker(object):
         return slice(None, None, None)
 
 
-class CoaddMetricCalculator(object):
+class CoaddMetricCalculator:
     """Object that runs several coadd mockers on a set of input PSFs and variances
     representing a single point on the sky, computing the effective FWHM of the
     coadd PSF (from its effective area) and the variance in the coadd pixels.

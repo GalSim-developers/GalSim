@@ -22,7 +22,7 @@ from . import _galsim
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
 from .utilities import isinteger
 
-class BaseDeviate(object):
+class BaseDeviate:
     """Base class for all the various random deviates.
 
     This holds the essential random number generator that all the other classes use.

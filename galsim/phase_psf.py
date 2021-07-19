@@ -31,7 +31,7 @@ from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValues
 from .errors import GalSimFFTSizeError, galsim_warn
 
 
-class Aperture(object):
+class Aperture:
     """Class representing a telescope aperture embedded in a larger pupil plane array -- for use
     with the `PhaseScreenPSF` class to create PSFs via Fourier or geometric optics.
 
@@ -685,7 +685,7 @@ class Aperture(object):
         return (lam*1e-9) / self.pupil_plane_scale * radians/scale_unit
 
 
-class PhaseScreenList(object):
+class PhaseScreenList:
     """List of phase screens that can be turned into a PSF.  Screens can be either atmospheric
     layers or optical phase screens.  Generally, one would assemble a PhaseScreenList object using
     the function `Atmosphere`.  Layers can be added, removed, appended, etc. just like items can

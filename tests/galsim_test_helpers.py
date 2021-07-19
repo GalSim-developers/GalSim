@@ -588,7 +588,7 @@ def timer(f):
     return f2
 
 
-class CaptureLog(object):
+class CaptureLog:
     """A context manager that saves logging output into a string that is accessible for
     checking in unit tests.
 
@@ -667,7 +667,7 @@ del Dummy
 del _t
 
 # Context to make it easier to profile bits of the code
-class profile(object):
+class profile:
     def __init__(self, sortby='tottime', nlines=30):
         self.sortby = sortby
         self.nlines = nlines

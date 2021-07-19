@@ -242,7 +242,7 @@ def GetSky(config, base, logger=None, full=False):
 # items that are parsed separately from the normal noise function
 noise_ignore = [ 'whiten', 'symmetrize', 'use_flux_sky_areas' ]
 
-class NoiseBuilder(object):
+class NoiseBuilder:
     """A base class for building noise objects and applying the noise to images.
 
     The base class doesn't do anything, but it defines the call signatures of the methods

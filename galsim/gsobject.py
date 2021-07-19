@@ -27,7 +27,7 @@ from .errors import GalSimError, GalSimRangeError, GalSimValueError, GalSimIncom
 from .errors import GalSimFFTSizeError, GalSimNotImplementedError, convert_cpp_errors, galsim_warn
 
 
-class GSObject(object):
+class GSObject:
     """Base class for all GalSim classes that represent some kind of surface brightness profile.
 
     A GSObject is not intended to be constructed directly.  Normally, you would use whatever

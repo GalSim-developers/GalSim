@@ -31,7 +31,7 @@ from .utilities import lazy_property
 # Note: This isn't used anywhere.  This is just informational, really.
 cosmos_pix_scale = 0.03
 
-class COSMOSCatalog(object):
+class COSMOSCatalog:
     """
     A class representing a random subsample of galaxies from the COSMOS sample with F814W<25.2
     (default), or alternatively the entire sample with F814W<23.5.

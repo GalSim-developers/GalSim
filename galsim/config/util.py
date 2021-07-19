@@ -268,7 +268,7 @@ def GetLoggerProxy(logger):
         logger_proxy = None
     return logger_proxy
 
-class LoggerWrapper(object):
+class LoggerWrapper:
     """A wrap around a Logger object that checks whether a debug or info or warn call will
     actually produce any output before calling the functions.
 
@@ -629,7 +629,7 @@ def UpdateConfig(config, new_params):
         SetInConfig(config, key, value)
 
 
-class single_threaded(object):
+class single_threaded:
     """A context manager that turns off (or down) OpenMP threading e.g. during multiprocessing.
 
     Parameters:

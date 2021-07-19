@@ -72,7 +72,7 @@ def initWorker(share):
     _GSScreenShare.update(share)  # pragma: no cover  (covered, but in a fork)
 
 
-class AtmosphericScreen(object):
+class AtmosphericScreen:
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
     initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is
     defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
@@ -912,7 +912,7 @@ def Atmosphere(screen_size, rng=None, _bar=None, **kwargs):
     return PhaseScreenList([AtmosphericScreen(**kw) for kw in utilities.dol_to_lod(kwargs, nmax)])
 
 
-class OpticalScreen(object):
+class OpticalScreen:
     """
     Class to describe optical aberrations in terms of Zernike polynomial coefficients.
 
@@ -1117,7 +1117,7 @@ class _DummyScreen(OpticalScreen):
         raise RuntimeError("Shouldn't reach this")
 
 
-class UserScreen(object):
+class UserScreen:
     """ Create a (static) user-defined phase screen.
 
     Parameters:

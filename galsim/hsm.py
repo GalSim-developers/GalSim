@@ -25,7 +25,7 @@ from .shear import Shear
 from .image import Image, ImageI, ImageF, ImageD
 from .errors import GalSimError, GalSimValueError, GalSimHSMError, GalSimIncompatibleValuesError
 
-class ShapeData(object):
+class ShapeData:
     """A class to contain the outputs of the HSM shape and moments measurement routines.
 
     The ShapeData class contains the following information about moment measurement (from either
@@ -221,7 +221,7 @@ class ShapeData(object):
         self.__init__(*state)
 
 
-class HSMParams(object):
+class HSMParams:
     """A collection of parameters that govern how the HSM functions operate.
 
     HSMParams stores a set of numbers that determine how the moments/shape estimation
