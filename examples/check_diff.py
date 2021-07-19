@@ -51,7 +51,7 @@ def report(file_name1, file_name2):
     try:
         f1 = pyfits.open(file_name1)
         f2 = pyfits.open(file_name2)
-    except (IOError, OSError) as e:
+    except OSError as e:
         # Then either at least one of the files doesn't exist, which diff can report for us,
         # or the files are txt files, which diff can also do.
         return report_txt(file_name1, file_name2)

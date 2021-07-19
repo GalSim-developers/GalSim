@@ -1421,7 +1421,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
         raise OSError("The file %r does not exist."%(file_name))
     try:
         cfimage = fits.read(file_name)
-    except (IOError, OSError, AttributeError, TypeError) as e:
+    except (OSError, AttributeError, TypeError) as e:
         raise OSError("Unable to read COSMOSNoise file %s.\n%r"%(file_name,e))
 
     # Then check for negative variance before doing anything time consuming

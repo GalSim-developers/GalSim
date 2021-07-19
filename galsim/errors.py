@@ -34,9 +34,6 @@ from contextlib import contextmanager
 #                       - missing or invalid kwargs when processing `**kwargs` by hand.
 #
 # OSError:              Use this for errors related to I/O, disk access, etc.
-#                       Note: In Python 2, there was a distinction between IOError and OSError, but
-#                       there was never much difference in reality, and in Python 3, they made both
-#                       OSError. We should just use OSError for all such kinds of errors.
 #
 # NotImplementedError:  Use this for code that is not implemented by design and which will never
 #                       be implemented. E.g. GSObject and Position use this for their __init__

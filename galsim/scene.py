@@ -243,14 +243,14 @@ class COSMOSCatalog:
             try:
                 with pyfits.open(selection_file_name) as fits:
                     self.selection_cat = fits[1].data
-            except (IOError, OSError):
+            except (OSError):
                 # There's one more option: full_file_name might be the parametric fit file, so
                 # we have to strip off the _fits.fits (instead of just the .fits)
                 selection_file_name = self.full_file_name.replace('_fits', '_selection')
                 try:
                     with pyfits.open(selection_file_name) as fits:
                         self.selection_cat = fits[1].data
-                except (IOError, OSError):  # pragma: no cover
+                except (OSError):  # pragma: no cover
                     raise OSError("File with GalSim selection criteria not found. "
                                   "Run the program `galsim_download_cosmos -s %s` to get the "
                                   "necessary selection file."%(self.use_sample))
