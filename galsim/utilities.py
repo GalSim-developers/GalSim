@@ -229,48 +229,6 @@ class SimpleGenerator:
     def __call__(self):  # pragma: no cover  (It is covered, but coveralls doesn't get it right.)
         return self._obj
 
-class AttributeDict(object): # pragma: no cover
-    """Dictionary class that allows for easy initialization and refs to key values via attributes.
-
-    NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
-    in ipython since attributes are actually added to __dict__.
-
-    HOWEVER this means the __dict__ attribute has been redefined to be a collections.defaultdict()
-    so that Jim's previous default attribute behaviour is also replicated.
-    """
-    def __init__(self):
-        import collections
-        object.__setattr__(self, "__dict__", collections.defaultdict(AttributeDict))
-
-    def __getattr__(self, name):
-        return self.__dict__[name]
-
-    def __setattr__(self, name, value):
-        self.__dict__[name] = value
-
-    def merge(self, other):
-        self.__dict__.update(other.__dict__)
-
-    def _write(self, output, prefix=""):
-        for k, v in self.__dict__.items():
-            if isinstance(v, AttributeDict):
-                v._write(output, prefix="{0}{1}.".format(prefix, k))
-            else:
-                output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
-
-    def __bool__(self):
-        return not not self.__dict__
-
-    def __repr__(self):
-        output = []
-        self._write(output, "")
-        return "\n".join(output)
-
-    __str__ = __repr__
-
-    def __len__(self):
-        return len(self.__dict__)
-
 def rand_arr(shape, deviate):
     """Function to make a 2d array of random deviates (of any sort).
 
