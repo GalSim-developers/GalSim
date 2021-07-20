@@ -54,7 +54,17 @@ jobs:
       - name: Download wheels
         uses: actions/download-artifact@v2
         with:
-          path: ./dist
+          path: ./wheels
+
+      - name: Copy wheels
+        run: |
+          echo ls -l wheels
+          ls -l wheels
+          echo ls -l wheels/artifact
+          ls -l wheels/artifact
+          cp wheels/artifact/*.whl dist
+          echo ls -l dist
+          ls -l dist
 
       - name: Build sdist
         run: |
