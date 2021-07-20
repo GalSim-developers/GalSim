@@ -201,3 +201,9 @@ Changes from v2.3.0 to v2.3.1
 =============================
 
 - Fixed some problems with the shared library build. (#1128)
+
+Changes from v2.3.1 to v2.3.2
+=============================
+
+- Fixed a rare problem with SED.sampleWavelength sometimes generating photons
+  slightly outside of bandpass range. (#1131)
