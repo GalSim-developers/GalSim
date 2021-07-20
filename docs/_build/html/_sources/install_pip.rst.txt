@@ -157,21 +157,32 @@ any extra work on your part.
 If it is in a non-standard location, and you do not want to add this path
 to your LD_LIBRARY_PATH (or you are on a modern Mac that hides such system
 variables from setup.py), then you can instead set the FFTW_DIR environment
-variable to tell GalSim where to look::
+variable to tell GalSim where to look when running pip or setup.py::
 
-    export FFTW_DIR=/some/path/to/fftw
+    FFTW_DIR=/path/to/fftw/lib pip install galsim
+
+or::
+
+    FFTW_DIR=/path/to/fftw/lib python setup.py install
 
 For instance, if libfftw3.so is located in /opt/cray/pe/lib64, you could use
 that with::
 
-    export FFTW_DIR=/opt/cray/pe/lib64
+    FFTW_DIR=/opt/cray/pe/lib64 pip install galsim
 
-This command would normally be done in your .bash_profile file so it gets
-executed every time you log in.
+If you want to set up your system so that you don't have to type that each
+time you re-install galsim, you might want to set it in your .bash_profile
+file or similar location.  e.g.::
+
+    export FFTW_DIR=/opt/cray/pe/lib64
 
 If you have multiple versions of FFTW installed on your system, this variable
 can be used to specify which version you want GalSim to use as this will be
 the first location it will check during the installation process.
+
+Furthermore, setup.py will trust this location even if it cannot load the
+library that it finds there.  This can be useful when cross-compiling, since
+the library it finds might not be loadable on the system doing the compiling.
 
 
 Installing FFTW with conda

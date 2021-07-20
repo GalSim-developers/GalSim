@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>galsim.sed &mdash; GalSim 2.3.1 documentation</title>
+  <title>galsim.sed &mdash; GalSim 2.3.2 documentation</title>
   
 
   
@@ -1195,7 +1195,17 @@
 
         <span class="n">ret</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nphotons</span><span class="p">)</span>
         <span class="n">dev</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span>
-        <span class="n">ret</span> <span class="o">*=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">*=</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">redshift</span><span class="p">)</span>
+            <span class="c1"># Rarely, with the redshift round trip, this can produce wavelengths &lt; blue_limit.</span>
+            <span class="c1"># If this happens, set those values equal to blue_limit.</span>
+            <span class="c1"># I&#39;m not sure if the red limit overrun can happen (we didn&#39;t see any in the use case</span>
+            <span class="c1"># that noticed the blue overruns), but it seems prudent to also correct any of these</span>
+            <span class="c1"># that may occur too.  Plus it&#39;s not noticeably slower using clip to do both at once.</span>
+            <span class="k">if</span> <span class="n">bandpass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">ret</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">ret</span></div>
 
     <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>

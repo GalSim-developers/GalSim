@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Installing With Pip &mdash; GalSim 2.3.1 documentation</title>
+  <title>Installing With Pip &mdash; GalSim 2.3.2 documentation</title>
   
 
   
@@ -347,20 +347,31 @@ any extra work on your part.</p>
 <p>If it is in a non-standard location, and you do not want to add this path
 to your LD_LIBRARY_PATH (or you are on a modern Mac that hides such system
 variables from setup.py), then you can instead set the FFTW_DIR environment
-variable to tell GalSim where to look:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">some</span><span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">fftw</span>
+variable to tell GalSim where to look when running pip or setup.py:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">fftw</span><span class="o">/</span><span class="n">lib</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">fftw</span><span class="o">/</span><span class="n">lib</span> <span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
 </pre></div>
 </div>
 <p>For instance, if libfftw3.so is located in /opt/cray/pe/lib64, you could use
 that with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">opt</span><span class="o">/</span><span class="n">cray</span><span class="o">/</span><span class="n">pe</span><span class="o">/</span><span class="n">lib64</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+<p>If you want to set up your system so that you don’t have to type that each
+time you re-install galsim, you might want to set it in your .bash_profile
+file or similar location.  e.g.:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">export</span> <span class="n">FFTW_DIR</span><span class="o">=/</span><span class="n">opt</span><span class="o">/</span><span class="n">cray</span><span class="o">/</span><span class="n">pe</span><span class="o">/</span><span class="n">lib64</span>
 </pre></div>
 </div>
-<p>This command would normally be done in your .bash_profile file so it gets
-executed every time you log in.</p>
 <p>If you have multiple versions of FFTW installed on your system, this variable
 can be used to specify which version you want GalSim to use as this will be
 the first location it will check during the installation process.</p>
+<p>Furthermore, setup.py will trust this location even if it cannot load the
+library that it finds there.  This can be useful when cross-compiling, since
+the library it finds might not be loadable on the system doing the compiling.</p>
 </div>
 <div class="section" id="installing-fftw-with-conda">
 <h3>Installing FFTW with conda<a class="headerlink" href="#installing-fftw-with-conda" title="Permalink to this headline">¶</a></h3>
