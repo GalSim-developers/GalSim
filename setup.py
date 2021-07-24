@@ -1021,6 +1021,9 @@ class my_build_shared_clib(my_build_clib):
                 # Also add rpath specification for fftw
                 if fftw_libpath != '':
                     lflags.append('-Wl,-rpath,' + fftw_libpath)
+                # This should work, but for some reason it doesn't.
+                # So I'm leaving it here, but we'll fix it below with install_name_tool anyway.
+                lflags.append('-install_name @rpath/%s'%full_lib_name)
 
             output_dir = os.path.join('build','shared_clib')
             self.compiler.link(CCompiler.SHARED_OBJECT, expected_objects, full_lib_name,
@@ -1030,10 +1033,20 @@ class my_build_shared_clib(my_build_clib):
                                extra_postargs=ext.extra_link_args + lflags,
                                output_dir=output_dir, debug=self.debug)
 
-            # Also make the non-versionful one
             full_lib_name_with_dir = os.path.join(output_dir, full_lib_name)
-            lib_name_with_dir = os.path.join(output_dir, lib_name)
             print('Versioned library: ',full_lib_name_with_dir)
+
+            if sys.platform == 'darwin':
+                # As mentioned above, for some reason the -install_name flag doesn't work when
+                # running from within setup.py, even though the exact same gcc command works for
+                # me when run on the command line.  I can't figure it out.  So just use the
+                # install_name_tool program to fix it now.
+                cmd = ['install_name_tool', '-id', '@rpath/'+full_lib_name, full_lib_name_with_dir]
+                p = subprocess.Popen(cmd)
+                p.communicate()
+
+            # Also make the non-versionful one
+            lib_name_with_dir = os.path.join(output_dir, lib_name)
             print('Un-versioned library: ',lib_name_with_dir)
             if not os.path.exists(lib_name_with_dir):
                 # This is slightly confusing.
