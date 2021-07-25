@@ -1029,26 +1029,29 @@ class my_build_shared_clib(my_build_clib):
                                extra_postargs=ext.extra_link_args + lflags,
                                output_dir=output_dir, debug=self.debug)
 
-            full_lib_name_with_dir = os.path.join(output_dir, full_lib_name)
-            print('Versioned library: ',full_lib_name_with_dir)
-
-            if sys.platform == 'darwin':
-                # As mentioned above, for some reason the -install_name flag doesn't work when
-                # running from within setup.py, even though the exact same gcc command works for
-                # me when run on the command line.  I can't figure it out.  So just use the
-                # install_name_tool program to fix it now.
-                cmd = ['install_name_tool', '-id', '@rpath/'+full_lib_name, full_lib_name_with_dir]
-                p = subprocess.Popen(cmd)
-                p.communicate()
-
             # Also make the non-versionful one
+            full_lib_name_with_dir = os.path.join(output_dir, full_lib_name)
             lib_name_with_dir = os.path.join(output_dir, lib_name)
+            print('Versioned library: ',full_lib_name_with_dir)
             print('Un-versioned library: ',lib_name_with_dir)
             if not os.path.exists(lib_name_with_dir):
                 # This is slightly confusing.
                 # The target needs the dir, but the source cannot include the dir or it
                 # will try to link to build/shared_clib/build/shared_clib/libgalsim...
                 os.symlink(full_lib_name, lib_name_with_dir)
+
+            if sys.platform == 'darwin':
+                # As mentioned above, for some reason the -install_name flag doesn't work when
+                # running from within setup.py, even though the exact same gcc command works for
+                # me when run on the command line.  I can't figure it out.  So just use the
+                # install_name_tool program to fix it now.
+                # If INSTALL_NAME_TOOL is in the environment (e.g. conda) use that, else
+                # (i.e. normally) use the regular install_name_tool.
+                install_name_tool = os.environ.get('INSTALL_NAME_TOOL', 'install_name_tool')
+                cmd = [install_name_tool, '-id', '@rpath/'+full_lib_name, full_lib_name_with_dir]
+                p = subprocess.Popen(cmd)
+                p.communicate()
+
 
 
 # Make a subclass of build_ext so we can add to the -I list.
