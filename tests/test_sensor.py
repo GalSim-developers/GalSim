@@ -441,6 +441,7 @@ def test_silicon_area():
     # We compare to an explicit Poisson simulation that was equivalent to the model
     # save as lsst_itl_8, so use that here, not the default lsst_itl_50_8.
     silicon = galsim.SiliconSensor(name='lsst_itl_8', rng=rng)
+    #silicon = galsim.SiliconSensor(name='lsst_itl_32', rng=rng)
     area_image = silicon.calculate_pixel_areas(im)
     # Get the area data from the Poisson simulation
     area_filename = silicon.vertex_file.split('/')[-1].strip('.dat')+'_areas.dat'
@@ -455,11 +456,26 @@ def test_silicon_area():
         #print(nx,ny,poisson_area,galsim_area)
         np.testing.assert_almost_equal(poisson_area/100.0, galsim_area, decimal=3)
 
+    # 8 point version
     np.testing.assert_almost_equal(area_image(0,0), 0.9286634530274507)   # matches original code
     np.testing.assert_almost_equal(area_image(1,0), 1.003792278324485)    # original code produces 1.0048448350598456
     np.testing.assert_almost_equal(area_image(-1,0), 1.0038164327563435)  # original code produces 1.004847964722863
     np.testing.assert_almost_equal(area_image(0,1), 1.012152175488738)    # original code produces 1.0123441514017317
     np.testing.assert_almost_equal(area_image(0,-1), 1.0121635282119203)  # original code produces 1.0123564581448614
+
+    # 32 point version
+    #np.testing.assert_almost_equal(area_image(0,0), 0.9291962878989952)   # matches original code
+    #np.testing.assert_almost_equal(area_image(1,0), 1.005344567094284)    # original code produces 1.0056389435560653
+    #np.testing.assert_almost_equal(area_image(-1,0), 1.0053587593320463)  # original code produces 1.0056399961006395
+    #np.testing.assert_almost_equal(area_image(0,1), 1.012087655987025)    # original code produces 1.0121748816976643
+    #np.testing.assert_almost_equal(area_image(0,-1), 1.012074445021806)   # original code produces 1.012139089334273
+
+    # 8 point version with symmetrized sensor data file. Original code seems unaffected by symmetrization
+    #np.testing.assert_almost_equal(area_image(0,0), 0.9286662325720573)   # original code produces 0.9286634422003064
+    #np.testing.assert_almost_equal(area_image(1,0), 1.0038011380338354)   # original code produces 1.0048448350598456
+    #np.testing.assert_almost_equal(area_image(-1,0), 1.0038011380299876)  # original code produces 1.004847964722863
+    #np.testing.assert_almost_equal(area_image(0,1), 1.0121528868571064)   # original code produces 1.0123441514017317
+    #np.testing.assert_almost_equal(area_image(0,-1), 1.0121528868436513)  # original code produces 1.0123564581448614
 
     # Draw a smallish but very bright Gaussian image
     obj = galsim.Gaussian(flux=5.e5, sigma=0.2)
