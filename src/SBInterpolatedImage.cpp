@@ -713,7 +713,7 @@ namespace galsim {
         skip += (m - mm);
 
         im.setZero();
-        for (int j=i1; j<i2; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
+        for (int j=j1; j<j2; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
 
@@ -747,6 +747,8 @@ namespace galsim {
                     }
                     sum += xsum * ywt;
                 }
+                xassert(ptr >= im.getData());
+                xassert(ptr < im.getData() + im.getNElements());
                 *ptr = sum;
             }
         }
