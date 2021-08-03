@@ -207,3 +207,9 @@ Changes from v2.3.1 to v2.3.2
 
 - Fixed a rare problem with SED.sampleWavelength sometimes generating photons
   slightly outside of bandpass range. (#1131)
+
+Changes from v2.3.2 to v2.3.3
+=============================
+
+- Fixed a bug where InterpolatedImage.drawReal could possibly cause seg faults
+  from writing past the end of the image arrays.
