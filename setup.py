@@ -1021,9 +1021,8 @@ class my_build_shared_clib(my_build_clib):
                 # Also add rpath specification for fftw
                 if fftw_libpath != '':
                     lflags.append('-Wl,-rpath,' + fftw_libpath)
-                # This should work, but for some reason it doesn't.
-                # So I'm leaving it here, but we'll fix it below with install_name_tool anyway.
-                lflags.append('-install_name @rpath/%s'%full_lib_name)
+                # Set the install_name to the right rpath name.
+                lflags.append('-Wl,-install_name,@rpath/%s'%full_lib_name)
 
             output_dir = os.path.join('build','shared_clib')
             self.compiler.link(CCompiler.SHARED_OBJECT, expected_objects, full_lib_name,
@@ -1043,18 +1042,6 @@ class my_build_shared_clib(my_build_clib):
                 # The target needs the dir, but the source cannot include the dir or it
                 # will try to link to build/shared_clib/build/shared_clib/libgalsim...
                 os.symlink(full_lib_name, lib_name_with_dir)
-
-            if sys.platform == 'darwin':
-                # As mentioned above, for some reason the -install_name flag doesn't work when
-                # running from within setup.py, even though the exact same gcc command works for
-                # me when run on the command line.  I can't figure it out.  So just use the
-                # install_name_tool program to fix it now.
-                # If INSTALL_NAME_TOOL is in the environment (e.g. conda) use that, else
-                # (i.e. normally) use the regular install_name_tool.
-                install_name_tool = os.environ.get('INSTALL_NAME_TOOL', 'install_name_tool')
-                cmd = [install_name_tool, '-id', '@rpath/'+full_lib_name, full_lib_name_with_dir]
-                p = subprocess.Popen(cmd)
-                p.communicate()
 
 
 
