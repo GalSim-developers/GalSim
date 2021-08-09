@@ -56,6 +56,12 @@ jobs:
         with:
           path: ./wheels
 
+      - name: Build sdist
+        run: |
+          python setup.py sdist
+          ls -l dist
+          tar tvfz dist/GalSim-*.tar.gz
+
       - name: Copy wheels
         run: |
           echo ls -l wheels
@@ -65,12 +71,6 @@ jobs:
           cp wheels/artifact/*.whl dist
           echo ls -l dist
           ls -l dist
-
-      - name: Build sdist
-        run: |
-          python setup.py sdist
-          ls -l dist
-          tar tvfz dist/GalSim-*.tar.gz
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
