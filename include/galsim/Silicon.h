@@ -59,7 +59,7 @@ namespace galsim
         double calculateConversionDepth(const PhotonArray& photons, int i, double randomNumber) const;
 
         void applyPixelDistortion(int i, int j, int disti, int distj, int nx,
-                                  int ny, double charge, bool rhs, bool bottom);
+                                  int ny, double charge, bool lhs, bool rhs, bool bottom);
 
         template <typename T>
         void updatePixelDistortions(ImageView<T> target);
@@ -85,7 +85,7 @@ namespace galsim
     private:
         // Convenience inline methods for access to linear boundary arrays.
         int horizontalPixelStride() const {
-            return _numVertices + 1;
+            return _numVertices + 2;
         }
 
         int verticalPixelStride() const {
@@ -93,7 +93,7 @@ namespace galsim
         }
 
         int horizontalRowStride(int nx) const {
-            return ((_numVertices + 1) * nx) + 1;
+            return ((_numVertices + 2) * nx);
         }
 
         int verticalColumnStride(int ny) const {
