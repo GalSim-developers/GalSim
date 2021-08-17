@@ -162,22 +162,22 @@ namespace galsim {
             _distortions[i * _ny + j][n].y = y;
 
             // populate the linear distortions arrays
-	    // make sure to always use values from closest to center pixel
-	    if ((((n < cornerIndexBottomLeft()) || (n > cornerIndexTopLeft())) && (i <= (_nx / 2))) ||  // LHS
-		(((n > cornerIndexBottomRight()) && (n < cornerIndexTopRight())) && (i >= (_nx / 2))) || // RHS
-		(((n >= cornerIndexBottomLeft()) && (n <= cornerIndexBottomRight())) && (j <= (_ny / 2))) || // bottom
-		(((n >= cornerIndexTopRight()) && (n <= cornerIndexTopLeft())) && (j >= (_ny / 2)))) {  // top
-		bool horiz = false;
-		int bidx = getBoundaryIndex(i, j, n, &horiz);
-		if (horiz) {
-		    _horizontalDistortions[bidx].x = x;
-		    _horizontalDistortions[bidx].y = y;
-		}
-		else {
-		    _verticalDistortions[bidx].x = x;
-		    _verticalDistortions[bidx].y = y;
-		}
-	    }
+            // make sure to always use values from closest to center pixel
+            if ((((n < cornerIndexBottomLeft()) || (n > cornerIndexTopLeft())) && (i <= (_nx / 2))) ||  // LHS
+                (((n > cornerIndexBottomRight()) && (n < cornerIndexTopRight())) && (i >= (_nx / 2))) || // RHS
+                (((n >= cornerIndexBottomLeft()) && (n <= cornerIndexBottomRight())) && (j <= (_ny / 2))) || // bottom
+                (((n >= cornerIndexTopRight()) && (n <= cornerIndexTopLeft())) && (j >= (_ny / 2)))) {  // top
+                bool horiz = false;
+                int bidx = getBoundaryIndex(i, j, n, &horiz);
+                if (horiz) {
+                    _horizontalDistortions[bidx].x = x;
+                    _horizontalDistortions[bidx].y = y;
+                }
+                else {
+                    _verticalDistortions[bidx].x = x;
+                    _verticalDistortions[bidx].y = y;
+                }
+            }
 
 #if 0
             if (index == 73) { // Test print out of read in
@@ -209,63 +209,63 @@ namespace galsim {
     // TO BE REMOVED
     void Silicon::makeDistortionsConsistent()
     {
-	// loop over all distortion polygons
-	for (int j = 0; j < _ny; j++) {
-	    for (int i = 0; i < _nx; i++) {
-		// if above center, copy bottom values from pixel below, including corners
-		if (j > (_ny / 2)) {
-		    Polygon& pl = _distortions[i * _ny + j - 1];
-		    Polygon& pu = _distortions[i * _ny + j];
+        // loop over all distortion polygons
+        for (int j = 0; j < _ny; j++) {
+            for (int i = 0; i < _nx; i++) {
+                // if above center, copy bottom values from pixel below, including corners
+                if (j > (_ny / 2)) {
+                    Polygon& pl = _distortions[i * _ny + j - 1];
+                    Polygon& pu = _distortions[i * _ny + j];
 
-		    for (int n = 0; n < (_numVertices + 2); n++) {
-			Point& ptl = pl[cornerIndexTopLeft() - n];
-			Point& ptu = pu[cornerIndexBottomLeft() + n];
-			ptu = ptl;
-		    }
-		}
+                    for (int n = 0; n < (_numVertices + 2); n++) {
+                        Point& ptl = pl[cornerIndexTopLeft() - n];
+                        Point& ptu = pu[cornerIndexBottomLeft() + n];
+                        ptu = ptl;
+                    }
+                }
 
-		// if below center, copy top values from pixel above, including corners
-		if (j < (_ny / 2)) {
-		    Polygon& pl = _distortions[i * _ny + j];
-		    Polygon& pu = _distortions[i * _ny + j + 1];
+                // if below center, copy top values from pixel above, including corners
+                if (j < (_ny / 2)) {
+                    Polygon& pl = _distortions[i * _ny + j];
+                    Polygon& pu = _distortions[i * _ny + j + 1];
 
-		    for (int n = 0; n < (_numVertices + 2); n++) {
-			Point& ptl = pl[cornerIndexTopLeft() - n];
-			Point& ptu = pu[cornerIndexBottomLeft() + n];
-			ptl = ptu;
-		    }
-		}
+                    for (int n = 0; n < (_numVertices + 2); n++) {
+                        Point& ptl = pl[cornerIndexTopLeft() - n];
+                        Point& ptu = pu[cornerIndexBottomLeft() + n];
+                        ptl = ptu;
+                    }
+                }
 
 
-		// if left of center, copy right hand side values from pixel on right
-		// no longer copy corners horizontally
-		if (i < (_nx / 2)) {
-		    Polygon& pl = _distortions[i * _ny + j];
-		    Polygon& pr = _distortions[(i + 1) * _ny + j];
-		    for (int n = 1; n < (_numVertices + 1); n++) {
-			Point& ptl = pl[cornerIndexBottomRight() + n];
-			Point& ptr = n < (cornerIndexBottomLeft() + 1) ?
-					 pr[cornerIndexBottomLeft() - n] : pr[((4 * _numVertices) + 3 - (n - (cornerIndexBottomLeft()+1)))];
-			ptl = ptr;
-		    }
-		}
+                // if left of center, copy right hand side values from pixel on right
+                // no longer copy corners horizontally
+                if (i < (_nx / 2)) {
+                    Polygon& pl = _distortions[i * _ny + j];
+                    Polygon& pr = _distortions[(i + 1) * _ny + j];
+                    for (int n = 1; n < (_numVertices + 1); n++) {
+                        Point& ptl = pl[cornerIndexBottomRight() + n];
+                        Point& ptr = n < (cornerIndexBottomLeft() + 1) ?
+                            pr[cornerIndexBottomLeft() - n] : pr[((4 * _numVertices) + 3 - (n - (cornerIndexBottomLeft()+1)))];
+                        ptl = ptr;
+                    }
+                }
 
-		// if right of center, copy left hand side values from pixel on left
-		// no longer copy corners horizontally
-		if (i > (_nx / 2)) {
-		    Polygon& pl = _distortions[(i - 1) * _ny + j];
-		    Polygon& pr = _distortions[i * _ny + j];
-		    for (int n = 1; n < (_numVertices + 1); n++) {
-			Point& ptl = pl[cornerIndexBottomRight() + n];
-			Point& ptr = n < (cornerIndexBottomLeft() + 1) ?
-					 pr[cornerIndexBottomLeft() - n] : pr[((4 * _numVertices) + 3 - (n - (cornerIndexBottomLeft()+1)))];
-			ptr = ptl;
-		    }
-		}
-	    }
-	}
+                // if right of center, copy left hand side values from pixel on left
+                // no longer copy corners horizontally
+                if (i > (_nx / 2)) {
+                    Polygon& pl = _distortions[(i - 1) * _ny + j];
+                    Polygon& pr = _distortions[i * _ny + j];
+                    for (int n = 1; n < (_numVertices + 1); n++) {
+                        Point& ptl = pl[cornerIndexBottomRight() + n];
+                        Point& ptr = n < (cornerIndexBottomLeft() + 1) ?
+                            pr[cornerIndexBottomLeft() - n] : pr[((4 * _numVertices) + 3 - (n - (cornerIndexBottomLeft()+1)))];
+                        ptr = ptl;
+                    }
+                }
+            }
+        }
     }
-    
+
     // Updates the outer ring of distortions so that they only affect their inner
     // boundary.
     // This relies on there being an extra "ring" of pixels around the rectangle
@@ -346,7 +346,7 @@ namespace galsim {
             }
         }
     }
-    
+
     // Check whether the original polygon pixel bounds matches the new linear
     // version or not.
     // Returns true if it matches closely, false if not
@@ -368,8 +368,8 @@ namespace galsim {
             if (dist > 1e-10) {
                 success = false;
                 xdbg << "Mismatch pixel (" << i << "," << j << ") n=" << n
-                     << ", polygon=(" << pt2.x << "," << pt2.y <<"), "
-                     << "linear=(" << pt.x << "," << pt.y << ")";
+                    << ", polygon=(" << pt2.x << "," << pt2.y <<"), "
+                    << "linear=(" << pt.x << "," << pt.y << ")";
                 if (horizontal) {
                     xdbg << ", horizontal idx " << idx << "\n";
                 }
@@ -380,7 +380,7 @@ namespace galsim {
         }
         return success;
     }
-    
+
     void Silicon::updatePixelBounds(int nx, int ny, size_t k)
     {
         // update the bounding rectangles for pixel k
@@ -392,11 +392,11 @@ namespace galsim {
         _pixelOuterBounds[k] = Bounds<double>();
 
         iteratePixelBoundary(x, y, nx, ny, [this, k](int n, Point& pt, bool rhs, bool top) {
-                Point p = pt;
-                if (rhs) p.x += 1.0;
-                if (top) p.y += 1.0;
-                _pixelOuterBounds[k] += p;
-            });
+                             Point p = pt;
+                             if (rhs) p.x += 1.0;
+                             if (top) p.y += 1.0;
+                             _pixelOuterBounds[k] += p;
+                             });
 
         Point center = _pixelOuterBounds[k].center();
 
@@ -405,15 +405,15 @@ namespace galsim {
         Bounds<double>& inner = _pixelInnerBounds[k];
 
         iteratePixelBoundary(x, y, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
-                Point p = pt;
-                if (rhs) p.x += 1.0;
-                if (top) p.y += 1.0;
-                
-                if (p.x-center.x >= std::abs(p.y-center.y) && p.x < inner.getXMax()) inner.setXMax(p.x);
-                if (p.x-center.x <= -std::abs(p.y-center.y) && p.x > inner.getXMin()) inner.setXMin(p.x);
-                if (p.y-center.y >= std::abs(p.x-center.x) && p.y < inner.getYMax()) inner.setYMax(p.y);
-                if (p.y-center.y <= -std::abs(p.x-center.x) && p.y > inner.getYMin()) inner.setYMin(p.y);
-            });
+                             Point p = pt;
+                             if (rhs) p.x += 1.0;
+                             if (top) p.y += 1.0;
+
+                             if (p.x-center.x >= std::abs(p.y-center.y) && p.x < inner.getXMax()) inner.setXMax(p.x);
+                             if (p.x-center.x <= -std::abs(p.y-center.y) && p.x > inner.getXMin()) inner.setXMin(p.x);
+                             if (p.y-center.y >= std::abs(p.x-center.x) && p.y < inner.getYMax()) inner.setYMax(p.y);
+                             if (p.y-center.y <= -std::abs(p.x-center.x) && p.y > inner.getYMin()) inner.setYMin(p.y);
+                             });
     }
 
     // Applies distortion to the linear boundaries of a pixel
@@ -425,17 +425,17 @@ namespace galsim {
         // their right hand boundaries, and only the pixels along the bottom of the
         // update region update their bottom boundaries
 
-	// we also need to ensure that pixels just inside the update region horizontally
-	// update the adjacent corners of the neighbouring pixels on the outside
+        // we also need to ensure that pixels just inside the update region horizontally
+        // update the adjacent corners of the neighbouring pixels on the outside
 
         // top (and optionally bottom rows)
 
-	// handle extra corner points on left if we're on edge of update region
-	if ((lhs) && (i > 0)) {
-	    if (bottom) {
-		int idxb = horizontalPixelIndex(i, j, nx) - 1;
-		Point& pt = _horizontalBoundaryPoints[idxb];
-		Point& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) - 1];
+        // handle extra corner points on left if we're on edge of update region
+        if ((lhs) && (i > 0)) {
+            if (bottom) {
+                int idxb = horizontalPixelIndex(i, j, nx) - 1;
+                Point& pt = _horizontalBoundaryPoints[idxb];
+                Point& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) - 1];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -444,7 +444,7 @@ namespace galsim {
 #pragma omp atomic
 #endif
                 pt.y += distpt.y * charge;
-	    }
+            }
 
             int idxt = horizontalPixelIndex(i, j+1, nx) - 1;
             Point& pt2 = _horizontalBoundaryPoints[idxt];
@@ -457,7 +457,7 @@ namespace galsim {
 #pragma omp atomic
 #endif
             pt2.y += distpt2.y * charge;
-	}
+        }
 
         for (int k = 0; k < (_numVertices + 2); k++) {
             if (bottom) {
@@ -487,12 +487,12 @@ namespace galsim {
             pt2.y += distpt2.y * charge;
         }
 
-	// handle extra corner points on right if we're on edge of update region
-	if ((rhs) && (i < (nx - 1))) {
-	    if (bottom) {
-		int idxb = horizontalPixelIndex(i, j, nx) + _numVertices + 2;
-		Point& pt = _horizontalBoundaryPoints[idxb];
-		Point& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) + _numVertices + 2];
+        // handle extra corner points on right if we're on edge of update region
+        if ((rhs) && (i < (nx - 1))) {
+            if (bottom) {
+                int idxb = horizontalPixelIndex(i, j, nx) + _numVertices + 2;
+                Point& pt = _horizontalBoundaryPoints[idxb];
+                Point& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) + _numVertices + 2];
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
@@ -501,7 +501,7 @@ namespace galsim {
 #pragma omp atomic
 #endif
                 pt.y += distpt.y * charge;
-	    }
+            }
 
             int idxt = horizontalPixelIndex(i, j+1, nx) + _numVertices + 2;
             Point& pt2 = _horizontalBoundaryPoints[idxt];
@@ -514,7 +514,7 @@ namespace galsim {
 #pragma omp atomic
 #endif
             pt2.y += distpt2.y * charge;
-	}
+        }
 
         // sides
         for (int k = 0; k < _numVertices; k++) {
@@ -598,15 +598,15 @@ namespace galsim {
                             (distj < (_ny-1))) {
                             // distort the linear boundaries
                             applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge, ((polyi == polyi1) || (disti == 1)), (polyi == polyi2) || (disti == (_nx-2)), (polyj == polyj1) || (distj == 1));
-			}
-			imagepoly.distort(distortion, charge);
+                        }
+                        imagepoly.distort(distortion, charge);
                         changed[index] = true;
                     }
                 }
             }
         }
-	auto start = std::chrono::steady_clock::now();
-	bool checkFailed = false;
+        auto start = std::chrono::steady_clock::now();
+        bool checkFailed = false;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -619,8 +619,8 @@ namespace galsim {
             // change
             //if (!checkPixel(k / ny, k % ny, nx, ny)) checkFailed = true;
         }
-	if (checkFailed) std::exit(1);
-	auto middle = std::chrono::steady_clock::now();
+        if (checkFailed) std::exit(1);
+        auto middle = std::chrono::steady_clock::now();
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -630,10 +630,10 @@ namespace galsim {
                 updatePixelBounds(nx, ny, k);
             }
         }
-	auto end = std::chrono::steady_clock::now();
+        auto end = std::chrono::steady_clock::now();
 
-	//std::cout << "poly update: " << std::chrono::duration_cast<std::chrono::microseconds>(middle - start).count() << "us" << std::endl;
-	//std::cout << "linear update: " << std::chrono::duration_cast<std::chrono::microseconds>(end - middle).count() << "us" << std::endl;
+        //std::cout << "poly update: " << std::chrono::duration_cast<std::chrono::microseconds>(middle - start).count() << "us" << std::endl;
+        //std::cout << "linear update: " << std::chrono::duration_cast<std::chrono::microseconds>(end - middle).count() << "us" << std::endl;
     }
 
     // This version of calculateTreeRingDistortion only distorts a polygon.
@@ -667,7 +667,7 @@ namespace galsim {
                                               Polygon& poly, int nx, int ny, int i1, int j1)
     {
         double shift = 0.0;
-	auto start = std::chrono::steady_clock::now();
+        auto start = std::chrono::steady_clock::now();
         for (int n=0; n<_nv; n++) {
             //xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
             //    poly[n].x <<"  "<< poly[n].y<<std::endl;
@@ -686,39 +686,39 @@ namespace galsim {
             //xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
         }
 
-	auto middle = std::chrono::steady_clock::now();
+        auto middle = std::chrono::steady_clock::now();
         iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
-                Point p = pt;
+                             Point p = pt;
 
-		// top right corner (22) may need done
-		if (n == 22) {
-		    if ((j - j1) < (ny -1)) return;
-		}
-		else if (n != 13) { // bottom right corner (13) always needs done
-		    // only do bottom and left points unless we're on top/right edge
-		    if ((rhs) && ((i - i1) < (nx - 1))) return;
-		    if ((top) && ((j - j1) < (ny - 1))) return;
-		}
-                
-                if (rhs) p.x += 1.0;
-                if (top) p.y += 1.0;
-                
-                double tx = (double)i + p.x - _treeRingCenter.x + (double)orig_center.x;
-                double ty = (double)j + p.y - _treeRingCenter.y + (double)orig_center.y;
-                //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
-                double r = sqrt(tx * tx + ty * ty);
-                double shift = _tr_radial_table.lookup(r);
-                //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
-                // Shifts are along the radial vector in direction of the doping gradient
-                double dx = shift * tx / r;
-                double dy = shift * ty / r;
-                //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
-                pt.x += dx;
-                pt.y += dy;
-            });
-	auto end = std::chrono::steady_clock::now();
-	//std::cout << "poly update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(middle - start).count() << "ns" << std::endl;
-	//std::cout << "linear update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - middle).count() << "ns" << std::endl;
+                             // top right corner (22) may need done
+                             if (n == 22) {
+                             if ((j - j1) < (ny -1)) return;
+                             }
+                             else if (n != 13) { // bottom right corner (13) always needs done
+                             // only do bottom and left points unless we're on top/right edge
+                             if ((rhs) && ((i - i1) < (nx - 1))) return;
+                             if ((top) && ((j - j1) < (ny - 1))) return;
+                             }
+
+                             if (rhs) p.x += 1.0;
+                             if (top) p.y += 1.0;
+
+                             double tx = (double)i + p.x - _treeRingCenter.x + (double)orig_center.x;
+                             double ty = (double)j + p.y - _treeRingCenter.y + (double)orig_center.y;
+                             //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
+                             double r = sqrt(tx * tx + ty * ty);
+                             double shift = _tr_radial_table.lookup(r);
+                             //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+                             // Shifts are along the radial vector in direction of the doping gradient
+                             double dx = shift * tx / r;
+                             double dy = shift * ty / r;
+                             //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+                             pt.x += dx;
+                             pt.y += dy;
+        });
+        auto end = std::chrono::steady_clock::now();
+        //std::cout << "poly update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(middle - start).count() << "ns" << std::endl;
+        //std::cout << "linear update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - middle).count() << "ns" << std::endl;
     }
 
     template <typename T>
@@ -852,12 +852,12 @@ namespace galsim {
         result = emptypoly;
 
         iteratePixelBoundary(i, j, nx, ny, [&](int n, const Point& pt, bool rhs, bool top) {
-                Point p = pt;
-                if (rhs) p.x += 1.0;
-                if (top) p.y += 1.0;
-                result[n].x += (p.x - emptypoly[n].x) * factor;
-                result[n].y += (p.y - emptypoly[n].y) * factor;
-            });
+                             Point p = pt;
+                             if (rhs) p.x += 1.0;
+                             if (top) p.y += 1.0;
+                             result[n].x += (p.x - emptypoly[n].x) * factor;
+                             result[n].y += (p.y - emptypoly[n].y) * factor;
+                             });
 
         result.updateBounds();
     }
@@ -1032,7 +1032,7 @@ namespace galsim {
         double area = 0.0;
         bool horizontal1, horizontal2;
 
-	// compute sum of triangle areas using cross-product rule (shoelace formula)
+        // compute sum of triangle areas using cross-product rule (shoelace formula)
         for (int n = 0; n < _nv; n++) {
             int pi1 = getBoundaryIndex(i, j, n, &horizontal1, nx, ny);
             Point p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
@@ -1046,14 +1046,14 @@ namespace galsim {
                 _verticalBoundaryPoints[pi2];
             if ((n2 >= cornerIndexBottomRight()) && (n2 <= cornerIndexTopRight())) p2.x += 1.0;
             if ((n2 >= cornerIndexTopRight()) && (n2 <= cornerIndexTopLeft())) p2.y += 1.0;
-            
+
             area += p1.x * p2.y;
             area -= p2.x * p1.y;
         }
 
         return std::abs(area) / 2.0;
     }
-    
+
     template <typename T>
     void Silicon::fillWithPixelAreas(ImageView<T> target, Position<int> orig_center,
                                      bool use_flux)
@@ -1093,7 +1093,7 @@ namespace galsim {
             for (int j=j1; j<=j2; ++j, ptr+=skip) {
                 for (int i=i1; i<=i2; ++i, ptr+=step) {
                     double newArea = pixelArea(i - i1, j - j1, nx, ny);
-                    
+
                     int index = (i - i1) * ny + (j - j1);
                     double oldArea = _imagepolys[index].area();
 
@@ -1149,8 +1149,8 @@ namespace galsim {
                 for (int n = cornerIndexBottomLeft(); n < cornerIndexBottomRight(); n++) {
                     _horizontalBoundaryPoints[i++] = _emptypoly[n];
                 }
-		// add bottom right corner point
-		_horizontalBoundaryPoints[i++] = _emptypoly[cornerIndexBottomLeft()];
+                // add bottom right corner point
+                _horizontalBoundaryPoints[i++] = _emptypoly[cornerIndexBottomLeft()];
             }
         }
 
@@ -1173,7 +1173,7 @@ namespace galsim {
             updatePixelBounds(nx, ny, k);
         }
     }
-    
+
     template <typename T>
     double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
                                Position<int> orig_center, bool resume)
@@ -1465,9 +1465,9 @@ namespace galsim {
                                        ImageView<float> target, bool*) const;
 
     template bool Silicon::insidePixelNew(int ix, int iy, double x, double y, double zconv,
-                                       ImageView<double> target, bool*) const;
+                                          ImageView<double> target, bool*) const;
     template bool Silicon::insidePixelNew(int ix, int iy, double x, double y, double zconv,
-                                       ImageView<float> target, bool*) const;
+                                          ImageView<float> target, bool*) const;
 
     template void Silicon::updatePixelDistortions(ImageView<double> target);
     template void Silicon::updatePixelDistortions(ImageView<float> target);

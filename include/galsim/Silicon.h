@@ -43,7 +43,7 @@ namespace galsim
                 const Table& tr_radial_table, Position<double> treeRingCenter,
                 const Table& abs_length_table, bool transpose, bool useNewBoundaries = false);
 
-	// TO BE REMOVED (replaced by insidePixelNew)
+        // TO BE REMOVED (replaced by insidePixelNew)
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target, bool* off_edge=0) const;
@@ -103,7 +103,7 @@ namespace galsim
         int horizontalPixelIndex(int x, int y, int nx) const {
             return (y * horizontalRowStride(nx)) + (x * horizontalPixelStride());
         }
-        
+
         int verticalPixelIndex(int x, int y, int ny) const {
             return (x * verticalColumnStride(ny)) + (((ny-1)-y) * verticalPixelStride());
         }
@@ -120,7 +120,7 @@ namespace galsim
         int cornerIndexTopLeft() const {
             return 7 * (_numVertices / 2) + 3;
         }
-        
+
         int cornerIndexTopRight() const {
             return 5 * (_numVertices / 2) + 2;
         }
@@ -139,7 +139,7 @@ namespace galsim
                 nx = _nx;
                 ny = _ny;
             }
-            
+
             if (n < cornerIndexBottomLeft()) {
                 // left hand side, lower
                 idx = n + cornerIndexBottomLeft();
@@ -236,19 +236,19 @@ namespace galsim
                 callback(n, _verticalBoundaryPoints[idx], false, false);
             }
         }
-        
+
         void initializeBoundaryPoints(int nx, int ny);
 
         void updatePixelBounds(int nx, int ny, size_t k);
 
-	// TO BE REMOVED
+        // TO BE REMOVED
         bool checkPixel(int i, int j, int nx, int ny);
 
-	// TO BE REMOVED
-	void makeDistortionsConsistent();
-	// TO BE REMOVED
+        // TO BE REMOVED
+        void makeDistortionsConsistent();
+        // TO BE REMOVED
         void addHalo();
-        
+
         bool _useNewBoundaries;
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
