@@ -89,15 +89,15 @@ namespace galsim
         }
 
         int verticalPixelStride() const {
-            return _numVertices;
+            return _numVertices + 2;
         }
 
         int horizontalRowStride(int nx) const {
-            return ((_numVertices + 2) * nx);
+            return (_numVertices + 2) * nx;
         }
 
         int verticalColumnStride(int ny) const {
-            return _numVertices * ny;
+            return (_numVertices + 2) * ny;
         }
 
         int horizontalPixelIndex(int x, int y, int nx) const {
@@ -109,20 +109,26 @@ namespace galsim
         }
 
         // Returns the indices of the corner vertices within each pixel polygon
+        // These are the indices for the horizontal stretch.  When converting two/from pixel
+        // polygons, there are two corner points, which may or may not have the same position,
+        // depending on the context in which it is being used.  That is, the last vertical point
+        // before the corner and the first one after a corner may be identical to the position
+        // from the horizontal corner.  Or it may be slightly offset, depending on which side
+        // of a "double T" corner we are on.
         int cornerIndexBottomLeft() const {
-            return _numVertices / 2;
+            return _numVertices / 2 + 1;
         }
 
         int cornerIndexBottomRight() const {
-            return 3 * (_numVertices / 2) + 1;
-        }
-
-        int cornerIndexTopLeft() const {
-            return 7 * (_numVertices / 2) + 3;
+            return 3 * (_numVertices / 2) + 2;
         }
 
         int cornerIndexTopRight() const {
-            return 5 * (_numVertices / 2) + 2;
+            return 5 * (_numVertices / 2) + 5;
+        }
+
+        int cornerIndexTopLeft() const {
+            return 7 * (_numVertices / 2) + 6;
         }
 
         // Converts pixel co-ordinates (x, y) and index n within pixel boundary
@@ -151,16 +157,16 @@ namespace galsim
             }
             else if (n < cornerIndexTopRight()) {
                 // right hand side
-                idx = (_numVertices - 1) - (n - (cornerIndexBottomRight()+1)) + verticalColumnStride(ny);
+                idx = (cornerIndexTopRight() - n - 1) + verticalColumnStride(ny);
             }
             else if (n <= cornerIndexTopLeft()) {
                 // top row including corners
                 *horizontal = true;
-                idx = (_numVertices + 1) - (n - cornerIndexTopRight()) + horizontalRowStride(nx);
+                idx = (cornerIndexTopLeft() - n) + horizontalRowStride(nx);
             }
             else {
                 // left hand side, upper
-                idx = n - (cornerIndexTopLeft()+1);
+                idx = n - cornerIndexTopLeft() - 1;
             }
 
             if (*horizontal) {
@@ -189,17 +195,17 @@ namespace galsim
             }
             // RHS
             for (; n < cornerIndexTopRight(); n++) {
-                idx = verticalPixelIndex(i + 1, j, ny) + (_numVertices - 1) - (n - (cornerIndexBottomRight()+1));
+                idx = verticalPixelIndex(i + 1, j, ny) + (cornerIndexTopRight() - n - 1);
                 callback(n, _verticalBoundaryPoints[idx], true, false);
             }
             // top row including corners
             for (; n <= cornerIndexTopLeft(); n++) {
-                idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - cornerIndexTopRight());
+                idx = horizontalPixelIndex(i, j + 1, nx) + (cornerIndexTopLeft() - n);
                 callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexTopRight(), true);
             }
             // LHS upper half
             for (; n < _nv; n++) {
-                idx = verticalPixelIndex(i, j, ny) + (n - (cornerIndexTopLeft()+1));
+                idx = verticalPixelIndex(i, j, ny) + (n - cornerIndexTopLeft() - 1);
                 callback(n, _verticalBoundaryPoints[idx], false, false);
             }
         }
@@ -222,17 +228,17 @@ namespace galsim
             }
             // RHS
             for (; n < cornerIndexTopRight(); n++) {
-                idx = verticalPixelIndex(i + 1, j, ny) + (_numVertices - 1) - (n - (cornerIndexBottomRight()+1));
+                idx = verticalPixelIndex(i + 1, j, ny) + (cornerIndexTopRight() - n - 1);
                 callback(n, _verticalBoundaryPoints[idx], true, false);
             }
             // top row including corners
             for (; n <= cornerIndexTopLeft(); n++) {
-                idx = horizontalPixelIndex(i, j + 1, nx) + (_numVertices + 1) - (n - cornerIndexTopRight());
+                idx = horizontalPixelIndex(i, j + 1, nx) + (cornerIndexTopLeft() - n);
                 callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexTopRight(), true);
             }
             // LHS upper half
             for (; n < _nv; n++) {
-                idx = verticalPixelIndex(i, j, ny) + (n - (cornerIndexTopLeft()+1));
+                idx = verticalPixelIndex(i, j, ny) + (n - cornerIndexTopLeft() - 1);
                 callback(n, _verticalBoundaryPoints[idx], false, false);
             }
         }
