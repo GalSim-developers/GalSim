@@ -191,7 +191,7 @@ namespace galsim
             // bottom row including corners
             for (; n <= cornerIndexBottomRight(); n++) {
                 idx = horizontalPixelIndex(i, j, nx) + (n - cornerIndexBottomLeft());
-                callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexBottomRight(), false);
+                callback(n, _horizontalBoundaryPoints[idx], false, false);
             }
             // RHS
             for (; n < cornerIndexTopRight(); n++) {
@@ -201,7 +201,7 @@ namespace galsim
             // top row including corners
             for (; n <= cornerIndexTopLeft(); n++) {
                 idx = horizontalPixelIndex(i, j + 1, nx) + (cornerIndexTopLeft() - n);
-                callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexTopRight(), true);
+                callback(n, _horizontalBoundaryPoints[idx], false, true);
             }
             // LHS upper half
             for (; n < _nv; n++) {
@@ -224,7 +224,7 @@ namespace galsim
             // bottom row including corners
             for (; n <= cornerIndexBottomRight(); n++) {
                 idx = horizontalPixelIndex(i, j, nx) + (n - cornerIndexBottomLeft());
-                callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexBottomRight(), false);
+                callback(n, _horizontalBoundaryPoints[idx], false, false);
             }
             // RHS
             for (; n < cornerIndexTopRight(); n++) {
@@ -234,7 +234,7 @@ namespace galsim
             // top row including corners
             for (; n <= cornerIndexTopLeft(); n++) {
                 idx = horizontalPixelIndex(i, j + 1, nx) + (cornerIndexTopLeft() - n);
-                callback(n, _horizontalBoundaryPoints[idx], n == cornerIndexTopRight(), true);
+                callback(n, _horizontalBoundaryPoints[idx], false, true);
             }
             // LHS upper half
             for (; n < _nv; n++) {
