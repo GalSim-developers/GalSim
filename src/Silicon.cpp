@@ -389,7 +389,7 @@ namespace galsim {
             int idx = getBoundaryIndex(i, j, n, &horizontal, nx, ny);
             Point pt = horizontal ? _horizontalBoundaryPoints[idx] :
                 _verticalBoundaryPoints[idx];
-            if ((n >= cornerIndexBottomRight()) && (n <= cornerIndexTopRight())) pt.x += 1.0;
+            if ((n > cornerIndexBottomRight()) && (n < cornerIndexTopRight())) pt.x += 1.0;
             if ((n >= cornerIndexTopRight()) && (n <= cornerIndexTopLeft())) pt.y += 1.0;
             Point& pt2 = poly[n];
             double dist = ((pt.x - pt2.x) * (pt.x - pt2.x)) +
@@ -663,18 +663,13 @@ namespace galsim {
         iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
                              Point p = pt;
 
-                             // top right corner (22) may need done
-                             if (n == 22) {
-                             if ((j - j1) < (ny -1)) return;
-                             }
-                             else if (n != 13) { // bottom right corner (13) always needs done
                              // only do bottom and left points unless we're on top/right edge
                              if ((rhs) && ((i - i1) < (nx - 1))) return;
                              if ((top) && ((j - j1) < (ny - 1))) return;
-                             }
 
                              if (rhs) p.x += 1.0;
                              if (top) p.y += 1.0;
+                             //xdbg<<"x,y = "<<p.x<<','<<p.y<<std::endl;
 
                              double tx = (double)i + p.x - _treeRingCenter.x + (double)orig_center.x;
                              double ty = (double)j + p.y - _treeRingCenter.y + (double)orig_center.y;
@@ -1010,14 +1005,14 @@ namespace galsim {
             int pi1 = getBoundaryIndex(i, j, n, &horizontal1, nx, ny);
             Point p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
                 _verticalBoundaryPoints[pi1];
-            if ((n >= cornerIndexBottomRight()) && (n <= cornerIndexTopRight())) p1.x += 1.0;
+            if ((n > cornerIndexBottomRight()) && (n < cornerIndexTopRight())) p1.x += 1.0;
             if ((n >= cornerIndexTopRight()) && (n <= cornerIndexTopLeft())) p1.y += 1.0;
 
             int n2 = (n + 1) % _nv;
             int pi2 = getBoundaryIndex(i, j, n2, &horizontal2, nx, ny);
             Point p2 = horizontal2 ? _horizontalBoundaryPoints[pi2] :
                 _verticalBoundaryPoints[pi2];
-            if ((n2 >= cornerIndexBottomRight()) && (n2 <= cornerIndexTopRight())) p2.x += 1.0;
+            if ((n2 > cornerIndexBottomRight()) && (n2 < cornerIndexTopRight())) p2.x += 1.0;
             if ((n2 >= cornerIndexTopRight()) && (n2 <= cornerIndexTopLeft())) p2.y += 1.0;
 
             area += p1.x * p2.y;
@@ -1067,8 +1062,8 @@ namespace galsim {
                 for (int i=i1; i<=i2; ++i, ptr+=step) {
                     double newArea = pixelArea(i - i1, j - j1, nx, ny);
 
-                    int index = (i - i1) * ny + (j - j1);
-                    double oldArea = _imagepolys[index].area();
+                    //int index = (i - i1) * ny + (j - j1);
+                    //double oldArea = _imagepolys[index].area();
 
                     *ptr = newArea;
                 }
@@ -1119,11 +1114,9 @@ namespace galsim {
         for (int y = 0; y < (ny + 1); y++) {
             // loop over pixels within a row
             for (int x = 0; x < nx; x++) {
-                for (int n = cornerIndexBottomLeft(); n < cornerIndexBottomRight(); n++) {
+                for (int n = cornerIndexBottomLeft(); n <= cornerIndexBottomRight(); n++) {
                     _horizontalBoundaryPoints[i++] = _emptypoly[n];
                 }
-                // add bottom right corner point
-                _horizontalBoundaryPoints[i++] = _emptypoly[cornerIndexBottomLeft()];
             }
         }
 
@@ -1133,9 +1126,11 @@ namespace galsim {
         for (int x = 0; x < (nx + 1); x++) {
             // loop over pixels within a column
             for (int y = 0; y < ny; y++) {
-                for (int n = (cornerIndexTopRight()-1); n > cornerIndexBottomRight(); n--) {
-                    _verticalBoundaryPoints[i] = _emptypoly[n];
-                    _verticalBoundaryPoints[i++].x -= 1.0;
+                for (int n = cornerIndexTopLeft()+1; n < _nv; n++) {
+                    _verticalBoundaryPoints[i++] = _emptypoly[n];
+                }
+                for (int n = 0; n < cornerIndexBottomLeft(); n++) {
+                    _verticalBoundaryPoints[i++] = _emptypoly[n];
                 }
             }
         }
