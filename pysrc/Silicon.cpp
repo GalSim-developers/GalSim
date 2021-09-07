@@ -38,12 +38,12 @@ namespace galsim {
         double Nrecalc, double DiffStep, double PixelSize,
         double SensorThickness, size_t idata,
         const Table& treeRingTable, const Position<double>& treeRingCenter,
-        const Table& abs_length_table, bool transpose, bool useNewBoundaries = false)
+        const Table& abs_length_table, bool transpose)
     {
         double* data = reinterpret_cast<double*>(idata);
         return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
                            Nrecalc, DiffStep, PixelSize, SensorThickness, data,
-                           treeRingTable, treeRingCenter, abs_length_table, transpose, useNewBoundaries);
+                           treeRingTable, treeRingCenter, abs_length_table, transpose);
     }
 
     void pyExportSilicon(py::module& _galsim)
