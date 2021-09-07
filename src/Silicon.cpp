@@ -32,11 +32,6 @@
 #include <algorithm>
 #include <climits>
 
-// for performance timing
-// should be removed before code is merged
-#include <iostream>
-#include <chrono>
-
 // only needed for std::exit when checking boundaries at each step
 // should be removed before code is merged
 #include <cstdlib>
@@ -96,13 +91,12 @@ namespace galsim {
                      double diffStep, double pixelSize,
                      double sensorThickness, double* vertex_data,
                      const Table& tr_radial_table, Position<double> treeRingCenter,
-                     const Table& abs_length_table, bool transpose,
-                     bool useNewBoundaries) :
+                     const Table& abs_length_table, bool transpose) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _qDist(qDist),
         _nrecalc(nrecalc), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
-        _abs_length_table(abs_length_table), _transpose(transpose), _resume_next_recalc(-999), _useNewBoundaries(useNewBoundaries)
+        _abs_length_table(abs_length_table), _transpose(transpose), _resume_next_recalc(-999)
     {
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
@@ -127,9 +121,12 @@ namespace galsim {
         for (int i=0; i < numThreads; i++) {
             _testpoly.push_back(_emptypoly);
         }
+
+#if 0
         _distortions.resize(_nx*_ny);
         for (int i=0; i<(_nx*_ny); ++i)
             _distortions[i] = _emptypoly;  // These will accumulated the distortions over time.
+#endif
 
         // Next, we read in the pixel distortions from the Poisson_CCD simulations
         if (_transpose) std::swap(_nx,_ny);
@@ -167,13 +164,19 @@ namespace galsim {
 
             // The following captures the pixel displacement. These are translated into
             // coordinates compatible with (x,y). These are per electron.
+#if 0
             double x = _distortions[i * _ny + j][n].x;
             x = ((x1 - x0) / _pixelSize + 0.5 - x) / numElec;
             _distortions[i * _ny + j][n].x = x;
             double y = _distortions[i * _ny + j][n].y;
             y = ((y1 - y0) / _pixelSize + 0.5 - y) / numElec;
             _distortions[i * _ny + j][n].y = y;
-
+#endif
+	    double x = _emptypoly[n].x;
+            x = ((x1 - x0) / _pixelSize + 0.5 - x) / numElec;
+	    double y = _emptypoly[n].y;
+            y = ((y1 - y0) / _pixelSize + 0.5 - y) / numElec;
+	    
             // populate the linear distortions arrays
             // make sure to always use values from closest to center pixel
             if ((((n < cornerIndexBottomLeft()) || (n > cornerIndexTopLeft())) && (i <= (_nx / 2))) ||  // LHS
@@ -209,8 +212,10 @@ namespace galsim {
 
                 // Do all the same stuff as above again.  (Could consider pulling this little
                 // section out into a function that we call twice.)
+#if 0
                 _distortions[i * _ny + j][n].x = x;
                 _distortions[i * _ny + j][n].y = y;
+#endif
 
                 if ((((n < cornerIndexBottomLeft()) || (n > cornerIndexTopLeft())) && (i <= (_nx / 2))) ||  // LHS
                     (((n > cornerIndexBottomRight()) && (n < cornerIndexTopRight())) && (i >= (_nx / 2))) || // RHS
@@ -230,6 +235,7 @@ namespace galsim {
             }
         }
 
+#if 0
 #ifdef DEBUGLOGGING
         //Test print out of distortion for central pixel
         int i = 4;
@@ -241,8 +247,10 @@ namespace galsim {
 #endif
         makeDistortionsConsistent();
         addHalo();
+#endif
     }
 
+#if 0
     // Reading from the sensor file results in slightly different boundary points
     // for neighbouring pixels. This function corrects this by using the values closest
     // to the center pixel in all cases.
@@ -409,6 +417,7 @@ namespace galsim {
         }
         return success;
     }
+#endif
 
     void Silicon::updatePixelBounds(int nx, int ny, size_t k)
     {
@@ -541,7 +550,7 @@ namespace galsim {
 
         // Now we cycle through the pixels in the target image and update any affected
         // pixel shapes.
-        std::vector<bool> changed(_imagepolys.size(), false);
+        std::vector<bool> changed(nx * ny, false);
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -564,49 +573,41 @@ namespace galsim {
                     int dist_index = disti * _ny + distj;
 
                     for (int polyj=polyj1; polyj<=polyj2; ++polyj, ++distj, ++index, ++dist_index) {
+#if 0
                         Polygon& distortion = _distortions[dist_index];
                         Polygon& imagepoly = _imagepolys[index];
+#endif
 
                         if ((disti > 0) && (distj > 0) && (disti < (_nx-1)) &&
                             (distj < (_ny-1))) {
                             // distort the linear boundaries
                             applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge, ((polyi == polyi1) || (disti == 1)), (polyi == polyi2) || (disti == (_nx-2)), (polyj == polyj1) || (distj == 1));
                         }
+#if 0
                         imagepoly.distort(distortion, charge);
+#endif
                         changed[index] = true;
                     }
                 }
             }
         }
-        auto start = std::chrono::steady_clock::now();
+
         bool checkFailed = false;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-        for (size_t k=0; k<_imagepolys.size(); ++k) {
+        for (size_t k=0; k<changed.size(); ++k) {
             if (changed[k]) {
+#if 0
                 _imagepolys[k].updateBounds();
-                //updatePixelBounds(nx, ny, k);
+#endif
+                updatePixelBounds(nx, ny, k);
             }
             // uncomment this to verify the polygonal and linear boundaries on every
             // change
             //if (!checkPixel(k / ny, k % ny, nx, ny)) checkFailed = true;
         }
         if (checkFailed) std::exit(1);
-        auto middle = std::chrono::steady_clock::now();
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
-        for (size_t k=0; k<_imagepolys.size(); ++k) {
-            if (changed[k]) {
-                //_imagepolys[k].updateBounds();
-                updatePixelBounds(nx, ny, k);
-            }
-        }
-        auto end = std::chrono::steady_clock::now();
-
-        //std::cout << "poly update: " << std::chrono::duration_cast<std::chrono::microseconds>(middle - start).count() << "us" << std::endl;
-        //std::cout << "linear update: " << std::chrono::duration_cast<std::chrono::microseconds>(end - middle).count() << "us" << std::endl;
     }
 
     // This version of calculateTreeRingDistortion only distorts a polygon.
@@ -634,13 +635,12 @@ namespace galsim {
         }
     }
 
-    // This version updates both a polygonal boundary and the linear boundary.
-    // Used in the main update.
+    // This version updates the linear boundary
     void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
-                                              Polygon& poly, int nx, int ny, int i1, int j1)
+                                              int nx, int ny, int i1, int j1)
     {
         double shift = 0.0;
-        auto start = std::chrono::steady_clock::now();
+#if 0
         for (int n=0; n<_nv; n++) {
             //xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
             //    poly[n].x <<"  "<< poly[n].y<<std::endl;
@@ -657,9 +657,9 @@ namespace galsim {
             poly[n].x += dx;
             poly[n].y += dy;
             //xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
-        }
+	}
+#endif
 
-        auto middle = std::chrono::steady_clock::now();
         iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
                              Point p = pt;
 
@@ -684,9 +684,6 @@ namespace galsim {
                              pt.x += dx;
                              pt.y += dy;
         });
-        auto end = std::chrono::steady_clock::now();
-        //std::cout << "poly update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(middle - start).count() << "ns" << std::endl;
-        //std::cout << "linear update: " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - middle).count() << "ns" << std::endl;
     }
 
     template <typename T>
@@ -713,25 +710,27 @@ namespace galsim {
         const int ny = j2-j1+1;
         // Now we cycle through the pixels in the target image and add
         // the (small) distortions due to tree rings
-        std::vector<bool> changed(_imagepolys.size(), false);
+        std::vector<bool> changed(nx * ny, false);
         for (int i=i1; i<=i2; ++i) {
             for (int j=j1; j<=j2; ++j) {
                 int index = (i - i1) * ny + (j - j1);
-                calculateTreeRingDistortion(i, j, orig_center, _imagepolys[index],
-                                            nx, ny, i1, j1);
+                calculateTreeRingDistortion(i, j, orig_center, nx, ny, i1, j1);
                 changed[index] = true;
             }
         }
-        for (size_t k=0; k<_imagepolys.size(); ++k) {
+        for (size_t k=0; k<changed.size(); ++k) {
             if (changed[k]) {
+#if 0
                 _imagepolys[k].updateBounds();
+#endif
                 updatePixelBounds(nx, ny, k);
             }
         }
     }
 
+#if 0
     // Checks if a point is inside a pixel based on the old polygonal boundaries.
-    // TO BE REMOVED (replaced by insidePixelNew)
+    // TO BE REMOVED
     template <typename T>
     bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                               ImageView<T> target, bool* off_edge) const
@@ -811,6 +810,7 @@ namespace galsim {
         }
         return inside;
     }
+#endif
 
     // Scales a linear pixel boundary into a polygon object.
     void Silicon::scaleBoundsToPoly(int i, int j, int nx, int ny,
@@ -832,8 +832,8 @@ namespace galsim {
 
     // Checks if a point is inside a pixel based on the new linear boundaries.
     template <typename T>
-    bool Silicon::insidePixelNew(int ix, int iy, double x, double y, double zconv,
-                                 ImageView<T> target, bool* off_edge) const
+    bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
+			      ImageView<T> target, bool* off_edge) const
     {
         // This scales the pixel distortion based on the zconv, which is the depth
         // at which the electron is created, and then tests to see if the delivered
@@ -1044,9 +1044,11 @@ namespace galsim {
             dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
             dbg<<"total memory = "<<nxny*_nv*sizeof(Point)/(1024.*1024.)<<" MBytes"<<std::endl;
 
+#if 0
             _imagepolys.resize(nxny);
             for (int i=0; i<nxny; ++i)
                 _imagepolys[i] = _emptypoly;
+#endif
             initializeBoundaryPoints(nx, ny);
 
             // Set up the pixel information according to the current flux in the image.
@@ -1061,10 +1063,10 @@ namespace galsim {
             for (int j=j1; j<=j2; ++j, ptr+=skip) {
                 for (int i=i1; i<=i2; ++i, ptr+=step) {
                     double newArea = pixelArea(i - i1, j - j1, nx, ny);
-
-                    //int index = (i - i1) * ny + (j - j1);
-                    //double oldArea = _imagepolys[index].area();
-
+#if 0
+                    int index = (i - i1) * ny + (j - j1);
+                    double oldArea = _imagepolys[index].area();
+#endif
                     *ptr = newArea;
                 }
             }
@@ -1195,6 +1197,7 @@ namespace galsim {
                 throw std::runtime_error(
                     "Silicon::accumulate called with resume, but accumulate hasn't been run yet.");
 
+#if 0
             // This isn't a complete check that it is the same image.  But it prevents
             // seg faults if the user messes up.
             if (int(_imagepolys.size()) != nxny)
@@ -1202,8 +1205,11 @@ namespace galsim {
                     "Silicon::accumulate called with resume, but image is not the same shape as "
                     "the previous run.");
 #endif
+#endif
             assert(_resume_next_recalc != -999);
+#if 0
             assert(int(_imagepolys.size()) == nxny);
+#endif
 
             next_recalc = _resume_next_recalc;
             // We already added delta to target.  But to get the right values when we next
@@ -1214,9 +1220,11 @@ namespace galsim {
             target -= _delta;
             dbg<<"resume=True.  Use saved next_recalc = "<<next_recalc<<std::endl;
         } else {
+#if 0
             _imagepolys.resize(nxny);
             for (int i=0; i<nxny; ++i)
                 _imagepolys[i] = _emptypoly;
+#endif
             initializeBoundaryPoints(nx, ny);
 
             dbg<<"Built poly list\n";
@@ -1307,12 +1315,7 @@ namespace galsim {
                 // First check the obvious choice, since this will usually work.
                 bool off_edge;
                 bool foundPixel;
-                if (!_useNewBoundaries) {
-                    foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
-                }
-                else {
-                    foundPixel = insidePixelNew(ix, iy, x, y, zconv, target, &off_edge);
-                }
+		foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
 #ifdef DEBUGLOGGING
                 if (foundPixel) ++zerocount;
 #endif
@@ -1431,11 +1434,6 @@ namespace galsim {
                                        ImageView<double> target, bool*) const;
     template bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
                                        ImageView<float> target, bool*) const;
-
-    template bool Silicon::insidePixelNew(int ix, int iy, double x, double y, double zconv,
-                                          ImageView<double> target, bool*) const;
-    template bool Silicon::insidePixelNew(int ix, int iy, double x, double y, double zconv,
-                                          ImageView<float> target, bool*) const;
 
     template void Silicon::updatePixelDistortions(ImageView<double> target);
     template void Silicon::updatePixelDistortions(ImageView<float> target);

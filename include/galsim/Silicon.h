@@ -41,9 +41,8 @@ namespace galsim
         Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
                 double diffStep, double pixelSize, double sensorThickness, double* vertex_data,
                 const Table& tr_radial_table, Position<double> treeRingCenter,
-                const Table& abs_length_table, bool transpose, bool useNewBoundaries = false);
+                const Table& abs_length_table, bool transpose);
 
-        // TO BE REMOVED (replaced by insidePixelNew)
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target, bool* off_edge=0) const;
@@ -51,10 +50,6 @@ namespace galsim
         void scaleBoundsToPoly(int i, int j, int nx, int ny,
                                const Polygon& emptypoly, Polygon& result,
                                double factor) const;
-
-        template <typename T>
-        bool insidePixelNew(int ix, int iy, double x, double y, double zconv,
-                            ImageView<T> target, bool* off_edge=0) const;
 
         double calculateConversionDepth(const PhotonArray& photons, int i, double randomNumber) const;
 
@@ -67,8 +62,7 @@ namespace galsim
         void calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
                                          Polygon& poly) const;
         void calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
-                                         Polygon& poly, int nx, int ny, int i1,
-                                         int j1);
+                                         int nx, int ny, int i1, int j1);
 
         template <typename T>
         void addTreeRingDistortions(ImageView<T> target, Position<int> orig_center);
@@ -247,6 +241,7 @@ namespace galsim
 
         void updatePixelBounds(int nx, int ny, size_t k);
 
+#if 0
         // TO BE REMOVED
         bool checkPixel(int i, int j, int nx, int ny);
 
@@ -256,10 +251,16 @@ namespace galsim
         void addHalo();
 
         bool _useNewBoundaries;
+#endif
+
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
+
+#if 0
         std::vector<Polygon> _distortions;
         std::vector<Polygon> _imagepolys;
+#endif
+
         std::vector<Point> _horizontalBoundaryPoints;
         std::vector<Point> _verticalBoundaryPoints;
         std::vector<Bounds<double> > _pixelInnerBounds;

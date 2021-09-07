@@ -114,42 +114,6 @@ def test_simple():
 
     
 @timer
-def test_new_boundaries():
-    """Test the new linear pixel boundary code compared to the old polygonal boundaries.
-    """
-    # create all the required objects
-    obj = galsim.Gaussian(flux=10000, sigma=0.3)
-
-    im1 = galsim.ImageD(64, 64, scale=0.3)
-    im2 = galsim.ImageD(64, 64, scale=0.3)
-
-    rng1 = galsim.BaseDeviate(5678)
-    rng2 = galsim.BaseDeviate(5678)
-
-    silicon_ob = galsim.SiliconSensor(rng=rng1, diffusion_factor=0.0, use_new_boundaries=False)
-    silicon_nb = galsim.SiliconSensor(rng=rng2, diffusion_factor=0.0, use_new_boundaries=True)
-
-    # shoot some photons onto both sensors
-    obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon_ob, rng=rng1)
-    obj.drawImage(im2, method='phot', poisson_flux=False, sensor=silicon_nb, rng=rng2)
-
-    # compare the results
-    np.testing.assert_array_equal(im1.array, im2.array)
-
-    # more photons to get brighter-fatter effect
-    obj *= 100
-    rng1 = galsim.BaseDeviate(5678)
-    rng2 = galsim.BaseDeviate(5678)
-
-    obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon_ob, rng=rng1)
-    obj.drawImage(im2, method='phot', poisson_flux=False, sensor=silicon_nb, rng=rng2)
-
-    # should still match
-    np.testing.assert_array_equal(im1.array, im2.array)
-    
-    
-
-@timer
 def test_silicon():
     """Test the basic construction and use of the SiliconSensor class.
     """
