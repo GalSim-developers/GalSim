@@ -32,10 +32,6 @@
 #include <algorithm>
 #include <climits>
 
-// only needed for std::exit when checking boundaries at each step
-// should be removed before code is merged
-#include <cstdlib>
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -100,10 +96,10 @@ namespace galsim {
     {
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
-        // and builds an array of polygons for calculating the distorted pixel shapes
+        // and builds arrays of points for calculating the distorted pixel shapes
         // as a function of charge in the surrounding pixels.
 
-        // First build the distorted polygons. We have an array of nx*ny polygons,
+        // First build the distorted points. We have linear boundary arrays,
         // an undistorted polygon, and a polygon for test.
 
         int nv1 = 4 * _numVertices + 4; // Number of vertices in each pixel in input file
@@ -607,7 +603,7 @@ namespace galsim {
             // change
             //if (!checkPixel(k / ny, k % ny, nx, ny)) checkFailed = true;
         }
-        if (checkFailed) std::exit(1);
+        //if (checkFailed) std::exit(1);
     }
 
     // This version of calculateTreeRingDistortion only distorts a polygon.
@@ -639,8 +635,8 @@ namespace galsim {
     void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
                                               int nx, int ny, int i1, int j1)
     {
-        double shift = 0.0;
 #if 0
+        double shift = 0.0;
         for (int n=0; n<_nv; n++) {
             //xdbg<<"i,j,n = "<<i<<','<<j<<','<<n<<": x,y = "<<
             //    poly[n].x <<"  "<< poly[n].y<<std::endl;
