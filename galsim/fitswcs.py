@@ -1574,7 +1574,6 @@ class GSFitsWCS(CelestialWCS):
                  self.wcs_type == other.wcs_type and
                  np.array_equal(self.crpix,other.crpix) and
                  np.array_equal(self.cd,other.cd) and
-                 np.array_equal(self.cd,other.cd) and
                  self.center == other.center and
                  np.array_equal(self.pv,other.pv) and
                  np.array_equal(self.ab,other.ab) and

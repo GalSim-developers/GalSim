@@ -2595,7 +2595,7 @@ def check_sphere(ra1, dec1, ra2, dec2, atol=1):
     if np.any(w):
         cross = np.cross(np.array([x1, y1, z1])[w], np.array([x2, y2, z2])[w])
         crosssq = cross[0]**2 + cross[1]**2 + cross[2]**2
-        dist[w] = np.pi - np.arcsin(np.sqrt(crossq))
+        dist[w] = np.pi - np.arcsin(np.sqrt(crosssq))
     dist = np.rad2deg(dist)*3600
     np.testing.assert_allclose(dist, 0.0, rtol=0.0, atol=atol)
 
