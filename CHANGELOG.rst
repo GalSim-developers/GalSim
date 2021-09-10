@@ -117,3 +117,8 @@ Change from v2.2.4 to v2.2.5
 =============================
 
 - Minor fixes to work with Python 3.8. (#1112, #1115)
+
+Change from v2.2.5 to v2.2.6
+=============================
+
+- Backported ability to shear a position to 2.2 series. (#1090)
