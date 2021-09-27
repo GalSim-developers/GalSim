@@ -450,78 +450,6 @@ namespace galsim {
                              });
     }
 
-    // Applies distortion to the linear boundaries of a pixel
-    void Silicon::applyPixelDistortion(int i, int j, int disti, int distj, int nx,
-                                       int ny, double charge, bool lhs, bool rhs, bool bottom)
-    {
-        // all pixels update their top left and right corners, top and left boundaries
-        // only the pixels on the right hand side of the update region update
-        // their right hand boundaries, and only the pixels along the bottom of the
-        // update region update their bottom boundaries
-
-        // we also need to ensure that pixels just inside the update region horizontally
-        // update the adjacent corners of the neighbouring pixels on the outside
-
-        // top (and optionally bottom rows)
-
-
-
-        for (int k = 0; k < (_numVertices + 2); k++) {
-            if (bottom) {
-                int idxb = horizontalPixelIndex(i, j, nx) + k;
-                Point& pt = _horizontalBoundaryPoints[idxb];
-                Point& distpt = _horizontalDistortions[horizontalPixelIndex(disti, distj, _nx) + k];
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-                pt.x += distpt.x * charge;
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-                pt.y += distpt.y * charge;
-            }
-
-            int idxt = horizontalPixelIndex(i, j+1, nx) + k;
-            Point& pt2 = _horizontalBoundaryPoints[idxt];
-            Point& distpt2 = _horizontalDistortions[horizontalPixelIndex(disti, distj+1, _nx) + k];
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-            pt2.x += distpt2.x * charge;
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-            pt2.y += distpt2.y * charge;
-        }
-
-        // sides
-        for (int k = 0; k < _numVertices + 2; k++) {
-            Point& pt = _verticalBoundaryPoints[verticalPixelIndex(i, j, ny) + k];
-            Point& distpt = _verticalDistortions[verticalPixelIndex(disti, distj, _ny) + k];
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-            pt.x += distpt.x * charge;
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-            pt.y += distpt.y * charge;
-
-            if (rhs) {
-                Point& pt2 = _verticalBoundaryPoints[verticalPixelIndex(i+1, j, ny) + k];
-                Point& distpt2 = _verticalDistortions[verticalPixelIndex(disti+1, distj, _ny) + k];
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-                pt2.x += distpt2.x * charge;
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
-                pt2.y += distpt2.y * charge;
-            }
-        }
-    }
-
     template <typename T>
     void Silicon::updatePixelDistortions(ImageView<T> target)
     {
@@ -561,30 +489,98 @@ namespace galsim {
                 int polyi2 = std::min(i + (_qDist+1), i2);
                 int polyj1 = std::max(j - (_qDist+1), j1);
                 int polyj2 = std::min(j + (_qDist+1), j2);
-                int disti = nxCenter + polyi1 - i;
 
-                for (int polyi=polyi1; polyi<=polyi2; ++polyi, ++disti) {
-                    int distj = nyCenter + polyj1 - j;
+		// work out indices of update region in horizontal linear array
+		int horizBoundaryX = (((i - i1) - _qDist) * horizontalPixelStride());
+		int horizDistortionX = ((nxCenter - _qDist) * horizontalPixelStride());
+		int horizW = (((_qDist * 2) + 1) * horizontalPixelStride());
+		if (horizBoundaryX < 0) {
+		    // handle case where stencil goes off left side
+		    horizW += horizBoundaryX;
+		    horizDistortionX -= horizBoundaryX;
+		    horizBoundaryX = 0;
+		}
+		if ((horizBoundaryX + horizW) > horizontalRowStride(nx)) {
+		    // handle case where stencil goes off right side
+		    horizW = horizontalRowStride(nx) - horizBoundaryX;
+		}
+
+		int horizBoundaryY = (j - j1) - _qDist;
+		int horizDistortionY = nyCenter - _qDist;
+		int horizH = (_qDist * 2) + 2;
+		if (horizBoundaryY < 0) {
+		    horizH += horizBoundaryY;
+		    horizDistortionY -= horizBoundaryY;
+		    horizBoundaryY = 0;
+		}
+		if ((horizBoundaryY + horizH) > ny) {
+		    horizH = ny - horizBoundaryY;
+		}
+
+		// update horizontal boundaries
+		for (int y = 0; y < horizH; ++y) {
+		    int index = ((horizBoundaryY + y) * horizontalRowStride(nx)) + horizBoundaryX;
+		    int dist_index = ((horizDistortionY + y) * horizontalRowStride(_nx)) + horizDistortionX;
+		    for (int x = 0; x < horizW; ++x, ++index, ++dist_index) {
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+			_horizontalBoundaryPoints[index].x += _horizontalDistortions[dist_index].x * charge;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+			_horizontalBoundaryPoints[index].y += _horizontalDistortions[dist_index].y * charge;
+		    }
+		}
+
+		// work out indices of update region in vertical linear array
+		int vertBoundaryX = (i - i1) - _qDist;
+		int vertDistortionX = nxCenter - _qDist;
+		int vertW = (_qDist * 2) + 2;
+		if (vertBoundaryX < 0) {
+		    vertW += vertBoundaryX;
+		    vertDistortionX -= vertBoundaryX;
+		    vertBoundaryX = 0;
+		}
+		if ((vertBoundaryX + vertW) > nx) {
+		    vertW = nx - vertBoundaryX;
+		}
+
+		int vertBoundaryY = (((j - j1) - _qDist) * verticalPixelStride());
+		int vertDistortionY = ((nyCenter - _qDist) * verticalPixelStride());
+		int vertH = (((_qDist * 2) + 1) * verticalPixelStride());
+		if (vertBoundaryY < 0) {
+		    vertH += vertBoundaryY;
+		    vertDistortionY -= vertBoundaryY;
+		    vertBoundaryY = 0;
+		}
+		if ((vertBoundaryY + vertH) > verticalColumnStride(ny)) {
+		    vertH = verticalColumnStride(ny) - vertBoundaryY;
+		}
+
+		// update vertical boundaries
+		for (int x = 0; x < vertW; ++x) {
+		    int index = ((vertBoundaryX + x) * verticalColumnStride(ny)) + ((verticalColumnStride(ny) - 1) - vertBoundaryY);
+		    int dist_index = ((vertDistortionX + x) * verticalColumnStride(_ny)) + ((verticalColumnStride(_ny) - 1) - vertDistortionY);
+		    for (int y = 0; y < vertH; ++y, --index, --dist_index) {
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+			_verticalBoundaryPoints[index].x += _verticalDistortions[dist_index].x * charge;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+			_verticalBoundaryPoints[index].y += _verticalDistortions[dist_index].y * charge;
+		    }
+		}
+
+		// flag pixels with changed bounds
+                for (int polyi=polyi1; polyi<=polyi2; ++polyi) {
                     int index = (polyi - i1) * ny + (polyj1 - j1);
-                    int dist_index = disti * _ny + distj;
-
-                    for (int polyj=polyj1; polyj<=polyj2; ++polyj, ++distj, ++index, ++dist_index) {
-#if 0
-                        Polygon& distortion = _distortions[dist_index];
-                        Polygon& imagepoly = _imagepolys[index];
-#endif
-
-                        if ((disti > 0) && (distj > 0) && (disti < (_nx-1)) &&
-                            (distj < (_ny-1))) {
-                            // distort the linear boundaries
-                            applyPixelDistortion(polyi - i1, polyj - j1, disti, distj, nx, ny, charge, ((polyi == polyi1) || (disti == 1)), (polyi == polyi2) || (disti == (_nx-2)), (polyj == polyj1) || (distj == 1));
-                        }
-#if 0
-                        imagepoly.distort(distortion, charge);
-#endif
+                    for (int polyj=polyj1; polyj<=polyj2; ++polyj, ++index) {
                         changed[index] = true;
-                    }
-                }
+		    }
+		}
             }
         }
 
