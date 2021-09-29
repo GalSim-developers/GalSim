@@ -490,97 +490,97 @@ namespace galsim {
                 int polyj1 = std::max(j - (_qDist+1), j1);
                 int polyj2 = std::min(j + (_qDist+1), j2);
 
-		// work out indices of update region in horizontal linear array
-		int horizBoundaryX = (((i - i1) - _qDist) * horizontalPixelStride());
-		int horizDistortionX = ((nxCenter - _qDist) * horizontalPixelStride());
-		int horizW = (((_qDist * 2) + 1) * horizontalPixelStride());
-		if (horizBoundaryX < 0) {
-		    // handle case where stencil goes off left side
-		    horizW += horizBoundaryX;
-		    horizDistortionX -= horizBoundaryX;
-		    horizBoundaryX = 0;
-		}
-		if ((horizBoundaryX + horizW) > horizontalRowStride(nx)) {
-		    // handle case where stencil goes off right side
-		    horizW = horizontalRowStride(nx) - horizBoundaryX;
-		}
+                // work out indices of update region in horizontal linear array
+                int horizBoundaryX = (((i - i1) - _qDist) * horizontalPixelStride());
+                int horizDistortionX = ((nxCenter - _qDist) * horizontalPixelStride());
+                int horizW = (((_qDist * 2) + 1) * horizontalPixelStride());
+                if (horizBoundaryX < 0) {
+                    // handle case where stencil goes off left side
+                    horizW += horizBoundaryX;
+                    horizDistortionX -= horizBoundaryX;
+                    horizBoundaryX = 0;
+                }
+                if ((horizBoundaryX + horizW) > horizontalRowStride(nx)) {
+                    // handle case where stencil goes off right side
+                    horizW = horizontalRowStride(nx) - horizBoundaryX;
+                }
 
-		int horizBoundaryY = (j - j1) - _qDist;
-		int horizDistortionY = nyCenter - _qDist;
-		int horizH = (_qDist * 2) + 2;
-		if (horizBoundaryY < 0) {
-		    horizH += horizBoundaryY;
-		    horizDistortionY -= horizBoundaryY;
-		    horizBoundaryY = 0;
-		}
-		if ((horizBoundaryY + horizH) > ny) {
-		    horizH = ny - horizBoundaryY;
-		}
+                int horizBoundaryY = (j - j1) - _qDist;
+                int horizDistortionY = nyCenter - _qDist;
+                int horizH = (_qDist * 2) + 2;
+                if (horizBoundaryY < 0) {
+                    horizH += horizBoundaryY;
+                    horizDistortionY -= horizBoundaryY;
+                    horizBoundaryY = 0;
+                }
+                if ((horizBoundaryY + horizH) > ny) {
+                    horizH = ny - horizBoundaryY;
+                }
 
-		// update horizontal boundaries
-		for (int y = 0; y < horizH; ++y) {
-		    int index = ((horizBoundaryY + y) * horizontalRowStride(nx)) + horizBoundaryX;
-		    int dist_index = ((horizDistortionY + y) * horizontalRowStride(_nx)) + horizDistortionX;
-		    for (int x = 0; x < horizW; ++x, ++index, ++dist_index) {
+                // update horizontal boundaries
+                for (int y = 0; y < horizH; ++y) {
+                    int index = ((horizBoundaryY + y) * horizontalRowStride(nx)) + horizBoundaryX;
+                    int dist_index = ((horizDistortionY + y) * horizontalRowStride(_nx)) + horizDistortionX;
+                    for (int x = 0; x < horizW; ++x, ++index, ++dist_index) {
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-			_horizontalBoundaryPoints[index].x += _horizontalDistortions[dist_index].x * charge;
+                        _horizontalBoundaryPoints[index].x += _horizontalDistortions[dist_index].x * charge;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-			_horizontalBoundaryPoints[index].y += _horizontalDistortions[dist_index].y * charge;
-		    }
-		}
+                        _horizontalBoundaryPoints[index].y += _horizontalDistortions[dist_index].y * charge;
+                    }
+                }
 
-		// work out indices of update region in vertical linear array
-		int vertBoundaryX = (i - i1) - _qDist;
-		int vertDistortionX = nxCenter - _qDist;
-		int vertW = (_qDist * 2) + 2;
-		if (vertBoundaryX < 0) {
-		    vertW += vertBoundaryX;
-		    vertDistortionX -= vertBoundaryX;
-		    vertBoundaryX = 0;
-		}
-		if ((vertBoundaryX + vertW) > nx) {
-		    vertW = nx - vertBoundaryX;
-		}
+                // work out indices of update region in vertical linear array
+                int vertBoundaryX = (i - i1) - _qDist;
+                int vertDistortionX = nxCenter - _qDist;
+                int vertW = (_qDist * 2) + 2;
+                if (vertBoundaryX < 0) {
+                    vertW += vertBoundaryX;
+                    vertDistortionX -= vertBoundaryX;
+                    vertBoundaryX = 0;
+                }
+                if ((vertBoundaryX + vertW) > nx) {
+                    vertW = nx - vertBoundaryX;
+                }
 
-		int vertBoundaryY = (((j - j1) - _qDist) * verticalPixelStride());
-		int vertDistortionY = ((nyCenter - _qDist) * verticalPixelStride());
-		int vertH = (((_qDist * 2) + 1) * verticalPixelStride());
-		if (vertBoundaryY < 0) {
-		    vertH += vertBoundaryY;
-		    vertDistortionY -= vertBoundaryY;
-		    vertBoundaryY = 0;
-		}
-		if ((vertBoundaryY + vertH) > verticalColumnStride(ny)) {
-		    vertH = verticalColumnStride(ny) - vertBoundaryY;
-		}
+                int vertBoundaryY = (((j - j1) - _qDist) * verticalPixelStride());
+                int vertDistortionY = ((nyCenter - _qDist) * verticalPixelStride());
+                int vertH = (((_qDist * 2) + 1) * verticalPixelStride());
+                if (vertBoundaryY < 0) {
+                    vertH += vertBoundaryY;
+                    vertDistortionY -= vertBoundaryY;
+                    vertBoundaryY = 0;
+                }
+                if ((vertBoundaryY + vertH) > verticalColumnStride(ny)) {
+                    vertH = verticalColumnStride(ny) - vertBoundaryY;
+                }
 
-		// update vertical boundaries
-		for (int x = 0; x < vertW; ++x) {
-		    int index = ((vertBoundaryX + x) * verticalColumnStride(ny)) + ((verticalColumnStride(ny) - 1) - vertBoundaryY);
-		    int dist_index = ((vertDistortionX + x) * verticalColumnStride(_ny)) + ((verticalColumnStride(_ny) - 1) - vertDistortionY);
-		    for (int y = 0; y < vertH; ++y, --index, --dist_index) {
+                // update vertical boundaries
+                for (int x = 0; x < vertW; ++x) {
+                    int index = ((vertBoundaryX + x) * verticalColumnStride(ny)) + ((verticalColumnStride(ny) - 1) - vertBoundaryY);
+                    int dist_index = ((vertDistortionX + x) * verticalColumnStride(_ny)) + ((verticalColumnStride(_ny) - 1) - vertDistortionY);
+                    for (int y = 0; y < vertH; ++y, --index, --dist_index) {
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-			_verticalBoundaryPoints[index].x += _verticalDistortions[dist_index].x * charge;
+                        _verticalBoundaryPoints[index].x += _verticalDistortions[dist_index].x * charge;
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
-			_verticalBoundaryPoints[index].y += _verticalDistortions[dist_index].y * charge;
-		    }
-		}
+                        _verticalBoundaryPoints[index].y += _verticalDistortions[dist_index].y * charge;
+                    }
+                }
 
-		// flag pixels with changed bounds
+                // flag pixels with changed bounds
                 for (int polyi=polyi1; polyi<=polyi2; ++polyi) {
                     int index = (polyi - i1) * ny + (polyj1 - j1);
                     for (int polyj=polyj1; polyj<=polyj2; ++polyj, ++index) {
                         changed[index] = true;
-		    }
-		}
+                    }
+                }
             }
         }
 
