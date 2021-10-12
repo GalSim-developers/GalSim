@@ -489,6 +489,7 @@ namespace galsim {
             // Loop over rectangle of pixels that could affect this row of points
             int polyi1 = std::max(x - _qDist, 0);
             int polyi2 = std::min(x + _qDist, nx - 1);
+	    // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
             int polyj1 = std::max(y - (_qDist + 1), 0);
             int polyj2 = std::min(y + _qDist, ny - 1);
 
