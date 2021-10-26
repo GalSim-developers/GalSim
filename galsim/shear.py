@@ -126,7 +126,7 @@ class Shear:
 
         if len(args) > 1:
             raise TypeError(
-                "Shear constructor received >1 non-keyword arguments: %s"%args)
+                "Shear constructor received >1 non-keyword arguments: %s"%str(args))
 
         # If a component of e, g, or eta, then require that the other component is zero if not set,
         # and don't allow specification of mixed pairs like e1 and g2.
