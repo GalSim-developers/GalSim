@@ -32,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -195,7 +194,7 @@ not automatically imported when you <code class="docutils literal notranslate"><
 <h2>DES PSF models<a class="headerlink" href="#des-psf-models" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="galsim.des.DES_PSFEx">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">DES_PSFEx</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">image_file_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">DES_PSFEx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_PSFEx" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class that handles DES files describing interpolated principal component images
 of the PSF.  These are usually stored as *_psfcat.psf files.</p>
@@ -266,7 +265,7 @@ the same directory.) [default: None].</p></li>
 </dl>
 <dl class="py method">
 <dt id="galsim.des.DES_PSFEx.getLocalWCS">
-<code class="sig-name descname">getLocalWCS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_pos</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getLocalWCS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getLocalWCS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getLocalWCS</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getLocalWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getLocalWCS" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the original image was provided to the constructor, this will return the local
 WCS at a given location in that original image.  If not, this will return None.</p>
 <dl class="simple">
@@ -282,7 +281,7 @@ WCS at a given location in that original image.  If not, this will return None.<
 
 <dl class="py method">
 <dt id="galsim.des.DES_PSFEx.getPSF">
-<code class="sig-name descname">getPSF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_pos</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getPSF" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getPSF</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getPSF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the PSF at position <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -300,7 +299,7 @@ WCS at a given location in that original image.  If not, this will return None.<
 
 <dl class="py method">
 <dt id="galsim.des.DES_PSFEx.getPSFArray">
-<code class="sig-name descname">getPSFArray</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_pos</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getPSFArray"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getPSFArray" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getPSFArray</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getPSFArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getPSFArray" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the PSF image as a numpy array at position image_pos in image coordinates.</p>
 </dd></dl>
 
@@ -308,7 +307,7 @@ WCS at a given location in that original image.  If not, this will return None.<
 
 <dl class="py class">
 <dt id="galsim.des.DES_Shapelet">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">DES_Shapelet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">dir</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_Shapelet" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">DES_Shapelet</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_Shapelet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class that handles DES files describing interpolated polar shapelet decompositions.
 These are stored as <code class="docutils literal notranslate"><span class="pre">*_fitpsf.fits</span></code> files.  They are not used in DES anymore, so this
@@ -349,13 +348,13 @@ already include it. [default: None]</p></li>
 </dl>
 <dl class="py method">
 <dt id="galsim.des.DES_Shapelet.getB">
-<code class="sig-name descname">getB</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.getB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.getB" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getB</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.getB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.getB" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the B vector as a numpy array at position pos</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.des.DES_Shapelet.getPSF">
-<code class="sig-name descname">getPSF</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">image_pos</span></em>, <em class="sig-param"><span class="n">gsparams</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.getPSF"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.getPSF" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getPSF</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.getPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.getPSF" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the PSF at position image_pos</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -373,7 +372,7 @@ already include it. [default: None]</p></li>
 
 <dl class="py method">
 <dt id="galsim.des.DES_Shapelet.read_fits">
-<code class="sig-name descname">read_fits</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.read_fits"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.read_fits" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">read_fits</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.read_fits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.read_fits" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read in a DES_Shapelet stored in FITS file.</p>
 </dd></dl>
 
@@ -386,7 +385,7 @@ already include it. [default: None]</p></li>
 <p>Importing this module also adds these data structures to the config framework, so that MEDS file output can subsequently be simulated directly using a config file.</p>
 <dl class="py class">
 <dt id="galsim.des.MultiExposureObject">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">MultiExposureObject</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">images</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">badpix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seg</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">psf</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">wcs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">id</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">cutout_row</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cutout_col</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MultiExposureObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MultiExposureObject" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">MultiExposureObject</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">badpix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutout_row</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutout_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MultiExposureObject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MultiExposureObject" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class containing exposures for single object, along with other information.</p>
 <p>The MultiExposureObject class represents multiple exposure data for a single object for the
 purpose of writing the images to a MEDS file.</p>
@@ -419,14 +418,14 @@ purpose of writing the images to a MEDS file.</p>
 
 <dl class="py class">
 <dt id="galsim.des.MEDSBuilder">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">MEDSBuilder</code><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MEDSBuilder" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">MEDSBuilder</span></code><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MEDSBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.output.OutputBuilder</span></code></p>
 <p>This class lets you use the <a class="reference internal" href="#galsim.des.MultiExposureObject" title="galsim.des.MultiExposureObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MultiExposureObject</span></code></a> very simply as a special <code class="docutils literal notranslate"><span class="pre">output</span></code>
 type when using config processing.</p>
 <p>It requires the use of <code class="docutils literal notranslate"><span class="pre">galsim.des</span></code> in the config files <code class="docutils literal notranslate"><span class="pre">modules</span></code> section.</p>
 <dl class="py method">
 <dt id="galsim.des.MEDSBuilder.buildImages">
-<code class="sig-name descname">buildImages</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">file_num</span></em>, <em class="sig-param"><span class="n">image_num</span></em>, <em class="sig-param"><span class="n">obj_num</span></em>, <em class="sig-param"><span class="n">ignore</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.buildImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.buildImages" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">buildImages</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.buildImages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.buildImages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Build a meds file as specified in config.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -449,7 +448,7 @@ here.</p></li>
 
 <dl class="py method">
 <dt id="galsim.des.MEDSBuilder.getNImages">
-<code class="sig-name descname">getNImages</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">file_num</span></em>, <em class="sig-param"><span class="n">logger</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.getNImages"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.getNImages" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getNImages</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.getNImages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.getNImages" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the number of images to be built for a given <code class="docutils literal notranslate"><span class="pre">file_num</span></code>.</p>
 <p>In the base class, we only build a single image, so it returns 1.</p>
 <dl class="field-list simple">
@@ -469,7 +468,7 @@ here.</p></li>
 
 <dl class="py method">
 <dt id="galsim.des.MEDSBuilder.writeFile">
-<code class="sig-name descname">writeFile</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.writeFile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.writeFile" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">writeFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.writeFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.writeFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Write the data to a file.  In this case a MEDS file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -488,13 +487,13 @@ here.</p></li>
 
 <dl class="py class">
 <dt id="galsim.des.OffsetBuilder">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">OffsetBuilder</code><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.OffsetBuilder" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">OffsetBuilder</span></code><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.OffsetBuilder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.extra.ExtraOutputBuilder</span></code></p>
 <p>This “extra” output builder saves the stamp offset values for later use.</p>
 <p>It is used as a <code class="docutils literal notranslate"><span class="pre">meds_get_offset</span></code> field in the <code class="docutils literal notranslate"><span class="pre">output</span></code> section.</p>
 <dl class="py method">
 <dt id="galsim.des.OffsetBuilder.finalize">
-<code class="sig-name descname">finalize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">main_data</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder.finalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.OffsetBuilder.finalize" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">finalize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.OffsetBuilder.finalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform any final processing at the end of all the image processing.</p>
 <p>This function will be called after all images have been built.</p>
 <p>It returns some sort of final version of the object.  In the base class, it just returns
@@ -517,7 +516,7 @@ more appropriate.</p>
 
 <dl class="py method">
 <dt id="galsim.des.OffsetBuilder.processStamp">
-<code class="sig-name descname">processStamp</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_num</span></em>, <em class="sig-param"><span class="n">config</span></em>, <em class="sig-param"><span class="n">base</span></em>, <em class="sig-param"><span class="n">logger</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder.processStamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.OffsetBuilder.processStamp" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">processStamp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder.processStamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.OffsetBuilder.processStamp" title="Permalink to this definition">¶</a></dt>
 <dd><p>Perform any necessary processing at the end of each stamp construction.</p>
 <p>This function will be called after each stamp is built, but before the noise is added,
 so the existing stamp image has the true surface brightness profile (unless photon shooting
@@ -540,7 +539,7 @@ is safe, even if multiprocessing is being used.</p>
 
 <dl class="py function">
 <dt id="galsim.des.WriteMEDS">
-<code class="sig-prename descclassname">galsim.des.</code><code class="sig-name descname">WriteMEDS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_list</span></em>, <em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">clobber</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#WriteMEDS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.des.WriteMEDS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">WriteMEDS</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clobber</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#WriteMEDS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.WriteMEDS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Writes a MEDS file from a list of <a class="reference internal" href="#galsim.des.MultiExposureObject" title="galsim.des.MultiExposureObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MultiExposureObject</span></code></a> instances.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

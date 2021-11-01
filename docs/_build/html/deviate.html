@@ -220,7 +220,7 @@ results.</p>
 </div>
 <dl class="py class">
 <dt id="galsim.BaseDeviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">BaseDeviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">BaseDeviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for all the various random deviates.</p>
 <p>This holds the essential random number generator that all the other classes use.</p>
 <p>All deviates take an initial <code class="docutils literal notranslate"><span class="pre">seed</span></code> argument that is used to seed the underlying random number
@@ -259,26 +259,26 @@ TypeError: &#39;BaseDeviate&#39; object is not callable
 </div>
 <dl class="py method">
 <dt id="galsim.BaseDeviate._seed">
-<code class="sig-name descname">_seed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate._seed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate._seed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">_seed</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate._seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate._seed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.BaseDeviate.seed" title="galsim.BaseDeviate.seed"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">seed</span></code></a>, but without any type checking.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate._reset">
-<code class="sig-name descname">_reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rng</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate._reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate._reset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">_reset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate._reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate._reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.BaseDeviate.reset" title="galsim.BaseDeviate.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a>, but rng must be a <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> (not an int), and there
 is no type checking.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate.add_generate">
-<code class="sig-name descname">add_generate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.add_generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.add_generate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">add_generate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.add_generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate.add_generate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate many pseudo-random values, adding them to the values of a numpy array.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate.clearCache">
-<code class="sig-name descname">clearCache</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.clearCache"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.clearCache" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">clearCache</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.clearCache"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate.clearCache" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear the internal cache of the <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a>, if any.  This is currently only relevant
 for <a class="reference internal" href="#galsim.GaussianDeviate" title="galsim.GaussianDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GaussianDeviate</span></code></a>, since it generates two values at a time, saving the second one to
 use for the next output value.</p>
@@ -286,13 +286,13 @@ use for the next output value.</p>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate.discard">
-<code class="sig-name descname">discard</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.discard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.discard" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">discard</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.discard"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate.discard" title="Permalink to this definition">¶</a></dt>
 <dd><p>Discard n values from the current sequence of pseudo-random numbers.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate.duplicate">
-<code class="sig-name descname">duplicate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.duplicate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.duplicate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">duplicate</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.duplicate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate.duplicate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a duplicate of the current <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object.</p>
 <p>The subsequent series from each copy of the <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> will produce identical values:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">u</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">UniformDeviate</span><span class="p">(</span><span class="mi">31415926</span><span class="p">)</span>
@@ -317,13 +317,13 @@ use for the next output value.</p>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate.generate">
-<code class="sig-name descname">generate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.generate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">generate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate.generate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate many pseudo-random values, filling in the values of a numpy array.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate.raw">
-<code class="sig-name descname">raw</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.raw"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.raw" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">raw</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.raw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate.raw" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate the next pseudo-random number and rather than return the appropriate kind
 of random deviate for this class, just return the raw integer value that would have been
 used to generate this value.</p>
@@ -331,7 +331,7 @@ used to generate this value.</p>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate.reset">
-<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.reset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.reset" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">reset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset the pseudo-random number generator, severing connections to any other deviates.
 Providing another <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object as the seed connects this deviate with the other
 one, so they will both use the same underlying random number generator.</p>
@@ -346,7 +346,7 @@ one, so they will both use the same underlying random number generator.</p>
 
 <dl class="py method">
 <dt id="galsim.BaseDeviate.seed">
-<code class="sig-name descname">seed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.seed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BaseDeviate.seed" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">seed</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BaseDeviate.seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseDeviate.seed" title="Permalink to this definition">¶</a></dt>
 <dd><p>Seed the pseudo-random number generator with a given integer value.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -360,7 +360,7 @@ means to generate a seed from the system. [default: 0]</p>
 
 <dl class="py class">
 <dt id="galsim.UniformDeviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">UniformDeviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#UniformDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UniformDeviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">UniformDeviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#UniformDeviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.UniformDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>Pseudo-random number generator with uniform distribution in interval [0.,1.).</p>
 <p>Successive calls to <code class="docutils literal notranslate"><span class="pre">u()</span></code> generate pseudo-random values distributed uniformly in the interval
@@ -381,7 +381,7 @@ means to generate a seed from the system. [default: 0]</p>
 </dl>
 <dl class="py method">
 <dt id="galsim.UniformDeviate.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#UniformDeviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.UniformDeviate.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#UniformDeviate.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.UniformDeviate.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a new random number from the distribution.</p>
 <p>Returns a uniform deviate between 0 and 1.</p>
 </dd></dl>
@@ -390,7 +390,7 @@ means to generate a seed from the system. [default: 0]</p>
 
 <dl class="py class">
 <dt id="galsim.GaussianDeviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GaussianDeviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mean</span><span class="o">=</span><span class="default_value">0.0</span></em>, <em class="sig-param"><span class="n">sigma</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianDeviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">GaussianDeviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GaussianDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>Pseudo-random number generator with Gaussian distribution.</p>
 <p>See <a class="reference external" href="http://en.wikipedia.org/wiki/Gaussian_distribution">http://en.wikipedia.org/wiki/Gaussian_distribution</a> for further details.</p>
@@ -416,27 +416,27 @@ distribution with the provided <code class="docutils literal notranslate"><span 
 </dl>
 <dl class="py method">
 <dt id="galsim.GaussianDeviate.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianDeviate.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GaussianDeviate.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a new random number from the distribution.</p>
 <p>Returns a Gaussian deviate with the given mean and sigma.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.GaussianDeviate.generate_from_variance">
-<code class="sig-name descname">generate_from_variance</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate.generate_from_variance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GaussianDeviate.generate_from_variance" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">generate_from_variance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GaussianDeviate.generate_from_variance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GaussianDeviate.generate_from_variance" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate many Gaussian deviate values using the existing array values as the
 variance for each.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.GaussianDeviate.mean">
-<em class="property">property </em><code class="sig-name descname">mean</code><a class="headerlink" href="#galsim.GaussianDeviate.mean" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">mean</span></code><a class="headerlink" href="#galsim.GaussianDeviate.mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>The mean of the Gaussian distribution.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.GaussianDeviate.sigma">
-<em class="property">property </em><code class="sig-name descname">sigma</code><a class="headerlink" href="#galsim.GaussianDeviate.sigma" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">sigma</span></code><a class="headerlink" href="#galsim.GaussianDeviate.sigma" title="Permalink to this definition">¶</a></dt>
 <dd><p>The sigma of the Gaussian distribution.</p>
 </dd></dl>
 
@@ -444,7 +444,7 @@ variance for each.</p>
 
 <dl class="py class">
 <dt id="galsim.PoissonDeviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PoissonDeviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mean</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonDeviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">PoissonDeviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PoissonDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>Pseudo-random Poisson deviate with specified <code class="docutils literal notranslate"><span class="pre">mean</span></code>.</p>
 <p>The input <code class="docutils literal notranslate"><span class="pre">mean</span></code> sets the mean and variance of the Poisson deviate.  An integer deviate with
@@ -471,21 +471,21 @@ Poisson distribution with the specified <code class="docutils literal notranslat
 </dl>
 <dl class="py method">
 <dt id="galsim.PoissonDeviate.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonDeviate.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PoissonDeviate.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a new random number from the distribution.</p>
 <p>Returns a Poisson deviate with the given mean.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.PoissonDeviate.generate_from_expectation">
-<code class="sig-name descname">generate_from_expectation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate.generate_from_expectation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PoissonDeviate.generate_from_expectation" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">generate_from_expectation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#PoissonDeviate.generate_from_expectation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PoissonDeviate.generate_from_expectation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate many Poisson deviate values using the existing array values as the
 expectation value (aka mean) for each.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.PoissonDeviate.mean">
-<em class="property">property </em><code class="sig-name descname">mean</code><a class="headerlink" href="#galsim.PoissonDeviate.mean" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">mean</span></code><a class="headerlink" href="#galsim.PoissonDeviate.mean" title="Permalink to this definition">¶</a></dt>
 <dd><p>The mean of the distribution.</p>
 </dd></dl>
 
@@ -493,7 +493,7 @@ expectation value (aka mean) for each.</p>
 
 <dl class="py class">
 <dt id="galsim.BinomialDeviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">BinomialDeviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">N</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">0.5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BinomialDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BinomialDeviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">BinomialDeviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">N</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BinomialDeviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BinomialDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>Pseudo-random Binomial deviate for <code class="docutils literal notranslate"><span class="pre">N</span></code> trials each of probability <code class="docutils literal notranslate"><span class="pre">p</span></code>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">N</span></code> is number of ‘coin flips,’ <code class="docutils literal notranslate"><span class="pre">p</span></code> is probability of ‘heads,’ and each call returns an
@@ -521,20 +521,20 @@ binomial distribution with the provided <code class="docutils literal notranslat
 </dl>
 <dl class="py method">
 <dt id="galsim.BinomialDeviate.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BinomialDeviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BinomialDeviate.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#BinomialDeviate.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BinomialDeviate.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a new random number from the distribution.</p>
 <p>Returns a Binomial deviate with the given n and p.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.BinomialDeviate.n">
-<em class="property">property </em><code class="sig-name descname">n</code><a class="headerlink" href="#galsim.BinomialDeviate.n" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">n</span></code><a class="headerlink" href="#galsim.BinomialDeviate.n" title="Permalink to this definition">¶</a></dt>
 <dd><p>The number of ‘coin flips’.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.BinomialDeviate.p">
-<em class="property">property </em><code class="sig-name descname">p</code><a class="headerlink" href="#galsim.BinomialDeviate.p" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">p</span></code><a class="headerlink" href="#galsim.BinomialDeviate.p" title="Permalink to this definition">¶</a></dt>
 <dd><p>The probability of success per ‘coin flip’.</p>
 </dd></dl>
 
@@ -542,7 +542,7 @@ binomial distribution with the provided <code class="docutils literal notranslat
 
 <dl class="py class">
 <dt id="galsim.Chi2Deviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Chi2Deviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#Chi2Deviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Chi2Deviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Chi2Deviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#Chi2Deviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Chi2Deviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>Pseudo-random Chi^2-distributed deviate for degrees-of-freedom parameter <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
 <p>See <a class="reference external" href="http://en.wikipedia.org/wiki/Chi-squared_distribution">http://en.wikipedia.org/wiki/Chi-squared_distribution</a> (note that k=n in the notation
@@ -570,14 +570,14 @@ Must be &gt; 0]</p></li>
 </dl>
 <dl class="py method">
 <dt id="galsim.Chi2Deviate.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#Chi2Deviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Chi2Deviate.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#Chi2Deviate.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Chi2Deviate.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a new random number from the distribution.</p>
 <p>Returns a Chi2-distributed deviate with the given number of degrees of freedom.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.Chi2Deviate.n">
-<em class="property">property </em><code class="sig-name descname">n</code><a class="headerlink" href="#galsim.Chi2Deviate.n" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">n</span></code><a class="headerlink" href="#galsim.Chi2Deviate.n" title="Permalink to this definition">¶</a></dt>
 <dd><p>The number of degrees of freedom.</p>
 </dd></dl>
 
@@ -585,7 +585,7 @@ Must be &gt; 0]</p></li>
 
 <dl class="py class">
 <dt id="galsim.GammaDeviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">GammaDeviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">k</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">theta</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GammaDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GammaDeviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">GammaDeviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GammaDeviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GammaDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>A Gamma-distributed deviate with shape parameter <code class="docutils literal notranslate"><span class="pre">k</span></code> and scale parameter <code class="docutils literal notranslate"><span class="pre">theta</span></code>.
 See <a class="reference external" href="http://en.wikipedia.org/wiki/Gamma_distribution">http://en.wikipedia.org/wiki/Gamma_distribution</a>.
@@ -613,20 +613,20 @@ distribution with the specified shape and scale parameters <code class="docutils
 </dl>
 <dl class="py method">
 <dt id="galsim.GammaDeviate.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GammaDeviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.GammaDeviate.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#GammaDeviate.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.GammaDeviate.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a new random number from the distribution.</p>
 <p>Returns a Gamma-distributed deviate with the given k and theta.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.GammaDeviate.k">
-<em class="property">property </em><code class="sig-name descname">k</code><a class="headerlink" href="#galsim.GammaDeviate.k" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">k</span></code><a class="headerlink" href="#galsim.GammaDeviate.k" title="Permalink to this definition">¶</a></dt>
 <dd><p>The shape parameter, k.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.GammaDeviate.theta">
-<em class="property">property </em><code class="sig-name descname">theta</code><a class="headerlink" href="#galsim.GammaDeviate.theta" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">theta</span></code><a class="headerlink" href="#galsim.GammaDeviate.theta" title="Permalink to this definition">¶</a></dt>
 <dd><p>The scale parameter, theta.</p>
 </dd></dl>
 
@@ -634,7 +634,7 @@ distribution with the specified shape and scale parameters <code class="docutils
 
 <dl class="py class">
 <dt id="galsim.WeibullDeviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">WeibullDeviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">a</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">b</span><span class="o">=</span><span class="default_value">1.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#WeibullDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WeibullDeviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">WeibullDeviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#WeibullDeviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.WeibullDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>Pseudo-random Weibull-distributed deviate for shape parameter <code class="docutils literal notranslate"><span class="pre">a</span></code> and scale parameter <code class="docutils literal notranslate"><span class="pre">b</span></code>.</p>
 <p>The Weibull distribution is related to a number of other probability distributions; in
@@ -665,20 +665,20 @@ distribution with the specified shape and scale parameters <code class="docutils
 </dl>
 <dl class="py method">
 <dt id="galsim.WeibullDeviate.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#WeibullDeviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.WeibullDeviate.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#WeibullDeviate.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.WeibullDeviate.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a new random number from the distribution.</p>
 <p>Returns a Weibull-distributed deviate with the given shape parameters a and b.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.WeibullDeviate.a">
-<em class="property">property </em><code class="sig-name descname">a</code><a class="headerlink" href="#galsim.WeibullDeviate.a" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">a</span></code><a class="headerlink" href="#galsim.WeibullDeviate.a" title="Permalink to this definition">¶</a></dt>
 <dd><p>The shape parameter, a.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.WeibullDeviate.b">
-<em class="property">property </em><code class="sig-name descname">b</code><a class="headerlink" href="#galsim.WeibullDeviate.b" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">b</span></code><a class="headerlink" href="#galsim.WeibullDeviate.b" title="Permalink to this definition">¶</a></dt>
 <dd><p>The scale parameter, b.</p>
 </dd></dl>
 
@@ -686,7 +686,7 @@ distribution with the specified shape and scale parameters <code class="docutils
 
 <dl class="py class">
 <dt id="galsim.DistDeviate">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">DistDeviate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">x_min</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">x_max</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">interpolant</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">npoints</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">DistDeviate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DistDeviate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.random.BaseDeviate</span></code></p>
 <p>A class to draw random numbers from a user-defined probability distribution.</p>
 <p>DistDeviate is a <a class="reference internal" href="#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> class that can be used to draw from an arbitrary probability
@@ -761,25 +761,25 @@ which case it uses the table’s x values]</p></li>
 </dl>
 <dl class="py method">
 <dt id="galsim.DistDeviate.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DistDeviate.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a new random number from the distribution.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.DistDeviate.add_generate">
-<code class="sig-name descname">add_generate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.add_generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.add_generate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">add_generate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.add_generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DistDeviate.add_generate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate many pseudo-random values, adding them to the values of a numpy array.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.DistDeviate.generate">
-<code class="sig-name descname">generate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.generate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.generate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">generate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.generate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DistDeviate.generate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate many pseudo-random values, filling in the values of a numpy array.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.DistDeviate.val">
-<code class="sig-name descname">val</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">p</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.val"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.DistDeviate.val" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">val</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/random.html#DistDeviate.val"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DistDeviate.val" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the value <span class="math notranslate nohighlight">\(x\)</span> of the input function to <a class="reference internal" href="#galsim.DistDeviate" title="galsim.DistDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DistDeviate</span></code></a> such that <code class="docutils literal notranslate"><span class="pre">p</span></code> =
 <span class="math notranslate nohighlight">\(F(x)\)</span>, where <span class="math notranslate nohighlight">\(F\)</span> is the cumulattive probability distribution function:</p>
 <div class="math notranslate nohighlight">

@@ -195,7 +195,7 @@
 <h1>Zernike Functions<a class="headerlink" href="#zernike-functions" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="galsim.zernike.Zernike">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.zernike.</code><code class="sig-name descname">Zernike</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coef</span></em>, <em class="sig-param"><span class="n">R_outer</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">R_inner</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.zernike.</span></code><code class="sig-name descname"><span class="pre">Zernike</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coef</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R_outer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R_inner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class to represent a Zernike polynomial series
 (<a class="reference external" href="http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials">http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials</a>).</p>
 <p>Zernike polynomials form an orthonormal basis over the unit circle.  The convention used here is
@@ -263,27 +263,27 @@ coef[4] is ‘defocus’, …)</p></li>
 </dl>
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.__add__">
-<code class="sig-name descname">__add__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rhs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__add__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__add__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__add__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__add__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.__add__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add two Zernikes.</p>
 <p>Requires that each operand’s <code class="docutils literal notranslate"><span class="pre">R_outer</span></code> and <code class="docutils literal notranslate"><span class="pre">R_inner</span></code> attributes are the same.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.__sub__">
-<code class="sig-name descname">__sub__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rhs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__sub__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__sub__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__sub__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__sub__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.__sub__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subtract two Zernikes.</p>
 <p>Requires that each operand’s <code class="docutils literal notranslate"><span class="pre">R_outer</span></code> and <code class="docutils literal notranslate"><span class="pre">R_inner</span></code> attributes are the same.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.__neg__">
-<code class="sig-name descname">__neg__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__neg__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__neg__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__neg__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__neg__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.__neg__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Negate a Zernike.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.__mul__">
-<code class="sig-name descname">__mul__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rhs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__mul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__mul__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__mul__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__mul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.__mul__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Multiply two Zernikes, or multiply a Zernike by a scalar.</p>
 <p>If both operands are Zernikes, then the <code class="docutils literal notranslate"><span class="pre">R_outer</span></code> and <code class="docutils literal notranslate"><span class="pre">R_inner</span></code> attributes of each must
 be the same.</p>
@@ -291,13 +291,13 @@ be the same.</p>
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.__rmul__">
-<code class="sig-name descname">__rmul__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rhs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__rmul__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__rmul__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__rmul__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rhs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__rmul__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.__rmul__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to obj * rhs.  See <a class="reference internal" href="#galsim.zernike.Zernike.__mul__" title="galsim.zernike.Zernike.__mul__"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">__mul__</span></code></a> for details.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.__call__">
-<code class="sig-name descname">__call__</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__call__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.__call__" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">__call__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.__call__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.__call__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this Zernike polynomial series at Cartesian coordinates x and y.
 Synonym for <a class="reference internal" href="#galsim.zernike.Zernike.evalCartesian" title="galsim.zernike.Zernike.evalCartesian"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evalCartesian</span></code></a>.</p>
 <dl class="field-list simple">
@@ -315,7 +315,7 @@ Synonym for <a class="reference internal" href="#galsim.zernike.Zernike.evalCart
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.evalCartesian">
-<code class="sig-name descname">evalCartesian</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalCartesian"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalCartesian" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">evalCartesian</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalCartesian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalCartesian" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this Zernike polynomial series at Cartesian coordinates x and y.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -332,7 +332,7 @@ Synonym for <a class="reference internal" href="#galsim.zernike.Zernike.evalCart
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.evalCartesianGrad">
-<code class="sig-name descname">evalCartesianGrad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalCartesianGrad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalCartesianGrad" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">evalCartesianGrad</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalCartesianGrad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalCartesianGrad" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate the gradient of this Zernike polynomial series at cartesian coordinates
 x and y.</p>
 <dl class="field-list simple">
@@ -350,7 +350,7 @@ x and y.</p>
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.evalPolar">
-<code class="sig-name descname">evalPolar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rho</span></em>, <em class="sig-param"><span class="n">theta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalPolar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalPolar" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">evalPolar</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.evalPolar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.evalPolar" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluate this Zernike polynomial series at polar coordinates rho and theta.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -368,7 +368,7 @@ Can be list-like.</p></li>
 
 <dl class="py method">
 <dt id="galsim.zernike.Zernike.rotate">
-<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">theta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.rotate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.Zernike.rotate" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">rotate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#Zernike.rotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.Zernike.rotate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return new Zernike polynomial series rotated by angle theta.</p>
 <p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Z</span> <span class="o">=</span> <span class="n">Zernike</span><span class="p">(</span><span class="n">coefs</span><span class="p">)</span>
@@ -390,7 +390,7 @@ Can be list-like.</p></li>
 
 <dl class="py function">
 <dt id="galsim.zernike.noll_to_zern">
-<code class="sig-prename descclassname">galsim.zernike.</code><code class="sig-name descname">noll_to_zern</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">j</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#noll_to_zern"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.noll_to_zern" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.zernike.</span></code><code class="sig-name descname"><span class="pre">noll_to_zern</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#noll_to_zern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.noll_to_zern" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert linear Noll index to tuple of Zernike indices.
 j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike
 index.</p>
@@ -407,7 +407,7 @@ index.</p>
 
 <dl class="py function">
 <dt id="galsim.zernike.zernikeRotMatrix">
-<code class="sig-prename descclassname">galsim.zernike.</code><code class="sig-name descname">zernikeRotMatrix</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">jmax</span></em>, <em class="sig-param"><span class="n">theta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#zernikeRotMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.zernikeRotMatrix" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.zernike.</span></code><code class="sig-name descname"><span class="pre">zernikeRotMatrix</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#zernikeRotMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.zernikeRotMatrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct Zernike basis rotation matrix.  This matrix can be used to convert a set of Zernike
 polynomial series coefficients expressed in one coordinate system to an equivalent set of
 coefficients expressed in a rotated coordinate system.</p>
@@ -443,7 +443,7 @@ is [jmax+1, jmax+1].</p>
 
 <dl class="py function">
 <dt id="galsim.zernike.zernikeBasis">
-<code class="sig-prename descclassname">galsim.zernike.</code><code class="sig-name descname">zernikeBasis</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">jmax</span></em>, <em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">y</span></em>, <em class="sig-param"><span class="n">R_outer</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">R_inner</span><span class="o">=</span><span class="default_value">0.0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#zernikeBasis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.zernikeBasis" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.zernike.</span></code><code class="sig-name descname"><span class="pre">zernikeBasis</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R_outer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R_inner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#zernikeBasis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.zernikeBasis" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct basis of Zernike polynomial series up to Noll index <code class="docutils literal notranslate"><span class="pre">jmax</span></code>, evaluated at a
 specific set of points <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.</p>
 <p>Useful for fitting Zernike polynomials to data, e.g.:</p>
@@ -481,7 +481,7 @@ to individual Zernike polynomials.</p>
 
 <dl class="py function">
 <dt id="galsim.zernike.describe_zernike">
-<code class="sig-prename descclassname">galsim.zernike.</code><code class="sig-name descname">describe_zernike</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">j</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#describe_zernike"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.zernike.describe_zernike" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.zernike.</span></code><code class="sig-name descname"><span class="pre">describe_zernike</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/zernike.html#describe_zernike"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.zernike.describe_zernike" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a human-readable string describing the jth (unit circle) Zernike mode as a bivariate
 polynomial in x and y.</p>
 <dl class="field-list simple">

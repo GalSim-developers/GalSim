@@ -32,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -187,7 +186,7 @@
 <h1>Bounding boxes<a class="headerlink" href="#bounding-boxes" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="galsim.Bounds">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Bounds</code><a class="reference internal" href="_modules/galsim/bounds.html#Bounds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Bounds</span></code><a class="reference internal" href="_modules/galsim/bounds.html#Bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for representing image bounds as 2D rectangles.</p>
 <p>Bounds is a base class for two slightly different kinds of bounds:
 <a class="reference internal" href="#galsim.BoundsD" title="galsim.BoundsD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsD</span></code></a> describes bounds with floating point values in x and y.
@@ -244,7 +243,7 @@ the edge of the other image:</p>
 </div>
 <dl class="py method">
 <dt id="galsim.Bounds.area">
-<code class="sig-name descname">area</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.area"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.area" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">area</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.area"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.area" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the area of the enclosed region.</p>
 <p>The area is a bit different for integer-type <a class="reference internal" href="#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a> and float-type <a class="reference internal" href="#galsim.BoundsD" title="galsim.BoundsD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsD</span></code></a> instances.
 For floating point types, it is simply <code class="docutils literal notranslate"><span class="pre">(xmax-xmin)*(ymax-ymin)</span></code>.  However, for integer
@@ -254,7 +253,7 @@ bounding box.</p>
 
 <dl class="py method">
 <dt id="galsim.Bounds.center">
-<em class="property">property </em><code class="sig-name descname">center</code><a class="headerlink" href="#galsim.Bounds.center" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">center</span></code><a class="headerlink" href="#galsim.Bounds.center" title="Permalink to this definition">¶</a></dt>
 <dd><p>The central position of the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a>.</p>
 <p>For a <a class="reference internal" href="#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a>, this will return an integer <a class="reference internal" href="pos.html#galsim.PositionI" title="galsim.PositionI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionI</span></code></a>, which will be above and/or to
 the right of the true center if the x or y ranges have an even number of pixels.</p>
@@ -263,37 +262,37 @@ the right of the true center if the x or y ranges have an even number of pixels.
 
 <dl class="py method">
 <dt id="galsim.Bounds.expand">
-<code class="sig-name descname">expand</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">factor</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.expand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.expand" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">expand</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.expand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.expand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Grow the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> by the supplied factor about the center.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.Bounds.getXMax">
-<code class="sig-name descname">getXMax</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.getXMax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.getXMax" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getXMax</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.getXMax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.getXMax" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value of xmax.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.Bounds.getXMin">
-<code class="sig-name descname">getXMin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.getXMin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.getXMin" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getXMin</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.getXMin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.getXMin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value of xmin.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.Bounds.getYMax">
-<code class="sig-name descname">getYMax</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.getYMax"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.getYMax" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getYMax</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.getYMax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.getYMax" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value of ymax.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.Bounds.getYMin">
-<code class="sig-name descname">getYMin</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.getYMin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.getYMin" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getYMin</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.getYMin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.getYMin" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the value of ymin.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.Bounds.includes">
-<code class="sig-name descname">includes</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.includes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.includes" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">includes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.includes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.includes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test whether a supplied <code class="docutils literal notranslate"><span class="pre">(x,y)</span></code> pair, <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a>, or <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> lie within a defined
 <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> rectangle of this instance.</p>
 <p>Examples:</p>
@@ -312,19 +311,19 @@ float type) should match that of the bounds instance.</p>
 
 <dl class="py method">
 <dt id="galsim.Bounds.isDefined">
-<code class="sig-name descname">isDefined</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.isDefined"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.isDefined" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">isDefined</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.isDefined"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.isDefined" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test whether <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> rectangle is defined.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.Bounds.origin">
-<em class="property">property </em><code class="sig-name descname">origin</code><a class="headerlink" href="#galsim.Bounds.origin" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">origin</span></code><a class="headerlink" href="#galsim.Bounds.origin" title="Permalink to this definition">¶</a></dt>
 <dd><p>The lower left position of the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt id="galsim.Bounds.shift">
-<code class="sig-name descname">shift</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">delta</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.shift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.shift" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">shift</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.shift"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.shift" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shift the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> instance by a supplied <a class="reference internal" href="pos.html#galsim.Position" title="galsim.Position"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Position</span></code></a>.</p>
 <p>Examples:</p>
 <p>The shift method takes either a <a class="reference internal" href="pos.html#galsim.PositionI" title="galsim.PositionI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionI</span></code></a> or <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> instance, which must match
@@ -339,7 +338,7 @@ the type of the <a class="reference internal" href="#galsim.Bounds" title="galsi
 
 <dl class="py method">
 <dt id="galsim.Bounds.true_center">
-<em class="property">property </em><code class="sig-name descname">true_center</code><a class="headerlink" href="#galsim.Bounds.true_center" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">true_center</span></code><a class="headerlink" href="#galsim.Bounds.true_center" title="Permalink to this definition">¶</a></dt>
 <dd><p>The central position of the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> as a <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a>.</p>
 <p>This is always (xmax + xmin)/2., (ymax + ymin)/2., even for integer <a class="reference internal" href="#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a>, where
 this may not necessarily be an integer <a class="reference internal" href="pos.html#galsim.PositionI" title="galsim.PositionI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionI</span></code></a>.</p>
@@ -347,7 +346,7 @@ this may not necessarily be an integer <a class="reference internal" href="pos.h
 
 <dl class="py method">
 <dt id="galsim.Bounds.withBorder">
-<code class="sig-name descname">withBorder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dx</span></em>, <em class="sig-param"><span class="n">dy</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.withBorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Bounds.withBorder" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">withBorder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#Bounds.withBorder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Bounds.withBorder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a new <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> object that expands the current bounds by the specified width.</p>
 <p>If two arguments are given, then these are separate dx and dy borders.</p>
 </dd></dl>
@@ -356,14 +355,14 @@ this may not necessarily be an integer <a class="reference internal" href="pos.h
 
 <dl class="py class">
 <dt id="galsim.BoundsI">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">BoundsI</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BoundsI" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">BoundsI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BoundsI" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.bounds.Bounds</span></code></p>
 <p>A <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> that takes only integer values.</p>
 <p>Typically used to define the bounding box of an image.</p>
 <p>See the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> doc string for more details.</p>
 <dl class="py method">
 <dt id="galsim.BoundsI.numpyShape">
-<code class="sig-name descname">numpyShape</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsI.numpyShape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BoundsI.numpyShape" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">numpyShape</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsI.numpyShape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BoundsI.numpyShape" title="Permalink to this definition">¶</a></dt>
 <dd><p>A simple utility function to get the numpy shape that corresponds to this <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> object.</p>
 </dd></dl>
 
@@ -371,7 +370,7 @@ this may not necessarily be an integer <a class="reference internal" href="pos.h
 
 <dl class="py class">
 <dt id="galsim.BoundsD">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">BoundsD</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.BoundsD" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">BoundsD</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#BoundsD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BoundsD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.bounds.Bounds</span></code></p>
 <p>A <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> that takes floating point values.</p>
 <p>See the <a class="reference internal" href="#galsim.Bounds" title="galsim.Bounds"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Bounds</span></code></a> doc string for more details.</p>
@@ -379,14 +378,14 @@ this may not necessarily be an integer <a class="reference internal" href="pos.h
 
 <dl class="py function">
 <dt id="galsim._BoundsI">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_BoundsI</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xmin</span></em>, <em class="sig-param"><span class="n">xmax</span></em>, <em class="sig-param"><span class="n">ymin</span></em>, <em class="sig-param"><span class="n">ymax</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#_BoundsI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._BoundsI" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">_BoundsI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#_BoundsI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim._BoundsI" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsI</span></code></a> constructor, but skips some sanity checks and argument parsing.
 This requires that the four values be int types.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt id="galsim._BoundsD">
-<code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">_BoundsD</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">xmin</span></em>, <em class="sig-param"><span class="n">xmax</span></em>, <em class="sig-param"><span class="n">ymin</span></em>, <em class="sig-param"><span class="n">ymax</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#_BoundsD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim._BoundsD" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">_BoundsD</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xmin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xmax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ymax</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/bounds.html#_BoundsD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim._BoundsD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.BoundsD" title="galsim.BoundsD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BoundsD</span></code></a> constructor, but skips some sanity checks and argument parsing.
 This requires that the four values be float types.</p>
 </dd></dl>

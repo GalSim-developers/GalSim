@@ -32,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -1239,7 +1238,7 @@ evaluated as a <em>float_value</em>.  In this case using <code class="docutils l
 <div class="section" id="the-eval-variables-field">
 <h3>The eval-variables field<a class="headerlink" href="#the-eval-variables-field" title="Permalink to this headline">¶</a></h3>
 <p>Sometimes it is useful to have the same variable used by multiple Eval calculations.  For such cases, Eval will look for a top-level field called <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code>.  If this field is present, then anything defined there will be accessible in all Eval calculations in addition to whatever variables are defined for each specific Eval item.</p>
-<p>This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> before it before any value.  Then later, you can refer to the value by that name preceded by a <code class="docutils literal notranslate"><span class="pre">*</span></code>, rather than write the value again.  This can lead to more maintainable config files.  E.g. demo10.yaml uses this functionality for <code class="docutils literal notranslate"><span class="pre">num_in_ring</span></code>, since the value is needed in two different calculations.</p>
+<p>This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> before it before any value.  Then later, you can refer to the value by that name preceded by a <code class="docutils literal notranslate"><span class="pre">*</span></code>, rather than write the value again.  This can lead to more maintainable config files.</p>
 <p>It can be convenient to combine the YAML naming scheme with our <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code> setup in the following way:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">eval_variables </span><span class="p">:</span>
     <span class="nt">fpixel_scale </span><span class="p">:</span> <span class="nl">&amp;pixel_scale</span> <span class="l l-Scalar l-Scalar-Plain">0.3</span>
@@ -1352,7 +1351,7 @@ give a list of all valid value types that are allowed for this function:</p>
 </div>
 <dl class="py function">
 <dt id="galsim.config.RegisterValueType">
-<code class="sig-prename descclassname">galsim.config.</code><code class="sig-name descname">RegisterValueType</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">type_name</span></em>, <em class="sig-param"><span class="n">gen_func</span></em>, <em class="sig-param"><span class="n">valid_types</span></em>, <em class="sig-param"><span class="n">input_type</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/value.html#RegisterValueType"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.config.RegisterValueType" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">RegisterValueType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/value.html#RegisterValueType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterValueType" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register a value type for use by the config apparatus.</p>
 <p>A few notes about the signature of the generating function:</p>
 <ol class="arabic simple">

@@ -32,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -189,7 +188,7 @@
 <p>This is the “lensing engine” for calculating shears around an NFW halo.</p>
 <dl class="py class">
 <dt id="galsim.NFWHalo">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">NFWHalo</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mass</span></em>, <em class="sig-param"><span class="n">conc</span></em>, <em class="sig-param"><span class="n">redshift</span></em>, <em class="sig-param"><span class="n">halo_pos</span><span class="o">=</span><span class="default_value">galsim.PositionD(x=0.0, y=0.0)</span></em>, <em class="sig-param"><span class="n">omega_m</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">omega_lam</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cosmo</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">NFWHalo</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">redshift</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">halo_pos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">galsim.PositionD(x=0.0,</span> <span class="pre">y=0.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_lam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosmo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class describing NFW halos.</p>
 <p>This class computes the lensing fields shear and convergence of a spherically symmetric NFW
 halo of given mass, concentration, redshift, assuming a particular cosmology.
@@ -215,7 +214,7 @@ of the universe, in units of M_solar/h.</p></li>
 </dl>
 <dl class="py method">
 <dt id="galsim.NFWHalo._getShear">
-<code class="sig-name descname">_getShear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos_x</span></em>, <em class="sig-param"><span class="n">pos_y</span></em>, <em class="sig-param"><span class="n">z_s</span></em>, <em class="sig-param"><span class="n">reduced</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getShear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo._getShear" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">_getShear</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getShear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo._getShear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.NFWHalo.getShear" title="galsim.NFWHalo.getShear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getShear</span></code></a>, but without some sanity checks and the positions must be
 given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
 <dl class="field-list simple">
@@ -235,7 +234,7 @@ given as <code class="docutils literal notranslate"><span class="pre">pos_x</spa
 
 <dl class="py method">
 <dt id="galsim.NFWHalo._getConvergence">
-<code class="sig-name descname">_getConvergence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos_x</span></em>, <em class="sig-param"><span class="n">pos_y</span></em>, <em class="sig-param"><span class="n">z_s</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getConvergence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo._getConvergence" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">_getConvergence</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getConvergence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo._getConvergence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.NFWHalo.getConvergence" title="galsim.NFWHalo.getConvergence"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getConvergence</span></code></a>, but without some sanity checks and the positions must be
 given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
 <dl class="field-list simple">
@@ -254,7 +253,7 @@ given as <code class="docutils literal notranslate"><span class="pre">pos_x</spa
 
 <dl class="py method">
 <dt id="galsim.NFWHalo._getMagnification">
-<code class="sig-name descname">_getMagnification</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos_x</span></em>, <em class="sig-param"><span class="n">pos_y</span></em>, <em class="sig-param"><span class="n">z_s</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getMagnification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo._getMagnification" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">_getMagnification</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getMagnification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo._getMagnification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.NFWHalo.getMagnification" title="galsim.NFWHalo.getMagnification"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getMagnification</span></code></a>, but without some sanity checks and the positions must
 be given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
 <dl class="field-list simple">
@@ -273,7 +272,7 @@ be given as <code class="docutils literal notranslate"><span class="pre">pos_x</
 
 <dl class="py method">
 <dt id="galsim.NFWHalo._getLensing">
-<code class="sig-name descname">_getLensing</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos_x</span></em>, <em class="sig-param"><span class="n">pos_y</span></em>, <em class="sig-param"><span class="n">z_s</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getLensing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo._getLensing" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">_getLensing</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_s</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo._getLensing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo._getLensing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Equivalent to <a class="reference internal" href="#galsim.NFWHalo.getLensing" title="galsim.NFWHalo.getLensing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">getLensing</span></code></a>, but without some sanity checks and the positions must
 be given as <code class="docutils literal notranslate"><span class="pre">pos_x</span></code>, <code class="docutils literal notranslate"><span class="pre">pos_y</span></code> in arcsec.</p>
 <dl class="field-list simple">
@@ -293,7 +292,7 @@ either a scalar or a numpy array)</p>
 
 <dl class="py method">
 <dt id="galsim.NFWHalo.getConvergence">
-<code class="sig-name descname">getConvergence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">z_s</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.getConvergence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.getConvergence" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getConvergence</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.getConvergence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo.getConvergence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate convergence of halo at specified positions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -321,7 +320,7 @@ If the input <code class="docutils literal notranslate"><span class="pre">pos</s
 
 <dl class="py method">
 <dt id="galsim.NFWHalo.getLensing">
-<code class="sig-name descname">getLensing</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">z_s</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.getLensing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.getLensing" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getLensing</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.getLensing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo.getLensing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate lensing shear and magnification of halo at specified positions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -350,7 +349,7 @@ If the input <code class="docutils literal notranslate"><span class="pre">pos</s
 
 <dl class="py method">
 <dt id="galsim.NFWHalo.getMagnification">
-<code class="sig-name descname">getMagnification</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">z_s</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.getMagnification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.getMagnification" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getMagnification</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.getMagnification"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo.getMagnification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate magnification of halo at specified positions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -378,7 +377,7 @@ If the input <code class="docutils literal notranslate"><span class="pre">pos</s
 
 <dl class="py method">
 <dt id="galsim.NFWHalo.getShear">
-<code class="sig-name descname">getShear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pos</span></em>, <em class="sig-param"><span class="n">z_s</span></em>, <em class="sig-param"><span class="n">units</span><span class="o">=</span><span class="default_value">coord.arcsec</span></em>, <em class="sig-param"><span class="n">reduced</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.getShear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.NFWHalo.getShear" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">getShear</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">coord.arcsec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#NFWHalo.getShear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.NFWHalo.getShear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate (reduced) shear of halo at specified positions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -409,7 +408,7 @@ If the input <code class="docutils literal notranslate"><span class="pre">pos</s
 
 <dl class="py class">
 <dt id="galsim.Cosmology">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Cosmology</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">omega_m</span><span class="o">=</span><span class="default_value">0.3</span></em>, <em class="sig-param"><span class="n">omega_lam</span><span class="o">=</span><span class="default_value">0.7</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Cosmology</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega_m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega_lam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Cosmology" title="Permalink to this definition">¶</a></dt>
 <dd><p>Basic cosmology calculations.</p>
 <p>Cosmology calculates expansion function E(a) and angular diameter distances Da(z) for a
 LambdaCDM universe.  Radiation is assumed to be zero and Dark Energy constant with w = -1 (no
@@ -427,7 +426,7 @@ quintessence), but curvature is arbitrary.</p>
 </dl>
 <dl class="py method">
 <dt id="galsim.Cosmology.Da">
-<code class="sig-name descname">Da</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em>, <em class="sig-param"><span class="n">z_ref</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.Da"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.Da" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">Da</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_ref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.Da"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Cosmology.Da" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute angular diameter distance between two redshifts in units of c/H0.</p>
 <p>In order to get the distance in Mpc/h, multiply by c/H0~3000.</p>
 <dl class="field-list simple">
@@ -442,7 +441,7 @@ quintessence), but curvature is arbitrary.</p>
 
 <dl class="py method">
 <dt id="galsim.Cosmology.E">
-<code class="sig-name descname">E</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">a</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.E"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.E" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">E</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.E"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Cosmology.E" title="Permalink to this definition">¶</a></dt>
 <dd><p>Evaluates expansion function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -453,7 +452,7 @@ quintessence), but curvature is arbitrary.</p>
 
 <dl class="py method">
 <dt id="galsim.Cosmology.a">
-<code class="sig-name descname">a</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.a"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Cosmology.a" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">a</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/nfw_halo.html#Cosmology.a"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Cosmology.a" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute scale factor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

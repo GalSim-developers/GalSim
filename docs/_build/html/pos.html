@@ -32,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -187,7 +186,7 @@
 <h1>Positions<a class="headerlink" href="#positions" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="galsim.Position">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">Position</code><a class="reference internal" href="_modules/galsim/position.html#Position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Position" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Position</span></code><a class="reference internal" href="_modules/galsim/position.html#Position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Position" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for representing 2D positions on the plane.</p>
 <p>Position is a base class for two slightly different kinds of positions:
 PositionD describes positions with floating point values in <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>.
@@ -240,7 +239,7 @@ a PositionI by a float add a PositionD to a PositionI in place.</p>
 an integer position is being sheared.</p>
 <dl class="py method">
 <dt id="galsim.Position.shear">
-<code class="sig-name descname">shear</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shear</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#Position.shear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.Position.shear" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">shear</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shear</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#Position.shear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Position.shear" title="Permalink to this definition">¶</a></dt>
 <dd><p>Shear the position.</p>
 <p>See the doc string of <a class="reference internal" href="shear.html#galsim.Shear.getMatrix" title="galsim.Shear.getMatrix"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">galsim.Shear.getMatrix</span></code></a> for more details.</p>
 <dl class="field-list simple">
@@ -257,7 +256,7 @@ an integer position is being sheared.</p>
 
 <dl class="py class">
 <dt id="galsim.PositionI">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PositionI</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#PositionI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PositionI" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">PositionI</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#PositionI"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PositionI" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.position.Position</span></code></p>
 <p>A Position that takes only integer values.</p>
 <p>Typically used for coordinate positions on an image.</p>
@@ -266,13 +265,13 @@ an integer position is being sheared.</p>
 
 <dl class="py class">
 <dt id="galsim.PositionD">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">PositionD</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#PositionD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PositionD" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">PositionD</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#PositionD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PositionD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.position.Position</span></code></p>
 <p>A Position that takes floating point values.</p>
 <p>See the Position doc string for more details.</p>
 <dl class="py method">
 <dt id="galsim.PositionD.round">
-<code class="sig-name descname">round</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#PositionD.round"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.PositionD.round" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">round</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/position.html#PositionD.round"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.PositionD.round" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the rounded-off PositionI version of this position.</p>
 </dd></dl>
 

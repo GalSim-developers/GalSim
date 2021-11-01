@@ -32,7 +32,6 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
     
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
@@ -188,7 +187,7 @@
 <h1>Spectral Correlated Noise<a class="headerlink" href="#spectral-correlated-noise" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="galsim.CovarianceSpectrum">
-<em class="property">class </em><code class="sig-prename descclassname">galsim.</code><code class="sig-name descname">CovarianceSpectrum</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Sigma</span></em>, <em class="sig-param"><span class="n">SEDs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">CovarianceSpectrum</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SEDs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CovarianceSpectrum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class to hold a <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> noise covariance spectrum (which is a generalization of a
 power spectrum or equivalently a correlation function).</p>
 <p>Analogous to how a <a class="reference internal" href="corr_noise.html#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CorrelatedNoise</span></code></a> object stores the variance and covariance of a
@@ -210,7 +209,7 @@ described by the corresponding <a class="reference internal" href="gsobject.html
 </dl>
 <dl class="py method">
 <dt id="galsim.CovarianceSpectrum.toNoise">
-<code class="sig-name descname">toNoise</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">bandpass</span></em>, <em class="sig-param"><span class="n">PSF</span></em>, <em class="sig-param"><span class="n">wcs</span></em>, <em class="sig-param"><span class="n">rng</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.toNoise"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.toNoise" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">toNoise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bandpass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">PSF</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CovarianceSpectrum.toNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CovarianceSpectrum.toNoise" title="Permalink to this definition">¶</a></dt>
 <dd><p>Derive the <a class="reference internal" href="corr_noise.html#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a> object for the associated <a class="reference internal" href="chromaticobject.html#galsim.ChromaticSum" title="galsim.ChromaticSum"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticSum</span></code></a> when convolved
 with <code class="docutils literal notranslate"><span class="pre">PSF</span></code> and drawn through <code class="docutils literal notranslate"><span class="pre">bandpass</span></code> onto pixels with specified <code class="docutils literal notranslate"><span class="pre">wcs</span></code>.</p>
 <dl class="field-list simple">
