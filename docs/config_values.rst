@@ -724,7 +724,7 @@ The eval-variables field
 
 Sometimes it is useful to have the same variable used by multiple Eval calculations.  For such cases, Eval will look for a top-level field called ``eval_variables``.  If this field is present, then anything defined there will be accessible in all Eval calculations in addition to whatever variables are defined for each specific Eval item.
 
-This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an ``&`` before it before any value.  Then later, you can refer to the value by that name preceded by a ``*``, rather than write the value again.  This can lead to more maintainable config files.  E.g. demo10.yaml uses this functionality for ``num_in_ring``, since the value is needed in two different calculations.
+This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an ``&`` before it before any value.  Then later, you can refer to the value by that name preceded by a ``*``, rather than write the value again.  This can lead to more maintainable config files.
 
 It can be convenient to combine the YAML naming scheme with our ``eval_variables`` setup in the following way:
 
