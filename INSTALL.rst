@@ -34,7 +34,7 @@ you can do::
     git clone git@github.com:GalSim-developers/GalSim.git
     cd GalSim
     pip install -r requirements.txt
-    python setup.py install
+    pip install .
 
 (again possibly with either sudo or --user).
 
