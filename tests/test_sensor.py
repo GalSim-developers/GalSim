@@ -790,6 +790,16 @@ def test_treerings():
     assert np.min(areas0.array) < np.min(areas2.array)
     assert np.max(areas0.array) > np.max(areas2.array)
 
+    # Check that pixel areas don't crash when tree ring center is at a pixel center (so r=0).
+    sensor8 = galsim.SiliconSensor(rng=rng4, treering_func=tr2,
+                                   treering_center=galsim.PositionD(1,1))
+    im.fill(0)
+    areas8 = sensor8.calculate_pixel_areas(im)
+    print('min/max area1 = ',np.min(areas8.array),np.max(areas8.array))
+    # Mostly checking that there aren't any nan's here from division by 0.
+    assert np.min(areas8.array) > 0
+
+
 @timer
 def test_resume():
     """Test that the resume option for accumulate works properly.

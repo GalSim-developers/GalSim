@@ -287,7 +287,7 @@ namespace galsim {
             // Loop over rectangle of pixels that could affect this row of points
             int polyi1 = std::max(x - _qDist, 0);
             int polyi2 = std::min(x + _qDist, nx - 1);
-	    // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
+            // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
             int polyj1 = std::max(y - (_qDist + 1), 0);
             int polyj2 = std::min(y + _qDist, ny - 1);
 
@@ -389,13 +389,15 @@ namespace galsim {
             double r = sqrt(tx * tx + ty * ty);
             shift = _tr_radial_table.lookup(r);
             xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
-            // Shifts are along the radial vector in direction of the doping gradient
-            double dx = shift * tx / r;
-            double dy = shift * ty / r;
-            xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
-            poly[n].x += dx;
-            poly[n].y += dy;
-            xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
+            if (r > 0) {
+                // Shifts are along the radial vector in direction of the doping gradient
+                double dx = shift * tx / r;
+                double dy = shift * ty / r;
+                xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+                poly[n].x += dx;
+                poly[n].y += dy;
+                xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
+            }
         }
     }
 
@@ -418,14 +420,16 @@ namespace galsim {
                              double ty = (double)j + p.y - _treeRingCenter.y + (double)orig_center.y;
                              //xdbg<<"tx,ty = "<<tx<<','<<ty<<std::endl;
                              double r = sqrt(tx * tx + ty * ty);
-                             double shift = _tr_radial_table.lookup(r);
-                             //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
-                             // Shifts are along the radial vector in direction of the doping gradient
-                             double dx = shift * tx / r;
-                             double dy = shift * ty / r;
-                             //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
-                             pt.x += dx;
-                             pt.y += dy;
+                             if (r > 0) {
+                                double shift = _tr_radial_table.lookup(r);
+                                //xdbg<<"r = "<<r<<", shift = "<<shift<<std::endl;
+                                // Shifts are along the radial vector in direction of the doping gradient
+                                double dx = shift * tx / r;
+                                double dy = shift * ty / r;
+                                //xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
+                                pt.x += dx;
+                                pt.y += dy;
+                             }
         });
     }
 
@@ -489,7 +493,7 @@ namespace galsim {
     // Checks if a point is inside a pixel based on the new linear boundaries.
     template <typename T>
     bool Silicon::insidePixel(int ix, int iy, double x, double y, double zconv,
-			      ImageView<T> target, bool* off_edge) const
+                              ImageView<T> target, bool* off_edge) const
     {
         // This scales the pixel distortion based on the zconv, which is the depth
         // at which the electron is created, and then tests to see if the delivered
@@ -943,7 +947,7 @@ namespace galsim {
                 // First check the obvious choice, since this will usually work.
                 bool off_edge;
                 bool foundPixel;
-		foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
+                foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
 #ifdef DEBUGLOGGING
                 if (foundPixel) ++zerocount;
 #endif
