@@ -1581,6 +1581,246 @@ class Image:
 
         return fwhm
 
+    # Define a utility function to be used by the arithmetic functions below
+    def check_image_consistency(self, im2, integer=False):
+        if integer and not self.isinteger:
+            raise GalSimValueError("Image must have integer values.",self)
+        if isinstance(im2, Image):
+            if self.array.shape != im2.array.shape:
+                raise GalSimIncompatibleValuesError("Image shapes are inconsistent",
+                                                    im1=self, im2=im2)
+            if integer and not im2.isinteger:
+                raise GalSimValueError("Image must have integer values.",im2)
+
+    def __add__(self, other):
+        self.check_image_consistency(other)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array + a, self.bounds, self.wcs)
+
+    __radd__ = __add__
+
+    def __iadd__(self, other):
+        self.check_image_consistency(other)
+        try:
+            a = other.array
+            dt = a.dtype
+        except AttributeError:
+            a = other
+            dt = type(a)
+        if dt == self.array.dtype:
+            self.array[:,:] += a
+        else:
+            self.array[:,:] = (self.array + a).astype(self.array.dtype, copy=False)
+        return self
+
+    def __sub__(self, other):
+        self.check_image_consistency(other)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array - a, self.bounds, self.wcs)
+
+    def __rsub__(self, other):
+        return _Image(other-self.array, self.bounds, self.wcs)
+
+    def __isub__(self, other):
+        self.check_image_consistency(other)
+        try:
+            a = other.array
+            dt = a.dtype
+        except AttributeError:
+            a = other
+            dt = type(a)
+        if dt == self.array.dtype:
+            self.array[:,:] -= a
+        else:
+            self.array[:,:] = (self.array - a).astype(self.array.dtype, copy=False)
+        return self
+
+    def __mul__(self, other):
+        self.check_image_consistency(other)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array * a, self.bounds, self.wcs)
+
+    __rmul__ = __mul__
+
+    def __imul__(self, other):
+        self.check_image_consistency(other)
+        try:
+            a = other.array
+            dt = a.dtype
+        except AttributeError:
+            a = other
+            dt = type(a)
+        if dt == self.array.dtype:
+            self.array[:,:] *= a
+        else:
+            self.array[:,:] = (self.array * a).astype(self.array.dtype, copy=False)
+        return self
+
+    def __div__(self, other):
+        self.check_image_consistency(other)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array / a, self.bounds, self.wcs)
+
+    __truediv__ = __div__
+
+    def __rdiv__(self, other):
+        return _Image(other / self.array, self.bounds, self.wcs)
+
+    __rtruediv__ = __rdiv__
+
+    def __idiv__(self, other):
+        self.check_image_consistency(other)
+        try:
+            a = other.array
+            dt = a.dtype
+        except AttributeError:
+            a = other
+            dt = type(a)
+        if dt == self.array.dtype and not self.isinteger:
+            # if dtype is an integer type, then numpy doesn't allow true division /= to assign
+            # back to an integer array.  So for integers (or mixed types), don't use /=.
+            self.array[:,:] /= a
+        else:
+            self.array[:,:] = (self.array / a).astype(self.array.dtype, copy=False)
+        return self
+
+    __itruediv__ = __idiv__
+
+    def __floordiv__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array // a, self.bounds, self.wcs)
+
+    def __rfloordiv__(self, other):
+        self.check_image_consistency(other, integer=True)
+        return _Image(other // self.array, self.bounds, self.wcs)
+
+    def __ifloordiv__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            a = other.array
+            dt = a.dtype
+        except AttributeError:
+            a = other
+            dt = type(a)
+        if dt == self.array.dtype:
+            self.array[:,:] //= a
+        else:
+            self.array[:,:] = (self.array // a).astype(self.array.dtype, copy=False)
+        return self
+
+    def __mod__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array % a, self.bounds, self.wcs)
+
+    def __rmod__(self, other):
+        self.check_image_consistency(other, integer=True)
+        return _Image(other % self.array, self.bounds, self.wcs)
+
+    def __imod__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            a = other.array
+            dt = a.dtype
+        except AttributeError:
+            a = other
+            dt = type(a)
+        if dt == self.array.dtype:
+            self.array[:,:] %= a
+        else:
+            self.array[:,:] = (self.array % a).astype(self.array.dtype, copy=False)
+        return self
+
+    def __pow__(self, other):
+        result = self.copy()
+        result **= other
+        return result
+
+    def __ipow__(self, other):
+        if not isinstance(other, int) and not isinstance(other, float):
+            raise TypeError("Can only raise an image to a float or int power!")
+        self.array[:,:] **= other
+        return self
+
+    def __neg__(self):
+        result = self.copy()
+        result *= -1
+        return result
+
+    # Define &, ^ and | only for integer-type images
+    def __and__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array & a, self.bounds, self.wcs)
+
+    __rand__ = __and__
+
+    def __iand__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            self.array[:,:] &= other.array
+        except AttributeError:
+            self.array[:,:] &= other
+        return self
+
+    def __xor__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array ^ a, self.bounds, self.wcs)
+
+    __rxor__ = __xor__
+
+    def __ixor__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            self.array[:,:] ^= other.array
+        except AttributeError:
+            self.array[:,:] ^= other
+        return self
+
+    def __or__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            a = other.array
+        except AttributeError:
+            a = other
+        return _Image(self.array | a, self.bounds, self.wcs)
+
+    __ror__ = __or__
+
+    def __ior__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            self.array[:,:] |= other.array
+        except AttributeError:
+            self.array[:,:] |= other
+        return self
+
     def __eq__(self, other):
         # Note that numpy.array_equal can return True if the dtypes of the two arrays involved are
         # different, as long as the contents of the two arrays are logically the same.  For example:
@@ -1664,269 +1904,3 @@ def ImageCD(*args, **kwargs):
     """
     kwargs['dtype'] = np.complex128
     return Image(*args, **kwargs)
-
-
-################################################################################################
-#
-# Now we have to make some modifications to the C++ layer objects.  Mostly adding some
-# arithmetic functions, so they work more intuitively.
-#
-
-# Define a utility function to be used by the arithmetic functions below
-def check_image_consistency(im1, im2, integer=False):
-    if integer and not im1.isinteger:
-        raise GalSimValueError("Image must have integer values.",im1)
-    if isinstance(im2, Image):
-        if im1.array.shape != im2.array.shape:
-            raise GalSimIncompatibleValuesError( "Image shapes are inconsistent", im1=im1, im2=im2)
-        if integer and not im2.isinteger:
-            raise GalSimValueError("Image must have integer values.",im2)
-
-def Image_add(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array + a, self.bounds, self.wcs)
-
-def Image_iadd(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-        dt = a.dtype
-    except AttributeError:
-        a = other
-        dt = type(a)
-    if dt == self.array.dtype:
-        self.array[:,:] += a
-    else:
-        self.array[:,:] = (self.array + a).astype(self.array.dtype, copy=False)
-    return self
-
-def Image_sub(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array - a, self.bounds, self.wcs)
-
-def Image_rsub(self, other):
-    return _Image(other-self.array, self.bounds, self.wcs)
-
-def Image_isub(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-        dt = a.dtype
-    except AttributeError:
-        a = other
-        dt = type(a)
-    if dt == self.array.dtype:
-        self.array[:,:] -= a
-    else:
-        self.array[:,:] = (self.array - a).astype(self.array.dtype, copy=False)
-    return self
-
-def Image_mul(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array * a, self.bounds, self.wcs)
-
-def Image_imul(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-        dt = a.dtype
-    except AttributeError:
-        a = other
-        dt = type(a)
-    if dt == self.array.dtype:
-        self.array[:,:] *= a
-    else:
-        self.array[:,:] = (self.array * a).astype(self.array.dtype, copy=False)
-    return self
-
-def Image_div(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array / a, self.bounds, self.wcs)
-
-def Image_rdiv(self, other):
-    return _Image(other / self.array, self.bounds, self.wcs)
-
-def Image_idiv(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-        dt = a.dtype
-    except AttributeError:
-        a = other
-        dt = type(a)
-    if dt == self.array.dtype and not self.isinteger:
-        # if dtype is an integer type, then numpy doesn't allow true division /= to assign
-        # back to an integer array.  So for integers (or mixed types), don't use /=.
-        self.array[:,:] /= a
-    else:
-        self.array[:,:] = (self.array / a).astype(self.array.dtype, copy=False)
-    return self
-
-def Image_floordiv(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array // a, self.bounds, self.wcs)
-
-def Image_rfloordiv(self, other):
-    check_image_consistency(self, other, integer=True)
-    return _Image(other // self.array, self.bounds, self.wcs)
-
-def Image_ifloordiv(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        a = other.array
-        dt = a.dtype
-    except AttributeError:
-        a = other
-        dt = type(a)
-    if dt == self.array.dtype:
-        self.array[:,:] //= a
-    else:
-        self.array[:,:] = (self.array // a).astype(self.array.dtype, copy=False)
-    return self
-
-def Image_mod(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array % a, self.bounds, self.wcs)
-
-def Image_rmod(self, other):
-    check_image_consistency(self, other, integer=True)
-    return _Image(other % self.array, self.bounds, self.wcs)
-
-def Image_imod(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        a = other.array
-        dt = a.dtype
-    except AttributeError:
-        a = other
-        dt = type(a)
-    if dt == self.array.dtype:
-        self.array[:,:] %= a
-    else:
-        self.array[:,:] = (self.array % a).astype(self.array.dtype, copy=False)
-    return self
-
-def Image_pow(self, other):
-    result = self.copy()
-    result **= other
-    return result
-
-def Image_ipow(self, other):
-    if not isinstance(other, int) and not isinstance(other, float):
-        raise TypeError("Can only raise an image to a float or int power!")
-    self.array[:,:] **= other
-    return self
-
-def Image_neg(self):
-    result = self.copy()
-    result *= -1
-    return result
-
-# Define &, ^ and | only for integer-type images
-def Image_and(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array & a, self.bounds, self.wcs)
-
-
-def Image_iand(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        self.array[:,:] &= other.array
-    except AttributeError:
-        self.array[:,:] &= other
-    return self
-
-def Image_xor(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array ^ a, self.bounds, self.wcs)
-
-def Image_ixor(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        self.array[:,:] ^= other.array
-    except AttributeError:
-        self.array[:,:] ^= other
-    return self
-
-def Image_or(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        a = other.array
-    except AttributeError:
-        a = other
-    return _Image(self.array | a, self.bounds, self.wcs)
-
-def Image_ior(self, other):
-    check_image_consistency(self, other, integer=True)
-    try:
-        self.array[:,:] |= other.array
-    except AttributeError:
-        self.array[:,:] |= other
-    return self
-
-# inject the arithmetic operators as methods of the Image class:
-Image.__add__ = Image_add
-Image.__radd__ = Image_add
-Image.__iadd__ = Image_iadd
-Image.__sub__ = Image_sub
-Image.__rsub__ = Image_rsub
-Image.__isub__ = Image_isub
-Image.__mul__ = Image_mul
-Image.__rmul__ = Image_mul
-Image.__imul__ = Image_imul
-Image.__div__ = Image_div
-Image.__rdiv__ = Image_rdiv
-Image.__truediv__ = Image_div
-Image.__rtruediv__ = Image_rdiv
-Image.__idiv__ = Image_idiv
-Image.__itruediv__ = Image_idiv
-Image.__mod__ = Image_mod
-Image.__rmod__ = Image_rmod
-Image.__imod__ = Image_imod
-Image.__floordiv__ = Image_floordiv
-Image.__rfloordiv__ = Image_rfloordiv
-Image.__ifloordiv__ = Image_ifloordiv
-Image.__ipow__ = Image_ipow
-Image.__pow__ = Image_pow
-Image.__neg__ = Image_neg
-Image.__and__ = Image_and
-Image.__xor__ = Image_xor
-Image.__or__ = Image_or
-Image.__rand__ = Image_and
-Image.__rxor__ = Image_xor
-Image.__ror__ = Image_or
-Image.__iand__ = Image_iand
-Image.__ixor__ = Image_ixor
-Image.__ior__ = Image_ior
