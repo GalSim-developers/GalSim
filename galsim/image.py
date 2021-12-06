@@ -20,7 +20,7 @@ import numpy as np
 
 from . import _galsim
 from .position import PositionI, _PositionD
-from .bounds import BoundsI, BoundsD
+from .bounds import BoundsI, BoundsD, _BoundsI
 from .wcs import BaseWCS, PixelScale, JacobianWCS
 from .utilities import lazy_property, parse_pos_args
 from .errors import GalSimError, GalSimBoundsError, GalSimValueError, GalSimImmutableError
@@ -836,7 +836,7 @@ class Image:
             y0 = (self.wcs.origin.y - self.ymin + 0.5) / ny + 0.5
             target_wcs = target_wcs.shiftOrigin(_PositionD(x0,y0), self.wcs.world_origin)
 
-        target_bounds = BoundsI(1, nbins_x, 1, nbins_y)
+        target_bounds = _BoundsI(1, nbins_x, 1, nbins_y)
 
         return _Image(target_ar, target_bounds, target_wcs)
 
@@ -890,7 +890,7 @@ class Image:
             y0 = (self.wcs.origin.y - self.ymin + 0.5) * ny + 0.5
             target_wcs = target_wcs.shiftOrigin(_PositionD(x0,y0), self.wcs.world_origin)
 
-        target_bounds = BoundsI(1, npix_x, 1, npix_y)
+        target_bounds = _BoundsI(1, npix_x, 1, npix_y)
 
         return _Image(target_ar, target_bounds, target_wcs)
 
@@ -917,7 +917,7 @@ class Image:
 
         No2 = max(-self.bounds.xmin, self.bounds.xmax+1, -self.bounds.ymin, self.bounds.ymax+1)
 
-        full_bounds = BoundsI(-No2, No2-1, -No2, No2-1)
+        full_bounds = _BoundsI(-No2, No2-1, -No2, No2-1)
         if self.bounds == full_bounds:
             # Then the image is already in the shape we need.
             ximage = self
@@ -930,7 +930,7 @@ class Image:
         # dk = 2pi / (N dk)
         dk = np.pi / (No2 * dx)
 
-        out = Image(BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
+        out = Image(_BoundsI(0,No2,-No2,No2-1), dtype=np.complex128, scale=dk)
         with convert_cpp_errors():
             _galsim.rfft(ximage._image, out._image, True, True)
         out *= dx*dx
@@ -970,15 +970,15 @@ class Image:
 
         No2 = max(self.bounds.xmax, -self.bounds.ymin, self.bounds.ymax)
 
-        target_bounds = BoundsI(0, No2, -No2, No2-1)
+        target_bounds = _BoundsI(0, No2, -No2, No2-1)
         if self.bounds == target_bounds:
             # Then the image is already in the shape we need.
             kimage = self
         else:
             # Then we can pad out with zeros and wrap to get this in the form we need.
-            full_bounds = BoundsI(0, No2, -No2, No2)
+            full_bounds = _BoundsI(0, No2, -No2, No2)
             kimage = Image(full_bounds, dtype=self.dtype, init_value=0)
-            posx_bounds = BoundsI(0, self.bounds.xmax, self.bounds.ymin, self.bounds.ymax)
+            posx_bounds = _BoundsI(0, self.bounds.xmax, self.bounds.ymin, self.bounds.ymax)
             kimage[posx_bounds] = self[posx_bounds]
             kimage = kimage.wrap(target_bounds, hermitian = 'x')
 
@@ -987,11 +987,11 @@ class Image:
         dx = np.pi / (No2 * dk)
 
         # For the inverse, we need a bit of extra space for the fft.
-        out_extra = Image(BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
+        out_extra = Image(_BoundsI(-No2,No2+1,-No2,No2-1), dtype=float, scale=dx)
         with convert_cpp_errors():
             _galsim.irfft(kimage._image, out_extra._image, True, True)
         # Now cut off the bit we don't need.
-        out = out_extra.subImage(BoundsI(-No2,No2-1,-No2,No2-1))
+        out = out_extra.subImage(_BoundsI(-No2,No2-1,-No2,No2-1))
         out *= (dk * No2 / np.pi)**2
         out.setCenter(0,0)
         return out
@@ -1812,6 +1812,57 @@ class Image:
         return _Image(self.array | a, self.bounds, self.wcs)
 
     __ror__ = __or__
+
+    def transpose(self):
+        """Return the tranpose of the image.
+
+        Note: The returned image will have an undefined wcs.
+        If you care about the wcs, you will need to set it yourself.
+        """
+        bT = _BoundsI(self.ymin, self.ymax, self.xmin, self.xmax)
+        return _Image(self.array.T, bT, None)
+
+    def flip_lr(self):
+        """Return a version of the image flipped left to right.
+
+        Note: The returned image will have an undefined wcs.
+        If you care about the wcs, you will need to set it yourself.
+        """
+        return _Image(self.array[:,::-1], self._bounds, None)
+
+    def flip_ud(self):
+        """Return a version of the image flipped top to bottom.
+
+        Note: The returned image will have an undefined wcs.
+        If you care about the wcs, you will need to set it yourself.
+        """
+        return _Image(self.array[::-1,:], self._bounds, None)
+
+    def rot_cw(self):
+        """Return a version of the image rotated 90 degrees clockwise.
+
+        Note: The returned image will have an undefined wcs.
+        If you care about the wcs, you will need to set it yourself.
+        """
+        bT = _BoundsI(self.ymin, self.ymax, self.xmin, self.xmax)
+        return _Image(self.array.T[::-1,:], bT, None)
+
+    def rot_ccw(self):
+        """Return a version of the image rotated 90 degrees counter-clockwise.
+
+        Note: The returned image will have an undefined wcs.
+        If you care about the wcs, you will need to set it yourself.
+        """
+        bT = _BoundsI(self.ymin, self.ymax, self.xmin, self.xmax)
+        return _Image(self.array.T[:,::-1], bT, None)
+
+    def rot_180(self):
+        """Return a version of the image rotated 180 degrees.
+
+        Note: The returned image will have an undefined wcs.
+        If you care about the wcs, you will need to set it yourself.
+        """
+        return _Image(self.array[::-1,::-1], self._bounds, None)
 
     def __ior__(self, other):
         self.check_image_consistency(other, integer=True)

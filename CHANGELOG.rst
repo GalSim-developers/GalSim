@@ -34,6 +34,7 @@ Config Updates
 New Features
 ------------
 
+- Added Image methods: tranpose, flip_ud, flip_lr, rot_cw, rot_ccw, rot_180.
 
 
 Performance Improvements
