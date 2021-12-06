@@ -3528,6 +3528,57 @@ def test_fpack():
         np.testing.assert_allclose(im1.array, im3.array, atol=1)
 
 
+@timer
+def test_flips():
+    """Test transpose, flips, and rotates
+    """
+    im1 = galsim.Image(np.random.sample(size=(13,19)), scale=0.2)
+    assert im1.bounds == galsim.BoundsI(1,19,1,13)
+    assert im1.array.shape == (13,19)
+
+    im2 = im1.transpose()
+    assert im2.bounds == galsim.BoundsI(1,13,1,19)
+    assert im2.array.shape == (19,13)
+    np.testing.assert_array_equal(im2.array, im1.array.T)
+    assert im1(1,1) == im2(1,1)
+    assert im1(8,3) == im2(3,8)
+
+    im3 = im1.flip_ud()
+    assert im3.bounds == galsim.BoundsI(1,19,1,13)
+    assert im3.array.shape == (13,19)
+    np.testing.assert_array_equal(im3.array, im1.array[::-1,:])
+    assert im1(1,1) == im3(1,13)
+    assert im1(8,3) == im3(8,11)
+
+    im4 = im1.flip_lr()
+    assert im4.bounds == galsim.BoundsI(1,19,1,13)
+    assert im4.array.shape == (13,19)
+    np.testing.assert_array_equal(im4.array, im1.array[:,::-1])
+    assert im1(1,1) == im4(19,1)
+    assert im1(8,3) == im4(12,3)
+
+    im5 = im1.rot_cw()
+    assert im5.bounds == galsim.BoundsI(1,13,1,19)
+    assert im5.array.shape == (19,13)
+    np.testing.assert_array_equal(im5.array, im1.array.T[::-1,:])
+    assert im1(1,1) == im5(1,19)
+    assert im1(8,3) == im5(3,12)
+
+    im6 = im1.rot_ccw()
+    assert im6.bounds == galsim.BoundsI(1,13,1,19)
+    assert im6.array.shape == (19,13)
+    np.testing.assert_array_equal(im6.array, im1.array.T[:,::-1])
+    assert im1(1,1) == im6(13,1)
+    assert im1(8,3) == im6(11,8)
+
+    im7 = im1.rot_180()
+    assert im7.bounds == galsim.BoundsI(1,19,1,13)
+    assert im7.array.shape == (13,19)
+    np.testing.assert_array_equal(im7.array, im1.array[::-1,::-1])
+    assert im1(1,1) == im7(19,13)
+    assert im1(8,3) == im7(12,11)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
