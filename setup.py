@@ -101,6 +101,11 @@ if "--debug" in sys.argv:
     for name in copt.keys():
         if name != 'unknown':
             copt[name].append('-g')
+        copt[name].append('-DMEM_TEST')
+else:
+    # Including mmgr.cpp in the library leads to problems if the other files don't
+    # include mmgr.h.  So remove it.
+    cpp_sources.remove('src/mmgr.cpp')
 
 # Verbose is the default for setuptools logging, but if it's on the command line, we take it
 # to mean that we should also be verbose.
