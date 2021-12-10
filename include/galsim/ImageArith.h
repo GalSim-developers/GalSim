@@ -58,6 +58,7 @@ namespace galsim {
                 for (int j=0; j<nrow; j++, ptr+=skip)
                     for (int i=0; i<ncol; i++, ptr+=step) f(*ptr);
             }
+            assert(ptr - step - skip < image.getMaxPtr());
         }
     }
 
@@ -86,6 +87,7 @@ namespace galsim {
                 for (int j=ymin; j<=ymax; j++, ptr+=skip)
                     for (int i=xmin; i<=xmax; i++, ptr+=step) f(*ptr,i,j);
             }
+            assert(ptr - step - skip < image.getMaxPtr());
         }
     }
 
@@ -112,6 +114,7 @@ namespace galsim {
                 for (int j=0; j<nrow; j++, ptr+=skip)
                     for (int i=0; i<ncol; i++, ptr+=step) *ptr = f(*ptr);
             }
+            assert(ptr - step - skip < image.getMaxPtr());
         }
     }
 
@@ -145,6 +148,8 @@ namespace galsim {
                 for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
                     for (int i=0; i<ncol; i++, ptr1+=step1, ptr2+=step2) *ptr1 = f(*ptr1,T1(*ptr2));
             }
+            assert(ptr1 - step1 - skip1 < image1.getMaxPtr());
+            assert(ptr2 - step2 - skip2 < image2.getMaxPtr());
         }
     }
 

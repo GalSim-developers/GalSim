@@ -192,6 +192,7 @@ namespace galsim {
          *  @brief Return a pointer to the first pixel in the image.
          */
         const T* getData() const { return _data; }
+        const T* getMaxPtr() const { return _maxptr; }
 
         /**
          *  @brief Return how many data elements are currently allocated in memory.
@@ -291,7 +292,13 @@ namespace galsim {
         /**
          *  @brief Unchecked element access
          */
-        const T& operator()(int xpos, int ypos) const { return _data[addressPixel(xpos, ypos)]; }
+        const T& operator()(int xpos, int ypos) const {
+#ifdef DEBUGLOGGING
+            return at(xpos,ypos);
+#else
+            return _data[addressPixel(xpos, ypos)];
+#endif
+        }
         const T& operator()(const Position<int>& pos) const { return operator()(pos.x,pos.y); }
         //@}
 
@@ -330,6 +337,7 @@ namespace galsim {
 
         shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
         T* _data;                     // pointer to be used for this image
+        const T* _maxptr;             // one-past-the-end of space allocated for the original image
         ptrdiff_t _nElements;         // number of elements allocated in memory
         int _step;                    // number of elements between cols (normally 1)
         int _stride;                  // number of elements between rows (!= width for subimages)
@@ -345,10 +353,10 @@ namespace galsim {
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
-        BaseImage(T* data, ptrdiff_t nElements, shared_ptr<T> owner,
+        BaseImage(T* data, const T* maxptr, ptrdiff_t nElements, shared_ptr<T> owner,
                   int step, int stride, const Bounds<int>& b) :
             AssignableToImage<T>(b),
-            _owner(owner), _data(data), _nElements(nElements),
+            _owner(owner), _data(data), _maxptr(maxptr), _nElements(nElements),
             _step(step), _stride(stride),
             _ncol(b.getXMax()-b.getXMin()+1), _nrow(b.getYMax()-b.getYMin()+1)
         { if (_nElements == 0) _nElements = _ncol * _nrow; }
@@ -361,7 +369,7 @@ namespace galsim {
          */
         BaseImage(const BaseImage<T>& rhs) :
             AssignableToImage<T>(rhs),
-            _owner(rhs._owner), _data(rhs._data), _nElements(rhs._nElements),
+            _owner(rhs._owner), _data(rhs._data), _maxptr(rhs._maxptr), _nElements(rhs._nElements),
             _step(rhs._step), _stride(rhs._stride), _ncol(rhs._ncol), _nrow(rhs._nrow)
         {}
 
@@ -407,9 +415,9 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ConstImageView(T* data, const shared_ptr<T>& owner, int step, int stride,
-                       const Bounds<int>& b) :
-            BaseImage<T>(data,0,owner,step,stride,b) {}
+        ConstImageView(T* data, const T* maxptr, int nElements, const shared_ptr<T>& owner,
+                       int step, int stride, const Bounds<int>& b) :
+            BaseImage<T>(data,maxptr,nElements,owner,step,stride,b) {}
 
         /**
          *  @brief Copy Constructor from a BaseImage makes a new view of the same data
@@ -464,9 +472,9 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ImageView(T* data, const shared_ptr<T>& owner, int step, int stride,
-                  const Bounds<int>& b, int nElements=0) :
-            BaseImage<T>(data, nElements, owner, step, stride, b) {}
+        ImageView(T* data, const T* maxptr, int nElements, const shared_ptr<T>& owner,
+                  int step, int stride, const Bounds<int>& b) :
+            BaseImage<T>(data, maxptr, nElements, owner, step, stride, b) {}
 
         /**
          *  @brief Shallow copy constructor.
@@ -529,6 +537,7 @@ namespace galsim {
          *  pointer.  (T*, not const T*)
          */
         T* getData() { return this->_data; }
+        const T* getMaxPtr() { return this->_maxptr; }
 
         /**
          *  @brief View just returns itself.
@@ -551,7 +560,13 @@ namespace galsim {
          *  @brief Unchecked access
          */
         T& operator()(int xpos, int ypos)
-        { return this->_data[this->addressPixel(xpos, ypos)]; }
+        {
+#ifdef DEBUGLOGGING
+            return at(xpos,ypos);
+#else
+            return this->_data[this->addressPixel(xpos, ypos)];
+#endif
+        }
         T& operator()(const Position<int>& pos) { return operator()(pos.x,pos.y); }
         //@}
 
@@ -725,6 +740,7 @@ namespace galsim {
          */
         T* getData() { return this->_data; }
         const T* getData() const { return this->_data; }
+        const T* getMaxPtr() const { return this->_maxptr; }
         //@}
 
         //@{
@@ -733,8 +749,8 @@ namespace galsim {
          */
         ImageView<T> view()
         {
-            return ImageView<T>(this->_data, this->_owner, this->_step, this->_stride,
-                                this->_bounds, this->_nElements);
+            return ImageView<T>(this->_data, this->_maxptr, this->_nElements, this->_owner,
+                                this->_step, this->_stride, this->_bounds);
         }
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
         //@}
@@ -763,10 +779,20 @@ namespace galsim {
         /**
          *  @brief Unchecked access
          */
-        T& operator()(int xpos, int ypos)
-        { return this->_data[this->addressPixel(xpos, ypos)]; }
-        const T& operator()(int xpos, int ypos) const
-        { return this->_data[this->addressPixel(xpos, ypos)]; }
+        T& operator()(int xpos, int ypos) {
+#ifdef DEBUGLOGGING
+            return at(xpos,ypos);
+#else
+            return this->_data[this->addressPixel(xpos, ypos)];
+#endif
+        }
+        const T& operator()(int xpos, int ypos) const {
+#ifdef DEBUGLOGGING
+            return at(xpos,ypos);
+#else
+            return this->_data[this->addressPixel(xpos, ypos)];
+#endif
+        }
         T& operator()(const Position<int>& pos) { return operator()(pos.x,pos.y); }
         const T& operator()(const Position<int>& pos) const { return operator()(pos.x,pos.y); }
         //@}

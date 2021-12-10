@@ -102,7 +102,7 @@ ImageBoundsError::ImageBoundsError(const int x, const int y, const Bounds<int> b
 
 template <typename T>
 BaseImage<T>::BaseImage(const Bounds<int>& b) :
-    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _step(0), _stride(0),
+    AssignableToImage<T>(b), _owner(), _data(0), _maxptr(0), _nElements(0), _step(0), _stride(0),
     _ncol(0), _nrow(0)
 {
     if (this->_bounds.isDefined()) allocateMem();
@@ -149,6 +149,7 @@ void BaseImage<T>::allocateMem()
 
     _owner = allocateAlignedMemory<T>(_nElements);
     _data = _owner.get();
+    _maxptr = _data + _nElements;
 }
 
 template <typename T>
@@ -285,6 +286,7 @@ void ImageAlloc<T>::resize(const Bounds<int>& new_bounds)
         this->_bounds = new_bounds;
         this->_owner.reset();
         this->_data = 0;
+        this->_maxptr = 0;
         this->_nElements = 0;
         this->_step = 0;
         this->_stride = 0;
@@ -315,7 +317,9 @@ const T& BaseImage<T>::at(const int xpos, const int ypos) const
 {
     if (!_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
-    return _data[addressPixel(xpos, ypos)];
+    ptrdiff_t addr = addressPixel(xpos, ypos);
+    assert(_data + addr < _maxptr);
+    return _data[addr];
 }
 
 template <typename T>
@@ -323,7 +327,9 @@ T& ImageView<T>::at(const int xpos, const int ypos)
 {
     if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
-    return this->_data[this->addressPixel(xpos, ypos)];
+    ptrdiff_t addr = this->addressPixel(xpos, ypos);
+    assert(this->_data + addr < this->_maxptr);
+    return this->_data[addr];
 }
 
 template <typename T>
@@ -331,7 +337,9 @@ T& ImageAlloc<T>::at(const int xpos, const int ypos)
 {
     if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
-    return this->_data[this->addressPixel(xpos, ypos)];
+    ptrdiff_t addr = this->addressPixel(xpos, ypos);
+    assert(this->_data + addr < this->_maxptr);
+    return this->_data[addr];
 }
 
 template <typename T>
@@ -339,7 +347,9 @@ const T& ImageAlloc<T>::at(const int xpos, const int ypos) const
 {
     if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
-    return this->_data[this->addressPixel(xpos, ypos)];
+    ptrdiff_t addr = this->addressPixel(xpos, ypos);
+    assert(this->_data + addr < this->_maxptr);
+    return this->_data[addr];
 }
 
 template <typename T>
@@ -351,10 +361,11 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
             "Subimage bounds (" << bounds << ") are outside original image bounds (" <<
             this->_bounds << ")";
     }
-    T* newdata = _data
-        + (bounds.getYMin() - this->_bounds.getYMin()) * _stride
+    ptrdiff_t off = (bounds.getYMin() - this->_bounds.getYMin()) * _stride
         + (bounds.getXMin() - this->_bounds.getXMin()) * _step;
-    return ConstImageView<T>(newdata,_owner,_step,_stride,bounds);
+    T* newdata = _data + off;
+    assert(newdata < _maxptr);
+    return ConstImageView<T>(newdata,_maxptr,0,_owner,_step,_stride,bounds);
 }
 
 template <typename T>
@@ -366,10 +377,11 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds)
             "Subimage bounds (" << bounds << ") are outside original image bounds (" <<
             this->_bounds << ")";
     }
-    T* newdata = this->_data
-        + (bounds.getYMin() - this->_bounds.getYMin()) * this->_stride
+    ptrdiff_t off = (bounds.getYMin() - this->_bounds.getYMin()) * this->_stride
         + (bounds.getXMin() - this->_bounds.getXMin()) * this->_step;
-    return ImageView<T>(newdata,this->_owner,this->_step,this->_stride,bounds);
+    T* newdata = this->_data + off;
+    assert(newdata < this->_maxptr);
+    return ImageView<T>(newdata,this->_maxptr,0,this->_owner,this->_step,this->_stride,bounds);
 }
 
 
@@ -766,6 +778,8 @@ void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
                     *xptr++ = REAL(*ptr);
         }
     }
+    assert(xptr-3 < (double*)(out.getMaxPtr()));
+    assert(ptr-in.getStep()-skip < in.getMaxPtr());
 
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(out.getData());
     double* xdata = reinterpret_cast<double*>(out.getData());
@@ -784,6 +798,7 @@ void rfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
         for (int j=Ny; j; --j, fac=(extra_flip?-fac:fac))
             for (int i=Nxo2+1; i; --i, fac=-fac)
                 *kptr++ *= fac;
+        assert(kptr-1 < out.getMaxPtr());
     }
 }
 
@@ -833,9 +848,9 @@ void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool sh
     const int start_offset = shift_in ? Nyo2 * in.getStride() : 0;
     const int mid_offset = shift_in ? 0 : Nyo2 * in.getStride();
 
+    const T* ptr = in.getData() + start_offset;
     const int skip = in.getNSkip();
     if (shift_out) {
-        const T* ptr = in.getData() + start_offset;
         const bool extra_flip = (Nxo2 % 2 == 1);
         if (in.getStep() == 1) {
             for (int j=Nyo2; j; --j, ptr+=skip, fac=(extra_flip?-fac:fac))
@@ -855,7 +870,6 @@ void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool sh
                     *kptr++ = fac * *ptr;
         }
     } else {
-        const T* ptr = in.getData() + start_offset;
         if (in.getStep() == 1) {
             for (int j=Nyo2; j; --j, ptr+=skip)
                 for (int i=Nxo2+1; i; --i)
@@ -874,6 +888,8 @@ void irfft(const BaseImage<T>& in, ImageView<double> out, bool shift_in, bool sh
                     *kptr++ = fac * *ptr;
         }
     }
+    assert(kptr-1 < (std::complex<double>*)(out.getMaxPtr()));
+    assert(ptr-in.getStep()-skip < in.getMaxPtr());
 
     double* xdata = out.getData();
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(xdata);
@@ -948,6 +964,8 @@ void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
                     *kptr++ = *ptr;
         }
     }
+    assert(kptr-1 < out.getMaxPtr());
+    assert(ptr-in.getStep()-skip < in.getMaxPtr());
 
     fftw_complex* kdata = reinterpret_cast<fftw_complex*>(out.getData());
 
@@ -963,6 +981,7 @@ void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
         for (int j=Ny; j; --j, fac=-fac)
             for (int i=Nx; i; --i, fac=-fac)
                 *kptr++ *= fac;
+        assert(kptr-1 < out.getMaxPtr());
     }
 }
 

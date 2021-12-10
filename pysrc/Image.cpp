@@ -28,8 +28,11 @@ namespace galsim {
         size_t idata, int step, int stride, const Bounds<int>& bounds)
     {
         T* data = reinterpret_cast<T*>(idata);
+        int ncol = bounds.getXMax() - bounds.getXMin() + 1;
+        int nrow = bounds.getYMax() - bounds.getYMin() + 1;
+        const T* maxptr = data + (ncol-1) * step + (nrow-1) * stride + 1;
         shared_ptr<T> owner;
-        return new ImageView<T>(data, owner, step, stride, bounds);
+        return new ImageView<T>(data, maxptr, ncol*nrow, owner, step, stride, bounds);
     }
 
     template <typename T>
