@@ -22,8 +22,8 @@
 #include <string>
 #include <algorithm>
 
-#include "BinomFact.h"
 #include "Laguerre.h"
+#include "BinomFact.h"
 #include "Solve.h"
 #include "math/Angle.h"
 

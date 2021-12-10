@@ -23,8 +23,8 @@
  * @file SBShapelet.h @brief SBProfile that implements a polar shapelet profile
  */
 
-#include "SBProfile.h"
 #include "Laguerre.h"
+#include "SBProfile.h"
 
 namespace galsim {
 

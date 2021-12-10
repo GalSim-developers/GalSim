@@ -43,6 +43,8 @@
 #include <string>
 #include <stdexcept>
 #include <cstddef>
+#include <vector>
+#include <map>
 
 #ifdef _WIN32
 #include <Windows.h>
