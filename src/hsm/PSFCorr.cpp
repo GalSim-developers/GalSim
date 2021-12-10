@@ -735,10 +735,12 @@ namespace hsm {
             if (ix1 > ix2) continue;  // rare, but it can happen after the ceil and floor.
 
             const double* imageptr = data.getPtr(ix1,y);
+            assert(imageptr < data.getMaxPtr());
             const int step = data.getStep();
             double x_x0 = ix1 - x0;
             const double* mxxptr = Minv_xx__x_x0__x_x0.data() + ix1-xmin;
             for(int x=ix1;x<=ix2;++x,x_x0+=1.,imageptr+=step) {
+                assert(imageptr < data.getMaxPtr());
                 /* Compute displacement from weight centroid, then
                  * get elliptical radius and weight.
                  */
@@ -969,20 +971,9 @@ namespace hsm {
         // below.  This now matches the original behavior (below), but it seems like someone
         // might want to change these somewhat to get im1 and im2 centered in the center of the
         // images rather than kind of offcenter as they are now.  Another time perhaps....
-        int offset_x3 = image_out.getXMin() - image1.getXMin() - image2.getXMin();
-        int offset_y3 = image_out.getYMin() - image1.getYMin() - image2.getYMin();
-        dbg<<"offset_x3 = "<<offset_x3<<std::endl;
-        dbg<<"offset_y3 = "<<offset_y3<<std::endl;
-        Bounds<int> b3 = image_out.getBounds();
-        b3.shift(-b3.origin());
-        b3.shift(Position<int>(offset_x3, offset_y3));
-        dbg<<"b3 = "<<b3<<std::endl;
-        b3 = b3 & xim.getBounds();
-        dbg<<"b3 => "<<b3<<std::endl;
-        Bounds<int> b4 = b3;
-        b4.shift(Position<int>(-offset_x3, -offset_y3));
-        b4.shift(image_out.getBounds().origin());
-        dbg<<"b4 = "<<b4<<std::endl;
+        Position<int> shift = image1.getBounds().origin() + image2.getBounds().origin();
+        Bounds<int> b3 = image_out.getBounds().makeShifted(-shift) & xim.getBounds();
+        Bounds<int> b4 = b3.makeShifted(shift);
         image_out[b4] += xim[b3];
      }
 #else
