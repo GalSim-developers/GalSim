@@ -35,6 +35,8 @@ void TestImageBasic()
         14, 24, 34, 44, 54, 64, 74,  // v
         15, 25, 35, 45, 55, 65, 75 };
     // Of course, when viewed as an image, the rows are generally drawn from bottom to top.
+    const int nelem = nrow*ncol;
+    const T* max_ptr = ref_array + nelem;
 
     // Check basic constructor from nrow,ncol
     galsim::ImageAlloc<T> im1(ncol,nrow);
@@ -101,8 +103,8 @@ void TestImageBasic()
     // Check view of given data
     // Note: Our array is on the stack, so we don't have any ownership to pass around.
     //       Hence, use a default shared_ptr constructor.
-    galsim::ImageView<T> im3_view(ref_array, shared_ptr<T>(), 1, ncol, bounds);
-    galsim::ConstImageView<T> im3_cview(ref_array, shared_ptr<T>(), 1, ncol, bounds);
+    galsim::ImageView<T> im3_view(ref_array, max_ptr, nelem, shared_ptr<T>(), 1, ncol, bounds);
+    galsim::ConstImageView<T> im3_cview(ref_array, max_ptr, nelem, shared_ptr<T>(), 1, ncol, bounds);
     Log("Testing initialized values");
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
@@ -156,8 +158,10 @@ void TestImageArith()
         14, 24, 34, 44, 54, 64, 74,
         15, 25, 35, 45, 55, 65, 75 };
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
+    const int nelem = ncol*nrow;
+    const T* max_ptr = ref_array + nelem;
 
-    galsim::ConstImageView<T> ref_im(ref_array, shared_ptr<T>(), 1, ncol, bounds);
+    galsim::ConstImageView<T> ref_im(ref_array, max_ptr, nelem, shared_ptr<T>(), 1, ncol, bounds);
 
     galsim::ImageAlloc<T> im1 = ref_im;
     galsim::ImageAlloc<T> im2 = T(2) * ref_im;
