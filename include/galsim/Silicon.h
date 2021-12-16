@@ -241,12 +241,12 @@ namespace galsim
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
 
-        std::vector<Point> _horizontalBoundaryPoints;
-        std::vector<Point> _verticalBoundaryPoints;
+        std::vector<Position<float> > _horizontalBoundaryPoints;
+        std::vector<Position<float> > _verticalBoundaryPoints;
         std::vector<Bounds<double> > _pixelInnerBounds;
         std::vector<Bounds<double> > _pixelOuterBounds;
-        std::vector<Point> _horizontalDistortions;
-        std::vector<Point> _verticalDistortions;
+        std::vector<Position<float> > _horizontalDistortions;
+        std::vector<Position<float> > _verticalDistortions;
         int _numVertices, _nx, _ny, _nv, _qDist;
         double _nrecalc, _diffStep, _pixelSize, _sensorThickness;
         Table _tr_radial_table;

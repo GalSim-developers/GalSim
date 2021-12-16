@@ -34,7 +34,7 @@
 
 namespace galsim {
 
-    void Polygon::add(const Point& point)
+    void Polygon::add(const Position<double>& point)
     {
         xdbg<<"Current size = "<<_points.size()<<" = "<<_npoints<<std::endl;
         xdbg<<"add point "<<point.x<<','<<point.y<<std::endl;
@@ -95,7 +95,7 @@ namespace galsim {
         return _area;
     }
 
-    bool Polygon::contains(const Point& point) const
+    bool Polygon::contains(const Position<double>& point) const
     {
         //Determines if a given point is inside the polygon
         assert(_sorted);
@@ -137,8 +137,8 @@ namespace galsim {
 
     void Polygon::distort(const Polygon& refpoly, double factor)
     {
-        std::vector<Point>::iterator it = _points.begin();
-        std::vector<Point>::const_iterator ref = refpoly._points.begin();
+        std::vector<Position<double>>::iterator it = _points.begin();
+        std::vector<Position<double>>::const_iterator ref = refpoly._points.begin();
         for (int n=_npoints; n; --n) {
 #ifdef _OPENMP
 #pragma omp atomic
