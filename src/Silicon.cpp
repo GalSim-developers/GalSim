@@ -306,8 +306,12 @@ namespace galsim {
 
                         // Loop over boundary points and update them
                         for (int n=0; n < horizontalPixelStride(); ++n, ++index, ++dist_index) {
-                            _horizontalBoundaryPoints[index].x += _horizontalDistortions[dist_index].x * charge;
-                            _horizontalBoundaryPoints[index].y += _horizontalDistortions[dist_index].y * charge;
+                            _horizontalBoundaryPoints[index].x =
+                                double(_horizontalBoundaryPoints[index].x) +
+                                _horizontalDistortions[dist_index].x * charge;
+                            _horizontalBoundaryPoints[index].y =
+                                double(_horizontalBoundaryPoints[index].y) +
+                                _horizontalDistortions[dist_index].y * charge;
                         }
                     }
                 }
@@ -350,8 +354,12 @@ namespace galsim {
 
                         // Loop over boundary points and update them
                         for (int n=0; n < verticalPixelStride(); ++n, --index, --dist_index) {
-                            _verticalBoundaryPoints[index].x += _verticalDistortions[dist_index].x * charge;
-                            _verticalBoundaryPoints[index].y += _verticalDistortions[dist_index].y * charge;
+                            _verticalBoundaryPoints[index].x =
+                                double(_verticalBoundaryPoints[index].x) +
+                                _verticalDistortions[dist_index].x * charge;
+                            _verticalBoundaryPoints[index].y =
+                                double(_verticalBoundaryPoints[index].y) +
+                                _verticalDistortions[dist_index].y * charge;
                         }
                     }
                 }
@@ -394,8 +402,8 @@ namespace galsim {
                 double dx = shift * tx / r;
                 double dy = shift * ty / r;
                 xdbg<<"dx,dy = "<<dx<<','<<dy<<std::endl;
-                poly[n].x += dx;
-                poly[n].y += dy;
+                poly[n].x = double(poly[n].x) + dx;
+                poly[n].y = double(poly[n].y) + dy;
                 xdbg<<"    x,y => "<<poly[n].x <<"  "<< poly[n].y;
             }
         }
