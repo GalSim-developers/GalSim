@@ -147,13 +147,16 @@ jobs:
                 # Extra packages needed for testing
                 pip install -U -r test_requirements.txt
                 pip install -U nose codecov coverage
-                pip install -U pandas matplotlib astroplan
+                pip install -U matplotlib astroplan
 
             - name: Install CPython-only dependencies
               if: matrix.py != 'pypy3'
-              run:
+              run: |
                 # The only one left that doesn't seem to work right on pypy is starlink-pyast.
                 pip install -U starlink-pyast
+                # And now pandas is acting up on pypy.
+                # cf. https://github.com/pandas-dev/pandas/issues/44253
+                pip install -U pandas
 
             - name: List all installed packages for reference
               run: pip list
