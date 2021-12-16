@@ -56,12 +56,20 @@ namespace galsim {
         ///@brief Constructor.
         Position(const T xin, const T yin) : x(xin), y(yin) {}
 
+        ///@brief Copy Constructor
+        Position(const Position<T>& rhs) : x(rhs.x), y(rhs.y) {}
+        template <typename T2>
+        Position(const Position<T2>& rhs) : x(rhs.x), y(rhs.y) {}
+
         ///@brief Assignment.
         Position& operator=(const Position<T>& rhs)
         {
             if (&rhs == this) return *this;
             else { x=rhs.x; y=rhs.y; return *this; }
         }
+        template <typename T2>
+        Position& operator=(const Position<T2>& rhs)
+        { x=rhs.x; y=rhs.y; return *this; }
 
         /// @brief Overloaded += operator, following standard vector algebra rules.
         template <typename T2>
@@ -251,9 +259,11 @@ namespace galsim {
 
         //@{
         /// @brief return whether the bounded region includes a given point
-        bool includes(const Position<T>& pos) const
+        template <typename T2>
+        bool includes(const Position<T2>& pos) const
         { return (defined && pos.x<=xmax && pos.x>=xmin && pos.y<=ymax && pos.y>=ymin); }
-        bool includes(const T x, const T y) const
+        template <typename T2>
+        bool includes(const T2 x, const T2 y) const
         { return (defined && x<=xmax && x>=xmin && y<=ymax && y>=ymin); }
         //@}
 
