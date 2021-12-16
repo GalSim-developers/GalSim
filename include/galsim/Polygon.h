@@ -32,8 +32,8 @@
 
 namespace galsim {
 
-    // For these purposes, we use Point as an alias for Position<double>
-    typedef Position<double> Point;
+    // For these purposes, we use Point as an alias for Position<float>
+    typedef Position<float> Point;
 
     class PUBLIC_API Polygon
     {
