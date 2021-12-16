@@ -59,10 +59,10 @@ namespace galsim {
         dbg<<"corners:\n";
         for (int xpix=0; xpix<2; xpix++) {
             for (int ypix=0; ypix<2; ypix++) {
-                poly.add(Point(xpix, ypix));
+                poly.add(Position<double>(xpix, ypix));
                 // Two copies of the corner to be consistent with new code
                 // that has two corner points.
-                poly.add(Point(xpix, ypix));
+                poly.add(Position<double>(xpix, ypix));
             }
         }
         // Next the edges
@@ -70,14 +70,14 @@ namespace galsim {
         for (int xpix=0; xpix<2; xpix++) {
             for (int n=0; n<numVertices; n++) {
                 double theta = theta0 + (n + 1.0) * dtheta;
-                poly.add(Point(xpix, (std::tan(theta) + 1.0) / 2.0));
+                poly.add(Position<double>(xpix, (std::tan(theta) + 1.0) / 2.0));
             }
         }
         dbg<<"y edges:\n";
         for (int ypix=0; ypix<2; ypix++) {
             for (int n=0; n<numVertices; n++) {
                 double theta = theta0 + (n + 1.0) * dtheta;
-                poly.add(Point((std::tan(theta) + 1.0) / 2.0, ypix));
+                poly.add(Position<double>((std::tan(theta) + 1.0) / 2.0, ypix));
             }
         }
         poly.sort();
@@ -106,7 +106,7 @@ namespace galsim {
         _nv = 4 * _numVertices + 8; // Number of vertices in each pixel
         dbg<<"_numVertices = "<<_numVertices<<", _nv = "<<_nv<<std::endl;
         dbg<<"nx,ny = "<<nx<<", "<<ny<<"  ntot = "<<nx*ny<<std::endl;
-        dbg<<"total memory = "<<nx*ny*_nv*sizeof(Point)/(1024.*1024.)<<" MBytes"<<std::endl;
+        dbg<<"total memory = "<<nx*ny*_nv*sizeof(Position<float>)/(1024.*1024.)<<" MBytes"<<std::endl;
 
         buildEmptyPoly(_emptypoly, _numVertices);
         // These are mutable Polygons we'll use as scratch space
@@ -223,21 +223,21 @@ namespace galsim {
         // compute outer bounds first
         _pixelOuterBounds[k] = Bounds<double>();
 
-        iteratePixelBoundary(x, y, nx, ny, [this, k](int n, Point& pt, bool rhs, bool top) {
-                             Point p = pt;
+        iteratePixelBoundary(x, y, nx, ny, [this, k](int n, Position<float>& pt, bool rhs, bool top) {
+                             Position<double> p = pt;
                              if (rhs) p.x += 1.0;
                              if (top) p.y += 1.0;
                              _pixelOuterBounds[k] += p;
                              });
 
-        Point center = _pixelOuterBounds[k].center();
+        Position<double> center = _pixelOuterBounds[k].center();
 
         // now compute inner bounds manually
         _pixelInnerBounds[k] = _pixelOuterBounds[k];
         Bounds<double>& inner = _pixelInnerBounds[k];
 
-        iteratePixelBoundary(x, y, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
-                             Point p = pt;
+        iteratePixelBoundary(x, y, nx, ny, [&](int n, Position<float>& pt, bool rhs, bool top) {
+                             Position<double> p = pt;
                              if (rhs) p.x += 1.0;
                              if (top) p.y += 1.0;
 
@@ -405,8 +405,8 @@ namespace galsim {
     void Silicon::calculateTreeRingDistortion(int i, int j, Position<int> orig_center,
                                               int nx, int ny, int i1, int j1)
     {
-        iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Point& pt, bool rhs, bool top) {
-                             Point p = pt;
+        iteratePixelBoundary(i - i1, j - j1, nx, ny, [&](int n, Position<float>& pt, bool rhs, bool top) {
+                             Position<double> p = pt;
 
                              // only do bottom and left points unless we're on top/right edge
                              if ((rhs) && ((i - i1) < (nx - 1))) return;
@@ -479,8 +479,8 @@ namespace galsim {
     {
         result = emptypoly;
 
-        iteratePixelBoundary(i, j, nx, ny, [&](int n, const Point& pt, bool rhs, bool top) {
-                             Point p = pt;
+        iteratePixelBoundary(i, j, nx, ny, [&](int n, const Position<float>& pt, bool rhs, bool top) {
+                             Position<double> p = pt;
                              if (rhs) p.x += 1.0;
                              if (top) p.y += 1.0;
                              result[n].x += (p.x - emptypoly[n].x) * factor;
@@ -527,7 +527,7 @@ namespace galsim {
 #else
         int t  = 0;
 #endif
-        Point p(x,y);
+        Position<double> p(x,y);
         bool inside;
         if (_pixelInnerBounds[index].includes(p)) {
             xdbg<<"trivial\n";
@@ -663,14 +663,14 @@ namespace galsim {
         // compute sum of triangle areas using cross-product rule (shoelace formula)
         for (int n = 0; n < _nv; n++) {
             int pi1 = getBoundaryIndex(i, j, n, &horizontal1, nx, ny);
-            Point p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
+            Position<double> p1 = horizontal1 ? _horizontalBoundaryPoints[pi1] :
                 _verticalBoundaryPoints[pi1];
             if ((n > cornerIndexBottomRight()) && (n < cornerIndexTopRight())) p1.x += 1.0;
             if ((n >= cornerIndexTopRight()) && (n <= cornerIndexTopLeft())) p1.y += 1.0;
 
             int n2 = (n + 1) % _nv;
             int pi2 = getBoundaryIndex(i, j, n2, &horizontal2, nx, ny);
-            Point p2 = horizontal2 ? _horizontalBoundaryPoints[pi2] :
+            Position<double> p2 = horizontal2 ? _horizontalBoundaryPoints[pi2] :
                 _verticalBoundaryPoints[pi2];
             if ((n2 > cornerIndexBottomRight()) && (n2 < cornerIndexTopRight())) p2.x += 1.0;
             if ((n2 >= cornerIndexTopRight()) && (n2 <= cornerIndexTopLeft())) p2.y += 1.0;
@@ -702,7 +702,7 @@ namespace galsim {
         if (use_flux) {
             dbg<<"Start full pixel area calculation\n";
             dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
-            dbg<<"total memory = "<<nxny*_nv*sizeof(Point)/(1024.*1024.)<<" MBytes"<<std::endl;
+            dbg<<"total memory = "<<nxny*_nv*sizeof(Position<float>)/(1024.*1024.)<<" MBytes"<<std::endl;
 
             initializeBoundaryPoints(nx, ny);
 

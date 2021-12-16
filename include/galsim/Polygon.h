@@ -32,9 +32,6 @@
 
 namespace galsim {
 
-    // For these purposes, we use Point as an alias for Position<float>
-    typedef Position<float> Point;
-
     class PUBLIC_API Polygon
     {
     public:
@@ -47,7 +44,7 @@ namespace galsim {
         // Add a point to a Polygon
         // Note: all points need to be added before doing area or contains.  If more points are
         // added after either of those calls, an exception will be thrown.
-        void add(const Point& point);
+        void add(const Position<double>& point);
 
         // Sort the points. The user is responsible for calling this after adding all the points
         // or after making any modification that might change the order of the points around
@@ -59,21 +56,21 @@ namespace galsim {
         double area() const;
 
         // Return whether the Polygon contains a given point
-        bool contains(const Point& point) const;
+        bool contains(const Position<double>& point) const;
 
         // Two functions that check whether the point is trivially inside or outside.
-        inline bool triviallyContains(const Point& point) const
+        inline bool triviallyContains(const Position<double>& point) const
         { return _inner.includes(point); }
 
-        inline bool mightContain(const Point& point) const
+        inline bool mightContain(const Position<double>& point) const
         { return _outer.includes(point); }
 
-        // Some methods that let Polygon act (in some ways) like a vector<Point>
+        // Some methods that let Polygon act (in some ways) like a vector<Position<double> >
         size_t size() const { return _points.size(); }
         void clear() { _points.clear(); }
         void reserve(int n) { _points.reserve(n); }
-        Point& operator[](int i) { return _points[i]; }
-        const Point& operator[](int i) const { return _points[i]; }
+        Position<double>& operator[](int i) { return _points[i]; }
+        const Position<double>& operator[](int i) const { return _points[i]; }
 
         // Make the Polygon a scaled version of a reference one (relative to an empty Polygon).
         void scale(const Polygon& refpoly, const Polygon& emptypoly, double factor);
@@ -92,7 +89,7 @@ namespace galsim {
 
         bool _sorted;
         mutable double _area;
-        std::vector<Point> _points;
+        std::vector<Position<double> > _points;
         int _npoints;  // Always equivalent to _points.size(), but convenient to have it as an int.
         Bounds<double> _inner;
         Bounds<double> _outer;
