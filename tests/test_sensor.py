@@ -436,7 +436,8 @@ def test_silicon_area():
     # Repeat with transpose=True to check that things are transposed properly.
     siliconT = galsim.SiliconSensor(name='lsst_itl_8', rng=rng, transpose=True)
     area_imageT = siliconT.calculate_pixel_areas(im)
-    np.testing.assert_almost_equal(area_imageT.array, area_image.array.T, decimal=7)
+    # This actually comes out exactly equal, but only test at single precision.
+    np.testing.assert_allclose(area_imageT.array, area_image.array.T, rtol=1.e-8)
 
     # Draw a smallish but very bright Gaussian image
     obj = galsim.Gaussian(flux=5.e5, sigma=0.2)
@@ -499,7 +500,8 @@ def test_silicon_area():
                                rtol=2.e-3)
     np.testing.assert_allclose((area_imageT(1,0) + area_imageT(-1,0))/2., 0.9790312068001015,
                                rtol=4.e-4)
-    np.testing.assert_almost_equal(area_imageT.array, area_image.array.T, decimal=7)
+    # This actually comes out exactly equal, but only test at single precision.
+    np.testing.assert_allclose(area_imageT.array, area_image.array.T, rtol=1.e-8)
 
     im2T = obj.drawImage(nx=17, ny=17, scale=0.3, method='phot', sensor=siliconT, rng=rng)
     im2T.setCenter(0,0)
@@ -784,7 +786,7 @@ def test_treerings():
     areas1 = sensor5.calculate_pixel_areas(im)
     print('min/max area1 = ',np.min(areas1.array),np.max(areas1.array))
     areas2 = sensor5.calculate_pixel_areas(im, use_flux=False)
-    np.testing.assert_array_almost_equal(areas1.array, areas2.array, decimal=7)
+    np.testing.assert_allclose(areas1.array, areas2.array, rtol=2.e-8)
     print('min/max area2 = ',np.min(areas2.array),np.max(areas2.array))
     # But the areas with flux have a larger range (in both directions) because of the BFE
     assert np.min(areas0.array) < np.min(areas2.array)
