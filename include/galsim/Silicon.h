@@ -238,25 +238,8 @@ namespace galsim
 
         void updatePixelBounds(int nx, int ny, size_t k);
 
-#if 0
-        // TO BE REMOVED
-        bool checkPixel(int i, int j, int nx, int ny);
-
-        // TO BE REMOVED
-        void makeDistortionsConsistent();
-        // TO BE REMOVED
-        void addHalo();
-
-        bool _useNewBoundaries;
-#endif
-
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
-
-#if 0
-        std::vector<Polygon> _distortions;
-        std::vector<Polygon> _imagepolys;
-#endif
 
         std::vector<Point> _horizontalBoundaryPoints;
         std::vector<Point> _verticalBoundaryPoints;
