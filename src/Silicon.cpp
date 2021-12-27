@@ -892,8 +892,9 @@ namespace galsim {
 
             // count up how many photos we can use before recalc is needed
             int photonsUntilRecalc = startPhoton;
-            while ((photonsUntilRecalc < nphotons) && (addedFlux <= next_recalc)) {
-                addedFlux += photons.getFlux(photonsUntilRecalc);
+            double addedFlux1 = addedFlux;
+            while ((photonsUntilRecalc < nphotons) && (addedFlux1 <= next_recalc)) {
+                addedFlux1 += photons.getFlux(photonsUntilRecalc);
                 photonsUntilRecalc++;
             }
 
@@ -1006,8 +1007,10 @@ namespace galsim {
 #pragma omp atomic
 #endif
                     _delta(ix,iy) += flux;
-
-                    // no longer need to update addedFlux as it's done before this loop
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
+                    addedFlux += flux;
                 }
             }
 

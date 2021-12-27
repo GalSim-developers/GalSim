@@ -36,27 +36,35 @@ def test_simple():
     # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
     im1 = galsim.ImageD(64, 64, scale=0.3)  # Refefence image with sensor=None
     im2 = galsim.ImageD(64, 64, scale=0.3)  # Use sensor=simple
+    im3 = galsim.ImageD(10, 10, scale=0.3)  # Small image, where some flux falls off the edge
 
     rng1 = galsim.BaseDeviate(5678)
     rng2 = galsim.BaseDeviate(5678)
+    rng3 = galsim.BaseDeviate(5678)
 
     simple = galsim.Sensor()
 
     # Start with photon shooting, since that's more straightforward.
     obj.drawImage(im1, method='phot', poisson_flux=False, rng=rng1)
     obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
+    obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
 
     # Should be exactly equal
     np.testing.assert_array_equal(im2.array, im1.array)
+    np.testing.assert_array_equal(im2.array[27:37,27:37], im3.array)
 
-    # Fluxes should all equal obj.flux
+    # Fluxes on im1,im2 should all equal obj.flux
+    print('added_flux = ',im1.added_flux, im2.added_flux, im3.added_flux)
     np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
     np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=6)
     np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=6)
     np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=6)
 
-    # Now test fft drawing, which is more complicated with possible temporaries and subsampling.
+    # Some flux missing from im3
+    assert im3.added_flux < 0.8 * obj.flux
+    np.testing.assert_almost_equal(im3.array.sum(), im3.added_flux, decimal=6)
 
+    # Now test fft drawing, which is more complicated with possible temporaries and subsampling.
     im1 = galsim.ImageD(64, 64, scale=0.3)  # Reference image with sensor=None
     im2 = galsim.ImageD(64, 64, scale=0.3)  # Use sensor=simple
     im3 = galsim.ImageD(64, 64, scale=0.3)  # Use sensor=simple, no subsampling
@@ -126,10 +134,12 @@ def test_silicon():
     im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon
     im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=simple
     im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=None
+    im4 = galsim.ImageD(4, 4, scale=0.3)  # Smaller image, some flux will be missing.
 
     rng1 = galsim.BaseDeviate(5678)
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
+    rng4 = galsim.BaseDeviate(5678)
 
     silicon = galsim.SiliconSensor(rng=rng1, diffusion_factor=0.0)
     simple = galsim.Sensor()
@@ -138,12 +148,26 @@ def test_silicon():
     obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
     obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
     obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
+    obj.drawImage(im4, method='phot', poisson_flux=False, sensor=silicon, rng=rng4)
 
     # First, im2 and im3 should be exactly equal.
     np.testing.assert_array_equal(im2.array, im3.array)
 
     # im1 should be similar, but not equal
     np.testing.assert_almost_equal(im1.array/obj.flux, im2.array/obj.flux, decimal=2)
+
+    # im4 should match im1 where they overlap
+    np.testing.assert_array_equal(im1.array[30:34,30:34], im4.array)
+
+    # Fluxes on im1,im2 should equal obj.flux
+    print('added_flux = ',im1.added_flux, im2.added_flux, im4.added_flux)
+    np.testing.assert_almost_equal(im1.array.sum(), im1.added_flux, decimal=6)
+    np.testing.assert_almost_equal(im2.array.sum(), im2.added_flux, decimal=6)
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
+
+    # im4 should be missing flux, but report that fact correctly.
+    np.testing.assert_almost_equal(im4.array.sum(), im4.added_flux, decimal=6)
+    assert im4.added_flux < 0.95 * obj.flux
 
     # Now use a different seed for 3 to see how much of the variation is just from randomness.
     rng3.seed(234241)
