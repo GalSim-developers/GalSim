@@ -268,7 +268,7 @@ namespace galsim
         Position<double> _treeRingCenter;
         Table _abs_length_table;
         bool _transpose;
-        double _resume_next_recalc;
+        double _added_flux_since_update;
         ImageAlloc<double> _delta;
     };
 
