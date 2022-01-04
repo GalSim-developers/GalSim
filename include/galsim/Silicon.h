@@ -38,7 +38,7 @@ namespace galsim
     class PUBLIC_API Silicon
     {
     public:
-        Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
+        Silicon(int numVertices, double numElec, int nx, int ny, int qDist,
                 double diffStep, double pixelSize, double sensorThickness, double* vertex_data,
                 const Table& tr_radial_table, Position<double> treeRingCenter,
                 const Table& abs_length_table, bool transpose);
@@ -73,12 +73,8 @@ namespace galsim
         void initialize(ImageView<T> target, Position<int> orig_center);
 
         template <typename T>
-        double accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
-                          Position<int> orig_center, bool resume);
-
-        template <typename T>
-        double accumulate1(const PhotonArray& photons, int i1, int i2,
-                           BaseDeviate rng, ImageView<T> target);
+        double accumulate(const PhotonArray& photons, int i1, int i2,
+                          BaseDeviate rng, ImageView<T> target);
 
         template <typename T>
         void update(ImageView<T> target);
@@ -263,12 +259,11 @@ namespace galsim
         std::vector<Position<float> > _horizontalDistortions;
         std::vector<Position<float> > _verticalDistortions;
         int _numVertices, _nx, _ny, _nv, _qDist;
-        double _nrecalc, _diffStep, _pixelSize, _sensorThickness;
+        double _diffStep, _pixelSize, _sensorThickness;
         Table _tr_radial_table;
         Position<double> _treeRingCenter;
         Table _abs_length_table;
         bool _transpose;
-        double _added_flux_since_update;
         ImageAlloc<double> _delta;
     };
 

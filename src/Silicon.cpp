@@ -83,16 +83,16 @@ namespace galsim {
         poly.sort();
     }
 
-    Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist, double nrecalc,
+    Silicon::Silicon(int numVertices, double numElec, int nx, int ny, int qDist,
                      double diffStep, double pixelSize,
                      double sensorThickness, double* vertex_data,
                      const Table& tr_radial_table, Position<double> treeRingCenter,
                      const Table& abs_length_table, bool transpose) :
         _numVertices(numVertices), _nx(nx), _ny(ny), _qDist(qDist),
-        _nrecalc(nrecalc), _diffStep(diffStep), _pixelSize(pixelSize),
+        _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
-        _abs_length_table(abs_length_table), _transpose(transpose), _added_flux_since_update(-999)
+        _abs_length_table(abs_length_table), _transpose(transpose)
     {
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
@@ -829,9 +829,6 @@ namespace galsim {
         // of the distortion updates.
         _delta.resize(b);
         _delta.setZero();
-
-        // Starting over, so nothing accumulated yet.
-        _added_flux_since_update = 0.;
     }
 
     template <typename T>
@@ -847,63 +844,8 @@ namespace galsim {
     }
 
     template <typename T>
-    double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
-                               Position<int> orig_center, bool resume)
-    {
-        const int nphotons = photons.size();
-
-        double nbatch = _nrecalc;
-        if (resume) {
-            if (_added_flux_since_update == -999)
-                throw std::runtime_error(
-                    "Silicon::accumulate called with resume, but accumulate hasn't been run yet.");
-            assert(_added_flux_since_update != -999);
-
-            nbatch = _nrecalc - _added_flux_since_update;
-
-            // We already added delta to target.  But to get the right values when we next
-            // updatePixelDistortions, we want delta to have everything that's been added since
-            // the last update.  The easiest way to do that is to just subtract off what has
-            // been added so far now and just keep adding to the existing _delta image.
-            // It will all be added back at the end of this call to accumulate.
-            subtractDelta(target);
-        } else {
-            initialize(target, orig_center);
-        }
-        double addedFlux = 0.;
-        int i1 = 0;
-
-        while (i1 < nphotons) {
-
-            // count up how many photos we can use before recalc is needed
-            int i2 = i1;
-            double addedFlux1 = 0.;
-            while ((i2 < nphotons) && (addedFlux1 <= nbatch)) {
-                addedFlux1 += photons.getFlux(i2);
-                i2++;
-            }
-
-            addedFlux += accumulate1(photons, i1, i2, rng, target);
-
-            // Update shapes if not at the end yet.
-            if (i2 < nphotons) {
-                update(target);
-                nbatch = _nrecalc;
-            } else {
-                _added_flux_since_update += addedFlux1;
-            }
-            i1 = i2;
-        }
-
-        // No need to update the distortions again, but we do need to add the delta image.
-        addDelta(target);
-
-        return addedFlux;
-    }
-
-    template <typename T>
-    double Silicon::accumulate1(const PhotonArray& photons, int i1, int i2,
-                                BaseDeviate rng, ImageView<T> target)
+    double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
+                               BaseDeviate rng, ImageView<T> target)
     {
         const int nphotons = i2 - i1;
 
@@ -1051,7 +993,6 @@ namespace galsim {
         updatePixelDistortions(_delta.view());
         target += _delta;
         _delta.setZero();
-        _added_flux_since_update = 0.;
     }
 
     int SetOMPThreads(int num_threads)
@@ -1094,12 +1035,10 @@ namespace galsim {
     template void Silicon::initialize(ImageView<double> target, Position<int> orig_center);
     template void Silicon::initialize(ImageView<float> target, Position<int> orig_center);
 
-    template double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng,
-                                        ImageView<double> target, Position<int> orig_center,
-                                        bool resume);
-    template double Silicon::accumulate(const PhotonArray& photons, BaseDeviate rng,
-                                        ImageView<float> target, Position<int> orig_center,
-                                        bool resume);
+    template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
+                                        BaseDeviate rng, ImageView<double> target);
+    template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
+                                        BaseDeviate rng, ImageView<float> target);
 
     template void Silicon::update(ImageView<double> target);
     template void Silicon::update(ImageView<float> target);

@@ -237,7 +237,7 @@ class SiliconSensor(Sensor):
         SensorThickness = self.config['SensorThickness']
         num_elec = float(self.config['CollectedCharge_0_0']) / self.strength
         # Scale this too, especially important if strength >> 1
-        nrecalc = float(self.nrecalc) / self.strength
+        self.effective_nrecalc = float(self.nrecalc) / self.strength
         vertex_data = np.loadtxt(self.vertex_file, skiprows = 1)
 
         if vertex_data.shape != (Nx * Ny * (4 * NumVertices + 4), 5):  # pragma: no cover
@@ -245,9 +245,8 @@ class SiliconSensor(Sensor):
                           self.vertex_file, self.config_file))
 
         _vertex_data = vertex_data.__array_interface__['data'][0]
-        self._silicon = _galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist, nrecalc,
-                                        diff_step, PixelSize, SensorThickness,
-                                        _vertex_data,
+        self._silicon = _galsim.Silicon(NumVertices, num_elec, Nx, Ny, self.qdist,
+                                        diff_step, PixelSize, SensorThickness, _vertex_data,
                                         self.treering_func._tab, self.treering_center._p,
                                         self.abs_length_table._tab, self.transpose)
 
@@ -322,8 +321,48 @@ class SiliconSensor(Sensor):
         self._last_image = image
         if not image.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Calling accumulate on image with undefined bounds")
-        return self._silicon.accumulate(photons._pa, self.rng._rng, image._image, orig_center._p,
-                                        resume)
+
+        if resume:
+            # The number in this batch is the total per recalc minus the number of photons
+            # shot in the last pass(es) of this function since being updated.
+            nbatch = self.effective_nrecalc - self._accum_flux_since_update
+
+            # We also need to subtract off the delta image from the last pass.
+            # This represents the flux in the image that hasn't updated the pixel boundaries
+            # yet.  So the first accumulate below will continue to add to this, and the whole
+            # delta image will be added at the end of that call.  Thus we remove it now, so it's
+            # not added twice.
+            self._silicon.subtractDelta(image._image)
+        else:
+            nbatch = self.effective_nrecalc
+            self._silicon.initialize(image._image, orig_center._p);
+            self._accum_flux_since_update = 0
+
+        i1 = 0
+        nphotons = len(photons)
+        # added_flux is how much flux acctually lands on the sensor.
+        # accum_flux is how much flux is in the photons that we have accumulated so far.
+        # cumsum_flux is an array with the cumulate sum of the photon fluxes in the photon array.
+        added_flux = accum_flux = 0.
+        cumsum_flux = np.cumsum(photons.flux)
+        while i1 < nphotons:
+            i2 = np.searchsorted(cumsum_flux, accum_flux+nbatch) + 1
+            i2 = min(i2, nphotons)
+            added_flux += self._silicon.accumulate(photons._pa, i1, i2, self.rng._rng, image._image)
+            if i2 < nphotons:
+                self._silicon.update(image._image)
+                nbatch = self.effective_nrecalc  # In case the first pass was a resume
+                accum_flux = cumsum_flux[i2-1]
+                self._accum_flux_since_update = 0.
+            else:
+                self._accum_flux_since_update += cumsum_flux[-1] - accum_flux
+            i1 = i2
+
+        # On the last pass, we don't update the pixel positions, but we do need to add the
+        # current running delta image to the full image.
+        self._silicon.addDelta(image._image)
+
+        return added_flux
 
     def calculate_pixel_areas(self, image, orig_center=PositionI(0,0), use_flux=True):
         """Create an image with the corresponding pixel areas according to the `SiliconSensor`

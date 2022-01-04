@@ -25,24 +25,32 @@ namespace galsim {
 
     template <typename T, typename W>
     static void WrapTemplates(W& wrapper) {
-        typedef double (Silicon::*accumulate_fn)(const PhotonArray&, BaseDeviate,
-                                                 ImageView<T>, Position<int>, bool);
+        typedef void (Silicon::*subtract_fn)(ImageView<T>);
+        typedef void (Silicon::*add_fn)(ImageView<T>);
+        typedef void (Silicon::*init_fn)(ImageView<T>, Position<int>);
+        typedef double (Silicon::*accumulate_fn)(const PhotonArray&, int, int, BaseDeviate,
+                                                 ImageView<T>);
+        typedef void (Silicon::*update_fn)(ImageView<T>);
         typedef void (Silicon::*area_fn)(ImageView<T>, Position<int>, bool);
 
+        wrapper.def("subtractDelta", (subtract_fn)&Silicon::subtractDelta);
+        wrapper.def("addDelta", (add_fn)&Silicon::addDelta);
+        wrapper.def("initialize", (init_fn)&Silicon::initialize);
         wrapper.def("accumulate", (accumulate_fn)&Silicon::accumulate);
+        wrapper.def("update", (update_fn)&Silicon::update);
         wrapper.def("fill_with_pixel_areas", (area_fn)&Silicon::fillWithPixelAreas);
     }
 
     static Silicon* MakeSilicon(
         int NumVertices, double NumElect, int Nx, int Ny, int QDist,
-        double Nrecalc, double DiffStep, double PixelSize,
+        double DiffStep, double PixelSize,
         double SensorThickness, size_t idata,
         const Table& treeRingTable, const Position<double>& treeRingCenter,
         const Table& abs_length_table, bool transpose)
     {
         double* data = reinterpret_cast<double*>(idata);
         return new Silicon(NumVertices, NumElect, Nx, Ny, QDist,
-                           Nrecalc, DiffStep, PixelSize, SensorThickness, data,
+                           DiffStep, PixelSize, SensorThickness, data,
                            treeRingTable, treeRingCenter, abs_length_table, transpose);
     }
 
