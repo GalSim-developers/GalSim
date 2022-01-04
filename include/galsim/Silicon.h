@@ -65,8 +65,23 @@ namespace galsim
         void addTreeRingDistortions(ImageView<T> target, Position<int> orig_center);
 
         template <typename T>
+        void subtractDelta(ImageView<T> target);
+        template <typename T>
+        void addDelta(ImageView<T> target);
+
+        template <typename T>
+        void initialize(ImageView<T> target, Position<int> orig_center);
+
+        template <typename T>
         double accumulate(const PhotonArray& photons, BaseDeviate rng, ImageView<T> target,
                           Position<int> orig_center, bool resume);
+
+        template <typename T>
+        double accumulate1(const PhotonArray& photons, int i1, int i2,
+                           BaseDeviate rng, ImageView<T> target);
+
+        template <typename T>
+        void update(ImageView<T> target);
 
         double pixelArea(int i, int j, int nx, int ny) const;
 
