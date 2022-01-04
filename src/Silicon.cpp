@@ -92,7 +92,7 @@ namespace galsim {
         _nrecalc(nrecalc), _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
-        _abs_length_table(abs_length_table), _transpose(transpose), _resume_next_recalc(-999)
+        _abs_length_table(abs_length_table), _transpose(transpose), _added_flux_since_update(-999)
     {
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
@@ -829,6 +829,9 @@ namespace galsim {
         // of the distortion updates.
         _delta.resize(b);
         _delta.setZero();
+
+        // Starting over, so nothing accumulated yet.
+        _added_flux_since_update = 0.;
     }
 
     template <typename T>
@@ -849,39 +852,21 @@ namespace galsim {
     {
         const int nphotons = photons.size();
 
-#ifdef DEBUGLOGGING
-        dbg<<"In Silicon::accumulate\n";
-        dbg<<"bounds = "<<b<<std::endl;
-        dbg<<"total nphotons = "<<photons.size()<<std::endl;
-        dbg<<"this call nphotons = "<<nphotons<<std::endl;
-        dbg<<"hasAllocatedWavelengths = "<<photons.hasAllocatedWavelengths()<<std::endl;
-        dbg<<"hasAllocatedAngles = "<<photons.hasAllocatedAngles()<<std::endl;
-        double Irr = 0.;
-        double Irr0 = 0.;
-        int zerocount=0, neighborcount=0, misscount=0;
-#endif
-
-        double next_recalc;
+        double nbatch = _nrecalc;
         if (resume) {
-            // These two tests are now done at the python layer.
-            // However, Jim is reporting that he's hitting the assert statement below, which
-            // I (MJ) thought shouldn't happen.  So rather than bomb out, raise an exception.
-
-            // _resume_next_recalc initialized to -1, so this is our sign that we haven't run
-            // accumulate yet.
-            if (_resume_next_recalc == -999)
+            if (_added_flux_since_update == -999)
                 throw std::runtime_error(
                     "Silicon::accumulate called with resume, but accumulate hasn't been run yet.");
-            assert(_resume_next_recalc != -999);
+            assert(_added_flux_since_update != -999);
 
-            next_recalc = _resume_next_recalc;
+            nbatch = _nrecalc - _added_flux_since_update;
+
             // We already added delta to target.  But to get the right values when we next
             // updatePixelDistortions, we want delta to have everything that's been added since
             // the last update.  The easiest way to do that is to just subtract off what has
             // been added so far now and just keep adding to the existing _delta image.
             // It will all be added back at the end of this call to accumulate.
             subtractDelta(target);
-            dbg<<"resume=True.  Use saved next_recalc = "<<next_recalc<<std::endl;
         } else {
             initialize(target, orig_center);
         }
@@ -892,39 +877,27 @@ namespace galsim {
 
             // count up how many photos we can use before recalc is needed
             int i2 = i1;
-            double addedFlux1 = addedFlux;
-            while ((i2 < nphotons) && (addedFlux1 <= next_recalc)) {
+            double addedFlux1 = 0.;
+            while ((i2 < nphotons) && (addedFlux1 <= nbatch)) {
                 addedFlux1 += photons.getFlux(i2);
                 i2++;
             }
 
             addedFlux += accumulate1(photons, i1, i2, rng, target);
 
-            // Update shapes every _nrecalc electrons
-            if (addedFlux > next_recalc) {
-                dbg<<"updatePixelDistortions because "<<addedFlux<<" > "<<next_recalc<<std::endl;
-                updatePixelDistortions(_delta.view());
-                target += _delta;
-                _delta.setZero();
-                next_recalc = addedFlux + _nrecalc;
+            // Update shapes if not at the end yet.
+            if (i2 < nphotons) {
+                update(target);
+                nbatch = _nrecalc;
+            } else {
+                _added_flux_since_update += addedFlux1;
             }
-
             i1 = i2;
         }
 
         // No need to update the distortions again, but we do need to add the delta image.
         addDelta(target);
-        _resume_next_recalc = next_recalc - addedFlux;
-        dbg<<"All done.  Added flux "<<addedFlux<<".  Save next_recalc = "<<_resume_next_recalc<<std::endl;
 
-#ifdef DEBUGLOGGING
-        Irr /= addedFlux;
-        Irr0 /= addedFlux;
-        dbg<<"Irr = "<<Irr<<"  cf. Irr0 = "<<Irr0<<std::endl;
-        dbg << "Found "<< zerocount << " photons in undistorted pixel, " << neighborcount;
-        dbg << " in one of the neighbors, and "<<misscount;
-        dbg << " not in any pixel\n" << std::endl;
-#endif
         return addedFlux;
     }
 
@@ -1078,6 +1051,7 @@ namespace galsim {
         updatePixelDistortions(_delta.view());
         target += _delta;
         _delta.setZero();
+        _added_flux_since_update = 0.;
     }
 
     int SetOMPThreads(int num_threads)
