@@ -325,11 +325,17 @@ def test_des():
     run to completion without errors.
     """
     original_dir = os.getcwd()
+
     try:
         os.chdir('des')
         new_dir = os.getcwd()
         if new_dir not in sys.path:
             sys.path.append(new_dir)
+
+        if not os.path.exists('des_data'):
+            print('The des tests require the des_data directory.')
+            print('Download from http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz')
+            return
 
         import draw_psf
         print('Running draw_psf.py')
