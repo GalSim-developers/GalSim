@@ -870,7 +870,9 @@ namespace galsim {
         double addedFlux = 0.;
 
 #ifdef _OPENMP
-#pragma omp parallel for
+#pragma omp parallel reduction (+:addedFlux)
+        {
+#pragma omp for
 #endif
         for (int i=i1; i<i2; i++) {
             // Get the location where the photon strikes the silicon:
@@ -978,12 +980,14 @@ namespace galsim {
 #pragma omp atomic
 #endif
                 _delta(ix,iy) += flux;
-#ifdef _OPENMP
-#pragma omp atomic
-#endif
+
+                // This isn't atomic -- openmp is handling the reduction for us.
                 addedFlux += flux;
             }
         }
+#ifdef _OPENMP
+        }
+#endif
         return addedFlux;
     }
 
