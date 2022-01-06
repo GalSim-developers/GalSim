@@ -217,7 +217,7 @@ def main(argv):
     dvdx = numpy.sin(theta) * pixel_scale
     dvdy = numpy.cos(theta) * pixel_scale
     image_center = full_image.true_center
-    affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=full_image.true_center)
+    affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin=image_center)
 
     # We can also put it on the celestial sphere to give it a bit more realism.
     # The TAN projection takes a (u,v) coordinate system on a tangent plane and projects
@@ -247,9 +247,11 @@ def main(argv):
         # We will need the image position as well, so use the wcs to get that
         image_pos = wcs.toImage(world_pos)
 
-        # We also need this in the tangent plane, which we call "world coordinates" here,
+        # We also need this in the tangent plane, which we call "uv coordinates" here,
         # since the PowerSpectrum class is really defined on that plane, not in (ra,dec).
-        uv_pos = affine.toWorld(image_pos)
+        world_center = wcs.toWorld(image_center)
+        u, v = world_center.project(world_pos)
+        uv_pos = galsim.PositionD(u/galsim.arcsec, v/galsim.arcsec)
 
         # Get the reduced shears and magnification at this point
         g1, g2, mu = ps.getLensing(pos = uv_pos)
