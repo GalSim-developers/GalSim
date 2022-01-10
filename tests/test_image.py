@@ -46,7 +46,6 @@ incremented by one.
 import os
 import sys
 import numpy as np
-from distutils.version import LooseVersion
 
 import galsim
 from galsim_test_helpers import *
@@ -1088,14 +1087,7 @@ def test_Image_CubeFITS_IO():
             test_array = fits[0].data
 
         wrong_type_error_msg = "%s != %s" % (test_array.dtype.type, types[i])
-        if types[i] == np.uint16 or types[i] == np.uint32:
-            # If astropy version < 1.1.0, uint fits files will be read wrongly, so skip this test
-            # note that all other tests will pass since they will be read as float32s instead
-            import astropy
-            if LooseVersion(astropy.__version__) >= LooseVersion('1.1.0'):
-                assert test_array.dtype.type == types[i], wrong_type_error_msg
-        else:
-            assert test_array.dtype.type == types[i], wrong_type_error_msg
+        assert test_array.dtype.type == types[i], wrong_type_error_msg
 
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]), test_array[k,:,:],
