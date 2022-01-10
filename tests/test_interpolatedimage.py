@@ -1575,14 +1575,6 @@ def test_ne():
     perturb_image.array[64, 64] *= 1000
     obj2 = galsim.InterpolatedImage(perturb_image, flux=20, calculate_maxk=False, calculate_stepk=False)
 
-    # These tests won't always work if astropy < 1.0.6 has been imported, so look for that.
-    import sys
-    if 'astropy' in sys.modules:
-        import astropy  # Just b/c someone imported it, doesn't mean we can see it yet.
-        from distutils.version import LooseVersion
-        if LooseVersion(astropy.__version__) < LooseVersion('1.0.6'):
-            return
-
     with galsim.utilities.printoptions(threshold=128*128):
         assert repr(obj1) != repr(obj2), "Reprs unexpectedly agree: %r"%obj1
 
