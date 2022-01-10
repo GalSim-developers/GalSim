@@ -382,10 +382,11 @@ def _read_aberrations(SCA):
     # use entries 1-22).  The units are waves.
     aberrations = np.zeros((5,23))
     aberrations[:,1:] = dat[:,5:]
-    # Also get the field position.  The file gives it in arcsec with respect to the center, but we
-    # want it in pixels with respect to the corner.
-    x_sca_pos = dat[:,1]/pixel_scale + n_pix/2
-    y_sca_pos = dat[:,2]/pixel_scale + n_pix/2
+    # Also get the field position.  The file gives it in mm with respect to the center, but we
+    # want it in pixels with respect to the corner. The pixel size of the detector is 0.01 mm/pixel
+    pixel_size = 0.01 
+    x_sca_pos = dat[:,1]/pixel_size + n_pix/2
+    y_sca_pos = n_pix/2 - dat[:,2]/pixel_size
     return aberrations, x_sca_pos, y_sca_pos
 
 def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
