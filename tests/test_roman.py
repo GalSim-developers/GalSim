@@ -1052,6 +1052,84 @@ def test_config_sca():
         im2 -= sky_image
         assert im1 == im2
 
+@timer
+def test_aberration_interpolation():
+    
+    """Test the Roman aberration interpolation method inside roman.roman_psfs
+    """
+    # We read in pairs of conjunction points, they are on different SCAs but are physically
+    # adjacent on the FPA. The optical aberration between the two points in a pair should
+    # be much less than the aberration range in the FPA. The maximum and minimum of aberration
+    # in the FPA is pre-calculated using an 20x20 grid of positions on each SCA by Tianqing 
+    # Zhang. The conjunction pairs between the first row and the second row are considered 
+    # 'far', because are further separated. For 'far' pairs, z_diff<= 0.1*(z_max - z_min), 
+    # elsewhere, z_diff<= 0.05*(z_max - z_min).
+
+    print("Start continuity test for aberration interpolation")
+    
+    print('Read the SCA# and sca_pos of the conjunction pairs. (SCA#1, SCA1_X, SCA1_Y, SCA#2, SCA2_X, SCA2_Y )')
+    edge_pair_array = np.loadtxt("roman_files/sca_conjunction_points.txt")
+    # Z_min, Z_max across the FPA
+    Z_min_max = np.loadtxt('roman_files/Z_min_max.txt')
+
+    #Read the aberration and sca_pos for the interpolation *reference* points from the roman files.
+    aberration_list = []
+    sca_x_list = []
+    sca_y_list = []
+    for sca_index in range(1,19):
+
+        this_aberration, this_x, this_y = galsim.roman.roman_psfs._read_aberrations(sca_index)
+        aberration_list.append(this_aberration)
+        sca_x_list.append(this_x)
+        sca_y_list.append(this_y)
+
+
+
+    for pair in edge_pair_array:
+
+        sca1 = int(pair[0])
+        sca_pos_1 = galsim.PositionD(x = pair[1] , y = pair[2])
+
+        sca2 = int(pair[3])
+        sca_pos_2 = galsim.PositionD(x = pair[4] , y = pair[5])
+
+        far = False
+        if sca2%3==0 and sca2-sca1 == 1:
+            far = True
+        
+        #For each pair of conjunction points, calculate their aberration by calling _interp_aberrations_bilinear
+        point_1_abe = galsim.roman.roman_psfs._interp_aberrations_bilinear(aberration_list[sca1-1],
+                                                                       sca_x_list[sca1-1], 
+                                                                       sca_y_list[sca1-1],
+                                                                       sca_pos_1)
+        point_2_abe = galsim.roman.roman_psfs._interp_aberrations_bilinear(aberration_list[sca2-1],
+                                                                       sca_x_list[sca2-1], 
+                                                                       sca_y_list[sca2-1],
+                                                                       sca_pos_2)
+        for i in range(23):
+            z_min, z_max = Z_min_max[i]
+            #Skip the Z22 because it is indeed not continuous given the current roman file.
+            if i ==22:
+                continue
+
+
+            z_diff = np.abs(point_2_abe[i] - point_1_abe[i])
+
+            if far:
+
+                assert z_diff<= 0.1*(z_max - z_min), 'z_diff > 0.1(z_max - z_min), failed aberration continuity test.\
+                \n \fail for Z{}, z_diff = {}, sca1 = {}, sca2 = {}'.format(i,z_diff,sca1,sca2)
+
+
+            else:
+
+                assert z_diff<= 0.05*(z_max - z_min),'z_diff > 0.05(z_max - z_min), failed aberration continuity test.\
+                    \nFail for Z{}, z_diff = {}, sca1 = {}, sca2 = {}'.format(i,z_diff,sca1,sca2)
+                
+    print("Continuity test passes.")
+
+
+
 
 if __name__ == "__main__":
     #import cProfile, pstats
