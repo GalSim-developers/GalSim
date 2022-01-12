@@ -196,6 +196,7 @@ jobs:
                 GALSIM_TEST_PY=0 python setup.py test
 
             - name: Upload coverage to codecov
+              if: matrix.py != 'pypy3'
               run: |
                 cd tests
                 pwd -P
