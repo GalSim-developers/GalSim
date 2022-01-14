@@ -41,6 +41,11 @@ rng_fields = ['rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng',
 
 valid_index_keys = [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]
 
+# This module-level dict will store all the registered template names.
+# See the RegisterTemplate function at the end of this file.
+# The keys are the (string) names of the templates, and the values are the corresponding
+# real file location on disk.
+valid_templates = {}
 
 def ReadConfig(config_file, file_type=None, logger=None):
     """Read in a configuration file and return the corresponding dicts.
@@ -146,6 +151,12 @@ def ProcessTemplate(config, base, logger=None):
         else:
             config_file, field = template_string, None
 
+        # If it is a registered name, get the real file name
+        if config_file in valid_templates:
+            logger.info("Template %s is registered as %s",
+                        config_file, valid_templates[config_file])
+            config_file = valid_templates[config_file]
+
         # Read the config file if appropriate
         if config_file != '':
             template = ReadConfig(config_file, logger=logger)[0]
@@ -221,6 +232,9 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     # First thing to do is deep copy the input config to make sure we don't modify the original.
     config = CopyConfig(config)
 
+    # Import any modules if requested
+    ImportModules(config)
+
     # Process any template specifications in the dict.
     ProcessAllTemplates(config, logger)
 
@@ -228,7 +242,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
     if new_params is not None:
         UpdateConfig(config, new_params)
 
-    # Import any modules if requested
+    # Do this again in case any new modules were added by the templates or command line params.
     ImportModules(config)
 
     logger.debug("Final config dict to be processed: \n%s",
@@ -266,3 +280,21 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
                             except_abort=except_abort)
     #Return config_out in case useful
     return config_out
+
+def RegisterTemplate(template_name, file_name):
+    """Register a template config file with the given named alias.
+
+    There are currently no named templates shipped with GalSim, but this function
+    provides a mechanism for modules to register a config file with a more user-friendly
+    name for a module-provided configuration that may be stored in an awkward location
+    on disk.
+
+    E.g. LSSTDESC.imSim has a few configurations that include most of the default recommended
+    modules for producing various simulations of LSST images.  They are stored in the imSim
+    data directory, but users can just use the named value as a more convenient alias.
+
+    Parameters:
+        template_name:  The name to allow in a 'template' field in lieu of the file name.
+        file_name:      The actual file name on disk with the configuration file.
+    """
+    valid_templates[template_name] = file_name

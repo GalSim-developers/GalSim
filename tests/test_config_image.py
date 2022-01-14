@@ -2203,7 +2203,7 @@ def test_template():
     """Test various uses of the template keyword
     """
     # Use the multirng.yaml config file from the above test as a convenient template source
-    config = {
+    config1 = {
         # This copies everything, but we'll override a few things
         "template" : "config_input/multirng.yaml",
 
@@ -2237,6 +2237,7 @@ def test_template():
             ]
         }
     }
+    config = copy.deepcopy(config1)  # Leave config1 as the original given above.
     config2 = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
 
     galsim.config.ProcessAllTemplates(config)
@@ -2258,6 +2259,25 @@ def test_template():
                                           "ellip": { "type" : "PowerSpectrumShear", "num" : 0 } }
     assert config['psf']['items'][1] == { "type": "Gaussian", "sigma" : 0.3 }
     assert config['psf']['items'][2] == { "type": "Gaussian", "sigma" : 0.4 }
+
+    # Test registering the template.
+    galsim.config.RegisterTemplate('multirng', 'config_input/multirng.yaml')
+    config3 = config1.copy()
+    config3['template'] = 'multirng'
+
+    galsim.config.ProcessAllTemplates(config3)
+    assert config3 == config
+
+    # Make sure template works when registered in a user module
+    del galsim.config.process.valid_templates['multirng']
+    config4 = config1.copy()
+    config4['template'] = 'multirng'
+    config4['modules'] = ['template_register']
+    galsim.config.ImportModules(config4)
+    galsim.config.ProcessAllTemplates(config4)
+    for field in ['image', 'output', 'gal', 'psf']:
+        assert config4[field] == config[field]
+
 
 @timer
 def test_variable_cat_size():
