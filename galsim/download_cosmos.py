@@ -218,7 +218,7 @@ def check_existing(target, unpack_dir, meta, args, logger):
                         obsolete = False
                     else:
                         logger.info("Checksum key %s doesn't matches.  File is obsolete."%k)
-                        obsolete = False
+                        obsolete = True
                     break
 
             if obsolete is None:

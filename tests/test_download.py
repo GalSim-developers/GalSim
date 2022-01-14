@@ -304,7 +304,7 @@ def test_check():
     # Meta data is obsolete
     meta1 = meta.copy()
     meta1['Content-Length'] = "9999"
-    meta1['Content-New-MD5'] = "e05cfe60c037c645d61ac70545cc2a99"
+    meta1['Content-MD5'] = "f05cfe60c037c645d61ac70545cc2a99"
     args.quiet = True
     do_download = check_existing(target, unpack_dir, meta1, args, logger)
     assert do_download is True
