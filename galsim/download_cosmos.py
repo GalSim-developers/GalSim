@@ -204,22 +204,42 @@ def check_existing(target, unpack_dir, meta, args, logger):
             logger.debug("current meta information is %s",saved_meta_dict)
             meta_dict = dict(meta)
             logger.debug("url's meta information is %s",meta_dict)
-            obsolete = False
-            for k in meta_dict:
-                # Skip some keys that don't imply obselescence.
-                if k.startswith('X-') or k.startswith('Retry') or k.startswith('Set-Cookie'):
-                    continue
-                if k == 'Date' or k == 'Last-Modified' or k == 'Server':
-                    continue
-                # Others that are missing or different imply obsolete
-                if k not in saved_meta_dict:
-                    logger.debug("key %s is missing in saved meta information",k)
-                    obsolete = True
-                elif meta_dict[k] != saved_meta_dict[k]:
-                    logger.debug("key %s differs: %s != %s",k,meta_dict[k],saved_meta_dict[k])
-                    obsolete = True
-                else:
-                    logger.debug("key %s matches",k)
+
+            # There are several checksum tags.  If any of them are present and match,
+            # then file is current.  If they don't match, file is obsolete.
+            # If none are present, then they changed something, so do a longer check.
+            # (And try to get around to updating this list of checksum keys.)
+            checksum_keys = ['OC-Checksum', 'Content-MD5', 'ETag']
+            obsolete = None
+            for k in checksum_keys:
+                if k in saved_meta_dict and k in meta_dict:
+                    if saved_meta_dict[k] == meta_dict[k]:
+                        logger.info("Checksum key %s matches.  File is up to date."%k)
+                        obsolete = False
+                    else:
+                        logger.info("Checksum key %s doesn't matches.  File is obsolete."%k)
+                        obsolete = False
+                    break
+
+            if obsolete is None:
+                # Check all meta data.  If it all matches, then it's fine.
+                # Otherwise, the file is obsolete.
+                obsolete = False
+                for k in meta_dict:
+                    # Skip some keys that don't imply obselescence.
+                    if k.startswith('X-') or k.startswith('Retry') or k.startswith('Set-Cookie'):
+                        continue
+                    if k == 'Date' or k == 'Last-Modified' or k == 'Server':
+                        continue
+                    # Others that are missing or different imply obsolete
+                    if k not in saved_meta_dict:
+                        logger.debug("key %s is missing in saved meta information",k)
+                        obsolete = True
+                    elif meta_dict[k] != saved_meta_dict[k]:
+                        logger.debug("key %s differs: %s != %s",k,meta_dict[k],saved_meta_dict[k])
+                        obsolete = True
+                    else:
+                        logger.debug("key %s matches",k)
         else:
             logger.debug('meta_file does not exist')
             obsolete = True
