@@ -17,6 +17,9 @@
 #
 
 
+modules:
+    - numpy
+
 psf:
     type: Moffat
     beta: 2

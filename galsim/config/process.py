@@ -170,7 +170,13 @@ def ProcessTemplate(config, base, logger=None):
         # Copy over the template config into this one.
         new_params = config.copy()  # N.B. Already popped config['template'].
         config.clear()
+
         config.update(template)
+
+        if 'modules' in config:
+            # We want to keep all the modules from either place in the config dict
+            # so things like Eval can import everything that might be needed.
+            config['modules'].extend(new_params.pop('modules', []))
 
         # Update the config with the requested changes
         UpdateConfig(config, new_params)
