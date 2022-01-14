@@ -2237,7 +2237,7 @@ def test_template():
             ]
         }
     }
-    config = copy.deepcopy(config1)  # Leave config1 as the original given above.
+    config = config1.copy()  # Leave config1 as the original given above.
     config2 = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
 
     galsim.config.ProcessAllTemplates(config)
