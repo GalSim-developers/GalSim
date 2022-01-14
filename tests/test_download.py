@@ -309,6 +309,14 @@ def test_check():
     do_download = check_existing(target, unpack_dir, meta1, args, logger)
     assert do_download is True
 
+    # If they change the name of the checksum key, we consider it obsolete.
+    meta2 = meta1.copy()
+    meta2['Content-New-MD5'] = "e05cfe60c037c645d61ac70545cc2a99"
+    del meta2['Content-MD5']
+    del meta2['ETag']
+    do_download = check_existing(target, unpack_dir, meta2, args, logger)
+    assert do_download is True
+
     args.quiet = False
     args.force = True
     do_download = check_existing(target, unpack_dir, meta1, args, logger)
