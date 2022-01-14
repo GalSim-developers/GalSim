@@ -2207,6 +2207,9 @@ def test_template():
         # This copies everything, but we'll override a few things
         "template" : "config_input/multirng.yaml",
 
+        # Modules works differently from the others.  Here, we want to concatenate the lists.
+        "modules" : ["astropy"],
+
         # Specific fields can be overridden
         "output" : { "file_name" : "test_template.fits" },
 
@@ -2259,6 +2262,8 @@ def test_template():
                                           "ellip": { "type" : "PowerSpectrumShear", "num" : 0 } }
     assert config['psf']['items'][1] == { "type": "Gaussian", "sigma" : 0.3 }
     assert config['psf']['items'][2] == { "type": "Gaussian", "sigma" : 0.4 }
+
+    assert config['modules'] == ['numpy', 'astropy']
 
     # Test registering the template.
     galsim.config.RegisterTemplate('multirng', 'config_input/multirng.yaml')
