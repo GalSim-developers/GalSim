@@ -409,13 +409,6 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     from numpy import array, uint16, uint32, int16, int32, float32, float64, complex64, complex128, ndarray
     from astropy.units import Unit
 
-    try:
-        import astropy.io.fits
-        from distutils.version import LooseVersion
-        if LooseVersion(astropy.__version__) < LooseVersion('1.0.6'):
-            irreprable = True
-    except ImportError:
-        import pyfits
     print('Try pickling ',str(obj1))
 
     #print('pickled obj1 = ',pickle.dumps(obj1))
