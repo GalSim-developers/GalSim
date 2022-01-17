@@ -26,7 +26,6 @@ import galsim
 import galsim.roman
 from galsim_test_helpers import *
 
-
 @timer
 def skip_roman_wcs():
     """Test the Roman WCS routines against ones provided by the Roman project office.
@@ -1067,10 +1066,97 @@ def test_aberration_interpolation():
 
     print("Start continuity test for aberration interpolation")
     
-    print('Read the SCA# and sca_pos of the conjunction pairs. (SCA#1, SCA1_X, SCA1_Y, SCA#2, SCA2_X, SCA2_Y )')
-    edge_pair_array = np.loadtxt("roman_files/sca_conjunction_points.txt")
-    # Z_min, Z_max across the FPA
-    Z_min_max = np.loadtxt('roman_files/Z_min_max.txt')
+    # Read the centers of the sca (in mm)
+    infile = galsim.meta_data.share_dir+ '/roman/'+ 'sca_positions_7_6_8.txt'
+    sca_data = np.loadtxt(infile).transpose()
+    
+    sca_xc_mm = -sca_data[3,:]
+    sca_yc_mm = sca_data[4,:]
+    
+    horizontal_adjacent = []
+    # list of horizontal contact (SCA# DOWN, SCA# UP)
+    for i in range(1, 17, 3):
+        horizontal_adjacent.append((i,i+1))
+        horizontal_adjacent.append((i+1,i+2))
+    
+    verticle_adjacent = []
+    # list of verticle contact (SCA# LEFT, SCA# RIGHT)
+    for i in range(10,13):
+        verticle_adjacent.append((i,i-9))
+    
+    ## Compute the fpa-position of all the contact points
+    edge_pair_list = []
+    
+    # Compute horizontal adjacent pairs
+    for pair in range(len(horizontal_adjacent)):
+        sca1 = horizontal_adjacent[pair][0]-1
+        sca2 = horizontal_adjacent[pair][1]-1
+
+        pixel_size = 0.01 # mm/pixel
+        npix = galsim.roman.n_pix
+
+        x_contact = (sca_xc_mm[sca1]+sca_xc_mm[sca2])/2
+        x_1_mm = x_contact - sca_xc_mm[sca1]
+        x_2_mm = x_contact - sca_xc_mm[sca2]
+
+        y_1_mm = + npix*pixel_size/2
+        y_2_mm = - npix*pixel_size/2
+
+        sca_pos_1 = galsim.PositionD(x = npix/2 -x_1_mm/pixel_size , y = y_1_mm/pixel_size + npix/2)
+        sca_pos_2 = galsim.PositionD(x = npix/2 -x_2_mm/pixel_size , y = y_2_mm/pixel_size + npix/2)
+
+
+        edge_pair_list.append([sca1+1,sca_pos_1.x, sca_pos_1.y, sca2+1, sca_pos_2.x, sca_pos_2.y])
+
+
+
+    for pair in range(len(verticle_adjacent)):
+        sca1 = verticle_adjacent[pair][0]-1
+        sca2 = verticle_adjacent[pair][1]-1
+
+        y_contact = (sca_yc_mm[sca1]+sca_yc_mm[sca2])/2
+        y_1_mm = y_contact - sca_yc_mm[sca1]
+        y_2_mm = y_contact - sca_yc_mm[sca2]
+
+        x_1_mm = + npix*pixel_size/2
+        x_2_mm = - npix*pixel_size/2
+
+
+        sca_pos_1 = galsim.PositionD(x = npix/2 -x_1_mm/pixel_size , y = y_1_mm/pixel_size + npix/2)
+        sca_pos_2 = galsim.PositionD(x = npix/2 -x_2_mm/pixel_size , y = y_2_mm/pixel_size + npix/2)
+
+
+
+
+
+        edge_pair_list.append([sca1+1,sca_pos_1.x, sca_pos_1.y, sca2+1, sca_pos_2.x, sca_pos_2.y])
+        
+    edge_pair_array = np.array(edge_pair_list)
+    
+    # Z_min, Z_max across the FPA. This is too slow to compute at runtime.
+    Z_min_max = np.array([[ 0.00000000e+00,  0.00000000e+00],
+                         [-9.41831458e-02 , 1.48836864e-02],
+                         [-5.39685347e-02 , 6.77900000e-02],
+                         [-6.71719717e-02 , 5.11592637e-02],
+                         [-5.94858831e-02 , 4.73625734e-03],
+                         [-5.39000000e-02 , 1.37568469e-02],
+                         [-2.42295572e-02 , 1.92651932e-02],
+                         [-2.04531483e-02 , 1.97997407e-02],
+                         [-2.08693493e-02 , 2.56600000e-02],
+                         [-2.24474951e-02 , 6.23876468e-03],
+                         [-2.28480626e-02 , 2.36465119e-02],
+                         [-3.97983366e-03 ,-2.16004403e-03],
+                         [-2.06984100e-03 , 4.49926614e-04],
+                         [-1.88975783e-03 , 2.06991438e-03],
+                         [-1.89977984e-04 , 9.99706482e-05],
+                         [-1.99958417e-04 , 1.79982877e-04],
+                         [-9.69929061e-04 , 9.20000000e-04],
+                         [ 7.00000000e-04 , 1.83993640e-03],
+                         [-9.99755382e-06 , 9.99510823e-06],
+                         [ 0.00000000e+00 , 9.99755382e-06],
+                         [ 0.00000000e+00 , 0.00000000e+00],
+                         [ 0.00000000e+00 , 0.00000000e+00],
+                         [ 6.60000000e-04 , 6.70000000e-04]])
 
     #Read the aberration and sca_pos for the interpolation *reference* points from the roman files.
     aberration_list = []
@@ -1096,7 +1182,7 @@ def test_aberration_interpolation():
         far = False
         if sca2%3==0 and sca2-sca1 == 1:
             far = True
-        
+    
         #For each pair of conjunction points, calculate their aberration by calling _interp_aberrations_bilinear
         point_1_abe = galsim.roman.roman_psfs._interp_aberrations_bilinear(aberration_list[sca1-1],
                                                                        sca_x_list[sca1-1], 
@@ -1118,15 +1204,17 @@ def test_aberration_interpolation():
             if far:
 
                 assert z_diff<= 0.1*(z_max - z_min), 'z_diff > 0.1(z_max - z_min), failed aberration continuity test.\
-                \n \fail for Z{}, z_diff = {}, sca1 = {}, sca2 = {}'.format(i,z_diff,sca1,sca2)
+                \n Fail for Z{}, z_diff = {}, sca1 = {}, sca2 = {}'.format(i,z_diff,sca1,sca2)
 
 
             else:
 
                 assert z_diff<= 0.05*(z_max - z_min),'z_diff > 0.05(z_max - z_min), failed aberration continuity test.\
-                    \nFail for Z{}, z_diff = {}, sca1 = {}, sca2 = {}'.format(i,z_diff,sca1,sca2)
+                \n Fail for Z{}, z_diff = {}, sca1 = {}, sca2 = {}'.format(i,z_diff,sca1,sca2)
                 
     print("Continuity test passes.")
+
+
 
 
 
