@@ -140,10 +140,18 @@ def ProcessTemplate(config, base, logger=None):
         base:           The base configuration dict.
         logger:         If given, a logger object to log progress. [default: None]
     """
+    from .value_eval import _GenerateFromEval
+
     logger = LoggerWrapper(logger)
     if 'template' in config:
         template_string = config.pop('template')
         logger.debug("Processing template specified as %s",template_string)
+
+        # Allow it to be an Eval.  We don't have much set up yet in the config dict,
+        # but really simple Eval strings should still be workable.
+        if template_string[0] == '$':
+            temp_config = { 'type': 'Eval', 'str': template_string[1:] }
+            template_string = _GenerateFromEval(temp_config, base, str)[0]
 
         # Parse the template string
         if ':' in template_string:
