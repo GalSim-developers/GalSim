@@ -2283,6 +2283,13 @@ def test_template():
     for field in ['image', 'output', 'gal', 'psf']:
         assert config4[field] == config[field]
 
+    # Check a simple Eval string
+    config5 = config1.copy()
+    config5['template'] = '$"gnritlum"[::-1]'
+    galsim.config.ProcessAllTemplates(config5)
+    for key in config:
+        assert config5[key] == config[key]
+
 
 @timer
 def test_variable_cat_size():
