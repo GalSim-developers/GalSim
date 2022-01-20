@@ -1,12 +1,6 @@
 [run]
 branch = True
 
-include = *galsim/*
-
-omit =
-    # This is a utility for tracking down OSErrors.  Don't include in coverage.
-    *fds_test.py
-
 # Without this, coverage misses anything that is only run in multiprocessing mode.
 concurrency = multiprocessing
 
