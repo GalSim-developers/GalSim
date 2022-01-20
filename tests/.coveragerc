@@ -1,6 +1,8 @@
 [run]
 branch = True
 
+include = *galsim/*
+
 # Without this, coverage misses anything that is only run in multiprocessing mode.
 concurrency = multiprocessing
 
