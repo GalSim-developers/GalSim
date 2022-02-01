@@ -1082,7 +1082,7 @@ def test_aberration_interpolation():
     vertical_adjacent = []
     # list of verticle contact (SCA# LEFT, SCA# RIGHT)
     for i in range(10,13):
-        verticle_adjacent.append((i,i-9))
+        vertical_adjacent.append((i,i-9))
     
     ## Compute the fpa-position of all the contact points
     edge_pair_list = []
