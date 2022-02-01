@@ -1079,7 +1079,7 @@ def test_aberration_interpolation():
         horizontal_adjacent.append((i,i+1))
         horizontal_adjacent.append((i+1,i+2))
     
-    verticle_adjacent = []
+    vertical_adjacent = []
     # list of verticle contact (SCA# LEFT, SCA# RIGHT)
     for i in range(10,13):
         verticle_adjacent.append((i,i-9))
