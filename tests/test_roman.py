@@ -1112,7 +1112,7 @@ def test_aberration_interpolation():
 
     for pair in range(len(verticle_adjacent)):
         sca1 = verticle_adjacent[pair][0]-1
-        sca2 = verticle_adjacent[pair][1]-1
+        sca2 = vertical_adjacent[pair][1]-1
 
         y_contact = (sca_yc_mm[sca1]+sca_yc_mm[sca2])/2
         y_1_mm = y_contact - sca_yc_mm[sca1]
