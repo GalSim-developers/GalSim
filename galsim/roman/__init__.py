@@ -41,6 +41,9 @@ thermal_backgrounds = {'J129': 0.023, # e-/pix/s
                        'H158': 0.022,
                        'W149': 0.023}
 
+# Physical pixel size
+pixel_scale_mm = 0.01 # mm
+
 # There are actually separate pupil plane files for each SCA, since the view of the pupil
 # obscuration is different from different locations on the focal plane.  It's also modestly
 # wavelength dependent, so there is a different file appropriate for F184, the longest wavelength

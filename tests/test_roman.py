@@ -1092,7 +1092,7 @@ def test_aberration_interpolation():
         sca1 = horizontal_adjacent[pair][0]-1
         sca2 = horizontal_adjacent[pair][1]-1
 
-        pixel_size = 0.01 # mm/pixel
+        pixel_size = galsim.roman.pixel_scale_mm # mm/pixel
         npix = galsim.roman.n_pix
 
         x_contact = (sca_xc_mm[sca1]+sca_xc_mm[sca2])/2
