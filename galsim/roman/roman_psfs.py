@@ -187,7 +187,7 @@ def getPSF(SCA, bandpass,
     from ..errors import GalSimValueError, GalSimRangeError
     from ..bandpass import Bandpass
     from ..wcs import PixelScale
-    from . import n_pix, n_sca, longwave_bands, shortwave_bands, pixel_scale
+    from . import n_pix, n_sca, longwave_bands, shortwave_bands, pixel_scale, pixel_scale_mm
 
     # Deprecated options
     if high_accuracy:
@@ -367,7 +367,7 @@ def _read_aberrations(SCA):
         NumPy arrays containing the aberrations, and x and y field positions.
     """
     from .. import meta_data
-    from . import pixel_scale, n_pix
+    from . import pixel_scale, n_pix, pixel_scale_mm
 
     # Construct filename.
     sca_str = '_%02d'%SCA
@@ -382,10 +382,13 @@ def _read_aberrations(SCA):
     # use entries 1-22).  The units are waves.
     aberrations = np.zeros((5,23))
     aberrations[:,1:] = dat[:,5:]
-    # Also get the field position.  The file gives it in arcsec with respect to the center, but we
-    # want it in pixels with respect to the corner.
-    x_sca_pos = dat[:,1]/pixel_scale + n_pix/2
-    y_sca_pos = dat[:,2]/pixel_scale + n_pix/2
+    # Also get the field position.  The file gives it in mm with respect to the center, but we
+    # want it in pixels with respect to the corner. The pixel size of the detector is 0.01 mm/pixel
+    # The y-coordinates have the opposite signs to the corresponding WFI location, explained 
+    # in the Roman file.
+
+    x_sca_pos = dat[:,1]/pixel_scale_mm + n_pix/2
+    y_sca_pos = n_pix/2 - dat[:,2]/pixel_scale_mm
     return aberrations, x_sca_pos, y_sca_pos
 
 def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
