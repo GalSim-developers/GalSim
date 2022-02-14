@@ -213,3 +213,8 @@ Changes from v2.3.2 to v2.3.3
 
 - Fixed a bug where InterpolatedImage.drawReal could possibly cause seg faults
   from writing past the end of the image arrays.
+
+Changes from v2.3.3 to v2.3.4
+=============================
+
+- Fixed an error in our handling of the Cycle 7 aberrations file. (#1142)
