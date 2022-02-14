@@ -20,8 +20,8 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v1.12.0
         env:
-          CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel
-          CIBW_BEFORE_ALL_MACOS: brew install fftw
+          CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel eigen3-devel
+          CIBW_BEFORE_ALL_MACOS: brew install fftw eigen
 
       - uses: actions/upload-artifact@v2
         with:
