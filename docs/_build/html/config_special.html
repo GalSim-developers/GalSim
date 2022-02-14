@@ -1,74 +1,34 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>Special Fields &mdash; GalSim 2.3.3 documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>Special Fields &mdash; GalSim 2.3.4 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-
-    
+    <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="The galsim Executable" href="config_galsim.html" />
     <link rel="prev" title="Config Values" href="config_values.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="index.html" class="icon icon-home"> GalSim
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 2.3
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -76,18 +36,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
@@ -128,73 +77,31 @@
 <li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="index.html">GalSim</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="config.html">The Config Module</a> &raquo;</li>
-        
       <li>Special Fields</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="_sources/config_special.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="special-fields">
 <h1>Special Fields<a class="headerlink" href="#special-fields" title="Permalink to this headline">¶</a></h1>
 <p>There are a couple of other top level fields that act more in a support role, rather than being
@@ -256,14 +163,14 @@ e.g. <code class="docutils literal notranslate"><span class="pre">image.noise.sk
 <p>For example, if you have a simulation defined in <code class="docutils literal notranslate"><span class="pre">my_sim.yaml</span></code>, and you want to make another
 simulation that is identical, except you want Sersic galaxies instead of Exponential galaxies say,
 you could write a new file that looks something like this:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">template </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my_sim.yaml</span>
-<span class="nt">gal</span><span class="p">:</span>
-    <span class="nt">type </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Sersic</span>
-    <span class="nt">n </span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span> <span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min </span><span class="p">:</span> <span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span> <span class="nv">4</span> <span class="p p-Indicator">}</span>
-    <span class="nt">half_light_radius </span><span class="p">:</span>
-        <span class="nt">template </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">my_sim.yaml:gal.half_light_radius</span>
-    <span class="nt">flux </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1000</span>
-<span class="nt">output.dir </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">sersic_sim</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">template </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sim.yaml</span><span class="w"></span>
+<span class="nt">gal</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sersic</span><span class="w"></span>
+<span class="w">    </span><span class="nt">n </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min </span><span class="p">:</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">4</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">    </span><span class="nt">half_light_radius </span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">template </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_sim.yaml:gal.half_light_radius</span><span class="w"></span>
+<span class="w">    </span><span class="nt">flux </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span><span class="w"></span>
+<span class="nt">output.dir </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sersic_sim</span><span class="w"></span>
 </pre></div>
 </div>
 <p>This will load in the file <code class="docutils literal notranslate"><span class="pre">my_sim.yaml</span></code> first, then replace the whole <code class="docutils literal notranslate"><span class="pre">config['gal']</span></code> field
@@ -273,12 +180,12 @@ the other file (which might be some complicated random variate that you did not 
 duplicate here).</p>
 <p>If the <code class="docutils literal notranslate"><span class="pre">template</span></code> field is not at the top level of the config dict, the adjustments should be
 made relative to that level of the dictionary:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">psf </span><span class="p">:</span>
-    <span class="nt">template</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">cgc.yaml:psf</span>
-    <span class="nt">index_key </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">obj_num</span>
-    <span class="nt">items.0.ellip.e.max </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">0.05</span>
-    <span class="nt">items.1.nstruts </span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
-    <span class="nt">items.1.strut_angle </span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span> <span class="nv">Random</span> <span class="p p-Indicator">}</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">psf </span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">cgc.yaml:psf</span><span class="w"></span>
+<span class="w">    </span><span class="nt">index_key </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">obj_num</span><span class="w"></span>
+<span class="w">    </span><span class="nt">items.0.ellip.e.max </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.05</span><span class="w"></span>
+<span class="w">    </span><span class="nt">items.1.nstruts </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"></span>
+<span class="w">    </span><span class="nt">items.1.strut_angle </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Note that the modifications do not start with <code class="docutils literal notranslate"><span class="pre">psf.</span></code>, since the template processing is being done
@@ -286,20 +193,20 @@ within the <code class="docutils literal notranslate"><span class="pre">psf</spa
 <p>Finally, if you want to use a different field from the current config dict as a template, you can
 use the colon notation without the file.
 E.g. To have a bulge plus disk that have the same kinds of parameters, except that the overall type is a DeVaucouleurs and Exponential respectively, you could do:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span>
-    <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Sum</span>
-    <span class="nt">items</span><span class="p">:</span>
-        <span class="p p-Indicator">-</span>
-            <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">DeVaucouleurs</span>
-            <span class="nt">half_light_radius</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span> <span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span> <span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span> <span class="nv">0.8</span> <span class="p p-Indicator">}</span>
-            <span class="nt">flux</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span> <span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span> <span class="nv">100</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span> <span class="nv">1000</span> <span class="p p-Indicator">}</span>
-            <span class="nt">ellip</span><span class="p">:</span>
-                <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Eta1Eta2</span>
-                <span class="nt">eta1</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span> <span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span> <span class="nv">0.2</span> <span class="p p-Indicator">}</span>
-                <span class="nt">eta2</span><span class="p">:</span> <span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span> <span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span> <span class="nv">0.2</span> <span class="p p-Indicator">}</span>
-        <span class="p p-Indicator">-</span>
-            <span class="nt">template</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">:gal.items.0</span>
-            <span class="nt">type</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">Exponential</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Sum</span><span class="w"></span>
+<span class="w">    </span><span class="nt">items</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"></span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DeVaucouleurs</span><span class="w"></span>
+<span class="w">            </span><span class="nt">half_light_radius</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">0.8</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">            </span><span class="nt">flux</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="p p-Indicator">,</span><span class="nt"> min</span><span class="p">:</span><span class="w"> </span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="nt"> max</span><span class="p">:</span><span class="w"> </span><span class="nv">1000</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">            </span><span class="nt">ellip</span><span class="p">:</span><span class="w"></span>
+<span class="w">                </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eta1Eta2</span><span class="w"></span>
+<span class="w">                </span><span class="nt">eta1</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">                </span><span class="nt">eta2</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="p p-Indicator">,</span><span class="nt"> sigma</span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"></span>
+<span class="w">            </span><span class="nt">template</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">:gal.items.0</span><span class="w"></span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Exponential</span><span class="w"></span>
 </pre></div>
 </div>
 <p>This would generate different values for the size, flux, and shape of each component.  But the way those numbers are drawn would be the same for each.</p>
@@ -355,50 +262,33 @@ field. See the description of <code class="docutils literal notranslate"><span c
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="config_galsim.html" class="btn btn-neutral float-right" title="The galsim Executable" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="config_values.html" class="btn btn-neutral float-left" title="Config Values" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_galsim.html" class="btn btn-neutral float-right" title="The galsim Executable" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2019, GalSim-developers.
-
-    </p>
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
