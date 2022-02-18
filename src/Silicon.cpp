@@ -984,6 +984,422 @@ namespace galsim {
         return addedFlux;
     }
 
+    #define MAX_POLY_POINTS 250
+    
+    bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
+				 BoundsIGPU& targetBounds, bool* off_edge,
+				 BoundsFGPU* pixelInnerBounds,
+				 BoundsFGPU* pixelOuterBounds, PointDGPU* emptypoly,
+				 int emptypolySize, PointSGPU* verticalBoundaryPoints,
+                                 PointSGPU* horizontalBoundaryPoints) const
+    {
+        // This scales the pixel distortion based on the zconv, which is the depth
+        // at which the electron is created, and then tests to see if the delivered
+        // point is inside the pixel.
+        // (ix,iy) is the pixel being tested, and (x,y) is the coordinate of the
+        // photon within the pixel, with (0,0) in the lower left
+
+        // If test pixel is off the image, return false.  (Avoids seg faults!)
+	if ((ix < targetBounds.xmin) || (ix > targetBounds.xmax) ||
+	    (iy < targetBounds.ymin) || (iy > targetBounds.ymax)) {
+            if (off_edge) *off_edge = true;
+            return false;
+        }
+
+        const int i1 = targetBounds.xmin;
+        const int i2 = targetBounds.xmax;
+        const int j1 = targetBounds.ymin;
+        const int j2 = targetBounds.ymax;
+        const int nx = i2-i1+1;
+        const int ny = j2-j1+1;
+
+        int index = (ix - i1) * ny + (iy - j1);
+
+        // First do some easy checks if the point isn't terribly close to the boundary.
+
+        bool inside;
+	if ((x >= pixelInnerBounds[index].xmin) && (x <= pixelInnerBounds[index].xmax) &&
+	    (y >= pixelInnerBounds[index].ymin) && (y <= pixelInnerBounds[index].ymax)) {
+            inside = true;
+	} else if ((x < pixelOuterBounds[index].xmin) || (x > pixelOuterBounds[index].xmax) ||
+		   (y < pixelOuterBounds[index].ymin) || (y > pixelOuterBounds[index].ymax)) {
+            inside = false;
+        } else {
+            // OK, it must be near the boundary, so now be careful.
+            // The term zfactor decreases the pixel shifts as we get closer to the bottom
+            // It is an empirical fit to the Poisson solver simulations, and only matters
+            // when we get quite close to the bottom.  This could be more accurate by making
+            // the Vertices files have an additional look-up variable (z), but this doesn't
+            // seem necessary at this point
+            const double zfit = 12.0;
+            const double zfactor = std::tanh(zconv / zfit);
+
+	    PointDGPU testpoly[MAX_POLY_POINTS];
+	    for (int i = 0; i < emptypolySize; i++) {
+		testpoly[i] = emptypoly[i];
+	    }
+	    
+	    // iterate over pixel boundary
+	    // LHS lower half
+	    int n;
+	    int idx;
+	    for (n = 0; n < cornerIndexBottomLeft(); n++) {
+		// FIXME: hoping these functions work on GPU. May need to annotate them
+                idx = verticalPixelIndex(ix - i1, iy - j1, ny) + n + cornerIndexBottomLeft();
+		testpoly[n].x += (verticalBoundaryPoints[idx].x - emptypoly[n].x) * zfactor;
+		testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+	    }
+	    // bottom row including corners
+	    for (; n <= cornerIndexBottomRight(); n++) {
+                idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
+		double px = horizontalBoundaryPoints[idx].x;
+		if (n == cornerIndexBottomRight()) px += 1.0;
+		testpoly[n].x += (px - emptypoly[n].x) * zfactor;
+		testpoly[n].y += (horizontalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+	    }
+	    // RHS
+	    for (; n < cornerIndexTopRight(); n++) {
+                idx = verticalPixelIndex(ix - i1 + 1, iy - j1, ny) + (cornerIndexTopRight() - n - 1);
+		testpoly[n].x += ((verticalBoundaryPoints[idx].x + 1.0) - emptypoly[n].x) * zfactor;
+		testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+	    }
+	    // top row including corners
+	    for (; n <= cornerIndexTopLeft(); n++) {
+                idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
+		double px = horizontalBoundaryPoints[idx].x;
+		if (n == cornerIndexTopRight()) px += 1.0;
+		testpoly[n].x += (px - emptypoly[n].x) * zfactor;
+		testpoly[n].y += ((horizontalBoundaryPoints[idx].y + 1.0) - emptypoly[n].y) * zfactor;
+	    }
+	    // LHS upper half
+	    for (; n < _nv; n++) {
+                idx = verticalPixelIndex(ix - i1, iy - j1, ny) + (n - cornerIndexTopLeft() - 1);
+		testpoly[n].x += (verticalBoundaryPoints[idx].x - emptypoly[n].x) * zfactor;
+		testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+	    }
+
+            // Now test to see if the point is inside
+	    // run shoelace algorithm
+	    double x1 = testpoly[0].x;
+	    double y1 = testpoly[0].y;
+	    double xinters = 0.0;
+	    inside = false;
+	    for (int i = 1; i <= emptypolySize; i++) {
+		double x2 = testpoly[i % emptypolySize].x;
+		double y2 = testpoly[i % emptypolySize].y;
+		if (y > std::min(y1, y2)) {
+		    if (y <= std::max(y1, y2)) {
+			if (x <= std::max(x1, x2)) {
+			    if (y1 != y2) {
+				xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1;
+			    }
+			    if ((x1 == x2) || (x <= xinters)) {
+				inside = !inside;
+			    }
+			}
+		    }
+		}
+		x1 = x2;
+		y1 = y2;
+	    }
+        }
+
+        // If the nominal pixel is on the edge of the image and the photon misses in the
+        // direction of falling off the image, (possibly) report that in off_edge.
+        if (!inside && off_edge) {
+            *off_edge = false;
+            if ((ix == i1) && (x < pixelInnerBounds[index].xmin)) *off_edge = true;
+            if ((ix == i2) && (x > pixelInnerBounds[index].xmax)) *off_edge = true;
+            if ((iy == j1) && (y < pixelInnerBounds[index].ymin)) *off_edge = true;
+            if ((iy == j2) && (y > pixelInnerBounds[index].ymax)) *off_edge = true;
+        }
+        return inside;
+    }
+
+    bool searchNeighborsGPU(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
+			    BoundsIGPU& targetBounds, int& step, BoundsFGPU* pixelInnerBounds,
+			    BoundsFGPU* pixelOuterBounds, PointDGPU* emptypoly,
+			    int emptypolySize, PointSGPU* verticalBoundaryPoints,
+                            PointSGPU* horizontalBoundaryPoints)
+    {
+        const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
+        const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
+
+        // The following code finds which pixel we are in given
+        // pixel distortion due to the brighter-fatter effect
+        // The following are set up to start the search in the undistorted pixel, then
+        // search in the nearest neighbor first if it's not in the undistorted pixel.
+        if      ((x > y) && (x > 1.0 - y)) step = 1;
+        else if ((x < y) && (x < 1.0 - y)) step = 7;
+        else if ((x < y) && (x > 1.0 - y)) step = 3;
+        else step = 5;
+        int n=step;
+        for (int m=1; m<9; m++) {
+            int ix_off = ix + xoff[n];
+            int iy_off = iy + yoff[n];
+            double x_off = x - xoff[n];
+            double y_off = y - yoff[n];
+	    if (silicon.insidePixelGPU(ix_off, iy_off, x_off, y_off, zconv, targetBounds, nullptr,
+                                       pixelInnerBounds, pixelOuterBounds, emptypoly,
+                                       emptypolySize, verticalBoundaryPoints,
+                                       horizontalBoundaryPoints)) {
+                ix = ix_off;
+                iy = iy_off;
+                return true;
+            }
+            n = ((n-1) + step) % 8 + 1;
+            // This is intended to start with the nearest neighbor, then cycle through others.
+        }
+        return false;
+    }
+
+    template <typename T>
+    double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
+				  BaseDeviate rng, ImageView<T> target)
+    {
+        const int nphotons = i2 - i1;
+
+        // Generate random numbers in advance
+        std::vector<double> conversionDepthRandom(nphotons);
+        std::vector<double> pixelNotFoundRandom(nphotons);
+        std::vector<double> diffStepRandom(nphotons * 2);
+
+        UniformDeviate ud(rng);
+        GaussianDeviate gd(ud, 0, 1);
+
+        for (int i=0; i<nphotons; i++) {
+            diffStepRandom[i*2] = gd();
+            diffStepRandom[i*2+1] = gd();
+            pixelNotFoundRandom[i] = ud();
+            conversionDepthRandom[i] = ud();
+        }
+
+        const double invPixelSize = 1./_pixelSize; // pixels/micron
+        const double diffStep_pixel_z = _diffStep / (_sensorThickness * _pixelSize);
+        Bounds<int> b = target.getBounds();
+        double addedFlux = 0.;
+
+	// Get everything out of C++ classes and into arrays/structures suitable for GPU
+	// photons
+        // can't get pointers to internal data from a const reference
+        PhotonArray& photonsMutable = const_cast<PhotonArray&>(photons);        
+	double* photonsX = photonsMutable.getXArray();
+	double* photonsY = photonsMutable.getYArray();
+	double* photonsDXDZ = photonsMutable.getDXDZArray();
+	double* photonsDYDZ = photonsMutable.getDYDZArray();
+	double* photonsFlux = photonsMutable.getFluxArray();
+	double* photonsWavelength = photonsMutable.getWavelengthArray();
+	bool photonsHasAllocatedAngles = photons.hasAllocatedAngles();
+	bool photonsHasAllocatedWavelengths = photons.hasAllocatedWavelengths();
+
+	// random arrays
+	double* diffStepRandomArray = diffStepRandom.data();
+	double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
+	double* conversionDepthRandomArray = conversionDepthRandom.data();
+
+	// target bounds
+	BoundsIGPU targetBounds;
+	targetBounds.xmin = target.getXMin();
+	targetBounds.xmax = target.getXMax();
+	targetBounds.ymin = target.getYMin();
+	targetBounds.ymax = target.getYMax();
+	
+	// delta image
+	double* deltaImageData = _delta.getData();
+	int deltaXMin = _delta.getXMin();
+	int deltaYMin = _delta.getYMin();
+        int deltaXMax = _delta.getXMax();
+        int deltaYMax = _delta.getYMax();
+	int deltaStep = _delta.getStep();
+	int deltaStride = _delta.getStride();
+
+	// pixel inner and outer bounds
+	BoundsFGPU* pixelInnerBounds = new BoundsFGPU[_pixelInnerBounds.size()];
+	BoundsFGPU* pixelOuterBounds = new BoundsFGPU[_pixelOuterBounds.size()];
+	for (int i = 0; i < _pixelInnerBounds.size(); i++) {
+	    pixelInnerBounds[i].xmin = _pixelInnerBounds[i].getXMin();
+	    pixelInnerBounds[i].xmax = _pixelInnerBounds[i].getXMax();
+	    pixelInnerBounds[i].ymin = _pixelInnerBounds[i].getYMin();
+	    pixelInnerBounds[i].ymax = _pixelInnerBounds[i].getYMax();
+	}
+	for (int i = 0; i < _pixelOuterBounds.size(); i++) {
+	    pixelOuterBounds[i].xmin = _pixelOuterBounds[i].getXMin();
+	    pixelOuterBounds[i].xmax = _pixelOuterBounds[i].getXMax();
+	    pixelOuterBounds[i].ymin = _pixelOuterBounds[i].getYMin();
+	    pixelOuterBounds[i].ymax = _pixelOuterBounds[i].getYMax();
+	}
+
+	// horizontal and vertical boundary points
+	PointSGPU* horizontalBoundaryPoints = new PointSGPU[_horizontalBoundaryPoints.size()];
+	PointSGPU* verticalBoundaryPoints = new PointSGPU[_verticalBoundaryPoints.size()];
+	for (int i = 0; i < _horizontalBoundaryPoints.size(); i++) {
+	    horizontalBoundaryPoints[i].x = _horizontalBoundaryPoints[i].x;
+	    horizontalBoundaryPoints[i].y = _horizontalBoundaryPoints[i].y;
+	}
+	for (int i = 0; i < _verticalBoundaryPoints.size(); i++) {
+	    verticalBoundaryPoints[i].x = _verticalBoundaryPoints[i].x;
+	    verticalBoundaryPoints[i].y = _verticalBoundaryPoints[i].y;
+	}
+
+	// emptypoly
+	int emptypolySize = _emptypoly.size();
+	PointDGPU* emptypolyGPU = new PointDGPU[emptypolySize];
+	for (int i = 0; i < emptypolySize; i++) {
+	    emptypolyGPU[i].x = _emptypoly[i].x;
+	    emptypolyGPU[i].y = _emptypoly[i].y;
+	}
+
+	// _testpoly allocated per-thread on stack instead
+
+	// xoff and yoff displacement arrays should be OK as they are
+
+	// first item is for lambda=255.0, last for lambda=1450.0
+	const double abs_length_table[240] = {
+	    0.005376, 0.005181, 0.004950, 0.004673, 0.004444, 0.004292, 0.004237, 0.004348,
+	    0.004854, 0.005556, 0.006211, 0.006803, 0.007299, 0.007752, 0.008130, 0.008475,
+	    0.008850, 0.009174, 0.009434, 0.009615, 0.009709, 0.009804, 0.010776, 0.013755,
+	    0.020243, 0.030769, 0.044843, 0.061728, 0.079365, 0.097087, 0.118273, 0.135230,
+	    0.160779, 0.188879, 0.215008, 0.248565, 0.280576, 0.312637, 0.339916, 0.375516,
+	    0.421177, 0.462770, 0.519427, 0.532396, 0.586786, 0.638651, 0.678058, 0.724795,
+	    0.754888, 0.819471, 0.888573, 0.925497, 1.032652, 1.046835, 1.159474, 1.211754,
+	    1.273999, 1.437339, 1.450579, 1.560939, 1.641228, 1.678331, 1.693222, 1.910329,
+	    1.965988, 2.107881, 2.183263, 2.338634, 2.302821, 2.578183, 2.540070, 2.812702,
+	    2.907146, 2.935392, 3.088994, 3.082139, 3.311807, 3.466084, 3.551767, 3.580123,
+	    3.716781, 3.859216, 4.007534, 4.162331, 4.323576, 4.492161, 4.667662, 4.851307,
+	    5.042610, 5.243014, 5.451968, 5.670863, 5.899705, 6.139489, 6.390185, 6.652917,
+	    6.928086, 7.217090, 7.519928, 7.838219, 8.171938, 8.522969, 8.891260, 9.279881,
+	    9.688045, 10.119102, 10.572501, 11.051556, 11.556418, 12.090436, 12.654223,
+	    13.251527, 13.883104, 14.553287, 15.263214, 16.017940, 16.818595, 17.671903,
+	    18.578727, 19.546903, 20.578249, 21.681627, 22.860278, 24.124288, 25.477707,
+	    26.933125, 28.495711, 30.181390, 31.995905, 33.960470, 36.082846, 38.387716,
+	    40.886418, 43.610990, 46.578788, 50.147936, 53.455926, 57.267209, 61.599113,
+	    66.352598, 71.802973, 77.730276, 84.423808, 91.810503, 100.049024, 109.326777,
+	    120.098481, 132.101967, 145.853388, 162.345569, 180.515516, 202.860331,
+	    228.060573, 258.191113, 295.011358, 340.808398, 394.960306, 460.893211,
+	    541.418517, 640.697078, 760.282825, 912.075885, 1085.116542, 1255.510120,
+	    1439.760424, 1647.500741, 1892.004389, 2181.025082, 2509.599217, 2896.955300,
+	    3321.155762, 3854.455751, 4470.072862, 5222.477543, 6147.415012, 7263.746641,
+	    8802.042074, 10523.214211, 12895.737959, 16091.399147, 20783.582632,
+	    26934.575915, 35981.577432, 52750.962705, 90155.066715, 168918.918919,
+	    288184.438040, 409836.065574, 534759.358289, 684931.506849, 900900.900901,
+	    1190476.190476, 1552795.031056, 2024291.497976, 2673796.791444, 3610108.303249,
+	    4830917.874396, 6896551.724138, 10416666.666667, 16920473.773266,
+	    27700831.024931, 42918454.935622, 59880239.520958, 79365079.365079,
+	    103842159.916926, 135317997.293640, 175746924.428822, 229357798.165138,
+	    294117647.058824, 380228136.882129, 497512437.810945, 657894736.842105,
+	    877192982.456140, 1204819277.108434, 1680672268.907563, 2518891687.657431,
+	    3816793893.129771, 5882352941.176471, 7999999999.999999, 10298661174.047373,
+	    14430014430.014431, 17211703958.691910, 21786492374.727669, 27932960893.854748,
+	    34482758620.689659, 41666666666.666672, 54347826086.956520, 63694267515.923569,
+	    86956521739.130432, 106837606837.606827, 128205128205.128204,
+	    185528756957.328400, 182815356489.945160, 263157894736.842072,
+	    398406374501.992065, 558659217877.094971, 469483568075.117371,
+	    833333333333.333374, 917431192660.550415, 1058201058201.058228
+	};
+
+        int imageDataSize = (deltaXMax - deltaXMin) * deltaStep + (deltaYMax - deltaYMin) * deltaStride;
+        int pixelInnerBoundsSize = _pixelInnerBounds.size();
+        int hbpSize = _horizontalBoundaryPoints.size();
+        int vbpSize = _verticalBoundaryPoints.size();
+        
+#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2], photonsY[i1:i2], photonsDXDZ[i1:i2], photonsDYDZ[i1:i2], photonsFlux[i1:i2], photonsWavelength[i1:i2], diffStepRandomArray[i1:i2], pixelNotFoundRandomArray[i1:i2], conversionDepthRandomArray[i1:i2], pixelInnerBounds[0:pixelInnerBoundsSize], pixelOuterBounds[0:pixelInnerBoundsSize], horizontalBoundaryPoints[0:hbpSize], verticalBoundaryPoints[0:vbpSize], emptypolyGPU[0:emptypolySize], abs_length_table[0:240]), map(tofrom: deltaImageData[0:imageDataSize]) reduction(+:addedFlux)
+	for (int i = i1; i < i2; i++) {
+	    double x0 = photonsX[i];
+	    double y0 = photonsY[i];
+
+	    // calculateConversionDepth
+	    double dz;
+	    if (photonsHasAllocatedWavelengths) {
+		double lambda = photonsWavelength[i];
+
+		// perform abs_length_table lookup with linear interpolation
+		int tableIdx = int((lambda - 255.0) / 5.0);
+		double alpha = (lambda - ((float(tableIdx) * 5.0) + 255.0)) / 5.0;
+		tableIdx = std::max(tableIdx, 0);
+		int tableIdx1 = tableIdx + 1;
+		tableIdx = std::min(tableIdx, 239);
+		tableIdx1 = std::min(tableIdx1, 239);
+		double abs_length = (abs_length_table[tableIdx] * (1.0 - alpha)) +
+		    (abs_length_table[tableIdx1] * alpha);
+
+		dz = -abs_length * std::log(1.0 - conversionDepthRandomArray[i - i1]);
+	    }
+	    else {
+		dz = 1.0;
+	    }
+
+	    if (photonsHasAllocatedAngles) {
+		double dxdz = photonsDXDZ[i];
+		double dydz = photonsDYDZ[i];
+		double pdz = dz / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz);
+		dz = std::min(_sensorThickness - 1.0, pdz);
+	    }
+
+	    if (photonsHasAllocatedAngles) {
+		double dxdz = photonsDXDZ[i];
+		double dydz = photonsDYDZ[i];
+		double dz_pixel = dz * invPixelSize;
+		x0 += dxdz * dz_pixel;
+		y0 += dydz * dz_pixel;
+	    }
+
+	    double zconv = _sensorThickness - dz;
+	    if (zconv < 0.0) continue;
+
+	    if (_diffStep != 0.) {
+		double diffStep = std::max(0.0, diffStep_pixel_z * std::sqrt(zconv * _sensorThickness));
+		x0 += diffStep * diffStepRandomArray[(i-i1)*2];
+		y0 += diffStep * diffStepRandomArray[(i-i1)*2+1];
+	    }
+
+	    double flux = photonsFlux[i];
+
+	    int ix = int(std::floor(x0 + 0.5));
+	    int iy = int(std::floor(y0 + 0.5));
+
+	    double x = x0 - ix + 0.5;
+	    double y = y0 - iy + 0.5;
+
+	    bool off_edge;
+	    bool foundPixel;
+
+	    foundPixel = insidePixelGPU(ix, iy, x, y, zconv, targetBounds, &off_edge,
+					pixelInnerBounds, pixelOuterBounds, emptypolyGPU,
+					emptypolySize, verticalBoundaryPoints,
+                                        horizontalBoundaryPoints);
+
+	    if (!foundPixel && off_edge) continue;
+
+	    int step;
+	    if (!foundPixel) {
+		foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv, targetBounds, step,
+						pixelInnerBounds, pixelOuterBounds,
+						emptypolyGPU, emptypolySize,
+                                                verticalBoundaryPoints,
+                                                horizontalBoundaryPoints);
+		if (!foundPixel) continue; // ignore ones that have rounding errors for now
+	    }
+
+	    if ((ix >= targetBounds.xmin) && (ix <= targetBounds.xmax) &&
+		(iy >= targetBounds.ymin) && (iy <= targetBounds.ymax)) {
+
+		int deltaIdx = (ix - deltaXMin) * deltaStep + (iy - deltaYMin) * deltaStride;
+#pragma omp atomic
+		deltaImageData[deltaIdx] += flux;
+		addedFlux += flux;
+	    }
+	}
+
+	// delete GPU arrays
+	delete[] pixelInnerBounds;
+	delete[] pixelOuterBounds;
+	delete[] horizontalBoundaryPoints;
+	delete[] verticalBoundaryPoints;
+	delete[] emptypolyGPU;
+	
+        return addedFlux;
+    }
+
     template <typename T>
     void Silicon::update(ImageView<T> target)
     {
@@ -1036,6 +1452,11 @@ namespace galsim {
                                         BaseDeviate rng, ImageView<double> target);
     template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
                                         BaseDeviate rng, ImageView<float> target);
+
+    template double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
+					   BaseDeviate rng, ImageView<double> target);
+    template double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
+					   BaseDeviate rng, ImageView<float> target);
 
     template void Silicon::update(ImageView<double> target);
     template void Silicon::update(ImageView<float> target);

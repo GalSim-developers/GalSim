@@ -34,6 +34,21 @@
 
 namespace galsim
 {
+    struct BoundsFGPU {
+	double xmin, xmax, ymin, ymax;
+    };
+    
+    struct BoundsIGPU {
+	int xmin, xmax, ymin, ymax;
+    };
+	
+    struct PointSGPU {
+	float x, y;
+    };
+    
+    struct PointDGPU {
+	double x, y;
+    };
 
     class PUBLIC_API Silicon
     {
@@ -47,7 +62,14 @@ namespace galsim
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
                          ImageView<T> target, bool* off_edge=0) const;
 
-        void scaleBoundsToPoly(int i, int j, int nx, int ny,
+	bool insidePixelGPU(int ix, int iy, double x, double y, double zconv,
+			    BoundsIGPU& targetBounds, bool* off_edge,
+			    BoundsFGPU* pixelInnerBounds,
+			    BoundsFGPU* pixelOuterBounds, PointDGPU* emptypoly,
+			    int emptypolySize, PointSGPU* verticalBoundaryPoints,
+                            PointSGPU* horizontalBoundaryPoints) const;
+
+	void scaleBoundsToPoly(int i, int j, int nx, int ny,
                                const Polygon& emptypoly, Polygon& result,
                                double factor) const;
 
@@ -76,6 +98,10 @@ namespace galsim
         double accumulate(const PhotonArray& photons, int i1, int i2,
                           BaseDeviate rng, ImageView<T> target);
 
+	template <typename T>
+	double accumulateGPU(const PhotonArray& photons, int i1, int i2,
+			     BaseDeviate rng, ImageView<T> target);
+	
         template <typename T>
         void update(ImageView<T> target);
 
