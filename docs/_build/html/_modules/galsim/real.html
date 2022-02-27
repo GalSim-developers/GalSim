@@ -153,7 +153,10 @@
 <span class="sd">    passbands, and/or parametric representations, should use the COSMOSGalaxy class.</span>
 
 <span class="sd">    Because RealGalaxy involves a `Deconvolution`, ``method = &#39;phot&#39;`` is unavailable for the</span>
-<span class="sd">    `GSObject.drawImage` function.</span>
+<span class="sd">    `GSObject.drawImage` function, and it is essential that users convolve each RealGalaxy with a</span>
+<span class="sd">    PSF that is at least as large as the original HST PSF (stored as an attribute) before rendering</span>
+<span class="sd">    any images.  This is necessary to eliminate noise that was amplified due to deconvolution of the</span>
+<span class="sd">    HST PSF.</span>
 
 <span class="sd">    Example::</span>
 

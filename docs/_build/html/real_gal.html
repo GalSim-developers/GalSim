@@ -135,7 +135,10 @@ might be needed to make or interpret the simulations, e.g., the noise properties
 data.  Users who wish to draw RealGalaxies that have well-defined flux scalings in various
 passbands, and/or parametric representations, should use the COSMOSGalaxy class.</p>
 <p>Because RealGalaxy involves a <a class="reference internal" href="transform.html#galsim.Deconvolution" title="galsim.Deconvolution"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Deconvolution</span></code></a>, <code class="docutils literal notranslate"><span class="pre">method</span> <span class="pre">=</span> <span class="pre">'phot'</span></code> is unavailable for the
-<a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> function.</p>
+<a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> function, and it is essential that users convolve each RealGalaxy with a
+PSF that is at least as large as the original HST PSF (stored as an attribute) before rendering
+any images.  This is necessary to eliminate noise that was amplified due to deconvolution of the
+HST PSF.</p>
 <p>Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">real_galaxy</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">RealGalaxy</span><span class="p">(</span><span class="n">real_galaxy_catalog</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">random</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="gp">... </span>                                <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">k_interpolant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -453,6 +456,9 @@ these routines, consider the following code:</p>
 <p>This code snippet will draw images of the first 10 entries in the COSMOS catalog, at slightly
 lower resolution than in COSMOS, with a real image and its parametric representation for each of
 those objects.</p>
+<p>When using the ‘real’ rather than ‘parametric’ option, please read the documentation for the
+<a class="reference internal" href="#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> class for additional caveats about the available drawing methods and
+the need to convolve with a suitable PSF.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
