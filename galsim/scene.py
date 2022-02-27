@@ -94,6 +94,10 @@ class COSMOSCatalog:
     lower resolution than in COSMOS, with a real image and its parametric representation for each of
     those objects.
 
+    When using the 'real' rather than 'parametric' option, please read the documentation for the
+    `RealGalaxy` class for additional caveats about the available drawing methods and
+    the need to convolve with a suitable PSF.
+
     Parameters:
         file_name:          The file containing the catalog. [default: None, which will look for the
                             F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
