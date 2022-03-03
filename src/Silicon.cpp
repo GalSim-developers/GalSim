@@ -844,6 +844,9 @@ namespace galsim {
     template <typename T>
     void Silicon::addDelta(ImageView<T> target)
     {
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+
+#pragma omp target update from(_deltaGPU[0:imageDataSize])
         target += _delta;
     }
 
@@ -986,6 +989,130 @@ namespace galsim {
 
     #define MAX_POLY_POINTS 250
     
+    template <typename T>
+    void Silicon::initializeGPU(ImageView<T> target, Position<int> orig_center)
+    {
+	// FIXME: do GPU-specific stuff
+        Bounds<int> b = target.getBounds();
+        if (!b.isDefined())
+            throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
+                                     " undefined Bounds");
+
+        const int nx = b.getXMax() - b.getXMin() + 1;
+        const int ny = b.getYMax() - b.getYMin() + 1;
+        dbg<<"nx,ny = "<<nx<<','<<ny<<std::endl;
+
+        initializeBoundaryPoints(nx, ny);
+
+        dbg<<"Built poly list\n";
+        // Now we add in the tree ring distortions
+        addTreeRingDistortions(target, orig_center);
+
+        // Start with the correct distortions for the initial image as it is already
+        dbg<<"Initial updatePixelDistortions\n";
+        updatePixelDistortions(target);
+
+        // Keep track of the charge we are accumulating on a separate image for efficiency
+        // of the distortion updates.
+        _delta.resize(b);
+        _delta.setZero();
+
+
+	// convert and map data for GPU
+	_deltaGPU = _delta.getData();
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+
+	// FIXME: this needs deleted eventually
+	_pixelInnerBoundsGPU = new BoundsFGPU[_pixelInnerBounds.size()];
+	_pixelOuterBoundsGPU = new BoundsFGPU[_pixelOuterBounds.size()];
+	for (int i = 0; i < _pixelInnerBounds.size(); i++) {
+	    _pixelInnerBoundsGPU[i].xmin = _pixelInnerBounds[i].getXMin();
+	    _pixelInnerBoundsGPU[i].xmax = _pixelInnerBounds[i].getXMax();
+	    _pixelInnerBoundsGPU[i].ymin = _pixelInnerBounds[i].getYMin();
+	    _pixelInnerBoundsGPU[i].ymax = _pixelInnerBounds[i].getYMax();
+	}
+	for (int i = 0; i < _pixelOuterBounds.size(); i++) {
+	    _pixelOuterBoundsGPU[i].xmin = _pixelOuterBounds[i].getXMin();
+	    _pixelOuterBoundsGPU[i].xmax = _pixelOuterBounds[i].getXMax();
+	    _pixelOuterBoundsGPU[i].ymin = _pixelOuterBounds[i].getYMin();
+	    _pixelOuterBoundsGPU[i].ymax = _pixelOuterBounds[i].getYMax();
+	}
+        int pixelInnerBoundsSize = _pixelInnerBounds.size();
+
+        int hbpSize = _horizontalBoundaryPoints.size();
+        int vbpSize = _verticalBoundaryPoints.size();
+	_horizontalBoundaryPointsGPU = new PointSGPU[hbpSize];
+	_verticalBoundaryPointsGPU = new PointSGPU[vbpSize];
+	for (int i = 0; i < hbpSize; i++) {
+	    _horizontalBoundaryPointsGPU[i].x = _horizontalBoundaryPoints[i].x;
+	    _horizontalBoundaryPointsGPU[i].y = _horizontalBoundaryPoints[i].y;
+	}
+	for (int i = 0; i < vbpSize; i++) {
+	    _verticalBoundaryPointsGPU[i].x = _verticalBoundaryPoints[i].x;
+	    _verticalBoundaryPointsGPU[i].y = _verticalBoundaryPoints[i].y;
+	}
+
+	// first item is for lambda=255.0, last for lambda=1450.0
+	const double abs_length_table[240] = {
+	    0.005376, 0.005181, 0.004950, 0.004673, 0.004444, 0.004292, 0.004237, 0.004348,
+	    0.004854, 0.005556, 0.006211, 0.006803, 0.007299, 0.007752, 0.008130, 0.008475,
+	    0.008850, 0.009174, 0.009434, 0.009615, 0.009709, 0.009804, 0.010776, 0.013755,
+	    0.020243, 0.030769, 0.044843, 0.061728, 0.079365, 0.097087, 0.118273, 0.135230,
+	    0.160779, 0.188879, 0.215008, 0.248565, 0.280576, 0.312637, 0.339916, 0.375516,
+	    0.421177, 0.462770, 0.519427, 0.532396, 0.586786, 0.638651, 0.678058, 0.724795,
+	    0.754888, 0.819471, 0.888573, 0.925497, 1.032652, 1.046835, 1.159474, 1.211754,
+	    1.273999, 1.437339, 1.450579, 1.560939, 1.641228, 1.678331, 1.693222, 1.910329,
+	    1.965988, 2.107881, 2.183263, 2.338634, 2.302821, 2.578183, 2.540070, 2.812702,
+	    2.907146, 2.935392, 3.088994, 3.082139, 3.311807, 3.466084, 3.551767, 3.580123,
+	    3.716781, 3.859216, 4.007534, 4.162331, 4.323576, 4.492161, 4.667662, 4.851307,
+	    5.042610, 5.243014, 5.451968, 5.670863, 5.899705, 6.139489, 6.390185, 6.652917,
+	    6.928086, 7.217090, 7.519928, 7.838219, 8.171938, 8.522969, 8.891260, 9.279881,
+	    9.688045, 10.119102, 10.572501, 11.051556, 11.556418, 12.090436, 12.654223,
+	    13.251527, 13.883104, 14.553287, 15.263214, 16.017940, 16.818595, 17.671903,
+	    18.578727, 19.546903, 20.578249, 21.681627, 22.860278, 24.124288, 25.477707,
+	    26.933125, 28.495711, 30.181390, 31.995905, 33.960470, 36.082846, 38.387716,
+	    40.886418, 43.610990, 46.578788, 50.147936, 53.455926, 57.267209, 61.599113,
+	    66.352598, 71.802973, 77.730276, 84.423808, 91.810503, 100.049024, 109.326777,
+	    120.098481, 132.101967, 145.853388, 162.345569, 180.515516, 202.860331,
+	    228.060573, 258.191113, 295.011358, 340.808398, 394.960306, 460.893211,
+	    541.418517, 640.697078, 760.282825, 912.075885, 1085.116542, 1255.510120,
+	    1439.760424, 1647.500741, 1892.004389, 2181.025082, 2509.599217, 2896.955300,
+	    3321.155762, 3854.455751, 4470.072862, 5222.477543, 6147.415012, 7263.746641,
+	    8802.042074, 10523.214211, 12895.737959, 16091.399147, 20783.582632,
+	    26934.575915, 35981.577432, 52750.962705, 90155.066715, 168918.918919,
+	    288184.438040, 409836.065574, 534759.358289, 684931.506849, 900900.900901,
+	    1190476.190476, 1552795.031056, 2024291.497976, 2673796.791444, 3610108.303249,
+	    4830917.874396, 6896551.724138, 10416666.666667, 16920473.773266,
+	    27700831.024931, 42918454.935622, 59880239.520958, 79365079.365079,
+	    103842159.916926, 135317997.293640, 175746924.428822, 229357798.165138,
+	    294117647.058824, 380228136.882129, 497512437.810945, 657894736.842105,
+	    877192982.456140, 1204819277.108434, 1680672268.907563, 2518891687.657431,
+	    3816793893.129771, 5882352941.176471, 7999999999.999999, 10298661174.047373,
+	    14430014430.014431, 17211703958.691910, 21786492374.727669, 27932960893.854748,
+	    34482758620.689659, 41666666666.666672, 54347826086.956520, 63694267515.923569,
+	    86956521739.130432, 106837606837.606827, 128205128205.128204,
+	    185528756957.328400, 182815356489.945160, 263157894736.842072,
+	    398406374501.992065, 558659217877.094971, 469483568075.117371,
+	    833333333333.333374, 917431192660.550415, 1058201058201.058228
+	};
+
+	_abs_length_table_GPU = new double[240];
+	for (int i = 0; i < 240; i++) {
+	    _abs_length_table_GPU[i] = abs_length_table[i];
+	}
+	
+	int emptypolySize = _emptypoly.size();
+	_emptypolyGPU = new PointDGPU[emptypolySize];
+	for (int i = 0; i < emptypolySize; i++) {
+	    _emptypolyGPU[i].x = _emptypoly[i].x;
+	    _emptypolyGPU[i].y = _emptypoly[i].y;
+	}
+	
+	// FIXME: probably need a corresponding exit somewhere...
+	//#pragma omp target enter data map(to: _deltaGPU[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize])
+	//#pragma omp target enter data map(to: _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize])
+    }
+
     bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
 				 BoundsIGPU& targetBounds, bool* off_edge,
 				 BoundsFGPU* pixelInnerBounds,
@@ -1194,7 +1321,7 @@ namespace galsim {
 
 	// random arrays
 	double* diffStepRandomArray = diffStepRandom.data();
-	double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
+	//double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
 	double* conversionDepthRandomArray = conversionDepthRandom.data();
 
 	// target bounds
@@ -1205,7 +1332,6 @@ namespace galsim {
 	targetBounds.ymax = target.getYMax();
 	
 	// delta image
-	double* deltaImageData = _delta.getData();
 	int deltaXMin = _delta.getXMin();
 	int deltaYMin = _delta.getYMin();
         int deltaXMax = _delta.getXMax();
@@ -1213,102 +1339,34 @@ namespace galsim {
 	int deltaStep = _delta.getStep();
 	int deltaStride = _delta.getStride();
 
-	// pixel inner and outer bounds
-	BoundsFGPU* pixelInnerBounds = new BoundsFGPU[_pixelInnerBounds.size()];
-	BoundsFGPU* pixelOuterBounds = new BoundsFGPU[_pixelOuterBounds.size()];
-	for (int i = 0; i < _pixelInnerBounds.size(); i++) {
-	    pixelInnerBounds[i].xmin = _pixelInnerBounds[i].getXMin();
-	    pixelInnerBounds[i].xmax = _pixelInnerBounds[i].getXMax();
-	    pixelInnerBounds[i].ymin = _pixelInnerBounds[i].getYMin();
-	    pixelInnerBounds[i].ymax = _pixelInnerBounds[i].getYMax();
-	}
-	for (int i = 0; i < _pixelOuterBounds.size(); i++) {
-	    pixelOuterBounds[i].xmin = _pixelOuterBounds[i].getXMin();
-	    pixelOuterBounds[i].xmax = _pixelOuterBounds[i].getXMax();
-	    pixelOuterBounds[i].ymin = _pixelOuterBounds[i].getYMin();
-	    pixelOuterBounds[i].ymax = _pixelOuterBounds[i].getYMax();
-	}
-
-	// horizontal and vertical boundary points
-	PointSGPU* horizontalBoundaryPoints = new PointSGPU[_horizontalBoundaryPoints.size()];
-	PointSGPU* verticalBoundaryPoints = new PointSGPU[_verticalBoundaryPoints.size()];
-	for (int i = 0; i < _horizontalBoundaryPoints.size(); i++) {
-	    horizontalBoundaryPoints[i].x = _horizontalBoundaryPoints[i].x;
-	    horizontalBoundaryPoints[i].y = _horizontalBoundaryPoints[i].y;
-	}
-	for (int i = 0; i < _verticalBoundaryPoints.size(); i++) {
-	    verticalBoundaryPoints[i].x = _verticalBoundaryPoints[i].x;
-	    verticalBoundaryPoints[i].y = _verticalBoundaryPoints[i].y;
-	}
-
-	// emptypoly
-	int emptypolySize = _emptypoly.size();
-	PointDGPU* emptypolyGPU = new PointDGPU[emptypolySize];
-	for (int i = 0; i < emptypolySize; i++) {
-	    emptypolyGPU[i].x = _emptypoly[i].x;
-	    emptypolyGPU[i].y = _emptypoly[i].y;
-	}
-
 	// _testpoly allocated per-thread on stack instead
 
 	// xoff and yoff displacement arrays should be OK as they are
 
-	// first item is for lambda=255.0, last for lambda=1450.0
-	const double abs_length_table[240] = {
-	    0.005376, 0.005181, 0.004950, 0.004673, 0.004444, 0.004292, 0.004237, 0.004348,
-	    0.004854, 0.005556, 0.006211, 0.006803, 0.007299, 0.007752, 0.008130, 0.008475,
-	    0.008850, 0.009174, 0.009434, 0.009615, 0.009709, 0.009804, 0.010776, 0.013755,
-	    0.020243, 0.030769, 0.044843, 0.061728, 0.079365, 0.097087, 0.118273, 0.135230,
-	    0.160779, 0.188879, 0.215008, 0.248565, 0.280576, 0.312637, 0.339916, 0.375516,
-	    0.421177, 0.462770, 0.519427, 0.532396, 0.586786, 0.638651, 0.678058, 0.724795,
-	    0.754888, 0.819471, 0.888573, 0.925497, 1.032652, 1.046835, 1.159474, 1.211754,
-	    1.273999, 1.437339, 1.450579, 1.560939, 1.641228, 1.678331, 1.693222, 1.910329,
-	    1.965988, 2.107881, 2.183263, 2.338634, 2.302821, 2.578183, 2.540070, 2.812702,
-	    2.907146, 2.935392, 3.088994, 3.082139, 3.311807, 3.466084, 3.551767, 3.580123,
-	    3.716781, 3.859216, 4.007534, 4.162331, 4.323576, 4.492161, 4.667662, 4.851307,
-	    5.042610, 5.243014, 5.451968, 5.670863, 5.899705, 6.139489, 6.390185, 6.652917,
-	    6.928086, 7.217090, 7.519928, 7.838219, 8.171938, 8.522969, 8.891260, 9.279881,
-	    9.688045, 10.119102, 10.572501, 11.051556, 11.556418, 12.090436, 12.654223,
-	    13.251527, 13.883104, 14.553287, 15.263214, 16.017940, 16.818595, 17.671903,
-	    18.578727, 19.546903, 20.578249, 21.681627, 22.860278, 24.124288, 25.477707,
-	    26.933125, 28.495711, 30.181390, 31.995905, 33.960470, 36.082846, 38.387716,
-	    40.886418, 43.610990, 46.578788, 50.147936, 53.455926, 57.267209, 61.599113,
-	    66.352598, 71.802973, 77.730276, 84.423808, 91.810503, 100.049024, 109.326777,
-	    120.098481, 132.101967, 145.853388, 162.345569, 180.515516, 202.860331,
-	    228.060573, 258.191113, 295.011358, 340.808398, 394.960306, 460.893211,
-	    541.418517, 640.697078, 760.282825, 912.075885, 1085.116542, 1255.510120,
-	    1439.760424, 1647.500741, 1892.004389, 2181.025082, 2509.599217, 2896.955300,
-	    3321.155762, 3854.455751, 4470.072862, 5222.477543, 6147.415012, 7263.746641,
-	    8802.042074, 10523.214211, 12895.737959, 16091.399147, 20783.582632,
-	    26934.575915, 35981.577432, 52750.962705, 90155.066715, 168918.918919,
-	    288184.438040, 409836.065574, 534759.358289, 684931.506849, 900900.900901,
-	    1190476.190476, 1552795.031056, 2024291.497976, 2673796.791444, 3610108.303249,
-	    4830917.874396, 6896551.724138, 10416666.666667, 16920473.773266,
-	    27700831.024931, 42918454.935622, 59880239.520958, 79365079.365079,
-	    103842159.916926, 135317997.293640, 175746924.428822, 229357798.165138,
-	    294117647.058824, 380228136.882129, 497512437.810945, 657894736.842105,
-	    877192982.456140, 1204819277.108434, 1680672268.907563, 2518891687.657431,
-	    3816793893.129771, 5882352941.176471, 7999999999.999999, 10298661174.047373,
-	    14430014430.014431, 17211703958.691910, 21786492374.727669, 27932960893.854748,
-	    34482758620.689659, 41666666666.666672, 54347826086.956520, 63694267515.923569,
-	    86956521739.130432, 106837606837.606827, 128205128205.128204,
-	    185528756957.328400, 182815356489.945160, 263157894736.842072,
-	    398406374501.992065, 558659217877.094971, 469483568075.117371,
-	    833333333333.333374, 917431192660.550415, 1058201058201.058228
-	};
-
+	int emptypolySize = _emptypoly.size();
+	
         int imageDataSize = (deltaXMax - deltaXMin) * deltaStep + (deltaYMax - deltaYMin) * deltaStride;
-        int pixelInnerBoundsSize = _pixelInnerBounds.size();
-        int hbpSize = _horizontalBoundaryPoints.size();
-        int vbpSize = _verticalBoundaryPoints.size();
+	_deltaGPU = _delta.getData();
+	//#pragma omp target enter data map(to: _deltaGPU[0:imageDataSize])
         
-#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2], photonsY[i1:i2], photonsDXDZ[i1:i2], photonsDYDZ[i1:i2], photonsFlux[i1:i2], photonsWavelength[i1:i2], diffStepRandomArray[i1:i2], pixelNotFoundRandomArray[i1:i2], conversionDepthRandomArray[i1:i2], pixelInnerBounds[0:pixelInnerBoundsSize], pixelOuterBounds[0:pixelInnerBoundsSize], horizontalBoundaryPoints[0:hbpSize], verticalBoundaryPoints[0:vbpSize], emptypolyGPU[0:emptypolySize], abs_length_table[0:240]), map(tofrom: deltaImageData[0:imageDataSize]) reduction(+:addedFlux)
+	//#pragma omp target enter data map(to: _deltaGPU[0:imageDataSize], photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1])
+
+	//#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1], pixelInnerBounds[0:pixelInnerBoundsSize], pixelOuterBounds[0:pixelInnerBoundsSize], horizontalBoundaryPoints[0:hbpSize], verticalBoundaryPoints[0:vbpSize], emptypolyGPU[0:emptypolySize], abs_length_table[0:240]), map(tofrom: deltaImageData[0:imageDataSize]) reduction(+:addedFlux)
+#pragma omp target teams distribute parallel for map(to: _deltaGPU[0:imageDataSize], photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
+	//#pragma omp target teams distribute parallel for reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
 	    double x0 = photonsX[i];
 	    double y0 = photonsY[i];
 
+	    double flux = photonsFlux[i];
+	    int deltaIdx = 0;
+
+#pragma omp atomic
+	    _deltaGPU[deltaIdx] += flux;
+	    addedFlux += flux;
+
 	    // calculateConversionDepth
-	    double dz;
+	    /*double dz;
 	    if (photonsHasAllocatedWavelengths) {
 		double lambda = photonsWavelength[i];
 
@@ -1319,8 +1377,8 @@ namespace galsim {
 		int tableIdx1 = tableIdx + 1;
 		tableIdx = std::min(tableIdx, 239);
 		tableIdx1 = std::min(tableIdx1, 239);
-		double abs_length = (abs_length_table[tableIdx] * (1.0 - alpha)) +
-		    (abs_length_table[tableIdx1] * alpha);
+		double abs_length = (_abs_length_table_GPU[tableIdx] * (1.0 - alpha)) +
+		    (_abs_length_table_GPU[tableIdx1] * alpha);
 
 		dz = -abs_length * std::log(1.0 - conversionDepthRandomArray[i - i1]);
 	    }
@@ -1364,19 +1422,20 @@ namespace galsim {
 	    bool foundPixel;
 
 	    foundPixel = insidePixelGPU(ix, iy, x, y, zconv, targetBounds, &off_edge,
-					pixelInnerBounds, pixelOuterBounds, emptypolyGPU,
-					emptypolySize, verticalBoundaryPoints,
-                                        horizontalBoundaryPoints);
+					_pixelInnerBoundsGPU, _pixelOuterBoundsGPU,
+					_emptypolyGPU, emptypolySize,
+					_verticalBoundaryPointsGPU,
+                                        _horizontalBoundaryPointsGPU);
 
 	    if (!foundPixel && off_edge) continue;
 
 	    int step;
 	    if (!foundPixel) {
 		foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv, targetBounds, step,
-						pixelInnerBounds, pixelOuterBounds,
-						emptypolyGPU, emptypolySize,
-                                                verticalBoundaryPoints,
-                                                horizontalBoundaryPoints);
+						_pixelInnerBoundsGPU, _pixelOuterBoundsGPU,
+						_emptypolyGPU, emptypolySize,
+                                                _verticalBoundaryPointsGPU,
+                                                _horizontalBoundaryPointsGPU);
 		if (!foundPixel) continue; // ignore ones that have rounding errors for now
 	    }
 
@@ -1385,19 +1444,22 @@ namespace galsim {
 
 		int deltaIdx = (ix - deltaXMin) * deltaStep + (iy - deltaYMin) * deltaStride;
 #pragma omp atomic
-		deltaImageData[deltaIdx] += flux;
+		_deltaGPU[deltaIdx] += flux;
 		addedFlux += flux;
-	    }
+		}*/
 	}
+	//#pragma omp target exit data map(from: _deltaGPU[0:imageDataSize])
 
-	// delete GPU arrays
-	delete[] pixelInnerBounds;
-	delete[] pixelOuterBounds;
-	delete[] horizontalBoundaryPoints;
-	delete[] verticalBoundaryPoints;
-	delete[] emptypolyGPU;
-	
         return addedFlux;
+    }
+
+    template <typename T>
+    void Silicon::updateGPU(ImageView<T> target)
+    {
+	// FIXME: do GPU-specific stuff
+        updatePixelDistortions(_delta.view());
+        target += _delta;
+        _delta.setZero();
     }
 
     template <typename T>
@@ -1448,6 +1510,9 @@ namespace galsim {
     template void Silicon::initialize(ImageView<double> target, Position<int> orig_center);
     template void Silicon::initialize(ImageView<float> target, Position<int> orig_center);
 
+    template void Silicon::initializeGPU(ImageView<double> target, Position<int> orig_center);
+    template void Silicon::initializeGPU(ImageView<float> target, Position<int> orig_center);
+
     template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
                                         BaseDeviate rng, ImageView<double> target);
     template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
@@ -1460,6 +1525,9 @@ namespace galsim {
 
     template void Silicon::update(ImageView<double> target);
     template void Silicon::update(ImageView<float> target);
+
+    template void Silicon::updateGPU(ImageView<double> target);
+    template void Silicon::updateGPU(ImageView<float> target);
 
     template void Silicon::fillWithPixelAreas(ImageView<double> target, Position<int> orig_center,
                                               bool);
