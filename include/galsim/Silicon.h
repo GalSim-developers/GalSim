@@ -95,6 +95,9 @@ namespace galsim
         void initialize(ImageView<T> target, Position<int> orig_center);
 
         template <typename T>
+        void initializeGPU(ImageView<T> target, Position<int> orig_center);
+
+        template <typename T>
         double accumulate(const PhotonArray& photons, int i1, int i2,
                           BaseDeviate rng, ImageView<T> target);
 
@@ -104,6 +107,9 @@ namespace galsim
 	
         template <typename T>
         void update(ImageView<T> target);
+
+        template <typename T>
+        void updateGPU(ImageView<T> target);
 
         double pixelArea(int i, int j, int nx, int ny) const;
 
@@ -291,6 +297,15 @@ namespace galsim
         Table _abs_length_table;
         bool _transpose;
         ImageAlloc<double> _delta;
+
+	// GPU data
+	double* _deltaGPU;
+	BoundsFGPU* _pixelInnerBoundsGPU;
+	BoundsFGPU* _pixelOuterBoundsGPU;
+	PointSGPU* _horizontalBoundaryPointsGPU;
+	PointSGPU* _verticalBoundaryPointsGPU;
+	double* _abs_length_table_GPU;
+	PointDGPU* _emptypolyGPU;
     };
 
     PUBLIC_API int SetOMPThreads(int num_threads);
