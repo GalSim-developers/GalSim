@@ -281,6 +281,8 @@ namespace galsim
 
         void updatePixelBounds(int nx, int ny, size_t k);
 
+        void updatePixelBoundsGPU(int nx, int ny, size_t k);
+
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
 
@@ -304,6 +306,8 @@ namespace galsim
 	BoundsFGPU* _pixelOuterBoundsGPU;
 	PointSGPU* _horizontalBoundaryPointsGPU;
 	PointSGPU* _verticalBoundaryPointsGPU;
+        PointSGPU* _horizontalDistortionsGPU;
+        PointSGPU* _verticalDistortionsGPU;
 	double* _abs_length_table_GPU;
 	PointDGPU* _emptypolyGPU;
     };
