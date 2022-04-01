@@ -1479,7 +1479,7 @@ namespace galsim {
             obxmin = std::min(obxmin, px);
             obxmax = std::max(obxmax, px);
             obymin = std::min(obymin, py);
-            obymax = std::min(obymax, py);
+            obymax = std::max(obymax, py);
         }
         // bottom row including corners
         for (; n <= cornerIndexBottomRight(); n++) {
@@ -1490,7 +1490,7 @@ namespace galsim {
             obxmin = std::min(obxmin, px);
             obxmax = std::max(obxmax, px);
             obymin = std::min(obymin, py);
-            obymax = std::min(obymax, py);
+            obymax = std::max(obymax, py);
         }
         // RHS
         for (; n < cornerIndexTopRight(); n++) {
@@ -1500,7 +1500,7 @@ namespace galsim {
             obxmin = std::min(obxmin, px);
             obxmax = std::max(obxmax, px);
             obymin = std::min(obymin, py);
-            obymax = std::min(obymax, py);
+            obymax = std::max(obymax, py);
         }            
         // top row including corners
         for (; n <= cornerIndexTopLeft(); n++) {
@@ -1511,7 +1511,7 @@ namespace galsim {
             obxmin = std::min(obxmin, px);
             obxmax = std::max(obxmax, px);
             obymin = std::min(obymin, py);
-            obymax = std::min(obymax, py);
+            obymax = std::max(obymax, py);
         }
         // LHS upper half
         for (; n < _nv; n++) {
@@ -1521,7 +1521,7 @@ namespace galsim {
             obxmin = std::min(obxmin, px);
             obxmax = std::max(obxmax, px);
             obymin = std::min(obymin, py);
-            obymax = std::min(obymax, py);
+            obymax = std::max(obymax, py);
         }
 
         // compute center
