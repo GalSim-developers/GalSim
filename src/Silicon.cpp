@@ -1022,6 +1022,9 @@ namespace galsim {
 	_deltaGPU = _delta.getData();
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
 
+        // FIXME: won't work for single precision images yet
+        _targetGPU = (double*)target.getData();
+        
 	// FIXME: this needs deleted eventually
 	_pixelInnerBoundsGPU = new BoundsFGPU[_pixelInnerBounds.size()];
 	_pixelOuterBoundsGPU = new BoundsFGPU[_pixelOuterBounds.size()];
@@ -1121,9 +1124,13 @@ namespace galsim {
 	    _emptypolyGPU[i].y = _emptypoly[i].y;
 	}
 
+        int nxny = nx * ny;
+        _changedGPU = new bool[nxny];
+        for (int i = 0; i < nxny; i++) _changedGPU[i] = false;
+        
         // map all data to the GPU
 	// FIXME: probably need a corresponding exit somewhere...
-#pragma omp target enter data map(to: this[:1], _deltaGPU[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize])
+#pragma omp target enter data map(to: this[:1], _deltaGPU[0:imageDataSize], _targetGPU[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
     }
 
     bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
@@ -1608,38 +1615,43 @@ namespace galsim {
         const int stride = target.getStride();
 
         int nxny = nx * ny;
-        /*std::vector<bool> changed(nxny, false);
-          bool* changedGPU = changed.data();*/
-        bool* changedGPU = new bool[nxny];
-        for (int i = 0; i < nxny; i++) changedGPU[i] = false;
         
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
 
         // Loop through the boundary arrays and update any points affected by nearby pixels
         // Horizontal array first
-        const T* ptr = target.getData();
-
         // map image data and changed array throughout all GPU loops
-#pragma omp target enter data map(to: changedGPU[0:nxny], ptr[0:imageDataSize])
-        
+
 #pragma omp target teams distribute parallel for
-        for (int p=0; p < (ny * nx); p++) {
+        for (int p=0; p < nxny; p++) {
             // Calculate which pixel we are currently below
             int x = p % nx;
             int y = p / nx;
 
             // Loop over rectangle of pixels that could affect this row of points
-            int polyi1 = std::max(x - _qDist, 0);
-            int polyi2 = std::min(x + _qDist, nx - 1);
+            // std::min and std::max are causing this loop to crash, even though
+            // the same functions run fine in the accumulate loop.
+            int polyi1 = x - _qDist;
+            if (polyi1 < 0) polyi1 = 0;
+            int polyi2 = x + _qDist;
+            if (polyi2 > (nx - 1)) polyi2 = nx - 1;
+            int polyj1 = y - (_qDist + 1);
+            if (polyj1 < 0) polyj1 = 0;
+            int polyj2 = y + _qDist;
+            if (polyj2 > (ny - 1)) polyj2 = ny - 1;
+
+            //int polyi1 = std::max(x - _qDist, 0);
+            //int polyi2 = std::min(x + _qDist, nx - 1);
             // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
-            int polyj1 = std::max(y - (_qDist + 1), 0);
-            int polyj2 = std::min(y + _qDist, ny - 1);
+            //int polyj1 = std::max(y - (_qDist + 1), 0);
+            //int polyj2 = std::min(y + _qDist, ny - 1);
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
-                    double charge = ptr[(j * stride) + (i * step)];
+                    double charge = _targetGPU[(j * stride) + (i * step)];
+                    //double charge = 0.1;
 
                     if (charge != 0.0) {
                         change = true;
@@ -1660,11 +1672,11 @@ namespace galsim {
                     }
                 }
             }
-
+            
             // update changed array
             if (change) {
-                if (y < ny) changedGPU[(x * ny) + y] = true; // pixel above
-                if (y > 0)  changedGPU[(x * ny) + (y - 1)] = true; // pixel below
+                if (y < ny) _changedGPU[(x * ny) + y] = true; // pixel above
+                if (y > 0)  _changedGPU[(x * ny) + (y - 1)] = true; // pixel below
             }
         }
 
@@ -1676,16 +1688,24 @@ namespace galsim {
             int y = (ny - 1) - (p % ny); // remember vertical points run top-to-bottom
 
             // Loop over rectangle of pixels that could affect this column of points
-            int polyi1 = std::max(x - (_qDist + 1), 0);
-            int polyi2 = std::min(x + _qDist, nx - 1);
-            int polyj1 = std::max(y - _qDist, 0);
-            int polyj2 = std::min(y + _qDist, ny - 1);
+            int polyi1 = x - (_qDist + 1);
+            if (polyi1 < 0) polyi1 = 0;
+            int polyi2 = x + _qDist;
+            if (polyi2 > (nx - 1)) polyi2 = nx - 1;
+            int polyj1 = y - _qDist;
+            if (polyj1 < 0) polyj1 = 0;
+            int polyj2 = y + _qDist;
+            if (polyj2 > (ny - 1)) polyj2 = ny - 1;
+            //int polyi1 = std::max(x - (_qDist + 1), 0);
+            //int polyi2 = std::min(x + _qDist, nx - 1);
+            //int polyj1 = std::max(y - _qDist, 0);
+            //int polyj2 = std::min(y + _qDist, ny - 1);
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
-                    double charge = ptr[(j * stride) + (i * step)];
+                    double charge = _targetGPU[(j * stride) + (i * step)];
 
                     if (charge != 0.0) {
                         change = true;
@@ -1709,19 +1729,18 @@ namespace galsim {
 
             // update changed array
             if (change) {
-                if (x < nx) changedGPU[(x * ny) + y] = true;
-                if (x > 0)  changedGPU[((x - 1) * ny) + y] = true;
+                if (x < nx) _changedGPU[(x * ny) + y] = true;
+                if (x > 0)  _changedGPU[((x - 1) * ny) + y] = true;
             }
         }
 
 #pragma omp target teams distribute parallel for
         for (size_t k=0; k<nxny; ++k) {
-            if (changedGPU[k]) {
+            if (_changedGPU[k]) {
                 updatePixelBoundsGPU(nx, ny, k);
+                _changedGPU[k] = false;
             }
         }
-
-        delete[] changedGPU;
 
         // update target from delta
 #pragma omp target update from(_deltaGPU[0:imageDataSize])

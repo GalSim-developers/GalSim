@@ -310,6 +310,8 @@ namespace galsim
         PointSGPU* _verticalDistortionsGPU;
 	double* _abs_length_table_GPU;
 	PointDGPU* _emptypolyGPU;
+        double* _targetGPU;
+        bool* _changedGPU;
     };
 
     PUBLIC_API int SetOMPThreads(int num_threads);
