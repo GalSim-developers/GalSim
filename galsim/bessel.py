@@ -28,4 +28,4 @@ yn = yv
 # These aren't Bessel related, but they are similarly useful math functions that we have
 # implemented in C++.  Exposing them primarily helps for testing that they give essentially
 # equivalent answers as scipy.special.
-from ._galsim import gammainc, sinc, si
+from ._galsim import gammainc, sinc, si, ci

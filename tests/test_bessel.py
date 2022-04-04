@@ -434,7 +434,7 @@ def test_sinc():
 @timer
 def test_si():
     """Test the bessel.si function"""
-    x_list = [ 0, 1, -1, 1.99, 2.0, 2.01, 0.2, 3.3, 15.9, 18, 19, 20, -7.7, 1.e-12, 500. ]
+    x_list = [ 0, 1, -1, 2, 3.99, 4.0, 4.01, 0.2, 3.3, 15.9, 18, 19, 20, -7.7, 1.e-12, 500. ]
     vals1 = [ galsim.bessel.si(x) for x in x_list ]
     print('x = ',x_list)
     print('vals1 = ',vals1)
@@ -448,9 +448,10 @@ def test_si():
     vals2 = [   0.0,
                 0.9460830703671831,
                 -0.9460830703671831,
-                1.600844723087052,
                 1.605412976802695,
-                1.6099376909382972,
+                1.7600892984314866,
+                1.758203138949053,
+                1.7563053683733343,
                 0.19955608852623385,
                 1.8480807827952113,
                 1.6328040281824159,
@@ -463,6 +464,41 @@ def test_si():
             ]
     np.testing.assert_allclose(
         vals1, vals2, rtol=1.e-10, err_msg="bessel.si disagrees with reference values")
+
+
+@timer
+def test_ci():
+    """Test the bessel.ci function"""
+    x_list = [ 0, 1, -1, 2, 3.99, 4.0, 4.01, 0.2, 3.3, 15.9, 18, 19, 20, -7.7, 1.e-12, 500. ]
+    vals1 = [ galsim.bessel.ci(x) for x in x_list ]
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
+
+    vals2 = [ scipy.special.sici(x)[1] for x in x_list ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.ci disagrees with scipy.special.sici")
+
+    # These values are what scipy returns.
+    vals2 = [   -np.inf,
+                0.33740392290096816,
+                0.33740392290096816,
+                0.422980828774865,
+                -0.13933609432530814,
+                -0.1409816978869305,
+                -0.14260429630144628,
+                -1.0422055956727818,
+                0.02467828460795851,
+                -0.008115782282273786,
+                -0.04347510299950101,
+                0.0051503710084261295,
+                0.044419820845353314,
+                0.1222458319118463,
+                -27.053805451027014,
+                -0.0009320008144042904
+            ]
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.ci disagrees with reference values")
 
 
 

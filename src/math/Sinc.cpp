@@ -32,6 +32,70 @@ namespace math {
         else return std::sin(M_PI*x)/(M_PI*x);
     }
 
+    double f_pade(double x)
+    {
+        // I used Maple to calculate a Chebyshev-Pade approximation of 1/sqrt(y) f(1/sqrt(y))
+        // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to
+        // better than 1.e-16 for x > 4.
+        double y = 1./(x*x);
+        double f =
+            (1. +
+             y*(7.44437068161936700618e2 +
+                y*(1.96396372895146869801e5 +
+                   y*(2.37750310125431834034e7 +
+                      y*(1.43073403821274636888e9 +
+                         y*(4.33736238870432522765e10 +
+                            y*(6.40533830574022022911e11 +
+                               y*(4.20968180571076940208e12 +
+                                  y*(1.00795182980368574617e13 +
+                                     y*(4.94816688199951963482e12 +
+                                        y*(-4.94701168645415959931e11)))))))))))
+            / (x*(1. +
+                  y*(7.46437068161927678031e2 +
+                     y*(1.97865247031583951450e5 +
+                        y*(2.41535670165126845144e7 +
+                           y*(1.47478952192985464958e9 +
+                              y*(4.58595115847765779830e10 +
+                                 y*(7.08501308149515401563e11 +
+                                    y*(5.06084464593475076774e12 +
+                                       y*(1.43468549171581016479e13 +
+                                          y*(1.11535493509914254097e13)))))))))));
+        return f;
+    }
+
+    double g_pade(double x)
+    {
+
+        // Similarly, a Chebyshev-Pade approximation of 1/y g(1/sqrt(y)) from 0..1/4^2
+        // leads to the following formula for g(x), which is also accurate to better than
+        // 1.e-16 for x > 4.
+        double y = 1./(x*x);
+        double g =
+            y*(1. +
+               y*(8.1359520115168615e2 +
+                  y*(2.35239181626478200e5 +
+                     y*(3.12557570795778731e7 +
+                        y*(2.06297595146763354e9 +
+                           y*(6.83052205423625007e10 +
+                              y*(1.09049528450362786e12 +
+                                 y*(7.57664583257834349e12 +
+                                    y*(1.81004487464664575e13 +
+                                       y*(6.43291613143049485e12 +
+                                          y*(-1.36517137670871689e12)))))))))))
+            / (1. +
+               y*(8.19595201151451564e2 +
+                  y*(2.40036752835578777e5 +
+                     y*(3.26026661647090822e7 +
+                        y*(2.23355543278099360e9 +
+                           y*(7.87465017341829930e10 +
+                              y*(1.39866710696414565e12 +
+                                 y*(1.17164723371736605e13 +
+                                    y*(4.01839087307656620e13 +
+                                       y*(3.99653257887490811e13))))))))));
+        return g;
+    }
+
+
     // Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
     // does not have pi multiplying t.
     double Si(double x)
@@ -82,58 +146,8 @@ namespace math {
             // (By asymptotic, I mean that f and g approach 1/x and 1/x^2 respectively as x -> inf.
             //  The formula as given is exact.)
             //
-            // I used Maple to calculate a Chebyshev-Pade approximation of 1/sqrt(y) f(1/sqrt(y))
-            // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to
-            // better than 1.e-16 for x > 4.
-            double y=1./x2;
-            double f =
-                (1. +
-                 y*(7.44437068161936700618e2 +
-                    y*(1.96396372895146869801e5 +
-                       y*(2.37750310125431834034e7 +
-                          y*(1.43073403821274636888e9 +
-                             y*(4.33736238870432522765e10 +
-                                y*(6.40533830574022022911e11 +
-                                   y*(4.20968180571076940208e12 +
-                                      y*(1.00795182980368574617e13 +
-                                         y*(4.94816688199951963482e12 +
-                                            y*(-4.94701168645415959931e11)))))))))))
-                / (x*(1. +
-                      y*(7.46437068161927678031e2 +
-                         y*(1.97865247031583951450e5 +
-                            y*(2.41535670165126845144e7 +
-                               y*(1.47478952192985464958e9 +
-                                  y*(4.58595115847765779830e10 +
-                                     y*(7.08501308149515401563e11 +
-                                        y*(5.06084464593475076774e12 +
-                                           y*(1.43468549171581016479e13 +
-                                              y*(1.11535493509914254097e13)))))))))));
-
-            // Similarly, a Chebyshev-Pade approximation of 1/y g(1/sqrt(y)) from 0..1/4^2
-            // leads to the following formula for g(x), which is also accurate to better than
-            // 1.e-16 for x > 4.
-            double g =
-                y*(1. +
-                   y*(8.1359520115168615e2 +
-                      y*(2.35239181626478200e5 +
-                         y*(3.12557570795778731e7 +
-                            y*(2.06297595146763354e9 +
-                               y*(6.83052205423625007e10 +
-                                  y*(1.09049528450362786e12 +
-                                     y*(7.57664583257834349e12 +
-                                        y*(1.81004487464664575e13 +
-                                           y*(6.43291613143049485e12 +
-                                              y*(-1.36517137670871689e12)))))))))))
-                / (1. +
-                   y*(8.19595201151451564e2 +
-                      y*(2.40036752835578777e5 +
-                         y*(3.26026661647090822e7 +
-                            y*(2.23355543278099360e9 +
-                               y*(7.87465017341829930e10 +
-                                  y*(1.39866710696414565e12 +
-                                     y*(1.17164723371736605e13 +
-                                        y*(4.01839087307656620e13 +
-                                           y*(3.99653257887490811e13))))))))));
+            double f = f_pade(x);
+            double g = g_pade(x);
 
             double sinx,cosx;
             math::sincos(x, sinx, cosx);
@@ -165,6 +179,48 @@ namespace math {
         // Si(x), so hopefully this will help people in the future to not have to reproduce
         // my work.  -MJ
 #endif
+    }
+
+
+    // We don't use Ci for anything, but just in case it's useful for someone,
+    // here is that function using the same technique as above.
+    double Ci(double x)
+    {
+        double x2 = x*x;
+        if (x2 > 16.) {
+            // For |x| > 4, we use the asymptotic formula:
+            //
+            // Ci(x) = f(x) sin(x) - g(x) cos(x)
+            //
+            // where f(x) and g(x) are as above.
+            double f = f_pade(x);
+            double g = g_pade(x);
+
+            double sinx,cosx;
+            math::sincos(x, sinx, cosx);
+            return f*sinx - g*cosx;
+        } else {
+            // Here I used Maple to calculate the Pade approximation for Ci(x), which is accurate
+            // to better than 1.e-16 for x < 4:
+            double euler_gamma = 0.5772156649015328606;
+            return
+                euler_gamma + std::log(std::abs(x)) +
+                    x2*(-0.25 +
+                        x2*(7.51851524438898291e-3 +
+                            x2*(-1.27528342240267686e-4 +
+                                x2*(1.05297363846239184e-6 +
+                                    x2*(-4.68889508144848019e-9 +
+                                        x2*(1.06480802891189243e-11 +
+                                            x2*(-9.93728488857585407e-15)))))))
+                    / (1. +
+                       x2*(1.1592605689110735e-2 +
+                           x2*(6.72126800814254432e-5 +
+                               x2*(2.55533277086129636e-7 +
+                                   x2*(6.97071295760958946e-10 +
+                                       x2*(1.38536352772778619e-12 +
+                                           x2*(1.89106054713059759e-15 +
+                                               x2*(1.39759616731376855e-18))))))));
+        }
     }
 
 }
