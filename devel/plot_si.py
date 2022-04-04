@@ -39,5 +39,4 @@ ax[1,1].set_xlabel('x')
 ax[1,1].set_ylabel('Ci_galsim(x) - Ci_scipy(x)')
 ax[1,1].set_ylim(-1.e-15, 1.e-15)
 
-fig.savefig('cisi.pdf')
 fig.savefig('cisi.png')
