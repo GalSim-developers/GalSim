@@ -19,6 +19,8 @@
 
 #include "PyBind11Helper.h"
 #include "math/Bessel.h"
+#include "math/Gamma.h"
+#include "math/Sinc.h"
 
 namespace galsim {
 namespace math {
@@ -33,6 +35,11 @@ namespace math {
         _galsim.def("yv", &cyl_bessel_y);
         _galsim.def("iv", &cyl_bessel_i);
         _galsim.def("kv", &cyl_bessel_k);
+
+        // Include a few other (non-Bessel) math items of similar utility.
+        _galsim.def("gammainc", &gamma_p);
+        _galsim.def("sinc", &sinc);
+        _galsim.def("si", &Si);
     }
 
 } // namespace math

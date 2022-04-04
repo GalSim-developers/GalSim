@@ -374,6 +374,97 @@ def test_jv_root():
     with assert_raises(RuntimeError):
         galsim.bessel.jv_root(0.3,-1)
 
+@timer
+def test_gammainc():
+    """Test the bessel.gammainc function"""
+    a_list = [ 3.3, 4, 1.9, 0, 0.2, 4.7, 39.8, 2.3 ]
+    x_list = [ 1, 2.01, 0.2, 3.3, 15.9, 1.e-12, 3.4, 19.1 ]
+    vals1 = [ galsim.bessel.gammainc(a,x) for a,x in zip(a_list,x_list) ]
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
+
+    vals2 = [ scipy.special.gammainc(a,x) for a,x in zip(a_list,x_list) ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.gammainc disagrees with scipy.special.gammainc")
+
+    # These values are what scipy returns.
+    vals2 = [   0.05336162361853338,
+                0.14468550606481548,
+                0.022580514695946612,
+                1.0,
+                0.9999999971717825,
+                5.489041152199198e-59,
+                1.3292187146528721e-28,
+                0.9999997850330204
+            ]
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.gammainc disagrees with reference values")
+
+@timer
+def test_sinc():
+    """Test the bessel.sinc function"""
+    x_list = [ 0, 1, -1, 2.01, 0.2, 3.3, 15.9, -7.7, 1.e-12, 500., 3.4, 19.1 ]
+    vals1 = [ galsim.bessel.sinc(x) for x in x_list ]
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
+
+    vals2 = [ scipy.special.sinc(x) for x in x_list ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.sinc disagrees with scipy.special.sinc")
+
+    # These values are what scipy returns.
+    vals2 = [   1.0,
+                3.8981718325193755e-17,
+                3.8981718325193755e-17,
+                0.004974306043335856,
+                0.935489283788639,
+                -0.07803579012128542,
+                -0.006186362535116209,
+                -0.03344391005197945,
+                1.0,
+                -1.0231009598277845e-16,
+                -0.0890384386636067,
+                -0.005149903890489398
+            ]
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.sinc disagrees with reference values")
+
+@timer
+def test_si():
+    """Test the bessel.si function"""
+    x_list = [ 0, 1, -1, 1.99, 2.0, 2.01, 0.2, 3.3, 15.9, 18, 19, 20, -7.7, 1.e-12, 500. ]
+    vals1 = [ galsim.bessel.si(x) for x in x_list ]
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
+
+    vals2 = [ scipy.special.sici(x)[0] for x in x_list ]
+    print('vals2 = ',vals2)
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.si disagrees with scipy.special.sici")
+
+    # These values are what scipy returns.
+    vals2 = [   0.0,
+                0.9460830703671831,
+                -0.9460830703671831,
+                1.600844723087052,
+                1.605412976802695,
+                1.6099376909382972,
+                0.19955608852623385,
+                1.8480807827952113,
+                1.6328040281824159,
+                1.5366080968611855,
+                1.518630031769364,
+                1.5482417010434397,
+                -1.5361092381286596,
+                1e-12,
+                1.5725658822431687
+            ]
+    np.testing.assert_allclose(
+        vals1, vals2, rtol=1.e-10, err_msg="bessel.si disagrees with reference values")
+
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
