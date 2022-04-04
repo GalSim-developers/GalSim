@@ -40,6 +40,7 @@ namespace math {
         _galsim.def("gammainc", &gamma_p);
         _galsim.def("sinc", &sinc);
         _galsim.def("si", &Si);
+        _galsim.def("ci", &Ci);
     }
 
 } // namespace math

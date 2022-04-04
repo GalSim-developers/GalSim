@@ -36,6 +36,10 @@ namespace math {
     // does not have pi multiplying t.
     PUBLIC_API double Si(double x);
 
+    // We don't actually use this anywhere, but the formula is in Rowe et al, so expose it
+    // here for testing purposes.
+    PUBLIC_API double Ci(double x);
+
 }
 }
 
