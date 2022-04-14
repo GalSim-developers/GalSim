@@ -340,6 +340,15 @@ class PhotonArray:
                 self.dxdz = rhs.dxdz
                 self.dydz = rhs.dydz
 
+        if rhs.hasAllocatedWavelengths():
+            if self.hasAllocatedWavelengths():
+                if self._wave is not rhs._wave:
+                    raise GalSimIncompatibleValuesError(
+                        "PhotonArray.convolve with doubly assigned wavelengths"
+                    )
+            else:
+                self.wavelength = rhs.wavelength
+
         rng = BaseDeviate(rng)
         self._pa.convolve(rhs._pa, rng._rng)
 

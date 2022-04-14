@@ -304,7 +304,7 @@ def test_convolve():
     pa4 = galsim.PhotonArray(50, pa1.x[:50], pa1.y[:50], pa1.flux[:50])
     assert_raises(galsim.GalSimError, pa1.convolve, pa4)
 
-    # Check propagation of dxdz, dydz
+    # Check propagation of dxdz, dydz, wavelength
     pa1 = obj.shoot(nphotons, rng)
     pa2 = obj.shoot(nphotons, rng)
     dxdz = np.linspace(-0.1, 0.1, nphotons)
@@ -316,6 +316,21 @@ def test_convolve():
     np.testing.assert_array_equal(pa2.dxdz, dxdz)
 
     # both have angles now...
+    with assert_raises(galsim.GalSimIncompatibleValuesError):
+        pa1.convolve(pa2)
+
+    # repeat for wavelengths
+    pa1 = obj.shoot(nphotons, rng)
+    pa2 = obj.shoot(nphotons, rng)
+    wavelength = np.linspace(500, 900, nphotons)
+    pa1.wavelength = wavelength
+    pa1.convolve(pa2)
+    np.testing.assert_array_equal(pa1.wavelength, wavelength)
+    assert not pa2.hasAllocatedWavelengths()
+    pa2.convolve(pa1)
+    np.testing.assert_array_equal(pa2.wavelength, wavelength)
+
+    # both have wavelengths now...
     with assert_raises(galsim.GalSimIncompatibleValuesError):
         pa1.convolve(pa2)
 
