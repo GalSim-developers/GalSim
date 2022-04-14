@@ -331,6 +331,15 @@ class PhotonArray:
         if rhs.size() != self.size():
             raise GalSimIncompatibleValuesError("PhotonArray.convolve with unequal size arrays",
                                                 self_pa=self, rhs=rhs)
+        if rhs.hasAllocatedAngles():
+            if self.hasAllocatedAngles():
+                raise GalSimIncompatibleValuesError(
+                    "PhotonArray.convolve with doubly assigned angles"
+                )
+            else:
+                self.dxdz = rhs.dxdz
+                self.dydz = rhs.dydz
+
         rng = BaseDeviate(rng)
         self._pa.convolve(rhs._pa, rng._rng)
 

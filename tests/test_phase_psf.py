@@ -1451,6 +1451,30 @@ def test_user_screen():
     all_obj_diff([uscreen, uscreen2, uscreen3])
 
 
+@timer
+def test_uv_persistence():
+    # Check that reasonable pupil samples are used and persisted when phase screen shooting.
+    u = galsim.UniformDeviate(5185)
+    for _ in range(3):
+        diam = u()+1
+        obscuration = u()*0.5
+        nstruts = int(u()*4)
+        strut_thick = u()*0.01
+        strut_angle = u()*2*np.pi*galsim.radians
+        aper = galsim.Aperture(
+            diam=diam, obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
+            strut_angle=strut_angle, pupil_plane_scale=diam/20
+        )
+
+        allowed = set(zip(aper.u_illuminated, aper.v_illuminated))
+
+        psf = galsim.OpticalPSF(lam=500, diam=diam, aper=aper, geometric_shooting=True)
+        photons = psf.drawImage(save_photons=True, method='phot', n_photons=1000000).photons
+        observed = set(zip(photons.dxdz, photons.dydz))
+
+        assert observed.issubset(allowed)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
