@@ -88,6 +88,7 @@ def test_photon_array():
     assert len(photon_array.flux) == nphotons
     assert not photon_array.hasAllocatedWavelengths()
     assert not photon_array.hasAllocatedAngles()
+    assert not photon_array.hasAllocatedPupil()
 
     # Check arithmetic ops
     photon_array.x *= 5
@@ -124,6 +125,7 @@ def test_photon_array():
     photon_array.wavelength = 500.
     assert photon_array.hasAllocatedWavelengths()
     assert not photon_array.hasAllocatedAngles()
+    assert not photon_array.hasAllocatedPupil()
     np.testing.assert_array_equal(photon_array.wavelength, 500)
 
     photon_array.dxdz = 0.23
@@ -131,9 +133,21 @@ def test_photon_array():
     photon_array.wavelength = 912.
     assert photon_array.hasAllocatedWavelengths()
     assert photon_array.hasAllocatedAngles()
+    assert not photon_array.hasAllocatedPupil()
     np.testing.assert_array_equal(photon_array.dxdz, 0.23)
     np.testing.assert_array_equal(photon_array.dydz, 0.88)
     np.testing.assert_array_equal(photon_array.wavelength, 912)
+
+    # Add pupil coords
+    photon_array.pupil_u = 6.0
+    assert photon_array.hasAllocatedWavelengths()
+    assert photon_array.hasAllocatedAngles()
+    assert photon_array.hasAllocatedPupil()
+    np.testing.assert_array_equal(photon_array.dxdz, 0.23)
+    np.testing.assert_array_equal(photon_array.dydz, 0.88)
+    np.testing.assert_array_equal(photon_array.wavelength, 912)
+    np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
+    np.testing.assert_array_equal(photon_array.pupil_v, 0.0)
 
     # Check toggling is_corr
     assert not photon_array.isCorrelated()
@@ -172,12 +186,16 @@ def test_photon_array():
     pa1.dxdz = photon_array.dxdz[:50]
     pa1.dydz = photon_array.dydz[:50]
     pa1.wavelength = photon_array.wavelength[:50]
+    pa1.pupil_u = photon_array.pupil_u[:50]
+    pa1.pupil_v = photon_array.pupil_v[:50]
     np.testing.assert_almost_equal(pa1.x, photon_array.x[:50])
     np.testing.assert_almost_equal(pa1.y, photon_array.y[:50])
     np.testing.assert_almost_equal(pa1.flux, photon_array.flux[:50])
     np.testing.assert_almost_equal(pa1.dxdz, photon_array.dxdz[:50])
     np.testing.assert_almost_equal(pa1.dydz, photon_array.dydz[:50])
     np.testing.assert_almost_equal(pa1.wavelength, photon_array.wavelength[:50])
+    np.testing.assert_almost_equal(pa1.pupil_u, photon_array.pupil_u[:50])
+    np.testing.assert_almost_equal(pa1.pupil_v, photon_array.pupil_v[:50])
 
     # Check assignAt
     pa2 = galsim.PhotonArray(100)
@@ -189,12 +207,16 @@ def test_photon_array():
     np.testing.assert_almost_equal(pa2.dxdz[:50], pa1.dxdz)
     np.testing.assert_almost_equal(pa2.dydz[:50], pa1.dydz)
     np.testing.assert_almost_equal(pa2.wavelength[:50], pa1.wavelength)
+    np.testing.assert_almost_equal(pa2.pupil_u[:50], pa1.pupil_u)
+    np.testing.assert_almost_equal(pa2.pupil_v[:50], pa1.pupil_v)
     np.testing.assert_almost_equal(pa2.x[50:], pa1.x)
     np.testing.assert_almost_equal(pa2.y[50:], pa1.y)
     np.testing.assert_almost_equal(pa2.flux[50:], pa1.flux)
     np.testing.assert_almost_equal(pa2.dxdz[50:], pa1.dxdz)
     np.testing.assert_almost_equal(pa2.dydz[50:], pa1.dydz)
     np.testing.assert_almost_equal(pa2.wavelength[50:], pa1.wavelength)
+    np.testing.assert_almost_equal(pa2.pupil_u[50:], pa1.pupil_u)
+    np.testing.assert_almost_equal(pa2.pupil_v[50:], pa1.pupil_v)
 
     # Error if it doesn't fit.
     assert_raises(ValueError, pa2.assignAt, 90, pa1)
@@ -304,35 +326,24 @@ def test_convolve():
     pa4 = galsim.PhotonArray(50, pa1.x[:50], pa1.y[:50], pa1.flux[:50])
     assert_raises(galsim.GalSimError, pa1.convolve, pa4)
 
-    # Check propagation of dxdz, dydz, wavelength
-    pa1 = obj.shoot(nphotons, rng)
-    pa2 = obj.shoot(nphotons, rng)
-    dxdz = np.linspace(-0.1, 0.1, nphotons)
-    pa1.dxdz = dxdz
-    pa1.convolve(pa2)
-    np.testing.assert_array_equal(pa1.dxdz, dxdz)
-    assert not pa2.hasAllocatedAngles()
-    pa2.convolve(pa1)
-    np.testing.assert_array_equal(pa2.dxdz, dxdz)
-
-    # both have angles now...
-    with assert_raises(galsim.GalSimIncompatibleValuesError):
+    # Check propagation of dxdz, dydz, wavelength, pupil_u, pupil_v
+    for attr, checkFn in zip(
+        ['dxdz', 'wavelength', 'pupil_u'],
+        ['hasAllocatedAngles', 'hasAllocatedWavelengths', 'hasAllocatedPupil']
+    ):
+        pa1 = obj.shoot(nphotons, rng)
+        pa2 = obj.shoot(nphotons, rng)
+        data = np.linspace(-0.1, 0.1, nphotons)
+        setattr(pa1, attr, data)
         pa1.convolve(pa2)
+        np.testing.assert_array_equal(getattr(pa1, attr), data)
+        assert not getattr(pa2, checkFn)()
+        pa2.convolve(pa1)
+        np.testing.assert_array_equal(getattr(pa2, attr), data)
 
-    # repeat for wavelengths
-    pa1 = obj.shoot(nphotons, rng)
-    pa2 = obj.shoot(nphotons, rng)
-    wavelength = np.linspace(500, 900, nphotons)
-    pa1.wavelength = wavelength
-    pa1.convolve(pa2)
-    np.testing.assert_array_equal(pa1.wavelength, wavelength)
-    assert not pa2.hasAllocatedWavelengths()
-    pa2.convolve(pa1)
-    np.testing.assert_array_equal(pa2.wavelength, wavelength)
-
-    # both have wavelengths now...
-    with assert_raises(galsim.GalSimIncompatibleValuesError):
-        pa1.convolve(pa2)
+        # both have data now...
+        with assert_raises(galsim.GalSimIncompatibleValuesError):
+            pa1.convolve(pa2)
 
 
 @timer
@@ -513,6 +524,7 @@ def test_photon_io():
     assert photons1.size() == nphotons
     assert not photons1.hasAllocatedWavelengths()
     assert not photons1.hasAllocatedAngles()
+    assert not photons1.hasAllocatedPupil()
 
     np.testing.assert_array_equal(photons1.x, photons.x)
     np.testing.assert_array_equal(photons1.y, photons.y)
@@ -528,6 +540,10 @@ def test_photon_io():
     for op in ops:
         op.applyTo(photons, rng=rng)
 
+    # Directly inject some pupil coordinates
+    photons.pupil_u = np.linspace(0, 1, nphotons)
+    photons.pupil_v = np.linspace(1, 2, nphotons)
+
     file_name = 'output/photons2.dat'
     photons.write(file_name)
 
@@ -536,6 +552,7 @@ def test_photon_io():
     assert photons2.size() == nphotons
     assert photons2.hasAllocatedWavelengths()
     assert photons2.hasAllocatedAngles()
+    assert photons2.hasAllocatedPupil()
 
     np.testing.assert_array_equal(photons2.x, photons.x)
     np.testing.assert_array_equal(photons2.y, photons.y)
@@ -543,6 +560,8 @@ def test_photon_io():
     np.testing.assert_array_equal(photons2.dxdz, photons.dxdz)
     np.testing.assert_array_equal(photons2.dydz, photons.dydz)
     np.testing.assert_array_equal(photons2.wavelength, photons.wavelength)
+    np.testing.assert_array_equal(photons.pupil_u, photons.pupil_u)
+    np.testing.assert_array_equal(photons.pupil_v, photons.pupil_v)
 
 @timer
 def test_dcr():
@@ -1277,14 +1296,18 @@ def test_fromArrays():
     dxdz = np.empty(1000)
     dydz = np.empty(1000)
     wavelength = np.empty(1000)
-    pa_batch = galsim.PhotonArray.fromArrays(x, y, flux, dxdz, dydz, wavelength)
+    pupil_u = np.empty(1000)
+    pupil_v = np.empty(1000)
+    pa_batch = galsim.PhotonArray.fromArrays(x, y, flux, dxdz, dydz, wavelength, pupil_u, pupil_v)
     pa_1 = galsim.PhotonArray.fromArrays(
         x[:Nsplit],
         y[:Nsplit],
         flux[:Nsplit],
         dxdz[:Nsplit],
         dydz[:Nsplit],
-        wavelength[:Nsplit]
+        wavelength[:Nsplit],
+        pupil_u[:Nsplit],
+        pupil_v[:Nsplit]
     )
     pa_2 = galsim.PhotonArray.fromArrays(
         x[Nsplit:],
@@ -1292,7 +1315,9 @@ def test_fromArrays():
         flux[Nsplit:],
         dxdz[Nsplit:],
         dydz[Nsplit:],
-        wavelength[Nsplit:]
+        wavelength[Nsplit:],
+        pupil_u[Nsplit:],
+        pupil_v[Nsplit:]
     )
 
     sed = galsim.SED("vega.txt", wave_type='nm', flux_type='flambda')
@@ -1307,24 +1332,32 @@ def test_fromArrays():
     assert pa_batch.dxdz is dxdz
     assert pa_batch.dydz is dydz
     assert pa_batch.wavelength is wavelength
+    assert pa_batch.pupil_u is pupil_u
+    assert pa_batch.pupil_v is pupil_v
     np.testing.assert_array_equal(pa_batch.x, x)
     np.testing.assert_array_equal(pa_batch.y, y)
     np.testing.assert_array_equal(pa_batch.flux, flux)
     np.testing.assert_array_equal(pa_batch.dxdz, dxdz)
     np.testing.assert_array_equal(pa_batch.dydz, dydz)
     np.testing.assert_array_equal(pa_batch.wavelength, wavelength)
+    np.testing.assert_array_equal(pa_batch.pupil_u, pupil_u)
+    np.testing.assert_array_equal(pa_batch.pupil_v, pupil_v)
     np.testing.assert_array_equal(pa_1.x, pa_batch.x[:Nsplit])
     np.testing.assert_array_equal(pa_1.y, pa_batch.y[:Nsplit])
     np.testing.assert_array_equal(pa_1.flux, pa_batch.flux[:Nsplit])
     np.testing.assert_array_equal(pa_1.dxdz, pa_batch.dxdz[:Nsplit])
     np.testing.assert_array_equal(pa_1.dydz, pa_batch.dydz[:Nsplit])
     np.testing.assert_array_equal(pa_1.wavelength, pa_batch.wavelength[:Nsplit])
+    np.testing.assert_array_equal(pa_1.pupil_u, pa_batch.pupil_u[:Nsplit])
+    np.testing.assert_array_equal(pa_1.pupil_v, pa_batch.pupil_v[:Nsplit])
     np.testing.assert_array_equal(pa_2.x, pa_batch.x[Nsplit:])
     np.testing.assert_array_equal(pa_2.y, pa_batch.y[Nsplit:])
     np.testing.assert_array_equal(pa_2.flux, pa_batch.flux[Nsplit:])
     np.testing.assert_array_equal(pa_2.dxdz, pa_batch.dxdz[Nsplit:])
     np.testing.assert_array_equal(pa_2.dydz, pa_batch.dydz[Nsplit:])
     np.testing.assert_array_equal(pa_2.wavelength, pa_batch.wavelength[Nsplit:])
+    np.testing.assert_array_equal(pa_2.pupil_u, pa_batch.pupil_u[Nsplit:])
+    np.testing.assert_array_equal(pa_2.pupil_v, pa_batch.pupil_v[Nsplit:])
 
     # Check the is_corr flag gets set
     assert not pa_batch.isCorrelated()

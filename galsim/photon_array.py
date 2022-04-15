@@ -63,6 +63,10 @@ class PhotonArray:
                     the +z direction as towards towards the dielectric medium of the detector and
                     -z as towards vacuum; consequently, a photon with increasing y in time has
                     positive dydz.
+        pupil_u:    Horizontal location of photon as it intersected the entrance pupil plane
+                    (meters).
+        pupil_v:    Vertical location of photon as it intersected the entrance pupil plane
+                    (meters).
         wavelength  The wavelength of the photons (in nm)
 
     Unlike most GalSim objects (but like `Image`), PhotonArrays are mutable.  It is permissible
@@ -95,9 +99,14 @@ class PhotonArray:
         flux:       Optionally, the initial flux values. [default: None]
         dxdz:       Optionally, the initial dxdz values. [default: None]
         dydz:       Optionally, the initial dydz values. [default: None]
+        pupil_u:    Optionally, the initial pupil_u values. [default: None]
+        pupil_v:    Optionally, the initial pupil_v values. [default: None]
         wavelength: Optionally, the initial wavelength values (in nm). [default: None]
     """
-    def __init__(self, N, x=None, y=None, flux=None, dxdz=None, dydz=None, wavelength=None):
+    def __init__(
+        self, N, x=None, y=None, flux=None, dxdz=None, dydz=None, wavelength=None,
+        pupil_u=None, pupil_v=None
+    ):
         # Only x, y, flux are built by default, since these are always required.
         # The others we leave as None unless/until they are needed.
         self._x = np.zeros(N, dtype=float)
@@ -106,6 +115,8 @@ class PhotonArray:
         self._dxdz = None
         self._dydz = None
         self._wave = None
+        self._pupil_u = None
+        self._pupil_v = None
         self._is_corr = False
 
         # These give reasonable errors if x,y,flux are the wrong size/type
@@ -115,9 +126,14 @@ class PhotonArray:
         if dxdz is not None: self.dxdz = dxdz
         if dydz is not None: self.dydz = dydz
         if wavelength is not None: self.wavelength = wavelength
+        if pupil_u is not None: self.pupil_u = pupil_u
+        if pupil_v is not None: self.pupil_v = pupil_v
 
     @classmethod
-    def fromArrays(cls, x, y, flux, dxdz=None, dydz=None, wavelength=None, is_corr=False):
+    def fromArrays(
+        cls, x, y, flux, dxdz=None, dydz=None, wavelength=None, pupil_u=None, pupil_v=None,
+        is_corr=False,
+    ):
         """Create a PhotonArray from pre-allocated numpy arrays without any copying.
 
         The normal PhotonArray constructor always allocates new arrays and copies any provided
@@ -136,11 +152,16 @@ class PhotonArray:
             dxdz:       Optionally, the initial dxdz values. [default: None]
             dydz:       Optionally, the initial dydz values. [default: None]
             wavelength: Optionally, the initial wavelength values (in nm). [default: None]
+            pupil_u:    Optionally, the initial pupil_u values (in m). [default: None]
+            pupil_v:    Optionally, the initial pupil_v values (in m). [default: None]
             is_corr:    Whether or not the photons are correlated. [default: False]
         """
         args = [x, y, flux]
         argnames = ['x', 'y', 'flux']
-        for a, aname in zip([dxdz, dydz, wavelength], ['dxdz', 'dydz', 'wavelength']):
+        for a, aname in zip(
+            [dxdz, dydz, wavelength, pupil_u, pupil_v],
+            ['dxdz', 'dydz', 'wavelength', 'pupil_u', 'pupil_v']
+        ):
             if a is not None:  # don't check optional args that are None
                 args.append(a)
                 argnames.append(aname)
@@ -156,10 +177,13 @@ class PhotonArray:
             if not a.flags.c_contiguous:
                 raise ValueError("Array {} must be c_contiguous".format(aname))
 
-        return cls._fromArrays(x, y, flux, dxdz, dydz, wavelength, is_corr)
+        return cls._fromArrays(x, y, flux, dxdz, dydz, wavelength, pupil_u, pupil_v, is_corr)
 
     @classmethod
-    def _fromArrays(cls, x, y, flux, dxdz=None, dydz=None, wavelength=None, is_corr=False):
+    def _fromArrays(
+        cls, x, y, flux, dxdz=None, dydz=None, wavelength=None, pupil_u=None, pupil_v=None,
+        is_corr=False
+    ):
         """Same as `fromArrays`, but no sanity checking of inputs.
         """
         ret = PhotonArray.__new__(PhotonArray)
@@ -169,6 +193,8 @@ class PhotonArray:
         ret._dxdz = dxdz
         ret._dydz = dydz
         ret._wave = wavelength
+        ret._pupil_u = pupil_u
+        ret._pupil_v = pupil_v
         ret._is_corr = is_corr
         return ret
 
@@ -242,6 +268,28 @@ class PhotonArray:
         self.allocateWavelengths()
         self._wave[:] = value
 
+    @property
+    def pupil_u(self):
+        """Horizontal location of photon as it intersected the entrance pupil plane.
+        """
+        self.allocatePupil()
+        return self._pupil_u
+    @pupil_u.setter
+    def pupil_u(self, value):
+        self.allocatePupil()
+        self._pupil_u[:] = value
+
+    @property
+    def pupil_v(self):
+        """Vertical location of photon as it intersected the entrance pupil plane.
+        """
+        self.allocatePupil()
+        return self._pupil_v
+    @pupil_v.setter
+    def pupil_v(self, value):
+        self.allocatePupil()
+        self._pupil_v[:] = value
+
     def hasAllocatedAngles(self):
         """Returns whether the arrays for the incidence angles `dxdz` and `dydz` have been
         allocated.
@@ -267,6 +315,19 @@ class PhotonArray:
         if self._wave is None:
             self._wave = np.zeros_like(self._x)
             self.__dict__.pop('_pa', None)
+
+    def hasAllocatedPupil(self):
+        """Returns whether the arrays for the pupil coordinates `pupil_u` and `pupil_v` have been
+        allocated.
+        """
+        return self._pupil_u is not None and self._pupil_v is not None
+
+    def allocatePupil(self):
+        """Allocate the memory for the pupil coordinates, `pupil_u` and `pupil_v`.
+        """
+        if self._pupil_u is None:
+            self._pupil_u = np.zeros_like(self._x)
+            self._pupil_v = np.zeros_like(self._x)
 
     def isCorrelated(self):
         """Returns whether the photons are correlated
@@ -324,6 +385,9 @@ class PhotonArray:
             self.dydz[s] = rhs.dydz
         if rhs.hasAllocatedWavelengths():
             self.wavelength[s] = rhs.wavelength
+        if rhs.hasAllocatedPupil():
+            self.pupil_u[s] = rhs.pupil_u
+            self.pupil_v[s] = rhs.pupil_v
 
     def convolve(self, rhs, rng=None):
         """Convolve this `PhotonArray` with another.
@@ -349,6 +413,15 @@ class PhotonArray:
             else:
                 self.wavelength = rhs.wavelength
 
+        if rhs.hasAllocatedPupil():
+            if self.hasAllocatedPupil():
+                raise GalSimIncompatibleValuesError(
+                    "PhotonArray.convolve with doubly assigned pupil coordinates"
+                )
+            else:
+                self.pupil_u = rhs.pupil_u
+                self.pupil_v = rhs.pupil_v
+
         rng = BaseDeviate(rng)
         self._pa.convolve(rhs._pa, rng._rng)
 
@@ -359,6 +432,8 @@ class PhotonArray:
             s += ", dxdz=array(%r), dydz=array(%r)"%(self.dxdz.tolist(), self.dydz.tolist())
         if self.hasAllocatedWavelengths():
             s += ", wavelength=array(%r)"%(self.wavelength.tolist())
+        if self.hasAllocatedPupil():
+            s += ", pupil_u=array(%r), pupil_v=array(%r)"%(self.pupil_u.tolist(), self.pupil_v.tolist())
         s += ")"
         return s
 
@@ -383,10 +458,16 @@ class PhotonArray:
                  np.array_equal(self.flux,other.flux) and
                  self.hasAllocatedAngles() == other.hasAllocatedAngles() and
                  self.hasAllocatedWavelengths() == other.hasAllocatedWavelengths() and
+                 self.hasAllocatedPupil() == other.hasAllocatedPupil() and
                  (np.array_equal(self.dxdz,other.dxdz) if self.hasAllocatedAngles() else True) and
                  (np.array_equal(self.dydz,other.dydz) if self.hasAllocatedAngles() else True) and
                  (np.array_equal(self.wavelength,other.wavelength)
-                    if self.hasAllocatedWavelengths() else True) ))
+                    if self.hasAllocatedWavelengths() else True) and
+                 (np.array_equal(self.pupil_u,other.pupil_u)
+                    if self.hasAllocatedPupil() else True) and
+                 (np.array_equal(self.pupil_v,other.pupil_v)
+                    if self.hasAllocatedPupil() else True)
+                ))
 
     def __ne__(self, other):
         return not self == other
@@ -502,6 +583,10 @@ class PhotonArray:
         if self.hasAllocatedWavelengths():
             cols.append(pyfits.Column(name='wavelength', format='D', array=self.wavelength))
 
+        if self.hasAllocatedPupil():
+            cols.append(pyfits.Column(name='pupil_u', format='D', array=self.pupil_u))
+            cols.append(pyfits.Column(name='pupil_v', format='D', array=self.pupil_v))
+
         cols = pyfits.ColDefs(cols)
         table = pyfits.BinTableHDU.from_columns(cols)
         fits.writeFile(file_name, table)
@@ -531,6 +616,9 @@ class PhotonArray:
             photons.dydz = data['dydz']
         if 'wavelength' in names:
             photons.wavelength = data['wavelength']
+        if 'pupil_u' in names:
+            photons.pupil_u = data['pupil_u']
+            photons.pupil_v = data['pupil_v']
         return photons
 
 
