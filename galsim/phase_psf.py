@@ -1566,9 +1566,8 @@ class PhaseScreenPSF(GSObject):
         ud.generate(pick)
         pick *= len(u)
         pick = pick.astype(int)
-        # abuse dxdz and dydz to persist u and v
-        u = photons.dxdz = u[pick]
-        v = photons.dydz = v[pick]
+        u = photons.pupil_u = u[pick]
+        v = photons.pupil_v = v[pick]
 
         # This is where the screens need to be instantiated for drawing with geometric photon
         # shooting.

@@ -1465,14 +1465,16 @@ def test_uv_persistence():
             diam=diam, obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
             strut_angle=strut_angle, pupil_plane_scale=diam/20
         )
-
-        allowed = set(zip(aper.u_illuminated, aper.v_illuminated))
+        with assert_warns(galsim.GalSimWarning):
+            allowed = set(zip(aper.u_illuminated, aper.v_illuminated))
 
         psf = galsim.OpticalPSF(lam=500, diam=diam, aper=aper, geometric_shooting=True)
         photons = psf.drawImage(save_photons=True, method='phot', n_photons=1000000).photons
-        observed = set(zip(photons.dxdz, photons.dydz))
+        observed = set(zip(photons.pupil_u, photons.pupil_v))
 
         assert observed.issubset(allowed)
+
+        do_pickle(photons)
 
 
 if __name__ == "__main__":
