@@ -242,23 +242,7 @@ class HSMParams:
                                 ``nsig_rg2 > 0``, then this PSF residual is cut off at ``nsig_rg2``
                                 sigma to save computation time in convolutions. [default: 3.6]
 
-        max_moment_nsig2:       A parameter for optimizing calculations of adaptive moments by
-                                cutting off profiles. This parameter is used to decide how many
-                                sigma^2 into the Gaussian adaptive moment to extend the moment
-                                calculation, with the weight being defined as 0 beyond this point.
-                                i.e., if max_moment_nsig2 is set to 25, then the Gaussian is
-                                extended to ``(r^2/sigma^2)=25``, with proper accounting for
-                                elliptical geometry.  If this parameter is set to some very large
-                                number, then the weight is never set to zero and the exponential
-                                function is always called. Note: GalSim script
-                                devel/modules/test_mom_timing.py was used to choose a value of 25 as
-                                being optimal, in that for the cases that were tested, the speedups
-                                were typically factors of several, but the results of moments and
-                                shear estimation were changed by <10^-5.  Not all possible cases
-                                were checked, and so for use of this code for unusual cases, we
-                                recommend that users check that this value does not affect accuracy,
-                                and/or set it to some large value to completely disable this
-                                optimization. [default: 25.0]
+        max_moment_nsig2:       No longer used.  (Now calculated based on convergence_threshold.)
 
         regauss_too_small:      A parameter for how strictly the re-Gaussianization code treats
                                 small galaxies. If this parameter is 1, then the re-Gaussianization
@@ -323,7 +307,7 @@ class HSMParams:
 
     After construction, all of the above are available as read-only attributes.
     """
-    def __init__(self, nsig_rg=3.0, nsig_rg2=3.6, max_moment_nsig2=25.0, regauss_too_small=1,
+    def __init__(self, nsig_rg=3.0, nsig_rg2=3.6, max_moment_nsig2=0, regauss_too_small=1,
                  adapt_order=2, convergence_threshold=1.e-6, max_mom2_iter=400,
                  num_iter_default=-1, bound_correct_wt=0.25, max_amoment=8000., max_ashift=15.,
                  ksb_moments_max=4, ksb_sig_weight=0.0, ksb_sig_factor=1.0, failed_moments=-1000.):
