@@ -632,8 +632,8 @@ namespace hsm {
      * rho4 = int rho^4 f(r) w(r)
      *
      * where w(r) = exp(-rho^2/2), rho^2 = (x-x0) * M^{-1} * (y-y0),
-     * M = adaptive covariance matrix, and note that the weight may be set to zero for rho^2 >
-     * hsmparams.max_moment_nsig2 if that parameter is defined.
+     * M = adaptive covariance matrix, and note that the weight is set to zero when
+     * exp(-0.5 rho^2) < convergence_threshold / 10.
      *
      * Arguments:
      *   data: the input image (ImageView format)
@@ -684,6 +684,9 @@ namespace hsm {
          */
         A = Bx = By = Cxx = Cxy = Cyy = rho4w = 0.;
 
+        // Based on convergence_threshold, don't need to go past where weight is significantly
+        // less than this accuracy.
+        double max_moment_nsig2 = -2.*std::log(hsmparams.convergence_threshold/10.);
         // rho2 = Minv_xx(x-x0)^2 + 2Minv_xy(x-x0)(y-y0) + Minv_yy(y-y0)^2
         // The minimum/maximum y that have a solution rho2 = max_moment_nsig2 is at:
         //   2*Minv_xx*(x-x0) + 2Minv_xy(y-y0) = 0
@@ -693,7 +696,7 @@ namespace hsm {
         //      = (Minv_xx Minv_yy - Minv_xy^2)/Minv_xx (y-y0)^2
         //      = (1/detM) / Minv_xx (y-y0)^2
         //      = (1/Myy) (y-y0)^2
-        double y2 = sqrt(hsmparams.max_moment_nsig2 * Myy);  // This still needs the +y0 bit.
+        double y2 = sqrt(max_moment_nsig2 * Myy);  // This still needs the +y0 bit.
         double y1 = -y2 + y0;
         y2 += y0;  // ok, now it's right.
         int iy1 = int(ceil(y1));
@@ -720,7 +723,7 @@ namespace hsm {
             // Simple quadratic formula:
             double a = Minv_xx;
             double b = TwoMinv_xy__y_y0;
-            double c = Minv_yy__y_y0__y_y0 - hsmparams.max_moment_nsig2;
+            double c = Minv_yy__y_y0__y_y0 - max_moment_nsig2;
             double d = b*b-4.*a*c;
             if (d < 0.)
                 throw HSMError("Failure in finding min/max x for some y!");
@@ -745,8 +748,7 @@ namespace hsm {
                  * get elliptical radius and weight.
                  */
                 double rho2 = Minv_yy__y_y0__y_y0 + TwoMinv_xy__y_y0*x_x0 + *mxxptr++;
-                xdbg<<"Using pixel: "<<x<<" "<<y<<" with value "<<*(imageptr)<<" rho2 "<<rho2<<" x_x0 "<<x_x0<<" y_y0 "<<y_y0<<std::endl;
-                xassert(rho2 < hsmparams.max_moment_nsig2 + 1.e-8); // allow some numerical error.
+                xassert(rho2 < max_moment_nsig2 + 1.e-8); // allow some numerical error.
 
                 double intensity = std::exp(-0.5 * rho2) * (*imageptr);
 
@@ -854,12 +856,10 @@ namespace hsm {
             if (dyy    < -hsmparams.bound_correct_wt) dyy    = -hsmparams.bound_correct_wt;
 
             /* Convergence tests */
-            convergence_factor = std::abs(dx)>std::abs(dy)? std::abs(dx): std::abs(dy);
-            convergence_factor *= convergence_factor;
-            if (std::abs(dxx)>convergence_factor) convergence_factor = std::abs(dxx);
-            if (std::abs(dxy)>convergence_factor) convergence_factor = std::abs(dxy);
-            if (std::abs(dyy)>convergence_factor) convergence_factor = std::abs(dyy);
-            convergence_factor = std::sqrt(convergence_factor);
+            convergence_factor = std::max(std::abs(dx), std::abs(dy));
+            convergence_factor = std::max(std::abs(dxx), convergence_factor);
+            convergence_factor = std::max(std::abs(dxy), convergence_factor);
+            convergence_factor = std::max(std::abs(dyy), convergence_factor);
             if (shiftscale<shiftscale0) convergence_factor *= shiftscale0/shiftscale;
 
             /* Now update moments */

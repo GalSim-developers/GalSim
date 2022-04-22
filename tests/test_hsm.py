@@ -617,17 +617,15 @@ def test_hsmparams_nodefault():
     assert(not equal_hsmshapedata(g_res, g_res2)),'Results should differ with diff nsig_rg'
     assert g_res != g_res2,'Results should differ with diff nsig_rg'
 
-    # Check that results, timing change as expected with max_moment_nsig2
+    # Check that results, timing change as expected with convergence_threshold
     test_t2 = time.time()
     res2 = galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image,
-                                    hsmparams=galsim.hsm.HSMParams(max_moment_nsig2 = 9.))
+                                    hsmparams=galsim.hsm.HSMParams(convergence_threshold = 1.e-3))
     dt2 = time.time() - test_t2
     if test_timing:
-        assert(dt2 < dt),'Should be faster to estimate shear with lower max_moment_nsig2'
-    assert(not equal_hsmshapedata(res, res2)),'Outputs same despite change in max_moment_nsig2'
-    assert res != res2,'Outputs same despite change in max_moment_nsig2'
-    assert(res.moments_sigma > res2.moments_sigma),'Sizes do not change as expected'
-    assert(res.moments_amp > res2.moments_amp),'Amplitudes do not change as expected'
+        assert(dt2 < dt),'Should be faster to estimate shear with higher convergence_threshold'
+    assert(not equal_hsmshapedata(res, res2)),'Outputs same despite change in convergence_threshold'
+    assert res != res2,'Outputs same despite change in convergence_threshold'
 
     # Check that max_amoment, max_ashift work as expected
     assert_raises(galsim.GalSimError,
