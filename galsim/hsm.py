@@ -96,7 +96,7 @@ class ShapeData:
     def __init__(self, image_bounds=BoundsI(), moments_status=-1,
                  observed_shape=Shear(), moments_sigma=-1.0, moments_amp=-1.0,
                  moments_centroid=PositionD(), moments_rho4=-1.0, moments_n_iter=0,
-                 correction_status=-10, corrected_e1=-10., corrected_e2=-10.,
+                 correction_status=-1, corrected_e1=-10., corrected_e2=-10.,
                  corrected_g1=-10., corrected_g2=-10., meas_type="None",
                  corrected_shape_err=-1.0, correction_method="None",
                  resolution_factor=-1.0, psf_sigma=-1.0,
