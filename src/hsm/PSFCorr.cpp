@@ -878,6 +878,12 @@ namespace hsm {
                 throw HSMError("Error: adaptive moment failed\n");
             }
 
+            double detM = Mxx * Myy - Mxy * Mxy;
+            if (std::abs(Mxx) < 1.e-8 || std::abs(Myy) < 1.e-8 || detM < 1.e-8) {
+                throw HSMError("Error: HSM collapsed to singular moment matrix. Object is too small.\n");
+            }
+
+
             if (++num_iter > hsmparams.max_mom2_iter) {
                 throw HSMError("Error: too many iterations in adaptive moments\n");
             }

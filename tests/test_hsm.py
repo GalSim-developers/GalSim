@@ -903,6 +903,15 @@ def test_very_small():
     print(mom)
     assert mom.moments_status == 0
 
+    # However, if the object is small enough, then HSM cannot recover.  Make sure the
+    # error message in such cases is sensible.
+    profile = galsim.Gaussian(sigma=0.18).shift(0.02,-0.03)
+    im = profile.drawImage(nx=31, ny=31, scale=0.26)
+    mom = im.FindAdaptiveMom(strict=False)
+    print(mom)
+    assert mom.moments_status != 0
+    assert "Object is too small" in mom.error_message
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
