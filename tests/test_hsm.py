@@ -597,6 +597,14 @@ def test_hsmparams_nodefault():
     res3 = galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image, recompute_flux = 'none')
     assert(res3.moments_amp == 0),'Incorrect behavior with recompute_flux=none'
 
+    # Check correction_status and error message when recompute_flux is invalid.
+    with assert_raises(galsim.GalSimError):
+        galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image, recompute_flux='invalid')
+    res4 = galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image, recompute_flux='invalid',
+                                    strict=False)
+    assert res4.correction_status == -1
+    assert "Unknown value" in res4.error_message
+
     # Check that results, timing change as expected with nsig_rg
     # For this, use Gaussian as galaxy and for ePSF, i.e., no extra pixel response
     p = galsim.Gaussian(fwhm=10.)
