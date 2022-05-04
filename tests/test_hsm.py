@@ -28,6 +28,7 @@ import os
 import sys
 import numpy as np
 import math
+import glob
 
 import galsim
 from galsim_test_helpers import *
@@ -882,6 +883,25 @@ def test_headers():
     import ctypes
     lib = ctypes.cdll.LoadLibrary(galsim.lib_file)
     # The test was that this doesn't raise an OSError or something.
+
+def test_failures():
+    """Test some images that used to fail, but now work.
+    """
+    files = glob.glob(os.path.join(img_dir, 'HSM*.fits'))
+
+    for f in files:
+        im = galsim.fits.read(f)
+        hsm = im.FindAdaptiveMom()
+        assert hsm.moments_status == 0
+
+def test_very_small():
+    """Test an unresolved star reported to fail in #1132, but now works.
+    """
+    profile = galsim.VonKarman(lam=700.0, r0=0.25, L0=11.0, flux=1.0).shift(-0.13, -0.13)
+    im = profile.drawImage(nx=31, ny=31, scale=0.26)
+    mom = im.FindAdaptiveMom(strict=False)
+    print(mom)
+    assert mom.moments_status == 0
 
 
 if __name__ == "__main__":
