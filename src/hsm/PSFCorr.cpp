@@ -660,7 +660,7 @@ namespace hsm {
         long xmax = data.getXMax();
         long ymin = data.getYMin();
         long ymax = data.getYMax();
-        dbg<<"Entering find_ellipmom_1 with Mxx, Myy, Mxy: "<<Mxx<<" "<<Myy<<" "<<Mxy<<std::endl;
+        dbg<<"Entering find_ellipmom_1 with Mxx, Mxy, Myy: "<<Mxx<<" "<<Mxy<<" "<<Myy<<std::endl;
         dbg<<"e1,e2 = "<<(Mxx-Myy)/(Mxx+Myy)<<" "<<2.*Mxy/(Mxx+Myy)<<std::endl;
         dbg<<"x0, y0: "<<x0<<" "<<y0<<std::endl;
         dbg<<"xmin, xmax: "<<xmin<<" "<<xmax<<std::endl;
@@ -764,7 +764,7 @@ namespace hsm {
                 rho4w+= intensity * rho2 * rho2;
             }
         }
-        dbg<<"Exiting find_ellipmom_1 with results: "<<A<<" "<<Bx<<" "<<By<<" "<<Cxx<<" "<<Cyy<<" "<<Cxy<<" "<<rho4w<<std::endl;
+        dbg<<"Exiting find_ellipmom_1 with results: "<<A<<" "<<Bx<<" "<<By<<" "<<Cxx<<" "<<Cxy<<" "<<Cyy<<" "<<rho4w<<std::endl;
     }
 
     /* find_ellipmom_2
@@ -888,6 +888,8 @@ namespace hsm {
                 throw HSMError("Error: NaN in calculation of adaptive moments\n");
             }
         }
+        dbg<<"num_iter = "<<num_iter<<std::endl;
+        dbg<<"Final moments = "<<Mxx<<','<<Mxy<<','<<Myy<<std::endl;
 
         /* Re-normalize rho4 */
         A = Amp;
