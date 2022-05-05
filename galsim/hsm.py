@@ -312,9 +312,12 @@ class HSMParams:
                  num_iter_default=-1, bound_correct_wt=0.25, max_amoment=8000., max_ashift=15.,
                  ksb_moments_max=4, ksb_sig_weight=0.0, ksb_sig_factor=1.0, failed_moments=-1000.):
 
+        if max_moment_nsig2 != 0:
+            from .deprecated import depr
+            depr('max_moment_nsig2', 2.4, '', 'This parameter is no longer used.')
+
         self._nsig_rg = float(nsig_rg)
         self._nsig_rg2 = float(nsig_rg2)
-        self._max_moment_nsig2 = float(max_moment_nsig2)
         self._regauss_too_small = int(regauss_too_small)
         self._adapt_order = int(adapt_order)
         self._convergence_threshold = float(convergence_threshold)
@@ -333,7 +336,9 @@ class HSMParams:
         self._hsmp = _galsim.HSMParams(*self._getinitargs())
 
     def _getinitargs(self):
-        return (self.nsig_rg, self.nsig_rg2, self.max_moment_nsig2, self.regauss_too_small,
+        # TODO: For now, leave 3rd param as unused max_moment_nsig2.
+        #       Remove it at version 3.0 to avoid changing C++ API yet.
+        return (self.nsig_rg, self.nsig_rg2, 0., self.regauss_too_small,
                 self.adapt_order, self.convergence_threshold, self.max_mom2_iter,
                 self.num_iter_default, self.bound_correct_wt, self.max_amoment, self.max_ashift,
                 self.ksb_moments_max, self.ksb_sig_weight, self.ksb_sig_factor,
@@ -344,7 +349,7 @@ class HSMParams:
     @property
     def nsig_rg2(self): return self._nsig_rg2
     @property
-    def max_moment_nsig2(self): return self._max_moment_nsig2
+    def max_moment_nsig2(self): return 0.
     @property
     def regauss_too_small(self): return self._regauss_too_small
     @property

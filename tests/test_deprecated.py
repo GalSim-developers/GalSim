@@ -487,6 +487,11 @@ def test_trapz_basic():
     with assert_raises(TypeError):
         check_dep(galsim.integ.trapz, func, 0.1, 1, points=2.3)
 
+@timer
+def test_hsm_depr():
+    hsmp = check_dep(galsim.hsm.HSMParams, max_moment_nsig2=25.0)
+    assert hsmp.max_moment_nsig2 == 0.
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
