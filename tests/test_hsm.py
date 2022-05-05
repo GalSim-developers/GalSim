@@ -515,7 +515,6 @@ def test_hsmparams():
     # hsmparams or don't specify hsmparams at all.
     default_hsmparams = galsim.hsm.HSMParams(nsig_rg=3.0,
                                              nsig_rg2=3.6,
-                                             max_moment_nsig2=25.0,
                                              regauss_too_small=1,
                                              adapt_order=2,
                                              convergence_threshold=1.e-6,
@@ -548,7 +547,6 @@ def test_hsmparams():
     do_pickle(default_hsmparams)
     do_pickle(galsim.hsm.HSMParams(nsig_rg=1.0,
                                    nsig_rg2=1.6,
-                                   max_moment_nsig2=2.0,
                                    regauss_too_small=0,
                                    adapt_order=0,
                                    convergence_threshold=1.e-8,
