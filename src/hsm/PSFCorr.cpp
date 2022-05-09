@@ -633,7 +633,7 @@ namespace hsm {
      *
      * where w(r) = exp(-rho^2/2), rho^2 = (x-x0) * M^{-1} * (y-y0),
      * M = adaptive covariance matrix, and note that the weight is set to zero when
-     * exp(-0.5 rho^2) < convergence_threshold / 10.
+     * exp(-0.5 rho^2) < hsmparams.convergence_threshold / 10.
      *
      * Arguments:
      *   data: the input image (ImageView format)
