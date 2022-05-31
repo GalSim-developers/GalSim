@@ -748,16 +748,23 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
        stepk ~= 2pi / image_size and maxk ~= x_interpolant.krange() / pixel_scale.
     3. The flux is just the flux of the image.  It cannot be rescaled to a different flux value.
     4. The input image must have a defined wcs.
+    5. The image is not recentered to have its center at (0,0).  The returned profile will be
+       centered wherever the (0,0) location is in the image, possibly with an offset governed
+       by ``offset`` and ``use_true_center``.  If you want to mimic the behavior of the regular
+       `InterpolatedImage` initializer, you can call `image.setCenter(0,0)` before calling this
+       function.
 
     Parameters:
         image:              The `Image` from which to construct the object.
         x_interpolant:      An `Interpolant` instance for real-space interpolation
                             [default: Quintic]
         k_interpolant:      An `Interpolant` instance for k-space interpolation [default: Quintic]
-        use_true_center:    Whether to use the true center of the provided image as the center
-                            of the profile. [default: True]
-        offset:             The location in the input image to use as the center of the profile.
-                            [default: None]
+        use_true_center:    Whether to adjust the offset by the difference between the integer
+                            center and the true center. For odd-sized images, this does nothing,
+                            but for even-sized dimensions, it adjusts the offset by -0.5.
+                            [default: True]
+        offset:             The location in the input image to use as the center of the profile
+                            relative to position (0,0). [default: None]
         gsparams:           An optional `GSParams` argument. [default: None]
         force_stepk:        A stepk value to use rather than the default value. [default: 0.]
         force_maxk:         A maxk value to use rather than the default value. [default: 0.]
