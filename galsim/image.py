@@ -1813,6 +1813,14 @@ class Image:
 
     __ror__ = __or__
 
+    def __ior__(self, other):
+        self.check_image_consistency(other, integer=True)
+        try:
+            self.array[:,:] |= other.array
+        except AttributeError:
+            self.array[:,:] |= other
+        return self
+
     def transpose(self):
         """Return the tranpose of the image.
 
@@ -1863,14 +1871,6 @@ class Image:
         If you care about the wcs, you will need to set it yourself.
         """
         return _Image(self.array[::-1,::-1], self._bounds, None)
-
-    def __ior__(self, other):
-        self.check_image_consistency(other, integer=True)
-        try:
-            self.array[:,:] |= other.array
-        except AttributeError:
-            self.array[:,:] |= other
-        return self
 
     def __eq__(self, other):
         # Note that numpy.array_equal can return True if the dtypes of the two arrays involved are
