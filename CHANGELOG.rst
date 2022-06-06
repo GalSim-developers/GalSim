@@ -24,7 +24,8 @@ Dependency Changes
 API Changes
 -----------
 
-- `expand` method of a `galsim.Bounds` instance can take an optional second argument and scale differently in different directions. (#1155)
+- Let `expand` method of a `galsim.Bounds` instance take an optional second argument to scale
+  differently in different directions. (#1155)
 
 
 
@@ -47,4 +48,6 @@ Performance Improvements
 Bug Fixes
 ---------
 
+- Fixed error in InterpolatedImage.withGSParams not correctly updating stepk and maxk
+  if the updated parameters merited it. (#1154)
 - Fix error in ChromaticSum photon shooting when n_photons is explicitly given. (#1156)

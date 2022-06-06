@@ -130,6 +130,20 @@ def test_roundtrip():
             err_msg="Transposed array failed InterpolatedImage roundtrip.")
     check_basic(interp, "InterpolatedImage (Fortran ordering)", approx_maxsb=True)
 
+    # Check that folding_threshold and maxk_threshold update stepk and maxk
+    # Do this with the larger ref_image, since this one is too small to have any difference
+    # from different folding_threshold values.
+    scale = 0.3
+    ii1 = galsim.InterpolatedImage(ref_image, scale=scale)
+    gsp = galsim.GSParams(folding_threshold=1.e-4, maxk_threshold=1.e-4)
+    ii2 = galsim.InterpolatedImage(ref_image, scale=scale, gsparams=gsp)
+    assert ii2 == ii1.withGSParams(gsp)
+    assert ii2.stepk != ii1.stepk
+    assert ii2.maxk != ii1.maxk
+    assert ii2.stepk == ii1.withGSParams(folding_threshold=1.e-4).stepk
+    assert ii2.maxk == ii1.withGSParams(maxk_threshold=1.e-4).maxk
+
+
 @timer
 def test_interpolant():
     from scipy.special import sici

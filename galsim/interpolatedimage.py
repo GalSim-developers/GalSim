@@ -342,6 +342,8 @@ class InterpolatedImage(GSObject):
 
         # Process the different options for flux, stepk, maxk
         self._flux = self._getFlux(flux, normalization)
+        self._calculate_stepk = calculate_stepk
+        self._calculate_maxk = calculate_maxk
         self._stepk = self._getStepK(calculate_stepk, _force_stepk)
         self._maxk = self._getMaxK(calculate_maxk, _force_maxk)
 
@@ -353,6 +355,10 @@ class InterpolatedImage(GSObject):
         ret._gsparams = GSParams.check(gsparams, self.gsparams, **kwargs)
         ret._x_interpolant = self._x_interpolant.withGSParams(ret._gsparams, **kwargs)
         ret._k_interpolant = self._k_interpolant.withGSParams(ret._gsparams, **kwargs)
+        if ret._gsparams.folding_threshold != self._gsparams.folding_threshold:
+            ret._stepk = ret._getStepK(self._calculate_stepk, 0.)
+        if ret._gsparams.maxk_threshold != self._gsparams.maxk_threshold:
+            ret._maxk = ret._getMaxK(self._calculate_maxk, 0.)
         return ret
 
     @lazy_property
