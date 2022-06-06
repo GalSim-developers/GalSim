@@ -199,6 +199,7 @@ class GSParams:
                 if not hasattr(ret, '_' + k):
                     raise TypeError('parameter %s is invalid'%k)
                 setattr(ret, '_' + k, kwargs[k])
+            ret._gsp = _galsim.GSParams(*ret._getinitargs())
             return ret
 
     @staticmethod
@@ -230,7 +231,7 @@ class GSParams:
 
     # Define once the order of args in __init__, since we use it a few times.
     def _getinitargs(self):
-        return (self.minimum_fft_size, self.maximum_fft_size,
+        return (int(self.minimum_fft_size), int(self.maximum_fft_size),
                 self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
                 self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
                 self.realspace_relerr, self.realspace_abserr,
