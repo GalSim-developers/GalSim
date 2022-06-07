@@ -1661,6 +1661,41 @@ def test_quintic_glagn():
 
         gsobj.drawImage(method='phot', image=image, add_to_image=True)
 
+def test_depixelize():
+    # True, non-II profile.  Something not too symmetric.
+    true_prof = galsim.Gaussian(sigma=1.2, flux=20).shear(g1=0.1, g2=0.3) + \
+                galsim.Gaussian(sigma=0.4, flux=10).shift(0.1,-0.3)
+    im1 = true_prof.drawImage(nx=64, ny=64, scale=0.3)
+
+    interp = galsim.Lanczos(11)
+
+    ii_with_pixel = galsim.InterpolatedImage(im1, x_interpolant=interp)
+    im2 = ii_with_pixel.drawImage(nx=64, ny=64, scale=0.3)
+
+    nopix_image = im1.depixelize(x_interpolant=interp)
+    ii_without_pixel = galsim.InterpolatedImage(nopix_image, x_interpolant=interp)
+
+    # The depixelize function is basically exact for real-space convolution.
+    im3 = ii_without_pixel.drawImage(nx=64, ny=64, scale=0.3, method='real_space')
+    np.testing.assert_allclose(im3.array, im1.array, atol=1.e-12)
+
+    # With FFT convolution, it's not as close, but this is just due to the approximations that
+    # we always have in FFT convolutions.
+    im4 = ii_without_pixel.drawImage(nx=64, ny=64, scale=0.3, method='fft')
+    np.testing.assert_allclose(im4.array, im1.array, atol=1.e-4)
+
+    # We can make this a lot better by increasing maxk artificially.
+    # However, it's not currently possible to make the InterpolatedImage have this high a
+    # maxk using just maxk_threshold, since CalculateMaxK hits the edge of the FFT image at
+    # around maxk=10, not matter what the threshold is.
+    # So using this high a maxk is actually wrapping around the FFT image multiple times.
+    # This feels like a clue that something could be improved in some of the choices we make
+    # wrt the InterpolatedImage FFT rendering, but I'm going to leave this alone for now.
+    alt = galsim.InterpolatedImage(nopix_image, x_interpolant=interp, _force_maxk=50)
+    im5 = alt.drawImage(nx=64, ny=64, scale=0.3, method='fft')
+    np.testing.assert_allclose(im5.array, im1.array, atol=1.e-7)
+
+
 if __name__ == "__main__":
     setup()
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
