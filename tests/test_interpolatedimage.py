@@ -210,7 +210,7 @@ def test_interpolant():
     s = galsim.SincInterpolant()
     assert s.gsparams == galsim.GSParams()
     assert np.isclose(s.xrange, 1./(np.pi * s.gsparams.kvalue_accuracy))
-    assert s.ixrange == np.inf
+    assert s.ixrange == 2*np.ceil(s.xrange)
     assert np.isclose(s.krange, np.pi)
     assert np.isclose(s.krange, 2.*np.pi * s._i.urange())
     assert np.isclose(s.positive_flux, 3.18726437) # Empirical -- this is a regression test

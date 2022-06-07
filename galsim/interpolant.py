@@ -331,7 +331,7 @@ class SincInterpolant(Interpolant):
     def ixrange(self):
         """The total integral range of the interpolant.  Typically 2 * xrange.
         """
-        return np.inf
+        return 2*int(np.ceil(self.xrange))
 
     @property
     def krange(self):

@@ -1900,7 +1900,7 @@ class Image:
         rev = dict(zip(zip(allh,allk), range(npix)))
 
         # kernel is the integral of the interpolant over 1 pixel.
-        n = min((x_interpolant.ixrange+1)//2, nx, ny)
+        n = (x_interpolant.ixrange+1)//2
         kernel = np.zeros(n+1)
         for i in range(n+1):
             kernel[i] = int1d(x_interpolant.xval, i-0.5, i+0.5)
