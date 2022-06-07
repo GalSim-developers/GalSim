@@ -1872,6 +1872,60 @@ class Image:
         """
         return _Image(self.array[::-1,::-1], self._bounds, None)
 
+    def depixelize(self, x_interpolant):
+        """Return a depixelized version of the image.
+
+        Specifically, this function creates an image that could be used with InterpolatedImage
+        with the given x_interpolant, which when drawn with method=auto would produce the
+        current image.
+
+            >>> alt_image = image.depixelize(x_interpolant)
+            >>> ii = galsim.InterpolatedImage(alt_image, x_interpolant=x_interpolant)
+            >>> image2 = ii.drawImage(image.copy())
+
+        image2 will end up approximately equalt to the original image.
+        """
+        from .integ import int1d
+
+        nx, ny = self.array.shape
+
+        # Get a list of (h,k) indices of each pixel
+        allh,allk = np.meshgrid(range(nx), range(ny), indexing='ij')
+        allh = allh.ravel()
+        allk = allk.ravel()
+        npix = len(allh)
+
+        # Make a reverse lookup dict saying which (h,k) corresponds to linear index.
+        # I.e. rev[(h,k)] = index of that position in raveled array.
+        rev = dict(zip(zip(allh,allk), range(npix)))
+
+        # kernel is the integral of the interpolant over 1 pixel.
+        n = min((x_interpolant.ixrange+1)//2, nx, ny)
+        kernel = np.zeros(n+1)
+        for i in range(n+1):
+            kernel[i] = int1d(x_interpolant.xval, i-0.5, i+0.5)
+
+        # Matrix equation A x = b.
+        # b are the given pixel values in the input image.
+        # x are the desired pixel values in the returned image.
+        # The elements of A are the integral of the interpolant over x and y directions
+        # for pixels that are within ixrange in both directions.
+        A = np.zeros((npix, npix))
+        for row in range(npix):
+            h = allh[row]
+            k = allk[row]
+            for p in range(h-n, h+n+1):
+                if p < 0 or p >= nx: continue
+                for q in range(k-n, k+n+1):
+                    if q < 0 or q >= ny: continue
+                    A[row, rev[(p,q)]] += kernel[abs(p-h)] * kernel[abs(q-k)]
+
+        # Solve for x.
+        x = np.linalg.solve(A, self.array.ravel())
+
+        # Return the result as an Image with the same bounds, wcs as self.
+        return _Image(x.reshape(self.array.shape), self.bounds, self.wcs)
+
     def __eq__(self, other):
         # Note that numpy.array_equal can return True if the dtypes of the two arrays involved are
         # different, as long as the contents of the two arrays are logically the same.  For example:
