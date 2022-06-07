@@ -24,9 +24,10 @@ Dependency Changes
 API Changes
 -----------
 
+- Changed SincInterpolant.ixrange to be consistent with the value of xrange, rather than inf.
+  (#1154)
 - Let `expand` method of a `galsim.Bounds` instance take an optional second argument to scale
   differently in different directions. (#1155)
-
 
 
 Config Updates
