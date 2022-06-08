@@ -1663,26 +1663,39 @@ def test_quintic_glagn():
 
 def test_depixelize():
     # True, non-II profile.  Something not too symmetric.
-    true_prof = galsim.Gaussian(sigma=1.2, flux=20).shear(g1=0.1, g2=0.3) + \
-                galsim.Gaussian(sigma=0.4, flux=10).shift(0.1,-0.3)
-    im1 = true_prof.drawImage(nx=64, ny=64, scale=0.3)
+    nx = 52
+    ny = 45  # Make these unequal to test indexing
+    scale = 0.3
+    true_prof = galsim.Gaussian(sigma=0.7, flux=10).shear(g1=0.1, g2=0.3) + \
+                galsim.Gaussian(sigma=0.4, flux=3).shift(0.1,-0.3)
+    im1 = true_prof.drawImage(nx=nx, ny=ny, scale=scale)
 
     interp = galsim.Lanczos(11)
 
+    import time
+    t0 = time.time()
     ii_with_pixel = galsim.InterpolatedImage(im1, x_interpolant=interp)
-    im2 = ii_with_pixel.drawImage(nx=64, ny=64, scale=0.3)
+    t1 = time.time()
+    im2 = ii_with_pixel.drawImage(nx=nx, ny=ny, scale=scale)
+    t2 = time.time()
 
     nopix_image = im1.depixelize(x_interpolant=interp)
+    t3 = time.time()
     ii_without_pixel = galsim.InterpolatedImage(nopix_image, x_interpolant=interp)
+    t4 = time.time()
 
     # The depixelize function is basically exact for real-space convolution.
-    im3 = ii_without_pixel.drawImage(nx=64, ny=64, scale=0.3, method='real_space')
+    im3 = ii_without_pixel.drawImage(nx=nx, ny=ny, scale=scale, method='real_space')
+    print('real-space drawing: max error = ',np.max(np.abs(im3.array-im1.array)))
     np.testing.assert_allclose(im3.array, im1.array, atol=1.e-12)
+    t5 = time.time()
 
     # With FFT convolution, it's not as close, but this is just due to the approximations that
     # we always have in FFT convolutions.
-    im4 = ii_without_pixel.drawImage(nx=64, ny=64, scale=0.3, method='fft')
+    im4 = ii_without_pixel.drawImage(nx=nx, ny=ny, scale=scale, method='fft')
+    print('fft drawing: max error = ',np.max(np.abs(im4.array-im1.array)))
     np.testing.assert_allclose(im4.array, im1.array, atol=1.e-4)
+    t6 = time.time()
 
     # We can make this a lot better by increasing maxk artificially.
     # However, it's not currently possible to make the InterpolatedImage have this high a
@@ -1692,8 +1705,19 @@ def test_depixelize():
     # This feels like a clue that something could be improved in some of the choices we make
     # wrt the InterpolatedImage FFT rendering, but I'm going to leave this alone for now.
     alt = galsim.InterpolatedImage(nopix_image, x_interpolant=interp, _force_maxk=50)
-    im5 = alt.drawImage(nx=64, ny=64, scale=0.3, method='fft')
+    im5 = alt.drawImage(nx=nx, ny=ny, scale=scale, method='fft')
+    print('high-maxk fft drawing: max error = ',np.max(np.abs(im5.array-im1.array)))
     np.testing.assert_allclose(im5.array, im1.array, atol=1.e-7)
+    t7 = time.time()
+
+    print('times:')
+    print('make ii_with_pixel: ',t1-t0)
+    print('draw ii_with_pixel: ',t2-t1)
+    print('depixelize: ',t3-t2)
+    print('make ii_without_pixel: ',t4-t3)
+    print('draw ii_without_pixel, real: ',t5-t4)
+    print('draw ii_without_pixel, fft: ',t6-t5)
+    print('draw ii_without_pixel, high maxk: ',t7-t6)
 
 
 if __name__ == "__main__":

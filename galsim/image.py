@@ -1886,17 +1886,8 @@ class Image:
         image2 will end up approximately equalt to the original image.
         """
 
-        nx, ny = self.array.shape
-
-        # Get a list of (h,k) indices of each pixel
-        allh,allk = np.meshgrid(range(nx), range(ny), indexing='ij')
-        allh = allh.ravel()
-        allk = allk.ravel()
-        npix = len(allh)
-
-        # Make a reverse lookup dict saying which (h,k) corresponds to linear index.
-        # I.e. rev[(h,k)] = index of that position in raveled array.
-        rev = dict(zip(zip(allh,allk), range(npix)))
+        ny, nx = self.array.shape
+        npix = nx * ny
 
         # kernel is the integral of the interpolant over 1 pixel.
         kernel = x_interpolant.unit_integrals(max_len=max(nx,ny))
@@ -1909,13 +1900,14 @@ class Image:
         A = np.zeros((npix, npix))
         n = len(kernel)
         for row in range(npix):
-            h = allh[row]
-            k = allk[row]
+            h = row % nx
+            k = row // nx
             for p in range(h-n+1, h+n):
                 if p < 0 or p >= nx: continue
                 for q in range(k-n+1, k+n):
                     if q < 0 or q >= ny: continue
-                    A[row, rev[(p,q)]] += kernel[abs(p-h)] * kernel[abs(q-k)]
+                    col = q*nx + p
+                    A[row, col] += kernel[abs(p-h)] * kernel[abs(q-k)]
 
         # Solve for x.
         x = np.linalg.solve(A, self.array.ravel())
