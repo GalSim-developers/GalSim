@@ -189,6 +189,27 @@ class Interpolant:
             self._i.uvalMany(_u, len(u))
             return u
 
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        ret[i] = int(xval(xval, i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+        from .integ import int1d
+        # Note: This is pretty fast, but subclasses may choose to override this if there
+        # is an analytic integral to avoud the int1d call.
+        n = (self.ixrange+1)//2 + 1
+        n = n if max_len is None else min(n, max_len)
+        integrals = np.zeros(n)
+        for i in range(n):
+            integrals[i] = int1d(self.xval, i-0.5, i+0.5)
+        return integrals
+
     # Sub-classes should define _i property, repr, and str
 
 

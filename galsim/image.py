@@ -1885,7 +1885,6 @@ class Image:
 
         image2 will end up approximately equalt to the original image.
         """
-        from .integ import int1d
 
         nx, ny = self.array.shape
 
@@ -1900,10 +1899,7 @@ class Image:
         rev = dict(zip(zip(allh,allk), range(npix)))
 
         # kernel is the integral of the interpolant over 1 pixel.
-        n = (x_interpolant.ixrange+1)//2
-        kernel = np.zeros(n+1)
-        for i in range(n+1):
-            kernel[i] = int1d(x_interpolant.xval, i-0.5, i+0.5)
+        kernel = x_interpolant.unit_integrals(max_len=max(nx,ny))
 
         # Matrix equation A x = b.
         # b are the given pixel values in the input image.
@@ -1911,12 +1907,13 @@ class Image:
         # The elements of A are the integral of the interpolant over x and y directions
         # for pixels that are within ixrange in both directions.
         A = np.zeros((npix, npix))
+        n = len(kernel)
         for row in range(npix):
             h = allh[row]
             k = allk[row]
-            for p in range(h-n, h+n+1):
+            for p in range(h-n+1, h+n):
                 if p < 0 or p >= nx: continue
-                for q in range(k-n, k+n+1):
+                for q in range(k-n+1, k+n):
                     if q < 0 or q >= ny: continue
                     A[row, rev[(p,q)]] += kernel[abs(p-h)] * kernel[abs(q-k)]
 
