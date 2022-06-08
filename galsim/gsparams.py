@@ -181,7 +181,13 @@ class GSParams:
         (GSParams.default if no other default specified).
         """
         if gsparams is None:
-            gsparams = default if default is not None else GSParams.default
+            if default is not None:
+                if isinstance(default, GSParams):
+                    gsparams = default 
+                else:
+                    TypeError("Invalid default GSParams: %s"%default)
+            else:
+                gsparams = GSParams.default
         elif not isinstance(gsparams, GSParams):
             raise TypeError("Invalid GSParams: %s"%gsparams)
         return gsparams.withParams(**kwargs)
