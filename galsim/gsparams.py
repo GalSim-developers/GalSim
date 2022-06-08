@@ -185,7 +185,7 @@ class GSParams:
                 if isinstance(default, GSParams):
                     gsparams = default 
                 else:
-                    TypeError("Invalid default GSParams: %s"%default)
+                    raise TypeError("Invalid default GSParams: %s"%default)
             else:
                 gsparams = GSParams.default
         elif not isinstance(gsparams, GSParams):
