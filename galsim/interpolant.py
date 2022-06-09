@@ -203,7 +203,7 @@ class Interpolant:
         from .integ import int1d
         # Note: This is pretty fast, but subclasses may choose to override this if there
         # is an analytic integral to avoud the int1d call.
-        n = (self.ixrange+1)//2 + 1
+        n = self.ixrange//2 + 1
         n = n if max_len is None else min(n, max_len)
         integrals = np.zeros(n)
         for i in range(n):
@@ -260,6 +260,19 @@ class Delta(Interpolant):
         """
         return 2. * math.pi / self._gsparams.kvalue_accuracy
 
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        ret[i] = int(xval(xval, i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+        return np.array([1])
+
 
 class Nearest(Interpolant):
     """Nearest-neighbor interpolation (boxcar).
@@ -308,6 +321,19 @@ class Nearest(Interpolant):
         """The maximum extent of the interpolant in Fourier space (in 1/pixels).
         """
         return 2. / self._gsparams.kvalue_accuracy
+
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        ret[i] = int(xval(xval, i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+        return np.array([1])
 
 
 class SincInterpolant(Interpolant):
@@ -360,6 +386,25 @@ class SincInterpolant(Interpolant):
         """
         return math.pi
 
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        ret[i] = int(xval(xval, i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+        from .bessel import si
+        n = self.ixrange//2 + 1
+        n = n if max_len is None else min(n, max_len)
+        integrals = np.zeros(n)
+        for i in range(n):
+            integrals[i] = (si(np.pi * (i+0.5)) - si(np.pi * (i-0.5))) / np.pi
+        return integrals
+
 
 class Linear(Interpolant):
     """Linear interpolation
@@ -409,6 +454,23 @@ class Linear(Interpolant):
         """
         return 2. / self._gsparams.kvalue_accuracy**0.5
 
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        ret[i] = int(xval(xval, i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+        # i0 = 2*int(1-x, x=0..0.5)
+        #    = 3/4
+        # i1 = int(1-x, x=0.5..1)
+        #    = 1/8
+        return np.array([0.75, 0.125])
+
 
 class Cubic(Interpolant):
     """Cubic interpolation
@@ -456,6 +518,36 @@ class Cubic(Interpolant):
         """
         # kmax = 2 * (3sqrt(3)/8 tol)^1/3
         return 1.7320508075688774 / self._gsparams.kvalue_accuracy**(1./3.)
+
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        ret[i] = int(xval(xval, i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+    def unit_integrals(self, max_len=None):
+        """Compute the unit integrals of the real-space kernel.
+
+        ret[i] = int(xval(xval, i-0.5, i+0.5)
+
+        Parameters:
+            max_len:    The maximum length of the returned array.  This is usually only relevant
+                        for SincInterpolant, where xrange = inf.
+        Returns:
+            integrals:  An array of unit integrals of length max_len or smaller.
+        """
+        # i0 = 2*int(1 + 1/2 x^2(3x-5), x=0..0.5)
+        #    = 161/192
+        # i1 = int(1 + 1/2 x^2(3x-5), x=0.5..1) - int(1/2 (x-1)*(x-2)^2, x=1..1.5)
+        #    = 47/384 - 11/384 = 3/32
+        # i2 = -int(1/2 (x-1)*(x-2)^2, x=1.5..2)
+        #    = -5/384
+        return np.array([161./192, 3./32, -5./384])
 
 
 class Quintic(Interpolant):
