@@ -383,6 +383,45 @@ def test_interpolant():
     with assert_raises(galsim.GalSimValueError):
         q.kval(x2d)
 
+@timer
+def test_unit_integrals():
+    # Test Interpolant.unit_integrals
+
+    interps = [galsim.Delta(),
+               galsim.Nearest(),
+               galsim.SincInterpolant(),
+               galsim.Linear(),
+               galsim.Cubic(),
+               galsim.Quintic(),
+               galsim.Lanczos(3),
+               galsim.Lanczos(3, conserve_dc=False),
+               galsim.Lanczos(17),
+              ]
+    for i in interps:
+        print(str(i))
+        # Compute directly with int1d
+        n = i.ixrange//2 + 1
+        direct_integrals = np.zeros(n)
+        if isinstance(i, galsim.Delta):
+            # int1d doesn't handle this well.
+            direct_integrals[0] = 1
+        else:
+            for k in range(n):
+                direct_integrals[k] = galsim.integ.int1d(i.xval, k-0.5, k+0.5)
+        print('direct: ',direct_integrals)
+
+        # Get from unit_integrals method (sometimes using analytic formulas)
+        integrals = i.unit_integrals()
+        print('integrals: ',len(integrals),integrals)
+
+        assert len(integrals) == n
+        np.testing.assert_allclose(integrals, direct_integrals, atol=1.e-12)
+
+        if n > 10:
+            print('n>10 for ',repr(i))
+            integrals2 = i.unit_integrals(max_len=10)
+            assert len(integrals2) == 10
+            np.testing.assert_equal(integrals2, integrals[:10])
 
 @timer
 def test_fluxnorm():
