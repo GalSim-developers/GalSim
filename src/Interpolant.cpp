@@ -400,8 +400,8 @@ namespace galsim {
         // f'(2)_left = f'(2)_right
         // f'(3)_left = 0
         // f''(0) = 0
-        // (*) f''(1)_left = f'(1)_right
-        // (*) f''(2)_left = f'(2)_right
+        // (*) f''(1)_left = f''(1)_right
+        // (*) f''(2)_left = f''(2)_right
         // (*) f''(3)_left = 0
         // f(x-3)+f(x-2) + f(x-1) + f(x) + f(x+1) + f(x+2) = 1 from 0..1
         // F'(j) = F''(j) = F'''(j) = F''''(j) = 0
