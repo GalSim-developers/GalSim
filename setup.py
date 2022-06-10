@@ -67,6 +67,7 @@ py_sources = all_files_from('pysrc', '.cpp')
 cpp_sources = all_files_from('src', '.cpp')
 test_sources = all_files_from('tests', '.cpp')
 headers = all_files_from('include')
+inst = all_files_from('src', '.inst')
 shared_data = all_files_from('share')
 
 copt =  {
@@ -1230,12 +1231,12 @@ class my_test(test):
 
 
 lib=("galsim", {'sources' : cpp_sources,
-                'depends' : headers,
+                'depends' : headers + inst,
                 'include_dirs' : ['include', 'include/galsim'],
                 'undef_macros' : undef_macros })
 ext=Extension("galsim._galsim",
               py_sources,
-              depends = cpp_sources + headers,
+              depends = cpp_sources + headers + inst,
               undef_macros = undef_macros)
 
 build_dep = ['setuptools>=38', 'pybind11>=2.2']
