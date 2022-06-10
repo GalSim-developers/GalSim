@@ -1012,26 +1012,30 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
     MatrixXd A(npix, npix);
     Vector<typename ComplexHelper<T>::double_type, Dynamic> b(npix);
 
-    //std::cerr<<"kernels: \n";
-    //for(int k=0; k<nk; ++k) {
-        //std::cerr<<k<<" "<<kernels[k]<<std::endl;
-    //}
-
     A.setZero();
-    for(int row=0; row<npix; ++row) {
-        int h = row % nx;
-        int k = row / nx;
-        for(int q=k-nk+1; q<k+nk; ++q) {
-            if (q < 0 || q >= ny) continue;
-            for(int p=h-nk+1; p<h+nk; ++p) {
-                if (p < 0 || p >= nx) continue;
-                int col = q*nx + p;
-                A(row, col) = kernels[std::abs(p-h)] * kernels[std::abs(q-k)];
-                //std::cerr<<h<<" "<<k<<" "<<p<<" "<<q<<"   "<<row<<"  "<<col<<"  "<<A(row,col)<<std::endl;
+    auto bit = b.begin();
+    for(int col=0; col<npix; ++col) {
+        int h = col % nx;
+        int k = col / nx;
+        int q1 = std::max(k-nk+1,0);
+        int q2 = std::min(k+nk,ny);
+        int p1 = std::max(h-nk+1,0);
+        int p2 = std::min(h+nk,nx);
+        auto Acol = A.col(col);
+        for(int q=q1; q<q2; ++q) {
+            int row = q*nx + p1;
+            double kq = kernels[std::abs(q-k)];
+            auto Acolit = Acol.begin() + row;
+            const double* kpit = kernels + (h-p1);
+            // A(row,col) = kernels[std::abs(p-h)] * kernels[std::abs(q-k)];
+            for(int p=p1; p<h; ++p) {
+                *Acolit++ = *kpit-- * kq;
+            }
+            for(int p=h; p<p2; ++p) {
+                *Acolit++ = *kpit++ * kq;
             }
         }
-        b[row] = *ptr++;
-        //std::cerr<<"b: "<<h<<" "<<k<<"  "<<b[row]<<std::endl;
+        *bit++ = *ptr++;
     }
 
     // Rather than A.lu(), this lets lu be constructed in place, so less memory usage.
@@ -1044,12 +1048,8 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
 
     // Copy back to the image
     ptr = getData();
-    for(int row=0; row<npix; ++row) {
-        //int h = row % nx;
-        //int k = row / nx;
-        *ptr++ = b[row];
-        //std::cerr<<"final: "<<h<<" "<<k<<"  "<<b[row]<<std::endl;
-    }
+    bit = b.begin();
+    for(int col=0; col<npix; ++col) *ptr++ = *bit++;
 }
 
 // The classes ConstReturn, ReturnInverse, and ReturnSecond are defined in ImageArith.h.
