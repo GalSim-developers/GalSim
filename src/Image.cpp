@@ -30,8 +30,6 @@
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
 #endif
 #include "Eigen/Dense"
-using Eigen::MatrixXd;
-using Eigen::VectorXd;
 
 #include "Image.h"
 #include "ImageArith.h"
@@ -1017,14 +1015,16 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
     for(int col=0; col<npix; ++col) {
         int h = col % nx;
         int k = col / nx;
-        int q1 = std::max(k-nk+1,0);
+        // Only populate lower triangle of A (since it's symmetric)
+        // I.e. only when row >= col, so q >= k
+        int q1 = k;
         int q2 = std::min(k+nk,ny);
         int p1 = std::max(h-nk+1,0);
         int p2 = std::min(h+nk,nx);
         auto Acol = A.col(col);
         for(int q=q1; q<q2; ++q) {
             int row = q*nx + p1;
-            double kq = kernels[std::abs(q-k)];
+            double kq = kernels[q-k];
             auto Acolit = Acol.begin() + row;
             const double* kpit = kernels + (h-p1);
             // A(row,col) = kernels[std::abs(p-h)] * kernels[std::abs(q-k)];
@@ -1038,13 +1038,13 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
         *bit++ = *ptr++;
     }
 
-    // Rather than A.lu(), this lets lu be constructed in place, so less memory usage.
+    // Rather than A.llt(), this lets solver be constructed in place, so less memory usage.
     // cf. https://eigen.tuxfamily.org/dox/group__InplaceDecomposition.html
-    Eigen::PartialPivLU<Eigen::Ref<Eigen::MatrixXd> > lu(A);
+    Eigen::LLT<Eigen::Ref<MatrixXd> > solver(A);
 
     // Unfortunately, Eigen doesn't seem to be able to solve the vector in place, but
     // that's less memory, so just assign the answer back to b.
-    b = lu.solve(b);
+    b = solver.solve(b);
 
     // Copy back to the image
     ptr = getData();
