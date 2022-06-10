@@ -1885,7 +1885,8 @@ class Image:
 
         image2 will end up approximately equalt to the original image.
         """
-
+        import time
+        t0 = time.time()
         ny, nx = self.array.shape
         npix = nx * ny
 
@@ -1898,19 +1899,39 @@ class Image:
         # The elements of A are the integral of the interpolant over x and y directions
         # for pixels that are within ixrange in both directions.
         A = np.zeros((npix, npix))
-        n = len(kernel)
+        nk = len(kernel)
         for row in range(npix):
             h = row % nx
             k = row // nx
-            for p in range(h-n+1, h+n):
-                if p < 0 or p >= nx: continue
-                for q in range(k-n+1, k+n):
-                    if q < 0 or q >= ny: continue
+            for q in range(k-nk+1, k+nk):
+                if q < 0 or q >= ny: continue
+                for p in range(h-nk+1, h+nk):
+                    if p < 0 or p >= nx: continue
                     col = q*nx + p
                     A[row, col] += kernel[abs(p-h)] * kernel[abs(q-k)]
+                    #print(h,k,p,q,row,col,A[row,col])
+            #print('b: ',h,k,self.array.ravel()[row])
 
         # Solve for x.
         x = np.linalg.solve(A, self.array.ravel())
+        for row in range(npix):
+            h = row % nx
+            k = row // nx
+            #print('final: ',h,k,x[row])
+
+        t1 = time.time()
+        im2 = self.copy()
+        #print('kernel.dtype = ',kernel.dtype)
+        #print('kernel = ',kernel)
+        _kernel = kernel.__array_interface__['data'][0]
+        _galsim.depixelizeImage(im2._image, _kernel, kernel.size)
+        #print('x = ',x)
+        #print('x2 = ',im2.array.ravel())
+        #print('x[mid] = ',x[npix//2-5:npix//2+5])
+        #print('x2[mid] = ',im2.array.ravel()[npix//2-5:npix//2+5])
+        t2 = time.time()
+        print('times: ',t1-t0,t2-t1)
+        return im2
 
         # Return the result as an Image with the same bounds, wcs as self.
         return _Image(x.reshape(self.array.shape), self.bounds, self.wcs)

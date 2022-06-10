@@ -531,6 +531,11 @@ namespace galsim {
         void invertSelf();
 
         /**
+        *  @brief Make a depixelized version of the image
+        */
+        void depixelizeSelf(const double* kernels, const int nk);
+
+        /**
          *  @brief Return a pointer to the first pixel in the image.
          *
          *  This overrides the version in BaseImage, since this one returns a non-const
@@ -877,9 +882,6 @@ namespace galsim {
      */
     template <typename T>
     PUBLIC_API void invertImage(ImageView<T> im);
-
-
-
 
 } // namespace galsim
 

@@ -24,7 +24,14 @@
 #include <cstring>
 
 #include "fftw3.h"
-#include "fmath/fmath.hpp"  // Use their compiler checks for the right SSE include.
+#include "fmath/fmath.hpp"  // Use their compiler checks for the right SSE to include.
+
+#if defined(__GNUC__) && __GNUC__ >= 6
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#endif
+#include "Eigen/Dense"
+using Eigen::MatrixXd;
+using Eigen::VectorXd;
 
 #include "Image.h"
 #include "ImageArith.h"
@@ -38,6 +45,7 @@ struct ComplexHelper
 {
     typedef T real_type;
     typedef std::complex<T> complex_type;
+    typedef double double_type;
     static inline T conj(const T& x) { return x; }
     static inline T real(const T& x) { return x; }
 };
@@ -46,6 +54,7 @@ struct ComplexHelper<std::complex<T> >
 {
     typedef T real_type;
     typedef std::complex<T> complex_type;
+    typedef std::complex<double> double_type;
     static inline T real(const std::complex<T>& x) { return std::real(x); }
     static inline std::complex<T> conj(const std::complex<T>& x) { return std::conj(x); }
 };
@@ -988,6 +997,60 @@ void cfft(const BaseImage<T>& in, ImageView<std::complex<double> > out,
 template <typename T>
 void invertImage(ImageView<T> im)
 { im.invertSelf(); }
+
+template <typename T>
+void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
+{
+    using Eigen::MatrixXd;
+    using Eigen::Vector;
+    using Eigen::Dynamic;
+
+    const int nx = this->getNCol();
+    const int ny = this->getNRow();
+    T* ptr = getData();
+    int npix = nx * ny;
+    MatrixXd A(npix, npix);
+    Vector<typename ComplexHelper<T>::double_type, Dynamic> b(npix);
+
+    //std::cerr<<"kernels: \n";
+    //for(int k=0; k<nk; ++k) {
+        //std::cerr<<k<<" "<<kernels[k]<<std::endl;
+    //}
+
+    A.setZero();
+    for(int row=0; row<npix; ++row) {
+        int h = row % nx;
+        int k = row / nx;
+        for(int q=k-nk+1; q<k+nk; ++q) {
+            if (q < 0 || q >= ny) continue;
+            for(int p=h-nk+1; p<h+nk; ++p) {
+                if (p < 0 || p >= nx) continue;
+                int col = q*nx + p;
+                A(row, col) = kernels[std::abs(p-h)] * kernels[std::abs(q-k)];
+                //std::cerr<<h<<" "<<k<<" "<<p<<" "<<q<<"   "<<row<<"  "<<col<<"  "<<A(row,col)<<std::endl;
+            }
+        }
+        b[row] = *ptr++;
+        //std::cerr<<"b: "<<h<<" "<<k<<"  "<<b[row]<<std::endl;
+    }
+
+    // Rather than A.lu(), this lets lu be constructed in place, so less memory usage.
+    // cf. https://eigen.tuxfamily.org/dox/group__InplaceDecomposition.html
+    Eigen::PartialPivLU<Eigen::Ref<Eigen::MatrixXd> > lu(A);
+
+    // Unfortunately, Eigen doesn't seem to be able to solve the vector in place, but
+    // that's less memory, so just assign the answer back to b.
+    b = lu.solve(b);
+
+    // Copy back to the image
+    ptr = getData();
+    for(int row=0; row<npix; ++row) {
+        //int h = row % nx;
+        //int k = row / nx;
+        *ptr++ = b[row];
+        //std::cerr<<"final: "<<h<<" "<<k<<"  "<<b[row]<<std::endl;
+    }
+}
 
 // The classes ConstReturn, ReturnInverse, and ReturnSecond are defined in ImageArith.h.
 

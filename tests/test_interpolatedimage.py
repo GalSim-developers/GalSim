@@ -1726,7 +1726,7 @@ def test_depixelize():
     # The depixelize function is basically exact for real-space convolution.
     im3 = ii_without_pixel.drawImage(nx=nx, ny=ny, scale=scale, method='real_space')
     print('real-space drawing: max error = ',np.max(np.abs(im3.array-im1.array)))
-    np.testing.assert_allclose(im3.array, im1.array, atol=1.e-12)
+    np.testing.assert_allclose(im3.array, im1.array, atol=1.e-9)
     t5 = time.time()
 
     # With FFT convolution, it's not as close, but this is just due to the approximations that
