@@ -36,6 +36,13 @@ namespace galsim {
     }
 
     template <typename T>
+    static void DepixelizeImage(ImageView<T> im, size_t ikernels, const int nk)
+    {
+        const double* kernels = reinterpret_cast<const double*>(ikernels);
+        im.depixelizeSelf(kernels, nk);
+    }
+
+    template <typename T>
     static void WrapImage(py::module& _galsim, const std::string& suffix)
     {
         py::class_<BaseImage<T> >(_galsim, ("BaseImage" + suffix).c_str());
@@ -58,6 +65,9 @@ namespace galsim {
 
         typedef void (*invert_func_type)(ImageView<T>);
         _galsim.def("invertImage", invert_func_type(&invertImage));
+
+        typedef void (*depix_func_type)(ImageView<T>, size_t, const int);
+        _galsim.def("depixelizeImage", depix_func_type(&DepixelizeImage));
     }
 
     void pyExportImage(py::module& _galsim)
