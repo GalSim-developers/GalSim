@@ -1338,6 +1338,19 @@ namespace galsim {
 	bool photonsHasAllocatedAngles = photons.hasAllocatedAngles();
 	bool photonsHasAllocatedWavelengths = photons.hasAllocatedWavelengths();
 
+        // if no wavelengths allocated, photonsWavelength will be null, but some
+        // compilers don't like mapping a null pointer to the GPU, so assign it to
+        // something safe instead. (It will never be accessed in this case so the
+        // content of what it points to doesn't matter).
+        if (!photonsHasAllocatedWavelengths) {
+            photonsWavelength = photonsX;
+        }
+        // same with the angles
+        if (!photonsHasAllocatedAngles) {
+            photonsDXDZ = photonsX;
+            photonsDYDZ = photonsY;
+        }
+        
 	// random arrays
 	double* diffStepRandomArray = diffStepRandom.data();
 	//double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
@@ -1365,7 +1378,9 @@ namespace galsim {
 	int emptypolySize = _emptypoly.size();
 	
 #pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
-	//#pragma omp target teams distribute parallel for reduction(+:addedFlux)
+        
+        //#pragma omp target enter data map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1])
+        //#pragma omp target teams distribute parallel for reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
 	    double x0 = photonsX[i];
 	    double y0 = photonsY[i];
@@ -1451,7 +1466,7 @@ namespace galsim {
 #pragma omp atomic
 		_deltaGPU[deltaIdx] += flux;
 		addedFlux += flux;
-	    }
+            }
 	}
 
         return addedFlux;
