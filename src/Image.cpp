@@ -30,6 +30,7 @@
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
 #endif
 #include "Eigen/Dense"
+#include "Eigen/Core"
 
 #include "Image.h"
 #include "ImageArith.h"
