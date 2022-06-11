@@ -1764,6 +1764,16 @@ def test_depixelize():
     print('draw ii_without_pixel, fft: ',t6-t5)
     print('draw ii_without_pixel, high maxk: ',t7-t6)
 
+    # Check with a non-trivial WCS
+    wcs = galsim.AffineTransform(0.07, -0.31, 0.33, 0.03,
+                                 galsim.PositionD(5.3,7.1), galsim.PositionD(293, 800))
+    im6 = true_prof.drawImage(nx=nx, ny=ny, wcs=wcs)
+    im6d = im6.depixelize(interp)
+    ii = galsim.InterpolatedImage(im6d, x_interpolant=interp, _force_maxk=50)
+    im7 = ii.drawImage(nx=nx, ny=ny, wcs=wcs, method='auto')
+    print('affine wcs max error = ',np.max(np.abs(im7.array-im6.array)),'  time = ',t2-t1)
+    np.testing.assert_allclose(im7.array, im6.array, atol=1.e-7)
+
     # Check a variety of interpolants.
     interps = [galsim.Delta(),
                galsim.Nearest(),
@@ -1783,9 +1793,10 @@ def test_depixelize():
                                       gsparams=interp.gsparams)
 
         im6 = ii.drawImage(nx=nx, ny=ny, scale=scale, method='auto')
+        # Most of these are better than 1.e-5, but Delta and Nearest are much worse.
+        # So just use tol=1.e-2 here.
         np.testing.assert_allclose(im6.array, im1.array, atol=1.e-2)
         print(interp,' max error = ',np.max(np.abs(im6.array-im1.array)),'  time = ',t2-t1)
-
 
 if __name__ == "__main__":
     setup()
