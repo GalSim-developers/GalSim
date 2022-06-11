@@ -30,7 +30,6 @@
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
 #endif
 #include "Eigen/Dense"
-#include "Eigen/Core"
 
 #include "Image.h"
 #include "ImageArith.h"
@@ -1001,7 +1000,7 @@ template <typename T>
 void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
 {
     using Eigen::MatrixXd;
-    using Eigen::Vector;
+    using Eigen::Matrix;
     using Eigen::Dynamic;
 
     const int nx = this->getNCol();
@@ -1009,7 +1008,7 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
     T* ptr = getData();
     int npix = nx * ny;
     MatrixXd A(npix, npix);
-    Vector<typename ComplexHelper<T>::double_type, Dynamic> b(npix);
+    Matrix<typename ComplexHelper<T>::double_type, Dynamic, 1> b(npix);
 
     A.setZero();
     auto bit = b.begin();
