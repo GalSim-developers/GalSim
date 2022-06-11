@@ -1702,11 +1702,13 @@ def test_quintic_glagn():
 
 def test_depixelize():
     # True, non-II profile.  Something not too symmetric.
-    nx = 52
-    ny = 45  # Make these unequal to test indexing
-    scale = 0.3
     true_prof = galsim.Gaussian(sigma=0.7, flux=10).shear(g1=0.1, g2=0.3) + \
                 galsim.Gaussian(sigma=0.4, flux=3).shift(0.1,-0.3)
+
+    # Make these unequal to test indexing
+    nx = 52
+    ny = 45
+    scale = 0.3
     im1 = true_prof.drawImage(nx=nx, ny=ny, scale=scale)
 
     interp = galsim.Lanczos(11)
@@ -1715,7 +1717,11 @@ def test_depixelize():
     t0 = time.time()
     ii_with_pixel = galsim.InterpolatedImage(im1, x_interpolant=interp)
     t1 = time.time()
-    im2 = ii_with_pixel.drawImage(nx=nx, ny=ny, scale=scale)
+
+    # The normal use of InterpolatedImage requires drawing with no_pixel to match original.
+    im2 = ii_with_pixel.drawImage(nx=nx, ny=ny, scale=scale, method='no_pixel')
+    print('with_pixel: max error = ',np.max(np.abs(im2.array-im1.array)))
+    np.testing.assert_allclose(im2.array, im1.array, atol=1.e-9)
     t2 = time.time()
 
     nopix_image = im1.depixelize(x_interpolant=interp)
@@ -1757,6 +1763,28 @@ def test_depixelize():
     print('draw ii_without_pixel, real: ',t5-t4)
     print('draw ii_without_pixel, fft: ',t6-t5)
     print('draw ii_without_pixel, high maxk: ',t7-t6)
+
+    # Check a variety of interpolants.
+    interps = [galsim.Delta(),
+               galsim.Nearest(),
+               galsim.SincInterpolant(gsparams=galsim.GSParams(kvalue_accuracy=0.01)),
+               galsim.Linear(),
+               galsim.Cubic(),
+               galsim.Quintic(),
+               galsim.Lanczos(3),
+               galsim.Lanczos(5, conserve_dc=False),
+               galsim.Lanczos(17),
+              ]
+    for interp in interps:
+        t1 = time.time()
+        nopix_image = im1.depixelize(x_interpolant=interp)
+        t2 = time.time()
+        ii = galsim.InterpolatedImage(nopix_image, x_interpolant=interp, _force_maxk=50,
+                                      gsparams=interp.gsparams)
+
+        im6 = ii.drawImage(nx=nx, ny=ny, scale=scale, method='auto')
+        np.testing.assert_allclose(im6.array, im1.array, atol=1.e-2)
+        print(interp,' max error = ',np.max(np.abs(im6.array-im1.array)),'  time = ',t2-t1)
 
 
 if __name__ == "__main__":

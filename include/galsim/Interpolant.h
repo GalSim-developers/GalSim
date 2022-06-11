@@ -310,7 +310,7 @@ namespace galsim {
         ~SincInterpolant() {}
 
         double xrange() const { return 1./(M_PI*_gsparams.kvalue_accuracy); }
-        int ixrange() const { return 0; }
+        int ixrange() const { return 2*int(ceil(xrange())); }
         double urange() const { return 0.5; }
 
         double xval(double x) const;
