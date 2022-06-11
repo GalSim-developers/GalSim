@@ -197,6 +197,7 @@ class Interpolant:
         Parameters:
             max_len:    The maximum length of the returned array.  This is usually only relevant
                         for SincInterpolant, where xrange = inf.
+
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
@@ -266,12 +267,12 @@ class Delta(Interpolant):
         ret[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
-            max_len:    The maximum length of the returned array.  This is usually only relevant
-                        for SincInterpolant, where xrange = inf.
+            max_len:    The maximum length of the returned array. (ignored)
+
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
-        return np.array([1])
+        return np.array([1], dtype=float)
 
 
 class Nearest(Interpolant):
@@ -328,12 +329,12 @@ class Nearest(Interpolant):
         ret[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
-            max_len:    The maximum length of the returned array.  This is usually only relevant
-                        for SincInterpolant, where xrange = inf.
+            max_len:    The maximum length of the returned array. (ignored)
+
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
-        return np.array([1])
+        return np.array([1], dtype=float)
 
 
 class SincInterpolant(Interpolant):
@@ -392,8 +393,8 @@ class SincInterpolant(Interpolant):
         ret[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
-            max_len:    The maximum length of the returned array.  This is usually only relevant
-                        for SincInterpolant, where xrange = inf.
+            max_len:    The maximum length of the returned array.
+
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
@@ -469,7 +470,7 @@ class Linear(Interpolant):
         #    = 3/4
         # i1 = int(1-x, x=0.5..1)
         #    = 1/8
-        return np.array([0.75, 0.125])
+        return np.array([0.75, 0.125], dtype=float)
 
 
 class Cubic(Interpolant):
@@ -547,7 +548,7 @@ class Cubic(Interpolant):
         #    = 47/384 - 11/384 = 3/32
         # i2 = -int(1/2 (x-1)*(x-2)^2, x=1.5..2)
         #    = -5/384
-        return np.array([161./192, 3./32, -5./384])
+        return np.array([161./192, 3./32, -5./384], dtype=float)
 
 
 class Quintic(Interpolant):
