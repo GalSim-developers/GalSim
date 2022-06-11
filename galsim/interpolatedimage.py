@@ -54,13 +54,20 @@ class InterpolatedImage(GSObject):
        multiplied by the pixel area.
 
     You can also use images that were drawn with one of the pixel-integrating methods ('auto',
-    'fft', or 'real_space'); however, the resulting profile will not correspond to the one
-    that was used to call `GSObject.drawImage`.  The integration over the pixel is equivalent to
-    convolving the original profile by a `Pixel` and then drawing with ``method='no_pixel'``.  So
-    if you use such an image with InterpolatedImage, the resulting profile will include the `Pixel`
-    convolution already.  As such, if you use it as a PSF for example, then the final objects
-    convolved by this PSF will already include the pixel convolution, so you should draw them
-    using ``method='no_pixel'``.
+    'phot', 'fft', or 'real_space'), or real images where nature has integrated over the pixel for
+    you.  However, the resulting profile will by default include a convolution by a `Pixel` (this
+    is equivalent to integration over the pixel).  This is often acceptable, and the resulting
+    `InterpolatedImage` object can be convolved by other profiles as usual.  One just needs to
+    remember to draw the final convolved profile using ``method='no_pixel'`` to avoid including
+    the pixel convolution a second time.
+
+    However, if you want to try to remove the effect of the pixel and have the `InterpolatedImage`
+    model the pre-pixelized profile, then you can set ``depixelize=True``.  This will call
+    `Image.depixelize` on the image automatically to try to remove the effect of the pixelization.
+    This step can be rather slow and memory-demanding, so use this with caution.  But if
+    used, the resulting profile represents the true underlying profile, without the pixel
+    convolution.  It can therefore be rotated, sheared, etc.  And when rendering, one should
+    use the normal methods: ``auto``, ``phot``, etc.
 
     If the input `Image` has a ``scale`` or ``wcs`` associated with it, then there is no need to
     specify one as a parameter here.  But if one is provided, that will override any ``scale`` or
@@ -233,6 +240,11 @@ class InterpolatedImage(GSObject):
                             center of the profile (if ``use_true_center=True``) or the nominal
                             center given by image.center (if ``use_true_center=False``)
                             [default: True]
+        depixelize:         Whether to try to remove the effect of the pixelization.  If this is
+                            True, then drawing this profile with method='auto' should render an
+                            image equivalent to the input image.  If this is False (the default),
+                            then you would need to draw with method='no_pixel' to get an equivalent
+                            image.  See discussion above. [default: False]
         offset:             The location in the input image to use as the center of the profile.
                             This should be specified relative to the center of the input image
                             (either the true center if ``use_true_center=True``, or the nominal
@@ -243,19 +255,21 @@ class InterpolatedImage(GSObject):
     """
     _req_params = { 'image' : str }
     _opt_params = {
-        'x_interpolant' : str ,
-        'k_interpolant' : str ,
-        'normalization' : str ,
-        'scale' : float ,
-        'flux' : float ,
-        'pad_factor' : float ,
-        'noise_pad_size' : float ,
-        'noise_pad' : str ,
-        'pad_image' : str ,
-        'calculate_stepk' : bool ,
-        'calculate_maxk' : bool ,
-        'use_true_center' : bool ,
-        'hdu' : int
+        'x_interpolant': str,
+        'k_interpolant': str,
+        'normalization': str,
+        'scale': float,
+        'flux': float,
+        'pad_factor': float,
+        'noise_pad_size': float,
+        'noise_pad': str,
+        'pad_image': str,
+        'calculate_stepk': bool,
+        'calculate_maxk': bool,
+        'use_true_center': bool,
+        'depixelize': bool,
+        'offset': PositionD,
+        'hdu': int
     }
     _takes_rng = True
     _cache_noise_pad = {}
@@ -268,8 +282,8 @@ class InterpolatedImage(GSObject):
     def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
-                 use_cache=True, use_true_center=True, offset=None, gsparams=None,
-                 _force_stepk=0., _force_maxk=0., hdu=None):
+                 use_cache=True, use_true_center=True, depixelize=False, offset=None,
+                 gsparams=None, _force_stepk=0., _force_maxk=0., hdu=None):
 
         from .wcs import BaseWCS, PixelScale
         from .random import BaseDeviate
@@ -290,14 +304,9 @@ class InterpolatedImage(GSObject):
             raise GalSimValueError("Invalid normalization requested.", normalization,
                                    ('flux', 'f', 'surface brightness', 'sb'))
 
-        # Store the image as an attribute and make sure we don't change the original image
-        # in anything we do here.  (e.g. set scale, etc.)
-        self._image = image.view(dtype=np.float64, contiguous=True)
-        self._image.setCenter(0,0)
-        self._gsparams = GSParams.check(gsparams)
-
         # Set up the interpolants if none was provided by user, or check that the user-provided ones
         # are of a valid type
+        self._gsparams = GSParams.check(gsparams)
         if x_interpolant is None:
             self._x_interpolant = Quintic(gsparams=self._gsparams)
         else:
@@ -306,6 +315,14 @@ class InterpolatedImage(GSObject):
             self._k_interpolant = Quintic(gsparams=self._gsparams)
         else:
             self._k_interpolant = convert_interpolant(k_interpolant).withGSParams(self._gsparams)
+
+        # Store the image as an attribute and make sure we don't change the original image
+        # in anything we do here.  (e.g. set scale, etc.)
+        if depixelize:
+            self._image = image.view(dtype=np.float64).depixelize(self._x_interpolant)
+        else:
+            self._image = image.view(dtype=np.float64, contiguous=True)
+        self._image.setCenter(0,0)
 
         # Set the wcs if necessary
         if scale is not None:
