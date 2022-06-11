@@ -1709,7 +1709,7 @@ def test_depixelize():
     nx = 52
     ny = 45
     scale = 0.3
-    im1 = true_prof.drawImage(nx=nx, ny=ny, scale=scale)
+    im1 = true_prof.drawImage(nx=nx, ny=ny, scale=scale, dtype=float)
 
     interp = galsim.Lanczos(11)
 
@@ -1748,7 +1748,8 @@ def test_depixelize():
     # around maxk=10, not matter what the threshold is.
     # So using this high a maxk is actually wrapping around the FFT image multiple times.
     # This feels like a clue that something could be improved in some of the choices we make
-    # wrt the InterpolatedImage FFT rendering, but I'm going to leave this alone for now.
+    # wrt the InterpolatedImage FFT rendering, but I'm going to leave this alone for now,
+    # since I'm not actually sure what the better thing to do would be.
     alt = galsim.InterpolatedImage(nopix_image, x_interpolant=interp, _force_maxk=50)
     im5 = alt.drawImage(nx=nx, ny=ny, scale=scale, method='fft')
     print('high-maxk fft drawing: max error = ',np.max(np.abs(im5.array-im1.array)))
@@ -1764,12 +1765,18 @@ def test_depixelize():
     print('draw ii_without_pixel, fft: ',t6-t5)
     print('draw ii_without_pixel, high maxk: ',t7-t6)
 
+    # Use the simpler API that we expect users to typically prefer.
+    # Should be exactly equivalent to the above two-step process.
+    # (But only if the original image is double-precision.  Otherwise, this gets to dtype=float
+    # sooner than the other method.)
+    ii_without_pixel2 = galsim.InterpolatedImage(im1, x_interpolant=interp, depixelize=True)
+    assert ii_without_pixel2 == ii_without_pixel
+
     # Check with a non-trivial WCS
     wcs = galsim.AffineTransform(0.07, -0.31, 0.33, 0.03,
                                  galsim.PositionD(5.3,7.1), galsim.PositionD(293, 800))
     im6 = true_prof.drawImage(nx=nx, ny=ny, wcs=wcs)
-    im6d = im6.depixelize(interp)
-    ii = galsim.InterpolatedImage(im6d, x_interpolant=interp, _force_maxk=50)
+    ii = galsim.InterpolatedImage(im6, x_interpolant=interp, _force_maxk=50, depixelize=True)
     im7 = ii.drawImage(nx=nx, ny=ny, wcs=wcs, method='auto')
     print('affine wcs max error = ',np.max(np.abs(im7.array-im6.array)),'  time = ',t2-t1)
     np.testing.assert_allclose(im7.array, im6.array, atol=1.e-7)
@@ -1787,10 +1794,9 @@ def test_depixelize():
               ]
     for interp in interps:
         t1 = time.time()
-        nopix_image = im1.depixelize(x_interpolant=interp)
-        t2 = time.time()
-        ii = galsim.InterpolatedImage(nopix_image, x_interpolant=interp, _force_maxk=50,
+        ii = galsim.InterpolatedImage(im1, x_interpolant=interp, _force_maxk=50, depixelize=True,
                                       gsparams=interp.gsparams)
+        t2 = time.time()
 
         im6 = ii.drawImage(nx=nx, ny=ny, scale=scale, method='auto')
         # Most of these are better than 1.e-5, but Delta and Nearest are much worse.
