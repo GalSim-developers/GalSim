@@ -1875,15 +1875,28 @@ class Image:
     def depixelize(self, x_interpolant):
         """Return a depixelized version of the image.
 
-        Specifically, this function creates an image that could be used with InterpolatedImage
+        Specifically, this function creates an image that could be used with `InterpolatedImage`
         with the given x_interpolant, which when drawn with method=auto would produce the
         current image.
 
             >>> alt_image = image.depixelize(x_interpolant)
             >>> ii = galsim.InterpolatedImage(alt_image, x_interpolant=x_interpolant)
-            >>> image2 = ii.drawImage(image.copy())
+            >>> image2 = ii.drawImage(image.copy(), method='auto')
 
         image2 will end up approximately equalt to the original image.
+
+        .. warning::
+
+            This function is fairly expensive, both in memory and CPU time, so it should
+            only be called on fairly small images (~100x100 or smaller typically).
+            The memory requirement scales as Npix^2, and the execution time scales as Npix^3.
+
+        Parameters:
+            x_interpolant:  The `Interpolant` to use in the `InterpolatedImage` to describe
+                            how the profile should be interpolated between the pixel centers.
+
+        Returns:
+            an `Image` representing the underlying profile without the pixel convolution.
         """
         ny, nx = self.array.shape
         npix = nx * ny
