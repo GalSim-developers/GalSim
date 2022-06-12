@@ -202,14 +202,15 @@ class Interpolant:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
         from .integ import int1d
-        # Note: This is pretty fast, but subclasses may choose to override this if there
-        # is an analytic integral to avoud the int1d call.
         n = self.ixrange//2 + 1
         n = n if max_len is None else min(n, max_len)
-        integrals = np.zeros(n)
-        for i in range(n):
-            integrals[i] = int1d(self.xval, i-0.5, i+0.5)
-        return integrals
+        if not hasattr(self, '_unit_integrals') or n > len(self._unit_integrals):
+            # Note: This is pretty fast, but subclasses may choose to override this if there
+            # is an analytic integral to avoid the int1d call.
+            self._unit_integrals = np.zeros(n)
+            for i in range(n):
+                self._unit_integrals[i] = int1d(self.xval, i-0.5, i+0.5)
+        return self._unit_integrals[:n]
 
     # Sub-classes should define _i property, repr, and str
 
@@ -261,6 +262,8 @@ class Delta(Interpolant):
         """
         return 2. * math.pi / self._gsparams.kvalue_accuracy
 
+    _unit_integrals = np.array([1], dtype=float)
+
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
@@ -272,7 +275,7 @@ class Delta(Interpolant):
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
-        return np.array([1], dtype=float)
+        return self._unit_integrals
 
 
 class Nearest(Interpolant):
@@ -323,6 +326,8 @@ class Nearest(Interpolant):
         """
         return 2. / self._gsparams.kvalue_accuracy
 
+    _unit_integrals = np.array([1], dtype=float)
+
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
@@ -334,7 +339,7 @@ class Nearest(Interpolant):
         Returns:
             integrals:  An array of unit integrals of length max_len or smaller.
         """
-        return np.array([1], dtype=float)
+        return self._unit_integrals
 
 
 class SincInterpolant(Interpolant):
@@ -401,10 +406,11 @@ class SincInterpolant(Interpolant):
         from .bessel import si
         n = self.ixrange//2 + 1
         n = n if max_len is None else min(n, max_len)
-        integrals = np.zeros(n)
-        for i in range(n):
-            integrals[i] = (si(np.pi * (i+0.5)) - si(np.pi * (i-0.5))) / np.pi
-        return integrals
+        if not hasattr(self, '_unit_integrals') or n > len(self._unit_integrals):
+            self._unit_integrals = np.zeros(n)
+            for i in range(n):
+                self._unit_integrals[i] = (si(np.pi * (i+0.5)) - si(np.pi * (i-0.5))) / np.pi
+        return self._unit_integrals[:n]
 
 
 class Linear(Interpolant):
@@ -455,6 +461,8 @@ class Linear(Interpolant):
         """
         return 2. / self._gsparams.kvalue_accuracy**0.5
 
+    _unit_integrals = np.array([0.75, 0.125], dtype=float)
+
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
@@ -470,7 +478,7 @@ class Linear(Interpolant):
         #    = 3/4
         # i1 = int(1-x, x=0.5..1)
         #    = 1/8
-        return np.array([0.75, 0.125], dtype=float)
+        return self._unit_integrals
 
 
 class Cubic(Interpolant):
@@ -520,6 +528,8 @@ class Cubic(Interpolant):
         # kmax = 2 * (3sqrt(3)/8 tol)^1/3
         return 1.7320508075688774 / self._gsparams.kvalue_accuracy**(1./3.)
 
+    _unit_integrals = np.array([161./192, 3./32, -5./384], dtype=float)
+
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
@@ -537,7 +547,7 @@ class Cubic(Interpolant):
         #    = 47/384 - 11/384 = 3/32
         # i2 = -int(1/2 (x-1)*(x-2)^2, x=1.5..2)
         #    = -5/384
-        return np.array([161./192, 3./32, -5./384], dtype=float)
+        return self._unit_integrals
 
 
 class Quintic(Interpolant):
