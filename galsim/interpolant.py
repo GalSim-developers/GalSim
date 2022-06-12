@@ -192,7 +192,7 @@ class Interpolant:
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
-        ret[i] = int(xval(xval, i-0.5, i+0.5)
+        integrals[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
             max_len:    The maximum length of the returned array.  This is usually only relevant
@@ -264,7 +264,7 @@ class Delta(Interpolant):
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
-        ret[i] = int(xval(xval, i-0.5, i+0.5)
+        integrals[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
             max_len:    The maximum length of the returned array. (ignored)
@@ -326,7 +326,7 @@ class Nearest(Interpolant):
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
-        ret[i] = int(xval(xval, i-0.5, i+0.5)
+        integrals[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
             max_len:    The maximum length of the returned array. (ignored)
@@ -390,7 +390,7 @@ class SincInterpolant(Interpolant):
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
-        ret[i] = int(xval(xval, i-0.5, i+0.5)
+        integrals[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
             max_len:    The maximum length of the returned array.
@@ -458,7 +458,7 @@ class Linear(Interpolant):
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
-        ret[i] = int(xval(xval, i-0.5, i+0.5)
+        integrals[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
             max_len:    The maximum length of the returned array.  This is usually only relevant
@@ -523,18 +523,7 @@ class Cubic(Interpolant):
     def unit_integrals(self, max_len=None):
         """Compute the unit integrals of the real-space kernel.
 
-        ret[i] = int(xval(xval, i-0.5, i+0.5)
-
-        Parameters:
-            max_len:    The maximum length of the returned array.  This is usually only relevant
-                        for SincInterpolant, where xrange = inf.
-        Returns:
-            integrals:  An array of unit integrals of length max_len or smaller.
-        """
-    def unit_integrals(self, max_len=None):
-        """Compute the unit integrals of the real-space kernel.
-
-        ret[i] = int(xval(xval, i-0.5, i+0.5)
+        integrals[i] = int(xval(xval, i-0.5, i+0.5)
 
         Parameters:
             max_len:    The maximum length of the returned array.  This is usually only relevant
