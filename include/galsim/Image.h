@@ -883,6 +883,11 @@ namespace galsim {
     template <typename T>
     PUBLIC_API void invertImage(ImageView<T> im);
 
+    /**
+     *  @brief Clear the cached solver used for depixelizing images
+     */
+    PUBLIC_API void ClearDepixelizeCache();
+
 } // namespace galsim
 
 #include "ImageArith.h"

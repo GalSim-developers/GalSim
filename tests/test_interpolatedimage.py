@@ -1779,6 +1779,12 @@ def test_depixelize():
     t9 = time.time()
     assert t9-t8 < (t3-t2)/10
 
+    # But not if you clear the cache.
+    galsim.Image.clear_depixelize_cache()
+    nopix_image4 = im4.depixelize(x_interpolant=interp)
+    t10 = time.time()
+    assert t10-t9 > (t3-t2)/10
+
     print('times:')
     print('make ii_with_pixel: ',t1-t0)
     print('draw ii_with_pixel: ',t2-t1)
@@ -1789,6 +1795,7 @@ def test_depixelize():
     print('draw ii_without_pixel, high maxk: ',t7-t6)
     print('depixelize #2: ',t8-t7)
     print('depixelize #3: ',t9-t8)
+    print('depixelize #4: ',t10-t9)
 
     # Use the simpler API that we expect users to typically prefer.
     # Should be exactly equivalent to the above two-step process.
