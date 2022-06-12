@@ -1089,6 +1089,9 @@ void ImageView<T>::depixelizeSelf(const double* unit_integrals, const int nk)
     for(int col=0; col<npix; ++col) *ptr++ = *bit++;
 }
 
+void ClearDepixelizeCache()
+{ depixelize::_solver.reset(); }
+
 // The classes ConstReturn, ReturnInverse, and ReturnSecond are defined in ImageArith.h.
 
 // Helper function to set data to all zeros.  (memset doesn't like being called on complex<T>)

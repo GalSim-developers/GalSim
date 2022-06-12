@@ -1891,6 +1891,15 @@ class Image:
             only be called on fairly small images (~100x100 or smaller typically).
             The memory requirement scales as Npix^2, and the execution time scales as Npix^3.
 
+            However, the expensive part of the calculation is independent of the image values.
+            It only depends on the size of the image and interpolant being used.  So this part
+            of the calculation is cached and reused if possible.  If you make repeated calls
+            to depixelize using the same image size and interpolant, it will be much faster
+            after the first call.
+
+            If you need to release the cache (since it can be a non-trivial amount of memory),
+            you may do so using `Image.clear_depixelize_cache`.
+
         Parameters:
             x_interpolant:  The `Interpolant` to use in the `InterpolatedImage` to describe
                             how the profile should be interpolated between the pixel centers.
@@ -1909,6 +1918,12 @@ class Image:
         _unit_integrals = unit_integrals.__array_interface__['data'][0]
         _galsim.depixelizeImage(im2._image, _unit_integrals, unit_integrals.size)
         return im2
+
+    @staticmethod
+    def clear_depixelize_cache():
+        """Release the cached solver used by depixelize to make repeated calls more efficient.
+        """
+        _galsim.ClearDepixelizeCache()
 
     def __eq__(self, other):
         # Note that numpy.array_equal can return True if the dtypes of the two arrays involved are

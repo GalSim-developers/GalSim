@@ -82,6 +82,7 @@ namespace galsim {
         WrapImage<std::complex<float> >(_galsim, "CF");
 
         _galsim.def("goodFFTSize", &goodFFTSize);
+        _galsim.def("ClearDepixelizeCache", &ClearDepixelizeCache);
     }
 
 } // namespace galsim
