@@ -1011,7 +1011,8 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
     Matrix<typename ComplexHelper<T>::double_type, Dynamic, 1> b(npix);
 
     A.setZero();
-    auto bit = b.begin();
+    // Note: In Eigen 3.4, this can be b.begin()
+    auto bit = &b[0];
     for(int col=0; col<npix; ++col) {
         int h = col % nx;
         int k = col / nx;
@@ -1025,7 +1026,8 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
         for(int q=q1; q<q2; ++q) {
             int row = q*nx + p1;
             double kq = kernels[q-k];
-            auto Acolit = Acol.begin() + row;
+            // Note: In Eigen 3.4, this can be Acol.begin() + row
+            auto Acolit = &Acol[row];
             const double* kpit = kernels + (h-p1);
             // A(row,col) = kernels[std::abs(p-h)] * kernels[std::abs(q-k)];
             for(int p=p1; p<h; ++p) {
@@ -1048,7 +1050,7 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
 
     // Copy back to the image
     ptr = getData();
-    bit = b.begin();
+    bit = &b[0];
     for(int col=0; col<npix; ++col) *ptr++ = *bit++;
 }
 
