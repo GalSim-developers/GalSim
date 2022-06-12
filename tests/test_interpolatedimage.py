@@ -1719,8 +1719,8 @@ def test_depixelize():
                 galsim.Gaussian(sigma=0.4, flux=3).shift(0.1,-0.3)
 
     # Make these unequal to test indexing
-    nx = 52
-    ny = 45
+    nx = 32
+    ny = 25
     scale = 0.3
     im1 = true_prof.drawImage(nx=nx, ny=ny, scale=scale, dtype=float)
 
