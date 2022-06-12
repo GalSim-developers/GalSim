@@ -1769,6 +1769,16 @@ def test_depixelize():
     np.testing.assert_allclose(im5.array, im1.array, atol=1.e-7)
     t7 = time.time()
 
+    # Second time with the same size image is much faster, since uses a cache.
+    nopix_image2 = im1.depixelize(x_interpolant=interp)
+    t8 = time.time()
+    assert t8-t7 < (t3-t2)/10
+
+    # Even if the image is different.
+    nopix_image3 = im4.depixelize(x_interpolant=interp)
+    t9 = time.time()
+    assert t9-t8 < (t3-t2)/10
+
     print('times:')
     print('make ii_with_pixel: ',t1-t0)
     print('draw ii_with_pixel: ',t2-t1)
@@ -1777,6 +1787,8 @@ def test_depixelize():
     print('draw ii_without_pixel, real: ',t5-t4)
     print('draw ii_without_pixel, fft: ',t6-t5)
     print('draw ii_without_pixel, high maxk: ',t7-t6)
+    print('depixelize #2: ',t8-t7)
+    print('depixelize #3: ',t9-t8)
 
     # Use the simpler API that we expect users to typically prefer.
     # Should be exactly equivalent to the above two-step process.

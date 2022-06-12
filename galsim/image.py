@@ -1902,12 +1902,12 @@ class Image:
         npix = nx * ny
 
         # Each kernel is the integral of the interpolant over 1 pixel.
-        kernels = x_interpolant.unit_integrals(max_len=max(nx,ny))
+        unit_integrals = x_interpolant.unit_integrals(max_len=max(nx,ny))
 
         # The rest of the implementation is done in C++.  cf. src/Image.cpp
         im2 = self.copy()
-        _kernels = kernels.__array_interface__['data'][0]
-        _galsim.depixelizeImage(im2._image, _kernels, kernels.size)
+        _unit_integrals = unit_integrals.__array_interface__['data'][0]
+        _galsim.depixelizeImage(im2._image, _unit_integrals, unit_integrals.size)
         return im2
 
     def __eq__(self, other):
