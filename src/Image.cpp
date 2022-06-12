@@ -996,8 +996,36 @@ template <typename T>
 void invertImage(ImageView<T> im)
 { im.invertSelf(); }
 
+namespace depixelize {
+
+    typedef Eigen::LLT<Eigen::Ref<Eigen::MatrixXd> > SolverType;
+    std::unique_ptr<SolverType> _solver;
+    int _nx = -1;
+    int _ny = -1;
+    std::vector<double> _unit_integrals;
+
+    SolverType* get_cache(
+        int nx, int ny, const double* unit_integrals, const int nk)
+    {
+        if (nx != _nx || ny != _ny) return 0;
+        if (int(_unit_integrals.size()) != nk) return 0;
+        for (int k=0; k<nk; ++k)
+            if (_unit_integrals[k] != unit_integrals[k]) return 0;
+        return _solver.get();
+    }
+
+    void set_cache(SolverType* solver,
+                   const int nx, const int ny, const double* unit_integrals, const int nk)
+    {
+        _solver.reset(solver);
+        _nx = nx;
+        _ny = ny;
+        _unit_integrals = std::vector<double>(unit_integrals, unit_integrals+nk);
+    }
+}
+
 template <typename T>
-void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
+void ImageView<T>::depixelizeSelf(const double* unit_integrals, const int nk)
 {
     using Eigen::MatrixXd;
     using Eigen::Matrix;
@@ -1005,48 +1033,55 @@ void ImageView<T>::depixelizeSelf(const double* kernels, const int nk)
 
     const int nx = this->getNCol();
     const int ny = this->getNRow();
-    T* ptr = getData();
-    int npix = nx * ny;
-    MatrixXd A(npix, npix);
-    Matrix<typename ComplexHelper<T>::double_type, Dynamic, 1> b(npix);
+    const int npix = nx * ny;
 
-    A.setZero();
-    // Note: In Eigen 3.4, this can be b.begin()
-    auto bit = &b[0];
-    for(int col=0; col<npix; ++col) {
-        int h = col % nx;
-        int k = col / nx;
-        // Only populate lower triangle of A (since it's symmetric)
-        // I.e. only when row >= col, so q >= k
-        int q1 = k;
-        int q2 = std::min(k+nk,ny);
-        int p1 = std::max(h-nk+1,0);
-        int p2 = std::min(h+nk,nx);
-        auto Acol = A.col(col);
-        for(int q=q1; q<q2; ++q) {
-            int row = q*nx + p1;
-            double kq = kernels[q-k];
-            // Note: In Eigen 3.4, this can be Acol.begin() + row
-            auto Acolit = &Acol[row];
-            const double* kpit = kernels + (h-p1);
-            // A(row,col) = kernels[std::abs(p-h)] * kernels[std::abs(q-k)];
-            for(int p=p1; p<h; ++p) {
-                *Acolit++ = *kpit-- * kq;
-            }
-            for(int p=h; p<p2; ++p) {
-                *Acolit++ = *kpit++ * kq;
+    depixelize::SolverType* solver = depixelize::get_cache(nx, ny, unit_integrals, nk);
+    if (!solver) {
+        // Make solver and cache it.
+        MatrixXd A(npix, npix);
+        A.setZero();
+        for(int col=0; col<npix; ++col) {
+            int h = col % nx;
+            int k = col / nx;
+            // Only populate lower triangle of A (since it's symmetric)
+            // I.e. only when row >= col, so q >= k
+            int q1 = k;
+            int q2 = std::min(k+nk,ny);
+            int p1 = std::max(h-nk+1,0);
+            int p2 = std::min(h+nk,nx);
+            auto Acol = A.col(col);
+            for(int q=q1; q<q2; ++q) {
+                int row = q*nx + p1;
+                double kq = unit_integrals[q-k];
+                // Note: In Eigen 3.4, this can be Acol.begin() + row
+                auto Acolit = &Acol[row];
+                const double* kpit = unit_integrals + (h-p1);
+                // A(row,col) = unit_integrals[std::abs(p-h)] * unit_integrals[std::abs(q-k)];
+                for(int p=p1; p<h; ++p) {
+                    *Acolit++ = *kpit-- * kq;
+                }
+                for(int p=h; p<p2; ++p) {
+                    *Acolit++ = *kpit++ * kq;
+                }
             }
         }
-        *bit++ = *ptr++;
+
+        // Rather than A.llt(), this lets solver be constructed in place, so less memory usage.
+        // cf. https://eigen.tuxfamily.org/dox/group__InplaceDecomposition.html
+        solver = new depixelize::SolverType(A);
+
+        depixelize::set_cache(solver, nx, ny, unit_integrals, nk);
     }
 
-    // Rather than A.llt(), this lets solver be constructed in place, so less memory usage.
-    // cf. https://eigen.tuxfamily.org/dox/group__InplaceDecomposition.html
-    Eigen::LLT<Eigen::Ref<MatrixXd> > solver(A);
+    Matrix<typename ComplexHelper<T>::double_type, Dynamic, 1> b(npix);
+    // Note: In Eigen 3.4, this can be b.begin()
+    auto bit = &b[0];
+    T* ptr = getData();
+    for(int col=0; col<npix; ++col) *bit++ = *ptr++;
 
     // Unfortunately, Eigen doesn't seem to be able to solve the vector in place, but
     // that's less memory, so just assign the answer back to b.
-    b = solver.solve(b);
+    b = solver->solve(b);
 
     // Copy back to the image
     ptr = getData();

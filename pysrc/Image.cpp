@@ -36,10 +36,10 @@ namespace galsim {
     }
 
     template <typename T>
-    static void DepixelizeImage(ImageView<T> im, size_t ikernels, const int nk)
+    static void DepixelizeImage(ImageView<T> im, size_t iunit_integrals, const int nk)
     {
-        const double* kernels = reinterpret_cast<const double*>(ikernels);
-        im.depixelizeSelf(kernels, nk);
+        const double* unit_integrals = reinterpret_cast<const double*>(iunit_integrals);
+        im.depixelizeSelf(unit_integrals, nk);
     }
 
     template <typename T>
