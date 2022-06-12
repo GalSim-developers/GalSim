@@ -533,7 +533,7 @@ namespace galsim {
         /**
         *  @brief Make a depixelized version of the image
         */
-        void depixelizeSelf(const double* unit_integrals, const int nk);
+        void depixelizeSelf(const double* unit_integrals, const int n);
 
         /**
          *  @brief Return a pointer to the first pixel in the image.
