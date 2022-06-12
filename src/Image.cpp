@@ -1000,32 +1000,34 @@ namespace depixelize {
 
     typedef Eigen::LLT<Eigen::Ref<Eigen::MatrixXd> > SolverType;
     std::unique_ptr<SolverType> _solver;
+    std::unique_ptr<Eigen::MatrixXd> _A; // Need this too!
     int _nx = -1;
     int _ny = -1;
     std::vector<double> _unit_integrals;
 
     SolverType* get_cache(
-        int nx, int ny, const double* unit_integrals, const int nk)
+        int nx, int ny, const double* unit_integrals, const int n)
     {
         if (nx != _nx || ny != _ny) return 0;
-        if (int(_unit_integrals.size()) != nk) return 0;
-        for (int k=0; k<nk; ++k)
+        if (int(_unit_integrals.size()) != n) return 0;
+        for (int k=0; k<n; ++k)
             if (_unit_integrals[k] != unit_integrals[k]) return 0;
         return _solver.get();
     }
 
-    void set_cache(SolverType* solver,
-                   const int nx, const int ny, const double* unit_integrals, const int nk)
+    void set_cache(SolverType* solver, Eigen::MatrixXd* A,
+                   const int nx, const int ny, const double* unit_integrals, const int n)
     {
         _solver.reset(solver);
+        _A.reset(A);
         _nx = nx;
         _ny = ny;
-        _unit_integrals = std::vector<double>(unit_integrals, unit_integrals+nk);
+        _unit_integrals = std::vector<double>(unit_integrals, unit_integrals+n);
     }
 }
 
 template <typename T>
-void ImageView<T>::depixelizeSelf(const double* unit_integrals, const int nk)
+void ImageView<T>::depixelizeSelf(const double* unit_integrals, const int n)
 {
     using Eigen::MatrixXd;
     using Eigen::Matrix;
@@ -1035,21 +1037,21 @@ void ImageView<T>::depixelizeSelf(const double* unit_integrals, const int nk)
     const int ny = this->getNRow();
     const int npix = nx * ny;
 
-    depixelize::SolverType* solver = depixelize::get_cache(nx, ny, unit_integrals, nk);
+    depixelize::SolverType* solver = depixelize::get_cache(nx, ny, unit_integrals, n);
     if (!solver) {
         // Make solver and cache it.
-        MatrixXd A(npix, npix);
-        A.setZero();
+        MatrixXd* A = new MatrixXd(npix, npix);
+        A->setZero();
         for(int col=0; col<npix; ++col) {
             int h = col % nx;
             int k = col / nx;
             // Only populate lower triangle of A (since it's symmetric)
             // I.e. only when row >= col, so q >= k
             int q1 = k;
-            int q2 = std::min(k+nk,ny);
-            int p1 = std::max(h-nk+1,0);
-            int p2 = std::min(h+nk,nx);
-            auto Acol = A.col(col);
+            int q2 = std::min(k+n,ny);
+            int p1 = std::max(h-n+1,0);
+            int p2 = std::min(h+n,nx);
+            auto Acol = A->col(col);
             for(int q=q1; q<q2; ++q) {
                 int row = q*nx + p1;
                 double kq = unit_integrals[q-k];
@@ -1066,11 +1068,12 @@ void ImageView<T>::depixelizeSelf(const double* unit_integrals, const int nk)
             }
         }
 
-        // Rather than A.llt(), this lets solver be constructed in place, so less memory usage.
+        // Rather than A->llt(), this lets solver be constructed in place, so less memory usage.
         // cf. https://eigen.tuxfamily.org/dox/group__InplaceDecomposition.html
-        solver = new depixelize::SolverType(A);
+        // But this also means we need to persist A as long as the solver, so cache it too.
+        solver = new depixelize::SolverType(*A);
 
-        depixelize::set_cache(solver, nx, ny, unit_integrals, nk);
+        depixelize::set_cache(solver, A, nx, ny, unit_integrals, n);
     }
 
     Matrix<typename ComplexHelper<T>::double_type, Dynamic, 1> b(npix);
@@ -1090,7 +1093,10 @@ void ImageView<T>::depixelizeSelf(const double* unit_integrals, const int nk)
 }
 
 void ClearDepixelizeCache()
-{ depixelize::_solver.reset(); }
+{
+    depixelize::_solver.reset();
+    depixelize::_A.reset();
+}
 
 // The classes ConstReturn, ReturnInverse, and ReturnSecond are defined in ImageArith.h.
 
