@@ -368,7 +368,7 @@ def find_eigen_dir(output=False):
             print("Previous attempt to download eigen found. Deleting and trying again.")
             shutil.rmtree(dir)
         os.mkdir(dir)
-        url = 'https://gitlab.com/libeigen/eigen/-/archive/3.3.4/eigen-3.3.4.tar.bz2'
+        url = 'https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.tar.bz2'
         if output:
             print("Downloading eigen from ",url)
         # Unfortunately, gitlab doesn't allow direct downloads. We need to spoof the request
