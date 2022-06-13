@@ -24,6 +24,8 @@ Dependency Changes
 API Changes
 -----------
 
+- `expand` method of a `galsim.Bounds` instance can take an optional second argument and scale differently in different directions. (#1155)
+
 
 
 Config Updates
