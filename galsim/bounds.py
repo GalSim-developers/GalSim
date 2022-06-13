@@ -239,10 +239,16 @@ class Bounds:
         else:
             raise TypeError("include takes at most 2 arguments (%d given)"%len(args))
 
-    def expand(self, factor):
-        "Grow the `Bounds` by the supplied factor about the center."
-        dx = (self.xmax - self.xmin) * 0.5 * (factor-1.)
-        dy = (self.ymax - self.ymin) * 0.5 * (factor-1.)
+    def expand(self, factor_x, factor_y=None):
+        """Grow the `Bounds` by the supplied factor about the center.
+
+        If two arguments are given, then these are separate x and y factors to
+        expand by.
+        """
+        if factor_y is None:
+            factor_y = factor_x
+        dx = (self.xmax - self.xmin) * 0.5 * (factor_x-1.)
+        dy = (self.ymax - self.ymin) * 0.5 * (factor_y-1.)
         if isinstance(self, BoundsI):
             dx = int(math.ceil(dx))
             dy = int(math.ceil(dy))
