@@ -1883,7 +1883,7 @@ class Image:
             >>> ii = galsim.InterpolatedImage(alt_image, x_interpolant=x_interpolant)
             >>> image2 = ii.drawImage(image.copy(), method='auto')
 
-        image2 will end up approximately equalt to the original image.
+        image2 will end up approximately equal to the original image.
 
         .. warning::
 
