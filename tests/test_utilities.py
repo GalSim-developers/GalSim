@@ -308,6 +308,23 @@ def test_bounds():
     assert bd1.expand(2) == galsim.BoundsD(5,29,0.5,66.5)
     np.testing.assert_almost_equal(bd1.expand(1.1)._getinitargs(), (10.4,23.6,15.35,51.65))
 
+    assert bi1.expand(2,2) == galsim.BoundsI(5,29,0,67)
+    assert bi1.expand(1.1,1.1) == galsim.BoundsI(10,24,15,52)
+    assert bd1.expand(2,2) == galsim.BoundsD(5,29,0.5,66.5)
+
+    assert bi1.expand(2,None) == galsim.BoundsI(5,29,0,67)
+    assert bi1.expand(1.1,None) == galsim.BoundsI(10,24,15,52)
+    assert bd1.expand(2,None) == galsim.BoundsD(5,29,0.5,66.5)
+
+    assert bi1.expand(2,1) == galsim.BoundsI(5,29,17,50)
+    assert bi1.expand(1,1.1) == galsim.BoundsI(11,23,15,52)
+    assert bd1.expand(2,1) == galsim.BoundsD(5,29,17,50)
+    assert bd1.expand(1,2) == galsim.BoundsD(11,23,0.5,66.5)
+
+    assert bi1.expand(2,1.1) == galsim.BoundsI(5,29,15,52)
+    assert bi1.expand(3,2) == galsim.BoundsI(-1,35,0,67)
+    assert bd1.expand(2,3) == galsim.BoundsD(5,29,-16,83)
+
     # Check shift
     assert bi1.shift(galsim.PositionI(2,5)) == galsim.BoundsI(13,25,22,55)
     assert bd1.shift(galsim.PositionD(2,5)) == galsim.BoundsD(13,25,22,55)
