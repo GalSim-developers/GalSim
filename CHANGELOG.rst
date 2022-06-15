@@ -45,3 +45,4 @@ Performance Improvements
 Bug Fixes
 ---------
 
+- Fix error in ChromaticSum photon shooting when n_photons is explicitly given. (#1156)
