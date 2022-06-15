@@ -752,6 +752,110 @@ def test_double_ChromaticSum():
 
 
 @timer
+def test_ChromaticSum_nphot():
+    """Test n_photons parameter with ChromaticSum photon shooting
+    """
+    # in response to issue #1156
+    rng = galsim.BaseDeviate(12345)
+    sed1 = galsim.SED("CWW_E_ext.sed", wave_type='A', flux_type='flambda')
+    sed2 = galsim.SED("CWW_Sbc_ext.sed", wave_type='A', flux_type='flambda')
+    bandpass = galsim.Bandpass("LSST_r.dat", wave_type="nm")
+
+    flux1 = 990
+    flux2 = 20
+    flux = flux1 + flux2
+    obj1 = (galsim.Gaussian(fwhm=0.6) * sed1).withFlux(flux1, bandpass)
+    obj2 = (galsim.Gaussian(fwhm=0.3) * sed2).withFlux(flux2, bandpass)
+    obj = obj1 + obj2
+
+    class Counter(galsim.PhotonOp):
+        def __init__(self):
+            self.nphot = []
+            self.meanflux = []
+
+        def applyTo(self, photon_array, local_wcs=None, rng=None):
+            self.nphot.append(len(photon_array))
+            self.meanflux.append(np.mean(photon_array.flux))
+
+    # Looks okay when n_photons unspecified
+    counter = Counter()
+    img = obj.drawImage(
+        bandpass, nx=24, ny=24, scale=0.2, method='phot', rng=rng, poisson_flux=False,
+        photon_ops=[counter]
+    )
+    print("n_photons = 0, poisson_flux=False:")
+    print(f"{counter.nphot = }")
+    print(f"{counter.meanflux = }")
+    print(f"{img.array.sum() = }")
+    assert np.isclose(np.sum(counter.nphot), flux)
+    assert np.isclose(img.array.sum(), flux)
+    assert np.isclose(img.array.sum(), np.sum(counter.nphot))
+    assert np.isclose(counter.nphot[0], flux1)
+    assert np.isclose(counter.nphot[1], flux2)
+    np.testing.assert_allclose(counter.meanflux, 1.0)
+
+    counter = Counter()
+    img = obj.drawImage(
+        bandpass, nx=24, ny=24, scale=0.2, method='phot', rng=rng, poisson_flux=True,
+        photon_ops=[counter]
+    )
+    print("n_photons = 0, poisson_flux=True:")
+    print(f"{counter.nphot = }")
+    print(f"{counter.meanflux = }")
+    print(f"{img.array.sum() = }")
+    assert np.isclose(np.sum(counter.nphot), flux, rtol=0.1)
+    assert np.isclose(img.array.sum(), flux, rtol=0.1)
+    assert np.isclose(img.array.sum(), np.sum(counter.nphot))
+    assert np.isclose(counter.nphot[1]/counter.nphot[0], flux2/flux1, rtol=0.3)
+    np.testing.assert_allclose(counter.meanflux, 1.0)
+
+    # When n_photons is explicit, used to shoot too many photons.  cf. #1156
+    counter = Counter()
+    img = obj.drawImage(
+        bandpass, nx=24, ny=24, scale=0.2, method='phot', rng=rng,
+        photon_ops=[counter], n_photons=101, poisson_flux=False,
+    )
+    print("n_photons = 101, poisson_flux=False:")
+    print(f"{counter.nphot = }")
+    print(f"{counter.meanflux = }")
+    print(f"{img.array.sum() = }")
+    assert np.sum(counter.nphot) == 101
+    assert np.isclose(img.array.sum(), flux)
+    assert np.isclose(counter.nphot[1]/counter.nphot[0], flux2/flux1, rtol=1)
+    np.testing.assert_allclose(counter.meanflux, np.mean(counter.meanflux))
+
+    # Repeat with poisson_flux=True
+    counter = Counter()
+    img = obj.drawImage(
+        bandpass, nx=24, ny=24, scale=0.2, method='phot', rng=rng,
+        photon_ops=[counter], n_photons=101, poisson_flux=True,
+    )
+    print("n_photons = 101, poisson_flux=True:")
+    print(f"{counter.nphot = }")
+    print(f"{counter.meanflux = }")
+    print(f"{img.array.sum() = }")
+    assert np.sum(counter.nphot) == 101
+    assert np.isclose(img.array.sum(), flux, rtol=0.1)
+    assert np.isclose(counter.nphot[1]/counter.nphot[0], flux2/flux1, rtol=1)
+    np.testing.assert_allclose(counter.meanflux, np.mean(counter.meanflux))
+
+    # Do few enough that one component gets no photons.
+    rng = galsim.BaseDeviate(1234)
+    counter = Counter()
+    img = obj.drawImage(
+        bandpass, nx=24, ny=24, scale=0.2, method='phot', rng=rng,
+        photon_ops=[counter], n_photons=11, poisson_flux=False,
+    )
+    print("n_photons = 11, poisson_flux=False:")
+    print(f"{counter.nphot = }")
+    print(f"{counter.meanflux = }")
+    print(f"{img.array.sum() = }")
+    assert np.sum(counter.nphot) == 11
+    assert len(counter.nphot) == 1  # Not a priori required, but works for this rng.
+    assert np.isclose(img.array.sum(), flux)
+
+
+@timer
 def test_ChromaticConvolution_of_ChromaticConvolution():
     """Check that the __init__ of ChromaticConvolution properly expands arguments that are already
     ChromaticConvolutions.

@@ -2218,17 +2218,49 @@ class ChromaticSum(ChromaticObject):
         Returns:
             the drawn `Image`.
         """
+        from .random import BaseDeviate, BinomialDeviate, PoissonDeviate
         # Store the last bandpass used.
         self._last_bp = bandpass
         if self.SED.dimensionless:
             raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.SED)
         add_to_image = kwargs.pop('add_to_image', False)
-        # Use given add_to_image for the first one, then add_to_image=True for the rest.
-        image = self.obj_list[0].drawImage(
-                bandpass, image=image, add_to_image=add_to_image, **kwargs)
-        _remove_setup_kwargs(kwargs)
-        for obj in self.obj_list[1:]:
-            image = obj.drawImage(bandpass, image=image, add_to_image=True, **kwargs)
+
+        n_photons = kwargs.pop('n_photons', None)
+        if n_photons is None or kwargs.get('method', None) != 'phot':
+            # Use given add_to_image for the first one, then add_to_image=True for the rest.
+            image = self.obj_list[0].drawImage(
+                    bandpass, image=image, add_to_image=add_to_image, **kwargs)
+            _remove_setup_kwargs(kwargs)
+            for obj in self.obj_list[1:]:
+                image = obj.drawImage(bandpass, image=image, add_to_image=True, **kwargs)
+        else:
+            # If n_photons is specified, need some special handling here.
+            rng = BaseDeviate(kwargs.get('rng', None))
+            total_flux = self.calculateFlux(bandpass)
+            remaining_nphot = n_photons
+            remaining_flux = total_flux
+            if kwargs.pop('poisson_flux',False):
+                pd = PoissonDeviate(rng, total_flux)
+                flux_ratio = pd() / total_flux
+            else:
+                flux_ratio = 1
+            for i, obj in enumerate(self.obj_list):
+                this_flux = obj.calculateFlux(bandpass)
+                if i == len(self.obj_list)-1:
+                    this_nphot = remaining_nphot
+                else:
+                    bd = BinomialDeviate(rng, remaining_nphot, this_flux / remaining_flux)
+                    this_nphot = int(bd())
+                    remaining_nphot -= this_nphot
+                    remaining_flux -= this_flux
+                # Get the flux right based on the actual draw and possibly poisson_flux.
+                if this_nphot > 0:
+                    obj *= (this_nphot * total_flux) / (n_photons * this_flux) * flux_ratio
+                    image = obj.drawImage(bandpass, image=image, add_to_image=add_to_image,
+                                          n_photons=this_nphot, poisson_flux=False, **kwargs)
+                if i==0:
+                    _remove_setup_kwargs(kwargs)
+                    add_to_image = True
         self._last_wcs = image.wcs
         return image
 
