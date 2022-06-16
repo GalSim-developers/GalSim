@@ -65,10 +65,11 @@ class InterpolatedImage(GSObject):
     However, if you want to try to remove the effect of the pixel and have the `InterpolatedImage`
     model the pre-pixelized profile, then you can set ``depixelize=True``.  This will call
     `Image.depixelize` on the image automatically to try to remove the effect of the pixelization.
-    This step can be rather slow and memory-demanding, so use this with caution.  But if
-    used, the resulting profile represents the true underlying profile, without the pixel
-    convolution.  It can therefore be rotated, sheared, etc.  And when rendering, one should
-    use the methods that do involve integration over the pixel: ``auto``, ``phot``, etc.
+    We recommend using a Lanczos interpolant with this option for best results.  (Higher order
+    tends to work better here.) This step can be rather slow and memory-demanding, so use this
+    with caution.  But if used, the resulting profile represents the true underlying profile,
+    without the pixel convolution.  It can therefore be rotated, sheared, etc.  And when rendering,
+    one should use the methods that do involve integration over the pixel: ``auto``, ``phot``, etc.
 
     .. warning ::
 
