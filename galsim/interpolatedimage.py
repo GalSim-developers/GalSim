@@ -59,7 +59,8 @@ class InterpolatedImage(GSObject):
     is equivalent to integration over the pixel).  This is often acceptable, and the resulting
     `InterpolatedImage` object can be convolved by other profiles as usual.  One just needs to
     remember to draw the final convolved profile using ``method='no_pixel'`` to avoid including
-    the pixel convolution a second time.
+    the pixel convolution a second time.  In particular, one should not use it in conjunction
+    with photon shooting, for the same reason.
 
     However, if you want to try to remove the effect of the pixel and have the `InterpolatedImage`
     model the pre-pixelized profile, then you can set ``depixelize=True``.  This will call
@@ -67,7 +68,7 @@ class InterpolatedImage(GSObject):
     This step can be rather slow and memory-demanding, so use this with caution.  But if
     used, the resulting profile represents the true underlying profile, without the pixel
     convolution.  It can therefore be rotated, sheared, etc.  And when rendering, one should
-    use the normal methods: ``auto``, ``phot``, etc.
+    use the methods that do involve integration over the pixel: ``auto``, ``phot``, etc.
 
     If the input `Image` has a ``scale`` or ``wcs`` associated with it, then there is no need to
     specify one as a parameter here.  But if one is provided, that will override any ``scale`` or
