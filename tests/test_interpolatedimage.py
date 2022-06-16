@@ -1714,9 +1714,12 @@ def test_quintic_glagn():
         gsobj.drawImage(method='phot', image=image, add_to_image=True)
 
 def test_depixelize():
-    # True, non-II profile.  Something not too symmetric.
-    true_prof = galsim.Gaussian(sigma=0.7, flux=10).shear(g1=0.1, g2=0.3) + \
-                galsim.Gaussian(sigma=0.4, flux=3).shift(0.1,-0.3)
+    # True, non-II profile.  Something not too symmetric or simple.
+    true_prof = galsim.Convolve(
+                    galsim.Kolmogorov(fwhm=1.1, flux=10).shear(g1=0.1, g2=0.2),
+                    galsim.OpticalPSF(lam_over_diam=0.6, obscuration=0.4, nstruts=4,
+                                      defocus=0.15, astig1=0.13, astig2=-0.14,
+                                      coma1=-0.06, trefoil1=-0.08))
 
     # Make these unequal to test indexing
     nx = 32
