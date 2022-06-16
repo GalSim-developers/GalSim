@@ -70,6 +70,12 @@ class InterpolatedImage(GSObject):
     convolution.  It can therefore be rotated, sheared, etc.  And when rendering, one should
     use the methods that do involve integration over the pixel: ``auto``, ``phot``, etc.
 
+    .. warning ::
+
+        Input images that are undersampled and/or noisy may not necessarily work well with the
+        ``depixelize=True`` option.  Users should treat this option with some care and validate
+        that the results are sufficiently accurate for your particular use case.
+
     If the input `Image` has a ``scale`` or ``wcs`` associated with it, then there is no need to
     specify one as a parameter here.  But if one is provided, that will override any ``scale`` or
     ``wcs`` that is native to the `Image`.
