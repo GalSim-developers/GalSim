@@ -784,9 +784,9 @@ def test_ChromaticSum_nphot():
         photon_ops=[counter]
     )
     print("n_photons = 0, poisson_flux=False:")
-    print(f"{counter.nphot = }")
-    print(f"{counter.meanflux = }")
-    print(f"{img.array.sum() = }")
+    print("counter.nphot = ",counter.nphot)
+    print("counter.meanflux = ",counter.meanflux)
+    print("img.array.sum() = ",img.array.sum())
     assert np.isclose(np.sum(counter.nphot), flux)
     assert np.isclose(img.array.sum(), flux)
     assert np.isclose(img.array.sum(), np.sum(counter.nphot))
@@ -800,9 +800,9 @@ def test_ChromaticSum_nphot():
         photon_ops=[counter]
     )
     print("n_photons = 0, poisson_flux=True:")
-    print(f"{counter.nphot = }")
-    print(f"{counter.meanflux = }")
-    print(f"{img.array.sum() = }")
+    print("counter.nphot = ",counter.nphot)
+    print("counter.meanflux = ",counter.meanflux)
+    print("img.array.sum() = ",img.array.sum())
     assert np.isclose(np.sum(counter.nphot), flux, rtol=0.1)
     assert np.isclose(img.array.sum(), flux, rtol=0.1)
     assert np.isclose(img.array.sum(), np.sum(counter.nphot))
@@ -816,9 +816,9 @@ def test_ChromaticSum_nphot():
         photon_ops=[counter], n_photons=101, poisson_flux=False,
     )
     print("n_photons = 101, poisson_flux=False:")
-    print(f"{counter.nphot = }")
-    print(f"{counter.meanflux = }")
-    print(f"{img.array.sum() = }")
+    print("counter.nphot = ",counter.nphot)
+    print("counter.meanflux = ",counter.meanflux)
+    print("img.array.sum() = ",img.array.sum())
     assert np.sum(counter.nphot) == 101
     assert np.isclose(img.array.sum(), flux)
     assert np.isclose(counter.nphot[1]/counter.nphot[0], flux2/flux1, rtol=1)
@@ -831,9 +831,9 @@ def test_ChromaticSum_nphot():
         photon_ops=[counter], n_photons=101, poisson_flux=True,
     )
     print("n_photons = 101, poisson_flux=True:")
-    print(f"{counter.nphot = }")
-    print(f"{counter.meanflux = }")
-    print(f"{img.array.sum() = }")
+    print("counter.nphot = ",counter.nphot)
+    print("counter.meanflux = ",counter.meanflux)
+    print("img.array.sum() = ",img.array.sum())
     assert np.sum(counter.nphot) == 101
     assert np.isclose(img.array.sum(), flux, rtol=0.1)
     assert np.isclose(counter.nphot[1]/counter.nphot[0], flux2/flux1, rtol=1)
@@ -847,9 +847,9 @@ def test_ChromaticSum_nphot():
         photon_ops=[counter], n_photons=11, poisson_flux=False,
     )
     print("n_photons = 11, poisson_flux=False:")
-    print(f"{counter.nphot = }")
-    print(f"{counter.meanflux = }")
-    print(f"{img.array.sum() = }")
+    print("counter.nphot = ",counter.nphot)
+    print("counter.meanflux = ",counter.meanflux)
+    print("img.array.sum() = ",img.array.sum())
     assert np.sum(counter.nphot) == 11
     assert len(counter.nphot) == 1  # Not a priori required, but works for this rng.
     assert np.isclose(img.array.sum(), flux)
