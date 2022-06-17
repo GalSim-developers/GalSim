@@ -264,7 +264,7 @@ class InterpolatedImage(GSObject):
                             and force stepk to the given value. [default: 0]
         _force_maxk:        Override the normal maxk calculation (using gsparams.maxk_threshold)
                             and force maxk to the given value.  This option in particular can help
-                            reduce FFT artifacts in a manner than is currently unobtainable by
+                            reduce FFT artifacts in a manner that is currently unobtainable by
                             lowering maxk_threshold. [default: 0]
     """
     _req_params = { 'image' : str }
