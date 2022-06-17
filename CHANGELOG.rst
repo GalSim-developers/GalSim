@@ -26,8 +26,6 @@ API Changes
 
 - Changed SincInterpolant.ixrange to be consistent with the value of xrange, rather than inf.
   (#1154)
-- Let `expand` method of a `galsim.Bounds` instance take an optional second argument to scale
-  differently in different directions. (#1155)
 
 
 Config Updates
@@ -38,7 +36,11 @@ Config Updates
 New Features
 ------------
 
-- Added Image methods: tranpose, flip_ud, flip_lr, rot_cw, rot_ccw, rot_180. (#1139)
+- Added methods `Image.tranpose`, `Image.flip_ud`, `Image.flip_lr`, `Image.rot_cw`,
+  `Image.rot_ccw`, and `Image.rot_180`. (#1139)
+- Added `Image.depixelize` and ``depixelize=True`` option for `InterpolatedImage`. (#1154)
+- Let `expand` method of a `galsim.Bounds` instance take an optional second argument to scale
+  differently in different directions. (#1155)
 
 
 Performance Improvements
