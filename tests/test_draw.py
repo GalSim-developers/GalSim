@@ -1521,6 +1521,13 @@ def test_np_fft():
     assert_raises(ValueError, galsim.fft.irfft2, xar_oe)
     # eo is ok, since the second dimension is actually N/2+1
 
+def round_cast(array, dt):
+    # array.astype(dt) doesn't round to the nearest for integer types.
+    # This rounds first if dt is integer and then casts.
+    if dt(0.5) != 0.5:
+        array = np.around(array)
+    return array.astype(dt)
+
 @timer
 def test_types():
     """Test drawing onto image types other than float32, float64.
@@ -1544,13 +1551,13 @@ def test_types():
                                     "wrong scale when drawing onto dt=%s"%dt)
             np.testing.assert_equal(im.bounds, ref_im.bounds,
                                     "wrong bounds when drawing onto dt=%s"%dt)
-            np.testing.assert_almost_equal(im.array, ref_im.array.astype(dt), 6,
+            np.testing.assert_almost_equal(im.array, round_cast(ref_im.array, dt), 6,
                                            "wrong array when drawing onto dt=%s"%dt)
 
             if method == 'phot':
                 rng.reset(1234)
             obj.drawImage(im, method=method, add_to_image=True, rng=rng)
-            np.testing.assert_almost_equal(im.array, ref_im.array.astype(dt) * 2, 6,
+            np.testing.assert_almost_equal(im.array, round_cast(ref_im.array, dt) * 2, 6,
                                            "wrong array when adding to image with dt=%s"%dt)
 
 @timer

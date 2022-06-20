@@ -550,7 +550,7 @@ class ChromaticObject:
         if add_to_image:
             image += image_int
         else:
-            image.copyFrom(image_int)
+            image._copyFrom(image_int)
         return image
 
     def evaluateAtWavelength(self, wave):
