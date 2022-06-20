@@ -30,7 +30,7 @@ from .noise import CalculateNoiseVariance, AddSky, AddNoise
 from .wcs import BuildWCS
 from .photon_ops import BuildPhotonOps
 from ..errors import GalSimConfigError, GalSimConfigValueError
-from ..image import Image, ImageF
+from ..image import Image
 from ..wcs import PixelScale
 from ..position import PositionD, PositionI
 from ..bounds import _BoundsI
@@ -141,7 +141,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 # A list of keys that really belong in stamp, but are allowed in image both for convenience
 # and backwards-compatibility reasons.  Any of these present will be copied over to
 # config['stamp'] if they exist in config['image'].
-stamp_image_keys = ['offset', 'retry_failures', 'gsparams', 'draw_method',
+stamp_image_keys = ['offset', 'retry_failures', 'gsparams', 'draw_method', 'dtype',
                     'n_photons', 'max_extra_noise', 'poisson_flux', 'obj_rng']
 
 def SetupConfigObjNum(config, obj_num, logger=None):
@@ -227,7 +227,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos, logger=None
 
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos', 'sky_pos',
-                'offset', 'retry_failures', 'gsparams', 'draw_method',
+                'offset', 'retry_failures', 'gsparams', 'draw_method', 'dtype',
                 'n_photons', 'max_extra_noise', 'poisson_flux', 'photon_ops',
                 'skip', 'reject', 'min_flux_frac', 'min_snr', 'max_snr',
                 'quick_skip', 'obj_rng', 'index_key', 'rng_index_key', 'rng_num']
@@ -517,6 +517,9 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
         sensor.updateRNG(rng)
         kwargs['sensor'] = sensor
 
+    if image is None:
+        kwargs['dtype'] = _ParseDType(config, base)
+
     if logger.isEnabledFor(logging.DEBUG):
         # Don't output the full image array.  Use str(image) for that kwarg.  And Bandpass.
         alt_kwargs = dict([(k, str(kwargs[k]) if isinstance(kwargs[k],(Image,Bandpass))
@@ -573,6 +576,20 @@ def ParseWorldPos(config, param_name, base, logger):
         return ParseValue(config, param_name, base, CelestialCoord)[0]
     else:
         return ParseValue(config, param_name, base, PositionD)[0]
+
+def _ParseDType(config, base):
+    dtype = config.get('dtype', None)
+    if isinstance(dtype, str):
+        try:
+            gdict = globals().copy()
+            exec('import numpy', gdict)
+            exec('import numpy as np', gdict)
+            dtype = eval(dtype, gdict)
+        except Exception:
+            raise GalSimConfigValueError("dtype = %s is invalid."%dtype, Image.valid_dtypes)
+    if dtype is None and base.get('current_image', None) is not None:
+        dtype = base['current_image'].dtype
+    return dtype
 
 class StampBuilder:
     """A base class for building stamp images of individual objects.
@@ -863,7 +880,8 @@ class StampBuilder:
             the image
         """
         if xsize and ysize:
-            im = ImageF(xsize, ysize)
+            dtype = _ParseDType(config, base)
+            im = Image(xsize, ysize, dtype=dtype)
             im.setZero()
             return im
         else:

@@ -40,6 +40,7 @@ Config Updates
 - Added Correlated noise type as a generalization of the more specific COSMOS noise type. (#731)
 - Added galaxy_sample input type with corresponding SampleGalaxy GSObject type. (#731)
 - Added COSMOSValue and SampleValue value types. (#954)
+- Added option to specify a dtype other than np.float32 for images built by config. (#1148)
 - Changed the way the internal random number sequence works so that running multiple simulations
   with sequential random seed values doesn't end up with duplicated random values across the
   two (or more) simulations. (#1169)

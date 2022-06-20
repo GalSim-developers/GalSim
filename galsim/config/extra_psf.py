@@ -25,7 +25,7 @@ from .stamp import valid_draw_methods
 from .value import ParseValue, GetCurrentValue
 from .util import GetRNG
 from .noise import CalculateNoiseVariance, AddNoise
-from ..image import ImageF
+from ..image import Image
 from ..position import PositionD
 from ..errors import GalSimConfigValueError, GalSimConfigError
 
@@ -58,7 +58,7 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
         n_photons = 0
 
     wcs = base['wcs'].local(base['image_pos'])
-    im = ImageF(bounds, wcs=wcs)
+    im = Image(bounds, wcs=wcs, dtype=base['current_stamp'].dtype)
     im = psf.drawImage(image=im, offset=offset, method=method, rng=rng, n_photons=n_photons)
 
     if 'signal_to_noise' in config:
@@ -131,7 +131,8 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
 
     # The function to call at the end of building each image
     def processImage(self, index, obj_nums, config, base, logger):
-        image = ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
+        image = Image(base['image_bounds'], wcs=base['wcs'], init_value=0.,
+                      dtype=base['current_image'].dtype)
         # Make sure to only use the stamps for objects in this image.
         for obj_num in obj_nums:
             stamp = self.scratch[obj_num]

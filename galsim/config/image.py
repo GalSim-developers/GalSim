@@ -31,7 +31,7 @@ from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..position import PositionI, PositionD
 from ..bounds import BoundsI
 from ..celestial import CelestialCoord
-from ..image import ImageF
+from ..image import Image
 from ..noise import VariableGaussianNoise
 
 # This file handles the building of an image by parsing config['image'].
@@ -357,7 +357,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         # Then there was whitening applied in the individual stamps.
         # But there could be a different variance in each postage stamp, so the first
         # thing we need to do is bring everything up to a common level.
-        noise_image = ImageF(full_image.bounds)
+        noise_image = Image(bounds=full_image.bounds, dtype=full_image.dtype)
         for k in range(nobjects):
             if stamps[k] is None: continue
             b = stamps[k].bounds & full_image.bounds
