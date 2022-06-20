@@ -1805,7 +1805,7 @@ class GSObject:
                     # Need a temporary
                     im1 = ImageD(bounds=imview.bounds)
                     added_photons = sensor.accumulate(photons, im1, orig_center)
-                    imview.array[:,:] += im1.array.astype(imview.dtype, copy=False)
+                    imview += im1
 
         image.added_flux = added_photons / flux_scale
         if save_photons:
@@ -1854,9 +1854,9 @@ class GSObject:
                 im1 = ImageF(bounds=image.bounds, scale=image.scale)
             self._drawReal(im1)
             if add_to_image:
-                image.array[:,:] += im1.array.astype(image.dtype, copy=False)
+                image += im1
             else:
-                image.array[:,:] = im1.array
+                image._copyFrom(im1)
             return im1.array.sum(dtype=float)
 
     def _drawReal(self, image, jac=None, offset=(0.,0.), flux_scaling=1.):
@@ -1982,7 +1982,7 @@ class GSObject:
         if add_to_image:
             image += temp
         else:
-            image.copyFrom(temp)
+            image._copyFrom(temp)
         added_photons = temp.array.sum(dtype=float)
         return added_photons
 
@@ -2373,7 +2373,7 @@ class GSObject:
                 # Need a temporary
                 im1 = ImageD(bounds=image.bounds)
                 added_flux += sensor.accumulate(photons, im1, orig_center)
-                image.array[:,:] += im1.array.astype(image.dtype, copy=False)
+                image += im1
 
             Nleft -= thisN
 

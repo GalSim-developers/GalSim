@@ -72,3 +72,5 @@ Bug Fixes
 - Fixed error in InterpolatedImage.withGSParams not correctly updating stepk and maxk
   if the updated parameters merited it. (#1154)
 - Fix error in ChromaticSum photon shooting when n_photons is explicitly given. (#1156)
+- Fixed some rounding errors that could happen when rendering integer-typed images
+  (e.g. ImageI) that could cause values to be off by 1.

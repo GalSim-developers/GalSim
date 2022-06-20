@@ -1027,7 +1027,12 @@ class Image:
         if self.bounds.numpyShape() != rhs.bounds.numpyShape():
             raise GalSimIncompatibleValuesError(
                 "Trying to copy images that are not the same shape", self_image=self, rhs=rhs)
-        self._array[:,:] = rhs.array[:,:]
+        self._copyFrom(rhs)
+
+    def _copyFrom(self, rhs):
+        """Same as copyFrom, but no sanity checks.
+        """
+        self._array[:,:] = self._safe_cast(rhs.array)
 
     def view(self, scale=None, wcs=None, origin=None, center=None,
              make_const=False, dtype=None, contiguous=False):
@@ -1613,6 +1618,14 @@ class Image:
 
     __radd__ = __add__
 
+    def _safe_cast(self, array):
+        # Assign the given array to self.array, safely casting it to the required type.
+        # Most important is to make sure integer types round first before casting, since
+        # numpy's astype doesn't do any rounding.
+        if self.isinteger:
+            array = np.around(array)
+        return array.astype(self.array.dtype, copy=False)
+
     def __iadd__(self, other):
         self.check_image_consistency(other)
         try:
@@ -1624,7 +1637,7 @@ class Image:
         if dt == self.array.dtype:
             self.array[:,:] += a
         else:
-            self.array[:,:] = (self.array + a).astype(self.array.dtype, copy=False)
+            self.array[:,:] = self._safe_cast(self.array + a)
         return self
 
     def __sub__(self, other):
@@ -1649,7 +1662,7 @@ class Image:
         if dt == self.array.dtype:
             self.array[:,:] -= a
         else:
-            self.array[:,:] = (self.array - a).astype(self.array.dtype, copy=False)
+            self.array[:,:] = self._safe_cast(self.array - a)
         return self
 
     def __mul__(self, other):
@@ -1673,7 +1686,7 @@ class Image:
         if dt == self.array.dtype:
             self.array[:,:] *= a
         else:
-            self.array[:,:] = (self.array * a).astype(self.array.dtype, copy=False)
+            self.array[:,:] = self._safe_cast(self.array * a)
         return self
 
     def __div__(self, other):
@@ -1704,7 +1717,7 @@ class Image:
             # back to an integer array.  So for integers (or mixed types), don't use /=.
             self.array[:,:] /= a
         else:
-            self.array[:,:] = (self.array / a).astype(self.array.dtype, copy=False)
+            self.array[:,:] = self._safe_cast(self.array / a)
         return self
 
     __itruediv__ = __idiv__
@@ -1732,7 +1745,7 @@ class Image:
         if dt == self.array.dtype:
             self.array[:,:] //= a
         else:
-            self.array[:,:] = (self.array // a).astype(self.array.dtype, copy=False)
+            self.array[:,:] = self._safe_cast(self.array // a)
         return self
 
     def __mod__(self, other):
@@ -1758,7 +1771,7 @@ class Image:
         if dt == self.array.dtype:
             self.array[:,:] %= a
         else:
-            self.array[:,:] = (self.array % a).astype(self.array.dtype, copy=False)
+            self.array[:,:] = self._safe_cast(self.array % a)
         return self
 
     def __pow__(self, other):
