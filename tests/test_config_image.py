@@ -86,8 +86,18 @@ def test_single():
         # The user is allowed to to add extra kwarg to the end, which would be passed on
         # to the drawImage command.
         im5 = galsim.config.DrawBasic(gal, im3.copy(), 'auto', galsim.PositionD(0,0),
-                                      config['stamp'], config, logger, scale=1.0)
+                                      config['stamp'], config, logger,
+                                      scale=1.0, dtype=np.float32)
         np.testing.assert_array_equal(im5.array, im1.array)
+
+        # Both scale and float are valid options in config too, with these defaults.
+        config['stamp']['scale'] = 1.0
+        config['stamp']['dtype'] = 'np.float32'
+        im6 = galsim.config.DrawBasic(gal, im3.copy(), 'auto', galsim.PositionD(0,0),
+                                      config['stamp'], config, logger)
+        np.testing.assert_array_equal(im6.array, im1.array)
+        config['stamp'].pop('scale')
+        config['stamp'].pop('dtype')
 
     # Use BuildStamps to build them all at once:
     im6_list = galsim.config.BuildStamps(nimages, config)[0]
@@ -103,6 +113,28 @@ def test_single():
         im7 = im7_list[k]
         np.testing.assert_array_equal(im7.array, im1.array)
 
+    # Can make images in double precision if desired.  Here use fact that Basic is default.
+    config['stamp'] = { 'dtype': 'np.float64' }
+    im8_list = galsim.config.BuildImages(nimages, config)
+    for k in range(nimages):
+        im1 = im1_list[k]
+        im8 = im8_list[k]
+        assert im1.dtype is np.float32
+        assert im8.dtype is np.float64
+        np.testing.assert_allclose(im8.array/gal.flux, im1.array/gal.flux, atol=1.e-8)
+
+    # dtype is also allowed in image field.  Either np or numpy prefix works.
+    config['stamp'] = {}
+    config['image']['dtype'] = 'numpy.float64'
+    im8_list = galsim.config.BuildImages(nimages, config)
+    for k in range(nimages):
+        im1 = im1_list[k]
+        im8 = im8_list[k]
+        assert im1.dtype is np.float32
+        assert im8.dtype is np.float64
+        np.testing.assert_allclose(im8.array/gal.flux, im1.array/gal.flux, atol=1.e-8)
+    config['image'].pop('dtype')
+
     # Check some errors
     config['stamp'] = 'Invalid'
     with assert_raises(galsim.GalSimConfigError):
@@ -111,6 +143,12 @@ def test_single():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     config['stamp'] = { 'draw_method' : 'invalid' }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['stamp'] = { 'dtype': 'invalid' }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['stamp'] = { 'dtype': 'float64' }   # Need np. or numpy.
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     config['stamp'] = { 'n_photons' : 200 }    # These next few require draw_method = phot
@@ -138,6 +176,9 @@ def test_single():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     config['image'] = { 'type' : 'Single', 'xsize' : 0, 'ysize' : 32 }
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
+    config['image'] = { 'type' : 'Single', 'dtype' : 'invalid' }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     config['image'] = { 'type' : 'Single' }
@@ -605,6 +646,7 @@ def test_snr():
         'stamp' : {
             'type' : 'Basic',
             'size' : 32,
+            'dtype' : 'float'
         },
         'gal' : {
             'type' : 'Gaussian',
@@ -617,7 +659,7 @@ def test_snr():
     first_seed = galsim.BaseDeviate(1234).raw()
     ud = galsim.UniformDeviate(first_seed + 1)
     gal = galsim.Gaussian(sigma=1.7)
-    im1a = gal.drawImage(nx=32, ny=32, scale=0.4)
+    im1a = gal.drawImage(nx=32, ny=32, scale=0.4, dtype=float)
     sn_meas = math.sqrt( np.sum(im1a.array**2, dtype=float) / 50 )
     print('measured s/n = ',sn_meas)
     im1a *= 70 / sn_meas
@@ -637,7 +679,7 @@ def test_snr():
     config['stamp']['draw_method'] = 'phot'
     config['stamp']['n_photons'] = 100  # Need something here otherwise it will shoot 1 photon.
     ud.seed(first_seed + 1)
-    im2a = gal.drawImage(nx=32, ny=32, scale=0.4, method='phot', n_photons=100, rng=ud)
+    im2a = gal.drawImage(nx=32, ny=32, scale=0.4, method='phot', n_photons=100, rng=ud, dtype=float)
     sn_meas = math.sqrt( np.sum(im2a.array**2, dtype=float) / 50 )
     print('measured s/n = ',sn_meas)
     im2a *= 70 / sn_meas
@@ -911,6 +953,10 @@ def test_scattered():
     config['image']['index_convention'] = 'invalid'
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
+    config['image'].pop('index_convention')
+    config['image']['dtype'] = 'float32'  # numpy types need np. or numpy. prefix.
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
 
     # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the
     # image count.
@@ -927,12 +973,13 @@ def test_scattered():
                                     galsim.PositionD(x2,y2),
                                     galsim.PositionD(x3,y3) ]
                       },
+        'dtype' : 'float',
         'nobjects' : 3
     }
 
     image = galsim.config.BuildImage(config)
 
-    image2 = galsim.ImageF(size,size, scale=scale)
+    image2 = galsim.ImageD(size,size, scale=scale)
     image2.setZero()
     image2.setOrigin(0,0)
     gal = galsim.Gaussian(sigma=sigma, flux=flux)
@@ -1361,6 +1408,12 @@ def test_tiled():
     config['image']['yborder'] = xborder
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
+    config['image']['yborder'] = -yborder
+
+    # numpy types need np. or numpy. prefix.
+    config['image']['dtype'] = 'float64'
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildImage(config)
 
     # If tile with a square grid, then PowerSpectrum can omit grid_spacing and ngrid.
     size = 32
@@ -1371,6 +1424,7 @@ def test_tiled():
             'ny_tiles' : ny,
             'stamp_size' : size,
             'pixel_scale' : scale,
+            'dtype' : 'np.float64',
 
             'random_seed' : 1234,
             'obj_rng' : True,     # Gratuitous branch check.  This is the default.
@@ -1389,7 +1443,7 @@ def test_tiled():
     seed = galsim.BaseDeviate(1234).raw()
     rng = galsim.BaseDeviate(seed)
     ps = galsim.PowerSpectrum(e_power_function=lambda k: np.exp(-k**0.2))
-    im4a = galsim.Image(nx*size, ny*size, scale=scale)
+    im4a = galsim.ImageD(nx*size, ny*size, scale=scale)
     center = im4a.true_center * scale
     ps.buildGrid(grid_spacing=size*scale, ngrid=max(nx,ny)+1, rng=rng, center=center)
     for j in range(ny):
@@ -1400,7 +1454,7 @@ def test_tiled():
             yorigin = j * size + 1
             x = xorigin + (size-1)/2.
             y = yorigin + (size-1)/2.
-            stamp = galsim.Image(size,size, scale=scale)
+            stamp = galsim.ImageD(size,size, scale=scale)
             stamp.setOrigin(xorigin,yorigin)
 
             sigma = ud() + 1
@@ -1427,7 +1481,7 @@ def test_tiled():
     config['image']['stamp_ysize'] = ysize
     seed = galsim.BaseDeviate(1234).raw()
     rng = galsim.BaseDeviate(seed)
-    im5a = galsim.Image(nx*xsize, ny*ysize, scale=scale)
+    im5a = galsim.ImageD(nx*xsize, ny*ysize, scale=scale)
     center = im5a.true_center * scale
     grid_spacing = min(xsize,ysize) * scale
     ngrid = int(math.ceil(max(nx*xsize, ny*ysize) * scale / grid_spacing))+1
@@ -1440,7 +1494,7 @@ def test_tiled():
             yorigin = j * ysize + 1
             x = xorigin + (xsize-1)/2.
             y = yorigin + (ysize-1)/2.
-            stamp = galsim.Image(xsize,ysize, scale=scale)
+            stamp = galsim.ImageD(xsize,ysize, scale=scale)
             stamp.setOrigin(xorigin,yorigin)
 
             sigma = ud() + 1

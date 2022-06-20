@@ -861,6 +861,7 @@ def test_extra_psf_sn():
             'random_seed' : 1234,
             'pixel_scale' : 0.4,
             'size' : 64,
+            'dtype': 'float',
         },
         'gal' : {
             'type' : 'Gaussian',
@@ -879,6 +880,8 @@ def test_extra_psf_sn():
     # First pure psf image with no noise.
     gal_image = galsim.config.BuildImage(config)
     pure_psf_image = galsim.config.extra.GetFinalExtraOutput('psf', config)[0]
+    assert gal_image.dtype is np.float64
+    assert pure_psf_image.dtype is np.float64  # PSF gets dtype from main image
     np.testing.assert_almost_equal(pure_psf_image.array.sum(), 1., decimal=6)
 
     # Draw PSF at S/N = 100

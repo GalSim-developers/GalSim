@@ -17,14 +17,15 @@
 #
 
 import logging
+import numpy as np
 
 from .image import ImageBuilder, FlattenNoiseVariance, RegisterImageType
 from .value import ParseValue, GetAllParams
-from .stamp import BuildStamps
+from .stamp import BuildStamps, _ParseDType
 from .noise import AddSky, AddNoise
 from .input import ProcessInputNObjects
 from ..errors import GalSimConfigError, GalSimConfigValueError
-from ..image import ImageF
+from ..image import Image
 
 # This file adds image type Scattered, which places individual stamps at arbitrary
 # locations on a larger image.
@@ -57,7 +58,7 @@ class ScatteredImageBuilder(ImageBuilder):
         # These are allowed for Scattered, but we don't use them here.
         extra_ignore = [ 'image_pos', 'world_pos', 'stamp_size', 'stamp_xsize', 'stamp_ysize',
                          'nobjects' ]
-        opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
+        opt = { 'size' : int , 'xsize' : int , 'ysize' : int, 'dtype': None }
         params = GetAllParams(config, base, opt=opt, ignore=ignore+extra_ignore)[0]
 
         size = params.get('size',0)
@@ -95,7 +96,8 @@ class ScatteredImageBuilder(ImageBuilder):
         full_ysize = base['image_ysize']
         wcs = base['wcs']
 
-        full_image = ImageF(full_xsize, full_ysize)
+        dtype = _ParseDType(config, base)
+        full_image = Image(full_xsize, full_ysize, dtype=dtype)
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()

@@ -17,14 +17,15 @@
 #
 
 import logging
+import numpy as np
 
 from .image import ImageBuilder, FlattenNoiseVariance, RegisterImageType
 from .util import GetRNG
 from .value import ParseValue, GetAllParams
-from .stamp import BuildStamps
+from .stamp import BuildStamps, _ParseDType
 from .noise import AddSky, AddNoise
 from ..errors import GalSimConfigError, GalSimConfigValueError
-from ..image import ImageF
+from ..image import Image
 from .. import random
 
 # This file adds image type Tiled, which builds a larger image by tiling nx x ny individual
@@ -118,7 +119,8 @@ class TiledImageBuilder(ImageBuilder):
         full_ysize = base['image_ysize']
         wcs = base['wcs']
 
-        full_image = ImageF(full_xsize, full_ysize)
+        dtype = _ParseDType(config, base)
+        full_image = Image(full_xsize, full_ysize, dtype=dtype)
         full_image.setOrigin(base['image_origin'])
         full_image.wcs = wcs
         full_image.setZero()
