@@ -508,6 +508,8 @@ class ImageBuilder:
 
         image, current_var = BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
+        if image is not None:
+            image.wcs = base['wcs']   # in case stamp has a local jacobian.
         return image, current_var
 
     def makeTasks(self, config, base, jobs, logger):
