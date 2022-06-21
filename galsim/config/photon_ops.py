@@ -217,7 +217,8 @@ class PhotonDCRBuilder(PhotonOpBuilder):
     def buildPhotonOp(self, config, base, logger):
         req, opt, single, takes_rng = get_cls_params(PhotonDCR)
         kwargs, safe = GetAllParams(config, base, req, opt, single)
-        kwargs['obj_coord'] = base['sky_pos']
+        if 'sky_pos' in base:
+            kwargs['obj_coord'] = base['sky_pos']
         return PhotonDCR(**kwargs)
 
 class ListPhotonOpBuilder(PhotonOpBuilder):

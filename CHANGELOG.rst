@@ -41,6 +41,7 @@ Config Updates
 - Added galaxy_sample input type with corresponding SampleGalaxy GSObject type. (#731)
 - Added COSMOSValue and SampleValue value types. (#954)
 - Added option to specify a dtype other than np.float32 for images built by config. (#1148)
+- Fixed some errors in PhotonDCR usage in the config layer. (#1148)
 - Added option to specify a dtype other than np.float32 for images built by config. (#1160)
 - Fixed inconsistent behavior of image.world_pos in image type=Single. (#1160)
 - Let a flux item for an object with an SED normalize the SED for the bandpass being
