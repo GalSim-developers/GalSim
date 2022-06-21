@@ -1818,6 +1818,19 @@ def test_wcs():
             np.testing.assert_almost_equal(wcs.toImage(p).x, ref.toImage(p).x)
             np.testing.assert_almost_equal(wcs.toImage(p).y, ref.toImage(p).y)
 
+        # Check actually using the config to draw an image.
+        if key == 'scale1': continue
+        config1 = {
+            'gal': {'type': 'Gaussian', 'sigma': 3, 'flux': 100},
+            'image': {
+                'size': 64,
+                'wcs': config['image'][key],
+                'draw_method':'sb'
+            }
+        }
+        image = galsim.config.BuildImage(config1)
+        assert image.wcs == wcs
+
     # If we build something again with the same index, it should get the current value
     wcs = galsim.config.BuildWCS(config['image'], 'shear2', config)
     ref = reference['shear2']
