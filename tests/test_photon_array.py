@@ -626,6 +626,25 @@ def test_dcr():
     chrom = galsim.Convolve(star, chrom_PSF)
     chrom.drawImage(bandpass, image=im1)
 
+    # Repeat with config
+    config = {
+        'psf': { 'type': 'ChromaticAtmosphere',
+                 'base_profile': { 'type': 'Kolmogorov', 'fwhm': fwhm },
+                 'base_wavelength': base_wavelength,
+                 'zenith_angle': zenith_angle,
+                 'parallactic_angle': parallactic_angle,
+                 'alpha': alpha
+               },
+        'gal': { 'type': 'DeltaFunction', 'flux': flux, 'sed': sed },
+        'image': { 'xsize': 50, 'ysize': 50, 'pixel_scale': pixel_scale,
+                   'bandpass': bandpass,
+                   'random_seed': 31415,
+                   'dtype': int,
+                 },
+    }
+    im1c = galsim.config.BuildImage(config)
+    assert im1c == im1
+
     # Use PhotonDCR
     im2 = galsim.ImageI(50, 50, scale=pixel_scale)
     dcr = galsim.PhotonDCR(base_wavelength=base_wavelength,
@@ -633,13 +652,41 @@ def test_dcr():
                            parallactic_angle=parallactic_angle,
                            alpha=alpha)
     achrom = base_PSF.withFlux(flux)
-    rng = galsim.BaseDeviate(31415)
+    # Because we'll be comparing to config version, get the rng the way it will do it.
+    rng = galsim.BaseDeviate(galsim.BaseDeviate(31415).raw()+1)
     wave_sampler = galsim.WavelengthSampler(sed, bandpass)
     photon_ops = [wave_sampler, dcr]
     achrom.drawImage(image=im2, method='phot', rng=rng, photon_ops=photon_ops)
 
     do_pickle(dcr)
 
+    # Repeat with config
+    config = {
+        'psf': { 'type': 'Kolmogorov', 'fwhm': fwhm },
+        'gal': { 'type': 'DeltaFunction', 'flux': flux },
+        'image': { 'xsize': 50, 'ysize': 50, 'pixel_scale': pixel_scale,
+                   'bandpass': bandpass,
+                   'random_seed': 31415,
+                   'dtype': 'np.int32',
+                 },
+        'stamp': {
+                   'draw_method': 'phot',
+                   'photon_ops': [
+                        { 'type': 'WavelengthSampler',
+                          'sed': sed },
+                        { 'type': 'PhotonDCR',
+                          'base_wavelength': base_wavelength,
+                          'zenith_angle': zenith_angle,
+                          'parallactic_angle': parallactic_angle,
+                          'alpha': alpha
+                        }
+                   ],
+                 },
+    }
+    im2c = galsim.config.BuildImage(config)
+    assert im2c == im2
+
+    # Compare ChromaticAtmosphere image with PhotonDCR image.
     printval(im2, im1, show=False)
     # tolerace for photon shooting is ~sqrt(flux) = 1.e3
     np.testing.assert_allclose(im2.array, im1.array, atol=1.e3,
@@ -670,16 +717,26 @@ def test_dcr():
 
     # Check scale_unit
     im4 = galsim.ImageI(50, 50, scale=pixel_scale/60)
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass)
     dcr = galsim.PhotonDCR(base_wavelength=base_wavelength,
                            zenith_angle=zenith_angle,
                            parallactic_angle=parallactic_angle,
                            scale_unit='arcmin',
                            alpha=alpha)
     photon_ops = [wave_sampler, dcr]
+    rng = galsim.BaseDeviate(galsim.BaseDeviate(31415).raw()+1)
     achrom.dilate(1./60).drawImage(image=im4, method='phot', rng=rng, photon_ops=photon_ops)
     printval(im4, im1, show=False)
     np.testing.assert_allclose(im4.array, im1.array, atol=1.e3,
                                err_msg="PhotonDCR with scale_unit=arcmin, didn't match")
+
+    galsim.config.RemoveCurrent(config)
+    del config['stamp']['photon_ops'][1]['_get']
+    config['stamp']['photon_ops'][1]['scale_unit'] = 'arcmin'
+    config['image']['pixel_scale'] = pixel_scale/60
+    config['psf']['fwhm'] = fwhm/60
+    im4c = galsim.config.BuildImage(config)
+    assert im4c == im4
 
     # Check some other valid options
     # alpha = 0 means don't do any size scaling.
@@ -698,7 +755,7 @@ def test_dcr():
     obj_coord = wcs.toWorld(im5.true_center)
     base_PSF = galsim.Kolmogorov(fwhm=0.9)
     achrom = base_PSF.withFlux(flux)
-    dcr = galsim.PhotonDCR(base_wavelength=bandpass.effective_wavelength,
+    dcr = galsim.PhotonDCR(base_wavelength=base_wavelength,
                            obj_coord=obj_coord,
                            HA=local_sidereal_time-obj_coord.ra,
                            latitude=lsst_lat,
@@ -706,10 +763,51 @@ def test_dcr():
                            temperature=290,     # default is 293.15
                            H2O_pressure=0.9)    # default is 1.067
                            #alpha=0)            # default is 0, so don't need to set it.
+    wave_sampler = galsim.WavelengthSampler(sed, bandpass)
     photon_ops = [wave_sampler, dcr]
+    rng = galsim.BaseDeviate(galsim.BaseDeviate(31415).raw()+1)
     achrom.drawImage(image=im5, method='phot', rng=rng, photon_ops=photon_ops)
 
     do_pickle(dcr)
+
+    galsim.config.RemoveCurrent(config)
+    config['psf']['fwhm'] = 0.9
+    config['image'] = {
+        'xsize': 50,
+        'ysize': 50,
+        'wcs': { 'type': 'Fits', 'file_name': 'des_data/DECam_00154912_12_header.fits' },
+        'bandpass': bandpass,
+        'random_seed': 31415,
+        'dtype': 'np.int32',
+        'world_pos': obj_coord,
+    }
+    config['stamp']['photon_ops'][1] = {
+        'type': 'PhotonDCR',
+        'base_wavelength': base_wavelength,
+        'HA': local_sidereal_time-obj_coord.ra,
+        'latitude': '-30:14:23.76 deg',
+        'pressure': 72,
+        'temperature': 290,
+        'H2O_pressure': 0.9,
+    }
+    im5c = galsim.config.BuildImage(config)
+    assert im5c == im5
+
+    # Also one using zenith_coord = (lst, lat)
+    config['stamp']['photon_ops'][1] = {
+        'type': 'PhotonDCR',
+        'base_wavelength': base_wavelength,
+        'zenith_coord': {
+            'type': 'RADec',
+            'ra': local_sidereal_time,
+            'dec': lsst_lat,
+        },
+        'pressure': 72,
+        'temperature': 290,
+        'H2O_pressure': 0.9,
+    }
+    im5d = galsim.config.BuildImage(config)
+    assert im5d == im5
 
     im6 = galsim.ImageI(50, 50, wcs=wcs)
     star = galsim.DeltaFunction() * sed

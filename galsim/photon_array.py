@@ -889,10 +889,10 @@ class PhotonDCR(PhotonOp):
         H2O_pressure:       Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
     _req_params = { 'base_wavelength' : float }
-    _opt_params = { 'scale_units' : str, 'alpha' : float,
+    _opt_params = { 'scale_unit' : str, 'alpha' : float,
                     'parallactic_angle' : Angle, 'latitude' : Angle,
                     'pressure' : float, 'temperature' : float, 'H2O_pressure' : float }
-    _single_params = [ { 'zenith_angle' : Angle, 'HA' : Angle, 'zenit_coord' : CelestialCoord } ]
+    _single_params = [ { 'zenith_angle' : Angle, 'HA' : Angle, 'zenith_coord' : CelestialCoord } ]
 
     def __init__(self, base_wavelength, scale_unit=arcsec, **kwargs):
         from . import dcr
