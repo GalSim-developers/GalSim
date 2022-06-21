@@ -24,6 +24,11 @@ Dependency Changes
 API Changes
 -----------
 
+- Removed CppEllipse in C++ layer, which had been deprecated since the 1.x series, but we forgot
+  to actually get rid of. (#1129)
+- Removed AstronomicalConstants.h in C++ layer, which we never used. (#1129)
+- Removed AttributeDict, which we had stting in utilities, but which we have never used.
+  (#1129)
 - Changed SincInterpolant.ixrange to be consistent with the value of xrange, rather than inf.
   (#1154)
 
@@ -36,11 +41,11 @@ Config Updates
 New Features
 ------------
 
-- Added methods `Image.tranpose`, `Image.flip_ud`, `Image.flip_lr`, `Image.rot_cw`,
+- Added methods `Image.transpose`, `Image.flip_ud`, `Image.flip_lr`, `Image.rot_cw`,
   `Image.rot_ccw`, and `Image.rot_180`. (#1139)
 - Added `Image.depixelize` and ``depixelize=True`` option for `InterpolatedImage`. (#1154)
-- Let `expand` method of a `galsim.Bounds` instance take an optional second argument to scale
-  differently in different directions. (#1155)
+- Let `galsim.Bounds.expand` take an optional second argument to scale differently in different
+  directions. (#1155)
 - Added `BaseWCS.shearToWorld` and `BaseWCS.shearToImage` along with overloading
   `BaseWCS.toWorld` and `BaseWCS.toImage` to mean the same thing when the argument is a
   `Shear` value. (#1158)

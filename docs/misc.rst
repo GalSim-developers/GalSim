@@ -35,9 +35,6 @@ Other Possibly Useful Classes
 
 .. autoclass:: galsim.utilities.SimpleGenerator
 
-.. autoclass:: galsim.utilities.AttributeDict
-    :members:
-
 
 Math Calculations
 -----------------
