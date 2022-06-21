@@ -198,6 +198,15 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     gsobject, safe1 = ApplyRedshift(gsobject, param, base, logger)
     safe = safe and safe1
 
+    if 'flux' in param:
+        flux, safe1 = ParseValue(param, 'flux', base, float)
+        logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
+        if 'sed' in param and 'bandpass' in base:
+            gsobject = gsobject.withFlux(flux, bandpass=base['bandpass'])
+        else:
+            gsobject = gsobject.withFlux(flux)
+        safe = safe and safe1
+
     # If this is a psf, try to save the half_light_radius in case gal uses resolution.
     if key == 'psf':
         try:
@@ -338,12 +347,6 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
         else: gsparams = None
         gsobject = Add(gsobjects,gsparams=gsparams)
 
-    if 'flux' in config:
-        flux, safe1 = ParseValue(config, 'flux', base, float)
-        logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
-        gsobject = gsobject.withFlux(flux)
-        safe = safe and safe1
-
     return gsobject, safe
 
 def _BuildConvolve(config, base, ignore, gsparams, logger):
@@ -373,12 +376,6 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
         else: gsparams = None
         gsobject = Convolve(gsobjects,gsparams=gsparams)
 
-    if 'flux' in config:
-        flux, safe1 = ParseValue(config, 'flux', base, float)
-        logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
-        gsobject = gsobject.withFlux(flux)
-        safe = safe and safe1
-
     return gsobject, safe
 
 def _BuildList(config, base, ignore, gsparams, logger):
@@ -401,12 +398,6 @@ def _BuildList(config, base, ignore, gsparams, logger):
 
     gsobject, safe1 = BuildGSObject(items, index, base, gsparams, logger)
     safe = safe and safe1
-
-    if 'flux' in config:
-        flux, safe1 = ParseValue(config, 'flux', base, float)
-        logger.debug('obj %d: flux == %f',base.get('obj_num',0),flux)
-        gsobject = gsobject.withFlux(flux)
-        safe = safe and safe1
 
     return gsobject, safe
 

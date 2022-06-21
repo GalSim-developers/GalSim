@@ -43,6 +43,8 @@ Config Updates
 - Added option to specify a dtype other than np.float32 for images built by config. (#1148)
 - Added option to specify a dtype other than np.float32 for images built by config. (#1160)
 - Fixed inconsistent behavior of image.world_pos in image type=Single. (#1160)
+- Let a flux item for an object with an SED normalize the SED for the bandpass being
+  simulated. (#1160)
 - Changed the way the internal random number sequence works so that running multiple simulations
   with sequential random seed values doesn't end up with duplicated random values across the
   two (or more) simulations. (#1169)
