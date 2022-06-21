@@ -235,14 +235,12 @@ def test_positions():
     np.testing.assert_array_equal(im4.array, im1.array)
     assert im4.bounds == im1.bounds
 
-    # world_pos in image works slightly differently for image type = Single.
-    # The intent there is just to give the object a world position for values that might depend
-    # on it (e.g. NFWHalo shears)
+    # Can also set world_pos in image.
     config['image']['world_pos'] = config['stamp']['world_pos']
     del config['stamp']['world_pos']
     im5 = galsim.config.BuildImage(config, logger=logger)
     np.testing.assert_array_equal(im5.array, im1.array)
-    assert im5.bounds == galsim.BoundsI(-10,10,-10,10)
+    assert im5.bounds == im1.bounds
 
     # It is also valid to give both world_pos and image_pos in the image field for Single.
     config['image']['image_pos'] = config['image']['world_pos']

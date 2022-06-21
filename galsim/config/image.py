@@ -445,11 +445,6 @@ class ImageBuilder:
             raise GalSimConfigError(
                 "Both (or neither) of image.xsize and image.ysize need to be defined and != 0.")
 
-        # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
-        # in BuildStamp.  To mark this, we set image_pos to (0,0)
-        if 'world_pos' in config and 'image_pos' not in config:
-            config['image_pos'] = PositionD(0,0)
-
         return xsize, ysize
 
     def buildBandpass(self, config, base, image_num, obj_num, logger):
