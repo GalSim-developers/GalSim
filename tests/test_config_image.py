@@ -2685,6 +2685,26 @@ def test_chromatic():
     psf1 = galsim.Moffat(fwhm=0.5, beta=2.5)
     final = galsim.Convolve(gal, psf1)
     image1 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    print('image.sum = ',image.array.sum())
+    print('image1.sum = ',image1.array.sum())
+    np.testing.assert_allclose(image.array, image1.array)
+
+    # Can also set a flux rather than normalize the sed.
+    config['gal']['sed'] = {
+        'file_name': 'CWW_E_ext.sed',
+        'wave_type': 'Ang',
+        'flux_type': 'flambda',
+    }
+    config['gal']['flux'] = 500
+    del config['gal']['_get']
+    galsim.config.RemoveCurrent(config)
+    image = galsim.config.BuildImage(config)
+    sed = galsim.SED('CWW_E_ext.sed', 'Ang', 'flambda').atRedshift(0.8)
+    gal = (galsim.Exponential(half_light_radius=0.5, flux=500) * sed).withFlux(500, bandpass)
+    final = galsim.Convolve(gal, psf1)
+    image1 = final.drawImage(nx=64, ny=64, scale=0.2, bandpass=bandpass)
+    print('image.sum = ',image.array.sum())
+    print('image1.sum = ',image1.array.sum())
     np.testing.assert_allclose(image.array, image1.array)
 
     # Now check ChromaticAtmosphere
