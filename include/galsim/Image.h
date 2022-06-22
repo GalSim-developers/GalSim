@@ -59,9 +59,6 @@ namespace galsim {
     template <typename T>
     std::shared_ptr<T> allocateAlignedMemory(int n);
 
-    // All code between the @cond and @endcond is excluded from Doxygen documentation
-    //! @cond
-
     /**
      *  @brief Exception class usually thrown by images.
      */
@@ -83,9 +80,6 @@ namespace galsim {
 
         ImageBoundsError(int x, int y, const Bounds<int> b);
     };
-
-    //! @endcond
-
 
     template <typename T> class PUBLIC_API AssignableToImage;
     template <typename T> class PUBLIC_API BaseImage;
