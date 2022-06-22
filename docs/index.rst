@@ -25,6 +25,8 @@ GalSim: The modular galaxy image simulation toolkit
     des
     roman
 
+    cpp
+
     shared
     history
 
