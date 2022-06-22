@@ -145,7 +145,7 @@ namespace galsim {
 
     void pyExportTable(py::module& _galsim)
     {
-        py::class_<Table>(_galsim, "_LookupTable")
+        py::class_<Table>(_galsim, "LookupTable")
             .def(py::init(&MakeTable))
             .def(py::init(&MakeGSInterpTable))
             .def("interp", &Table::lookup)
@@ -153,7 +153,7 @@ namespace galsim {
             .def("integrate", &Table::integrate)
             .def("integrate_product", &Table::integrateProduct);
 
-        py::class_<Table2D>(_galsim, "_LookupTable2D")
+        py::class_<Table2D>(_galsim, "LookupTable2D")
             .def(py::init(&MakeTable2D))
             .def(py::init(&MakeSplineTable2D))
             .def(py::init(&MakeGSInterpTable2D))

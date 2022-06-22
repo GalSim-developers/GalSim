@@ -39,7 +39,7 @@ namespace galsim {
      *  a gain differing from that in the supplied image.
      */
     template <typename T>
-    PUBLIC_API void ApplyCD(
+    PUBLIC_API void ApplyCDModel(
         ImageView<T>& output, const BaseImage<T>& input,
         const BaseImage<double>& aL, const BaseImage<double>& aR,
         const BaseImage<double>& aB, const BaseImage<double>& aT,

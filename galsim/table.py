@@ -175,9 +175,9 @@ class LookupTable:
         _x = self._x.__array_interface__['data'][0]
         _f = self._f.__array_interface__['data'][0]
         if self._interp1d is not None:
-            return _galsim._LookupTable(_x, _f, len(self._x), self._interp1d._i)
+            return _galsim.LookupTable(_x, _f, len(self._x), self._interp1d._i)
         else:
-            return _galsim._LookupTable(_x, _f, len(self._x), self.interpolant)
+            return _galsim.LookupTable(_x, _f, len(self._x), self.interpolant)
 
     @property
     def x_min(self):
@@ -816,17 +816,17 @@ class LookupTable2D:
         _y = self.y.__array_interface__['data'][0]
         _f = self.f.__array_interface__['data'][0]
         if self._interp2d is not None:
-            return _galsim._LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
-                                          self._interp2d._i)
+            return _galsim.LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
+                                         self._interp2d._i)
         elif self.interpolant == 'spline':
             _dfdx = self.dfdx.__array_interface__['data'][0]
             _dfdy = self.dfdy.__array_interface__['data'][0]
             _d2fdxdy = self.d2fdxdy.__array_interface__['data'][0]
-            return _galsim._LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
-                                          _dfdx, _dfdy, _d2fdxdy)
+            return _galsim.LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
+                                         _dfdx, _dfdy, _d2fdxdy)
         else:
-            return _galsim._LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
-                                          self.interpolant)
+            return _galsim.LookupTable2D(_x, _y, _f, len(self.x), len(self.y),
+                                         self.interpolant)
 
     def getXArgs(self):
         return self.x

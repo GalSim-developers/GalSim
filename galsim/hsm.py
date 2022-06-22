@@ -598,11 +598,11 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
         guess_centroid = gal_image.true_center
     try:
         result = ShapeData()
-        _galsim._EstimateShearView(result._data,
-                                   gal_image._image, PSF_image._image, weight._image,
-                                   float(sky_var), shear_est.upper(), recompute_flux.upper(),
-                                   float(guess_sig_gal), float(guess_sig_PSF), float(precision),
-                                   guess_centroid._p, hsmparams._hsmp)
+        _galsim.EstimateShearView(result._data,
+                                  gal_image._image, PSF_image._image, weight._image,
+                                  float(sky_var), shear_est.upper(), recompute_flux.upper(),
+                                  float(guess_sig_gal), float(guess_sig_PSF), float(precision),
+                                  guess_centroid._p, hsmparams._hsmp)
         return result
     except RuntimeError as err:
         if (strict == True):
@@ -711,10 +711,10 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
 
     try:
         result = ShapeData()
-        _galsim._FindAdaptiveMomView(result._data,
-                                     object_image._image, weight._image,
-                                     float(guess_sig), float(precision), guess_centroid._p,
-                                     bool(round_moments), hsmparams._hsmp)
+        _galsim.FindAdaptiveMomView(result._data,
+                                    object_image._image, weight._image,
+                                    float(guess_sig), float(precision), guess_centroid._p,
+                                    bool(round_moments), hsmparams._hsmp)
         return result
     except RuntimeError as err:
         if (strict == True):

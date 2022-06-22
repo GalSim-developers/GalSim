@@ -66,13 +66,13 @@ namespace hsm {
     {
         typedef void (*FAM_func)(ShapeData&, const BaseImage<T>&, const BaseImage<int>&,
                                  double, double, Position<double>, bool, const HSMParams&);
-        _galsim.def("_FindAdaptiveMomView", FAM_func(&FindAdaptiveMomView));
+        _galsim.def("FindAdaptiveMomView", FAM_func(&FindAdaptiveMomView));
 
         typedef void (*ESH_func)(ShapeData&, const BaseImage<T>&, const BaseImage<V>&,
                                  const BaseImage<int>&, float, const char *,
                                  const char*, double, double, double, Position<double>,
                                  const HSMParams&);
-        _galsim.def("_EstimateShearView", ESH_func(&EstimateShearView));
+        _galsim.def("EstimateShearView", ESH_func(&EstimateShearView));
     };
 
     void pyExportHSM(py::module& _galsim)
