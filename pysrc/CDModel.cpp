@@ -29,7 +29,7 @@ namespace galsim {
                                      const BaseImage<double>& , const BaseImage<double>& ,
                                      const BaseImage<double>& , const BaseImage<double>& ,
                                      const int , const double );
-        _galsim.def("_ApplyCD", ApplyCD_func(&ApplyCD));
+        _galsim.def("ApplyCDModel", ApplyCD_func(&ApplyCDModel));
     }
 
     void pyExportCDModel(py::module& _galsim)

@@ -22,10 +22,10 @@
 namespace galsim {
 
     template <typename T>
-    void ApplyCD(ImageView<T>& output, const BaseImage<T>& input,
-                 const BaseImage<double>& aL, const BaseImage<double>& aR,
-                 const BaseImage<double>& aB, const BaseImage<double>& aT,
-                 const int dmax, const double gain_ratio)
+    void ApplyCDModel(ImageView<T>& output, const BaseImage<T>& input,
+                      const BaseImage<double>& aL, const BaseImage<double>& aR,
+                      const BaseImage<double>& aB, const BaseImage<double>& aT,
+                      const int dmax, const double gain_ratio)
     {
         // images aL, aR, aB, aT contain shift coefficients for left, right, bottom and top border
         // dmax is maximum separation considered
@@ -87,12 +87,12 @@ namespace galsim {
     }
 
     // instantiate template functions for expected types: float and double currently
-    template void ApplyCD(ImageView<double>& output, const BaseImage<double>& input,
-                          const BaseImage<double>& aL, const BaseImage<double>& aR,
-                          const BaseImage<double>& aB, const BaseImage<double>& aT,
-                          const int dmax, const double gain_ratio);
-    template void ApplyCD(ImageView<float>& output, const BaseImage<float>& input,
-                          const BaseImage<double>& aL, const BaseImage<double>& aR,
-                          const BaseImage<double>& aB, const BaseImage<double>& aT,
-                          const int dmax, const double gain_ratio);
+    template void ApplyCDModel(ImageView<double>& output, const BaseImage<double>& input,
+                               const BaseImage<double>& aL, const BaseImage<double>& aR,
+                               const BaseImage<double>& aB, const BaseImage<double>& aT,
+                               const int dmax, const double gain_ratio);
+    template void ApplyCDModel(ImageView<float>& output, const BaseImage<float>& input,
+                               const BaseImage<double>& aL, const BaseImage<double>& aR,
+                               const BaseImage<double>& aB, const BaseImage<double>& aT,
+                               const int dmax, const double gain_ratio);
 }

@@ -89,7 +89,7 @@ class BaseCDModel:
                         flat and science images have the same gain value
         """
         ret = image.copy()
-        _galsim._ApplyCD(
+        _galsim.ApplyCDModel(
             ret._image, image._image, self.a_l._image, self.a_r._image, self.a_b._image,
             self.a_t._image, int(self.n), float(gain_ratio))
         return ret
