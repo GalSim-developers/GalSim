@@ -68,7 +68,13 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.napoleon',
     'sphinx.ext.coverage',
+    'breathe',
 ]
+
+# Stuff for breathe
+breathe_projects = {"GalSim": "doxygen_output/xml"}
+breathe_default_project = "GalSim"
+breathe_default_members = ('members', 'undoc-members')
 
 # Add any paths that contain templates here, relative to this directory.
 #templates_path = ['_templates']
