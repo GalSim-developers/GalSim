@@ -1,3 +1,7 @@
+# Note: Need Sphinx <=3.5.4 or get errors about ambiguous cross-reference targets.
+# It works correctly on 3.5.4, but not yet on 4.x or 5.x up to 5.0.2
+# cf. https://github.com/sphinx-doc/sphinx/issues/4961
+doxygen
 cd docs
 make clean
 make html
