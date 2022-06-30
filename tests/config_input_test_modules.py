@@ -1,7 +1,8 @@
 import galsim.config
 import galsim.config.value_eval
+import numpy as np
 
-galsim.config.value_eval.eval_base_variables += ["input_size"]
+galsim.config.eval_base_variables += ["input_size_0", "input_size_arr"]
 
 
 def _ret_size(size=-1):
@@ -17,7 +18,9 @@ class InputSizeLoader(galsim.config.InputLoader):
         return kwargs, True
 
     def initialize(self, input_objs, num, base, logger):
-        base['input_size'] = input_objs[0]
+        base['input_size_0'] = input_objs[0]
+        if all(iobj is not None for iobj in input_objs):
+            base['input_size_arr'] = np.array(input_objs, dtype=int)
 
 
 galsim.config.RegisterInputType(
