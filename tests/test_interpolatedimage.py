@@ -1864,7 +1864,7 @@ def test_drawreal_seg_fault():
     image.fill(3)
     prof.drawReal(image)
 
-    # The prolem was that the object is shifted fully off the target image and that was leading
+    # The problem was that the object is shifted fully off the target image and that was leading
     # to an attempt to create a stack of length -1, which caused the seg fault.
     # So mostly this test just confirms that this runs without seg faulting.
     # But we can check that the image is now correctly all zeros.
