@@ -12,6 +12,13 @@ changes to the C++ API, so most of the time you will be fine upgrading, but you 
 be prepared that you may need to update your code when upgrading GalSim.  (We do
 guarantee that we won't change the C++ API for bugfix updates, e.g. 2.4.1 to 2.4.2.)
 
+.. note::
+
+    While we don't intend to break ABI compatibility on bugfix releases, we don't
+    currently have any mechanisms in place to ensure ABI compatibility.  So it is
+    possible that you will need to recompile your code when updating to a new
+    GalSim version.
+
 The other caveat is that we haven't put much energy into documenting the C++ layer
 functions.  The following comes from a combination of Doxygen and Breathe to shoehorn
 it into the Sphinx structure.  But the docs are pretty bare bones in places.  Sorry
