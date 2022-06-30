@@ -27,7 +27,7 @@ API Changes
 - Removed CppEllipse in C++ layer, which had been deprecated since the 1.x series, but we forgot
   to actually get rid of. (#1129)
 - Removed AstronomicalConstants.h in C++ layer, which we never used. (#1129)
-- Removed AttributeDict, which we had stting in utilities, but which we have never used.
+- Removed AttributeDict, which we had sitting in utilities, but which we have never used.
   (#1129)
 - Changed SincInterpolant.ixrange to be consistent with the value of xrange, rather than inf.
   (#1154)
