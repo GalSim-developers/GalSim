@@ -18,7 +18,8 @@ class InputSizeLoader(galsim.config.InputLoader):
         return kwargs, True
 
     def initialize(self, input_objs, num, base, logger):
-        base['input_size_0'] = input_objs[0]
+        if num == 0:
+            base['input_size_0'] = input_objs[0]
         if all(iobj is not None for iobj in input_objs):
             base['input_size_arr'] = np.array(input_objs, dtype=int)
 

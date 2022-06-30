@@ -452,6 +452,11 @@ class InputLoader:
         things like load an input object and then assign it to an eval variable in the
         base configuration dictionary.
 
+        When writing this method, remember that the entries in input objs are set to
+        ``None`` initially. This can cause problems for some operations on them and so
+        you may want to test for this condition with code like
+        ``all(iobj is not None for iobj in input_objs)``.
+
         Parameters:
             input_objs:  The (current) list of input objects.
             num:         The entry in the list that was loaded.
