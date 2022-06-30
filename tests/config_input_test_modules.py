@@ -4,7 +4,7 @@ import galsim.config.value_eval
 galsim.config.value_eval.eval_base_variables += ["input_size"]
 
 
-def _ret_size(*, size):
+def _ret_size(size=-1):
     return size
 
 
