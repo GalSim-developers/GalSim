@@ -39,12 +39,13 @@ def test_input_init():
     config = {
         'modules': ['config_input_test_modules'],
         'input': {
-            'input_size_module': {'size': 55},
+            'input_size_module': [{'size': 55}, {'size': 45}],
         },
         'image': {
             'type': 'Single',
             'random_seed': 1234,
-            'size': "$input_size"
+            'xsize': "$input_size_0",
+            'ysize': "$input_size_arr[1]",
         },
         'gal': {
             'type': 'Gaussian',
@@ -64,7 +65,7 @@ def test_input_init():
     ud = galsim.UniformDeviate(1234 + 0 + 1)
     sigma = ud() + 1.
     gal = galsim.Gaussian(sigma=sigma, flux=100)
-    im1 = gal.drawImage(scale=1, nx=55, ny=55)
+    im1 = gal.drawImage(scale=1, nx=55, ny=45)
 
     galsim.config.Process(config, logger=logger)
     file_name = 'output_fits/test_fits.fits'
