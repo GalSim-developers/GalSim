@@ -238,6 +238,8 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
         logger.info('Input %s has %d objects',key,input_obj.getNObjects())
 
     input_objs[num] = input_obj
+    loader.initialize(input_objs, num, config, logger)
+
     # Invalidate any currently cached values that use this kind of input object:
     # TODO: This isn't quite correct if there are multiple versions of this input
     #       item.  e.g. you might want to invalidate dict0, but not dict1.
@@ -440,6 +442,21 @@ class InputLoader:
             config:     The configuration dict for the input type
             base:       The base configuration dict.
             logger:     If given, a logger object to log progress.  [default: None]
+        """
+        pass
+
+    def initialize(self, input_objs, num, base, logger):
+        """Do any global setup for input objects right after they are loaded.
+
+        In the base class, this function does not do anything. It can be used to do
+        things like load an input object and then assign it to an eval variable in the
+        base configuration dictionary.
+
+        Parameters:
+            input_objs:  The (current) list of input objects.
+            num:         The entry in the list that was loaded.
+            base:        The base configuration dict.
+            logger:      If given, a logger object to log progress.  [default: None]
         """
         pass
 
