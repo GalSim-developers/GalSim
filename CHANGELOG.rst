@@ -218,3 +218,9 @@ Changes from v2.3.3 to v2.3.4
 =============================
 
 - Fixed an error in our handling of the Cycle 7 aberrations file. (#1142)
+
+Changes from v2.3.4 to v2.3.5
+=============================
+
+- Fixed an error that could cause seg faults when drawing an InterpolatedImage that
+  is completely off the target image. (#1164)
