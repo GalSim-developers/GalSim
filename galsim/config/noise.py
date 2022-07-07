@@ -457,11 +457,7 @@ class CCDNoiseBuilder(NoiseBuilder):
         # Get how much extra sky to assume from the image.noise attribute.
         sky = GetSky(base['image'], base, logger, full=True)
         extra_sky = GetSky(config, base, logger, full=True)
-        total_sky = sky + extra_sky # for the return value
-        if isinstance(total_sky, Image):
-            var = np.mean(total_sky.array) + read_noise_var
-        else:
-            var = total_sky + read_noise_var
+        total_sky = sky + extra_sky
 
         # If we already have some variance in the image (from whitening), then we try to subtract
         # it from the read noise if possible.  If not, we subtract the rest off of the sky level.
@@ -529,7 +525,12 @@ class CCDNoiseBuilder(NoiseBuilder):
         logger.debug('image %d, obj %d: Added CCD noise with gain = %f, read_noise = %f',
                      base.get('image_num',0),base.get('obj_num',0), gain, read_noise)
 
-        return var
+        if isinstance(total_sky, Image):
+            var_adu = np.mean(total_sky.array) / gain + read_noise_var / gain**2
+        else:
+            var_adu = total_sky / gain + read_noise_var / gain**2
+
+        return var_adu
 
     def getNoiseVariance(self, config, base, full=False):
         # The noise variance is sky / gain + (read_noise/gain)**2
@@ -625,4 +626,3 @@ RegisterNoiseType('Gaussian', GaussianNoiseBuilder())
 RegisterNoiseType('Poisson', PoissonNoiseBuilder())
 RegisterNoiseType('CCD', CCDNoiseBuilder())
 RegisterNoiseType('COSMOS', COSMOSNoiseBuilder())
-
