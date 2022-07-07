@@ -784,7 +784,7 @@ def test_whiten():
     rng.reset(rng1.duplicate())
     im5a.addNoise(galsim.CCDNoise(sky_level=25, read_noise=rn, gain=gain, rng=rng))
     im5b, cv5b = galsim.config.BuildStamp(config)
-    np.testing.assert_almost_equal(cv5b, 25/3.7 + 25/3.7**2, decimal=5)
+    np.testing.assert_almost_equal(cv5b, 25/gain + 5**2/gain**2, decimal=5)
     np.testing.assert_almost_equal(im5b.array, im5a.array, decimal=5)
 
     # And again with a non-trivial sky image
@@ -803,7 +803,7 @@ def test_whiten():
     rn = math.sqrt(25 - cv5c*gain**2)
     im5c.addNoise(galsim.CCDNoise(sky_level=25, read_noise=rn, gain=gain, rng=rng))
     im5d, cv5d = galsim.config.BuildStamp(config2)
-    np.testing.assert_almost_equal(cv5d, 50 + mean_sky, decimal=4)
+    np.testing.assert_almost_equal(cv5d, mean_sky/gain + 5**2/gain**2, decimal=4)
     np.testing.assert_almost_equal(im5d.array, im5c.array, decimal=5)
 
     config['image']['noise']['sky_level_pixel'] = 1.e-5
