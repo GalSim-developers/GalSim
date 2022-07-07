@@ -66,6 +66,9 @@ def AddNoise(config, im, current_var=0., logger=None):
         im:             The image onto which to add the noise
         current_var:    The current noise variance present in the image already [default: 0]
         logger:         If given, a logger object to log progress. [default: None]
+
+    Returns:
+        Variance added to the image (units are ADU if gain != 1)
     """
     from .stamp import SetupConfigObjNum
 
@@ -110,7 +113,7 @@ def CalculateNoiseVariance(config, full=False):
                     noise variance at every pixel.  Otherwise, just return the value at the center.
 
     Returns:
-        the noise variance
+        the noise variance (units are ADU if gain != 1)
     """
     noise = config['image']['noise']
     if not isinstance(noise, dict):
@@ -145,7 +148,7 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
         logger:             If given, a logger object to log progress. [default: None]
 
     Returns:
-        the variance in the image
+        the variance in the image (units are ADU if gain != 1)
     """
     logger = LoggerWrapper(logger)
     if 'noise' in config['image']:
@@ -260,6 +263,9 @@ class NoiseBuilder:
             current_var:    The current noise variance present in the image already.
             draw_method:    The method that was used to draw the objects on the image.
             logger:         If given, a logger object to log progress.
+
+        Returns:
+            the variance of the noise model (units are ADU if gain != 1)
         """
         raise NotImplementedError("The %s class has not overridden addNoise"%self.__class__)
 
@@ -274,7 +280,7 @@ class NoiseBuilder:
                         center.
 
         Returns:
-            the variance of the noise model
+            the variance of the noise model (units are ADU if gain != 1)
         """
         raise NotImplementedError("The %s class has not overridden addNoise"%self.__class__)
 
