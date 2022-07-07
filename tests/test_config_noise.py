@@ -695,6 +695,7 @@ def test_whiten():
     im2b, cv2b = galsim.config.BuildStamp(config)
     np.testing.assert_almost_equal(cv2b, 50)
     np.testing.assert_almost_equal(im2b.array, im2a.array, decimal=5)
+    np.testing.assert_allclose(cv2b, np.var(im2b.array - im1a.array), rtol=0.1)
 
     # If whitening already added too much noise, raise an exception
     config['image']['noise']['variance'] = 1.e-5
@@ -724,6 +725,7 @@ def test_whiten():
     im3b, cv3b = galsim.config.BuildStamp(config)
     np.testing.assert_almost_equal(cv3b, 50, decimal=5)
     np.testing.assert_almost_equal(im3b.array, im3a.array, decimal=5)
+    np.testing.assert_allclose(cv3b, np.var(im3b.array - im1a.array), rtol=0.1)
 
     # It's more complicated if the sky is quoted per arcsec and the wcs is not uniform.
     config2 = galsim.config.CopyConfig(config)
@@ -752,6 +754,7 @@ def test_whiten():
     im3d, cv3d = galsim.config.BuildStamp(config2)
     np.testing.assert_almost_equal(cv3d, 50 + mean_sky, decimal=4)
     np.testing.assert_almost_equal(im3d.array, im3c.array, decimal=5)
+    np.testing.assert_allclose(cv3d, np.var(im3d.array - im1a.array), rtol=0.1)
 
     config['image']['noise']['sky_level_pixel'] = 1.e-5
     with assert_raises(galsim.GalSimConfigError):
@@ -774,6 +777,7 @@ def test_whiten():
     im4b, cv4b = galsim.config.BuildStamp(config)
     np.testing.assert_almost_equal(cv4b, 50, decimal=5)
     np.testing.assert_almost_equal(im4b.array, im4a.array, decimal=5)
+    np.testing.assert_allclose(cv4b, np.var(im4b.array - im1a.array), rtol=0.1)
 
     # Repeat with gain != 1
     gain = 3.7
@@ -786,6 +790,7 @@ def test_whiten():
     im5b, cv5b = galsim.config.BuildStamp(config)
     np.testing.assert_almost_equal(cv5b, 25/gain + 5**2/gain**2, decimal=5)
     np.testing.assert_almost_equal(im5b.array, im5a.array, decimal=5)
+    np.testing.assert_allclose(cv5b, np.var(im5b.array - im1a.array), rtol=0.1)
 
     # And again with a non-trivial sky image
     galsim.config.RemoveCurrent(config2)
@@ -805,6 +810,7 @@ def test_whiten():
     im5d, cv5d = galsim.config.BuildStamp(config2)
     np.testing.assert_almost_equal(cv5d, (25+mean_sky)/gain + 5**2/gain**2, decimal=4)
     np.testing.assert_almost_equal(im5d.array, im5c.array, decimal=5)
+    np.testing.assert_allclose(cv5d, np.var(im5d.array - im1a.array), rtol=0.1)
 
     config['image']['noise']['sky_level_pixel'] = 1.e-5
     config['image']['noise']['read_noise'] = 0
@@ -829,6 +835,7 @@ def test_whiten():
     im6b, cv6b = galsim.config.BuildStamp(config)
     np.testing.assert_almost_equal(cv6b, 50, decimal=5)
     np.testing.assert_almost_equal(im6b.array, im6a.array, decimal=5)
+    np.testing.assert_allclose(cv6b, np.var(im6b.array - im1a.array), rtol=0.1)
 
     config['image']['noise']['variance'] = 1.e-5
     del config['_current_cn_tag']
