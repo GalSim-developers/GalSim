@@ -475,11 +475,10 @@ class CCDNoiseBuilder(NoiseBuilder):
             if isinstance(total_sky, Image):
                 test = np.any(total_sky.array/gain + read_noise_var_adu < current_var)
             else:
-                target_var = total_sky / gain + read_noise_var_adu
                 logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                              base.get('image_num',0),base.get('obj_num',0),
-                             target_var, current_var)
-                test = target_var < current_var
+                             var_adu, current_var)
+                test = var_adu < current_var
             if test:
                 raise GalSimConfigError(
                     "Whitening already added more noise than the requested CCD noise.")
