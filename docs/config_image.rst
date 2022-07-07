@@ -149,7 +149,7 @@ that are defined by GalSim are:
     * ``sky_level`` = *float_value* (default = 0.0)  The sky level in ADU/arcsec^2 to use for the noise.  If both this and ``image.sky_level`` are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be ``image.sky_level``.
     * ``sky_level_pixel`` = *float_value* (default = 0.0)  The sky level in ADU/pixel to use for the noise.  If both this and ``image.sky_level_pixel`` are provided, then they will be added together for the purpose of the noise, but the background level in the final image will just be ``image.sky_level_pixel``.
     * ``gain`` = *float_value* (default = 1.0)  The CCD gain in e-/ADU.
-    * ``read_noise`` = *float_value* (default = 0.0)  The CCD read noise in ADU.
+    * ``read_noise`` = *float_value* (default = 0.0)  The CCD read noise in e-.
 
 * 'COSMOS' provides spatially correlated noise of the sort found in the F814W HST COSMOS science images described by Leauthaud et al (2007).  The point variance (given by the zero distance correlation function value) may be normalized by the user as required, as well as the dimensions of the correlation function.
 
@@ -428,4 +428,3 @@ Then you can use this as a valid sensor type:
         sensor:
             type: CustomSensor
             ...
-
