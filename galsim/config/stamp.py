@@ -1180,8 +1180,8 @@ class StampBuilder:
         Returns:
             the new values of image, current_var
         """
-        AddSky(base,image)
         base['current_noise_image'] = base['current_stamp']
+        AddSky(base,image)
         current_var = AddNoise(base,image,current_var,logger)
         return image, current_var
 
