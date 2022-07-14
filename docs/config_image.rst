@@ -16,6 +16,12 @@ Some attributes that are allowed for all image types are:
 * ``random_seed`` = *int_value* or *list* (optional)  Normally, the initial random seed value to use for the first object. Each successive object gets the next integer value in sequence. We do it this way rather than just continue the random numbers from the random number generator so that the output is deterministic even when using multiple processes to build each image. The default is to get a seed from the system (/dev/urandom if possible, otherwise based on the time).
 
     * If ``random_seed`` is a list, then multiple random number generators will be available for each object according to the multiple seed specifications.  This is normally used to have one random number repeat with some cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure).  Whenever you want to use an rng other than the first one, add ``rng_num`` to the field and set it to the number of the rng you want to use in this list.
+    .. note::
+
+        Within this ``random_seed`` list, any items that are either an int or str will be
+        evaluated once and converted into a sequence in the normal way.  So if you want an item
+        to be some complex Eval operation, you should make it a dict with an explicit
+        ``type: Eval``, rather than use the ``$`` shorthand notation.
 
 * ``nproc`` = *int_value*  (default = 1)  Specify the number of processors to use when drawing images. If nproc <= 0, then this means to try to automatically figure out the number of cpus and use that.
 * ``wcs`` See `WCS Field` below.
