@@ -66,7 +66,11 @@ image:
     nobjects: 5
     random_seed:
         - 12345  # Implicitly a sequence that increases from here by 1 each obj_num.
-        - '$123456789 + (image_num//3) * @image.nobjects + obj_num % @image.nobjects'
+        -
+          # Can't use $ shorthand here, since that will implicitly evaluate it once and then treat
+          # it the same way as an integer.
+          type: Eval
+          str: '123456789 + (image_num//3) * @image.nobjects + obj_num % @image.nobjects'
     world_pos:
         rng_num: 1
         type: XY

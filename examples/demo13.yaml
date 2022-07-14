@@ -119,7 +119,15 @@ image:
         - 12345
 
         # Used for objects.  Repeats sequence for each filter
-        - '$12345 + obj_num % @image.nobjects + 10**6 * (1 + image_num // len(@image.filter.items))'
+        # Note: Don't use $ shorthand here, since that will implicitly be evaluated once and then
+        # treated the same way as an integer (i.e. making a regular sequence starting from that
+        # value).  Using an explicit dict with an Eval type means GalSim will leave it alone and
+        # evaluate it as is for each object.
+        -
+          type: Eval
+          str: '12345
+                + obj_num % @image.nobjects
+                + 10**6 * (1 + image_num // len(@image.filter.items))'
 
     # We're just doing one SCA here.
     # If you wanted to do all of them in each of three filters (given below), you could use:
