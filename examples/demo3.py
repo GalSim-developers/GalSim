@@ -107,7 +107,7 @@ def main(argv):
                            # you could include the QE factor as part of the gain.
     read_noise = 0.3       # e- / pixel
 
-    random_seed = 1314662
+    random_seed = galsim.BaseDeviate(1314662).raw()
 
     logger.info('Starting demo script 3 using:')
     logger.info('    - Galaxy is bulge plus disk, flux = %.1e',gal_flux)

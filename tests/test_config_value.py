@@ -1830,7 +1830,7 @@ def test_eval():
     config['index_key'] = 'file_num'
     config['file_num'] = 0
     config['image'] = { 'random_seed' : 1234 }
-    rng = galsim.BaseDeviate(1234)
+    rng = galsim.BaseDeviate(galsim.BaseDeviate(1234).raw())
     galsim.config.ProcessInput(config)
     galsim.config.SetupInputsForImage(config, None)
     ps = galsim.PowerSpectrum(e_power_function = lambda k: np.exp(-k**0.2),
@@ -1851,7 +1851,7 @@ def test_eval():
     np.testing.assert_almost_equal(ps_mu, mu)
 
     # Check use of numpy in the evaluated string
-    rng2 = galsim.BaseDeviate(1234 + 31415)
+    rng2 = galsim.BaseDeviate(galsim.BaseDeviate(1234 + 31415).raw())
     ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng2)
     g1,g2,mu = ps.getLensing(pos = config['world_pos'])
     ps_shear = galsim.config.ParseValue(config, 'ps_shear1', config, galsim.Shear)[0]

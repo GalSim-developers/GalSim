@@ -82,7 +82,7 @@ def main(argv):
 
     # The random seed is used for both the power spectrum realization and the random properties
     # of the galaxies.
-    random_seed = 3339201
+    random_seed = galsim.BaseDeviate(3339201).raw()
 
     # Make output directory if not already present.
     if not os.path.isdir('output'):

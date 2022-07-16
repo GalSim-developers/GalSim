@@ -64,8 +64,9 @@ def test_fits():
 
     im1_list = []
     nfiles = 6
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nfiles):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         sigma = ud() + 1.
         gal = galsim.Gaussian(sigma=sigma, flux=100)
         im1 = gal.drawImage(scale=1)
@@ -227,8 +228,9 @@ def test_multifits():
 
     im1_list = []
     nimages = 6
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nimages):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         sigma = ud() + 1.
         gal = galsim.Gaussian(sigma=sigma, flux=100)
         im1 = gal.drawImage(scale=1)
@@ -295,8 +297,9 @@ def test_datacube():
     im1_list = []
     nimages = 6
     b = None
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nimages):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         sigma = ud() + 1.
         gal = galsim.Gaussian(sigma=sigma, flux=100)
         if b is None:
@@ -356,7 +359,7 @@ def test_datacube():
     im5_list = galsim.fits.readCube('output/test_datacube.fits')
     assert len(im5_list) == 3
     for k in range(3):
-        rng = galsim.UniformDeviate(1234 + k + 1)
+        rng = galsim.UniformDeviate(first_seed + k + 1)
         rng.discard(1)
         im1_list[k].addNoise(galsim.GaussianNoise(sigma=0.1**0.5, rng=rng))
         np.testing.assert_array_equal(im5_list[k].array, im1_list[k].array)
@@ -390,17 +393,18 @@ def test_skip():
     im1_list = []
     skip_list = []
     nfiles = 6
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nfiles):
         file_name = 'output/test_skip_%d.fits'%k
         if os.path.exists(file_name):
             os.remove(file_name)
-        ud_file = galsim.UniformDeviate(1234 + k)
+        ud_file = galsim.UniformDeviate(first_seed + k)
         if ud_file() < 0.4:
             print('skip k = ',k)
             skip_list.append(True)
         else:
             skip_list.append(False)
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         sigma = ud() + 1.
         gal = galsim.Gaussian(sigma=sigma, flux=100)
         im1 = gal.drawImage(scale=1)
@@ -421,7 +425,6 @@ def test_skip():
     with CaptureLog() as cl:
         galsim.config.Process(config, logger=cl.logger)
     assert "Skipping file 1 = output/test_skip_1.fits because output.noclobber" in cl.output
-    assert "Skipping file 2 = output/test_skip_2.fits because output.noclobber" in cl.output
     assert "Skipping file 3 = output/test_skip_3.fits because output.noclobber" in cl.output
     assert "Skipping file 5 = output/test_skip_5.fits because output.noclobber" in cl.output
     for k in range(nfiles):
@@ -536,8 +539,9 @@ def test_extra_wt():
     config['output']['nproc'] = 2
     galsim.config.RemoveCurrent(config)
     galsim.config.Process(config)
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nfiles):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         sigma = ud() + 1.
         gal = galsim.Gaussian(sigma=sigma, flux=100)
         im = gal.drawImage(scale=0.4)
@@ -608,8 +612,9 @@ def test_extra_wt():
     config['output']['nproc'] = 2
     galsim.config.RemoveCurrent(config)
     galsim.config.Process(config)
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nfiles):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         x = ud() * 63 + 1
         y = ud() * 63 + 1
         ix = int(math.floor(x+1))
@@ -695,8 +700,9 @@ def test_extra_psf():
     gal_offset = []
     psf_fwhm = []
 
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nfiles):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         x = ud() * 130 - 30
         y = ud() * 130 - 30
         ix = int(math.floor(x+0.5))
@@ -783,7 +789,7 @@ def test_extra_psf():
     galsim.config.RemoveCurrent(config)
     galsim.config.Process(config)
     for k in range(nfiles):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         ud.discard(8)  # The ud() calls for the galaxy precede the extra_output calls.
         ix, iy = gal_center[k]
         dx, dy = gal_dxy[k]
@@ -892,7 +898,7 @@ def test_extra_psf_sn():
     np.testing.assert_allclose(psf_noise.array.var(), noise_var, rtol=0.02)
     snr = np.sqrt( np.sum(sn100_psf_image.array**2, dtype=float) / noise_var )
     print('snr = ',snr, 100)
-    np.testing.assert_allclose(snr, 100, rtol=0.2)  # Not super accurate for any single image.
+    np.testing.assert_allclose(snr, 100, rtol=0.25)  # Not super accurate for any single image.
 
     # Can also specify different draw_methods.
     config['output']['psf']['draw_method'] = 'real_space'
@@ -1013,8 +1019,9 @@ def test_extra_truth():
     meas_g2 = np.empty(nobjects)
     obj_type_i = np.empty(nobjects, dtype=int)
     obj_type_s = [None] * nobjects
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nobjects):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         if k%3 == 0:
             sigma[k] = 1.e-6
             g[k] = 0.
@@ -1157,7 +1164,7 @@ def test_retry_io():
     assert "File output/test_flaky_fits_0.fits: Caught OSError" in cl.output
     assert "This is try 2/6, so sleep for 2 sec and try again." in cl.output
     assert "file 0: Wrote FlakyFits to file 'output/test_flaky_fits_0.fits'" in cl.output
-    assert "File output/test_flaky_wt_0.fits: Caught OSError: " in cl.output
+    assert "File output/test_flaky_wt_4.fits: Caught OSError: " in cl.output
     assert "This is try 1/6, so sleep for 1 sec and try again." in cl.output
     assert "file 0: Wrote flaky_weight to 'output/test_flaky_wt_0.fits'" in cl.output
 
@@ -1191,9 +1198,9 @@ def test_retry_io():
     assert "File 1 = output/test_flaky_fits_1.fits" in cl.output
     assert "File 2 = output/test_flaky_fits_2.fits" in cl.output
     assert "File 3 = output/test_flaky_fits_3.fits" in cl.output
-    assert "File 4 = output/test_flaky_fits_4.fits" in cl.output
-    assert "Exception caught for file 5 = output/test_flaky_fits_5.fits" in cl.output
-    assert "File output/test_flaky_fits_5.fits not written! Continuing on..." in cl.output
+    assert "Exception caught for file 4 = output/test_flaky_fits_4.fits" in cl.output
+    assert "File output/test_flaky_fits_4.fits not written! Continuing on..." in cl.output
+    assert "File 5 = output/test_flaky_fits_5.fits" in cl.output
 
     # Also works in nproc > 1 mode
     config['output']['nproc'] = 2
@@ -1208,10 +1215,10 @@ def test_retry_io():
         assert re.search("Process-.: File 1 = output/test_flaky_fits_1.fits", cl.output)
         assert re.search("Process-.: File 2 = output/test_flaky_fits_2.fits", cl.output)
         assert re.search("Process-.: File 3 = output/test_flaky_fits_3.fits", cl.output)
-        assert re.search("Process-.: File 4 = output/test_flaky_fits_4.fits", cl.output)
-        assert re.search("Process-.: Exception caught for file 5 = output/test_flaky_fits_5.fits",
+        assert re.search("Process-.: Exception caught for file 4 = output/test_flaky_fits_4.fits",
                          cl.output)
-        assert "File output/test_flaky_fits_5.fits not written! Continuing on..." in cl.output
+        assert "File output/test_flaky_fits_4.fits not written! Continuing on..." in cl.output
+        assert re.search("Process-.: File 5 = output/test_flaky_fits_5.fits", cl.output)
 
     # But with except_abort = True, it will stop after the first failure
     del config['output']['nproc']  # Otherwise which file fails in non-deterministic.
@@ -1219,7 +1226,7 @@ def test_retry_io():
         try:
             galsim.config.Process(config, logger=cl.logger, except_abort=True)
         except OSError as e:
-            assert str(e) == "p = 0.126989"
+            assert str(e) == "p = 0.285159"
     #print(cl.output)
     assert "File output/test_flaky_fits_0.fits not written." in cl.output
 

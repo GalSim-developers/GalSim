@@ -82,7 +82,7 @@ def main(argv):
     stamp_xsize = 40                #
     stamp_ysize = 40                #
 
-    random_seed = 6424512           #
+    random_seed = galsim.BaseDeviate(6424512).raw()
 
     pixel_scale = 1.0               # arcsec / pixel
     sky_level = 1.e6                # ADU / arcsec^2

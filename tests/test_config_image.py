@@ -60,8 +60,9 @@ def test_single():
 
     im1_list = []
     nimages = 6
+    first_seed = galsim.BaseDeviate(1234).raw()
     for k in range(nimages):
-        ud = galsim.UniformDeviate(1234 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
         sigma = ud() + 1.
         gal = galsim.Gaussian(sigma=sigma, flux=100)
         print('gal = ',gal)
@@ -259,7 +260,8 @@ def test_phot():
     }
 
     # First the simple config written above
-    ud = galsim.UniformDeviate(1234 + 1)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    ud = galsim.UniformDeviate(first_seed + 1)
     gal = galsim.Gaussian(sigma=1.7, flux=100)
     im1a = gal.drawImage(scale=1, method='phot', rng=ud)
     im1b = galsim.config.BuildImage(config)
@@ -268,7 +270,7 @@ def test_phot():
     # Use a non-default number of photons
     del config['stamp']['_done']
     config['image']['n_photons'] = 300
-    ud.seed(1234 + 1)
+    ud.seed(first_seed + 1)
     im2a = gal.drawImage(scale=1, method='phot', n_photons=300, rng=ud)
     im2b = galsim.config.BuildImage(config)
     print('image = ',config['image'])
@@ -278,7 +280,7 @@ def test_phot():
     # Allow the flux to vary as a Poisson deviate even though n_photons is given
     del config['stamp']['_done']
     config['image']['poisson_flux'] = True
-    ud.seed(1234 + 1)
+    ud.seed(first_seed + 1)
     im3a = gal.drawImage(scale=1, method='phot', n_photons=300, rng=ud, poisson_flux=True)
     im3b = galsim.config.BuildImage(config)
     np.testing.assert_array_equal(im3b.array, im3a.array)
@@ -306,7 +308,7 @@ def test_phot():
     print('N,g without extra_noise: ',gal._calculate_nphotons(0, False, 0, None))
     print('N,g with extra_noise: ',gal._calculate_nphotons(0, False, 5, None))
     config['image']['noise'] = { 'type' : 'Gaussian', 'variance' : 50 }
-    ud.seed(1234 + 1)
+    ud.seed(first_seed + 1)
     im4a = gal.drawImage(scale=1, method='phot', max_extra_noise=5, rng=ud, poisson_flux=True)
     im4a.addNoise(galsim.GaussianNoise(sigma=math.sqrt(50), rng=ud))
     im4b = galsim.config.BuildImage(config)
@@ -426,10 +428,10 @@ def test_reject():
 
     nimages = 11
     im_list = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=logger)[0]
-    # For this particular config, only 6 of them are real images.  The others were skipped.
+    # For this particular config, only 3 of them are real images.  The others were skipped.
     # The skipped ones are present in the list, but their flux is 0
     fluxes = [im.array.sum(dtype=float) if im is not None else 0 for im in im_list]
-    expected_fluxes = [1289, 0, 1993, 1398, 0, 1795, 0, 0, 458, 0, 0]
+    expected_fluxes = [0, 2320, 0, 0, 0, 0, 1156, 2667, 0, 0, 0]
     np.testing.assert_almost_equal(fluxes, expected_fluxes, decimal=0)
 
     # Check for a few of the logging outputs that explain why things were rejected.
@@ -441,19 +443,18 @@ def test_reject():
     # Note: I'm testing for specific error messages here, which could change if we change
     # the order of operations somewhere.  The point here is that we hit at least one of each
     # kind of skip/rejection/exception that we intended in the config dict above.
-    assert "obj 1: Skipping because field skip=True" in cl.output
-    assert "obj 1: Caught SkipThisObject: e = None" in cl.output
-    assert "Skipping object 1" in cl.output
-    assert "Object 0: Caught exception index=105 has gone past the number of entries" in cl.output
-    assert "Object 0: Caught exception inner_radius must be less than radius (3.931733)" in cl.output
-    assert "Object 0: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
+    assert "obj 8: Skipping because field skip=True" in cl.output
+    assert "obj 8: Caught SkipThisObject: e = None" in cl.output
+    assert "Skipping object 8" in cl.output
+    assert "Object 6: Caught exception index=97 has gone past the number of entries" in cl.output
+    assert "Object 5: Caught exception inner_radius must be less than radius (1.193147)" in cl.output
+    assert "Object 4: Caught exception Unable to evaluate string 'math.sqrt(x)'" in cl.output
     assert "obj 0: reject evaluated to True" in cl.output
     assert "Object 0: Rejecting this object and rebuilding" in cl.output
-    # This next one can end up with slightly different numerical values depending on numpy version
-    #assert "Object 0: Measured flux = 3253.173584 < 0.95 * 3457.712670." in cl.output
-    #assert "Object 0: Measured snr = 60.992197 > 50.0." in cl.output
-    assert re.search(r"Object 0: Measured flux = 3253.17[0-9]* < 0.95 \* 3457.712670.", cl.output)
-    assert re.search(r"Object 0: Measured snr = 60.992[0-9]* > 50.0.", cl.output)
+    # This next two can end up with slightly different numerical values depending on numpy version
+    # So use re.search rather than require an exact match.
+    assert re.search(r"Object 0: Measured flux = 3086.30[0-9]* < 0.95 \* 3265.226572.", cl.output)
+    assert re.search(r"Object 4: Measured snr = 79.888[0-9]* > 50.0.", cl.output)
 
     # 10 is quick skipped, so we don't even get a debug line for it.
     assert 'Stamp 10' not in cl.output
@@ -465,11 +466,11 @@ def test_reject():
 
     # For test coverage to get all branches, do min_snr and max_snr separately.
     del config['stamp']['max_snr']
-    config['stamp']['min_snr'] = 20
+    config['stamp']['min_snr'] = 26
     with CaptureLog() as cl:
         im_list2 = galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)[0]
     #print(cl.output)
-    assert re.search(r"Object 8: Measured snr = 9.1573[0-9]* < 20.0.", cl.output)
+    assert re.search(r"Object 6: Measured snr = 25.2741[0-9]* < 26.0.", cl.output)
 
     # If we lower the number of retries, we'll max out and abort the image
     config['stamp']['retry_failures'] = 10
@@ -599,7 +600,8 @@ def test_snr():
     }
 
     # Do the S/N calculation by hand.
-    ud = galsim.UniformDeviate(1234 + 1)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    ud = galsim.UniformDeviate(first_seed + 1)
     gal = galsim.Gaussian(sigma=1.7)
     im1a = gal.drawImage(nx=32, ny=32, scale=0.4)
     sn_meas = math.sqrt( np.sum(im1a.array**2, dtype=float) / 50 )
@@ -620,7 +622,7 @@ def test_snr():
     # Photon shooting can do snr scaling, but will give a warning.
     config['stamp']['draw_method'] = 'phot'
     config['stamp']['n_photons'] = 100  # Need something here otherwise it will shoot 1 photon.
-    ud.seed(1234 + 1)
+    ud.seed(first_seed + 1)
     im2a = gal.drawImage(nx=32, ny=32, scale=0.4, method='phot', n_photons=100, rng=ud)
     sn_meas = math.sqrt( np.sum(im2a.array**2, dtype=float) / 50 )
     print('measured s/n = ',sn_meas)
@@ -1042,7 +1044,8 @@ def test_scattered_noskip():
     }
     gal = galsim.Gaussian(flux=100, sigma=1.2)
     image = galsim.Image(200,200, scale=0.2)
-    ud = galsim.UniformDeviate(1234)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    ud = galsim.UniformDeviate(first_seed)
     for i in range(50):
         x = ud() * 400 - 100
         y = ud() * 400 - 100
@@ -1129,8 +1132,9 @@ def test_scattered_whiten():
     im1 = galsim.Image(100,100, scale=scale)
     cv_im = galsim.Image(100,100)
 
+    first_seed = galsim.BaseDeviate(12345).raw()
     for k in range(nobjects):
-        ud = galsim.UniformDeviate(12345 + k + 1)
+        ud = galsim.UniformDeviate(first_seed + k + 1)
 
         x = ud() * 200. - 50.
         y = ud() * 200. - 50.
@@ -1158,7 +1162,8 @@ def test_scattered_whiten():
     print('min cv = ',cv_im.array.min())
     max_cv = cv_im.array.max()
     noise_im = max_cv - cv_im
-    rng = galsim.BaseDeviate(12345)
+    first_seed = galsim.BaseDeviate(12345).raw()
+    rng = galsim.BaseDeviate(first_seed)
     im1.addNoise(galsim.VariableGaussianNoise(rng, noise_im))
     im1.addNoise(galsim.GaussianNoise(rng, sigma=math.sqrt(variance-max_cv)))
 
@@ -1213,7 +1218,7 @@ def test_tiled():
         },
     }
 
-    seed = 1234
+    seed = galsim.BaseDeviate(1234).raw()
     im1a = galsim.Image(nx * (xsize+xborder) - xborder, ny * (ysize+yborder) - yborder, scale=scale)
     ud = galsim.UniformDeviate(seed)  # Test obj_rng=False -- one ud for all.
     for j in range(ny):
@@ -1243,7 +1248,7 @@ def test_tiled():
     config['image']['xborder'] = -xborder
     config['image']['yborder'] = -yborder
     im2a = galsim.Image(nx * (xsize-xborder) + xborder, ny * (ysize-yborder) + yborder, scale=scale)
-    seed = 1234
+    seed = galsim.BaseDeviate(1234).raw()
     ud = galsim.UniformDeviate(seed)
     for i in range(nx):
         for j in range(ny):
@@ -1272,7 +1277,7 @@ def test_tiled():
     config['image']['order'] = 'rand'
     config['gal']['skip'] = { 'type': 'RandomBinomial', 'p': 0.2 }
     im3a = galsim.Image(nx * (xsize-xborder) + xborder, ny * (ysize-yborder) + yborder, scale=scale)
-    seed = 1234
+    seed = galsim.BaseDeviate(1234).raw()
     i_list = []
     j_list = []
     for i in range(nx):
@@ -1367,9 +1372,9 @@ def test_tiled():
         },
     }
 
-    seed = 1234
-    ps = galsim.PowerSpectrum(e_power_function=lambda k: np.exp(-k**0.2))
+    seed = galsim.BaseDeviate(1234).raw()
     rng = galsim.BaseDeviate(seed)
+    ps = galsim.PowerSpectrum(e_power_function=lambda k: np.exp(-k**0.2))
     im4a = galsim.Image(nx*size, ny*size, scale=scale)
     center = im4a.true_center * scale
     ps.buildGrid(grid_spacing=size*scale, ngrid=max(nx,ny)+1, rng=rng, center=center)
@@ -1406,7 +1411,7 @@ def test_tiled():
     del config['image']['stamp_size']
     config['image']['stamp_xsize'] = xsize
     config['image']['stamp_ysize'] = ysize
-    seed = 1234
+    seed = galsim.BaseDeviate(1234).raw()
     rng = galsim.BaseDeviate(seed)
     im5a = galsim.Image(nx*xsize, ny*ysize, scale=scale)
     center = im5a.true_center * scale
@@ -1970,8 +1975,9 @@ def test_index_key():
                 for n in range(nfiles) ]
 
     # Now generate by hand
+    first_seed = galsim.BaseDeviate(12345).raw()
     for n in range(nfiles):
-        seed = 12345 + n*n_per_file
+        seed = first_seed + n*n_per_file
         file_rng = galsim.UniformDeviate(seed)
         fwhm = file_rng() * 0.2 + 0.9
         e = 0.2 + 0.05 * n
@@ -1989,12 +1995,12 @@ def test_index_key():
             if i == 0:
                 image_rng = file_rng
             else:
-                seed = 12345 + n*n_per_file + i*n_per_image
+                seed = first_seed + n*n_per_file + i*n_per_image
                 image_rng = galsim.UniformDeviate(seed)
             im = galsim.ImageF(32*3, 32*3, scale=0.3)
 
             for k in range(nx*ny):
-                seed = 12345 + n*n_per_file + i*n_per_image + k + 1
+                seed = first_seed + n*n_per_file + i*n_per_image + k + 1
                 obj_rng = galsim.UniformDeviate(seed)
                 kx = k % 3
                 ky = k // 3
@@ -2131,8 +2137,10 @@ def test_multirng():
                                   units=galsim.arcsec)
     gal_ps = galsim.PowerSpectrum('3.5e-8 * (k/10)**-1.4', units=galsim.radians)
 
+    first_seed = galsim.BaseDeviate(12345).raw()
+    ps_first_seed = galsim.BaseDeviate(12345 + 31415).raw()
     for n in range(nimages):
-        seed = 12345 + n*ngals
+        seed = first_seed + n*ngals
         rng = galsim.UniformDeviate(seed)
         centeru = rng() * 10. - 5.
         centerv = rng() * 10. - 5.
@@ -2141,7 +2149,7 @@ def test_multirng():
         im = galsim.ImageF(256, 256, wcs=wcs)
         world_center = im.wcs.toWorld(im.true_center)
         psf_ps.buildGrid(grid_spacing=1.0, ngrid=30, rng=rng, center=world_center, variance=0.1)
-        ps_rng = galsim.UniformDeviate(12345 + 31415 + (n//3))
+        ps_rng = galsim.UniformDeviate(ps_first_seed + (n//3))
         if n % 3 == 0:
             gal_ps.buildGrid(grid_spacing=1.0, ngrid=50, rng=ps_rng, center=galsim.PositionD(0,0))
         for i in range(ngals):
@@ -2197,6 +2205,55 @@ def test_multirng():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config7)
 
+@timer
+def test_sequential_seeds():
+    """Test using sequential seeds for successive images.
+
+    Our old (<=2.3) way of setting rng seeds involved using the nominal seed value for
+    the image rng, used for noise and other things that apply to the full image, and then
+    a series of sequential seed values following the nominal seed for each galaxy in the image.
+    This way the galaxies could be done asynchronously over multiple processes and still be
+    deterministic.
+
+    The problem with this is that a reasonable user choice is to set a new random seed for
+    each of several successive images, expecting all different galaxies to be built on each.
+    However, if the nominal seeds are too close together, you might get exactly the same
+    random values for galaxies on successive images.  The worst case is when the image seeds
+    are only incremented by 1 from one image to the next (not an unreasonable choice for a
+    user to make -- indeed one that tripped up multiple users).
+
+    Now we pick the galaxy seeds from a list generated from the image rng, so using sequential
+    seeds for multiple images is completely fine.  This test confirms that.
+    """
+    if __name__ == '__main__':
+        nimages = 6
+        ngals = 20
+        logger = logging.getLogger('test_sequential_seeds')
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+    else:
+        nimages = 3
+        ngals = 3
+        logger = None
+
+    # First generate using the config layer.
+    config = galsim.config.ReadConfig('config_input/sequential_seeds.yaml')[0]
+    config['image']['nobjects'] = ngals
+
+    all_stamps = []
+    for n in range(nimages):
+        # Check this at the stamp level.  Prior to the fix all but one of the stamps was
+        # the same as for the previous image.
+        config1 = galsim.config.CopyConfig(config)
+        config1['eval_variables']['iid'] = n
+        stamps, current_vars = galsim.config.BuildStamps(ngals, config1, logger=logger)
+        assert len(stamps) == ngals
+        all_stamps.append(stamps)
+
+    for n in range(1,nimages):
+        for i,stampi in enumerate(all_stamps[n]):
+            for j,stampj in enumerate(all_stamps[n-1]):
+                print(i,j,stampi==stampj)
+            assert stampi not in all_stamps[n-1]
 
 @timer
 def test_template():
@@ -2469,13 +2526,29 @@ def test_blend():
     for i, im in enumerate(images):
         im.write('output/blend%02d.fits'%i)
     # Within each blendset, the images are shifted copies of each other.
-    np.testing.assert_array_equal(images[1].array[3:64,16:64], images[0].array[0:61,9:57])
-    np.testing.assert_array_equal(images[2].array[1:62,6:54], images[0].array[0:61,9:57])
-    np.testing.assert_array_equal(images[3].array[0:61,0:48], images[0].array[0:61,9:57])
+    print('0: ',np.unravel_index(np.argmax(images[0].array),images[0].array.shape))
+    print('1: ',np.unravel_index(np.argmax(images[1].array),images[0].array.shape))
+    print('2: ',np.unravel_index(np.argmax(images[2].array),images[0].array.shape))
+    print('3: ',np.unravel_index(np.argmax(images[3].array),images[0].array.shape))
+    print('4: ',np.unravel_index(np.argmax(images[4].array),images[0].array.shape))
+    print('5: ',np.unravel_index(np.argmax(images[5].array),images[0].array.shape))
+    print('6: ',np.unravel_index(np.argmax(images[6].array),images[0].array.shape))
+    print('7: ',np.unravel_index(np.argmax(images[7].array),images[0].array.shape))
+    # With these random numbers relative to image 0, the offsets are:
+    # 1: +9, +4
+    # 2: -9, +4
+    # 3: +5, +9
+    np.testing.assert_array_equal(images[1].array[19:63,14:58], images[0].array[10:54,10:54])
+    np.testing.assert_array_equal(images[2].array[1:45,14:58], images[0].array[10:54,10:54])
+    np.testing.assert_array_equal(images[3].array[15:59,19:63], images[0].array[10:54,10:54])
 
-    np.testing.assert_array_equal(images[5].array[0:55,9:64], images[4].array[9:64,9:64])
-    np.testing.assert_array_equal(images[6].array[5:60,1:56], images[4].array[9:64,9:64])
-    np.testing.assert_array_equal(images[7].array[0:55,0:55], images[4].array[9:64,9:64])
+    # For the next set, the offset are (relative to image 4):
+    # 5: -5, +1
+    # 6: -1, +7
+    # 7: -5, -1
+    np.testing.assert_array_equal(images[5].array[5:49,11:55], images[4].array[10:54,10:54])
+    np.testing.assert_array_equal(images[6].array[9:53,17:61], images[4].array[10:54,10:54])
+    np.testing.assert_array_equal(images[7].array[5:49,9:53], images[4].array[10:54,10:54])
 
     # If there is a current_image, then updateSkip requires special handling here.
     config['current_image'] = galsim.Image(64,64)
@@ -2728,7 +2801,7 @@ def test_chromatic():
         'type' : 'ChromaticRealGalaxy',
         'random' : True
     }
-    config['image']['random_seed'] = 1239 # This seed happens to get index=0 first.
+    config['image']['random_seed'] = 12341 # This seed happens to get index=0 first.
     galsim.config.RemoveCurrent(config)
     image = galsim.config.BuildImage(config)
     np.testing.assert_allclose(image.array, image7.array)
@@ -2809,7 +2882,8 @@ def test_photon_ops():
         },
     }
 
-    rng = galsim.BaseDeviate(1235)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    rng = galsim.BaseDeviate(first_seed+1)
     gal = galsim.Gaussian(sigma=2.3, flux=10000)
     psf = galsim.Moffat(beta=3.5, fwhm=0.7)
     obj = galsim.Convolve(gal, psf)
@@ -2956,7 +3030,8 @@ def test_sensor():
         },
     }
 
-    rng = galsim.BaseDeviate(1235)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    rng = galsim.BaseDeviate(first_seed+1)
     gal = galsim.Gaussian(sigma=2.3, flux=10000)
     psf = galsim.Moffat(beta=3.5, fwhm=0.7)
     obj = galsim.Convolve(gal, psf)
@@ -3013,7 +3088,7 @@ def test_sensor():
     # Default sensor is equivalent to not using one.
     galsim.config.SetupConfigRNG(config, seed_offset=1)
     galsim.config.RemoveCurrent(config)
-    rng.reset(1235)
+    rng.reset(first_seed+1)
     config['image']['sensor'] = {}
     im3 = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops)
     im4 = galsim.config.BuildImage(config)
@@ -3040,7 +3115,7 @@ def test_sensor():
     }
     galsim.config.SetupConfigRNG(config, seed_offset=1)
     galsim.config.RemoveCurrent(config)
-    rng.reset(1235)
+    rng.reset(first_seed+1)
     trfunc = galsim.LookupTable.from_file('tree_ring_lookup.dat', amplitude=0.5)
     sensor = galsim.SiliconSensor(name='lsst_e2v_50_8', rng=rng,
                                   strength=0.8, diffusion_factor=0.2, qdist=2, nrecalc=3000,

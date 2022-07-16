@@ -971,7 +971,8 @@ def test_config_sca():
         wcs.makeSkyImage(im2, sky_level)
         gal = galsim.Exponential(half_light_radius=1.2, flux=177)
         gal.drawImage(im2, center=(23,17), add_to_image=True)
-        poisson_noise = galsim.PoissonNoise(galsim.BaseDeviate(1234))
+        first_seed = galsim.BaseDeviate(1234).raw()
+        poisson_noise = galsim.PoissonNoise(galsim.BaseDeviate(first_seed))
         im2.addNoise(poisson_noise)
         im2 /= galsim.roman.gain
         im2.quantize()
@@ -993,7 +994,7 @@ def test_config_sca():
         im2 += galsim.roman.thermal_backgrounds['H158'] * galsim.roman.exptime
         sky_image = im2.copy()
         gal.drawImage(im2, center=(23,17), add_to_image=True)
-        rng = galsim.BaseDeviate(1234)
+        rng = galsim.BaseDeviate(first_seed)
         poisson_noise = galsim.PoissonNoise(rng)
         im2.addNoise(poisson_noise)
         galsim.roman.addReciprocityFailure(im2)
@@ -1029,10 +1030,10 @@ def test_config_sca():
         wcs.makeSkyImage(im2, sky_level)
         im2 += galsim.roman.thermal_backgrounds['H158'] * galsim.roman.exptime
         sky_image = im2.copy()
-        rng = galsim.BaseDeviate(1234)
+        rng = galsim.BaseDeviate(first_seed)
         poisson_noise = galsim.PoissonNoise(rng)
         im2.addNoise(poisson_noise)
-        gal_rng = galsim.BaseDeviate(1235)
+        gal_rng = galsim.BaseDeviate(first_seed+1)
         gal.drawImage(im2, center=(23,17), add_to_image=True, method='phot', rng=gal_rng)
         galsim.roman.addReciprocityFailure(im2)
         dc = galsim.roman.dark_current * galsim.roman.exptime

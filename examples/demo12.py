@@ -73,7 +73,7 @@ def main(argv):
     logger = logging.getLogger("demo12")
 
     # initialize (pseudo-)random number generator
-    random_seed = 1234567
+    random_seed = galsim.BaseDeviate(1234567).raw()
 
     # read in SEDs
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']

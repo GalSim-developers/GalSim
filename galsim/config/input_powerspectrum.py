@@ -27,6 +27,7 @@ from .stamp import ParseWorldPos
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..position import PositionD
 from ..shear import Shear
+from ..random import BaseDeviate
 from ..lensing_ps import PowerSpectrum
 
 # This file adds input type nfw_halo and value types PowerSpectrumShear and
@@ -70,6 +71,7 @@ class PowerSpectrumLoader(InputLoader):
             rs = base['image']['random_seed']
             if not isinstance(rs, list): rs = [rs]
             first_seed += 31415  # An arbitrary offset to avoid the chance of unwanted correlations
+            first_seed = BaseDeviate(first_seed).raw()
             rs.append({ 'type' : 'Eval',
                         'str' : 'first + ps_index',
                         'ifirst' : first_seed,

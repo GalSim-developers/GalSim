@@ -83,7 +83,7 @@ def main(argv):
     cube_file_name = os.path.join('output','cube_real.fits')
     psf_file_name = os.path.join('output','psf_real.fits')
 
-    random_seed = 1512413
+    random_seed = galsim.BaseDeviate(1512413).raw()
     sky_level = 1.e6        # ADU / arcsec^2
     pixel_scale = 0.16      # arcsec
     gal_flux = 1.e5         # arbitrary choice, makes nice (not too) noisy images

@@ -136,7 +136,7 @@ def main(argv):
 
     field_shear = galsim.Shear(g1=field_g1, g2=field_g2)
 
-    random_seed = 8383721
+    random_seed = galsim.BaseDeviate(8383721).raw()
 
     logger.info('Starting demo script 9')
 
@@ -396,8 +396,8 @@ def main(argv):
             total_shear = nfw_shear + field_shear
 
             # Apply the magnification and shear to the galaxy
-            gal = gal.magnify(nfw_mu)
             gal = gal.shear(total_shear)
+            gal = gal.magnify(nfw_mu)
 
             # Build the final object
             final = galsim.Convolve([gal, psf])

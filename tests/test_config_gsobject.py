@@ -1116,7 +1116,7 @@ def test_cosmos_redshift():
             'size' : 256,
             'stamp_size' : 32,
             'nobjects' : 1,
-            'random_seed' : 31415,
+            'random_seed' : 12345,
             'image_pos' : {
                 'type' : 'XY' ,
                 'x' : { 'type' : 'Random' , 'min' : 0 , 'max' : 256 },
@@ -1134,7 +1134,10 @@ def test_cosmos_redshift():
     galsim.config.SetupConfigImageNum(config, 0, 0)
     galsim.config.SetupInputsForImage(config, logger=logger)
 
-    rng = galsim.UniformDeviate(31416)
+    # Note: not all redshifts are valid with NFWHalo.  It requires z>0.2.
+    # This seed choice is used since it happens to select a cosmos galaxy with z>0.2.
+    first_seed = galsim.BaseDeviate(12345).raw()
+    rng = galsim.UniformDeviate(first_seed+1)
     cosmos_cat = galsim.COSMOSCatalog(
         dir=real_gal_dir, file_name=real_gal_cat, use_real=False, preload=True)
 
