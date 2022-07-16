@@ -64,10 +64,20 @@ def main(argv):
     sky_level = 2.5e3  # counts / arcsec^2
 
     # This time use a particular seed, so the image is deterministic.
-    # This is the same seed that is used in demo2.yaml, which means the images produced
-    # by the two methods will be precisely identical.
+    # This is the same seed that is used in demo2.yaml, which means the images
+    # produced by the two methods will be precisely identical.
     random_seed = 1534225
 
+    # The first thing the config layer does with the random seed is to scramble
+    # it a bit. Specifically, it makes a random number generator (BaseDeviate)
+    # using that seed and asks for a raw value.  This becomes the seed that
+    # actually gets used.
+    # The reason for this extra step is that eventually (cf. demo4) the config
+    # layer will want to increment these seed values when building multiple
+    # objects or images.  If the user is likewise incrementing seed values for
+    # multiple runs of a given config file, these can interfere leading to
+    # surprising (and typically bad) results.
+    random_seed = galsim.BaseDeviate(random_seed).raw()
 
     logger.info('Starting demo script 2 using:')
     logger.info('    - sheared (%.2f,%.2f) exponential galaxy (flux = %.1e, scale radius = %.2f),',

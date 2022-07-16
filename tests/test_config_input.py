@@ -62,7 +62,8 @@ def test_input_init():
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    ud = galsim.UniformDeviate(1234 + 0 + 1)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    ud = galsim.UniformDeviate(first_seed + 0 + 1)
     sigma = ud() + 1.
     gal = galsim.Gaussian(sigma=sigma, flux=100)
     im1 = gal.drawImage(scale=1, nx=55, ny=45)

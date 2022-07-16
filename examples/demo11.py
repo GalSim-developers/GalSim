@@ -111,7 +111,7 @@ def main(argv):
 
     # random_seed is used for both the power spectrum realization and the random properties
     # of the galaxies.
-    random_seed = 24783923
+    random_seed = galsim.BaseDeviate(24783923).raw()
 
     file_name = os.path.join('output','tabulated_power_spectrum.fits.fz')
 

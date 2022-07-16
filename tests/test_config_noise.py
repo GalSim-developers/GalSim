@@ -53,7 +53,8 @@ def test_gaussian():
     }
 
     # First build by hand
-    rng = galsim.BaseDeviate(1234 + 1)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    rng = galsim.BaseDeviate(first_seed + 1)
     gal = galsim.Gaussian(sigma=1.1, flux=100)
     im1a = gal.drawImage(nx=32, ny=32, scale=scale)
     var = sigma**2
@@ -118,7 +119,8 @@ def test_poisson():
     }
 
     # First build by hand
-    rng = galsim.BaseDeviate(1234 + 1)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    rng = galsim.BaseDeviate(first_seed + 1)
     gal = galsim.Gaussian(sigma=1.1, flux=100)
     im1a = gal.drawImage(nx=32, ny=32, scale=scale)
     sky_pixel = sky * scale**2
@@ -142,7 +144,7 @@ def test_poisson():
 
     # Repeat using photon shooting, which needs to do something slightly different, since the
     # signal photons already have shot noise.
-    rng.seed(1234 + 1)
+    rng.seed(first_seed + 1)
     im2a = gal.drawImage(nx=32, ny=32, scale=scale, method='phot', rng=rng)
     # Need to add Poisson noise for the sky, but not the signal (which already has shot noise)
     im2a.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_pixel)))
@@ -166,7 +168,7 @@ def test_poisson():
     }
     del config['image']['pixel_scale']
     del config['wcs']
-    rng.seed(1234+1)
+    rng.seed(first_seed+1)
     wcs = galsim.UVFunction(ufunc='0.05*x + 0.001*x**2', vfunc='0.05*y + 0.001*y**2')
     im3a = gal.drawImage(nx=32, ny=32, wcs=wcs, method='phot', rng=rng)
     sky_im = galsim.Image(im3a.bounds, wcs=wcs)
@@ -196,7 +198,7 @@ def test_poisson():
     }
     galsim.config.RemoveCurrent(config)
     config = galsim.config.CleanConfig(config)
-    rng.seed(1234+1)
+    rng.seed(first_seed+1)
     trfunc = galsim.LookupTable.from_file('tree_ring_lookup.dat', amplitude=0.5)
     sensor = galsim.SiliconSensor(treering_func=trfunc, treering_center=galsim.PositionD(0,-500),
                                   rng=rng)
@@ -291,8 +293,7 @@ def test_ccdnoise():
         'type' : 'Single',
         'size' : size,
         'pixel_scale' : 0.3,
-        'random_seed' : 123 # Note: this means the seed for the noise will really be 124
-                            # since it is applied at the stamp level, so uses seed + obj_num
+        'random_seed' : 123
     }
     config['image']['noise'] = {
         'type' : 'CCD',
@@ -307,7 +308,8 @@ def test_ccdnoise():
 
     # Build another image that should have equivalent noise properties.
     image2 = galsim.Image(size, size, scale=0.3, dtype=float)
-    rng = galsim.BaseDeviate(124)
+    first_seed = galsim.BaseDeviate(123).raw()
+    rng = galsim.BaseDeviate(first_seed+1)
     noise = galsim.CCDNoise(rng=rng, gain=gain, read_noise=rn)
     image2 += sky
     image2.addNoise(noise)
@@ -321,7 +323,7 @@ def test_ccdnoise():
     # object for this.  In fact, it should do precisely the same calculation.
     # This should be equivalent to letting CCDNoise take the sky level:
     image2.fill(0)
-    rng.reset(124)
+    rng.reset(first_seed+1)
     noise = galsim.CCDNoise(rng=rng, sky_level=sky, gain=gain, read_noise=rn)
     image2.addNoise(noise)
 
@@ -342,7 +344,7 @@ def test_ccdnoise():
     # This time, we just set the current_var to 1.e-20 to trigger the alternate path, but
     # without any real noise there yet.
     image2.fill(0)
-    rng.reset(124)
+    rng.reset(first_seed+1)
     config['image_num_rng'] = rng
     galsim.config.AddNoise(config, image2, current_var=1.e-20, logger=logger)
 
@@ -415,7 +417,8 @@ def test_ccdnoise_phot():
     }
 
     # First build by hand
-    rng = galsim.BaseDeviate(1234 + 1)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    rng = galsim.BaseDeviate(first_seed + 1)
     gal = galsim.Gaussian(sigma=1.1, flux=100)
     im1a = gal.drawImage(nx=32, ny=32, scale=scale, method='phot', rng=rng)
     sky_pixel = sky * scale**2
@@ -447,7 +450,7 @@ def test_ccdnoise_phot():
     del config['image']['noise']['gain']
     del config['image']['noise']['read_noise']
     del config['image']['noise']['_get']
-    rng.seed(1234 + 1)
+    rng.seed(first_seed + 1)
     im2a = gal.drawImage(nx=32, ny=32, scale=scale, method='phot', rng=rng)
     im2a.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=sky_pixel)))
     im2a -= sky_pixel
@@ -472,7 +475,7 @@ def test_ccdnoise_phot():
     }
     del config['image']['pixel_scale']
     del config['wcs']
-    rng.seed(1234+1)
+    rng.seed(first_seed+1)
     wcs = galsim.UVFunction(ufunc='0.05*x + 0.001*x**2', vfunc='0.05*y + 0.001*y**2')
     im3a = gal.drawImage(nx=32, ny=32, wcs=wcs, method='phot', rng=rng)
     sky_im = galsim.Image(im3a.bounds, wcs=wcs)
@@ -491,7 +494,7 @@ def test_ccdnoise_phot():
     config['image']['noise']['gain'] = gain
     config['image']['noise']['read_noise'] = rn
     del config['image']['noise']['_get']
-    rng.seed(1234+1)
+    rng.seed(first_seed+1)
     im4a = gal.drawImage(nx=32, ny=32, wcs=wcs, method='phot', rng=rng)
     wcs.makeSkyImage(sky_im, sky)
     im4a += sky_im
@@ -527,8 +530,7 @@ def test_cosmosnoise():
     }
     config['image'] = {
         'pixel_scale' : pix_scale,
-        'random_seed' : 123 # Note: this means the seed for the noise will really be 124
-                            # since it is applied at the stamp level, so uses seed + obj_num
+        'random_seed' : 123
     }
     config['image']['noise'] = {
         'type' : 'COSMOS'
@@ -580,7 +582,8 @@ def test_cosmosnoise():
     print('From BuildStamp, current_var = ',current_var3)
 
     # Build the same image by hand to make sure it matches what config drew.
-    rng = galsim.BaseDeviate(124)
+    first_seed = galsim.BaseDeviate(123).raw()
+    rng = galsim.BaseDeviate(first_seed+1)
     rgc = galsim.RealGalaxyCatalog(os.path.join(real_gal_dir, real_gal_cat))
     gal = galsim.RealGalaxy(rgc, index=79, flux=0.01, rng=rng)
     image4 = gal.drawImage(image=image3.copy())
@@ -658,7 +661,8 @@ def test_whiten():
     }
 
     # First build by hand (no whitening yet)
-    rng = galsim.BaseDeviate(1234 + 1)
+    first_seed = galsim.BaseDeviate(1234).raw()
+    rng = galsim.BaseDeviate(first_seed + 1)
     rgc = galsim.RealGalaxyCatalog(os.path.join(real_gal_dir, real_gal_cat))
     gal = galsim.RealGalaxy(rgc, index=79, flux=100, rng=rng)
     psf = galsim.Gaussian(sigma=0.05)
@@ -740,7 +744,7 @@ def test_whiten():
     del config2['wcs']
     config2['image']['noise']['symmetrize'] = 4 # Also switch to symmetrize, just to mix it up.
     del config2['image']['noise']['whiten']
-    rng.reset(1234+1) # Start fresh, since redoing the whitening/symmetrizing
+    rng.reset(first_seed+1) # Start fresh, since redoing the whitening/symmetrizing
     wcs = galsim.UVFunction(ufunc='0.05*x + 0.001*x**2', vfunc='0.05*y + 0.001*y**2')
     im3c = galsim.Image(32,32, wcs=wcs)
     im3c = final.drawImage(im3c)
@@ -797,7 +801,7 @@ def test_whiten():
     config2['image']['noise'] = config['image']['noise']
     config2['image']['noise']['symmetrize'] = 4
     del config2['image']['noise']['whiten']
-    rng.reset(1234+1)
+    rng.reset(first_seed+1)
     im5c = galsim.Image(32,32, wcs=wcs)
     im5c = final.drawImage(im5c)
     cv5c = final.noise.symmetrizeImage(im5c, 4)

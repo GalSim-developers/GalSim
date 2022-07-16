@@ -379,19 +379,21 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
     """
     from .value import ParseValue
 
-    # Normally, random_seed parameter is just a number, which really means to use that number
-    # for the first item and go up sequentially from there for each object.
+    # Normally, random_seed parameter is just a number, which really means to use that seed
+    # start a sequential sequence of seeds for each object.
     # However, we allow for random_seed to be a gettable parameter, so for the
     # normal case, we just convert it into a Sequence.
     if isinstance(config[param_name], (int, str)):
-         # The "first" is actually the seed value to use for anything at file or image scope
-         # using the obj_num of the first object in the file or image.  Seeds for objects
-         # will start at 1 more than this.
          first = ParseValue(config, param_name, base, int)[0]
+         seed_rng = BaseDeviate(first)
+         new_first = seed_rng.raw()
+         # Note: This new "first" seed is actually the seed value to use for anything at file or
+         # image scope using the obj_num of the first object in the file or image.
+         # Seeds for objects will start at 1 more than this.
          config[param_name] = {
                  'type' : 'Sequence',
                  'index_key' : 'obj_num',
-                 'first' : first
+                 'first' : new_first
          }
 
     index_key = base['index_key']

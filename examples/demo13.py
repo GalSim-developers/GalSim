@@ -96,6 +96,7 @@ def main(argv):
     outpath = args.outpath
     nobj = args.nobj
     seed = args.seed
+    seed1 = galsim.BaseDeviate(seed).raw()
     use_SCA = args.sca
 
     # Make output directory if not already present.
@@ -219,7 +220,10 @@ def main(argv):
         # There are simpler ways to do this in a python script (e.g. probably only need 2
         # rngs, not 3), but this way of setting it up matches the way the config file initializes
         # the random number generators.
-        image_rng = galsim.UniformDeviate(seed + ifilter * nobj)
+        # Also, note that the second seed given in the config file, doesn't get the
+        # BaseDeviate(...).raw() treatment.  Only the first item, which parses as an int.
+        # When a random_seed config item is already a dict, GalSim leaves it as is.
+        image_rng = galsim.UniformDeviate(seed1 + ifilter * nobj)
 
         # Start with the flux from the sky. This is a little easier to do first before adding
         # the light from the objects, since we will have to apply Poisson noise to the sky flux
@@ -254,9 +258,11 @@ def main(argv):
 
             # The rng for object parameters should be the same for each filter to make sure
             # we get the same parameters, position, rotation in each color.
+            # Note that this one follows the explicit sequence given in the config file,
+            # starting with 12345, not BaseDeviate(12345).raw().
             obj_rng = galsim.UniformDeviate(seed + 1 + 10**6 + i_obj)
             # The rng for photon shooting should be different for each filter.
-            phot_rng = galsim.UniformDeviate(seed + 1 + i_obj + ifilter*nobj)
+            phot_rng = galsim.UniformDeviate(seed1 + 1 + i_obj + ifilter*nobj)
 
             # We'll deal with this below.  The config processing calculates this before the
             # position, so to get the same answers, we need to do the same here.

@@ -1,0 +1,56 @@
+# Copyright (c) 2012-2021 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+#
+
+
+modules:
+    - numpy
+
+eval_variables:
+    iid: 0
+
+psf:
+    type: Moffat
+    beta: 2
+    fwhm: 0.9
+
+gal:
+    type: Exponential
+    half_light_radius: 1.3
+    flux: 1000
+    shear:
+        type: GBeta
+        g: { type: Random, min: 0, max: 0.5 }
+        beta: { type: Random }
+
+image:
+    type: Scattered
+    size: 200
+    nobjects: 15
+    random_seed: "$12345 + id"
+    image_pos:
+        type: XY
+        x: { type: Random, min: 10, max: 190 }
+        y: { type: Random, min: 10, max: 190 }
+    wcs:
+        type: PixelScale
+        scale: 0.2
+
+output:
+    type: Fits
+    dir: output
+    file_name: '$"sequential_rng_%d.fits"%id'

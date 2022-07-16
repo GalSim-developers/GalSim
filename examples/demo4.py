@@ -87,7 +87,7 @@ def main(argv):
         os.mkdir('output')
     multi_file_name = os.path.join('output','multi.fits')
 
-    random_seed = 8241573
+    random_seed = galsim.BaseDeviate(8241573).raw()
     sky_level = 1.e6                # ADU / arcsec^2
     pixel_scale = 1.0               # arcsec / pixel  (size units in input catalog are pixels)
     gal_flux = 1.e6                 # arbitrary choice, makes nice (not too) noisy images

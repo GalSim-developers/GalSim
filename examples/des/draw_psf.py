@@ -76,7 +76,7 @@ def main(argv):
     out_dir = 'output'
 
     # The random seed, so the results are deterministic
-    random_seed = 1339201
+    random_seed = galsim.BaseDeviate(1339201).raw()
 
     x_col = 'X_IMAGE'
     y_col = 'Y_IMAGE'
