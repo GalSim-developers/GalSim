@@ -925,7 +925,6 @@ class StampBuilder:
             if image is None:
                 prof = base['wcs'].toImage(prof, image_pos=base['image_pos'])
                 N = prof.getGoodImageSize(1.)
-                N += 2 + int(np.abs(offset.x) + np.abs(offset.y))
                 bounds = _BoundsI(1,N,1,N)
             else:
                 bounds = image.bounds
