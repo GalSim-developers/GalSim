@@ -486,6 +486,20 @@ def test_reject():
     assert "Object 0: Too many exceptions/rejections for this object. Aborting." in cl.output
     assert "Exception caught when building stamp" in cl.output
 
+    # Even lower, and we get a different limiting error.
+    config['stamp']['retry_failures'] = 4
+    galsim.config.RemoveCurrent(config)
+    with assert_raises(galsim.GalSimConfigError):
+        galsim.config.BuildStamps(nimages, config, do_noise=False)
+    try:
+        with CaptureLog() as cl:
+            galsim.config.BuildStamps(nimages, config, do_noise=False, logger=cl.logger)
+    except (galsim.GalSimConfigError):
+        pass
+    #print(cl.output)
+    assert "Rejected an object 5 times. If this is expected," in cl.output
+    assert "Exception caught when building stamp" in cl.output
+
     # We can also do this with BuildImages which runs through a different code path.
     galsim.config.RemoveCurrent(config)
     try:
