@@ -31,6 +31,9 @@ API Changes
 Config Updates
 --------------
 
+- Changed the way the internal random number sequence works so that running multiple simulations
+  with sequential random seed values doesn't end up with duplicated random values across the
+  two (or more) simulations. (#1169)
 
 
 New Features
