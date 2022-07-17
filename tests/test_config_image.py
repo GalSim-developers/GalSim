@@ -2223,7 +2223,8 @@ def test_sequential_seeds():
     user to make -- indeed one that tripped up multiple users).
 
     Now we pick the galaxy seeds from a list generated from the image rng, so using sequential
-    seeds for multiple images is completely fine.  This test confirms that.
+    seeds for multiple images is completely fine.  This test confirms that.  (It fails
+    for the old way of doing the seed sequence.)
     """
     if __name__ == '__main__':
         nimages = 6
@@ -2235,7 +2236,6 @@ def test_sequential_seeds():
         ngals = 3
         logger = None
 
-    # First generate using the config layer.
     config = galsim.config.ReadConfig('config_input/sequential_seeds.yaml')[0]
     config['image']['nobjects'] = ngals
 
