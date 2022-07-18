@@ -2261,6 +2261,8 @@ class ChromaticSum(ChromaticObject):
                 if i==0:
                     _remove_setup_kwargs(kwargs)
                     add_to_image = True
+                if remaining_flux <= 0:
+                    break
         self._last_wcs = image.wcs
         return image
 
