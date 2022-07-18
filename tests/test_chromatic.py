@@ -854,6 +854,27 @@ def test_ChromaticSum_nphot():
     assert len(counter.nphot) == 1  # Not a priori required, but works for this rng.
     assert np.isclose(img.array.sum(), flux)
 
+    print('Start #1170 test')
+    # If multiple objects at the end has zero flux, it used to cause a ZeroDivisionError.
+    # (cf. #1170)
+    # Note: they need to all have different seds to avoid ChromaticSum collapsing them.
+    obj1 = (galsim.Gaussian(fwhm=0.6) * sed1).withFlux(1.0, bandpass)
+    sed3 = galsim.SED("CWW_Im_ext.sed", wave_type='A', flux_type='flambda')
+    obj3 = (galsim.Gaussian(fwhm=0.3) * sed3).withFlux(0, bandpass)
+    obj = galsim.ChromaticSum([obj1, obj2 * 0, obj3])
+    rng = galsim.BaseDeviate(1234)
+    counter = Counter()
+    img = obj.drawImage(
+        bandpass, nx=24, ny=24, scale=0.2, method='phot', rng=rng,
+        photon_ops=[counter], n_photons=11, poisson_flux=False,
+    )
+    print("3 objects, two with 0 flux, n_photons=11, poisson_flux=False:")
+    print("counter.nphot = ",counter.nphot)
+    print("counter.meanflux = ",counter.meanflux)
+    print("img.array.sum() = ",img.array.sum())
+    assert np.sum(counter.nphot) == 11
+    assert np.isclose(img.array.sum(), 1.0)
+
 
 @timer
 def test_ChromaticConvolution_of_ChromaticConvolution():
