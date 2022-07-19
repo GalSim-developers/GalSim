@@ -402,7 +402,7 @@ class BaseWCS:
 
         This is equivalent to ``wcs.toImage(shear, ...)``.
 
-        This reverses the conventions described in `shearToWorld`.
+        This reverses the process described in `shearToWorld`.
 
         Parameters:
             world_shear:    The shear in world coordinates to convert.
