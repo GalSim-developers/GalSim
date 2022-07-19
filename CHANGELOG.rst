@@ -41,6 +41,9 @@ New Features
 - Added `Image.depixelize` and ``depixelize=True`` option for `InterpolatedImage`. (#1154)
 - Let `expand` method of a `galsim.Bounds` instance take an optional second argument to scale
   differently in different directions. (#1155)
+- Added `BaseWCS.shearToWorld` and `BaseWCS.shearToImage` along with overloading
+  `BaseWCS.toWorld` and `BaseWCS.toImage` to mean the same thing when the argument is a
+  `Shear` value. (#1158)
 
 
 Performance Improvements

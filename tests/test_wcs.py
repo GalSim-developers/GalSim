@@ -561,7 +561,7 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
     im2 = galsim.Image(64,64, scale=1.)
 
     for world_profile in profiles:
-        # The profiles build above are in world coordinates (as usual)
+        # The profiles built above are in world coordinates (as usual)
 
         # Convert to image coordinates
         image_profile = wcs.toImage(world_profile)
@@ -617,6 +617,27 @@ def do_local_wcs(wcs, ufunc, vfunc, name):
         world_profile.drawImage(im1, method='no_pixel', center=(30.9,34.1))
         image_profile.drawImage(im2, method='no_pixel', center=(30.9,34.1))
         np.testing.assert_array_almost_equal(im1.array, im2.array, digits)
+
+        # Check shear conversion
+        world_shear = galsim.Shear(g1=0.2, g2=0.1)
+        image_shear = wcs.toImage(world_shear)
+        assert image_shear == wcs.shearToImage(world_shear)
+
+        # Check round trip.
+        world_shear2 = wcs.toWorld(image_shear)
+        assert world_shear2 == wcs.shearToWorld(image_shear)
+        assert np.isclose(world_shear2.g1, world_shear.g1)
+        assert np.isclose(world_shear2.g2, world_shear.g2)
+
+        # Check that a sheared object in world coordinates gets measured to have the nominal
+        # image shear value.
+        # This needs to start with a round profile so that the world shape is purely world_shear.
+        sigma = wcs.pixelArea(image_pos)**0.5 * 5  # hsm works relatively well with this size.
+        shear_profile = galsim.Gaussian(sigma=sigma).shear(world_shear)
+        shear_profile.drawImage(im1, method='no_pixel')
+        hsm = im1.FindAdaptiveMom()
+        assert np.isclose(hsm.observed_shape.g1, image_shear.g1, atol=1.e-3)
+        assert np.isclose(hsm.observed_shape.g2, image_shear.g2, atol=1.e-3)
 
     assert_raises(TypeError, wcs.withOrigin)
     assert_raises(TypeError, wcs.withOrigin, origin=(3,4), color=0.3)
@@ -811,6 +832,29 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True, color=None):
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, digits,
                     'world_profile with given wcs and image_profile differed when drawn for '+name)
+
+            # Check shear conversion
+            world_shear = galsim.Shear(g1=0.2, g2=0.1)
+            image_shear = wcs.toImage(world_shear, image_pos=image_pos, color=color)
+            assert image_shear == wcs.shearToImage(world_shear, image_pos=image_pos, color=color)
+
+            # Check round trip.
+            world_shear2 = wcs.toWorld(image_shear, image_pos=image_pos, color=color)
+            assert world_shear2 == wcs.shearToWorld(image_shear, image_pos=image_pos, color=color)
+            assert np.isclose(world_shear2.g1, world_shear.g1)
+            assert np.isclose(world_shear2.g2, world_shear.g2)
+
+            # Check that shearing in the respective domains does the same effective action
+            # on an initially round profile.
+            if image_shear.g > 0.8: continue  # If the image shear is extreme, hsm will fail.
+            sigma = wcs.pixelArea(image_pos, color=color)**0.5 * 5
+            shear_profile = galsim.Gaussian(sigma=sigma).shear(world_shear)
+            shear_profile.drawImage(im1, method='no_pixel')
+            hsm = im1.FindAdaptiveMom()
+            print('image_shear = ',image_shear, hsm.observed_shape)
+            # Most of these pass at 1.e-3, but some of the more contrived ones need the higher atol.
+            assert np.isclose(hsm.observed_shape.g1, image_shear.g1, atol=5.e-3)
+            assert np.isclose(hsm.observed_shape.g2, image_shear.g2, atol=5.e-3)
 
     # Check some properties that should be the same for the wcs and its local jacobian.
     np.testing.assert_allclose(
@@ -1015,6 +1059,27 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
                         im1.array, im2.array, digits,
                         'world_profile and image_profile differed when drawn for '+name)
 
+            # Check shear conversion
+            world_shear = galsim.Shear(g1=0.2, g2=0.1)
+            image_shear = wcs.toImage(world_shear, image_pos=image_pos)
+            assert image_shear == wcs.shearToImage(world_shear, image_pos=image_pos)
+
+            # Check round trip.
+            world_shear2 = wcs.toWorld(image_shear, image_pos=image_pos)
+            assert world_shear2 == wcs.shearToWorld(image_shear, image_pos=image_pos)
+            assert np.isclose(world_shear2.g1, world_shear.g1)
+            assert np.isclose(world_shear2.g2, world_shear.g2)
+
+            # Check that shearing in the respective domains does the same effective action
+            # on an initially round profile.
+            sigma = wcs.pixelArea(image_pos)**0.5 * 5
+            shear_profile = galsim.Gaussian(sigma=sigma).shear(world_shear)
+            shear_profile.drawImage(im1, method='no_pixel')
+            hsm = im1.FindAdaptiveMom()
+            print('image_shear = ',image_shear, hsm.observed_shape)
+            assert np.isclose(hsm.observed_shape.g1, image_shear.g1, atol=1.e-3)
+            assert np.isclose(hsm.observed_shape.g2, image_shear.g2, atol=1.e-3)
+
     # Test xyToradec with array
     xar = np.array(near_x_list)
     yar = np.array(near_y_list)
@@ -1205,7 +1270,6 @@ def test_pixelscale():
 
     # Check that using a wcs in the context of an image works correctly
     do_wcs_image(wcs, 'OffsetWCS')
-
 
 @timer
 def test_shearwcs():

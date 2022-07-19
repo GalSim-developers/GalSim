@@ -173,7 +173,7 @@ class BaseWCS:
     def toWorld(self, *args, **kwargs):
         """Convert from image coordinates to world coordinates.
 
-        There are essentially three overloaded versions of this function here.
+        There are essentially four overloaded versions of this function here.
 
         1. The first converts a `Position` from image coordinates to world coordinates.
            It returns the corresponding position in world coordinates as a `PositionD` if the WCS
@@ -181,7 +181,7 @@ class BaseWCS:
 
                >>> world_pos = wcs.toWorld(image_pos)
 
-           Equivalent to ``wcs.posToWorld(image_pos)``.
+           Equivalent to `posToWorld`.
 
         2. The second is nearly the same, but takes x and y values directly and returns
            either u, v or ra, dec, depending on the kind of wcs being used.  For this version,
@@ -191,7 +191,7 @@ class BaseWCS:
                >>> u, v = wcs.toWorld(x, y)                 # For EuclideanWCS types
                >>> ra, dec = wcs.toWorld(x, y, units=units) # For CelestialWCS types
 
-           Equivalent to ``wcs.xyTouv(x, y)`` or ``wcs.xyToradec(x, y, units=units)``.
+           Equivalent to `xyTouv` or `xyToradec`.
 
         3. The third converts a surface brightness profile (a `GSObject`) from image
            coordinates to world coordinates, returning the profile in world coordinates
@@ -203,12 +203,24 @@ class BaseWCS:
                >>> world_profile = wcs.toWorld(image_profile, image_pos=None, world_pos=None,
                                                flux_ratio=1, offset=(0,0))
 
-           Equivalent to ``wcs.profileToWorld(image_profile, ...)``.
+           Equivalent to `profileToWorld`.
+
+        4. The fourth converts a shear measurement (a `Shear`) from image coordinates to world
+           coordinates.  As above, for non-uniform WCS transforms, you must provide either
+           ``image_pos`` or ``world_pos``.  If the wcs is a CelestialWCS, then the returned
+           shear follows the convention used by TreeCorr (among others) for shear on a sphere,
+           namely in the local coordinates where north is up and west is to the right.
+
+               >>> world_shear = wcs.toWorld(image_shear, image_pos=None, world_pos=None)
+
+           Equivalent to `shearToWorld`.
         """
         from .chromatic import ChromaticObject
         if len(args) == 1:
             if isinstance(args[0], (GSObject, ChromaticObject)):
                 return self.profileToWorld(*args, **kwargs)
+            elif isinstance(args[0], Shear):
+                return self.shearToWorld(*args, **kwargs)
             else:
                 return self.posToWorld(*args, **kwargs)
         elif len(args) == 2:
@@ -260,6 +272,34 @@ class BaseWCS:
         return self.local(image_pos, world_pos, color=color)._profileToWorld(
                     image_profile, flux_ratio, PositionD(offset))
 
+    def shearToWorld(self, image_shear, image_pos=None, world_pos=None, color=None):
+        """Convert a shear measured in image coordinates to world coordinates
+
+        This is equivalent to ``wcs.toWorld(shear, ...)``.
+
+        Specifically, the input shear is taken to be defined such that +e1 means elongated along
+        the x-axis, -e1 is along the y-axis, +e2 is along the y=x line, and -e2 is along y=-x.
+
+        If the WCS is a EuclideanWCS, then the returned shear is converted to the equivalent
+        shear in u-v coordinates.  I.e. +e1 is along the u-axis, etc.
+
+        If the WCS is a CelestialWCS, then the returned shear is converted to sky coordinates where
+        North is up and West is to the right (as appropriate for looking up into the sky from Earth).
+        I.e. +e1 is E-W, -e1 is N-S, +e2 is NW-SE, and -e2 is NE-SW.  This is the convention used
+        by many, but not all, codes and catalogs that use or report shears on the spherical sky.
+
+        Parameters:
+            image_shear:    The shear in image coordinates to convert.
+            image_pos:      The image coordinate position (for non-uniform WCS types)
+            world_pos:      The world coordinate position (for non-uniform WCS types)
+            color:          For color-dependent WCS's, the color term to use. [default: None]
+
+        Returns:
+            world_shear:    The shear in world coordinates.
+        """
+        if color is None: color = self._color
+        return self.local(image_pos, world_pos, color=color)._shearToWorld(image_shear)
+
     def toImage(self, *args, **kwargs):
         """Convert from world coordinates to image coordinates
 
@@ -295,11 +335,23 @@ class BaseWCS:
                                                flux_ratio=1, offset=(0,0))
 
            Equivalent to `profileToImage`.
+
+        4. The fourth converts a shear measurement (a `Shear`) from image coordinates to world
+           coordinates.  As above, for non-uniform WCS transforms, you must provide either
+           ``image_pos`` or ``world_pos``.  If the wcs is a CelestialWCS, then the returned
+           shear follows the convention used by TreeCorr (among others) for shear on a sphere,
+           namely in the local coordinates where north is up and west is to the right.
+
+               >>> world_shear = wcs.toWorld(image_shear, image_pos=None, world_pos=None)
+
+           Equivalent to `shearToImage`.
         """
         from .chromatic import ChromaticObject
         if len(args) == 1:
             if isinstance(args[0], (GSObject, ChromaticObject)):
                 return self.profileToImage(*args, **kwargs)
+            elif isinstance(args[0], Shear):
+                return self.shearToImage(*args, **kwargs)
             else:
                 return self.posToImage(*args, **kwargs)
         elif len(args) == 2:
@@ -344,6 +396,25 @@ class BaseWCS:
         if color is None: color = self._color
         return self.local(image_pos, world_pos, color=color)._profileToImage(
                     world_profile, flux_ratio, PositionD(offset))
+
+    def shearToImage(self, world_shear, image_pos=None, world_pos=None, color=None):
+        """Convert a shear measured in world coordinates to image coordinates
+
+        This is equivalent to ``wcs.toImage(shear, ...)``.
+
+        This reverses the conventions described in `shearToWorld`.
+
+        Parameters:
+            world_shear:    The shear in world coordinates to convert.
+            image_pos:      The image coordinate position (for non-uniform WCS types)
+            world_pos:      The world coordinate position (for non-uniform WCS types)
+            color:          For color-dependent WCS's, the color term to use. [default: None]
+
+        Returns:
+            image_shear:    The shear in image coordinates.
+        """
+        if color is None: color = self._color
+        return self.local(image_pos, world_pos, color=color)._shearToImage(world_shear)
 
     def pixelArea(self, image_pos=None, world_pos=None, color=None):
         """Return the area of a pixel in arcsec**2 (or in whatever units you are using for
@@ -1487,6 +1558,13 @@ class PixelScale(LocalWCS):
         return Transform(world_profile, j, flux_ratio=self._scale**2 * flux_ratio,
                          offset=(offset.x, offset.y))
 
+    def _shearToWorld(self, image_shear):
+        # These are trivial for PixelScale.
+        return image_shear
+
+    def _shearToImage(self, world_shear):
+        return world_shear
+
     def _pixelArea(self):
         return self._scale**2
 
@@ -1603,6 +1681,13 @@ class ShearWCS(LocalWCS):
 
     def _profileToImage(self, world_profile, flux_ratio, offset):
         return world_profile.dilate(1./self._scale).shear(self.shear).shift(offset) * flux_ratio
+
+    def _shearToWorld(self, image_shear):
+        # This isn't worth customizing.  Just use the jacobian.
+        return self._toJacobian()._shearToWorld(image_shear)
+
+    def _shearToImage(self, world_shear):
+        return self._toJacobian()._shearToImage(world_shear)
 
     def _pixelArea(self):
         return self._scale**2
@@ -1753,6 +1838,24 @@ class JacobianWCS(LocalWCS):
         j = np.array(((self._dvdy, -self._dudy), (-self._dvdx, self._dudx))) * self._invdet
         return Transform(world_profile, j, flux_ratio=flux_ratio*abs(self._det),
                          offset=(offset.x, offset.y))
+
+    def _shearToWorld(self, image_shear):
+        # Code from https://github.com/rmjarvis/DESWL/blob/master/psf/run_piff.py#L713
+        e1 = image_shear.e1
+        e2 = image_shear.e2
+
+        M = np.matrix( [[ 1 + e1, e2 ], [ e2, 1 - e1 ]] )
+        J = self.getMatrix()
+        M = J * M * J.T
+
+        e1 = (M[0,0] - M[1,1]) / (M[0,0] + M[1,1])
+        e2 = (2.*M[0,1]) / (M[0,0] + M[1,1])
+
+        return Shear(e1=e1, e2=e2)
+
+    def _shearToImage(self, world_shear):
+        # Same as above but inverse J matrix.
+        return self._inverse()._shearToWorld(world_shear)
 
     @lazy_property
     def _invdet(self):
