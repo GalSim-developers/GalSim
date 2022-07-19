@@ -1840,7 +1840,7 @@ class JacobianWCS(LocalWCS):
                          offset=(offset.x, offset.y))
 
     def _shearToWorld(self, image_shear):
-        # Code from https://github.com/rmjarvis/DESWL/blob/master/psf/run_piff.py#L713
+        # Code from https://github.com/rmjarvis/DESWL/blob/y3a1-v23/psf/run_piff.py#L691
         e1 = image_shear.e1
         e2 = image_shear.e2
 
