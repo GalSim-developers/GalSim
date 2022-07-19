@@ -1844,7 +1844,7 @@ class JacobianWCS(LocalWCS):
         e1 = image_shear.e1
         e2 = image_shear.e2
 
-        M = np.matrix( [[ 1 + e1, e2 ], [ e2, 1 - e1 ]] )
+        M = np.matrix([[1+e1, e2], [e2, 1-e1]])
         J = self.getMatrix()
         M = J * M * J.T
 
