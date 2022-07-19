@@ -851,7 +851,7 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True, color=None):
             shear_profile = galsim.Gaussian(sigma=sigma).shear(world_shear)
             shear_profile.drawImage(im1, method='no_pixel')
             hsm = im1.FindAdaptiveMom()
-            print('image_shear = ',image_shear, hsm.observed_shape)
+            #print('image_shear = ',image_shear, hsm.observed_shape)
             # Most of these pass at 1.e-3, but some of the more contrived ones need the higher atol.
             assert np.isclose(hsm.observed_shape.g1, image_shear.g1, atol=5.e-3)
             assert np.isclose(hsm.observed_shape.g2, image_shear.g2, atol=5.e-3)
@@ -1076,7 +1076,7 @@ def do_celestial_wcs(wcs, name, test_pickle=True, approx=False):
             shear_profile = galsim.Gaussian(sigma=sigma).shear(world_shear)
             shear_profile.drawImage(im1, method='no_pixel')
             hsm = im1.FindAdaptiveMom()
-            print('image_shear = ',image_shear, hsm.observed_shape)
+            #print('image_shear = ',image_shear, hsm.observed_shape)
             assert np.isclose(hsm.observed_shape.g1, image_shear.g1, atol=1.e-3)
             assert np.isclose(hsm.observed_shape.g2, image_shear.g2, atol=1.e-3)
 
