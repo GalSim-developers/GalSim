@@ -383,23 +383,25 @@ def ParseRandomSeed(config, param_name, base, seed_offset):
     # start a sequential sequence of seeds for each object.
     # However, we allow for random_seed to be a gettable parameter, so for the
     # normal case, we just convert it into a Sequence.
-    if "_rng_init_done" not in config or not config["_rng_init_done"]:
-        try:
-            first = ParseValue(config, param_name, base, int)[0]
-        except Exception:
-            pass
-        else:
-            seed_rng = BaseDeviate(first)
-            new_first = seed_rng.raw()
-            # Note: This new "first" seed is actually the seed value to use for anything at file or
-            # image scope using the obj_num of the first object in the file or image.
-            # Seeds for objects will start at 1 more than this.
-            config[param_name] = {
-                 'type' : 'Sequence',
-                 'index_key' : 'obj_num',
-                 'first' : new_first
-            }
-        config["_rng_init_done"] = True
+    if isinstance(config[param_name], int) or (
+        isinstance(config[param_name], str)
+        and config[param_name][0] == "{"
+        and config[param_name][-1] == "}"
+    ):
+        if isinstance(config[param_name], str):
+            config[param_name] = config[param_name][1:-1]
+
+        first = ParseValue(config, param_name, base, int)[0]
+        seed_rng = BaseDeviate(first)
+        new_first = seed_rng.raw()
+        # Note: This new "first" seed is actually the seed value to use for anything at file or
+        # image scope using the obj_num of the first object in the file or image.
+        # Seeds for objects will start at 1 more than this.
+        config[param_name] = {
+             'type' : 'Sequence',
+             'index_key' : 'obj_num',
+             'first' : new_first
+        }
 
     index_key = base['index_key']
     if index_key == 'obj_num':

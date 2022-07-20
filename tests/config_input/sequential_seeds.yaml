@@ -41,7 +41,7 @@ image:
     type: Scattered
     size: 200
     nobjects: 15
-    random_seed: "$12345 + id"
+    random_seed: "{$12345 + id}"
     image_pos:
         type: XY
         x: { type: Random, min: 10, max: 190 }
