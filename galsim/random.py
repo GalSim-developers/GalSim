@@ -48,15 +48,20 @@ class BaseDeviate:
 
     **Usage**:
 
-    There is not much you can do with something that is only known to be a BaseDeviate rather than
-    one of the derived classes other than construct it and change the seed, and use it as an
-    argument to pass to other BaseDeviate constructors::
+    The only kind of random number you can obtain from a pure BaseDeviate (i.e. one that is
+    not actually one of the variosu subclasses) is a "raw" value.  This is an unsigned 32-bit
+    integer that behind the scenes is used by all sub-classes to generate floating point values
+    with various distributions.
 
         >>> rng = galsim.BaseDeviate(215324)
-        >>> rng()
-        Traceback (most recent call last):
-        File "<stdin>", line 1, in <module>
-        TypeError: 'BaseDeviate' object is not callable
+        >>> rng.raw()
+        3559052779
+
+    Most other usage is effected by creating sub-classes corresponding to particular random
+    deviates with various distributions.  E.g. `UniformDeviate` generates random values following
+    a uniform distribution between 0 and 1.
+
+        >>> rng = galsim.BaseDeviate(215324)
         >>> ud = galsim.UniformDeviate(rng)
         >>> ud()
         0.58736140513792634
