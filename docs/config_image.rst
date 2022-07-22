@@ -13,15 +13,21 @@ Some attributes that are allowed for all image types are:
 * ``sky_level`` = *float_value* (default = 0.0; only one of ``sky_level`` and ``sky_level_pixel`` is allowed)  The background level of the image in ADU/arcsec^2
 * ``sky_level_pixel`` = *float_value* (default = 0.0; only one of ``sky_level`` and ``sky_level_pixel`` is allowed)  The background level of the image in ADU/pixel
 * ``index_convention`` = *str_value* (default = 'FITS')  The convention for what to call the lower left pixel of the image.  The standard FITS convention is to call this pixel (1,1).  However, this can be counter-intuitive to people used to C or python indexing.  So if ``index_convention`` is 'C' or 'python' or '0', then the image origin will be considered (0,0) instead.  (While unnecessary to specify explicitly since it is the default, the (1,1) convention may be called 'FITS', 'Fortran' or '1'.)
-* ``random_seed`` = *int_value* or *list* (optional) The random seed to use for random numbers in the simulation. The typical use case is that this is an integer value. Then, internally we scramble this value in a deterministic way and use a sequence of seeds based on the scrambled value so that the output is deterministic even when using multiple processes to build each image. The default is to get a seed from the system (/dev/urandom if possible, otherwise based on the time).
+* ``random_seed`` = *int_value* or *list* (optional) The random seed to use for random numbers in the simulation.
 
-    * If ``random_seed`` is a list, then multiple random number generators will be available for each object according to the multiple seed specifications.  This is normally used to have one random number repeat with some cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure).  Whenever you want to use an rng other than the first one, add ``rng_num`` to the field and set it to the number of the rng you want to use in this list.
-    .. note::
+    * The typical use case is that this is a simple integer value. Then, internally we scramble this value in a deterministic way and use a sequence of seeds based on the scrambled value so that the output is deterministic even when using multiple processes to build each image.
+    * If ``random_seed`` is a string, then it is parsed as a integer and treated in the same way as above.  This allows you to do a simple calculation using the ``$`` Eval shorthand to e.g. compute the initial seed from some other kind of ID number you might have in the config file.  It also means you don't have to be careful in your YAML writing to not accidentally write e.g. ``'1234'`` rather than ``1234``.
+    * If ``random_seed`` is a dict, it should parse as an *int_value*, but in this case, GalSim will not convert it into a sequence based on a single value.  Rather, it will respect your specification and evaluate the seed for each object as you specifiy.  This let's you do advanced things like use a different cadence for your random numbers (e.g. potentially to repeat the same seed for multiple objects; cf. `Demo 7`).
+    * If ``random_seed`` is a list, then multiple random number generators will be available for each object according to the multiple seed specifications.  This is normally used to have one random number behave normally for noise and such, and another one repeat with some cadence (e.g. repeat for each image in an exposure to make sure you generate the same PSFs for multiple CCDs in an exposure).  Whenever you want to use an rng other than the first one, add ``rng_num`` to the field and set it to the number of the rng you want to use in this list.  Each item in the list is parsed as above.
+
+    .. warning::
 
         Within this ``random_seed`` list, any items that are either an int or str will be
         evaluated once and converted into a sequence in the normal way.  So if you want an item
         to be some complex Eval operation, you should make it a dict with an explicit
         ``type: Eval``, rather than use the ``$`` shorthand notation.
+
+    * The default behavior, if ``random_seed`` is not given, is to get a seed from the system (/dev/urandom if possible, otherwise based on the time).
 
 * ``nproc`` = *int_value*  (default = 1)  Specify the number of processors to use when drawing images. If nproc <= 0, then this means to try to automatically figure out the number of cpus and use that.
 * ``wcs`` See `WCS Field` below.
