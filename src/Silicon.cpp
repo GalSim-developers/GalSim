@@ -987,7 +987,8 @@ namespace galsim {
         return addedFlux;
     }
 
-    #define MAX_POLY_POINTS 250
+    #define MAX_POLY_POINTS 50
+    #define MAX_THREADS 1000000
     
     template <typename T>
     void Silicon::initializeGPU(ImageView<T> target, Position<int> orig_center)
@@ -1123,14 +1124,15 @@ namespace galsim {
 	    _emptypolyGPU[i].x = _emptypoly[i].x;
 	    _emptypolyGPU[i].y = _emptypoly[i].y;
 	}
-
+        std::cout << "emptypolySize at startup=" << emptypolySize << std::endl;
+        
         int nxny = nx * ny;
         _changedGPU = new bool[nxny];
         for (int i = 0; i < nxny; i++) _changedGPU[i] = false;
         
         // map all data to the GPU
 	// FIXME: probably need a corresponding exit somewhere...
-#pragma omp target enter data map(to: this[:1], _deltaGPU[0:imageDataSize], _targetGPU[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
+        #pragma omp target enter data map(to: this[:1], _deltaGPU[0:imageDataSize], _targetGPU[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
     }
 
     bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
@@ -1181,47 +1183,143 @@ namespace galsim {
             const double zfit = 12.0;
             const double zfactor = std::tanh(zconv / zfit);
 
-	    PointDGPU testpoly[MAX_POLY_POINTS];
+            // new version not using testpolyGPU
+            // first compute first point of polygon (index 0)
+            double x1, y1, xinters = 0.0;
+            inside = false;
+            for (int n = 0; n <= _nv; n++) {
+                double xp = 0.0, yp = 0.0;
+                double epx = 0.0, epy = 0.0;
+                if (n < _nv) {
+                    epx = emptypoly[n].x;
+                    epy = emptypoly[n].y;
+                }
+                xp = epx;
+                yp = epy;
+                int idx;
+
+                // compute this point
+                if (n < cornerIndexBottomLeft()) {
+                    idx = verticalPixelIndex(ix - i1, iy - j1, ny) + n + cornerIndexBottomLeft();
+                    xp += (verticalBoundaryPoints[idx].x - epx) * zfactor;
+                    yp += (verticalBoundaryPoints[idx].y - epy) * zfactor;
+                }
+                else if (n <= cornerIndexBottomRight()) {
+                    // bottom row including corners
+                    idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
+                    double px = horizontalBoundaryPoints[idx].x;
+                    if (n == cornerIndexBottomRight()) px += 1.0;
+                    xp += (px - epx) * zfactor;
+                    yp += (horizontalBoundaryPoints[idx].y - epy) * zfactor;
+                }
+                // RHS
+                else if (n < cornerIndexTopRight()) {
+                    idx = verticalPixelIndex(ix - i1 + 1, iy - j1, ny) + (cornerIndexTopRight() - n - 1);
+                    xp += ((verticalBoundaryPoints[idx].x + 1.0) - epx) * zfactor;
+                    yp += (verticalBoundaryPoints[idx].y - epy) * zfactor;
+                }
+                // top row including corners
+                else if (n <= cornerIndexTopLeft()) {
+                    idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
+                    double px = horizontalBoundaryPoints[idx].x;
+                    if (n == cornerIndexTopRight()) px += 1.0;
+                    xp += (px - epx) * zfactor;
+                    yp += ((horizontalBoundaryPoints[idx].y + 1.0) - epy) * zfactor;
+                }
+                else if (n < _nv) {
+                    // LHS upper half
+                    idx = verticalPixelIndex(ix - i1, iy - j1, ny) + (n - cornerIndexTopLeft() - 1);
+                    xp += (verticalBoundaryPoints[idx].x - epx) * zfactor;
+                    yp += (verticalBoundaryPoints[idx].y - epy) * zfactor;
+                }
+                if (n == 0) {
+                    // save first point for later
+                    x1 = xp;
+                    y1 = yp;
+                }
+                else {
+                    // shoelace algorithm
+                    double x2 = xp;
+                    double y2 = yp;
+                    if (n == _nv) {
+                        x2 = x1;
+                        y2 = y1;
+                    }
+                    double ymin = y1 < y2 ? y1 : y2;
+                    double ymax = y1 > y2 ? y1 : y2;
+                    double xmax = x1 > x2 ? x1 : x2;
+                    if (y > ymin) {
+                        if (y <= ymax) {
+                            if (x <= xmax) {
+                                if (y1 != y2) {
+                                    xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1;
+                                }
+                                if ((x1 == x2) || (x <= xinters)) {
+                                    inside = !inside;
+                                }
+                            }
+                        }
+                    }
+                    x1 = x2;
+                    y1 = y2;
+                }
+            }
+
+#if 0
+	    //PointDGPU testpoly[MAX_POLY_POINTS];
+            int t = omp_get_thread_num();
+            if (t >= MAX_THREADS) return false;
+            PointDGPU* testpoly = &testpolyGPU[t * MAX_POLY_POINTS];
 	    for (int i = 0; i < emptypolySize; i++) {
-		testpoly[i] = emptypoly[i];
+                testpoly[i] = emptypoly[i];
 	    }
-	    
+            
 	    // iterate over pixel boundary
 	    // LHS lower half
 	    int n;
 	    int idx;
 	    for (n = 0; n < cornerIndexBottomLeft(); n++) {
                 idx = verticalPixelIndex(ix - i1, iy - j1, ny) + n + cornerIndexBottomLeft();
-		testpoly[n].x += (verticalBoundaryPoints[idx].x - emptypoly[n].x) * zfactor;
-		testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+                if ((idx >= 0) && (idx < vbpSize)) {
+                    testpoly[n].x += (verticalBoundaryPoints[idx].x - emptypoly[n].x) * zfactor;
+                    testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+                }
 	    }
 	    // bottom row including corners
 	    for (; n <= cornerIndexBottomRight(); n++) {
                 idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
-		double px = horizontalBoundaryPoints[idx].x;
-		if (n == cornerIndexBottomRight()) px += 1.0;
-		testpoly[n].x += (px - emptypoly[n].x) * zfactor;
-		testpoly[n].y += (horizontalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+                if  ((idx >= 0) && (idx < hbpSize)) {
+                    double px = horizontalBoundaryPoints[idx].x;
+                    if (n == cornerIndexBottomRight()) px += 1.0;
+                    testpoly[n].x += (px - emptypoly[n].x) * zfactor;
+                    testpoly[n].y += (horizontalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+                }
 	    }
 	    // RHS
 	    for (; n < cornerIndexTopRight(); n++) {
                 idx = verticalPixelIndex(ix - i1 + 1, iy - j1, ny) + (cornerIndexTopRight() - n - 1);
-		testpoly[n].x += ((verticalBoundaryPoints[idx].x + 1.0) - emptypoly[n].x) * zfactor;
-		testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+                if ((idx >= 0) && (idx < vbpSize)) {
+                    testpoly[n].x += ((verticalBoundaryPoints[idx].x + 1.0) - emptypoly[n].x) * zfactor;
+                    testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+                }
 	    }
 	    // top row including corners
 	    for (; n <= cornerIndexTopLeft(); n++) {
                 idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
-		double px = horizontalBoundaryPoints[idx].x;
-		if (n == cornerIndexTopRight()) px += 1.0;
-		testpoly[n].x += (px - emptypoly[n].x) * zfactor;
-		testpoly[n].y += ((horizontalBoundaryPoints[idx].y + 1.0) - emptypoly[n].y) * zfactor;
+                if ((idx >= 0) && (idx < hbpSize)) {
+                    double px = horizontalBoundaryPoints[idx].x;
+                    if (n == cornerIndexTopRight()) px += 1.0;
+                    testpoly[n].x += (px - emptypoly[n].x) * zfactor;
+                    testpoly[n].y += ((horizontalBoundaryPoints[idx].y + 1.0) - emptypoly[n].y) * zfactor;
+                }
 	    }
 	    // LHS upper half
 	    for (; n < _nv; n++) {
                 idx = verticalPixelIndex(ix - i1, iy - j1, ny) + (n - cornerIndexTopLeft() - 1);
-		testpoly[n].x += (verticalBoundaryPoints[idx].x - emptypoly[n].x) * zfactor;
-		testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+                if ((idx >= 0) && (idx < vbpSize)) {
+                    testpoly[n].x += (verticalBoundaryPoints[idx].x - emptypoly[n].x) * zfactor;
+                    testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
+                }
 	    }
 
             // Now test to see if the point is inside
@@ -1248,8 +1346,9 @@ namespace galsim {
 		x1 = x2;
 		y1 = y2;
 	    }
+#endif
         }
-
+        
         // If the nominal pixel is on the edge of the image and the photon misses in the
         // direction of falling off the image, (possibly) report that in off_edge.
         if (!inside && off_edge) {
@@ -1351,6 +1450,8 @@ namespace galsim {
             photonsDYDZ = photonsY;
         }
         
+        // FIXME: is diffStepRandom size and indexing correct in here??
+        
 	// random arrays
 	double* diffStepRandomArray = diffStepRandom.data();
 	//double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
@@ -1371,16 +1472,18 @@ namespace galsim {
 	int deltaStep = _delta.getStep();
 	int deltaStride = _delta.getStride();
 
+        //std::cout << targetBounds.xmin << " " << targetBounds.xmax << " " << targetBounds.ymin << " " << targetBounds.ymax << std::endl;
+        //std::cout << deltaXMin << " " << deltaXMax << " " << deltaYMin << " " << deltaYMax << " " << deltaStep << " " << deltaStride << std::endl;
+
 	// _testpoly allocated per-thread on stack instead
 
 	// xoff and yoff displacement arrays should be OK as they are
 
 	int emptypolySize = _emptypoly.size();
-	
-#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
+
+        //std::cout << photonsHasAllocatedAngles << " " << photonsHasAllocatedWavelengths << " " << _diffStep << " " << emptypolySize << std::endl;
         
-        //#pragma omp target enter data map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1])
-        //#pragma omp target teams distribute parallel for reduction(+:addedFlux)
+        #pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
 	    double x0 = photonsX[i];
 	    double y0 = photonsY[i];
@@ -1393,10 +1496,10 @@ namespace galsim {
 		// perform abs_length_table lookup with linear interpolation
 		int tableIdx = int((lambda - 255.0) / 5.0);
 		double alpha = (lambda - ((float(tableIdx) * 5.0) + 255.0)) / 5.0;
-		tableIdx = std::max(tableIdx, 0);
+                if (tableIdx < 0) tableIdx = 0;
 		int tableIdx1 = tableIdx + 1;
-		tableIdx = std::min(tableIdx, 239);
-		tableIdx1 = std::min(tableIdx1, 239);
+                if (tableIdx > 239) tableIdx = 239;
+                if (tableIdx1 > 239) tableIdx1 = 239;
 		double abs_length = (_abs_length_table_GPU[tableIdx] * (1.0 - alpha)) +
 		    (_abs_length_table_GPU[tableIdx1] * alpha);
 
@@ -1410,7 +1513,8 @@ namespace galsim {
 		double dxdz = photonsDXDZ[i];
 		double dydz = photonsDYDZ[i];
 		double pdz = dz / std::sqrt(1.0 + dxdz*dxdz + dydz*dydz);
-		dz = std::min(_sensorThickness - 1.0, pdz);
+                dz = _sensorThickness - 1.0;
+                if (pdz < dz) dz = pdz;
 	    }
 
 	    if (photonsHasAllocatedAngles) {
@@ -1425,7 +1529,8 @@ namespace galsim {
 	    if (zconv < 0.0) continue;
 
 	    if (_diffStep != 0.) {
-		double diffStep = std::max(0.0, diffStep_pixel_z * std::sqrt(zconv * _sensorThickness));
+		double diffStep = diffStep_pixel_z * std::sqrt(zconv * _sensorThickness);
+                if (diffStep < 0.0) diffStep = 0.0;
 		x0 += diffStep * diffStepRandomArray[(i-i1)*2];
 		y0 += diffStep * diffStepRandomArray[(i-i1)*2+1];
 	    }
@@ -1456,15 +1561,16 @@ namespace galsim {
 						_emptypolyGPU, emptypolySize,
                                                 _verticalBoundaryPointsGPU,
                                                 _horizontalBoundaryPointsGPU);
+
 		if (!foundPixel) continue; // ignore ones that have rounding errors for now
-	    }
+            }
 
 	    if ((ix >= targetBounds.xmin) && (ix <= targetBounds.xmax) &&
-		(iy >= targetBounds.ymin) && (iy <= targetBounds.ymax)) {
+                (iy >= targetBounds.ymin) && (iy <= targetBounds.ymax)) {
 
 		int deltaIdx = (ix - deltaXMin) * deltaStep + (iy - deltaYMin) * deltaStride;
 #pragma omp atomic
-		_deltaGPU[deltaIdx] += flux;
+                _deltaGPU[deltaIdx] += flux;
 		addedFlux += flux;
             }
 	}
@@ -1491,10 +1597,10 @@ namespace galsim {
             idx = verticalPixelIndex(x, y, ny) + n + cornerIndexBottomLeft();
             double px = _verticalBoundaryPointsGPU[idx].x;
             double py = _verticalBoundaryPointsGPU[idx].y;
-            obxmin = std::min(obxmin, px);
-            obxmax = std::max(obxmax, px);
-            obymin = std::min(obymin, py);
-            obymax = std::max(obymax, py);
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
         }
         // bottom row including corners
         for (; n <= cornerIndexBottomRight(); n++) {
@@ -1502,20 +1608,20 @@ namespace galsim {
             double px = _horizontalBoundaryPointsGPU[idx].x;
             double py = _horizontalBoundaryPointsGPU[idx].y;
             if (n == cornerIndexBottomRight()) px += 1.0;
-            obxmin = std::min(obxmin, px);
-            obxmax = std::max(obxmax, px);
-            obymin = std::min(obymin, py);
-            obymax = std::max(obymax, py);
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
         }
         // RHS
         for (; n < cornerIndexTopRight(); n++) {
             idx = verticalPixelIndex(x + 1, y, ny) + (cornerIndexTopRight() - n - 1);
             double px = _verticalBoundaryPointsGPU[idx].x + 1.0;
             double py = _verticalBoundaryPointsGPU[idx].y;
-            obxmin = std::min(obxmin, px);
-            obxmax = std::max(obxmax, px);
-            obymin = std::min(obymin, py);
-            obymax = std::max(obymax, py);
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
         }            
         // top row including corners
         for (; n <= cornerIndexTopLeft(); n++) {
@@ -1523,20 +1629,20 @@ namespace galsim {
             double px = _horizontalBoundaryPointsGPU[idx].x;
             double py = _horizontalBoundaryPointsGPU[idx].y + 1.0;
             if (n == cornerIndexTopRight()) px += 1.0;
-            obxmin = std::min(obxmin, px);
-            obxmax = std::max(obxmax, px);
-            obymin = std::min(obymin, py);
-            obymax = std::max(obymax, py);
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
         }
         // LHS upper half
         for (; n < _nv; n++) {
             idx = verticalPixelIndex(x, y, ny) + (n - cornerIndexTopLeft() - 1);
             double px = _verticalBoundaryPointsGPU[idx].x;
             double py = _verticalBoundaryPointsGPU[idx].y;
-            obxmin = std::min(obxmin, px);
-            obxmax = std::max(obxmax, px);
-            obymin = std::min(obymin, py);
-            obymax = std::max(obymax, py);
+            if (px < obxmin) obxmin = px;
+            if (px > obxmax) obxmax = px;
+            if (py < obymin) obymin = py;
+            if (py > obymax) obymax = py;
         }
 
         // compute center
@@ -1756,18 +1862,32 @@ namespace galsim {
                 _changedGPU[k] = false;
             }
         }
+        
+        // update target from delta and zero delta on GPU
+#pragma omp target teams distribute parallel for
+        for (int i = 0; i < imageDataSize; i++) {
+            _targetGPU[i] += _deltaGPU[i];
+            _deltaGPU[i] = 0.0;
+        }
 
-        // update target from delta
+        // this only really needs to be done the last time around
+        // ideally move it somewhere else
+#pragma omp target update from(_targetGPU[0:imageDataSize])
+
+        // version that updates target on CPU (does work but might be slower)
+        /*
 #pragma omp target update from(_deltaGPU[0:imageDataSize])
         target += _delta;
-
+#pragma omp target update to(_targetGPU[0:imageDataSize])
+        
         // zero out delta on GPU. probably doesn't matter if host delta is zeroed
         // or not so don't bother
 #pragma omp target teams distribute parallel for
         for (int i = 0; i < imageDataSize; i++) {
             _deltaGPU[i] = 0.0;
         }
-        
+        */
+
         //_delta.setZero();
     }
 
