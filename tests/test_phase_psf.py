@@ -1453,6 +1453,11 @@ def test_user_screen():
 
 @timer
 def test_uv_persistence():
+    if __name__ == '__main__':
+        nphot = 1000000
+    else:
+        nphot = 1000
+
     # Check that reasonable pupil samples are used and persisted when phase screen shooting.
     u = galsim.UniformDeviate(5185)
     for _ in range(3):
@@ -1466,10 +1471,11 @@ def test_uv_persistence():
             strut_angle=strut_angle, pupil_plane_scale=diam/20
         )
         with assert_warns(galsim.GalSimWarning):
+            # Warning: Input pupil_plane_scale may be too large for good sampling.
             allowed = set(zip(aper.u_illuminated, aper.v_illuminated))
 
         psf = galsim.OpticalPSF(lam=500, diam=diam, aper=aper, geometric_shooting=True)
-        photons = psf.drawImage(save_photons=True, method='phot', n_photons=1000000).photons
+        photons = psf.drawImage(save_photons=True, method='phot', n_photons=nphot).photons
         observed = set(zip(photons.pupil_u, photons.pupil_v))
 
         assert observed.issubset(allowed)
