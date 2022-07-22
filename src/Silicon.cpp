@@ -987,9 +987,6 @@ namespace galsim {
         return addedFlux;
     }
 
-    #define MAX_POLY_POINTS 50
-    #define MAX_THREADS 1000000
-    
     template <typename T>
     void Silicon::initializeGPU(ImageView<T> target, Position<int> orig_center)
     {
@@ -1406,8 +1403,6 @@ namespace galsim {
         //std::cout << targetBounds.xmin << " " << targetBounds.xmax << " " << targetBounds.ymin << " " << targetBounds.ymax << std::endl;
         //std::cout << deltaXMin << " " << deltaXMax << " " << deltaYMin << " " << deltaYMax << " " << deltaStep << " " << deltaStride << std::endl;
 
-	// _testpoly allocated per-thread on stack instead
-
 	// xoff and yoff displacement arrays should be OK as they are
 
 	int emptypolySize = _emptypoly.size();
@@ -1692,11 +1687,7 @@ namespace galsim {
             int polyj2 = y + _qDist;
             if (polyj2 > (ny - 1)) polyj2 = ny - 1;
 
-            //int polyi1 = std::max(x - _qDist, 0);
-            //int polyi2 = std::min(x + _qDist, nx - 1);
             // NB. We are working between rows y and y-1, so need polyj1 = y-1 - _qDist.
-            //int polyj1 = std::max(y - (_qDist + 1), 0);
-            //int polyj2 = std::min(y + _qDist, ny - 1);
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
@@ -1748,10 +1739,6 @@ namespace galsim {
             if (polyj1 < 0) polyj1 = 0;
             int polyj2 = y + _qDist;
             if (polyj2 > (ny - 1)) polyj2 = ny - 1;
-            //int polyi1 = std::max(x - (_qDist + 1), 0);
-            //int polyi2 = std::min(x + _qDist, nx - 1);
-            //int polyj1 = std::max(y - _qDist, 0);
-            //int polyj2 = std::min(y + _qDist, ny - 1);
 
             bool change = false;
             for (int j=polyj1; j <= polyj2; j++) {
@@ -1795,31 +1782,12 @@ namespace galsim {
         }
         
         // update target from delta and zero delta on GPU
+        // CPU delta is not zeroed but that shouldn't matter
 #pragma omp target teams distribute parallel for
         for (int i = 0; i < imageDataSize; i++) {
             _targetGPU[i] += _deltaGPU[i];
             _deltaGPU[i] = 0.0;
         }
-
-        // this only really needs to be done the last time around
-        // ideally move it somewhere else
-        //#pragma omp target update from(_targetGPU[0:imageDataSize])
-
-        // version that updates target on CPU (does work but might be slower)
-        /*
-#pragma omp target update from(_deltaGPU[0:imageDataSize])
-        target += _delta;
-#pragma omp target update to(_targetGPU[0:imageDataSize])
-        
-        // zero out delta on GPU. probably doesn't matter if host delta is zeroed
-        // or not so don't bother
-#pragma omp target teams distribute parallel for
-        for (int i = 0; i < imageDataSize; i++) {
-            _deltaGPU[i] = 0.0;
-        }
-        */
-
-        //_delta.setZero();
     }
 
     template <typename T>
