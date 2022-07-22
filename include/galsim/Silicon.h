@@ -96,7 +96,8 @@ namespace galsim
 
         template <typename T>
         void initializeGPU(ImageView<T> target, Position<int> orig_center);
-
+        void finalizeGPU();
+    
         template <typename T>
         double accumulate(const PhotonArray& photons, int i1, int i2,
                           BaseDeviate rng, ImageView<T> target);

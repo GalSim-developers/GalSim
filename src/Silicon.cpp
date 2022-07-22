@@ -1026,7 +1026,6 @@ namespace galsim {
         // FIXME: won't work for single precision images yet
         _targetGPU = (double*)target.getData();
         
-	// FIXME: this needs deleted eventually
 	_pixelInnerBoundsGPU = new BoundsFGPU[_pixelInnerBounds.size()];
 	_pixelOuterBoundsGPU = new BoundsFGPU[_pixelOuterBounds.size()];
 	for (int i = 0; i < _pixelInnerBounds.size(); i++) {
@@ -1131,10 +1130,25 @@ namespace galsim {
         for (int i = 0; i < nxny; i++) _changedGPU[i] = false;
         
         // map all data to the GPU
-	// FIXME: probably need a corresponding exit somewhere...
         #pragma omp target enter data map(to: this[:1], _deltaGPU[0:imageDataSize], _targetGPU[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
     }
 
+    void Silicon::finalizeGPU()
+    {
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+#pragma omp target exit data map(from: _targetGPU[0:imageDataSize])
+
+        delete[] _pixelInnerBoundsGPU;
+        delete[] _pixelOuterBoundsGPU;
+        delete[] _horizontalBoundaryPointsGPU;
+        delete[] _verticalBoundaryPointsGPU;
+        delete[] _horizontalDistortionsGPU;
+        delete[] _verticalDistortionsGPU;
+        delete[] _abs_length_table_GPU;
+        delete[] _emptypolyGPU;
+        delete[] _changedGPU;
+    }
+    
     bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
 				 BoundsIGPU& targetBounds, bool* off_edge,
 				 BoundsFGPU* pixelInnerBounds,
@@ -1183,7 +1197,7 @@ namespace galsim {
             const double zfit = 12.0;
             const double zfactor = std::tanh(zconv / zfit);
 
-            // new version not using testpolyGPU
+            // new version not using testpoly
             // first compute first point of polygon (index 0)
             double x1, y1, xinters = 0.0;
             inside = false;
@@ -1264,89 +1278,6 @@ namespace galsim {
                     y1 = y2;
                 }
             }
-
-#if 0
-	    //PointDGPU testpoly[MAX_POLY_POINTS];
-            int t = omp_get_thread_num();
-            if (t >= MAX_THREADS) return false;
-            PointDGPU* testpoly = &testpolyGPU[t * MAX_POLY_POINTS];
-	    for (int i = 0; i < emptypolySize; i++) {
-                testpoly[i] = emptypoly[i];
-	    }
-            
-	    // iterate over pixel boundary
-	    // LHS lower half
-	    int n;
-	    int idx;
-	    for (n = 0; n < cornerIndexBottomLeft(); n++) {
-                idx = verticalPixelIndex(ix - i1, iy - j1, ny) + n + cornerIndexBottomLeft();
-                if ((idx >= 0) && (idx < vbpSize)) {
-                    testpoly[n].x += (verticalBoundaryPoints[idx].x - emptypoly[n].x) * zfactor;
-                    testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
-                }
-	    }
-	    // bottom row including corners
-	    for (; n <= cornerIndexBottomRight(); n++) {
-                idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
-                if  ((idx >= 0) && (idx < hbpSize)) {
-                    double px = horizontalBoundaryPoints[idx].x;
-                    if (n == cornerIndexBottomRight()) px += 1.0;
-                    testpoly[n].x += (px - emptypoly[n].x) * zfactor;
-                    testpoly[n].y += (horizontalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
-                }
-	    }
-	    // RHS
-	    for (; n < cornerIndexTopRight(); n++) {
-                idx = verticalPixelIndex(ix - i1 + 1, iy - j1, ny) + (cornerIndexTopRight() - n - 1);
-                if ((idx >= 0) && (idx < vbpSize)) {
-                    testpoly[n].x += ((verticalBoundaryPoints[idx].x + 1.0) - emptypoly[n].x) * zfactor;
-                    testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
-                }
-	    }
-	    // top row including corners
-	    for (; n <= cornerIndexTopLeft(); n++) {
-                idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
-                if ((idx >= 0) && (idx < hbpSize)) {
-                    double px = horizontalBoundaryPoints[idx].x;
-                    if (n == cornerIndexTopRight()) px += 1.0;
-                    testpoly[n].x += (px - emptypoly[n].x) * zfactor;
-                    testpoly[n].y += ((horizontalBoundaryPoints[idx].y + 1.0) - emptypoly[n].y) * zfactor;
-                }
-	    }
-	    // LHS upper half
-	    for (; n < _nv; n++) {
-                idx = verticalPixelIndex(ix - i1, iy - j1, ny) + (n - cornerIndexTopLeft() - 1);
-                if ((idx >= 0) && (idx < vbpSize)) {
-                    testpoly[n].x += (verticalBoundaryPoints[idx].x - emptypoly[n].x) * zfactor;
-                    testpoly[n].y += (verticalBoundaryPoints[idx].y - emptypoly[n].y) * zfactor;
-                }
-	    }
-
-            // Now test to see if the point is inside
-	    // run shoelace algorithm
-	    double x1 = testpoly[0].x;
-	    double y1 = testpoly[0].y;
-	    double xinters = 0.0;
-	    inside = false;
-	    for (int i = 1; i <= emptypolySize; i++) {
-		double x2 = testpoly[i % emptypolySize].x;
-		double y2 = testpoly[i % emptypolySize].y;
-		if (y > std::min(y1, y2)) {
-		    if (y <= std::max(y1, y2)) {
-			if (x <= std::max(x1, x2)) {
-			    if (y1 != y2) {
-				xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1;
-			    }
-			    if ((x1 == x2) || (x <= xinters)) {
-				inside = !inside;
-			    }
-			}
-		    }
-		}
-		x1 = x2;
-		y1 = y2;
-	    }
-#endif
         }
         
         // If the nominal pixel is on the edge of the image and the photon misses in the
@@ -1872,7 +1803,7 @@ namespace galsim {
 
         // this only really needs to be done the last time around
         // ideally move it somewhere else
-#pragma omp target update from(_targetGPU[0:imageDataSize])
+        //#pragma omp target update from(_targetGPU[0:imageDataSize])
 
         // version that updates target on CPU (does work but might be slower)
         /*
