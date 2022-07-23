@@ -1186,6 +1186,12 @@ def test_variance_changes():
     np.testing.assert_equal(cn.getVariance(), new_var,
                             err_msg='Failure to reset and then get variance for CorrelatedNoise')
 
+    # Also directly using from_file
+    file_name = '../share/acs_I_unrot_sci_20_cf.fits'
+    cn = galsim.BaseCorrelatedNoise.from_file(file_name, cosmos_scale, rng=gd, variance=new_var)
+    np.testing.assert_equal(cn.getVariance(), new_var,
+                            err_msg='Failure to set variance with from_file')
+
     # Also check some errors here
     assert_raises(ValueError, cn.withVariance, -1.0)
     assert_raises(OSError, galsim.getCOSMOSNoise, file_name='not_a_file')
@@ -1193,7 +1199,16 @@ def test_variance_changes():
     assert_raises(TypeError, galsim.getCOSMOSNoise, rng='invalid')
     assert_raises(ValueError, galsim.getCOSMOSNoise, variance = -1.0)
     assert_raises(ValueError, galsim.getCOSMOSNoise, x_interpolant='invalid')
-
+    assert_raises(OSError, galsim.BaseCorrelatedNoise.from_file, 'not_a_file', 0.1)
+    # Image must be square:
+    assert_raises(galsim.GalSimError, galsim.BaseCorrelatedNoise.from_file,
+                  os.path.join('real_comparison_images','AEGIS_F606w_images_01.fits'), 0.1)
+    # Image must have odd sides:
+    assert_raises(galsim.GalSimError, galsim.BaseCorrelatedNoise.from_file,
+                  os.path.join('real_comparison_images','AEGIS_F606w_PSF_images_01.fits'), 0.1)
+    # Image must be rotationally symmetric
+    assert_raises(galsim.GalSimError, galsim.BaseCorrelatedNoise.from_file,
+                  os.path.join('real_comparison_images', 'shera_target_PSF.fits'), 0.1)
 
 @timer
 def test_cosmos_wcs():
