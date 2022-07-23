@@ -17,6 +17,7 @@
 #
 
 import numpy as np
+import os
 
 from .image import Image
 from .random import BaseDeviate
@@ -74,6 +75,9 @@ class BaseCorrelatedNoise:
     is that users instead instantiate derived classes, such as the `CorrelatedNoise`, which are
     able to guarantee the above.
 
+    If you have the correlation function as an image on file, you can use the class  method
+    `from_file`, which does confirm that the file has the appopriate symmetry.
+
     The BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes
     (currently only `CorrelatedNoise` and `UncorrelatedNoise`) store the random deviate, noise
     correlation function profile and allow operations with it, generate images containing noise with
@@ -116,6 +120,106 @@ class BaseCorrelatedNoise:
         # Also set up the cache for a stored value of the variance, needed for efficiency once the
         # noise field can get convolved with other GSObjects making is_analytic_x False
         self._variance_cached = None
+
+    @classmethod
+    def from_file(cls, file_name, pixel_scale, rng=None, variance=0., x_interpolant=None,
+                  gsparams=None):
+        """Read a correlated noise profile from a file.
+
+        The file should contain an image of the correlation.
+
+            * The image should be square with odd size in each direction.
+            * The central pixel corresponds to the zero-lag correlation, i.e. the variance.
+              Call this pixel element (0,0).
+            * The other pixels (i,j) give the cross-correlation of the noise for pixels separated
+              by i pixels in the x direction (columns) and j pixels in the y direction (rows).
+            * The image therefore must be 180 degree rotationally symmetric.  i.e. the value at
+              (i,j) must be the same as at (-i,-j).
+
+        The pixel_scale is also required and defines the pixel scale of the original image.
+
+        The default ``x_interpolant`` is a ``galsim.Linear()``, which uses bilinear interpolation.
+        The use of this interpolant is an approximation that gives good empirical results without
+        requiring internal convolution of the correlation function profile by a `Pixel` object when
+        applying correlated noise to images: such an internal convolution has been found to be
+        computationally costly in practice, requiring the Fourier transform of very large arrays.
+
+        The use of the bilinear interpolants means that the representation of correlated noise will be
+        noticeably inaccurate in at least the following two regimes:
+
+        1. If the pixel scale of the desired final output (e.g. the target image of
+           `BaseCorrelatedNoise.drawImage`, `BaseCorrelatedNoise.applyTo` or
+           `BaseCorrelatedNoise.whitenImage`) is small relative to the separation between pixels in
+           the ``image`` used to instantiate ``cn`` as shown above.
+        2. If the `BaseCorrelatedNoise` instance ``cn`` was instantiated with an image of scale
+           comparable to that in the final output, and ``cn`` has been rotated or otherwise transformed
+           (e.g.  via the `BaseCorrelatedNoise.rotate`, `BaseCorrelatedNoise.shear` methods; see below).
+
+        Conversely, the approximation will work best in the case where the correlated noise used to
+        instantiate the ``cn`` is taken from an input image for which ``image.scale`` is smaller than
+        that in the desired output.  This is the most common use case in the practical treatment of
+        correlated noise when simulating galaxies from space as observed in ground-based surveys.
+
+        Changing from the default bilinear interpolant is made possible, but not recommended.  For more
+        information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.
+
+        Parameters:
+            file_name:      The name of the file to read.
+            rng:            If provided, a random number generator to use as the random number
+                            generator of the resulting noise object. (may be any kind of
+                            `BaseDeviate` object) [default: None, in which case, one will be
+                            automatically created, using the time as a seed.]
+            scale:          If desired, an image pixel scale to override any scale given in the file.
+            variance:       Scales the correlation function so that its point variance, equivalent
+                            to its value at zero separation distance, matches this value.
+                            [default: 0., which means to use the variance in the original file.]
+            x_interpolant:  Forces use of a non-default interpolant for interpolation of the
+                            internal lookup table in real space.  See below for more details.
+                            [default: galsim.Linear()]
+            gsparams:       An optional `GSParams` argument. [default: None]
+
+        Returns:
+            a `BaseCorrelatedNoise` instance
+        """
+        from . import fits
+        from .interpolant import Linear
+        from .interpolatedimage import InterpolatedImage
+        if not os.path.isfile(file_name):
+            raise OSError("The file %r does not exist."%(file_name))
+        try:
+            cfimage = fits.read(file_name)
+        except (OSError, AttributeError, TypeError) as e:
+            raise OSError("Unable to read COSMOSNoise file %s.\n%r"%(file_name,e))
+
+        # Check for invalid images:
+        if cfimage.nrow != cfimage.ncol:
+            raise GalSimError("Input image is not square.")
+        if cfimage.nrow % 2 != 1:
+            raise GalSimError("Input image does not have odd size.")
+        if np.max(np.abs((cfimage - cfimage.rot_180()).array)) > 1.e-12:
+            raise GalSimError("Input image does not have 180 degree rotational symmetry.")
+
+        # Also check for invalid negative variance
+        if variance < 0:
+            raise GalSimRangeError("Specified variance must be zero or positive.",
+                                   variance, 0, None)
+
+        # If x_interpolant not specified on input, use bilinear
+        if x_interpolant is None:
+            x_interpolant = Linear()
+        else:
+            x_interpolant = utilities.convert_interpolant(x_interpolant)
+
+        # Build the cf profile.
+        ii = InterpolatedImage(cfimage, scale=pixel_scale, normalization="sb",
+                               calculate_stepk=False, calculate_maxk=False,
+                               x_interpolant=x_interpolant, gsparams=gsparams)
+        ret = BaseCorrelatedNoise(rng, ii, PixelScale(pixel_scale))
+        # If the input keyword variance is non-zero, scale the correlation function to have this
+        # variance
+        if variance > 0.:
+            ret = ret.withVariance(variance)
+        return ret
 
     @property
     def rng(self):
@@ -980,6 +1084,7 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     # Finally generate and return noise using the irfft
     return np.fft.irfft2(gvec * rootps, s=shape)
 
+
 ###
 # Then we define the CorrelatedNoise, which generates a correlation function by estimating it
 # directly from images:
@@ -1410,43 +1515,13 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     The FITS file ``out.fits`` should then contain an image of randomly-generated, COSMOS-like noise.
     """
     from . import meta_data
-    from . import fits
-    from .interpolant import Linear
-    from .interpolatedimage import InterpolatedImage
-    # First try to read in the image of the COSMOS correlation function stored in the repository
-    import os
     if file_name is None:
         file_name = os.path.join(meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits')
-    if not os.path.isfile(file_name):
-        raise OSError("The file %r does not exist."%(file_name))
-    try:
-        cfimage = fits.read(file_name)
-    except (OSError, AttributeError, TypeError) as e:
-        raise OSError("Unable to read COSMOSNoise file %s.\n%r"%(file_name,e))
 
-    # Then check for negative variance before doing anything time consuming
-    if variance < 0:
-        raise GalSimRangeError("Specified variance must be zero or positive.",
-                               variance, 0, None)
-
-    # If x_interpolant not specified on input, use bilinear
-    if x_interpolant is None:
-        x_interpolant = Linear()
-    else:
-        x_interpolant = utilities.convert_interpolant(x_interpolant)
-
-    # Use this info to then generate a correlated noise model DIRECTLY: note this is non-standard
-    # usage, but tolerated since we can be sure that the input cfimage is appropriately symmetric
-    # and peaked at the origin
-    ii = InterpolatedImage(cfimage, scale=cosmos_scale, normalization="sb",
-                           calculate_stepk=False, calculate_maxk=False,
-                           x_interpolant=x_interpolant, gsparams=gsparams)
-    ret = BaseCorrelatedNoise(rng, ii, PixelScale(cosmos_scale))
-    # If the input keyword variance is non-zero, scale the correlation function to have this
-    # variance
-    if variance > 0.:
-        ret = ret.withVariance(variance)
-    return ret
+    return BaseCorrelatedNoise.from_file(file_name, cosmos_scale,
+                                         rng=rng, variance=variance,
+                                         x_interpolant=x_interpolant,
+                                         gsparams=gsparams)
 
 class UncorrelatedNoise(BaseCorrelatedNoise):
     """A class that represents 2D correlated noise fields that are actually (at least initially)
