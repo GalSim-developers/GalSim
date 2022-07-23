@@ -27,7 +27,7 @@ from ..image import Image
 from ..position import PositionI
 from ..random import PoissonDeviate
 from ..noise import GaussianNoise, PoissonNoise, DeviateNoise, CCDNoise
-from ..correlatednoise import getCOSMOSNoise, UncorrelatedNoise
+from ..correlatednoise import getCOSMOSNoise, BaseCorrelatedNoise, UncorrelatedNoise
 
 # This file handles the functionality for adding noise and the sky to an image after
 # drawing the objects.
@@ -564,31 +564,34 @@ class CCDNoiseBuilder(NoiseBuilder):
 
 
 #
-# COSMOS
+# Correlated
 #
 
-class COSMOSNoiseBuilder(NoiseBuilder):
+class CorrelatedNoiseBuilder(NoiseBuilder):
 
-    def getCOSMOSNoise(self, config, base, rng=None):
+    def getNoise(self, config, base, rng=None):
         # Save the constructed CorrelatedNoise object, since we might need it again.
         tag = (id(base), base['file_num'], base['image_num'])
         if base.get('_current_cn_tag',None) == tag:
             return base['_current_cn']
         else:
-            opt = { 'file_name' : str, 'cosmos_scale' : float, 'variance' : float }
-
-            kwargs = GetAllParams(config, base, opt=opt, ignore=noise_ignore)[0]
-            if rng is None:
-                rng = GetRNG(config, base)
-            cn = getCOSMOSNoise(rng=rng, **kwargs)
+            cn = self._readNoiseFile(config, base, rng)
             base['_current_cn'] = cn
             base['_current_cn_tag'] = tag
             return cn
 
+    def _readNoiseFile(self, config, base, rng=None):
+        req = { 'file_name': str, 'pixel_scale': float }
+        opt = { 'variance' : float }
+        kwargs = GetAllParams(config, base, req=req, opt=opt, ignore=noise_ignore)[0]
+        if rng is None:
+            rng = GetRNG(config, base)
+        return BaseCorrelatedNoise.from_file(rng=rng, **kwargs)
+
     def addNoise(self, config, base, im, rng, current_var, draw_method, logger):
 
         # Build the correlated noise
-        cn = self.getCOSMOSNoise(config,base,rng)
+        cn = self.getNoise(config,base,rng)
         var = cn.getVariance()
 
         # Subtract off the current variance if any
@@ -608,8 +611,17 @@ class COSMOSNoiseBuilder(NoiseBuilder):
         return var
 
     def getNoiseVariance(self, config, base, full=False):
-        cn = self.getCOSMOSNoise(config,base)
+        cn = self.getNoise(config,base)
         return cn.getVariance()
+
+# Specialization for COSMOS noise in particular (the OG version of this noise type).
+class COSMOSNoiseBuilder(CorrelatedNoiseBuilder):
+     def _readNoiseFile(self, config, base, rng=None):
+        opt = { 'file_name' : str, 'cosmos_scale' : float, 'variance' : float }
+        kwargs = GetAllParams(config, base, opt=opt, ignore=noise_ignore)[0]
+        if rng is None:
+            rng = GetRNG(config, base)
+        return getCOSMOSNoise(rng=rng, **kwargs)
 
 
 def RegisterNoiseType(noise_type, builder, input_type=None):
@@ -630,4 +642,5 @@ def RegisterNoiseType(noise_type, builder, input_type=None):
 RegisterNoiseType('Gaussian', GaussianNoiseBuilder())
 RegisterNoiseType('Poisson', PoissonNoiseBuilder())
 RegisterNoiseType('CCD', CCDNoiseBuilder())
+RegisterNoiseType('Correlated', CorrelatedNoiseBuilder())
 RegisterNoiseType('COSMOS', COSMOSNoiseBuilder())
