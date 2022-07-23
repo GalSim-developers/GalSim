@@ -558,6 +558,17 @@ def test_cosmosnoise():
         image.array, image2.array, rtol=1.e-5,
         err_msg='Config COSMOS noise does not reproduce results given kwargs')
 
+    # Use the more generic Correlated noise type
+    config2['image']['noise'] = {
+        'type' : 'Correlated',
+        'file_name' : os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
+        'pixel_scale' : pix_scale
+    }
+    config2 = galsim.config.CleanConfig(config2)
+    image3 = galsim.config.BuildStamp(config2,logger=logger)[0]
+    np.testing.assert_allclose(image3.array, image2.array,
+        err_msg='Config Correlated noise not the same as COSMOS')
+
     # Use a RealGalaxy with whitening to make sure that it properly handles any current_var
     # in the image already.
     # Detects bug Rachel found in issue #792

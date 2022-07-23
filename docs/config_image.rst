@@ -169,6 +169,12 @@ that are defined by GalSim are:
     * ``cosmos_scale`` = *float_value* (default = 0.03) The ACS coadd images in COSMOS have a pixel scale of 0.03 arcsec, and so the pixel scale ``cosmos_scale`` adopted in the representation of of the correlation function takes a default value of 0.03.  If you wish to use other units ensure that ``cosmos_scale`` takes the value corresponding to 0.03 arcsec in your chosen system.
     * ``variance`` = *float_value* (default = 0.) Scale the point variance of the noise field to the desired value, equivalent to scaling the correlation function to have this value at zero separation distance.  Choosing the default scaling of 0. uses the variance in the original COSMOS noise fields.
 
+* 'Correlated' is a more general version of COSMOS, allowing any arbitrary correlated noise spectrum to be used.  It requires the user to provide the appropriate file giving an image of the correlation function.  See `BaseCorrelatedNoise.from_file` for details about how this file must look.
+
+    * ``file_name`` = *str_value* (required) The path and filename of the FITS file containing the correlation function data used to generate the Correlated noise field.
+    * ``pixel_scale`` = *float_value* (required) The pixel scale of the original image data from which the correlated noise was constructed.
+    * ``variance`` = *float_value* (default = 0.) Scale the point variance of the noise field to the desired value, equivalent to scaling the correlation function to have this value at zero separation distance.  Choosing the default scaling of 0. uses the variance in the file without modification.
+
 The ``noise`` field can also take the following attributes, which are relevant when using
 object types that have some intrinsic noise already, such as 'RealGalaxy':
 

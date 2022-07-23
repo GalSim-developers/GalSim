@@ -36,6 +36,8 @@ API Changes
 Config Updates
 --------------
 
+- Added Correlated noise type as a generalization of the more specific COSMOS noise type.
+  (#731)
 - Changed the way the internal random number sequence works so that running multiple simulations
   with sequential random seed values doesn't end up with duplicated random values across the
   two (or more) simulations. (#1169)
