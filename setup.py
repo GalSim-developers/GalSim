@@ -108,7 +108,7 @@ if "--debug" in sys.argv:
 else:
     # Including mmgr.cpp in the library leads to problems if the other files don't
     # include mmgr.h.  So remove it.
-    cpp_sources.remove(os.path.join('src','mmgr.cpp')
+    cpp_sources.remove(os.path.join('src','mmgr.cpp'))
 
 # Verbose is the default for setuptools logging, but if it's on the command line, we take it
 # to mean that we should also be verbose.
