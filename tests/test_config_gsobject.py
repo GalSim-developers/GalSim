@@ -1087,9 +1087,7 @@ def test_cosmos_redshift():
     """Test accessing the redshift of a COSMOSGalaxy.  Useful e.g. when using NFWHalo.
     """
 
-    # For now, use a custom ValueType.
-    # TODO: Put this into the main GalSim code.  cf. Issue #954
-
+    # First check with a custom value type specialized to just zphot.
     def COSMOS_ZPhot(config, base, value_type):
         cosmos_cat = galsim.config.GetInputObj('cosmos_catalog', config, base, 'COSMOS_ZPhot')
         # Requires that galaxy uses an explicit index.
@@ -1119,7 +1117,12 @@ def test_cosmos_redshift():
                 'use_real' : False,
                 'preload' : True
             },
-
+            'galaxy_sample' : {
+                'dir' : real_gal_dir ,
+                'file_name' : real_gal_cat,
+                'use_real' : False,
+                'preload' : True
+            },
             'nfw_halo' : {
                 'mass' : halo_mass,
                 'conc' : halo_conc,
@@ -1129,10 +1132,28 @@ def test_cosmos_redshift():
 
         'gal' : {
             'type' : 'COSMOSGalaxy',
-            'index' : { 'type': 'Random' },
+            # Note: not all redshifts are valid with NFWHalo.  It requires z>0.2.
+            # This index has z>0.2.
+            'index' : 64,
             'shear' : { 'type' : 'NFWHaloShear' },
             'magnify' : { 'type' : 'NFWHaloMagnification' },
             'redshift' :  { 'type' : 'COSMOS_ZPhot' },
+        },
+
+        'gal2' : {
+            'type' : 'COSMOSGalaxy',
+            'index' : 64,
+            'shear' : { 'type' : 'NFWHaloShear' },
+            'magnify' : { 'type' : 'NFWHaloMagnification' },
+            'redshift' :  { 'type' : 'COSMOSValue', 'key' : 'zphot', 'index': '@gal2.index' },
+        },
+
+        'gal3' : {
+            'type' : 'SampleGalaxy',
+            'index' : 64,
+            'shear' : { 'type' : 'NFWHaloShear' },
+            'magnify' : { 'type' : 'NFWHaloMagnification' },
+            'redshift' :  { 'type' : 'SampleValue', 'key' : 'zphot', 'index': '@gal3.index' },
         },
 
         'image' : {
@@ -1158,11 +1179,9 @@ def test_cosmos_redshift():
     galsim.config.SetupConfigImageNum(config, 0, 0)
     galsim.config.SetupInputsForImage(config, logger=logger)
 
-    # Note: not all redshifts are valid with NFWHalo.  It requires z>0.2.
-    # This seed choice is used since it happens to select a cosmos galaxy with z>0.2.
-    first_seed = galsim.BaseDeviate(12345).raw()
-    rng = galsim.UniformDeviate(first_seed+1)
     cosmos_cat = galsim.COSMOSCatalog(
+        dir=real_gal_dir, file_name=real_gal_cat, use_real=False, preload=True)
+    sample_cat = galsim.GalaxySample(
         dir=real_gal_dir, file_name=real_gal_cat, use_real=False, preload=True)
 
     galsim.config.SetupConfigObjNum(config, 0, logger=logger)
@@ -1171,11 +1190,13 @@ def test_cosmos_redshift():
     galsim.config.SetupConfigStampSize(config,32,32,image_pos,None, logger=logger)
     gal1a = galsim.config.BuildGSObject(config, 'gal', logger=logger)[0]
     print('gal1a = ',gal1a)
+    first_seed = galsim.BaseDeviate(12345).raw()
+    rng = galsim.UniformDeviate(first_seed+1)
     x = float(rng() * 256)
     y = float(rng() * 256)
     assert x == image_pos.x
     assert y == image_pos.y
-    index = int(math.floor(rng() * cosmos_cat.getNObjects()))
+    index = 64
     gal1b = cosmos_cat.makeGalaxy(index)
     redshift = cosmos_cat.getParametricRecord(index)['zphot']
     nfw_halo = galsim.NFWHalo(mass=halo_mass, conc=halo_conc, redshift=halo_z)
@@ -1185,6 +1206,10 @@ def test_cosmos_redshift():
     print('gal1b = ',gal1b)
     gsobject_compare(gal1a, gal1b)
 
+    gal2 = galsim.config.BuildGSObject(config, 'gal2', logger=logger)[0]
+    gsobject_compare(gal2, gal1b)
+    gal3 = galsim.config.BuildGSObject(config, 'gal3', logger=logger)[0]
+    gsobject_compare(gal3, gal1b)
 
 @timer
 def test_interpolated_image():

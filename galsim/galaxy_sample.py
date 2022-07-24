@@ -728,6 +728,12 @@ class GalaxySample:
         record_dict = { k:record[k] for k in record.dtype.names }
         return record_dict
 
+    def getValue(self, key, index):
+        """Get the value in the parametric catalog at the given key and index"""
+        # Used by _makeGalaxy to circumvent pickling the result.
+        record = self.param_cat[self.orig_index[index]]
+        return record[key]
+
     def canMakeReal(self):
         """Is it permissible to call makeGalaxy with gal_type='real'?"""
         return self.use_real
