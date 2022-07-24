@@ -96,6 +96,10 @@ class GalaxySample:
                             there is approximately the same total I/O time (assuming you eventually
                             use most of the image files referenced in the catalog), but it is spread
                             over the calls to makeGalaxy().  [default: False]
+        orig_exptime:       The exposure time (in seconds) of the original observations.
+                            [default: 1]
+        orig_area:          The effective collecting area (in cm^2) of the original observations.
+                            [default: 1]
         use_real:           Enable the use of realistic galaxies?  [default: True]
                             If this parameter is False, then ``makeGalaxy(gal_type='real')`` will
                             not be allowed, and there will be a (modest) decrease in RAM and time
@@ -133,10 +137,12 @@ class GalaxySample:
                             [default: 0.8]
         sn_limit:           For the "bad_stamp" exclusions, cut out any stamps with estimated
                             S/N for an elliptical Gaussian less than this limit. [default: 10.]
-        flux_scaling:       The relative flux desired when creating the galaxies relative to what
-                            is in the original catalog.  This should be set to the ratio of
-                            (exptime * collecting_area) for the target observations relative to the
-                            original observations. [default: 1]
+        exptime:            The exposure time (in seconds) to assume when creating galaxies.
+                            [default: None, which means to use orig_exptime]
+        area:               The effective collecting area (in cm^2) to assume when creating
+                            galaxies. [default: None, which means to use orig_area]
+
+
 
     After construction, the following attributes are available:
 
@@ -144,16 +150,18 @@ class GalaxySample:
         nobjects:       The number of objects in the catalog
     """
     _opt_params = { 'file_name' : str, 'dir' : str,
+                    'orig_exptime': float, 'orig_area': float,
                     'preload' : bool, 'use_real' : bool,
                     'exclusion_level' : str, 'min_hlr' : float, 'max_hlr' : float,
                     'min_flux' : float, 'max_flux' : float,
-                    'cut_ratio' : float, 'sn_limit' : float, 'flux_scaling' : float,
+                    'cut_ratio' : float, 'sn_limit' : float,
                   }
 
     def __init__(self, file_name=None, dir=None, preload=False,
+                 orig_exptime=1., orig_area=1.,
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
                  min_flux=0., max_flux=0., cut_ratio=0.8, sn_limit=10.,
-                 flux_scaling=1., _use_sample=None):
+                 exptime=None, area=None, _use_sample=None):
 
         from ._pyfits import pyfits
         from .real import _parse_files_dirs
@@ -162,7 +170,10 @@ class GalaxySample:
         self.preload = preload
         self.cut_ratio = cut_ratio
         self.sn_limit = sn_limit
-        self.flux_scaling = flux_scaling
+        self.orig_exptime = orig_exptime
+        self.orig_area = orig_area
+        self.exptime = exptime
+        self.area = area
 
         # We'll set these up if and when we need them.
         self._bandpass = None
@@ -404,12 +415,12 @@ class GalaxySample:
             or a list of them if ``index`` is an iterable.
         """
         return self._makeGalaxy(self, index, gal_type, chromatic, noise_pad_size,
-                                deep, sersic_prec, self.flux_scaling,
+                                deep, sersic_prec, self.exptime, self.area,
                                 rng, n_random, gsparams)
 
     @staticmethod
     def _makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
-                    deep=False, sersic_prec=0.05, flux_scaling=1.,
+                    deep=False, sersic_prec=0.05, exptime=None, area=None,
                     rng=None, n_random=None, gsparams=None):
         from .random import BaseDeviate
         if not self.canMakeReal():
@@ -473,6 +484,11 @@ class GalaxySample:
                                                      chromatic, bandpass, sed)
                 gal_list.append(gal)
 
+        flux_scaling = 1.
+        if exptime is not None:
+            flux_scaling *= exptime / self.orig_exptime
+        if area is not None:
+            flux_scaling *= area / self.orig_area
         if flux_scaling != 1.:
             gal_list = [gal * flux_scaling for gal in gal_list]
 
@@ -888,7 +904,7 @@ class COSMOSCatalog(GalaxySample):
 
     hst_eff_area = math.pi * 120**2 * (1-0.33**2)
 
-    def __init__(self, file_name=None, sample=None, dir=None, exptime=1., area=None, **kwargs):
+    def __init__(self, file_name=None, sample=None, dir=None, **kwargs):
         if sample is not None and file_name is not None:
             raise GalSimIncompatibleValuesError(
                 "Cannot specify both the sample and file_name.",
@@ -896,10 +912,6 @@ class COSMOSCatalog(GalaxySample):
 
         from ._pyfits import pyfits
         from .real import _parse_files_dirs
-
-        flux_scaling = exptime
-        if area is not None:
-            flux_scaling *= area/self.hst_eff_area
 
         # Parse the file name
         file_name, _, use_sample = _parse_files_dirs(file_name, dir, sample)
@@ -911,5 +923,6 @@ class COSMOSCatalog(GalaxySample):
             cut_ratio = 0.8
             sn_limit = 12.0
 
-        super().__init__(file_name, flux_scaling=flux_scaling, _use_sample=use_sample,
+        super().__init__(file_name, _use_sample=use_sample,
+                         orig_exptime=1., orig_area=self.hst_eff_area,
                          cut_ratio=cut_ratio, sn_limit=sn_limit, **kwargs)
