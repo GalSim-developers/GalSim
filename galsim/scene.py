@@ -31,39 +31,23 @@ from .utilities import lazy_property
 # Note: This isn't used anywhere.  This is just informational, really.
 cosmos_pix_scale = 0.03
 
-class COSMOSCatalog:
+class GalaxySample:
     """
-    A class representing a random subsample of galaxies from the COSMOS sample with F814W<25.2
-    (default), or alternatively the entire sample with F814W<23.5.
+    A class representing a random subsample of galaxies from an arbitrary deep survey.
 
     Depending on the keyword arguments, particularly ``use_real``, the catalog will either have
-    information about real galaxies, and/or parametric ones.  To use this with either type of
-    galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see
+    information about real galaxies, and/or parametric ones.
 
-    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data
+    The original version of this functionality is now in the subclass `COSMOSCatalog`, which
+    specializes to HST observations of the COSMOS field.  `GalaxySample` is a generalization of
+    that, which works for arbitrary data sets, although the user is responsible for building
+    the appropriate input files to use with it.
 
-    option (1) for more information.  Note that if you want to make real galaxies you need to
-    download and store the full tarball with all galaxy images, whereas if you want to make
-    parametric galaxies you only need the catalog real_galaxy_catalog_25.2_fits.fits (and the
-    selection file real_galaxy_catalog_25.2_selection.fits if you want to place cuts on the
-    postage stamp quality) and can delete the galaxy and PSF image files.
+    Unlike `COSMOSCatalog`, which has easy options for picking out one of the two galaxy subsets
+    that are available for download using ``galsim_download_cosmos``, for this class you need to
+    manually specifiy the file name.
 
-    Finally, we provide a program that will download the large COSMOS sample for you and
-    put it in the $PREFIX/share/galsim directory of your installation path.  The program is::
-
-            galsim_download_cosmos
-
-    which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
-    this program to download the COSMOS catalog, then you can use it with::
-
-            cat = galsim.COSMOSCatalog()
-
-    GalSim knows the location of the installation share directory, so it will automatically
-    look for it there.
-
-    In addition to the option of specifying catalog names, this class also accepts a keyword
-    argument ``sample`` that can be used to switch between the samples with limiting magnitudes of
-    23.5 and 25.2.
+        >>> cat = galsim.GalaxySample(file_name)
 
     After getting the catalogs, there is a method makeGalaxy() that can make a `GSObject`
     corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
@@ -103,10 +87,6 @@ class COSMOSCatalog:
                             F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
                             exception if the catalog is not there telling you to run
                             galsim_download_cosmos.]
-        sample:             A keyword argument that can be used to specify the sample to use, i.e.,
-                            "23.5" or "25.2".  At most one of ``file_name`` and ``sample`` should be
-                            specified.  [default: None, which results in the same default as
-                            ``file_name=None``.]
         dir:                The directory with the catalog file and, if making realistic galaxies,
                             the image and noise files (or symlinks to them). [default: None, which
                             will look in $PREFIX/share/galsim.]
@@ -137,7 +117,9 @@ class COSMOSCatalog:
                             - "marginal": Apply the above cuts, plus ones that eliminate some more
                               marginal cases.
 
-                            [default: "marginal"]
+                            Use of this feature requires a ``CATALOG_selection.fits`` file
+                            (where CATALOG refers to the regular catalog base name).
+                            [default: "none"]
         min_hlr:            Exclude galaxies whose fitted half-light radius is smaller than this
                             value (in arcsec).  [default: 0, meaning no limit]
         max_hlr:            Exclude galaxies whose fitted half-light radius is larger than this
@@ -146,48 +128,41 @@ class COSMOSCatalog:
                             [default: 0, meaning no limit]
         max_flux:           Exclude galaxies whose fitted flux is larger than this value.
                             [default: 0, meaning no limit]
-        exptime:            The exposure time (in seconds) to assume when creating galaxies.
-                            .. note::
-
-                                The processed COSMOS ACS/HST science images have units of
-                                counts/second; i.e. they have an effective exposure time of 1
-                                second in terms of their flux levels. The default value
-                                corresponds to a 1 second exposure on HST, which will match
-                                these processed images.
-
-                            [default: 1]
-        area:               The effective collecting area (in cm^2) to assume when creating
-                            galaxies. [default: None, which means to use the original HST
-                            collecting area = pi/4 * 240**2 * (1.-0.33**2)]
+        cut_ratio:          For the "bad_stamp" exclusions, cut out any stamps with average
+                            adjacent pixels larger than this fraction of the peak pixel count.
+                            [default: 0.8]
+        sn_limit:           For the "bad_stamp" exclusions, cut out any stamps with estimated
+                            S/N for an elliptical Gaussian less than this limit. [default: 10.]
+        flux_scaling:       The relative flux desired when creating the galaxies relative to what
+                            is in the original catalog.  This should be set to the ratio of
+                            (exptime * collecting_area) for the target observations relative to the
+                            original observations. [default: 1]
 
     After construction, the following attributes are available:
 
     Attributes:
         nobjects:       The number of objects in the catalog
     """
-    _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
+    _opt_params = { 'file_name' : str, 'dir' : str,
                     'preload' : bool, 'use_real' : bool,
                     'exclusion_level' : str, 'min_hlr' : float, 'max_hlr' : float,
-                    'min_flux' : float, 'max_flux' : float
+                    'min_flux' : float, 'max_flux' : float,
+                    'cut_ratio' : float, 'sn_limit' : float, 'flux_scaling' : float,
                   }
 
-    hst_eff_area = math.pi * 120**2 * (1-0.33**2)
-
-    def __init__(self, file_name=None, sample=None, dir=None, preload=False,
+    def __init__(self, file_name=None, dir=None, preload=False,
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
-                 min_flux=0., max_flux=0., exptime=1., area=None):
-        if sample is not None and file_name is not None:
-            raise GalSimIncompatibleValuesError(
-                "Cannot specify both the sample and file_name.",
-                sample=sample, file_name=file_name)
+                 min_flux=0., max_flux=0., cut_ratio=0.8, sn_limit=10.,
+                 flux_scaling=1., _use_sample=None):
 
         from ._pyfits import pyfits
         from .real import _parse_files_dirs
 
         self.use_real = use_real
         self.preload = preload
-        self.exptime = exptime
-        self.area = area
+        self.cut_ratio = cut_ratio
+        self.sn_limit = sn_limit
+        self.flux_scaling = flux_scaling
 
         # We'll set these up if and when we need them.
         self._bandpass = None
@@ -198,7 +173,8 @@ class COSMOSCatalog:
                                    ('none', 'bad_stamp', 'bad_fits', 'marginal'))
 
         # Parse the file name
-        self.full_file_name, _, self.use_sample = _parse_files_dirs(file_name, dir, sample)
+        self.full_file_name, _, _ = _parse_files_dirs(file_name, dir, None)
+        self.use_sample = _use_sample
 
         try:
             # Read in data.
@@ -255,9 +231,12 @@ class COSMOSCatalog:
                     with pyfits.open(selection_file_name) as fits:
                         self.selection_cat = fits[1].data
                 except (OSError):  # pragma: no cover
-                    raise OSError("File with GalSim selection criteria not found. "
-                                  "Run the program `galsim_download_cosmos -s %s` to get the "
-                                  "necessary selection file."%(self.use_sample))
+                    if self.use_sample is None:
+                        raise
+                    else:
+                        raise OSError("File with GalSim selection criteria not found. "
+                                      "Run the program `galsim_download_cosmos -s %s` to get the "
+                                      "necessary selection file."%(self.use_sample))
 
             # We proceed to select galaxies in a way that excludes suspect postage stamps (e.g.,
             # with deblending issues), suspect parametric model fits, or both of the above plus
@@ -270,18 +249,12 @@ class COSMOSCatalog:
             # will first set that column to 1.e-5.  We choose a sample-dependent mask ratio cut,
             # since this depends on the peak object flux, which will differ for the two samples
             # (and we can't really cut on this for arbitrary user-defined samples).
-            if self.use_sample == "23.5":
-                cut_ratio = 0.2
-                sn_limit = 20.0
-            else:
-                cut_ratio = 0.8
-                sn_limit = 12.0
             div_val = self.selection_cat['peak_image_pixel_count']
             div_val[div_val == 0.] = 1.e-5
-            mask &= ( (self.selection_cat['sn_ellip_gauss'] >= sn_limit) &
+            mask &= ( (self.selection_cat['sn_ellip_gauss'] >= self.sn_limit) &
                       ((self.selection_cat['min_mask_dist_pixels'] > 11.0) |
                        (self.selection_cat['average_mask_adjacent_pixel_count'] / \
-                           div_val < cut_ratio)) )
+                           div_val < self.cut_ratio)) )
 
             # Finally, impose a cut that the total flux in the postage stamp should be positive,
             # which excludes a tiny number of galaxies (of order 10 in each sample) with some sky
@@ -313,7 +286,7 @@ class COSMOSCatalog:
 
             # Some fit parameters can indicate a likely sky subtraction error: very high sersic n
             # AND abnormally large half-light radius (>1 arcsec).
-            if 'hlr' not in self.param_cat.dtype.names:  # pragma: no cover
+            if 'hlr' not in self.param_cat.dtype.names and self.use_sample is not None:  # pragma: no cover
                 raise OSError("You still have the old COSMOS catalog.  Run the program "
                               "`galsim_download_cosmos -s %s` to upgrade."%(self.use_sample))
             hlr = self.param_cat['hlr'][:,0]
@@ -325,7 +298,7 @@ class COSMOSCatalog:
             mask &= ( np.abs(self.selection_cat['dmag']) < 0.8)
 
         if min_hlr > 0. or max_hlr > 0. or min_flux > 0. or max_flux > 0.:
-            if 'hlr' not in self.param_cat.dtype.names:  # pragma: no cover
+            if 'hlr' not in self.param_cat.dtype.names and self.use_sample is not None:  # pragma: no cover
                 raise OSError("You still have the old COSMOS catalog.  Run the program "
                               "`galsim_download_cosmos -s %s` to upgrade."%(self.use_sample))
 
@@ -431,12 +404,12 @@ class COSMOSCatalog:
             or a list of them if ``index`` is an iterable.
         """
         return self._makeGalaxy(self, index, gal_type, chromatic, noise_pad_size,
-                                deep, sersic_prec, self.exptime, self.area,
+                                deep, sersic_prec, self.flux_scaling,
                                 rng, n_random, gsparams)
 
     @staticmethod
     def _makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
-                    deep=False, sersic_prec=0.05, exptime=1., area=None,
+                    deep=False, sersic_prec=0.05, flux_scaling=1.,
                     rng=None, n_random=None, gsparams=None):
         from .random import BaseDeviate
         if not self.canMakeReal():
@@ -500,9 +473,6 @@ class COSMOSCatalog:
                                                      chromatic, bandpass, sed)
                 gal_list.append(gal)
 
-        flux_scaling = exptime
-        if area is not None:
-            flux_scaling *= area/self.hst_eff_area
         if flux_scaling != 1.:
             gal_list = [gal * flux_scaling for gal in gal_list]
 
@@ -645,7 +615,7 @@ class COSMOSCatalog:
         # the last 8 are for the bulge, with n=4.
         bparams = record['bulgefit']
         sparams = record['sersicfit']
-        if 'hlr' not in record:  # pragma: no cover
+        if 'hlr' not in record and self.use_sample is not None:  # pragma: no cover
             raise OSError("You still have the old COSMOS catalog.  Run the program "
                           "`galsim_download_cosmos -s %s` to upgrade."%(self.use_sample))
 
@@ -764,9 +734,176 @@ class COSMOSCatalog:
 
     def __eq__(self, other):
         return (self is other or
-                (isinstance(other, COSMOSCatalog) and
+                (isinstance(other, GalaxySample) and
                  self.use_real == other.use_real and
-                 self.use_sample == other.use_sample and
                  self.real_cat == other.real_cat and
                  np.array_equal(self.param_cat, other.param_cat) and
                  np.array_equal(self.orig_index, other.orig_index)))
+
+class COSMOSCatalog(GalaxySample):
+    """
+    A class representing a random subsample of galaxies from the COSMOS sample with F814W<25.2
+    (default), or alternatively the entire sample with F814W<23.5.
+
+    Depending on the keyword arguments, particularly ``use_real``, the catalog will either have
+    information about real galaxies, and/or parametric ones.  To use this with either type of
+    galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see
+
+    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data
+
+    option (1) for more information.  Note that if you want to make real galaxies you need to
+    download and store the full tarball with all galaxy images, whereas if you want to make
+    parametric galaxies you only need the catalog real_galaxy_catalog_25.2_fits.fits (and the
+    selection file real_galaxy_catalog_25.2_selection.fits if you want to place cuts on the
+    postage stamp quality) and can delete the galaxy and PSF image files.
+
+    Finally, we provide a program that will download the large COSMOS sample for you and
+    put it in the $PREFIX/share/galsim directory of your installation path.  The program is::
+
+            galsim_download_cosmos
+
+    which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
+    this program to download the COSMOS catalog, then you can use it with::
+
+            cat = galsim.COSMOSCatalog()
+
+    GalSim knows the location of the installation share directory, so it will automatically
+    look for it there.
+
+    In addition to the option of specifying catalog names, this class also accepts a keyword
+    argument ``sample`` that can be used to switch between the samples with limiting magnitudes of
+    23.5 and 25.2.
+
+    After getting the catalogs, there is a method makeGalaxy() that can make a `GSObject`
+    corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
+    `makeGalaxy` for more information.  As an interesting application and example of the usage of
+    these routines, consider the following code::
+
+        >>> im_size = 64
+        >>> pix_scale = 0.05
+        >>> bp_file = os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz')
+        >>> bandpass = galsim.Bandpass(bp_file, wave_type='ang').thin().withZeropoint(25.94)
+        >>> cosmos_cat = galsim.COSMOSCatalog()
+        >>> psf = galsim.OpticalPSF(diam=2.4, lam=1000.) # bigger than HST F814W PSF.
+        >>> indices = np.arange(10)
+        >>> real_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='real',
+        ...                                       noise_pad_size=im_size*pix_scale)
+        >>> param_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
+        >>> for ind in indices:
+        >>>     real_gal = galsim.Convolve(real_gal_list[ind], psf)
+        >>>     param_gal = galsim.Convolve(param_gal_list[ind], psf)
+        >>>     im_real = galsim.Image(im_size, im_size)
+        >>>     im_param = galsim.Image(im_size, im_size)
+        >>>     real_gal.drawImage(image=im_real, scale=pix_scale)
+        >>>     param_gal.drawImage(bandpass, image=im_param, scale=pix_scale)
+        >>>     im_real.write('im_real_'+str(ind)+'.fits')
+        >>>     im_param.write('im_param_'+str(ind)+'.fits')
+
+    This code snippet will draw images of the first 10 entries in the COSMOS catalog, at slightly
+    lower resolution than in COSMOS, with a real image and its parametric representation for each of
+    those objects.
+
+    When using the 'real' rather than 'parametric' option, please read the documentation for the
+    `RealGalaxy` class for additional caveats about the available drawing methods and
+    the need to convolve with a suitable PSF.
+
+    Parameters:
+        file_name:          The file containing the catalog. [default: None, which will look for the
+                            F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
+                            exception if the catalog is not there telling you to run
+                            galsim_download_cosmos.]
+        sample:             A keyword argument that can be used to specify the sample to use, i.e.,
+                            "23.5" or "25.2".  At most one of ``file_name`` and ``sample`` should be
+                            specified.  [default: None, which results in the same default as
+                            ``file_name=None``.]
+        dir:                The directory with the catalog file and, if making realistic galaxies,
+                            the image and noise files (or symlinks to them). [default: None, which
+                            will look in $PREFIX/share/galsim.]
+        preload:            Keyword that is only used for real galaxies, not parametric ones, to
+                            choose whether to preload the header information.  If ``preload=True``,
+                            the bulk of the I/O time is in the constructor.  If ``preload=False``,
+                            there is approximately the same total I/O time (assuming you eventually
+                            use most of the image files referenced in the catalog), but it is spread
+                            over the calls to makeGalaxy().  [default: False]
+        use_real:           Enable the use of realistic galaxies?  [default: True]
+                            If this parameter is False, then ``makeGalaxy(gal_type='real')`` will
+                            not be allowed, and there will be a (modest) decrease in RAM and time
+                            spent on I/O when initializing the COSMOSCatalog. If the real
+                            catalog is not available for some reason, it will still be possible to
+                            make parametric images.
+        exclusion_level:    Level of additional cuts to make on the galaxies based on the quality
+                            of postage stamp definition and/or parametric fit quality [beyond the
+                            minimal cuts imposed when making the catalog - see Mandelbaum et
+                            al. (2012, MNRAS, 420, 1518) for details].  Options:
+
+                            - "none": No cuts.
+                            - "bad_stamp": Apply cuts to eliminate galaxies that have failures in
+                              postage stamp definition.  These cuts may also eliminate a small
+                              subset of the good postage stamps as well.
+                            - "bad_fits": Apply cuts to eliminate galaxies that have failures in the
+                              parametric fits.  These cuts may also eliminate a small
+                              subset of the good parametric fits as well.
+                            - "marginal": Apply the above cuts, plus ones that eliminate some more
+                              marginal cases.
+
+                            [default: "marginal"]
+        min_hlr:            Exclude galaxies whose fitted half-light radius is smaller than this
+                            value (in arcsec).  [default: 0, meaning no limit]
+        max_hlr:            Exclude galaxies whose fitted half-light radius is larger than this
+                            value (in arcsec).  [default: 0, meaning no limit]
+        min_flux:           Exclude galaxies whose fitted flux is smaller than this value.
+                            [default: 0, meaning no limit]
+        max_flux:           Exclude galaxies whose fitted flux is larger than this value.
+                            [default: 0, meaning no limit]
+        exptime:            The exposure time (in seconds) to assume when creating galaxies.
+                            .. note::
+
+                                The processed COSMOS ACS/HST science images have units of
+                                counts/second; i.e. they have an effective exposure time of 1
+                                second in terms of their flux levels. The default value
+                                corresponds to a 1 second exposure on HST, which will match
+                                these processed images.
+
+                            [default: 1]
+        area:               The effective collecting area (in cm^2) to assume when creating
+                            galaxies. [default: None, which means to use the original HST
+                            collecting area = pi/4 * 240**2 * (1.-0.33**2)]
+
+    After construction, the following attributes are available:
+
+    Attributes:
+        nobjects:       The number of objects in the catalog
+    """
+    _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
+                    'preload' : bool, 'use_real' : bool,
+                    'exclusion_level' : str, 'min_hlr' : float, 'max_hlr' : float,
+                    'min_flux' : float, 'max_flux' : float
+                  }
+
+    hst_eff_area = math.pi * 120**2 * (1-0.33**2)
+
+    def __init__(self, file_name=None, sample=None, dir=None, exptime=1., area=None, **kwargs):
+        if sample is not None and file_name is not None:
+            raise GalSimIncompatibleValuesError(
+                "Cannot specify both the sample and file_name.",
+                sample=sample, file_name=file_name)
+
+        from ._pyfits import pyfits
+        from .real import _parse_files_dirs
+
+        flux_scaling = exptime
+        if area is not None:
+            flux_scaling *= area/self.hst_eff_area
+
+        # Parse the file name
+        file_name, _, use_sample = _parse_files_dirs(file_name, dir, sample)
+
+        if use_sample == "23.5":
+            cut_ratio = 0.2
+            sn_limit = 20.0
+        else:
+            cut_ratio = 0.8
+            sn_limit = 12.0
+
+        super().__init__(file_name, flux_scaling=flux_scaling, _use_sample=use_sample,
+                         cut_ratio=cut_ratio, sn_limit=sn_limit, **kwargs)

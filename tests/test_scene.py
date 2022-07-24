@@ -37,6 +37,13 @@ def test_cosmos_basic():
     # Initialize a COSMOSCatalog with all defaults.
     cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath)
+
+    # Check GalaxySample equivalent
+    cat1 = galsim.GalaxySample('real_galaxy_catalog_23.5_example.fits', datapath,
+                               cut_ratio=0.2, sn_limit=20.)
+    assert cat1.nobjects == cat.nobjects
+    assert cat1 == cat  # These (intentionally) test as equal even though different classes.
+
     # Initialize one that doesn't exclude failures.  It should be >= the previous one in length.
     cat2 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath, exclusion_level='none')
