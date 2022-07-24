@@ -922,11 +922,18 @@ def test_cosmosgalaxy():
     real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
     config = {
 
-        'input' : { 'cosmos_catalog' :
-                    { 'dir' : real_gal_dir ,
-                      'file_name' : real_gal_cat,
-                      'preload' : True}
-                    },
+        'input' : {
+            'cosmos_catalog' :
+                { 'dir' : real_gal_dir ,
+                  'file_name' : real_gal_cat,
+                  'preload' : True
+                },
+            'galaxy_sample' :
+                { 'dir' : real_gal_dir ,
+                  'file_name' : real_gal_cat,
+                  'preload' : True
+                },
+        },
 
         # First one uses defaults for gal_type (real, since we used the actual catalog and not the
         # parametric one) and selects a random galaxy using internal routines
@@ -948,7 +955,18 @@ def test_cosmosgalaxy():
 
         # Fourth tries to select outside the catalog; make sure the exception is caught.
         'gal4' : {'type' : 'COSMOSGalaxy', 'gal_type' : 'parametric',
-                  'index' : 1001}
+                  'index' : 1001},
+
+        # Same as gal2, but using SampleGalaxy
+        'gal2s' : { 'type' : 'SampleGalaxy', 'gal_type' : 'parametric',
+                    'index' : { 'type' : 'Sequence', 'nitems' : 1},
+                    'scale_flux' : 0.3,
+                    'rotate' : 30 * galsim.degrees },
+
+        # Same as gal3, but using SampleGalaxy
+        'gal3s' : {'type' : 'SampleGalaxy', 'gal_type' : 'parametric',
+                   'index' : 27, 'scale_flux' : 1.e6,
+                   'magnify' : 0.9, 'shear' : galsim.Shear(g1=0.01, g2=-0.07)},
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -966,18 +984,24 @@ def test_cosmosgalaxy():
     gal1a = galsim.config.BuildGSObject(config, 'gal1')[0]
     gal1b = 3.14*cosmos_cat.makeGalaxy(rng=rng)
     gsobject_compare(gal1a, gal1b, conv=conv)
+    # N.B. Don't test SampleGalaxy here, since the index is random, so we'd have to muck around
+    # with the random numbers to make it match.
 
     config['obj_num'] = 1
     gal2a = galsim.config.BuildGSObject(config, 'gal2')[0]
     gal2b = cosmos_cat.makeGalaxy(index=0, gal_type='parametric', rng=rng)
     gal2b = gal2b.withScaledFlux(0.3).rotate(30*galsim.degrees)
     gsobject_compare(gal2a, gal2b, conv=conv)
+    gal2s = galsim.config.BuildGSObject(config, 'gal2s')[0]
+    gsobject_compare(gal2s, gal2b, conv=conv)
 
     config['obj_num'] = 2
     gal3a = galsim.config.BuildGSObject(config, 'gal3')[0]
     gal3b = cosmos_cat.makeGalaxy(index=27, gal_type='parametric', rng=rng)
     gal3b = gal3b.withScaledFlux(1.e6).magnify(0.9).shear(g1=0.01, g2=-0.07)
     gsobject_compare(gal3a, gal3b, conv=conv)
+    gal3s = galsim.config.BuildGSObject(config, 'gal3s')[0]
+    gsobject_compare(gal3s, gal3b, conv=conv)
 
     config['obj_num'] = 3
     with assert_raises(galsim.GalSimConfigError):
