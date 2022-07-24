@@ -47,6 +47,7 @@ New Features
 ------------
 
 - Added `BaseCorrelatedNoise.from_file` class method. (#731)
+- Added `GalaxySample` class as generalization of `COSMOSCatalog`. (#731)
 - Added methods `Image.transpose`, `Image.flip_ud`, `Image.flip_lr`, `Image.rot_cw`,
   `Image.rot_ccw`, and `Image.rot_180`. (#1139)
 - Added `Image.depixelize` and ``depixelize=True`` option for `InterpolatedImage`. (#1154)
