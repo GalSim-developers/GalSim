@@ -18,10 +18,10 @@ jobs:
 
         strategy:
             matrix:
-                os: windows-latest
-                py: 3.9
-                CC: gcc
-                CXX: g++
+                os: [windows-latest]
+                py: [3.9]
+                CC: [gcc]
+                CXX: [g++]
 
                 # First all python versions in basic linux
                 #os: [ ubuntu-latest ]
