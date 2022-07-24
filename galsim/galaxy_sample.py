@@ -117,8 +117,8 @@ class GalaxySample:
                             - "marginal": Apply the above cuts, plus ones that eliminate some more
                               marginal cases.
 
-                            Use of this feature requires a ``CATALOG_selection.fits`` file
-                            (where CATALOG refers to the regular catalog base name).
+                            Use of "bad_stamp" or "marginal" requires a ``CATALOG_selection.fits``
+                            file (where CATALOG refers to the regular catalog base name).
                             [default: "none"]
         min_hlr:            Exclude galaxies whose fitted half-light radius is smaller than this
                             value (in arcsec).  [default: 0, meaning no limit]
