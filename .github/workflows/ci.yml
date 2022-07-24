@@ -18,40 +18,45 @@ jobs:
 
         strategy:
             matrix:
+                os: windows-latest
+                py: 3.9
+                CC: gcc
+                CXX: g++
+
                 # First all python versions in basic linux
-                os: [ ubuntu-latest ]
-                py: [ 3.7, 3.8, 3.9 ]
-                CC: [ gcc ]
-                CXX: [ g++ ]
+                #os: [ ubuntu-latest ]
+                #py: [ 3.7, 3.8, 3.9 ]
+                #CC: [ gcc ]
+                #CXX: [ g++ ]
 
                 # Add some other particular combinations to test
-                include:
+                #include:
                     # Just one in MacOS, since GitHub actions seems to have some kind of
                     # system problem where seg faults happen randomly on their Mac machines.
                     # Usually just restarting will fix it, but that's annoying, so minimize
                     # that by only having one of these to fight with.
-                    - os: macos-latest
-                      py: 3.8
-                      CC: cc
-                      CXX: c++
+                    #- os: macos-latest
+                      #py: 3.8
+                      #CC: cc
+                      #CXX: c++
 
                     # Check one with clang compiler
-                    - os: ubuntu-latest
-                      py: 3.8
-                      CC: clang
-                      CXX: clang++
+                    #- os: ubuntu-latest
+                      #py: 3.8
+                      #CC: clang
+                      #CXX: clang++
 
                     # Check one using pypy
-                    - os: ubuntu-latest
-                      py: pypy3
-                      CC: gcc
-                      CXX: g++
+                    #- os: ubuntu-latest
+                      #py: pypy3
+                      #CC: gcc
+                      #CXX: g++
 
                     # Check one on Windows
-                    - os: windows-latest
-                      py: 3.9
-                      CC: gcc
-                      CXX: g++
+                    #- os: windows-latest
+                      #py: 3.9
+                      #CC: gcc
+                      #CXX: g++
 
         steps:
             - uses: actions/checkout@v2
