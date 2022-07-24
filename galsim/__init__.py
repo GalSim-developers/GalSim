@@ -110,7 +110,7 @@ from .bounds import Bounds, BoundsI, BoundsD, _BoundsI, _BoundsD
 from .shear import Shear, _Shear
 from .angle import Angle, AngleUnit, _Angle, radians, hours, degrees, arcmin, arcsec
 from .catalog import Catalog, Dict, OutputCatalog
-from .scene import GalaxySample, COSMOSCatalog
+from .galaxy_sample import GalaxySample, COSMOSCatalog
 from .table import LookupTable, LookupTable2D, _LookupTable, _LookupTable2D, trapz
 
 # Exception and Warning classes

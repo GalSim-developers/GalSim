@@ -24,7 +24,7 @@ from .util import GetRNG
 from .value import GetAllParams, SetDefaultIndex
 from ..errors import GalSimConfigError
 from ..gsparams import GSParams
-from ..scene import COSMOSCatalog
+from ..galaxy_sample import COSMOSCatalog
 
 # This file adds input type cosmos_catalog and gsobject typs COSMOSGalaxy.
 
