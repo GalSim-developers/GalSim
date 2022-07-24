@@ -189,7 +189,7 @@ class BaseCorrelatedNoise:
         try:
             cfimage = fits.read(file_name)
         except (OSError, AttributeError, TypeError) as e:
-            raise OSError("Unable to read COSMOSNoise file %s.\n%r"%(file_name,e))
+            raise OSError("Unable to read file %s.\n%r"%(file_name,e))
 
         # Check for invalid images:
         if cfimage.nrow != cfimage.ncol:
