@@ -83,6 +83,12 @@ def test_cosmos_basic():
     print("Size of catalog with hlr and flux exclusions == ",len(cat2))
     assert len(cat2) == 47
 
+    # Repeat with a fake 25.2 catalog (just symlinks to the above 23.5 catalog).
+    fake_25_2_cat = galsim.COSMOSCatalog(file_name='fake_25.2.fits', dir='input',
+                                         exclusion_level='marginal', min_hlr=0.2, max_hlr=2,
+                                         min_flux=50, max_flux=5000)
+    assert len(fake_25_2_cat) == 47
+
     # Check for reasonable exceptions when initializing.
     # Can't find data (wrong directory).
     with assert_raises(OSError):
