@@ -17,7 +17,10 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include <sys/time.h>
+#ifndef _WIN32
+#include <sys/time.h>   // Unix-only
+#endif
+
 #include <fcntl.h>
 #include <string>
 #include <vector>
@@ -77,7 +80,7 @@ namespace galsim {
         _impl(new BaseDeviateImpl())
     {}
 
-    BaseDeviate::BaseDeviate(long lseed) :
+    BaseDeviate::BaseDeviate(long long lseed) :
         _impl(new BaseDeviateImpl())
     { seed(lseed); }
 
@@ -143,12 +146,20 @@ namespace galsim {
 
     void BaseDeviate::seedtime()
     {
+#ifdef _WIN32
+        // Windows deosn't have this.  sys/time.h is Unix-only.
+        // And /dev/urandom I think also doesn't exist, so seed_urandom will always throw.
+        // But honestly, this isn't that important, so just skip it.
+        // I.e. On Windows, use the default random seed using whatever the OS does for us.
+        _impl->_rng->seed(rand());
+#else
         struct timeval tp;
         gettimeofday(&tp,NULL);
         _impl->_rng->seed(tp.tv_usec);
+#endif
     }
 
-    void BaseDeviate::seed(long lseed)
+    void BaseDeviate::seed(long long lseed)
     {
         if (lseed == 0) {
             try {
@@ -184,7 +195,7 @@ namespace galsim {
         clearCache();
     }
 
-    void BaseDeviate::reset(long lseed)
+    void BaseDeviate::reset(long long lseed)
     { _impl.reset(new BaseDeviateImpl()); seed(lseed); }
 
     void BaseDeviate::reset(const BaseDeviate& dev)
@@ -193,7 +204,7 @@ namespace galsim {
     void BaseDeviate::discard(int n)
     { _impl->_rng->discard(n); }
 
-    long BaseDeviate::raw()
+    long long BaseDeviate::raw()
     { return (*_impl->_rng)(); }
 
     void BaseDeviate::generate(int N, double* data)
@@ -255,7 +266,7 @@ namespace galsim {
         boost::random::uniform_real_distribution<> _urd;
     };
 
-    UniformDeviate::UniformDeviate(long lseed) :
+    UniformDeviate::UniformDeviate(long long lseed) :
         BaseDeviate(lseed), _devimpl(new UniformDeviateImpl()) {}
 
     UniformDeviate::UniformDeviate(const BaseDeviate& rhs) :
@@ -287,7 +298,7 @@ namespace galsim {
         boost::random::normal_distribution<> _normal;
     };
 
-    GaussianDeviate::GaussianDeviate(long lseed, double mean, double sigma) :
+    GaussianDeviate::GaussianDeviate(long long lseed, double mean, double sigma) :
         BaseDeviate(lseed), _devimpl(new GaussianDeviateImpl(mean, sigma)) {}
 
     GaussianDeviate::GaussianDeviate(const BaseDeviate& rhs, double mean, double sigma) :
@@ -346,7 +357,7 @@ namespace galsim {
         boost::random::binomial_distribution<> _bd;
     };
 
-    BinomialDeviate::BinomialDeviate(long lseed, int N, double p) :
+    BinomialDeviate::BinomialDeviate(long long lseed, int N, double p) :
         BaseDeviate(lseed), _devimpl(new BinomialDeviateImpl(N,p)) {}
 
     BinomialDeviate::BinomialDeviate(const BaseDeviate& rhs, int N, double p) :
@@ -453,7 +464,7 @@ namespace galsim {
         shared_ptr<boost::random::normal_distribution<> > _gd;
     };
 
-    PoissonDeviate::PoissonDeviate(long lseed, double mean) :
+    PoissonDeviate::PoissonDeviate(long long lseed, double mean) :
         BaseDeviate(lseed), _devimpl(new PoissonDeviateImpl(mean)) {}
 
     PoissonDeviate::PoissonDeviate(const BaseDeviate& rhs, double mean) :
@@ -499,7 +510,7 @@ namespace galsim {
         boost::random::weibull_distribution<> _weibull;
     };
 
-    WeibullDeviate::WeibullDeviate(long lseed, double a, double b) :
+    WeibullDeviate::WeibullDeviate(long long lseed, double a, double b) :
         BaseDeviate(lseed), _devimpl(new WeibullDeviateImpl(a,b)) {}
 
     WeibullDeviate::WeibullDeviate(const BaseDeviate& rhs, double a, double b) :
@@ -546,7 +557,7 @@ namespace galsim {
         boost::random::gamma_distribution<> _gamma;
     };
 
-    GammaDeviate::GammaDeviate(long lseed, double k, double theta) :
+    GammaDeviate::GammaDeviate(long long lseed, double k, double theta) :
         BaseDeviate(lseed), _devimpl(new GammaDeviateImpl(k,theta)) {}
 
     GammaDeviate::GammaDeviate(const BaseDeviate& rhs, double k, double theta) :
@@ -593,7 +604,7 @@ namespace galsim {
         boost::random::chi_squared_distribution<> _chi_squared;
     };
 
-    Chi2Deviate::Chi2Deviate(long lseed, double n) :
+    Chi2Deviate::Chi2Deviate(long long lseed, double n) :
         BaseDeviate(lseed), _devimpl(new Chi2DeviateImpl(n)) {}
 
     Chi2Deviate::Chi2Deviate(const BaseDeviate& rhs, double n) :

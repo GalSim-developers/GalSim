@@ -70,6 +70,8 @@ headers = all_files_from('include')
 inst = all_files_from('src', '.inst')
 shared_data = all_files_from('share')
 
+if os.name != 'nt': cpp_sources.remove(os.path.join('src','windows.cpp'))
+
 copt =  {
     'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
     'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-openmp'],
@@ -681,6 +683,10 @@ def parallel_compile(self, sources, output_dir=None, macros=None,
 
 
 def fix_compiler(compiler, njobs):
+    if os.name == 'nt':
+        # Skip all this on windows.
+        return [],[]
+
     # Remove any -Wstrict-prototypes in the compiler flags (since invalid for C++)
     try:
         compiler.compiler_so.remove("-Wstrict-prototypes")
@@ -1339,18 +1345,22 @@ dist = setup(name="GalSim",
     zip_safe=False,
     )
 
-# Check that the path includes the directory where the scripts are installed.
-real_env_path = [os.path.realpath(d) for d in os.environ['PATH'].split(':')]
-if hasattr(dist,'script_install_dir'):
-    print('scripts installed into ',dist.script_install_dir)
-    if (dist.script_install_dir not in os.environ['PATH'].split(':') and
-        os.path.realpath(dist.script_install_dir) not in real_env_path):
+try:
+    # Check that the path includes the directory where the scripts are installed.
+    real_env_path = [os.path.realpath(d) for d in os.environ['PATH'].split(':')]
+    if hasattr(dist,'script_install_dir'):
+        print('scripts installed into ',dist.script_install_dir)
+        if (dist.script_install_dir not in os.environ['PATH'].split(':') and
+            os.path.realpath(dist.script_install_dir) not in real_env_path):
 
-        print('\nWARNING: The GalSim executables were installed in a directory not in your PATH')
-        print('         If you want to use the executables, you should add the directory')
-        print('\n             ',dist.script_install_dir,'\n')
-        print('         to your path.  The current path is')
-        print('\n             ',os.environ['PATH'],'\n')
-        print('         Alternatively, you can specify a different prefix with --prefix=PREFIX,')
-        print('         in which case the scripts will be installed in PREFIX/bin.')
-        print('         If you are installing via pip use --install-option="--prefix=PREFIX"')
+            print('\nWARNING: The GalSim executables were installed in a directory not in your PATH')
+            print('         If you want to use the executables, you should add the directory')
+            print('\n             ',dist.script_install_dir,'\n')
+            print('         to your path.  The current path is')
+            print('\n             ',os.environ['PATH'],'\n')
+            print('         Alternatively, you can specify a different prefix with --prefix=PREFIX,')
+            print('         in which case the scripts will be installed in PREFIX/bin.')
+            print('         If you are installing via pip use --install-option="--prefix=PREFIX"')
+except Exception:
+    # The path stuff doesn't work on windows, so skip that check.
+    pass

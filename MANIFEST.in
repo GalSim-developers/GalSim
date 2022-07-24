@@ -1,4 +1,4 @@
-recursive-include galsim *.py
+recursive-include galsim *.py *.pyd
 include *.rst
 include LICENSE
 recursive-include include *.h *.hpp

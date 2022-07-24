@@ -36,6 +36,10 @@
 #ifndef GalSim_Std_H
 #define GalSim_Std_H
 
+#ifdef _WIN32
+#define _USE_MATH_DEFINES  // To get M_PI
+#endif
+
 #include <cmath>
 #include <iostream>
 #include <sstream>

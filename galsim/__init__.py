@@ -91,15 +91,16 @@ version = __version__
 galsim_dir = os.path.dirname(__file__)
 include_dir = os.path.join(galsim_dir,'include')
 
-lib_file = os.path.join(galsim_dir,'_galsim.so')
+ext = 'pyd' if os.name == 'nt' else 'so'
+lib_file = os.path.join(galsim_dir,'_galsim.' + ext)
 # Some installation (e.g. Travis with python 3.x) name this e.g. _galsim.cpython-34m.so,
 # so if the normal name doesn't exist, look for something else.
 if not os.path.exists(lib_file): # pragma: no cover
-    alt_files = glob.glob(os.path.join(os.path.dirname(__file__),'_galsim*.so'))
+    alt_files = glob.glob(os.path.join(os.path.dirname(__file__),'_galsim*.'+ext))
     if len(alt_files) == 0:
-        raise OSError("No file '_galsim.so' found in %s"%galsim_dir)
+        raise OSError("No file '_galsim.%s' found in %s"%(ext,galsim_dir))
     if len(alt_files) > 1:
-        raise OSError("Multiple files '_galsim*.so' found in %s: %s"%(galsim_dir,alt_files))
+        raise OSError("Multiple files '_galsim*.%s' found in %s: %s"%(ext,galsim_dir,alt_files))
     lib_file = alt_files[0]
 
 # Import things from other files we want to be in the galsim namespace
