@@ -21,7 +21,7 @@ import logging
 from .input import InputLoader, GetInputObj, RegisterInputType
 from .gsobject import RegisterObjectType
 from .util import GetRNG
-from .value import GetAllParams, SetDefaultIndex
+from .value import GetAllParams, SetDefaultIndex, RegisterValueType
 from ..errors import GalSimConfigError
 from ..gsparams import GSParams
 from ..galaxy_sample import GalaxySample, COSMOSCatalog
@@ -144,3 +144,20 @@ def _FinishBuildSampleGalaxy(config, base, ignore, gsparams, logger, sample_cat,
 # Register this as a valid gsobject type
 RegisterObjectType('COSMOSGalaxy', _BuildCOSMOSGalaxy, input_type='cosmos_catalog')
 RegisterObjectType('SampleGalaxy', _BuildSampleGalaxy, input_type='galaxy_sample')
+
+# Finally, also provide accessor to values in the parametric catalog
+
+def _GetCOSMOSValue(config, base, value_type):
+    cosmos_cat = GetInputObj('cosmos_catalog', config, base, 'COSMOSValue')
+    req = { 'key': str, 'index': int }
+    kwargs, safe = GetAllParams(config, base, req=req)
+    return cosmos_cat.getValue(**kwargs)
+
+def _GetSampleValue(config, base, value_type):
+    sample_cat = GetInputObj('galaxy_sample', config, base, 'SampleValue')
+    req = { 'key': str, 'index': int }
+    kwargs, safe = GetAllParams(config, base, req=req)
+    return sample_cat.getValue(**kwargs)
+
+RegisterValueType('COSMOSValue', _GetCOSMOSValue, [float], input_type='cosmos_catalog')
+RegisterValueType('SampleValue', _GetSampleValue, [float], input_type='galaxy_sample')
