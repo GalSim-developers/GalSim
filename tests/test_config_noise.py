@@ -559,13 +559,14 @@ def test_cosmosnoise():
         err_msg='Config COSMOS noise does not reproduce results given kwargs')
 
     # Use the more generic Correlated noise type
-    config2['image']['noise'] = {
-        'type' : 'Correlated',
+    config3 = galsim.config.CopyConfig(config2)
+    config3 = galsim.config.CleanConfig(config3)
+    config3['image']['noise'] = {
+        'type': 'Correlated',
         'file_name' : os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
         'pixel_scale' : pix_scale
     }
-    config2 = galsim.config.CleanConfig(config2)
-    image3 = galsim.config.BuildStamp(config2,logger=logger)[0]
+    image3 = galsim.config.BuildStamp(config3,logger=logger)[0]
     np.testing.assert_allclose(image3.array, image2.array,
         err_msg='Config Correlated noise not the same as COSMOS')
 
@@ -629,6 +630,9 @@ def test_cosmosnoise():
     var3 = galsim.config.CalculateNoiseVariance(config)
     print('From config.CalculateNoiseVar = ',var3)
     np.testing.assert_almost_equal(var3, var1, err_msg="COSMOSNoise calculated the wrong variance")
+    del config3['_current_cn_tag']
+    var3b = galsim.config.CalculateNoiseVariance(config3)
+    np.testing.assert_almost_equal(var3b, var1, err_msg="CorrelatedNoise calculated the wrong variance")
 
     # AddNoiseVariance should add the variance to an image
     image5 = galsim.Image(32,32)
