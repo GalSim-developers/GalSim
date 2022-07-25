@@ -143,7 +143,7 @@ jobs:
                 echo ${{ matrix.os }}
                 mkdir fftw_lib
                 cd fftw_lib
-                curl ftp://ftp.fftw.org/pub/fftw/fftw-3.3.5-dll64.zip
+                curl ftp://ftp.fftw.org/pub/fftw/fftw-3.3.5-dll64.zip -O fftw-3.3.5-dll64.zip
                 dir
                 tar -xf fftw-3.3.5-dll64.zip
                 dir
