@@ -141,16 +141,16 @@ jobs:
               if: matrix.os == 'windows-latest'
               run: |
                 echo ${{ matrix.os }}
-                curl ftp://ftp.fftw.org/pub/fftw/fftw-3.3.5-dll64.zip -O fftw-3.3.5-dll64.zip
-                dir
-                Expand-Archive -Force fftw-3.3.5-dll64.zip
+                mkdir fftw_lib
+                cd fftw_lib
+                curl ftp://ftp.fftw.org/pub/fftw/fftw-3.3.5-dll64.zip
                 dir
                 tar -xf fftw-3.3.5-dll64.zip
                 dir
-                lib /def:libfftw3-3.def
-                lib /def:libfftw3f-3.def
-                lib /def:libfftw3l-3.def
-                dir
+                cat README
+                cat README.rst
+                cat README-WINDOWS
+                cd ..
 
             - name: Download des_data
               if: matrix.os != 'windows-latest'
