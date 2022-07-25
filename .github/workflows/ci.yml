@@ -147,8 +147,6 @@ jobs:
                 dir
                 tar -xf fftw-3.3.5-dll64.zip
                 dir
-                cat README
-                cat README.rst
                 cat README-WINDOWS
                 cd ..
 
