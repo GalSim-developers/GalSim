@@ -48,6 +48,7 @@ except ImportError:
 
 # Turn this on for more verbose debugging output about compile attempts.
 debug = False
+debug = True
 
 print('Python version = ',sys.version)
 py_version = "%d.%d"%sys.version_info[0:2]  # we check things based on the major.minor version.
