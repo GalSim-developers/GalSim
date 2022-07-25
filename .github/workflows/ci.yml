@@ -141,7 +141,7 @@ jobs:
               if: matrix.os == 'windows-latest'
               run: |
                 echo ${{ matrix.os }}
-                WGET ftp://ftp.fftw.org/pub/fftw/fftw-3.3.5-dll64.zip
+                curl ftp://ftp.fftw.org/pub/fftw/fftw-3.3.5-dll64.zip -O fftw-3.3.5-dll64.zip
                 dir
                 Expand-Archive -Force fftw-3.3.5-dll64.zip
                 dir
