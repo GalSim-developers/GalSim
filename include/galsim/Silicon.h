@@ -64,10 +64,7 @@ namespace galsim
 
 	bool insidePixelGPU(int ix, int iy, double x, double y, double zconv,
 			    BoundsIGPU& targetBounds, bool* off_edge,
-			    BoundsFGPU* pixelInnerBounds,
-			    BoundsFGPU* pixelOuterBounds, PointDGPU* emptypoly,
-			    int emptypolySize, PointSGPU* verticalBoundaryPoints,
-                            PointSGPU* horizontalBoundaryPoints) const;
+                            int emptypolySize) const;
 
 	void scaleBoundsToPoly(int i, int j, int nx, int ny,
                                const Polygon& emptypoly, Polygon& result,

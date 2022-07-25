@@ -844,6 +844,7 @@ namespace galsim {
     template <typename T>
     void Silicon::addDelta(ImageView<T> target)
     {
+        // FIXME: don't think this will work properly for GPU now...
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
 
 #pragma omp target update from(_deltaGPU[0:imageDataSize])
@@ -1120,7 +1121,6 @@ namespace galsim {
 	    _emptypolyGPU[i].x = _emptypoly[i].x;
 	    _emptypolyGPU[i].y = _emptypoly[i].y;
 	}
-        std::cout << "emptypolySize at startup=" << emptypolySize << std::endl;
         
         int nxny = nx * ny;
         _changedGPU = new bool[nxny];
@@ -1148,10 +1148,11 @@ namespace galsim {
     
     bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
 				 BoundsIGPU& targetBounds, bool* off_edge,
-				 BoundsFGPU* pixelInnerBounds,
-				 BoundsFGPU* pixelOuterBounds, PointDGPU* emptypoly,
-				 int emptypolySize, PointSGPU* verticalBoundaryPoints,
-                                 PointSGPU* horizontalBoundaryPoints) const
+                                 int emptypolySize) const
+    //				 BoundsFGPU* pixelInnerBounds,
+    //				 BoundsFGPU* pixelOuterBounds, PointDGPU* emptypoly,
+    //				 int emptypolySize, PointSGPU* verticalBoundaryPoints,
+    //                                 PointSGPU* horizontalBoundaryPoints) const
     {
         // This scales the pixel distortion based on the zconv, which is the depth
         // at which the electron is created, and then tests to see if the delivered
@@ -1178,11 +1179,11 @@ namespace galsim {
         // First do some easy checks if the point isn't terribly close to the boundary.
 
         bool inside;
-	if ((x >= pixelInnerBounds[index].xmin) && (x <= pixelInnerBounds[index].xmax) &&
-	    (y >= pixelInnerBounds[index].ymin) && (y <= pixelInnerBounds[index].ymax)) {
+	if ((x >= _pixelInnerBoundsGPU[index].xmin) && (x <= _pixelInnerBoundsGPU[index].xmax) &&
+	    (y >= _pixelInnerBoundsGPU[index].ymin) && (y <= _pixelInnerBoundsGPU[index].ymax)) {
             inside = true;
-	} else if ((x < pixelOuterBounds[index].xmin) || (x > pixelOuterBounds[index].xmax) ||
-		   (y < pixelOuterBounds[index].ymin) || (y > pixelOuterBounds[index].ymax)) {
+	} else if ((x < _pixelOuterBoundsGPU[index].xmin) || (x > _pixelOuterBoundsGPU[index].xmax) ||
+		   (y < _pixelOuterBoundsGPU[index].ymin) || (y > _pixelOuterBoundsGPU[index].ymax)) {
             inside = false;
         } else {
             // OK, it must be near the boundary, so now be careful.
@@ -1202,8 +1203,8 @@ namespace galsim {
                 double xp = 0.0, yp = 0.0;
                 double epx = 0.0, epy = 0.0;
                 if (n < _nv) {
-                    epx = emptypoly[n].x;
-                    epy = emptypoly[n].y;
+                    epx = _emptypolyGPU[n].x;
+                    epy = _emptypolyGPU[n].y;
                 }
                 xp = epx;
                 yp = epy;
@@ -1212,36 +1213,36 @@ namespace galsim {
                 // compute this point
                 if (n < cornerIndexBottomLeft()) {
                     idx = verticalPixelIndex(ix - i1, iy - j1, ny) + n + cornerIndexBottomLeft();
-                    xp += (verticalBoundaryPoints[idx].x - epx) * zfactor;
-                    yp += (verticalBoundaryPoints[idx].y - epy) * zfactor;
+                    xp += (_verticalBoundaryPointsGPU[idx].x - epx) * zfactor;
+                    yp += (_verticalBoundaryPointsGPU[idx].y - epy) * zfactor;
                 }
                 else if (n <= cornerIndexBottomRight()) {
                     // bottom row including corners
                     idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
-                    double px = horizontalBoundaryPoints[idx].x;
+                    double px = _horizontalBoundaryPointsGPU[idx].x;
                     if (n == cornerIndexBottomRight()) px += 1.0;
                     xp += (px - epx) * zfactor;
-                    yp += (horizontalBoundaryPoints[idx].y - epy) * zfactor;
+                    yp += (_horizontalBoundaryPointsGPU[idx].y - epy) * zfactor;
                 }
                 // RHS
                 else if (n < cornerIndexTopRight()) {
                     idx = verticalPixelIndex(ix - i1 + 1, iy - j1, ny) + (cornerIndexTopRight() - n - 1);
-                    xp += ((verticalBoundaryPoints[idx].x + 1.0) - epx) * zfactor;
-                    yp += (verticalBoundaryPoints[idx].y - epy) * zfactor;
+                    xp += ((_verticalBoundaryPointsGPU[idx].x + 1.0) - epx) * zfactor;
+                    yp += (_verticalBoundaryPointsGPU[idx].y - epy) * zfactor;
                 }
                 // top row including corners
                 else if (n <= cornerIndexTopLeft()) {
                     idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
-                    double px = horizontalBoundaryPoints[idx].x;
+                    double px = _horizontalBoundaryPointsGPU[idx].x;
                     if (n == cornerIndexTopRight()) px += 1.0;
                     xp += (px - epx) * zfactor;
-                    yp += ((horizontalBoundaryPoints[idx].y + 1.0) - epy) * zfactor;
+                    yp += ((_horizontalBoundaryPointsGPU[idx].y + 1.0) - epy) * zfactor;
                 }
                 else if (n < _nv) {
                     // LHS upper half
                     idx = verticalPixelIndex(ix - i1, iy - j1, ny) + (n - cornerIndexTopLeft() - 1);
-                    xp += (verticalBoundaryPoints[idx].x - epx) * zfactor;
-                    yp += (verticalBoundaryPoints[idx].y - epy) * zfactor;
+                    xp += (_verticalBoundaryPointsGPU[idx].x - epx) * zfactor;
+                    yp += (_verticalBoundaryPointsGPU[idx].y - epy) * zfactor;
                 }
                 if (n == 0) {
                     // save first point for later
@@ -1281,19 +1282,16 @@ namespace galsim {
         // direction of falling off the image, (possibly) report that in off_edge.
         if (!inside && off_edge) {
             *off_edge = false;
-            if ((ix == i1) && (x < pixelInnerBounds[index].xmin)) *off_edge = true;
-            if ((ix == i2) && (x > pixelInnerBounds[index].xmax)) *off_edge = true;
-            if ((iy == j1) && (y < pixelInnerBounds[index].ymin)) *off_edge = true;
-            if ((iy == j2) && (y > pixelInnerBounds[index].ymax)) *off_edge = true;
+            if ((ix == i1) && (x < _pixelInnerBoundsGPU[index].xmin)) *off_edge = true;
+            if ((ix == i2) && (x > _pixelInnerBoundsGPU[index].xmax)) *off_edge = true;
+            if ((iy == j1) && (y < _pixelInnerBoundsGPU[index].ymin)) *off_edge = true;
+            if ((iy == j2) && (y > _pixelInnerBoundsGPU[index].ymax)) *off_edge = true;
         }
         return inside;
     }
 
     bool searchNeighborsGPU(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
-			    BoundsIGPU& targetBounds, int& step, BoundsFGPU* pixelInnerBounds,
-			    BoundsFGPU* pixelOuterBounds, PointDGPU* emptypoly,
-			    int emptypolySize, PointSGPU* verticalBoundaryPoints,
-                            PointSGPU* horizontalBoundaryPoints)
+			    BoundsIGPU& targetBounds, int& step, int emptypolysize)
     {
         const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
         const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
@@ -1312,10 +1310,8 @@ namespace galsim {
             int iy_off = iy + yoff[n];
             double x_off = x - xoff[n];
             double y_off = y - yoff[n];
-	    if (silicon.insidePixelGPU(ix_off, iy_off, x_off, y_off, zconv, targetBounds, nullptr,
-                                       pixelInnerBounds, pixelOuterBounds, emptypoly,
-                                       emptypolySize, verticalBoundaryPoints,
-                                       horizontalBoundaryPoints)) {
+	    if (silicon.insidePixelGPU(ix_off, iy_off, x_off, y_off, zconv,
+                                       targetBounds, nullptr, emptypolysize)) {
                 ix = ix_off;
                 iy = iy_off;
                 return true;
@@ -1378,8 +1374,6 @@ namespace galsim {
             photonsDYDZ = photonsY;
         }
         
-        // FIXME: is diffStepRandom size and indexing correct in here??
-        
 	// random arrays
 	double* diffStepRandomArray = diffStepRandom.data();
 	//double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
@@ -1400,16 +1394,9 @@ namespace galsim {
 	int deltaStep = _delta.getStep();
 	int deltaStride = _delta.getStride();
 
-        //std::cout << targetBounds.xmin << " " << targetBounds.xmax << " " << targetBounds.ymin << " " << targetBounds.ymax << std::endl;
-        //std::cout << deltaXMin << " " << deltaXMax << " " << deltaYMin << " " << deltaYMax << " " << deltaStep << " " << deltaStride << std::endl;
-
-	// xoff and yoff displacement arrays should be OK as they are
-
 	int emptypolySize = _emptypoly.size();
 
-        //std::cout << photonsHasAllocatedAngles << " " << photonsHasAllocatedWavelengths << " " << _diffStep << " " << emptypolySize << std::endl;
-        
-        #pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1:i2-i1], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
+#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1*2:(i2-i1)*2], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
 	    double x0 = photonsX[i];
 	    double y0 = photonsY[i];
@@ -1473,21 +1460,13 @@ namespace galsim {
 	    bool foundPixel;
 
 	    foundPixel = insidePixelGPU(ix, iy, x, y, zconv, targetBounds, &off_edge,
-					_pixelInnerBoundsGPU, _pixelOuterBoundsGPU,
-					_emptypolyGPU, emptypolySize,
-					_verticalBoundaryPointsGPU,
-                                        _horizontalBoundaryPointsGPU);
+                                        emptypolySize);
 
 	    if (!foundPixel && off_edge) continue;
 
 	    int step;
 	    if (!foundPixel) {
-		foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv, targetBounds, step,
-						_pixelInnerBoundsGPU, _pixelOuterBoundsGPU,
-						_emptypolyGPU, emptypolySize,
-                                                _verticalBoundaryPointsGPU,
-                                                _horizontalBoundaryPointsGPU);
-
+		foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv, targetBounds, step, emptypolySize);
 		if (!foundPixel) continue; // ignore ones that have rounding errors for now
             }
 
@@ -1694,7 +1673,6 @@ namespace galsim {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
                     double charge = _targetGPU[(j * stride) + (i * step)];
-                    //double charge = 0.1;
 
                     if (charge != 0.0) {
                         change = true;
