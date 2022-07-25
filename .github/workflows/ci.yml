@@ -148,6 +148,7 @@ jobs:
                 tar -xf fftw-3.3.5-dll64.zip
                 dir
                 cat README-WINDOWS
+                set FFTW_DIR=%cd%
                 cd ..
 
             - name: Download des_data
