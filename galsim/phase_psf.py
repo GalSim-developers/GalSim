@@ -620,6 +620,23 @@ class Aperture:
             d.pop('_illuminated', None)
         return d
 
+    def samplePupil(self, photons, rng):
+        """Set the pupil_u and pupil_v values in the PhotonArray by sampling the current aperture.
+        """
+        from .random import UniformDeviate
+
+        n_photons = len(photons)
+        u = self.u_illuminated
+        v = self.v_illuminated
+        ud = UniformDeviate(rng)
+        pick = np.empty((n_photons,), dtype=float)
+        ud.generate(pick)
+        pick *= len(u)
+        pick = pick.astype(int)
+        photons.pupil_u = u[pick]
+        photons.pupil_v = v[pick]
+
+
     # Some quick notes for Josh:
     # - Relation between real-space grid with size theta and pitch dtheta (dimensions of angle)
     #   and corresponding (fast) Fourier grid with size 2*maxk and pitch stepk (dimensions of
@@ -1560,14 +1577,11 @@ class PhaseScreenPSF(GSObject):
         ud.generate(t)
         t *= self.exptime
         t += self.t0
-        u = self.aper.u_illuminated
-        v = self.aper.v_illuminated
-        pick = np.empty((n_photons,), dtype=float)
-        ud.generate(pick)
-        pick *= len(u)
-        pick = pick.astype(int)
-        u = photons.pupil_u = u[pick]
-        v = photons.pupil_v = v[pick]
+
+        if not photons.hasAllocatedPupil():
+            self.aper.samplePupil(photons, rng)
+        u = photons.pupil_u
+        v = photons.pupil_v
 
         # This is where the screens need to be instantiated for drawing with geometric photon
         # shooting.
