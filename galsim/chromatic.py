@@ -587,6 +587,9 @@ class ChromaticObject:
             raise GalSimError("Using ChromaticObject as a PhotonOp requires wavelengths be set")
         p1 = PhotonArray(len(photon_array))
         p1._wave = photon_array._wave
+        if photon_array.hasAllocatedPupil():
+            p1._pupil_u = photon_array._pupil_u
+            p1._pupil_v = photon_array._pupil_v
         obj = local_wcs.toImage(self) if local_wcs is not None else self
         rng = BaseDeviate(rng)
         obj._shoot(p1, rng)

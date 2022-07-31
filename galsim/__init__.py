@@ -127,7 +127,7 @@ from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageCF, ImageCD, Imag
 
 # PhotonArray
 from .photon_array import PhotonArray, PhotonOp, WavelengthSampler, FRatioAngles, PhotonDCR
-from .photon_array import Refraction, FocusDepth
+from .photon_array import Refraction, FocusDepth, PupilSampler
 
 # Noise
 from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate
