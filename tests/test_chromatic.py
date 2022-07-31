@@ -2261,8 +2261,11 @@ def test_phot():
 
         # Finally, the chromatic drawImage function should handle the wavelength sampling for us.
         # First do this with just the galaxy as the driver.
+        # (Also add a gratuitous pupil_sampler to test the case where pupil_u,v are set.)
+        pupil_sampler = galsim.PupilSampler(diam=diam, lam=bandpass.effective_wavelength)
         t0 = time.time()
-        im4 = gal.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng, photon_ops=[psf])
+        im4 = gal.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng,
+                            photon_ops=[pupil_sampler, psf])
         t1 = time.time()
         print('auto wave time = ',t1-t0)
         print('max diff/flux = ',np.max(np.abs(im1.array-im4.array)/flux))

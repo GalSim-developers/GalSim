@@ -2432,6 +2432,11 @@ class GSObject:
         """
         from .photon_array import PhotonArray
         p1 = PhotonArray(len(photon_array))
+        if photon_array.hasAllocatedWavelengths():
+            p1._wave = photon_array._wave
+        if photon_array.hasAllocatedPupil():
+            p1._pupil_u = photon_array._pupil_u
+            p1._pupil_v = photon_array._pupil_v
         obj = local_wcs.toImage(self) if local_wcs is not None else self
         obj._shoot(p1, rng)
         photon_array.convolve(p1, rng)

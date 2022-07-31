@@ -1571,17 +1571,17 @@ class PhaseScreenPSF(GSObject):
             self._prepareDraw()
             return self._ii._shoot(photons, rng)
 
+        if not photons.hasAllocatedPupil():
+            self.aper.samplePupil(photons, rng)
+        u = photons.pupil_u
+        v = photons.pupil_v
+
         n_photons = len(photons)
         t = np.empty((n_photons,), dtype=float)
         ud = UniformDeviate(rng)
         ud.generate(t)
         t *= self.exptime
         t += self.t0
-
-        if not photons.hasAllocatedPupil():
-            self.aper.samplePupil(photons, rng)
-        u = photons.pupil_u
-        v = photons.pupil_v
 
         # This is where the screens need to be instantiated for drawing with geometric photon
         # shooting.

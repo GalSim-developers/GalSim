@@ -874,9 +874,21 @@ def test_phase_gradient_shoot():
 
         # Check doing this with photon_ops
         im_shoot2 = galsim.DeltaFunction().drawImage(nx=256, ny=256, scale=0.05, method='phot',
-                                                     n_photons=100000, rng=rng1,
+                                                     n_photons=100000, rng=rng1.duplicate(),
                                                      photon_ops=[psf])
         np.testing.assert_allclose(im_shoot2.array, im_shoot.array)
+
+        # Repeat with the pupil_sampler before the psf.
+        pupil_sampler = galsim.PupilSampler(diam=diam, lam=lam,
+                                            pad_factor=pad_factor,
+                                            oversampling=oversampling,
+                                            screen_list=atm)
+        im_shoot3 = galsim.DeltaFunction().drawImage(nx=256, ny=256, scale=0.05, method='phot',
+                                                     n_photons=100000, rng=rng1.duplicate(),
+                                                     photon_ops=[pupil_sampler, psf])
+        np.testing.assert_allclose(im_shoot3.array, im_shoot.array)
+
+        do_pickle(pupil_sampler)
 
     # I cheated.  Here's code to evaluate how small I could potentially set the tolerances above.
     # I think they're all fine, but this is admittedly a tad bit backwards.

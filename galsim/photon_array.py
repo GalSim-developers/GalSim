@@ -405,16 +405,16 @@ class PhotonArray:
                 self.dydz = rhs.dydz
 
         if rhs.hasAllocatedWavelengths():
-            if self.hasAllocatedWavelengths():
-                if self._wave is not rhs._wave:
-                    raise GalSimIncompatibleValuesError(
-                        "PhotonArray.convolve with doubly assigned wavelengths"
-                    )
+            if self.hasAllocatedWavelengths() and self._wave is not rhs._wave:
+                raise GalSimIncompatibleValuesError(
+                    "PhotonArray.convolve with doubly assigned wavelengths"
+                )
             else:
                 self.wavelength = rhs.wavelength
 
         if rhs.hasAllocatedPupil():
-            if self.hasAllocatedPupil():
+            if self.hasAllocatedPupil() and (
+                    self._pupil_u is not rhs._pupil_u or self._pupil_v is not rhs._pupil_v):
                 raise GalSimIncompatibleValuesError(
                     "PhotonArray.convolve with doubly assigned pupil coordinates"
                 )
@@ -1020,3 +1020,85 @@ class FocusDepth(PhotonOp):
 
     def __repr__(self):
         return "galsim.FocusDepth(depth=%r)"%self.depth
+
+class PupilSampler(PhotonOp):
+    """A photon operator that samples the pupil-plane positions given a pupil-plane image.
+
+    Parameters:
+        diam:               Aperture diameter in meters.
+        lam:                Wavelength in nanometers.  [default: None]
+        circular_pupil:     Adopt a circular pupil?  [default: True]
+        obscuration:        Linear dimension of central obscuration as fraction of aperture
+                            linear dimension. [0., 1.).  [default: 0.0]
+        nstruts:            Number of radial support struts to add to the central obscuration.
+                            [default: 0]
+        strut_thick:        Thickness of support struts as a fraction of aperture diameter.
+                            [default: 0.05]
+        strut_angle:        `Angle` made between the vertical and the strut starting closest to it,
+                            defined to be positive in the counter-clockwise direction; must be an
+                            `Angle` instance. [default: 0. * galsim.degrees]
+        oversampling:       Optional oversampling factor *in the image plane* for the PSF
+                            eventually constructed using this `Aperture`.  Setting
+                            ``oversampling < 1`` will produce aliasing in the PSF (not good).
+                            [default: 1.0]
+        pad_factor:         Additional multiple by which to extend the PSF image to avoid
+                            folding.  [default: 1.0]
+        pupil_plane_im:     The GalSim.Image, NumPy array, or name of file containing the pupil
+                            plane image, to be used instead of generating one based on the
+                            obscuration and strut parameters.  [default: None]
+        pupil_angle:        If ``pupil_plane_im`` is not None, rotation angle for the pupil plane
+                            (positive in the counter-clockwise direction).  Must be an `Angle`
+                            instance. [default: 0. * galsim.degrees]
+        pupil_plane_scale:  Sampling interval in meters to use for the pupil plane array.  In
+                            most cases, it's a good idea to leave this as None, in which case
+                            GalSim will attempt to find a good value automatically.  The
+                            exception is when specifying the pupil arrangement via an image, in
+                            which case this keyword can be used to indicate the sampling of that
+                            image.  See also ``pad_factor`` for adjusting the pupil sampling scale.
+                            [default: None]
+        pupil_plane_size:   Size in meters to use for the pupil plane array.  In most cases, it's
+                            a good idea to leave this as None, in which case GalSim will attempt
+                            to find a good value automatically.  See also ``oversampling`` for
+                            adjusting the pupil size.  [default: None]
+    """
+    _req_params = {
+        "diam": float,
+    }
+    _opt_params = {
+        "lam": float,
+        "circular_pupil": bool,
+        "obscuration": float,
+        "nstruts": int,
+        "strut_thick": float,
+        "strut_angle": Angle,
+        "oversampling": float,
+        "pad_factor": float,
+        "pupil_plane_im": str,
+        "pupil_angle": Angle,
+        "pupil_plane_scale": float,
+        "pupil_plane_size": float,
+    }
+    def __init__(self, diam, **kwargs):
+        from .phase_psf import Aperture
+        self.aper = Aperture(diam, **kwargs)
+        # Save these for the repr
+        self.diam = diam
+        self.kwargs = kwargs
+
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
+        """Sample the pupil plane u,v positions for each photon.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
+        """
+        self.aper.samplePupil(photon_array, rng)
+
+    def __repr__(self):
+        s =  "galsim.PupilSampler(diam=%s"%self.diam
+        for k,v in self.kwargs.items():
+            s += ', %s=%r'%(k,v)
+        s += ')'
+        return s
