@@ -1029,29 +1029,9 @@ namespace galsim {
 
         int hbpSize = _horizontalBoundaryPoints.size();
         int vbpSize = _verticalBoundaryPoints.size();
-	_horizontalBoundaryPointsGPU = new PointSGPU[hbpSize];
-	_verticalBoundaryPointsGPU = new PointSGPU[vbpSize];
-	for (int i = 0; i < hbpSize; i++) {
-	    _horizontalBoundaryPointsGPU[i].x = _horizontalBoundaryPoints[i].x;
-	    _horizontalBoundaryPointsGPU[i].y = _horizontalBoundaryPoints[i].y;
-	}
-	for (int i = 0; i < vbpSize; i++) {
-	    _verticalBoundaryPointsGPU[i].x = _verticalBoundaryPoints[i].x;
-	    _verticalBoundaryPointsGPU[i].y = _verticalBoundaryPoints[i].y;
-	}
 
         int hdSize = _horizontalDistortions.size();
         int vdSize = _verticalDistortions.size();
-        _horizontalDistortionsGPU = new PointSGPU[hdSize];
-        _verticalDistortionsGPU = new PointSGPU[vdSize];
-        for (int i = 0; i < hdSize; i++) {
-            _horizontalDistortionsGPU[i].x = _horizontalDistortions[i].x;
-            _horizontalDistortionsGPU[i].y = _horizontalDistortions[i].y;
-        }
-        for (int i = 0; i < vdSize; i++) {
-            _verticalDistortionsGPU[i].x = _verticalDistortions[i].x;
-            _verticalDistortionsGPU[i].y = _verticalDistortions[i].y;
-        }
         
 	// first item is for lambda=255.0, last for lambda=1450.0
 	const double abs_length_table[240] = {
@@ -1115,9 +1095,14 @@ namespace galsim {
 
         Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
         Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+
+        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
+        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
+        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
+        Position<float>* verticalDistortionsData = _verticalDistortions.data();
         
         // map all data to the GPU
-        #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
+        #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], _changedGPU[0:nxny])
     }
 
     template <typename T>
@@ -1127,10 +1112,6 @@ namespace galsim {
         T* targetData = target.getData();
 #pragma omp target exit data map(from: targetData[0:imageDataSize])
 
-        delete[] _horizontalBoundaryPointsGPU;
-        delete[] _verticalBoundaryPointsGPU;
-        delete[] _horizontalDistortionsGPU;
-        delete[] _verticalDistortionsGPU;
         delete[] _abs_length_table_GPU;
         delete[] _emptypolyGPU;
         delete[] _changedGPU;
@@ -1140,7 +1121,9 @@ namespace galsim {
 				 BoundsIGPU& targetBounds, bool* off_edge,
                                  int emptypolySize,
                                  Bounds<double>* pixelInnerBoundsData,
-                                 Bounds<double>* pixelOuterBoundsData) const
+                                 Bounds<double>* pixelOuterBoundsData,
+                                 Position<float>* horizontalBoundaryPointsData,
+                                 Position<float>* verticalBoundaryPointsData) const
     {
         // This scales the pixel distortion based on the zconv, which is the depth
         // at which the electron is created, and then tests to see if the delivered
@@ -1201,36 +1184,36 @@ namespace galsim {
                 // compute this point
                 if (n < cornerIndexBottomLeft()) {
                     idx = verticalPixelIndex(ix - i1, iy - j1, ny) + n + cornerIndexBottomLeft();
-                    xp += (_verticalBoundaryPointsGPU[idx].x - epx) * zfactor;
-                    yp += (_verticalBoundaryPointsGPU[idx].y - epy) * zfactor;
+                    xp += (verticalBoundaryPointsData[idx].x - epx) * zfactor;
+                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
                 }
                 else if (n <= cornerIndexBottomRight()) {
                     // bottom row including corners
                     idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
-                    double px = _horizontalBoundaryPointsGPU[idx].x;
+                    double px = horizontalBoundaryPointsData[idx].x;
                     if (n == cornerIndexBottomRight()) px += 1.0;
                     xp += (px - epx) * zfactor;
-                    yp += (_horizontalBoundaryPointsGPU[idx].y - epy) * zfactor;
+                    yp += (horizontalBoundaryPointsData[idx].y - epy) * zfactor;
                 }
                 // RHS
                 else if (n < cornerIndexTopRight()) {
                     idx = verticalPixelIndex(ix - i1 + 1, iy - j1, ny) + (cornerIndexTopRight() - n - 1);
-                    xp += ((_verticalBoundaryPointsGPU[idx].x + 1.0) - epx) * zfactor;
-                    yp += (_verticalBoundaryPointsGPU[idx].y - epy) * zfactor;
+                    xp += ((verticalBoundaryPointsData[idx].x + 1.0) - epx) * zfactor;
+                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
                 }
                 // top row including corners
                 else if (n <= cornerIndexTopLeft()) {
                     idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
-                    double px = _horizontalBoundaryPointsGPU[idx].x;
+                    double px = horizontalBoundaryPointsData[idx].x;
                     if (n == cornerIndexTopRight()) px += 1.0;
                     xp += (px - epx) * zfactor;
-                    yp += ((_horizontalBoundaryPointsGPU[idx].y + 1.0) - epy) * zfactor;
+                    yp += ((horizontalBoundaryPointsData[idx].y + 1.0) - epy) * zfactor;
                 }
                 else if (n < _nv) {
                     // LHS upper half
                     idx = verticalPixelIndex(ix - i1, iy - j1, ny) + (n - cornerIndexTopLeft() - 1);
-                    xp += (_verticalBoundaryPointsGPU[idx].x - epx) * zfactor;
-                    yp += (_verticalBoundaryPointsGPU[idx].y - epy) * zfactor;
+                    xp += (verticalBoundaryPointsData[idx].x - epx) * zfactor;
+                    yp += (verticalBoundaryPointsData[idx].y - epy) * zfactor;
                 }
                 if (n == 0) {
                     // save first point for later
@@ -1279,7 +1262,11 @@ namespace galsim {
     }
 
     bool searchNeighborsGPU(const Silicon& silicon, int& ix, int& iy, double x, double y, double zconv,
-			    BoundsIGPU& targetBounds, int& step, int emptypolysize)
+			    BoundsIGPU& targetBounds, int& step, int emptypolysize,
+                            Bounds<double>* pixelInnerBoundsData,
+                            Bounds<double>* pixelOuterBoundsData,
+                            Position<float>* horizontalBoundaryPointsData,
+                            Position<float>* verticalBoundaryPointsData)
     {
         const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
         const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
@@ -1300,7 +1287,9 @@ namespace galsim {
             double y_off = y - yoff[n];
 	    if (silicon.insidePixelGPU(ix_off, iy_off, x_off, y_off, zconv,
                                        targetBounds, nullptr, emptypolysize,
-                                       nullptr, nullptr)) {
+                                       pixelInnerBoundsData, pixelOuterBoundsData,
+                                       horizontalBoundaryPointsData,
+                                       verticalBoundaryPointsData)) {
                 ix = ix_off;
                 iy = iy_off;
                 return true;
@@ -1388,6 +1377,8 @@ namespace galsim {
         double* deltaData = _delta.getData();
         Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
         Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
+        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
         
 #pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1*2:(i2-i1)*2], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
@@ -1454,14 +1445,20 @@ namespace galsim {
 
 	    foundPixel = insidePixelGPU(ix, iy, x, y, zconv, targetBounds, &off_edge,
                                         emptypolySize, pixelInnerBoundsData,
-                                        pixelOuterBoundsData);
+                                        pixelOuterBoundsData,
+                                        horizontalBoundaryPointsData,
+                                        verticalBoundaryPointsData);
 
 	    if (!foundPixel && off_edge) continue;
 
 	    int step;
 	    if (!foundPixel) {
-                // FIXME: re-enable once bounds etc. sorted out
-		//foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv, targetBounds, step, emptypolySize);
+		foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv,
+                                                targetBounds, step, emptypolySize,
+                                                pixelInnerBoundsData,
+                                                pixelOuterBoundsData,
+                                                horizontalBoundaryPointsData,
+                                                verticalBoundaryPointsData);
 		if (!foundPixel) continue; // ignore ones that have rounding errors for now
             }
 
@@ -1480,7 +1477,9 @@ namespace galsim {
 
     void Silicon::updatePixelBoundsGPU(int nx, int ny, size_t k,
                                        Bounds<double>* pixelInnerBoundsData,
-                                       Bounds<double>* pixelOuterBoundsData)
+                                       Bounds<double>* pixelOuterBoundsData,
+                                       Position<float>* horizontalBoundaryPointsData,
+                                       Position<float>* verticalBoundaryPointsData)
     {
         // update the bounding rectangles for pixel k
         // get pixel co-ordinates
@@ -1497,8 +1496,8 @@ namespace galsim {
         // LHS lower half
         for (n = 0; n < cornerIndexBottomLeft(); n++) {
             idx = verticalPixelIndex(x, y, ny) + n + cornerIndexBottomLeft();
-            double px = _verticalBoundaryPointsGPU[idx].x;
-            double py = _verticalBoundaryPointsGPU[idx].y;
+            double px = verticalBoundaryPointsData[idx].x;
+            double py = verticalBoundaryPointsData[idx].y;
             if (px < obxmin) obxmin = px;
             if (px > obxmax) obxmax = px;
             if (py < obymin) obymin = py;
@@ -1507,8 +1506,8 @@ namespace galsim {
         // bottom row including corners
         for (; n <= cornerIndexBottomRight(); n++) {
             idx = horizontalPixelIndex(x, y, nx) + (n - cornerIndexBottomLeft());
-            double px = _horizontalBoundaryPointsGPU[idx].x;
-            double py = _horizontalBoundaryPointsGPU[idx].y;
+            double px = horizontalBoundaryPointsData[idx].x;
+            double py = horizontalBoundaryPointsData[idx].y;
             if (n == cornerIndexBottomRight()) px += 1.0;
             if (px < obxmin) obxmin = px;
             if (px > obxmax) obxmax = px;
@@ -1518,8 +1517,8 @@ namespace galsim {
         // RHS
         for (; n < cornerIndexTopRight(); n++) {
             idx = verticalPixelIndex(x + 1, y, ny) + (cornerIndexTopRight() - n - 1);
-            double px = _verticalBoundaryPointsGPU[idx].x + 1.0;
-            double py = _verticalBoundaryPointsGPU[idx].y;
+            double px = verticalBoundaryPointsData[idx].x + 1.0;
+            double py = verticalBoundaryPointsData[idx].y;
             if (px < obxmin) obxmin = px;
             if (px > obxmax) obxmax = px;
             if (py < obymin) obymin = py;
@@ -1528,8 +1527,8 @@ namespace galsim {
         // top row including corners
         for (; n <= cornerIndexTopLeft(); n++) {
             idx = horizontalPixelIndex(x, y + 1, nx) + (cornerIndexTopLeft() - n);
-            double px = _horizontalBoundaryPointsGPU[idx].x;
-            double py = _horizontalBoundaryPointsGPU[idx].y + 1.0;
+            double px = horizontalBoundaryPointsData[idx].x;
+            double py = horizontalBoundaryPointsData[idx].y + 1.0;
             if (n == cornerIndexTopRight()) px += 1.0;
             if (px < obxmin) obxmin = px;
             if (px > obxmax) obxmax = px;
@@ -1539,8 +1538,8 @@ namespace galsim {
         // LHS upper half
         for (; n < _nv; n++) {
             idx = verticalPixelIndex(x, y, ny) + (n - cornerIndexTopLeft() - 1);
-            double px = _verticalBoundaryPointsGPU[idx].x;
-            double py = _verticalBoundaryPointsGPU[idx].y;
+            double px = verticalBoundaryPointsData[idx].x;
+            double py = verticalBoundaryPointsData[idx].y;
             if (px < obxmin) obxmin = px;
             if (px > obxmax) obxmax = px;
             if (py < obymin) obymin = py;
@@ -1559,8 +1558,8 @@ namespace galsim {
         // LHS lower half
         for (n = 0; n < cornerIndexBottomLeft(); n++) {
             idx = verticalPixelIndex(x, y, ny) + n + cornerIndexBottomLeft();
-            double px = _verticalBoundaryPointsGPU[idx].x;
-            double py = _verticalBoundaryPointsGPU[idx].y;
+            double px = verticalBoundaryPointsData[idx].x;
+            double py = verticalBoundaryPointsData[idx].y;
             if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
             if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
             if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
@@ -1569,8 +1568,8 @@ namespace galsim {
         // bottom row including corners
         for (; n <= cornerIndexBottomRight(); n++) {
             idx = horizontalPixelIndex(x, y, nx) + (n - cornerIndexBottomLeft());
-            double px = _horizontalBoundaryPointsGPU[idx].x;
-            double py = _horizontalBoundaryPointsGPU[idx].y;
+            double px = horizontalBoundaryPointsData[idx].x;
+            double py = horizontalBoundaryPointsData[idx].y;
             if (n == cornerIndexBottomRight()) px += 1.0;
             if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
             if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
@@ -1580,8 +1579,8 @@ namespace galsim {
         // RHS
         for (; n < cornerIndexTopRight(); n++) {
             idx = verticalPixelIndex(x + 1, y, ny) + (cornerIndexTopRight() - n - 1);
-            double px = _verticalBoundaryPointsGPU[idx].x + 1.0;
-            double py = _verticalBoundaryPointsGPU[idx].y;
+            double px = verticalBoundaryPointsData[idx].x + 1.0;
+            double py = verticalBoundaryPointsData[idx].y;
             if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
             if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
             if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
@@ -1590,8 +1589,8 @@ namespace galsim {
         // top row including corners
         for (; n <= cornerIndexTopLeft(); n++) {
             idx = horizontalPixelIndex(x, y + 1, nx) + (cornerIndexTopLeft() - n);
-            double px = _horizontalBoundaryPointsGPU[idx].x;
-            double py = _horizontalBoundaryPointsGPU[idx].y + 1.0;
+            double px = horizontalBoundaryPointsData[idx].x;
+            double py = horizontalBoundaryPointsData[idx].y + 1.0;
             if (n == cornerIndexTopRight()) px += 1.0;
             if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
             if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
@@ -1601,8 +1600,8 @@ namespace galsim {
         // LHS upper half
         for (; n < _nv; n++) {
             idx = verticalPixelIndex(x, y, ny) + (n - cornerIndexTopLeft() - 1);
-            double px = _verticalBoundaryPointsGPU[idx].x;
-            double py = _verticalBoundaryPointsGPU[idx].y;
+            double px = verticalBoundaryPointsData[idx].x;
+            double py = verticalBoundaryPointsData[idx].y;
             if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
             if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
             if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
@@ -1643,6 +1642,11 @@ namespace galsim {
 
         T* targetData = target.getData();
         
+        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
+        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
+        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
+        Position<float>* verticalDistortionsData = _verticalDistortions.data();
+        
         // Loop through the boundary arrays and update any points affected by nearby pixels
         // Horizontal array first
         // map image data and changed array throughout all GPU loops
@@ -1682,12 +1686,12 @@ namespace galsim {
 
                         // Loop over boundary points and update them
                         for (int n=0; n < horizontalPixelStride(); ++n, ++index, ++dist_index) {
-                            _horizontalBoundaryPointsGPU[index].x =
-                                double(_horizontalBoundaryPointsGPU[index].x) +
-                                _horizontalDistortionsGPU[dist_index].x * charge;
-                            _horizontalBoundaryPointsGPU[index].y =
-                                double(_horizontalBoundaryPointsGPU[index].y) +
-                                _horizontalDistortionsGPU[dist_index].y * charge;
+                            horizontalBoundaryPointsData[index].x =
+                                double(horizontalBoundaryPointsData[index].x) +
+                                horizontalDistortionsData[dist_index].x * charge;
+                            horizontalBoundaryPointsData[index].y =
+                                double(horizontalBoundaryPointsData[index].y) +
+                                horizontalDistortionsData[dist_index].y * charge;
                         }
                     }
                 }
@@ -1732,12 +1736,12 @@ namespace galsim {
 
                         // Loop over boundary points and update them
                         for (int n=0; n < verticalPixelStride(); ++n, --index, --dist_index) {
-                            _verticalBoundaryPointsGPU[index].x =
-                                double(_verticalBoundaryPointsGPU[index].x) +
-                                _verticalDistortionsGPU[dist_index].x * charge;
-                            _verticalBoundaryPointsGPU[index].y =
-                                double(_verticalBoundaryPointsGPU[index].y) +
-                                _verticalDistortionsGPU[dist_index].y * charge;
+                            verticalBoundaryPointsData[index].x =
+                                double(verticalBoundaryPointsData[index].x) +
+                                verticalDistortionsData[dist_index].x * charge;
+                            verticalBoundaryPointsData[index].y =
+                                double(verticalBoundaryPointsData[index].y) +
+                                verticalDistortionsData[dist_index].y * charge;
                         }
                     }
                 }
@@ -1756,7 +1760,9 @@ namespace galsim {
         for (size_t k=0; k<nxny; ++k) {
             if (_changedGPU[k]) {
                 updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
-                                     pixelOuterBoundsData);
+                                     pixelOuterBoundsData,
+                                     horizontalBoundaryPointsData,
+                                     verticalBoundaryPointsData);
                 _changedGPU[k] = false;
             }
         }
