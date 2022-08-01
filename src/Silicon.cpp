@@ -1025,20 +1025,6 @@ namespace galsim {
 
         T* targetData = target.getData();
         
-	_pixelInnerBoundsGPU = new BoundsFGPU[_pixelInnerBounds.size()];
-	_pixelOuterBoundsGPU = new BoundsFGPU[_pixelOuterBounds.size()];
-	for (int i = 0; i < _pixelInnerBounds.size(); i++) {
-	    _pixelInnerBoundsGPU[i].xmin = _pixelInnerBounds[i].getXMin();
-	    _pixelInnerBoundsGPU[i].xmax = _pixelInnerBounds[i].getXMax();
-	    _pixelInnerBoundsGPU[i].ymin = _pixelInnerBounds[i].getYMin();
-	    _pixelInnerBoundsGPU[i].ymax = _pixelInnerBounds[i].getYMax();
-	}
-	for (int i = 0; i < _pixelOuterBounds.size(); i++) {
-	    _pixelOuterBoundsGPU[i].xmin = _pixelOuterBounds[i].getXMin();
-	    _pixelOuterBoundsGPU[i].xmax = _pixelOuterBounds[i].getXMax();
-	    _pixelOuterBoundsGPU[i].ymin = _pixelOuterBounds[i].getYMin();
-	    _pixelOuterBoundsGPU[i].ymax = _pixelOuterBounds[i].getYMax();
-	}
         int pixelInnerBoundsSize = _pixelInnerBounds.size();
 
         int hbpSize = _horizontalBoundaryPoints.size();
@@ -1126,9 +1112,12 @@ namespace galsim {
         int nxny = nx * ny;
         _changedGPU = new bool[nxny];
         for (int i = 0; i < nxny; i++) _changedGPU[i] = false;
+
+        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
         
         // map all data to the GPU
-        #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
+        #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
     }
 
     template <typename T>
@@ -1138,8 +1127,6 @@ namespace galsim {
         T* targetData = target.getData();
 #pragma omp target exit data map(from: targetData[0:imageDataSize])
 
-        delete[] _pixelInnerBoundsGPU;
-        delete[] _pixelOuterBoundsGPU;
         delete[] _horizontalBoundaryPointsGPU;
         delete[] _verticalBoundaryPointsGPU;
         delete[] _horizontalDistortionsGPU;
@@ -1151,11 +1138,9 @@ namespace galsim {
     
     bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
 				 BoundsIGPU& targetBounds, bool* off_edge,
-                                 int emptypolySize) const
-    //				 BoundsFGPU* pixelInnerBounds,
-    //				 BoundsFGPU* pixelOuterBounds, PointDGPU* emptypoly,
-    //				 int emptypolySize, PointSGPU* verticalBoundaryPoints,
-    //                                 PointSGPU* horizontalBoundaryPoints) const
+                                 int emptypolySize,
+                                 Bounds<double>* pixelInnerBoundsData,
+                                 Bounds<double>* pixelOuterBoundsData) const
     {
         // This scales the pixel distortion based on the zconv, which is the depth
         // at which the electron is created, and then tests to see if the delivered
@@ -1182,11 +1167,11 @@ namespace galsim {
         // First do some easy checks if the point isn't terribly close to the boundary.
 
         bool inside;
-	if ((x >= _pixelInnerBoundsGPU[index].xmin) && (x <= _pixelInnerBoundsGPU[index].xmax) &&
-	    (y >= _pixelInnerBoundsGPU[index].ymin) && (y <= _pixelInnerBoundsGPU[index].ymax)) {
+	if ((x >= pixelInnerBoundsData[index].getXMin()) && (x <= pixelInnerBoundsData[index].getXMax()) &&
+	    (y >= pixelInnerBoundsData[index].getYMin()) && (y <= pixelInnerBoundsData[index].getYMax())) {
             inside = true;
-	} else if ((x < _pixelOuterBoundsGPU[index].xmin) || (x > _pixelOuterBoundsGPU[index].xmax) ||
-		   (y < _pixelOuterBoundsGPU[index].ymin) || (y > _pixelOuterBoundsGPU[index].ymax)) {
+	} else if ((x < pixelOuterBoundsData[index].getXMin()) || (x > pixelOuterBoundsData[index].getXMax()) ||
+		   (y < pixelOuterBoundsData[index].getYMin()) || (y > pixelOuterBoundsData[index].getYMax())) {
             inside = false;
         } else {
             // OK, it must be near the boundary, so now be careful.
@@ -1285,10 +1270,10 @@ namespace galsim {
         // direction of falling off the image, (possibly) report that in off_edge.
         if (!inside && off_edge) {
             *off_edge = false;
-            if ((ix == i1) && (x < _pixelInnerBoundsGPU[index].xmin)) *off_edge = true;
-            if ((ix == i2) && (x > _pixelInnerBoundsGPU[index].xmax)) *off_edge = true;
-            if ((iy == j1) && (y < _pixelInnerBoundsGPU[index].ymin)) *off_edge = true;
-            if ((iy == j2) && (y > _pixelInnerBoundsGPU[index].ymax)) *off_edge = true;
+            if ((ix == i1) && (x < pixelInnerBoundsData[index].getXMin())) *off_edge = true;
+            if ((ix == i2) && (x > pixelInnerBoundsData[index].getXMax())) *off_edge = true;
+            if ((iy == j1) && (y < pixelInnerBoundsData[index].getYMin())) *off_edge = true;
+            if ((iy == j2) && (y > pixelInnerBoundsData[index].getYMax())) *off_edge = true;
         }
         return inside;
     }
@@ -1314,7 +1299,8 @@ namespace galsim {
             double x_off = x - xoff[n];
             double y_off = y - yoff[n];
 	    if (silicon.insidePixelGPU(ix_off, iy_off, x_off, y_off, zconv,
-                                       targetBounds, nullptr, emptypolysize)) {
+                                       targetBounds, nullptr, emptypolysize,
+                                       nullptr, nullptr)) {
                 ix = ix_off;
                 iy = iy_off;
                 return true;
@@ -1400,6 +1386,8 @@ namespace galsim {
 	int emptypolySize = _emptypoly.size();
 
         double* deltaData = _delta.getData();
+        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
         
 #pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1*2:(i2-i1)*2], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
@@ -1465,13 +1453,15 @@ namespace galsim {
 	    bool foundPixel;
 
 	    foundPixel = insidePixelGPU(ix, iy, x, y, zconv, targetBounds, &off_edge,
-                                        emptypolySize);
+                                        emptypolySize, pixelInnerBoundsData,
+                                        pixelOuterBoundsData);
 
 	    if (!foundPixel && off_edge) continue;
 
 	    int step;
 	    if (!foundPixel) {
-		foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv, targetBounds, step, emptypolySize);
+                // FIXME: re-enable once bounds etc. sorted out
+		//foundPixel = searchNeighborsGPU(*this, ix, iy, x, y, zconv, targetBounds, step, emptypolySize);
 		if (!foundPixel) continue; // ignore ones that have rounding errors for now
             }
 
@@ -1488,7 +1478,9 @@ namespace galsim {
         return addedFlux;
     }
 
-    void Silicon::updatePixelBoundsGPU(int nx, int ny, size_t k)
+    void Silicon::updatePixelBoundsGPU(int nx, int ny, size_t k,
+                                       Bounds<double>* pixelInnerBoundsData,
+                                       Bounds<double>* pixelOuterBoundsData)
     {
         // update the bounding rectangles for pixel k
         // get pixel co-ordinates
@@ -1618,15 +1610,15 @@ namespace galsim {
         }
 
         // store results in actual bound structures
-        _pixelInnerBoundsGPU[k].xmin = ibxmin;
-        _pixelInnerBoundsGPU[k].xmax = ibxmax;
-        _pixelInnerBoundsGPU[k].ymin = ibymin;
-        _pixelInnerBoundsGPU[k].ymax = ibymax;
+        pixelInnerBoundsData[k].setXMin(ibxmin);
+        pixelInnerBoundsData[k].setXMax(ibxmax);
+        pixelInnerBoundsData[k].setYMin(ibymin);
+        pixelInnerBoundsData[k].setYMax(ibymax);
 
-        _pixelOuterBoundsGPU[k].xmin = obxmin;
-        _pixelOuterBoundsGPU[k].xmax = obxmax;
-        _pixelOuterBoundsGPU[k].ymin = obymin;
-        _pixelOuterBoundsGPU[k].ymax = obymax;
+        pixelOuterBoundsData[k].setXMin(obxmin);
+        pixelOuterBoundsData[k].setXMax(obxmax);
+        pixelOuterBoundsData[k].setYMin(obymin);
+        pixelOuterBoundsData[k].setYMax(obymax);
     }
 
     template <typename T>
@@ -1758,10 +1750,13 @@ namespace galsim {
             }
         }
 
+        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
 #pragma omp target teams distribute parallel for
         for (size_t k=0; k<nxny; ++k) {
             if (_changedGPU[k]) {
-                updatePixelBoundsGPU(nx, ny, k);
+                updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
+                                     pixelOuterBoundsData);
                 _changedGPU[k] = false;
             }
         }
