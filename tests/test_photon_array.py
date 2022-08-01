@@ -1375,6 +1375,29 @@ def test_fromArrays():
         galsim.PhotonArray.fromArrays(np.empty(2000)[::2], y, flux, dxdz, dydz, wavelength)
 
 
+def test_pupil_annulus_sampler():
+    """ Check that we get a uniform distribution from PupilAnnulusSampler
+    """
+    seed = 54321
+    sampler = galsim.PupilAnnulusSampler(1.0, 0.5)
+    pa = galsim.PhotonArray(1_000_000)
+    sampler.applyTo(pa, rng=seed)
+    r = np.hypot(pa.pupil_u, pa.pupil_v)
+    assert np.min(r) > 0.5
+    assert np.max(r) < 1.0
+    h, edges = np.histogram(r, bins=10, range=(0.5, 1.0), )
+    areas = np.pi*(edges[1:]**2 - edges[:-1]**2)
+    # each bin should have ~100_000 photons, so +/- 0.3%.  Test at 1%.
+    assert np.std(h/areas)/np.mean(h/areas) < 0.01
+
+    phi = np.arctan2(pa.pupil_v, pa.pupil_u)
+    phi[phi < 0] += 2*np.pi
+    h, edges = np.histogram(phi, bins=10, range=(0.0, 2*np.pi))
+    assert np.std(h)/np.mean(h) < 0.01
+
+    do_pickle(sampler)
+
+
 if __name__ == '__main__':
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     if no_astroplan:

@@ -879,16 +879,33 @@ def test_phase_gradient_shoot():
         np.testing.assert_allclose(im_shoot2.array, im_shoot.array)
 
         # Repeat with the pupil_sampler before the psf.
-        pupil_sampler = galsim.PupilSampler(diam=diam, lam=lam,
-                                            pad_factor=pad_factor,
-                                            oversampling=oversampling,
-                                            screen_list=atm)
+        pupil_sampler = galsim.PupilImageSampler(diam=diam, lam=lam,
+                                                 pad_factor=pad_factor,
+                                                 oversampling=oversampling,
+                                                 screen_list=atm)
         im_shoot3 = galsim.DeltaFunction().drawImage(nx=256, ny=256, scale=0.05, method='phot',
                                                      n_photons=100000, rng=rng1.duplicate(),
                                                      photon_ops=[pupil_sampler, psf])
         np.testing.assert_allclose(im_shoot3.array, im_shoot.array)
 
         do_pickle(pupil_sampler)
+
+        # Quick check with PupilAnnulusSampler
+        pupil_sampler2 = galsim.PupilAnnulusSampler(R_outer=diam/2)
+        im_shoot4 = galsim.DeltaFunction().drawImage(nx=256, ny=256, scale=0.05, method='phot',
+                                                     n_photons=100000, rng=rng1,
+                                                     photon_ops=[pupil_sampler2, psf]
+        )
+        shoot_moment4 = galsim.hsm.FindAdaptiveMom(im_shoot4)
+
+        np.testing.assert_allclose(
+            shoot_moment4.moments_sigma,
+            shoot_moment.moments_sigma,
+            rtol=0, atol=0.05,
+            err_msg='Annulus sampling not close to image sampling'
+        )
+
+        do_pickle(pupil_sampler2)
 
     # I cheated.  Here's code to evaluate how small I could potentially set the tolerances above.
     # I think they're all fine, but this is admittedly a tad bit backwards.
