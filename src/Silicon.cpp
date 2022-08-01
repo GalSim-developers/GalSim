@@ -838,18 +838,24 @@ namespace galsim {
     template <typename T>
     void Silicon::subtractDelta(ImageView<T> target)
     {
+        // both delta and target and stored on GPU so copy them back
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+
+        double* deltaData = _delta.getData();
+        T* targetData = target.getData();
+#pragma omp target update from(deltaData[0:imageDataSize], targetData[0:imageDataSize])
         target -= _delta;
     }
 
     template <typename T>
     void Silicon::addDelta(ImageView<T> target)
     {
-        // FIXME: don't think this will work properly for GPU now because
-        // memory mappings have changed...
+        // both delta and target and stored on GPU so copy them back
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
 
         double* deltaData = _delta.getData();
-#pragma omp target update from(deltaData[0:imageDataSize])
+        T* targetData = target.getData();
+#pragma omp target update from(deltaData[0:imageDataSize], targetData[0:imageDataSize])
         target += _delta;
     }
 
