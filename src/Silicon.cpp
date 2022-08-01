@@ -844,10 +844,12 @@ namespace galsim {
     template <typename T>
     void Silicon::addDelta(ImageView<T> target)
     {
-        // FIXME: don't think this will work properly for GPU now...
+        // FIXME: don't think this will work properly for GPU now because
+        // memory mappings have changed...
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
 
-#pragma omp target update from(_deltaGPU[0:imageDataSize])
+        double* deltaData = _delta.getData();
+#pragma omp target update from(deltaData[0:imageDataSize])
         target += _delta;
     }
 
@@ -1018,11 +1020,10 @@ namespace galsim {
 
 
 	// convert and map data for GPU
-	_deltaGPU = _delta.getData();
+        double* deltaData = _delta.getData();
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
 
-        // FIXME: won't work for single precision images yet
-        _targetGPU = (double*)target.getData();
+        T* targetData = target.getData();
         
 	_pixelInnerBoundsGPU = new BoundsFGPU[_pixelInnerBounds.size()];
 	_pixelOuterBoundsGPU = new BoundsFGPU[_pixelOuterBounds.size()];
@@ -1127,13 +1128,15 @@ namespace galsim {
         for (int i = 0; i < nxny; i++) _changedGPU[i] = false;
         
         // map all data to the GPU
-        #pragma omp target enter data map(to: this[:1], _deltaGPU[0:imageDataSize], _targetGPU[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
+        #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], _pixelInnerBoundsGPU[0:pixelInnerBoundsSize], _pixelOuterBoundsGPU[0:pixelInnerBoundsSize], _horizontalBoundaryPointsGPU[0:hbpSize], _verticalBoundaryPointsGPU[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], _horizontalDistortionsGPU[0:hdSize], _verticalDistortionsGPU[0:vdSize], _changedGPU[0:nxny])
     }
 
-    void Silicon::finalizeGPU()
+    template <typename T>
+    void Silicon::finalizeGPU(ImageView<T> target)
     {
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
-#pragma omp target exit data map(from: _targetGPU[0:imageDataSize])
+        T* targetData = target.getData();
+#pragma omp target exit data map(from: targetData[0:imageDataSize])
 
         delete[] _pixelInnerBoundsGPU;
         delete[] _pixelOuterBoundsGPU;
@@ -1396,6 +1399,8 @@ namespace galsim {
 
 	int emptypolySize = _emptypoly.size();
 
+        double* deltaData = _delta.getData();
+        
 #pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1*2:(i2-i1)*2], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
 	    double x0 = photonsX[i];
@@ -1475,7 +1480,7 @@ namespace galsim {
 
 		int deltaIdx = (ix - deltaXMin) * deltaStep + (iy - deltaYMin) * deltaStride;
 #pragma omp atomic
-                _deltaGPU[deltaIdx] += flux;
+                deltaData[deltaIdx] += flux;
 		addedFlux += flux;
             }
 	}
@@ -1644,6 +1649,8 @@ namespace galsim {
         
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
 
+        T* targetData = target.getData();
+        
         // Loop through the boundary arrays and update any points affected by nearby pixels
         // Horizontal array first
         // map image data and changed array throughout all GPU loops
@@ -1672,7 +1679,7 @@ namespace galsim {
             for (int j=polyj1; j <= polyj2; j++) {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
-                    double charge = _targetGPU[(j * stride) + (i * step)];
+                    double charge = targetData[(j * stride) + (i * step)];
 
                     if (charge != 0.0) {
                         change = true;
@@ -1722,7 +1729,7 @@ namespace galsim {
             for (int j=polyj1; j <= polyj2; j++) {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
-                    double charge = _targetGPU[(j * stride) + (i * step)];
+                    double charge = targetData[(j * stride) + (i * step)];
 
                     if (charge != 0.0) {
                         change = true;
@@ -1761,10 +1768,11 @@ namespace galsim {
         
         // update target from delta and zero delta on GPU
         // CPU delta is not zeroed but that shouldn't matter
+        double* deltaData = _delta.getData();
 #pragma omp target teams distribute parallel for
         for (int i = 0; i < imageDataSize; i++) {
-            _targetGPU[i] += _deltaGPU[i];
-            _deltaGPU[i] = 0.0;
+            targetData[i] += deltaData[i];
+            deltaData[i] = 0.0;
         }
     }
 
@@ -1818,6 +1826,9 @@ namespace galsim {
 
     template void Silicon::initializeGPU(ImageView<double> target, Position<int> orig_center);
     template void Silicon::initializeGPU(ImageView<float> target, Position<int> orig_center);
+
+    template void Silicon::finalizeGPU(ImageView<double> target);
+    template void Silicon::finalizeGPU(ImageView<float> target);
 
     template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
                                         BaseDeviate rng, ImageView<double> target);
