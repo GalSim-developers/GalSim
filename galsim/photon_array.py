@@ -1021,8 +1021,10 @@ class FocusDepth(PhotonOp):
     def __repr__(self):
         return "galsim.FocusDepth(depth=%r)"%self.depth
 
-class PupilSampler(PhotonOp):
+
+class PupilImageSampler(PhotonOp):
     """A photon operator that samples the pupil-plane positions given a pupil-plane image.
+    Samples are drawn discretely from pupil plane image pixels marked as illuminated.
 
     Parameters:
         diam:               Aperture diameter in meters.
@@ -1097,8 +1099,54 @@ class PupilSampler(PhotonOp):
         self.aper.samplePupil(photon_array, rng)
 
     def __repr__(self):
-        s =  "galsim.PupilSampler(diam=%s"%self.diam
+        s =  "galsim.PupilImageSampler(diam=%s"%self.diam
         for k,v in self.kwargs.items():
             s += ', %s=%r'%(k,v)
         s += ')'
+        return s
+
+
+class PupilAnnulusSampler(PhotonOp):
+    """A photon operator that uniformly samples an annular entrance pupil.
+
+    Parameters:
+        R_outer:  Annulus outer radius in meters.
+        R_inner:  Annulus inner radius in meters.  [default: 0.0]
+    """
+    _req_params = {
+        "R_outer": float,
+    }
+    _opt_params = {
+        "R_inner": float,
+    }
+    def __init__(self, R_outer, R_inner=0.0):
+        self.R_outer = R_outer
+        self.R_inner = R_inner
+
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
+        """Sample the pupil plane u,v positions for each photon.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
+        """
+        ud = UniformDeviate(rng)
+        r = np.empty((len(photon_array),), dtype=float)
+        phi = np.empty((len(photon_array),), dtype=float)
+        ud.generate(r)
+        r *= self.R_outer**2 - self.R_inner**2
+        r += self.R_inner**2
+        np.sqrt(r, out=r)
+        ud.generate(phi)
+        phi *= 2*np.pi
+        photon_array.pupil_u = r * np.cos(phi)
+        photon_array.pupil_v = r * np.sin(phi)
+
+    def __repr__(self):
+        s = "galsim.PupilAnnulusSampler(R_outer=%r"%self.R_outer
+        if self.R_inner != 0.0:
+            s += ", R_inner=%r"%self.R_inner
+        s += ")"
         return s
