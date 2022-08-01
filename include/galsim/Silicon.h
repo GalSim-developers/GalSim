@@ -38,10 +38,6 @@ namespace galsim
 	int xmin, xmax, ymin, ymax;
     };
 	
-    struct PointSGPU {
-	float x, y;
-    };
-    
     struct PointDGPU {
 	double x, y;
     };
@@ -62,7 +58,9 @@ namespace galsim
 			    BoundsIGPU& targetBounds, bool* off_edge,
                             int emptypolySize,
                             Bounds<double>* pixelInnerBoundsData,
-                            Bounds<double>* pixelOuterBoundsData) const;
+                            Bounds<double>* pixelOuterBoundsData,
+                            Position<float>* horizontalBoundaryPointsData,
+                            Position<float>* verticalBoundaryPointsData) const;
 
 	void scaleBoundsToPoly(int i, int j, int nx, int ny,
                                const Polygon& emptypoly, Polygon& result,
@@ -281,7 +279,9 @@ namespace galsim
 
         void updatePixelBoundsGPU(int nx, int ny, size_t k,
                                   Bounds<double>* pixelInnerBoundsData,
-                                  Bounds<double>* pixelOuterBoundsData);
+                                  Bounds<double>* pixelOuterBoundsData,
+                                  Position<float>* horizontalBoundaryPointsData,
+                                  Position<float>* verticalBoundaryPointsData);
 
         Polygon _emptypoly;
         mutable std::vector<Polygon> _testpoly;
@@ -301,10 +301,6 @@ namespace galsim
         ImageAlloc<double> _delta;
 
 	// GPU data
-	PointSGPU* _horizontalBoundaryPointsGPU;
-	PointSGPU* _verticalBoundaryPointsGPU;
-        PointSGPU* _horizontalDistortionsGPU;
-        PointSGPU* _verticalDistortionsGPU;
 	double* _abs_length_table_GPU;
 	PointDGPU* _emptypolyGPU;
         bool* _changedGPU;
