@@ -93,7 +93,9 @@ namespace galsim
 
         template <typename T>
         void initializeGPU(ImageView<T> target, Position<int> orig_center);
-        void finalizeGPU();
+
+        template <typename T>
+        void finalizeGPU(ImageView<T> target);
     
         template <typename T>
         double accumulate(const PhotonArray& photons, int i1, int i2,
@@ -299,7 +301,6 @@ namespace galsim
         ImageAlloc<double> _delta;
 
 	// GPU data
-	double* _deltaGPU;
 	BoundsFGPU* _pixelInnerBoundsGPU;
 	BoundsFGPU* _pixelOuterBoundsGPU;
 	PointSGPU* _horizontalBoundaryPointsGPU;
@@ -308,7 +309,6 @@ namespace galsim
         PointSGPU* _verticalDistortionsGPU;
 	double* _abs_length_table_GPU;
 	PointDGPU* _emptypolyGPU;
-        double* _targetGPU;
         bool* _changedGPU;
     };
 
