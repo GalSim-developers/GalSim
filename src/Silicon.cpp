@@ -32,12 +32,16 @@
 #include <algorithm>
 #include <climits>
 
+// Uncomment this for debugging output
+//#define DEBUGLOGGING
+
+#ifdef DEBUGLOGGING
+#undef _OPENMP
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
-
-// Uncomment this for debugging output
-//#define DEBUGLOGGING
 
 #include "Std.h"
 #include "Silicon.h"
@@ -848,6 +852,7 @@ namespace galsim {
                                BaseDeviate rng, ImageView<T> target)
     {
         const int nphotons = i2 - i1;
+        dbg<<"Start accumulate: nphot = "<<nphotons<<std::endl;
 
         // Generate random numbers in advance
         std::vector<double> conversionDepthRandom(nphotons);
@@ -891,6 +896,7 @@ namespace galsim {
             xdbg<<" => "<<x0<<','<<y0;
             // This is the reverse of depth. zconv is how far above the substrate the e- converts.
             double zconv = _sensorThickness - dz;
+            xdbg<<"zconv = "<<zconv<<std::endl;
             if (zconv < 0.0) continue; // Throw photon away if it hits the bottom
             // TODO: Do something more realistic if it hits the bottom.
 
@@ -930,9 +936,6 @@ namespace galsim {
             bool off_edge;
             bool foundPixel;
             foundPixel = insidePixel(ix, iy, x, y, zconv, target, &off_edge);
-#ifdef DEBUGLOGGING
-            if (foundPixel) ++zerocount;
-#endif
 
             // If the nominal position is on the edge of the image, off_edge reports whether
             // the photon has fallen off the edge of the image. In this case, we won't find it in
@@ -943,9 +946,6 @@ namespace galsim {
             int step;  // We might need this below, so let searchNeighbors return it.
             if (!foundPixel) {
                 foundPixel = searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
-#ifdef DEBUGLOGGING
-                if (foundPixel) ++neighborcount;
-#endif
             }
 
             // Rarely, we won't find it in the undistorted pixel or any of the neighboring pixels.
@@ -962,7 +962,6 @@ namespace galsim {
                 insidePixel(ix, iy, x, y, zconv, target, &off_edge);
                 searchNeighbors(*this, ix, iy, x, y, zconv, target, step);
                 set_verbose(1);
-                ++misscount;
 #endif
                 int n = (pixelNotFoundRandom[i-i1] > 0.5) ? 0 : step;
                 ix = ix + xoff[n];
@@ -970,12 +969,6 @@ namespace galsim {
             }
 
             if (b.includes(ix,iy)) {
-#ifdef DEBUGLOGGING
-                double rsq = (ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5);
-                Irr += flux * rsq;
-                rsq = (ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5);
-                Irr0 += flux * rsq;
-#endif
 #ifdef _OPENMP
 #pragma omp atomic
 #endif
