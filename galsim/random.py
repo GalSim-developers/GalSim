@@ -172,6 +172,33 @@ class BaseDeviate:
         """
         self._rng.discard(int(n))
 
+    @property
+    def has_reliable_discard(self):
+        """Indicates whether the generator always uses 1 rng per value.
+
+        If it does, then `discard` can reliably be used to keep two generators in sync when one
+        of them generated some values and the other didn't.
+
+        This is False for PoissonDeviate, Chi2Deviate, and GammaDeviate.
+
+        See also `generates_in_pairs`.
+        """
+        return True
+
+    @property
+    def generates_in_pairs(self):
+        """Indicates whether the generator uses 2 rngs values per 2 returned values.
+
+        GaussianDeviate has a slight wrinkle to the `has_reliable_discard` story.
+        It always uses two rng values to generate two Gaussian deviates.  So if the number of
+        generated values is even, then discard can keep things in sync.  However, if an odd
+        number of values are generated, then you to generate one more value (and discard it)
+        to keep things synced up.
+
+        This is only True for GaussianDeviate.
+        """
+        return False
+
     def raw(self):
         """Generate the next pseudo-random number and rather than return the appropriate kind
         of random deviate for this class, just return the raw integer value that would have been
@@ -302,6 +329,10 @@ class GaussianDeviate(BaseDeviate):
         """
         return self._rng_args[1]
 
+    @property
+    def generates_in_pairs(self):
+        return True
+
     def __call__(self):
         """Draw a new random number from the distribution.
 
@@ -415,6 +446,10 @@ class PoissonDeviate(BaseDeviate):
         """The mean of the distribution.
         """
         return self._rng_args[0]
+
+    @property
+    def has_reliable_discard(self):
+        return False
 
     def __call__(self):
         """Draw a new random number from the distribution.
@@ -538,6 +573,10 @@ class GammaDeviate(BaseDeviate):
         """
         return self._rng_args[1]
 
+    @property
+    def has_reliable_discard(self):
+        return False
+
     def __call__(self):
         """Draw a new random number from the distribution.
 
@@ -585,6 +624,10 @@ class Chi2Deviate(BaseDeviate):
         """The number of degrees of freedom.
         """
         return self._rng_args[0]
+
+    @property
+    def has_reliable_discard(self):
+        return False
 
     def __call__(self):
         """Draw a new random number from the distribution.
