@@ -23,6 +23,7 @@ import math
 
 import galsim
 from galsim_test_helpers import *
+from galsim.utilities import single_threaded
 
 
 #
@@ -240,6 +241,22 @@ def test_uniform():
             test_array, 2.*np.array(uResult), precisionF,
             err_msg='Wrong uniform random number sequence from generate.')
 
+    # Check that generated values are independent of number of threads.
+    u1 = galsim.UniformDeviate(testseed)
+    u2 = galsim.UniformDeviate(testseed)
+    v1 = np.empty(555)
+    v2 = np.empty(555)
+    with single_threaded():
+        u1.generate(v1)
+    with single_threaded(num_threads=10):
+        u2.generate(v2)
+    np.testing.assert_array_equal(v1, v2)
+    with single_threaded():
+        u1.add_generate(v1)
+    with single_threaded(num_threads=10):
+        u2.add_generate(v2)
+    np.testing.assert_array_equal(v1, v2)
+
     # Check picklability
     do_pickle(u, lambda x: x.serialize())
     do_pickle(u, lambda x: (x(), x(), x(), x()))
@@ -418,6 +435,31 @@ def test_gaussian():
             test_array, np.array(gResult)-gMean, precisionF,
             err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
 
+    # Check that generated values are independent of number of threads.
+    g1 = galsim.GaussianDeviate(testseed, mean=53, sigma=1.3)
+    g2 = galsim.GaussianDeviate(testseed, mean=53, sigma=1.3)
+    v1 = np.empty(555)
+    v2 = np.empty(555)
+    with single_threaded():
+        g1.generate(v1)
+    with single_threaded(num_threads=10):
+        g2.generate(v2)
+    np.testing.assert_array_equal(v1, v2)
+    with single_threaded():
+        g1.add_generate(v1)
+    with single_threaded(num_threads=10):
+        g2.add_generate(v2)
+    np.testing.assert_array_equal(v1, v2)
+    ud = galsim.UniformDeviate(testseed + 3)
+    ud.generate(v1)
+    v1 += 6.7
+    v2[:] = v1
+    with single_threaded():
+        g1.generate_from_variance(v1)
+    with single_threaded(num_threads=10):
+        g2.generate_from_variance(v2)
+    np.testing.assert_array_equal(v1, v2)
+
     # Check picklability
     do_pickle(g, lambda x: (x.serialize(), x.mean, x.sigma))
     do_pickle(g, lambda x: (x(), x(), x(), x()))
@@ -562,6 +604,22 @@ def test_binomial():
     np.testing.assert_array_almost_equal(
             test_array, np.array(bResult), precisionI,
             err_msg='Wrong binomial random number sequence from generate.')
+
+    # Check that generated values are independent of number of threads.
+    b1 = galsim.BinomialDeviate(testseed, N=17, p=0.7)
+    b2 = galsim.BinomialDeviate(testseed, N=17, p=0.7)
+    v1 = np.empty(555)
+    v2 = np.empty(555)
+    with single_threaded():
+        b1.generate(v1)
+    with single_threaded(num_threads=10):
+        b2.generate(v2)
+    np.testing.assert_array_equal(v1, v2)
+    with single_threaded():
+        b1.add_generate(v1)
+    with single_threaded(num_threads=10):
+        b2.add_generate(v2)
+    np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
     do_pickle(b, lambda x: (x.serialize(), x.n, x.p))
@@ -731,6 +789,23 @@ def test_poisson():
     print('test_array2 = ',test_array2)
     print('mean = ',test_array2.mean())
     assert np.isclose(test_array2.mean(), 77, atol=2)
+
+    # Check that generated values are independent of number of threads.
+    # This should be trivial, since Poisson disables multi-threading, but check anyway.
+    p1 = galsim.PoissonDeviate(testseed, mean=77)
+    p2 = galsim.PoissonDeviate(testseed, mean=77)
+    v1 = np.empty(555)
+    v2 = np.empty(555)
+    with single_threaded():
+        p1.generate(v1)
+    with single_threaded(num_threads=10):
+        p2.generate(v2)
+    np.testing.assert_array_equal(v1, v2)
+    with single_threaded():
+        p1.add_generate(v1)
+    with single_threaded(num_threads=10):
+        p2.add_generate(v2)
+    np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
     do_pickle(p, lambda x: (x.serialize(), x.mean))
@@ -1030,6 +1105,22 @@ def test_weibull():
     np.testing.assert_array_almost_equal(
             test_array, np.array(wResult), precisionF,
             err_msg='Wrong weibull random number sequence from generate.')
+
+    # Check that generated values are independent of number of threads.
+    w1 = galsim.WeibullDeviate(testseed, a=3.1, b=7.3)
+    w2 = galsim.WeibullDeviate(testseed, a=3.1, b=7.3)
+    v1 = np.empty(555)
+    v2 = np.empty(555)
+    with single_threaded():
+        w1.generate(v1)
+    with single_threaded(num_threads=10):
+        w2.generate(v2)
+    np.testing.assert_array_equal(v1, v2)
+    with single_threaded():
+        w1.add_generate(v1)
+    with single_threaded(num_threads=10):
+        w2.add_generate(v2)
+    np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
     do_pickle(w, lambda x: (x.serialize(), x.a, x.b))
@@ -1518,6 +1609,22 @@ def test_distfunction():
     np.testing.assert_array_almost_equal(
             test_array, 2*np.array(dFunctionResult), precisionF,
             err_msg='Wrong DistDeviate random number sequence from add_generate.')
+
+    # Check that generated values are independent of number of threads.
+    d1 = galsim.DistDeviate(testseed, function=lambda x: np.exp(-x**3), x_min=0, x_max=2)
+    d2 = galsim.DistDeviate(testseed, function=lambda x: np.exp(-x**3), x_min=0, x_max=2)
+    v1 = np.empty(555)
+    v2 = np.empty(555)
+    with single_threaded():
+        d1.generate(v1)
+    with single_threaded(num_threads=10):
+        d2.generate(v2)
+    np.testing.assert_array_equal(v1, v2)
+    with single_threaded():
+        d1.add_generate(v1)
+    with single_threaded(num_threads=10):
+        d2.add_generate(v2)
+    np.testing.assert_array_equal(v1, v2)
 
     # Check picklability
     do_pickle(d, lambda x: (x(), x(), x(), x()))

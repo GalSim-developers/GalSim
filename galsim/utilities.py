@@ -1869,7 +1869,7 @@ class single_threaded:
     Parameters:
         num_threads:    The number of threads you want during the context [default: 1]
     """
-    def __init__(self, num_threads=1):
+    def __init__(self, *, num_threads=1):
         # Get the current number of threads here, so we can set it back when we're done.
         self.orig_num_threads = get_omp_threads()
         self.temp_num_threads = num_threads

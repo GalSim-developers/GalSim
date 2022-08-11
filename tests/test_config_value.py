@@ -415,27 +415,28 @@ def test_float_value():
     np.testing.assert_almost_equal(ps1, ps.getMagnification((0.1,0.2)))
 
     # Beef up the amplitude to get strong lensing.
-    ps = galsim.PowerSpectrum(e_power_function='1000 * np.exp(-k**0.2)')
+    ps = galsim.PowerSpectrum(e_power_function='2000 * np.exp(-k**0.2)')
     ps.buildGrid(grid_spacing=10, ngrid=21, interpolant='linear', rng=rng)
 
     print("strong lensing mag = ",ps.getMagnification((0.1,0.2)))
     config = galsim.config.CleanConfig(config)
-    config['input']['power_spectrum']['e_power_function'] = '1000 * np.exp(-k**0.2)'
+    config['input']['power_spectrum']['e_power_function'] = '2000 * np.exp(-k**0.2)'
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, logger=cl.logger)
         ps2a = galsim.config.ParseValue(config,'ps',config, float)[0]
     print(cl.output)
-    assert 'PowerSpectrum mu = -2.426205 means strong lensing. Using mu=25.000000' in cl.output
+    assert 'PowerSpectrum mu = -4.335137 means strong lensing. Using mu=25.000000' in cl.output
     np.testing.assert_almost_equal(ps2a, 25.)
 
     # Need a different point that happens to have strong lensing, since the PS realization changed.
-    config['uv_pos'] = galsim.PositionD(-60, -60)
+    ps.buildGrid(grid_spacing=10, ngrid=21, interpolant='linear', rng=rng)
+    config['uv_pos'] = galsim.PositionD(55,-25)
     galsim.config.RemoveCurrent(config)
     with CaptureLog() as cl:
         galsim.config.SetupInputsForImage(config, logger=cl.logger)
         ps2b = galsim.config.ParseValue(config, 'ps', config, float)[0]
     print(cl.output)
-    assert "PowerSpectrum mu = 29.760221 means strong lensing. Using mu=25.000000" in cl.output
+    assert "PowerSpectrum mu = 26.746296 means strong lensing. Using mu=25.000000" in cl.output
     np.testing.assert_almost_equal(ps2b, 25.)
 
     # Or set a different maximum
@@ -443,7 +444,7 @@ def test_float_value():
     config['ps']['max_mu'] = 30.
     del config['ps']['_get']
     ps3 = galsim.config.ParseValue(config,'ps',config, float)[0]
-    np.testing.assert_almost_equal(ps3, 29.760221039098028)
+    np.testing.assert_almost_equal(ps3, 26.7462955457826)
 
     # Negative max_mu is invalid.
     galsim.config.RemoveCurrent(config)

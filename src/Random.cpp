@@ -24,6 +24,11 @@
 #include <sstream>
 #include <unistd.h>
 #include <cstring>  // For memcpy
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "Random.h"
 
 // Variable defined to use a private copy of Boost.Random, modified
@@ -198,12 +203,76 @@ namespace galsim {
 
     void BaseDeviate::generate(long long N, double* data)
     {
+        clearCache();
+#ifdef _OPENMP
+        int numThreads = omp_get_max_threads();
+        if (numThreads == 1 || !has_reliable_discard()) {
+            for (long long i=0; i<N; ++i) data[i] = (*this)();
+        } else {
+#pragma omp parallel
+            {
+                int thisThread = omp_get_thread_num();
+                // Each thread needs its own copy to avoid clobbering each other.
+                // For the last thread (thisThread == numThreads-1), use the main object's rng.
+                // That's the one that will automatically discard and/or generate the right number
+                // of values, so we don't need to discard any extra at the end.
+                shared_ptr<BaseDeviate> rngptr;
+                if (thisThread < numThreads-1) rngptr = duplicate_ptr();
+#pragma omp barrier  // Make sure they all completed the duplicate before starting to mess with
+                     // the main thread's rng.
+                BaseDeviate& rng = thisThread < numThreads-1 ? *rngptr : *this;
+                long long i1 = N * thisThread / numThreads;
+                long long i2 = N * (thisThread+1) / numThreads;
+                if (generates_in_pairs()) {
+                    // Then need to make these even.
+                    i1 = (i1+1) / 2 * 2;
+                    i2 = (i2+1) / 2 * 2;
+                    i2 = std::min(i2,N);
+                }
+                rng.discard(i1);
+                for (long long i=i1; i<i2; ++i) data[i] = rng();
+            }
+        }
+#else
         for (long long i=0; i<N; ++i) data[i] = (*this)();
+#endif
     }
 
     void BaseDeviate::addGenerate(long long N, double* data)
     {
+        clearCache();
+#ifdef _OPENMP
+        int numThreads = omp_get_max_threads();
+        if (numThreads == 1 || !has_reliable_discard()) {
+            for (long long i=0; i<N; ++i) data[i] += (*this)();
+        } else {
+#pragma omp parallel
+            {
+                int thisThread = omp_get_thread_num();
+                // Each thread needs its own copy to avoid clobbering each other.
+                // For the last thread (thisThread == numThreads-1), use the main object's rng.
+                // That's the one that will automatically discard and/or generate the right number
+                // of values, so we don't need to discard any extra at the end.
+                shared_ptr<BaseDeviate> rngptr;
+                if (thisThread < numThreads-1) rngptr = duplicate_ptr();
+#pragma omp barrier  // Make sure they all completed the duplicate before starting to mess with
+                     // the main thread's rng.
+                BaseDeviate& rng = thisThread < numThreads-1 ? *rngptr : *this;
+                long long i1 = N * thisThread / numThreads;
+                long long i2 = N * (thisThread+1) / numThreads;
+                if (generates_in_pairs()) {
+                    // Then need to make these even.
+                    i1 = (i1+1) / 2 * 2;
+                    i2 = (i2+1) / 2 * 2;
+                    i2 = std::min(i2,N);
+                }
+                rng.discard(i1);
+                for (long long i=i1; i<i2; ++i) data[i] += rng();
+            }
+        }
+#else
         for (long long i=0; i<N; ++i) data[i] += (*this)();
+#endif
     }
 
     // Next two functions shamelessly stolen from
@@ -335,11 +404,47 @@ namespace galsim {
         double old_mean = getMean();
         double old_sigma = getSigma();
         setMean(0.);
-        setSigma(1.);
+        setSigma(1.);  // Implicitly clears cache.
+#ifdef _OPENMP
+        int numThreads = omp_get_max_threads();
+        if (numThreads == 1) {
+            for (long long i=0; i<N; ++i) {
+                double sigma = std::sqrt(data[i]);
+                data[i] = (*this)() * sigma;
+            }
+        } else {
+#pragma omp parallel
+            {
+                int thisThread = omp_get_thread_num();
+                // Each thread needs its own copy to avoid clobbering each other.
+                // For the last thread (thisThread == numThreads-1), use the main object's rng.
+                // That's the one that will automatically discard and/or generate the right number
+                // of values, so we don't need to discard any extra at the end.
+                shared_ptr<BaseDeviate> rngptr;
+                if (thisThread < numThreads-1) rngptr = duplicate_ptr();
+#pragma omp barrier  // Make sure they all completed the duplicate before starting to mess with
+                     // the main thread's rng.
+                GaussianDeviate& rng = thisThread < numThreads-1 ?
+                    static_cast<GaussianDeviate&>(*rngptr) : *this;
+                long long i1 = N * thisThread / numThreads;
+                long long i2 = N * (thisThread+1) / numThreads;
+                // Note: Make sure i1,i2 are even, since GD generates values 2 at a time.
+                i1 = (i1+1) / 2 * 2;
+                i2 = (i2+1) / 2 * 2;
+                i2 = std::min(i2, N);  // In case even rounding took us to N+1.
+                rng.discard(i1);
+                for (long long i=i1; i<i2; ++i) {
+                    double sigma = std::sqrt(data[i]);
+                    data[i] = rng() * sigma;
+                }
+            }
+        }
+#else
         for (long long i=0; i<N; ++i) {
             double sigma = std::sqrt(data[i]);
             data[i] = (*this)() * sigma;
         }
+#endif
         setMean(old_mean);
         setSigma(old_sigma);
     }
@@ -489,6 +594,7 @@ namespace galsim {
     void PoissonDeviate::generateFromExpectation(long long N, double* data)
     {
         double old_mean = getMean();
+        // Note: cannot parallelize this, since Poisson doesn't have a reliable discard.
         for (long long i=0; i<N; ++i) {
             double mean = data[i];
             if (mean > 0.) {
