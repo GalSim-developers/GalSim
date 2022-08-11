@@ -122,6 +122,7 @@ def test_uniform():
             err_msg='Wrong uniform random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
+    u = galsim.UniformDeviate(testseed)
     vals = [u() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -133,6 +134,13 @@ def test_uniform():
             err_msg='Wrong mean from UniformDeviate')
     np.testing.assert_almost_equal(var, v, 1,
             err_msg='Wrong variance from UniformDeviate')
+
+    # Check discard
+    u2 = galsim.UniformDeviate(testseed)
+    u2.discard(nvals)
+    v1, v2 = u(), u2()
+    print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+    assert v1 == v2
 
     # Check seed, reset
     u.seed(testseed)
@@ -154,7 +162,9 @@ def test_uniform():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong uniform random number sequence generated after reset(rng)')
 
-    # Check dump, raw
+    # Check raw
+    u2.reset(testseed)
+    u2.discard(3)
     np.testing.assert_equal(u.raw(), u2.raw(),
             err_msg='Uniform deviates generate different raw values')
 
@@ -275,6 +285,7 @@ def test_gaussian():
             err_msg='Wrong Gaussian random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
+    g = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
     vals = [g() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -286,6 +297,19 @@ def test_gaussian():
             err_msg='Wrong mean from GaussianDeviate')
     np.testing.assert_almost_equal(var, v, 0,
             err_msg='Wrong variance from GaussianDeviate')
+
+    # Check discard
+    g2 = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
+    g2.discard(nvals)
+    v1,v2 = g(),g2()
+    print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+    assert v1 == v2
+    # Note: For Gaussian, this only works if nvals is even.
+    g2 = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
+    g2.discard(nvals+1)
+    v1,v2 = g(),g2()
+    print('after %d vals, next one is %s, %s'%(nvals+1,v1,v2))
+    assert v1 != v2
 
     # Check seed, reset
     g.seed(testseed)
@@ -433,6 +457,7 @@ def test_binomial():
             err_msg='Wrong binomial random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
+    b = galsim.BinomialDeviate(testseed, N=bN, p=bp)
     vals = [b() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -444,6 +469,13 @@ def test_binomial():
             err_msg='Wrong mean from BinomialDeviate')
     np.testing.assert_almost_equal(var, v, 1,
             err_msg='Wrong variance from BinomialDeviate')
+
+    # Check discard
+    b2 = galsim.BinomialDeviate(testseed, N=bN, p=bp)
+    b2.discard(nvals)
+    v1,v2 = b(),b2()
+    print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+    assert v1 == v2
 
     # Check seed, reset
     b.seed(testseed)
@@ -566,6 +598,7 @@ def test_poisson():
             err_msg='Wrong Poisson random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
+    p = galsim.PoissonDeviate(testseed, mean=pMean)
     vals = [p() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -578,7 +611,27 @@ def test_poisson():
     np.testing.assert_almost_equal(var, v, 1,
             err_msg='Wrong variance from PoissonDeviate')
 
+    # Check discard
+    p2 = galsim.PoissonDeviate(testseed, mean=pMean)
+    p2.discard(nvals)
+    v1,v2 = p(),p2()
+    print('With mean = %d, after %d vals, next one is %s, %s'%(pMean,nvals,v1,v2))
+    assert v1 == v2
+
+    # With a very small mean value, Poisson reliably only uses 1 rng per value.
+    # But at only slightly larger means, it sometimes uses two rngs for a single value.
+    # Basically anything >= 10 causes this next test to have v1 != v2
+    high_mean = 10
+    p = galsim.PoissonDeviate(testseed, mean=high_mean)
+    p2 = galsim.PoissonDeviate(testseed, mean=high_mean)
+    vals = [p() for i in range(nvals)]
+    p2.discard(nvals)
+    v1,v2 = p(),p2()
+    print('With mean = %d, after %d vals, next one is %s, %s'%(high_mean,nvals,v1,v2))
+    assert v1 != v2
+
     # Check seed, reset
+    p = galsim.PoissonDeviate(testseed, mean=pMean)
     p.seed(testseed)
     testResult2 = (p(), p(), p())
     np.testing.assert_array_equal(
@@ -730,6 +783,7 @@ def test_poisson_highmean():
                 err_msg='PoissonDeviate from serialize not equivalent for mean=%s'%mean)
 
         # Check that the mean and variance come out right
+        p = galsim.PoissonDeviate(testseed, mean=mean)
         vals = [p() for i in range(nvals)]
         mu = np.mean(vals)
         var = np.var(vals)
@@ -739,6 +793,16 @@ def test_poisson_highmean():
                 err_msg='Wrong mean from PoissonDeviate with mean=%s'%mean)
         np.testing.assert_allclose(var, mean, rtol=rtol_var,
                 err_msg='Wrong variance from PoissonDeviate with mean=%s'%mean)
+
+        # Check discard
+        p2 = galsim.PoissonDeviate(testseed, mean=mean)
+        p2.discard(nvals)
+        v1,v2 = p(),p2()
+        print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+        if mean > 2**30:
+            # Poisson doesn't have a reliable rng count (unless the mean is vv small).
+            # But above 2**30 we're back to Gaussian, which is reliable.
+            assert v1 == v2
 
         # Check that two connected poisson deviates work correctly together.
         p2 = galsim.PoissonDeviate(testseed, mean=mean)
@@ -857,6 +921,7 @@ def test_weibull():
             err_msg='Wrong Weibull random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
+    w = galsim.WeibullDeviate(testseed, a=wA, b=wB)
     vals = [w() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -870,6 +935,13 @@ def test_weibull():
             err_msg='Wrong mean from WeibullDeviate')
     np.testing.assert_almost_equal(var, v, 1,
             err_msg='Wrong variance from WeibullDeviate')
+
+    # Check discard
+    w2 = galsim.WeibullDeviate(testseed, a=wA, b=wB)
+    w2.discard(nvals)
+    v1,v2 = w(),w2()
+    print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+    assert v1 == v2
 
     # Check seed, reset
     w.seed(testseed)
@@ -990,6 +1062,7 @@ def test_gamma():
             err_msg='Wrong Gamma random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
+    g = galsim.GammaDeviate(testseed, k=gammaK, theta=gammaTheta)
     vals = [g() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -1001,6 +1074,14 @@ def test_gamma():
             err_msg='Wrong mean from GammaDeviate')
     np.testing.assert_almost_equal(var, v, 0,
             err_msg='Wrong variance from GammaDeviate')
+
+    # Check discard
+    g2 = galsim.GammaDeviate(testseed, k=gammaK, theta=gammaTheta)
+    g2.discard(nvals)
+    v1,v2 = g(),g2()
+    print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+    # Gamma uses at least 2 rngs per value, but can use arbitrarily more than this.
+    assert v1 != v2
 
     # Check seed, reset
     g.seed(testseed)
@@ -1121,6 +1202,7 @@ def test_chi2():
             err_msg='Wrong Chi^2 random number sequence generated from serialize')
 
     # Check that the mean and variance come out right
+    c = galsim.Chi2Deviate(testseed, n=chi2N)
     vals = [c() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -1132,6 +1214,14 @@ def test_chi2():
             err_msg='Wrong mean from Chi2Deviate')
     np.testing.assert_almost_equal(var, v, 0,
             err_msg='Wrong variance from Chi2Deviate')
+
+    # Check discard
+    c2 = galsim.Chi2Deviate(testseed, n=chi2N)
+    c2.discard(nvals)
+    v1,v2 = c(),c2()
+    print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+    # Chi2 uses at least 2 rngs per value, but can use arbitrarily more than this.
+    assert v1 != v2
 
     # Check seed, reset
     c.seed(testseed)
@@ -1287,6 +1377,7 @@ def test_distfunction():
             err_msg='Wrong DistDeviate sequence using d.val(u())')
 
     # Check that the mean and variance come out right
+    d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     vals = [d() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -1298,6 +1389,13 @@ def test_distfunction():
             err_msg='Wrong mean from DistDeviate random numbers using function')
     np.testing.assert_almost_equal(var, v, 1,
             err_msg='Wrong variance from DistDeviate random numbers using function')
+
+    # Check discard
+    d2 = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
+    d2.discard(nvals)
+    v1,v2 = d(),d2()
+    print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+    assert v1 == v2
 
     # Check seed, reset
     d.seed(testseed)
@@ -1456,6 +1554,7 @@ def test_distLookupTable():
             err_msg='Wrong DistDeviate random number sequence using LookupTable from serialize')
 
     # Check that the mean and variance come out right
+    d = galsim.DistDeviate(testseed, function=dLookupTable, npoints=256)
     vals = [d() for i in range(nvals)]
     mean = np.mean(vals)
     var = np.var(vals)
@@ -1467,6 +1566,13 @@ def test_distLookupTable():
             err_msg='Wrong mean from DistDeviate random numbers using LookupTable')
     np.testing.assert_almost_equal(var, v, 1,
             err_msg='Wrong variance from DistDeviate random numbers using LookupTable')
+
+    # Check discard
+    d2 = galsim.DistDeviate(testseed, function=dLookupTable, npoints=256)
+    d2.discard(nvals)
+    v1,v2 = d(),d2()
+    print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
+    assert v1 == v2
 
     # This should give the same values with only 5 points because of the particular nature
     # of these arrays.
