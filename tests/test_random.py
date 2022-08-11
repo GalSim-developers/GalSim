@@ -650,14 +650,6 @@ def test_poisson():
             test_array, np.array(pResult), precision,
             err_msg='Wrong poisson random number sequence from generate.')
 
-    # Test generate_from_expectation
-    p.seed(testseed)
-    test_array = np.array([pMean]*3)
-    p.generate_from_expectation(test_array)
-    np.testing.assert_array_almost_equal(
-            test_array, np.array(pResult), precision,
-            err_msg='Wrong poisson random number sequence from generate_from_expectation.')
-
     # Test generate with an int array
     p.seed(testseed)
     test_array = np.empty(3, dtype=int)
@@ -667,12 +659,17 @@ def test_poisson():
             err_msg='Wrong poisson random number sequence from generate.')
 
     # Test generate_from_expectation
-    p.seed(testseed)
+    p2 = galsim.PoissonDeviate(testseed, mean=77)
     test_array = np.array([pMean]*3, dtype=int)
-    p.generate_from_expectation(test_array)
+    p2.generate_from_expectation(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(pResult), precisionI,
             err_msg='Wrong poisson random number sequence from generate_from_expectation.')
+    # After generating, it should be back to mean=77
+    test_array2 = np.array([p2() for i in range(100)])
+    print('test_array2 = ',test_array2)
+    print('mean = ',test_array2.mean())
+    assert np.isclose(test_array2.mean(), 77, atol=2)
 
     # Check picklability
     do_pickle(p, lambda x: (x.serialize(), x.mean))

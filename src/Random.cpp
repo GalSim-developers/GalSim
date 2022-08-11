@@ -488,6 +488,7 @@ namespace galsim {
 
     void PoissonDeviate::generateFromExpectation(long long N, double* data)
     {
+        double old_mean = getMean();
         for (long long i=0; i<N; ++i) {
             double mean = data[i];
             if (mean > 0.) {
@@ -495,6 +496,7 @@ namespace galsim {
                 data[i] = (*this)();
             }
         }
+        setMean(old_mean);
     }
 
     struct WeibullDeviate::WeibullDeviateImpl
