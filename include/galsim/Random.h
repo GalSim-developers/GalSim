@@ -121,6 +121,19 @@ namespace galsim {
         BaseDeviate duplicate();
 
         /**
+         * @brief Construct a pointer to a duplicate of this object.
+         *
+         * This is usually the version you want when working in C++.  It is a virtual function
+         * so it resolves to the right function call a compile time, but the return value is
+         * always a shared_ptr<BaseDeviate>.
+         *
+         * I couldn't figure out how to have only one of these two nearly identical bits of
+         * functionality work both in Python and C++ to do what we want.
+         */
+        virtual shared_ptr<BaseDeviate> duplicate_ptr()
+        { return std::make_shared<BaseDeviate>(duplicate()); }
+
+        /**
          * @brief Return a string that can act as the repr in python
          */
         std::string repr() { return make_repr(true); }
@@ -274,6 +287,12 @@ namespace galsim {
         { return UniformDeviate(BaseDeviate::duplicate()); }
 
         /**
+         * @brief Construct a pointer to a duplicate of this object.
+         */
+        virtual shared_ptr<BaseDeviate> duplicate_ptr()
+        { return std::make_shared<UniformDeviate>(duplicate()); }
+
+        /**
          * @brief Draw a new random number from the distribution
          *
          * @return A uniform deviate in the interval [0.,1.)
@@ -341,6 +360,12 @@ namespace galsim {
          */
         GaussianDeviate duplicate()
         { return GaussianDeviate(BaseDeviate::duplicate(), getMean(), getSigma()); }
+
+        /**
+         * @brief Construct a pointer to a duplicate of this object.
+         */
+        virtual shared_ptr<BaseDeviate> duplicate_ptr()
+        { return std::make_shared<GaussianDeviate>(duplicate()); }
 
         /**
          * @brief Draw a new random number from the distribution
@@ -453,6 +478,12 @@ namespace galsim {
         { return BinomialDeviate(BaseDeviate::duplicate(), getN(), getP()); }
 
         /**
+         * @brief Construct a pointer to a duplicate of this object.
+         */
+        virtual shared_ptr<BaseDeviate> duplicate_ptr()
+        { return std::make_shared<BinomialDeviate>(duplicate()); }
+
+        /**
          * @brief Draw a new random number from the distribution
          *
          * @return A binomial deviate with current N and p
@@ -555,6 +586,12 @@ namespace galsim {
         { return PoissonDeviate(BaseDeviate::duplicate(), getMean()); }
 
         /**
+         * @brief Construct a pointer to a duplicate of this object.
+         */
+        virtual shared_ptr<BaseDeviate> duplicate_ptr()
+        { return std::make_shared<PoissonDeviate>(duplicate()); }
+
+        /**
          * @brief Report current distribution mean
          *
          * @return Current mean value
@@ -645,6 +682,12 @@ namespace galsim {
          */
         WeibullDeviate duplicate()
         { return WeibullDeviate(BaseDeviate::duplicate(), getA(), getB()); }
+
+        /**
+         * @brief Construct a pointer to a duplicate of this object.
+         */
+        virtual shared_ptr<BaseDeviate> duplicate_ptr()
+        { return std::make_shared<WeibullDeviate>(duplicate()); }
 
         /**
          * @brief Draw a new random number from the distribution.
@@ -750,6 +793,12 @@ namespace galsim {
         { return GammaDeviate(BaseDeviate::duplicate(), getK(), getTheta()); }
 
         /**
+         * @brief Construct a pointer to a duplicate of this object.
+         */
+        virtual shared_ptr<BaseDeviate> duplicate_ptr()
+        { return std::make_shared<GammaDeviate>(duplicate()); }
+
+        /**
          * @brief Draw a new random number from the distribution.
          *
          * @return A Gamma deviate with current shape k and scale theta.
@@ -851,6 +900,12 @@ namespace galsim {
          */
         Chi2Deviate duplicate()
         { return Chi2Deviate(BaseDeviate::duplicate(), getN()); }
+
+        /**
+         * @brief Construct a pointer to a duplicate of this object.
+         */
+        virtual shared_ptr<BaseDeviate> duplicate_ptr()
+        { return std::make_shared<Chi2Deviate>(duplicate()); }
 
         /**
          * @brief Draw a new random number from the distribution.
