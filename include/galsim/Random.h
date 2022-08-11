@@ -248,6 +248,20 @@ namespace galsim {
          */
         void seedurandom();
 
+        /**
+         * @brief Return whether the generator always uses 1 rng per value.
+         *
+         * Subclasses that do not, should override this to return false.
+         */
+        virtual bool has_reliable_discard() const { return true; }
+
+        /**
+         * @brief Return whether the generator uses 2 rngs values per 2 returned values.
+         *
+         * This is only true of GaussianDeviate, so it overrides this to return true.
+         */
+        virtual bool generates_in_pairs() const { return false; }
+
     private:
         BaseDeviate();  // Private no-action constructor used by duplicate().
     };
@@ -421,6 +435,8 @@ namespace galsim {
 
     protected:
         std::string make_repr(bool incl_seed);
+
+        virtual bool generates_in_pairs() const { return true; }
 
     private:
         struct GaussianDeviateImpl;
@@ -622,6 +638,8 @@ namespace galsim {
 
     protected:
         std::string make_repr(bool incl_seed);
+
+        virtual bool has_reliable_discard() const { return false; }
 
     private:
         struct PoissonDeviateImpl;
@@ -843,6 +861,8 @@ namespace galsim {
     protected:
         std::string make_repr(bool incl_seed);
 
+        virtual bool has_reliable_discard() const { return false; }
+
     private:
         // Note: confusingly, boost calls the internal values alpha and beta, even though they
         // don't conform to the normal beta=1/theta.  Rather, they have beta=theta.
@@ -936,6 +956,8 @@ namespace galsim {
 
     protected:
         std::string make_repr(bool incl_seed);
+
+        virtual bool has_reliable_discard() const { return false; }
 
     private:
 

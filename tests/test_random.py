@@ -141,6 +141,8 @@ def test_uniform():
     v1, v2 = u(), u2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     assert v1 == v2
+    assert u.has_reliable_discard
+    assert not u.generates_in_pairs
 
     # Check seed, reset
     u.seed(testseed)
@@ -310,6 +312,8 @@ def test_gaussian():
     v1,v2 = g(),g2()
     print('after %d vals, next one is %s, %s'%(nvals+1,v1,v2))
     assert v1 != v2
+    assert g.has_reliable_discard
+    assert g.generates_in_pairs
 
     # Check seed, reset
     g.seed(testseed)
@@ -476,6 +480,8 @@ def test_binomial():
     v1,v2 = b(),b2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     assert v1 == v2
+    assert b.has_reliable_discard
+    assert not b.generates_in_pairs
 
     # Check seed, reset
     b.seed(testseed)
@@ -629,6 +635,8 @@ def test_poisson():
     v1,v2 = p(),p2()
     print('With mean = %d, after %d vals, next one is %s, %s'%(high_mean,nvals,v1,v2))
     assert v1 != v2
+    assert not p.has_reliable_discard
+    assert not p.generates_in_pairs
 
     # Check seed, reset
     p = galsim.PoissonDeviate(testseed, mean=pMean)
@@ -942,6 +950,8 @@ def test_weibull():
     v1,v2 = w(),w2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     assert v1 == v2
+    assert w.has_reliable_discard
+    assert not w.generates_in_pairs
 
     # Check seed, reset
     w.seed(testseed)
@@ -1082,6 +1092,8 @@ def test_gamma():
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     # Gamma uses at least 2 rngs per value, but can use arbitrarily more than this.
     assert v1 != v2
+    assert not g.has_reliable_discard
+    assert not g.generates_in_pairs
 
     # Check seed, reset
     g.seed(testseed)
@@ -1222,6 +1234,8 @@ def test_chi2():
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     # Chi2 uses at least 2 rngs per value, but can use arbitrarily more than this.
     assert v1 != v2
+    assert not c.has_reliable_discard
+    assert not c.generates_in_pairs
 
     # Check seed, reset
     c.seed(testseed)
@@ -1396,6 +1410,8 @@ def test_distfunction():
     v1,v2 = d(),d2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     assert v1 == v2
+    assert d.has_reliable_discard
+    assert not d.generates_in_pairs
 
     # Check seed, reset
     d.seed(testseed)
@@ -1573,6 +1589,8 @@ def test_distLookupTable():
     v1,v2 = d(),d2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     assert v1 == v2
+    assert d.has_reliable_discard
+    assert not d.generates_in_pairs
 
     # This should give the same values with only 5 points because of the particular nature
     # of these arrays.
