@@ -332,12 +332,16 @@ namespace galsim {
 
     void GaussianDeviate::generateFromVariance(long long N, double* data)
     {
+        double old_mean = getMean();
+        double old_sigma = getSigma();
         setMean(0.);
         setSigma(1.);
         for (long long i=0; i<N; ++i) {
             double sigma = std::sqrt(data[i]);
             data[i] = (*this)() * sigma;
         }
+        setMean(old_mean);
+        setSigma(old_sigma);
     }
 
     struct BinomialDeviate::BinomialDeviateImpl

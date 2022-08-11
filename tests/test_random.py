@@ -361,12 +361,18 @@ def test_gaussian():
             err_msg='Wrong Gaussian random number sequence from generate.')
 
     # Test generate_from_variance.
-    g2 = galsim.GaussianDeviate(testseed)
+    g2 = galsim.GaussianDeviate(testseed, mean=5, sigma=0.3)
+    g3 = galsim.GaussianDeviate(testseed, mean=5, sigma=0.3)
     test_array.fill(gSigma**2)
     g2.generate_from_variance(test_array)
     np.testing.assert_array_almost_equal(
             test_array, np.array(gResult)-gMean, precision,
             err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
+    # After running generate_from_variance, it shoudl be back to using the specified mean, sigma.
+    # Note: need to round up to even number for discard, since gd generates 2 at a time.
+    g3.discard((len(test_array)+1)//2 * 2)
+    print('g2,g3 = ',g2(),g3())
+    assert g2() == g3()
 
     # Test generate with a float32 array.
     g.seed(testseed)
