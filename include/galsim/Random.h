@@ -219,7 +219,7 @@ namespace galsim {
          * @param N     The number of values to draw
          * @param data  The array into which to write the values
          */
-        void generate(int N, double* data);
+        void generate(long long N, double* data);
 
         /**
          * @brief Draw N new random numbers from the distribution and add them to the values in
@@ -228,7 +228,7 @@ namespace galsim {
          * @param N     The number of values to draw
          * @param data  The array into which to add the values
          */
-        void addGenerate(int N, double* data);
+        void addGenerate(long long N, double* data);
 
    protected:
         struct BaseDeviateImpl;
@@ -417,7 +417,7 @@ namespace galsim {
          * @param N     The number of values to draw
          * @param data  The array with the given variances to replace with Gaussian draws.
          */
-        void generateFromVariance(int N, double* data);
+        void generateFromVariance(long long N, double* data);
 
     protected:
         std::string make_repr(bool incl_seed);
@@ -617,7 +617,7 @@ namespace galsim {
          * @param N     The number of values to draw
          * @param data  The array with the given data to replace with Poisson draws.
          */
-        void generateFromExpectation(int N, double* data);
+        void generateFromExpectation(long long N, double* data);
 
 
     protected:

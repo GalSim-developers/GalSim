@@ -196,14 +196,14 @@ namespace galsim {
     long BaseDeviate::raw()
     { return (*_impl->_rng)(); }
 
-    void BaseDeviate::generate(int N, double* data)
+    void BaseDeviate::generate(long long N, double* data)
     {
-        for (int i=0; i<N; ++i) data[i] = (*this)();
+        for (long long i=0; i<N; ++i) data[i] = (*this)();
     }
 
-    void BaseDeviate::addGenerate(int N, double* data)
+    void BaseDeviate::addGenerate(long long N, double* data)
     {
-        for (int i=0; i<N; ++i) data[i] += (*this)();
+        for (long long i=0; i<N; ++i) data[i] += (*this)();
     }
 
     // Next two functions shamelessly stolen from
@@ -330,11 +330,11 @@ namespace galsim {
         return oss.str();
     }
 
-    void GaussianDeviate::generateFromVariance(int N, double* data)
+    void GaussianDeviate::generateFromVariance(long long N, double* data)
     {
         setMean(0.);
         setSigma(1.);
-        for (int i=0; i<N; ++i) {
+        for (long long i=0; i<N; ++i) {
             double sigma = std::sqrt(data[i]);
             data[i] = (*this)() * sigma;
         }
@@ -482,9 +482,9 @@ namespace galsim {
         return oss.str();
     }
 
-    void PoissonDeviate::generateFromExpectation(int N, double* data)
+    void PoissonDeviate::generateFromExpectation(long long N, double* data)
     {
-        for (int i=0; i<N; ++i) {
+        for (long long i=0; i<N; ++i) {
             double mean = data[i];
             if (mean > 0.) {
                 setMean(mean);
