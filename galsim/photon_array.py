@@ -63,11 +63,12 @@ class PhotonArray:
                     the +z direction as towards towards the dielectric medium of the detector and
                     -z as towards vacuum; consequently, a photon with increasing y in time has
                     positive dydz.
+        wavelength  The wavelength of the photons (in nm)
         pupil_u:    Horizontal location of photon as it intersected the entrance pupil plane
                     (meters).
         pupil_v:    Vertical location of photon as it intersected the entrance pupil plane
                     (meters).
-        wavelength  The wavelength of the photons (in nm)
+        time:       Time stamp for photon impacting the pupil plane (seconds).
 
     Unlike most GalSim objects (but like `Image`), PhotonArrays are mutable.  It is permissible
     to write values to the above attributes with code like::
@@ -99,13 +100,14 @@ class PhotonArray:
         flux:       Optionally, the initial flux values. [default: None]
         dxdz:       Optionally, the initial dxdz values. [default: None]
         dydz:       Optionally, the initial dydz values. [default: None]
+        wavelength: Optionally, the initial wavelength values (in nm). [default: None]
         pupil_u:    Optionally, the initial pupil_u values. [default: None]
         pupil_v:    Optionally, the initial pupil_v values. [default: None]
-        wavelength: Optionally, the initial wavelength values (in nm). [default: None]
+        time:       Optionally, the initial time values. [default: None]
     """
     def __init__(
         self, N, x=None, y=None, flux=None, dxdz=None, dydz=None, wavelength=None,
-        pupil_u=None, pupil_v=None
+        pupil_u=None, pupil_v=None, time=None
     ):
         # Only x, y, flux are built by default, since these are always required.
         # The others we leave as None unless/until they are needed.
@@ -117,6 +119,7 @@ class PhotonArray:
         self._wave = None
         self._pupil_u = None
         self._pupil_v = None
+        self._time = None
         self._is_corr = False
 
         # These give reasonable errors if x,y,flux are the wrong size/type
@@ -128,11 +131,12 @@ class PhotonArray:
         if wavelength is not None: self.wavelength = wavelength
         if pupil_u is not None: self.pupil_u = pupil_u
         if pupil_v is not None: self.pupil_v = pupil_v
+        if time is not None: self.time = time
 
     @classmethod
     def fromArrays(
         cls, x, y, flux, dxdz=None, dydz=None, wavelength=None, pupil_u=None, pupil_v=None,
-        is_corr=False,
+        time=None, is_corr=False,
     ):
         """Create a PhotonArray from pre-allocated numpy arrays without any copying.
 
@@ -154,13 +158,14 @@ class PhotonArray:
             wavelength: Optionally, the initial wavelength values (in nm). [default: None]
             pupil_u:    Optionally, the initial pupil_u values (in m). [default: None]
             pupil_v:    Optionally, the initial pupil_v values (in m). [default: None]
+            time:       Optionally, the initial time values (in s). [default: None]
             is_corr:    Whether or not the photons are correlated. [default: False]
         """
         args = [x, y, flux]
         argnames = ['x', 'y', 'flux']
         for a, aname in zip(
-            [dxdz, dydz, wavelength, pupil_u, pupil_v],
-            ['dxdz', 'dydz', 'wavelength', 'pupil_u', 'pupil_v']
+            [dxdz, dydz, wavelength, pupil_u, pupil_v, time],
+            ['dxdz', 'dydz', 'wavelength', 'pupil_u', 'pupil_v', 'time']
         ):
             if a is not None:  # don't check optional args that are None
                 args.append(a)
@@ -177,12 +182,12 @@ class PhotonArray:
             if not a.flags.c_contiguous:
                 raise ValueError("Array {} must be c_contiguous".format(aname))
 
-        return cls._fromArrays(x, y, flux, dxdz, dydz, wavelength, pupil_u, pupil_v, is_corr)
+        return cls._fromArrays(x, y, flux, dxdz, dydz, wavelength, pupil_u, pupil_v, time, is_corr)
 
     @classmethod
     def _fromArrays(
         cls, x, y, flux, dxdz=None, dydz=None, wavelength=None, pupil_u=None, pupil_v=None,
-        is_corr=False
+        time=None, is_corr=False
     ):
         """Same as `fromArrays`, but no sanity checking of inputs.
         """
@@ -195,6 +200,7 @@ class PhotonArray:
         ret._wave = wavelength
         ret._pupil_u = pupil_u
         ret._pupil_v = pupil_v
+        ret._time = time
         ret._is_corr = is_corr
         return ret
 
@@ -290,6 +296,17 @@ class PhotonArray:
         self.allocatePupil()
         self._pupil_v[:] = value
 
+    @property
+    def time(self):
+        """Time stamp of when photon encounters the pupil plane.
+        """
+        self.allocateTimes()
+        return self._time
+    @time.setter
+    def time(self, value):
+        self.allocateTimes()
+        self._time[:] = value
+
     def hasAllocatedAngles(self):
         """Returns whether the arrays for the incidence angles `dxdz` and `dydz` have been
         allocated.
@@ -328,6 +345,17 @@ class PhotonArray:
         if self._pupil_u is None:
             self._pupil_u = np.zeros_like(self._x)
             self._pupil_v = np.zeros_like(self._x)
+
+    def hasAllocatedTimes(self):
+        """Returns whether the array for the time stamps `time` has been allocated.
+        """
+        return self._time is not None
+
+    def allocateTimes(self):
+        """Allocate the memory for the time stamps, `time`.
+        """
+        if self._time is None:
+            self._time = np.zeros_like(self._x)
 
     def isCorrelated(self):
         """Returns whether the photons are correlated
@@ -388,6 +416,8 @@ class PhotonArray:
         if rhs.hasAllocatedPupil():
             self.pupil_u[s] = rhs.pupil_u
             self.pupil_v[s] = rhs.pupil_v
+        if rhs.hasAllocatedTimes():
+            self.time[s] = rhs.time
 
     def convolve(self, rhs, rng=None):
         """Convolve this `PhotonArray` with another.
@@ -422,6 +452,14 @@ class PhotonArray:
                 self.pupil_u = rhs.pupil_u
                 self.pupil_v = rhs.pupil_v
 
+        if rhs.hasAllocatedTimes():
+            if self.hasAllocatedTimes() and self._time is not rhs._time:
+                raise GalSimIncompatibleValuesError(
+                    "PhotonArray.convolve with doubly assigned time stamps"
+                )
+            else:
+                self.time = rhs.time
+
         rng = BaseDeviate(rng)
         self._pa.convolve(rhs._pa, rng._rng)
 
@@ -434,6 +472,8 @@ class PhotonArray:
             s += ", wavelength=array(%r)"%(self.wavelength.tolist())
         if self.hasAllocatedPupil():
             s += ", pupil_u=array(%r), pupil_v=array(%r)"%(self.pupil_u.tolist(), self.pupil_v.tolist())
+        if self.hasAllocatedTimes():
+            s += ", time=array(%r)"%(self.time.tolist())
         s += ")"
         return s
 
@@ -459,6 +499,7 @@ class PhotonArray:
                  self.hasAllocatedAngles() == other.hasAllocatedAngles() and
                  self.hasAllocatedWavelengths() == other.hasAllocatedWavelengths() and
                  self.hasAllocatedPupil() == other.hasAllocatedPupil() and
+                 self.hasAllocatedTimes() == other.hasAllocatedTimes() and
                  (np.array_equal(self.dxdz,other.dxdz) if self.hasAllocatedAngles() else True) and
                  (np.array_equal(self.dydz,other.dydz) if self.hasAllocatedAngles() else True) and
                  (np.array_equal(self.wavelength,other.wavelength)
@@ -466,7 +507,9 @@ class PhotonArray:
                  (np.array_equal(self.pupil_u,other.pupil_u)
                     if self.hasAllocatedPupil() else True) and
                  (np.array_equal(self.pupil_v,other.pupil_v)
-                    if self.hasAllocatedPupil() else True)
+                    if self.hasAllocatedPupil() else True) and
+                 (np.array_equal(self.time,other.time)
+                    if self.hasAllocatedTimes() else True)
                 ))
 
     def __ne__(self, other):
@@ -587,6 +630,9 @@ class PhotonArray:
             cols.append(pyfits.Column(name='pupil_u', format='D', array=self.pupil_u))
             cols.append(pyfits.Column(name='pupil_v', format='D', array=self.pupil_v))
 
+        if self.hasAllocatedTimes():
+            cols.append(pyfits.Column(name='time', format='D', array=self.time))
+
         cols = pyfits.ColDefs(cols)
         table = pyfits.BinTableHDU.from_columns(cols)
         fits.writeFile(file_name, table)
@@ -619,6 +665,8 @@ class PhotonArray:
         if 'pupil_u' in names:
             photons.pupil_u = data['pupil_u']
             photons.pupil_v = data['pupil_v']
+        if 'time' in names:
+            photons.time = data['time']
         return photons
 
 
@@ -1148,5 +1196,47 @@ class PupilAnnulusSampler(PhotonOp):
         s = "galsim.PupilAnnulusSampler(R_outer=%r"%self.R_outer
         if self.R_inner != 0.0:
             s += ", R_inner=%r"%self.R_inner
+        s += ")"
+        return s
+
+
+class TimeSampler(PhotonOp):
+    """A photon operator that uniformly samples photon time stamps within some interval.
+
+    Parameters
+    """
+    _req_params = {
+        "t0": float,
+        "exptime": float
+    }
+    def __init__(self, t0=0.0, exptime=0.0):
+        self.t0 = t0
+        self.exptime = exptime
+
+    def applyTo(self, photon_array, local_wcs=None, rng=None):
+        """Add time stamps to photons.
+
+        Parameters:
+            photon_array:   A `PhotonArray` to apply the operator to.
+            local_wcs:      A `LocalWCS` instance defining the local WCS for the current photon
+                            bundle in case the operator needs this information.  [default: None]
+            rng:            A random number generator to use if needed. [default: None]
+        """
+        ud = UniformDeviate(rng)
+        t = np.empty(len(photon_array))
+        ud.generate(t)
+        t *= self.exptime
+        t += self.t0
+        photon_array.time = t
+
+    def __repr__(self):
+        s = "galsim.TimeSampler("
+        if self.t0 != 0.0:
+            s += "t0=%r"%self.t0
+            if self.exptime != 0.0:
+                s += ", exptime=%r"%self.exptime
+        else:
+            if self.exptime != 0.0:
+                s += "exptime=%r"%self.exptime
         s += ")"
         return s
