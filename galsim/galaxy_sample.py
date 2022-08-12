@@ -83,10 +83,7 @@ class GalaxySample:
     the need to convolve with a suitable PSF.
 
     Parameters:
-        file_name:          The file containing the catalog. [default: None, which will look for the
-                            F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
-                            exception if the catalog is not there telling you to run
-                            galsim_download_cosmos.]
+        file_name:          The file containing the catalog.
         dir:                The directory with the catalog file and, if making realistic galaxies,
                             the image and noise files (or symlinks to them). [default: None, which
                             will look in $PREFIX/share/galsim.]
@@ -160,7 +157,7 @@ class GalaxySample:
                     'cut_ratio' : float, 'sn_limit' : float, 'min_mask_dist': float,
                   }
 
-    def __init__(self, file_name=None, dir=None, preload=False,
+    def __init__(self, file_name, dir=None, preload=False,
                  orig_exptime=1., orig_area=1.,
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
                  min_flux=0., max_flux=0., cut_ratio=0.8, sn_limit=10., min_mask_dist=11,
