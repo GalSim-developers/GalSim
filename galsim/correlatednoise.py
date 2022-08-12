@@ -76,7 +76,7 @@ class BaseCorrelatedNoise:
     able to guarantee the above.
 
     If you have the correlation function as an image on file, you can use the class  method
-    `from_file`, which does confirm that the file has the appopriate symmetry.
+    `from_file`, which does confirm that the file has the appropriate symmetry.
 
     The BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes
     (currently only `CorrelatedNoise` and `UncorrelatedNoise`) store the random deviate, noise
