@@ -1209,6 +1209,13 @@ def test_variance_changes():
     # Image must be rotationally symmetric
     assert_raises(galsim.GalSimError, galsim.BaseCorrelatedNoise.from_file,
                   os.path.join('real_comparison_images', 'shera_target_PSF.fits'), 0.1)
+    # Image must be centrally peaked
+    im = galsim.fits.read(file_name)
+    im[im.center] *= 0.1
+    bad_center_file_name = os.path.join('fits_files','test_acs_bad_center_cf.fits')
+    im.write(bad_center_file_name)
+    assert_raises(galsim.GalSimError, galsim.BaseCorrelatedNoise.from_file,
+                  bad_center_file_name, 0.1)
 
 @timer
 def test_cosmos_wcs():
