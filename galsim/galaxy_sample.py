@@ -45,7 +45,7 @@ class GalaxySample:
 
     Unlike `COSMOSCatalog`, which has easy options for picking out one of the two galaxy subsets
     that are available for download using ``galsim_download_cosmos``, for this class you need to
-    manually specifiy the file name.
+    manually specify the file name.
 
         >>> cat = galsim.GalaxySample(file_name)
 
