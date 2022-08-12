@@ -21,7 +21,7 @@ import numpy as np
 from .gsobject import GSObject
 from .sed import SED
 from .bandpass import Bandpass
-from .position import Position, PositionD, _PositionD
+from .position import Position, _PositionD
 from .utilities import lazy_property, doc_inherit
 from .gsparams import GSParams
 from .phase_psf import OpticalPSF, Aperture
