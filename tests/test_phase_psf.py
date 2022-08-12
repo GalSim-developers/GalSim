@@ -343,7 +343,7 @@ def test_frozen_flow():
 
     np.testing.assert_array_almost_equal(wf0, wf1, 5, "Flow is not frozen")
     np.testing.assert_array_almost_equal(dwdu0, dwdu1, 5, "Flow is not frozen")
-    np.testing.assert_array_almost_equal(dwdu0, dwdu1, 5, "Flow is not frozen")
+    np.testing.assert_array_almost_equal(dwdv0, dwdv1, 5, "Flow is not frozen")
 
     # We should be able to rewind too.
     screen._seek(0.01)
@@ -774,17 +774,18 @@ def test_phase_gradient_shoot():
         size_tolerance = 0.3
         size_bias = 0.15
         shape_tolerance = 0.04
+    t0 = 0.0
 
     psfs = [
         atm.makePSF(
-            lam, diam=diam, theta=th, exptime=exptime, aper=aper,
+            lam, diam=diam, theta=th, t0=t0, exptime=exptime, aper=aper,
             fft_sign='+' if i%2 else '-'  # Test both possibilities
         )
         for i, th in enumerate(thetas)
     ]
     psfs2 = [
         atm2.makePSF(
-            lam, diam=diam, theta=th, exptime=exptime, aper=aper, time_step=time_step,
+            lam, diam=diam, theta=th, t0=t0, exptime=exptime, aper=aper, time_step=time_step,
             fft_sign='+' if i%2 else '-'
         )
         for i, th in enumerate(thetas)
@@ -878,14 +879,15 @@ def test_phase_gradient_shoot():
                                                      photon_ops=[psf])
         np.testing.assert_allclose(im_shoot2.array, im_shoot.array)
 
-        # Repeat with the pupil_sampler before the psf.
+        # Repeat with the pupil_sampler, time_sampler before the psf.
         pupil_sampler = galsim.PupilImageSampler(diam=diam, lam=lam,
                                                  pad_factor=pad_factor,
                                                  oversampling=oversampling,
                                                  screen_list=atm)
+        time_sampler = galsim.TimeSampler(t0=t0, exptime=exptime)
         im_shoot3 = galsim.DeltaFunction().drawImage(nx=256, ny=256, scale=0.05, method='phot',
                                                      n_photons=100000, rng=rng1.duplicate(),
-                                                     photon_ops=[pupil_sampler, psf])
+                                                     photon_ops=[pupil_sampler, time_sampler, psf])
         np.testing.assert_allclose(im_shoot3.array, im_shoot.array)
 
         do_pickle(pupil_sampler)
@@ -1345,7 +1347,6 @@ def test_pickle():
     #screen_size = 819.2
     screen_size = 32
     screen_scale = 0.1
-    kmax = 1
 
     import multiprocessing as mp
     ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]

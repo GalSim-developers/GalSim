@@ -2437,6 +2437,8 @@ class GSObject:
         if photon_array.hasAllocatedPupil():
             p1._pupil_u = photon_array._pupil_u
             p1._pupil_v = photon_array._pupil_v
+        if photon_array.hasAllocatedTimes():
+            p1._time = photon_array._time
         obj = local_wcs.toImage(self) if local_wcs is not None else self
         obj._shoot(p1, rng)
         photon_array.convolve(p1, rng)

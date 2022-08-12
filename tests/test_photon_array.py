@@ -89,6 +89,7 @@ def test_photon_array():
     assert not photon_array.hasAllocatedWavelengths()
     assert not photon_array.hasAllocatedAngles()
     assert not photon_array.hasAllocatedPupil()
+    assert not photon_array.hasAllocatedTimes()
 
     # Check arithmetic ops
     photon_array.x *= 5
@@ -126,6 +127,7 @@ def test_photon_array():
     assert photon_array.hasAllocatedWavelengths()
     assert not photon_array.hasAllocatedAngles()
     assert not photon_array.hasAllocatedPupil()
+    assert not photon_array.hasAllocatedTimes()
     np.testing.assert_array_equal(photon_array.wavelength, 500)
 
     photon_array.dxdz = 0.23
@@ -134,6 +136,7 @@ def test_photon_array():
     assert photon_array.hasAllocatedWavelengths()
     assert photon_array.hasAllocatedAngles()
     assert not photon_array.hasAllocatedPupil()
+    assert not photon_array.hasAllocatedTimes()
     np.testing.assert_array_equal(photon_array.dxdz, 0.23)
     np.testing.assert_array_equal(photon_array.dydz, 0.88)
     np.testing.assert_array_equal(photon_array.wavelength, 912)
@@ -143,11 +146,26 @@ def test_photon_array():
     assert photon_array.hasAllocatedWavelengths()
     assert photon_array.hasAllocatedAngles()
     assert photon_array.hasAllocatedPupil()
+    assert not photon_array.hasAllocatedTimes()
     np.testing.assert_array_equal(photon_array.dxdz, 0.23)
     np.testing.assert_array_equal(photon_array.dydz, 0.88)
     np.testing.assert_array_equal(photon_array.wavelength, 912)
     np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
     np.testing.assert_array_equal(photon_array.pupil_v, 0.0)
+
+    # Add time stamps
+    photon_array.time = 0.0
+    assert photon_array.hasAllocatedWavelengths()
+    assert photon_array.hasAllocatedAngles()
+    assert photon_array.hasAllocatedPupil()
+    assert photon_array.hasAllocatedTimes()
+    np.testing.assert_array_equal(photon_array.dxdz, 0.23)
+    np.testing.assert_array_equal(photon_array.dydz, 0.88)
+    np.testing.assert_array_equal(photon_array.wavelength, 912)
+    np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
+    np.testing.assert_array_equal(photon_array.pupil_v, 0.0)
+    np.testing.assert_array_equal(photon_array.time, 0.0)
+
 
     # Check toggling is_corr
     assert not photon_array.isCorrelated()
@@ -188,6 +206,7 @@ def test_photon_array():
     pa1.wavelength = photon_array.wavelength[:50]
     pa1.pupil_u = photon_array.pupil_u[:50]
     pa1.pupil_v = photon_array.pupil_v[:50]
+    pa1.time = photon_array.time[:50]
     np.testing.assert_almost_equal(pa1.x, photon_array.x[:50])
     np.testing.assert_almost_equal(pa1.y, photon_array.y[:50])
     np.testing.assert_almost_equal(pa1.flux, photon_array.flux[:50])
@@ -196,6 +215,7 @@ def test_photon_array():
     np.testing.assert_almost_equal(pa1.wavelength, photon_array.wavelength[:50])
     np.testing.assert_almost_equal(pa1.pupil_u, photon_array.pupil_u[:50])
     np.testing.assert_almost_equal(pa1.pupil_v, photon_array.pupil_v[:50])
+    np.testing.assert_almost_equal(pa1.time, photon_array.time[:50])
 
     # Check assignAt
     pa2 = galsim.PhotonArray(100)
@@ -209,6 +229,7 @@ def test_photon_array():
     np.testing.assert_almost_equal(pa2.wavelength[:50], pa1.wavelength)
     np.testing.assert_almost_equal(pa2.pupil_u[:50], pa1.pupil_u)
     np.testing.assert_almost_equal(pa2.pupil_v[:50], pa1.pupil_v)
+    np.testing.assert_almost_equal(pa2.time[:50], pa1.time)
     np.testing.assert_almost_equal(pa2.x[50:], pa1.x)
     np.testing.assert_almost_equal(pa2.y[50:], pa1.y)
     np.testing.assert_almost_equal(pa2.flux[50:], pa1.flux)
@@ -217,6 +238,7 @@ def test_photon_array():
     np.testing.assert_almost_equal(pa2.wavelength[50:], pa1.wavelength)
     np.testing.assert_almost_equal(pa2.pupil_u[50:], pa1.pupil_u)
     np.testing.assert_almost_equal(pa2.pupil_v[50:], pa1.pupil_v)
+    np.testing.assert_almost_equal(pa2.time[50:], pa1.time)
 
     # Error if it doesn't fit.
     assert_raises(ValueError, pa2.assignAt, 90, pa1)
@@ -328,8 +350,9 @@ def test_convolve():
 
     # Check propagation of dxdz, dydz, wavelength, pupil_u, pupil_v
     for attr, checkFn in zip(
-        ['dxdz', 'wavelength', 'pupil_u'],
-        ['hasAllocatedAngles', 'hasAllocatedWavelengths', 'hasAllocatedPupil']
+        ['dxdz', 'wavelength', 'pupil_u', 'time'],
+        ['hasAllocatedAngles', 'hasAllocatedWavelengths', 'hasAllocatedPupil',
+         'hasAllocatedTimes']
     ):
         pa1 = obj.shoot(nphotons, rng)
         pa2 = obj.shoot(nphotons, rng)
@@ -525,6 +548,7 @@ def test_photon_io():
     assert not photons1.hasAllocatedWavelengths()
     assert not photons1.hasAllocatedAngles()
     assert not photons1.hasAllocatedPupil()
+    assert not photons1.hasAllocatedTimes()
 
     np.testing.assert_array_equal(photons1.x, photons.x)
     np.testing.assert_array_equal(photons1.y, photons.y)
@@ -540,9 +564,10 @@ def test_photon_io():
     for op in ops:
         op.applyTo(photons, rng=rng)
 
-    # Directly inject some pupil coordinates
+    # Directly inject some pupil coordinates and time stamps
     photons.pupil_u = np.linspace(0, 1, nphotons)
     photons.pupil_v = np.linspace(1, 2, nphotons)
+    photons.time = np.linspace(0, 30, nphotons)
 
     file_name = 'output/photons2.dat'
     photons.write(file_name)
@@ -553,6 +578,7 @@ def test_photon_io():
     assert photons2.hasAllocatedWavelengths()
     assert photons2.hasAllocatedAngles()
     assert photons2.hasAllocatedPupil()
+    assert photons2.hasAllocatedTimes()
 
     np.testing.assert_array_equal(photons2.x, photons.x)
     np.testing.assert_array_equal(photons2.y, photons.y)
@@ -562,6 +588,7 @@ def test_photon_io():
     np.testing.assert_array_equal(photons2.wavelength, photons.wavelength)
     np.testing.assert_array_equal(photons.pupil_u, photons.pupil_u)
     np.testing.assert_array_equal(photons.pupil_v, photons.pupil_v)
+    np.testing.assert_array_equal(photons.time, photons.time)
 
 @timer
 def test_dcr():
@@ -1298,7 +1325,10 @@ def test_fromArrays():
     wavelength = np.empty(1000)
     pupil_u = np.empty(1000)
     pupil_v = np.empty(1000)
-    pa_batch = galsim.PhotonArray.fromArrays(x, y, flux, dxdz, dydz, wavelength, pupil_u, pupil_v)
+    time = np.empty(1000)
+    pa_batch = galsim.PhotonArray.fromArrays(
+        x, y, flux, dxdz, dydz, wavelength, pupil_u, pupil_v, time
+    )
     pa_1 = galsim.PhotonArray.fromArrays(
         x[:Nsplit],
         y[:Nsplit],
@@ -1307,7 +1337,8 @@ def test_fromArrays():
         dydz[:Nsplit],
         wavelength[:Nsplit],
         pupil_u[:Nsplit],
-        pupil_v[:Nsplit]
+        pupil_v[:Nsplit],
+        time[:Nsplit]
     )
     pa_2 = galsim.PhotonArray.fromArrays(
         x[Nsplit:],
@@ -1317,7 +1348,8 @@ def test_fromArrays():
         dydz[Nsplit:],
         wavelength[Nsplit:],
         pupil_u[Nsplit:],
-        pupil_v[Nsplit:]
+        pupil_v[Nsplit:],
+        time[Nsplit:]
     )
 
     sed = galsim.SED("vega.txt", wave_type='nm', flux_type='flambda')
@@ -1325,6 +1357,7 @@ def test_fromArrays():
     with assert_warns(galsim.GalSimWarning):
         galsim.WavelengthSampler(sed, bp).applyTo(pa_batch, rng=rng)
     galsim.FRatioAngles(1.2, 0.61).applyTo(pa_batch, rng=rng)
+    galsim.TimeSampler(0.0, 30.0).applyTo(pa_batch, rng=rng)
 
     assert pa_batch.x is x
     assert pa_batch.y is y
@@ -1334,6 +1367,7 @@ def test_fromArrays():
     assert pa_batch.wavelength is wavelength
     assert pa_batch.pupil_u is pupil_u
     assert pa_batch.pupil_v is pupil_v
+    assert pa_batch.time is time
     np.testing.assert_array_equal(pa_batch.x, x)
     np.testing.assert_array_equal(pa_batch.y, y)
     np.testing.assert_array_equal(pa_batch.flux, flux)
@@ -1342,6 +1376,7 @@ def test_fromArrays():
     np.testing.assert_array_equal(pa_batch.wavelength, wavelength)
     np.testing.assert_array_equal(pa_batch.pupil_u, pupil_u)
     np.testing.assert_array_equal(pa_batch.pupil_v, pupil_v)
+    np.testing.assert_array_equal(pa_batch.time, time)
     np.testing.assert_array_equal(pa_1.x, pa_batch.x[:Nsplit])
     np.testing.assert_array_equal(pa_1.y, pa_batch.y[:Nsplit])
     np.testing.assert_array_equal(pa_1.flux, pa_batch.flux[:Nsplit])
@@ -1350,6 +1385,7 @@ def test_fromArrays():
     np.testing.assert_array_equal(pa_1.wavelength, pa_batch.wavelength[:Nsplit])
     np.testing.assert_array_equal(pa_1.pupil_u, pa_batch.pupil_u[:Nsplit])
     np.testing.assert_array_equal(pa_1.pupil_v, pa_batch.pupil_v[:Nsplit])
+    np.testing.assert_array_equal(pa_1.time, pa_batch.time[:Nsplit])
     np.testing.assert_array_equal(pa_2.x, pa_batch.x[Nsplit:])
     np.testing.assert_array_equal(pa_2.y, pa_batch.y[Nsplit:])
     np.testing.assert_array_equal(pa_2.flux, pa_batch.flux[Nsplit:])
@@ -1358,6 +1394,7 @@ def test_fromArrays():
     np.testing.assert_array_equal(pa_2.wavelength, pa_batch.wavelength[Nsplit:])
     np.testing.assert_array_equal(pa_2.pupil_u, pa_batch.pupil_u[Nsplit:])
     np.testing.assert_array_equal(pa_2.pupil_v, pa_batch.pupil_v[Nsplit:])
+    np.testing.assert_array_equal(pa_2.time, pa_batch.time[Nsplit:])
 
     # Check the is_corr flag gets set
     assert not pa_batch.isCorrelated()
@@ -1395,6 +1432,42 @@ def test_pupil_annulus_sampler():
     h, edges = np.histogram(phi, bins=10, range=(0.0, 2*np.pi))
     assert np.std(h)/np.mean(h) < 0.01
 
+    do_pickle(sampler)
+
+
+def test_time_sampler():
+    """ Check TimeSampler build arguments
+    """
+    seed = 97531
+    sampler = galsim.TimeSampler()
+    assert sampler.t0 == 0
+    assert sampler.exptime == 0
+    pa = galsim.PhotonArray(1_000_000)
+    sampler.applyTo(pa, rng=seed)
+    np.testing.assert_array_equal(pa.time, 0.0)
+    do_pickle(sampler)
+
+    sampler = galsim.TimeSampler(t0=1.0)
+    assert sampler.t0 == 1
+    assert sampler.exptime == 0
+    sampler.applyTo(pa, rng=seed)
+    np.testing.assert_array_equal(pa.time, 1.0)
+    do_pickle(sampler)
+
+    sampler = galsim.TimeSampler(exptime=30.0)
+    assert sampler.t0 == 0
+    assert sampler.exptime == 30
+    sampler.applyTo(pa, rng=seed)
+    np.testing.assert_array_less(pa.time, 30)
+    np.testing.assert_array_less(-pa.time, 0)
+    do_pickle(sampler)
+
+    sampler = galsim.TimeSampler(t0=10, exptime=30.0)
+    assert sampler.t0 == 10
+    assert sampler.exptime == 30
+    sampler.applyTo(pa, rng=seed)
+    np.testing.assert_array_less(pa.time, 40)
+    np.testing.assert_array_less(-pa.time, 10)
     do_pickle(sampler)
 
 

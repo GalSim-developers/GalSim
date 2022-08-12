@@ -2190,15 +2190,7 @@ def test_phot():
         print('psf = ',psf)
         atol = 4.e-4
         if psf in [psf5, psf6]:
-            atol = 5.e-4  # OpticalPSF doesn't match quite as well as the others.
-                          # geometric_shooting=False does better, even with the larger aberrations,
-                          # but it doesn't reliably pass at 3e-4 under different random seeds,
-                          # so just leave this as 4e-4 too to be more future-proof to random
-                          # variations.
-                          # Bumped these to 4e-4, 5e-4 after introducing fft_sign kwarg to
-                          # OpticalPSF.  We effectively rotate the PSF 180 degrees here, but not the
-                          # galaxy, so we end up with a slightly different profile.  I (JM) think we
-                          # just got lucky before.
+            atol = 6e-4   # OpticalPSF doesn't match quite as well as the others.
         rng = galsim.BaseDeviate(1234)
 
         # First draw with FFT
@@ -2261,11 +2253,12 @@ def test_phot():
 
         # Finally, the chromatic drawImage function should handle the wavelength sampling for us.
         # First do this with just the galaxy as the driver.
-        # (Also add a gratuitous pupil_sampler to test the case where pupil_u,v are set.)
+        # (Also add a gratuitous pupil_sampler, time_sampler to test the case where u,v,t are set.)
         pupil_sampler = galsim.PupilImageSampler(diam=diam, lam=bandpass.effective_wavelength)
+        time_sampler = galsim.TimeSampler()
         t0 = time.time()
         im4 = gal.drawImage(bandpass, image=im1.copy(), method='phot', rng=rng,
-                            photon_ops=[pupil_sampler, psf])
+                            photon_ops=[pupil_sampler, time_sampler, psf])
         t1 = time.time()
         print('auto wave time = ',t1-t0)
         print('max diff/flux = ',np.max(np.abs(im1.array-im4.array)/flux))
