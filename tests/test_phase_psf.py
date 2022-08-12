@@ -1222,7 +1222,6 @@ def test_shared_memory():
         spd.append(u()*max_speed)
         dirn.append(u()*360*galsim.degrees)
         r0_500s.append(r0_500*weights[i]**(-3./5))
-    rng2 = rng.duplicate()
 
     if __name__ == "__main__":
         ctxs = [None, mp.get_context("fork"), mp.get_context("spawn"), "forkserver"]
@@ -1515,6 +1514,17 @@ def test_uv_persistence():
         assert np.max(mindist) < np.hypot(uscale, vscale)*0.5
 
         do_pickle(photons)
+
+
+def test_t_persistence():
+    rng = galsim.BaseDeviate(10)
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=[0,1,2,3], r0_500=0.2, rng=rng)
+    psf = atm.makePSF(t0=10.0, lam=500.0, diam=1.0, exptime=15.0, time_step=0.025)
+    nphot = 1_000_000
+    photons = psf.drawImage(save_photons=True, method='phot', n_photons=nphot).photons
+    assert photons.hasAllocatedTimes()
+    assert np.min(photons.time) > 10.0
+    assert np.max(photons.time) < 25.0
 
 
 if __name__ == "__main__":

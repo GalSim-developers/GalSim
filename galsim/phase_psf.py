@@ -29,6 +29,7 @@ from .interpolatedimage import InterpolatedImage
 from .utilities import doc_inherit, OrderedWeakRef, rotate_xy, lazy_property, basestring
 from .errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 from .errors import GalSimFFTSizeError, galsim_warn
+from .photon_array import TimeSampler
 
 
 class Aperture:
@@ -1578,7 +1579,6 @@ class PhaseScreenPSF(GSObject):
 
     def _shoot(self, photons, rng):
         from .photon_array import PhotonArray
-        from .random import UniformDeviate
 
         if not self._geometric_shooting:
             self._prepareDraw()
@@ -1586,15 +1586,13 @@ class PhaseScreenPSF(GSObject):
 
         if not photons.hasAllocatedPupil():
             self.aper.samplePupil(photons, rng)
+        if not photons.hasAllocatedTimes():
+            TimeSampler(self.t0, self.exptime).applyTo(photons, rng=rng)
         u = photons.pupil_u
         v = photons.pupil_v
+        t = photons.time
 
         n_photons = len(photons)
-        t = np.empty((n_photons,), dtype=float)
-        ud = UniformDeviate(rng)
-        ud.generate(t)
-        t *= self.exptime
-        t += self.t0
 
         # This is where the screens need to be instantiated for drawing with geometric photon
         # shooting.
