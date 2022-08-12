@@ -144,32 +144,35 @@ class BaseCorrelatedNoise:
         applying correlated noise to images: such an internal convolution has been found to be
         computationally costly in practice, requiring the Fourier transform of very large arrays.
 
-        The use of the bilinear interpolants means that the representation of correlated noise will be
-        noticeably inaccurate in at least the following two regimes:
+        The use of the bilinear interpolants means that the representation of correlated noise will
+        be noticeably inaccurate in at least the following two regimes:
 
         1. If the pixel scale of the desired final output (e.g. the target image of
            `BaseCorrelatedNoise.drawImage`, `BaseCorrelatedNoise.applyTo` or
            `BaseCorrelatedNoise.whitenImage`) is small relative to the separation between pixels in
            the ``image`` used to instantiate ``cn`` as shown above.
         2. If the `BaseCorrelatedNoise` instance ``cn`` was instantiated with an image of scale
-           comparable to that in the final output, and ``cn`` has been rotated or otherwise transformed
-           (e.g.  via the `BaseCorrelatedNoise.rotate`, `BaseCorrelatedNoise.shear` methods; see below).
+           comparable to that in the final output, and ``cn`` has been rotated or otherwise
+           transformed (e.g.  via the `BaseCorrelatedNoise.rotate`, `BaseCorrelatedNoise.shear`
+           methods; see below).
 
         Conversely, the approximation will work best in the case where the correlated noise used to
-        instantiate the ``cn`` is taken from an input image for which ``image.scale`` is smaller than
-        that in the desired output.  This is the most common use case in the practical treatment of
-        correlated noise when simulating galaxies from space as observed in ground-based surveys.
+        instantiate the ``cn`` is taken from an input image for which ``image.scale`` is smaller
+        than that in the desired output.  This is the most common use case in the practical
+        treatment of correlated noise when simulating galaxies from space as observed in
+        ground-based surveys.
 
-        Changing from the default bilinear interpolant is made possible, but not recommended.  For more
-        information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.
+        Changing from the default bilinear interpolant is made possible, but not recommended.
+        In our validation tests, we found that the Linear interpolant usually gave the most
+        accurate results.
 
         Parameters:
             file_name:      The name of the file to read.
+            pixel_scale:    The pixel scale of the original image.
             rng:            If provided, a random number generator to use as the random number
                             generator of the resulting noise object. (may be any kind of
                             `BaseDeviate` object) [default: None, in which case, one will be
                             automatically created, using the time as a seed.]
-            scale:          If desired, an image pixel scale to override any scale given in the file.
             variance:       Scales the correlation function so that its point variance, equivalent
                             to its value at zero separation distance, matches this value.
                             [default: 0., which means to use the variance in the original file.]
@@ -1169,8 +1172,9 @@ class CorrelatedNoise(BaseCorrelatedNoise):
     that in the desired output.  This is the most common use case in the practical treatment of
     correlated noise when simulating galaxies from space telescopes, such as COSMOS.
 
-    Changing from the default bilinear interpolant is made possible, but not recommended.  For more
-    information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.
+    Changing from the default bilinear interpolant is made possible, but not recommended.
+    In our validation tests, we found that the Linear interpolant usually gave the most
+    accurate results.
 
     There is also an option to switch off an internal correction for assumptions made about the
     periodicity in the input noise image.  If you wish to turn this off you may, e.g.::
@@ -1480,8 +1484,9 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     correlated noise when simulating galaxies from COSMOS, for which this function is expressly
     designed.
 
-    Changing from the default bilinear interpolant is made possible, but not recommended.  For more
-    information please see the discussion on https://github.com/GalSim-developers/GalSim/pull/452.
+    Changing from the default bilinear interpolant is made possible, but not recommended.
+    In our validation tests, we found that the Linear interpolant usually gave the most
+    accurate results.
 
     You may also specify a gsparams argument.  See the docstring for `GSParams` for more
     information about this option.
