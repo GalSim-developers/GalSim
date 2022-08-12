@@ -24,7 +24,7 @@ Dependency Changes
 API Changes
 -----------
 
-- Changed `galsim.scene` namespace name to `galaxy.galaxy_sample`. (#731)
+- Changed `galsim.scene` namespace name to `galsim.galaxy_sample`. (#731)
 - Removed CppEllipse in C++ layer, which had been deprecated since the 1.x series, but we forgot
   to actually get rid of. (#1129)
 - Removed AstronomicalConstants.h in C++ layer, which we never used. (#1129)
