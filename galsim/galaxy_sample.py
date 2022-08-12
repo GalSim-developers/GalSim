@@ -35,8 +35,8 @@ class GalaxySample:
     """
     A class representing a random subsample of galaxies from an arbitrary deep survey.
 
-    Depending on the keyword arguments, particularly ``use_real``, the catalog will either have
-    information about real galaxies, and/or parametric ones.
+    Depending on the keyword arguments, particularly ``use_real``, a `GalaxySample` may be able to
+    generate real galaxies, parametric galaxies, or both.
 
     The original version of this functionality is now in the subclass `COSMOSCatalog`, which
     specializes to HST observations of the COSMOS field.  `GalaxySample` is a generalization of
@@ -47,40 +47,10 @@ class GalaxySample:
     that are available for download using ``galsim_download_cosmos``, for this class you need to
     manually specify the file name.
 
-        >>> cat = galsim.GalaxySample(file_name)
+        >>> sample = galsim.GalaxySample(file_name)
 
-    After getting the catalogs, there is a method makeGalaxy() that can make a `GSObject`
-    corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
-    `makeGalaxy` for more information.  As an interesting application and example of the usage of
-    these routines, consider the following code::
-
-        >>> im_size = 64
-        >>> pix_scale = 0.05
-        >>> bp_file = os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz')
-        >>> bandpass = galsim.Bandpass(bp_file, wave_type='ang').thin().withZeropoint(25.94)
-        >>> cosmos_cat = galsim.COSMOSCatalog()
-        >>> psf = galsim.OpticalPSF(diam=2.4, lam=1000.) # bigger than HST F814W PSF.
-        >>> indices = np.arange(10)
-        >>> real_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='real',
-        ...                                       noise_pad_size=im_size*pix_scale)
-        >>> param_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
-        >>> for ind in indices:
-        >>>     real_gal = galsim.Convolve(real_gal_list[ind], psf)
-        >>>     param_gal = galsim.Convolve(param_gal_list[ind], psf)
-        >>>     im_real = galsim.Image(im_size, im_size)
-        >>>     im_param = galsim.Image(im_size, im_size)
-        >>>     real_gal.drawImage(image=im_real, scale=pix_scale)
-        >>>     param_gal.drawImage(bandpass, image=im_param, scale=pix_scale)
-        >>>     im_real.write('im_real_'+str(ind)+'.fits')
-        >>>     im_param.write('im_param_'+str(ind)+'.fits')
-
-    This code snippet will draw images of the first 10 entries in the COSMOS catalog, at slightly
-    lower resolution than in COSMOS, with a real image and its parametric representation for each of
-    those objects.
-
-    When using the 'real' rather than 'parametric' option, please read the documentation for the
-    `RealGalaxy` class for additional caveats about the available drawing methods and
-    the need to convolve with a suitable PSF.
+    Other than this difference, the functionality of this class is the same as `COSMOSCatalog`.
+    See the documentation of that function for more detail.
 
     Parameters:
         file_name:          The file containing the catalog.
@@ -119,7 +89,7 @@ class GalaxySample:
                               marginal cases.
 
                             Use of "bad_stamp" or "marginal" requires a ``CATALOG_selection.fits``
-                            file (where CATALOG refers to the regular catalog base name).
+                            file (where CATALOG is ``file_name`` without the ".fits" extension).
                             [default: "none"]
         min_hlr:            Exclude galaxies whose fitted half-light radius is smaller than this
                             value (in arcsec).  [default: 0, meaning no limit]
@@ -147,7 +117,7 @@ class GalaxySample:
     After construction, the following attributes are available:
 
     Attributes:
-        nobjects:       The number of objects in the catalog
+        nobjects:       The number of objects in the sample
     """
     _opt_params = { 'file_name' : str, 'dir' : str,
                     'orig_exptime': float, 'orig_area': float,
@@ -768,8 +738,8 @@ class COSMOSCatalog(GalaxySample):
     A class representing a random subsample of galaxies from the COSMOS sample with F814W<25.2
     (default), or alternatively the entire sample with F814W<23.5.
 
-    Depending on the keyword arguments, particularly ``use_real``, the catalog will either have
-    information about real galaxies, and/or parametric ones.  To use this with either type of
+    Depending on the keyword arguments, particularly ``use_real``, the catalog may be able to
+    generate real galaxies, parametric galaxies, or both.  To use this with either type of
     galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see
 
     https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data
