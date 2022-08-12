@@ -198,6 +198,9 @@ class BaseCorrelatedNoise:
             raise GalSimError("Input image does not have odd size.")
         if np.max(np.abs((cfimage - cfimage.rot_180()).array)) > 1.e-12:
             raise GalSimError("Input image does not have 180 degree rotational symmetry.")
+        center_val = np.abs(cfimage[cfimage.center])
+        if np.max(np.abs(cfimage.array/center_val)) > 1. + 1.e-12:
+            raise GalSimError("Input image central value is not the maximum")
 
         # Also check for invalid negative variance
         if variance < 0:
