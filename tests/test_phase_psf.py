@@ -1482,6 +1482,7 @@ def test_user_screen():
 
 @timer
 def test_uv_persistence():
+    from scipy.spatial.distance import cdist
     if __name__ == '__main__':
         nphot = 1000000
     else:
@@ -1501,13 +1502,16 @@ def test_uv_persistence():
         )
         with assert_warns(galsim.GalSimWarning):
             # Warning: Input pupil_plane_scale may be too large for good sampling.
-            allowed = set(zip(aper.u_illuminated, aper.v_illuminated))
+            illuminated = np.vstack([aper.u_illuminated, aper.v_illuminated]).T
 
         psf = galsim.OpticalPSF(lam=500, diam=diam, aper=aper, geometric_shooting=True)
         photons = psf.drawImage(save_photons=True, method='phot', n_photons=nphot).photons
-        observed = set(zip(photons.pupil_u, photons.pupil_v))
+        pupil = np.vstack([photons.pupil_u, photons.pupil_v]).T
 
-        assert observed.issubset(allowed)
+        mindist = np.min(cdist(illuminated, pupil), axis=0)
+        uscale = aper.u[0,1] - aper.u[0,0]
+        vscale = aper.v[1,0] - aper.v[0,0]
+        assert np.max(mindist) < np.hypot(uscale, vscale)*0.5
 
         do_pickle(photons)
 

@@ -915,7 +915,7 @@ def test_geometric_shoot():
         print('added_flux = ',added_flux)
         print('image flux = ',im_shoot.array.sum())
         assert np.isclose(added_flux, psf.flux, rtol=3.e-4)
-        assert np.isclose(im_shoot.array.sum(), psf.flux, rtol=3.e-4)
+        assert np.isclose(im_shoot.array.sum(), psf.flux, rtol=4.e-4)
 
         # Check doing this with photon_ops
         im_shoot2 = opt_psf.drawImage(nx=256, ny=256, scale=0.2, method='phot',
