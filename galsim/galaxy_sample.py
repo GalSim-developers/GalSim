@@ -137,6 +137,9 @@ class GalaxySample:
                             [default: 0.8]
         sn_limit:           For the "bad_stamp" exclusions, cut out any stamps with estimated
                             S/N for an elliptical Gaussian less than this limit. [default: 10.]
+        min_mask_dist:      For the "bad_stamp" exclusions, remove any stamps that have some
+                            masked pixels closer to the center than this minimum distance
+                            (in pixels). [default: 10]
         exptime:            The exposure time (in seconds) to assume when creating galaxies.
                             [default: None, which means to use orig_exptime]
         area:               The effective collecting area (in cm^2) to assume when creating
@@ -154,13 +157,13 @@ class GalaxySample:
                     'preload' : bool, 'use_real' : bool,
                     'exclusion_level' : str, 'min_hlr' : float, 'max_hlr' : float,
                     'min_flux' : float, 'max_flux' : float,
-                    'cut_ratio' : float, 'sn_limit' : float,
+                    'cut_ratio' : float, 'sn_limit' : float, 'min_mask_dist': float,
                   }
 
     def __init__(self, file_name=None, dir=None, preload=False,
                  orig_exptime=1., orig_area=1.,
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
-                 min_flux=0., max_flux=0., cut_ratio=0.8, sn_limit=10.,
+                 min_flux=0., max_flux=0., cut_ratio=0.8, sn_limit=10., min_mask_dist=11,
                  exptime=None, area=None, _use_sample=None):
 
         from ._pyfits import pyfits
@@ -170,6 +173,7 @@ class GalaxySample:
         self.preload = preload
         self.cut_ratio = cut_ratio
         self.sn_limit = sn_limit
+        self.min_mask_dist = min_mask_dist
         self.orig_exptime = orig_exptime
         self.orig_area = orig_area
         self.exptime = exptime
@@ -263,7 +267,7 @@ class GalaxySample:
             div_val = self.selection_cat['peak_image_pixel_count']
             div_val[div_val == 0.] = 1.e-5
             mask &= ( (self.selection_cat['sn_ellip_gauss'] >= self.sn_limit) &
-                      ((self.selection_cat['min_mask_dist_pixels'] > 11.0) |
+                      ((self.selection_cat['min_mask_dist_pixels'] > self.min_mask_dist) |
                        (self.selection_cat['average_mask_adjacent_pixel_count'] / \
                            div_val < self.cut_ratio)) )
 
@@ -919,10 +923,13 @@ class COSMOSCatalog(GalaxySample):
         if use_sample == "23.5":
             cut_ratio = 0.2
             sn_limit = 20.0
+            min_mask_dist = 11.
         else:
             cut_ratio = 0.8
             sn_limit = 12.0
+            min_mask_dist = 11.
 
         super().__init__(file_name, _use_sample=use_sample,
                          orig_exptime=1., orig_area=self.hst_eff_area,
-                         cut_ratio=cut_ratio, sn_limit=sn_limit, **kwargs)
+                         cut_ratio=cut_ratio, sn_limit=sn_limit, min_mask_dist=min_mask_dist,
+                         **kwargs)
