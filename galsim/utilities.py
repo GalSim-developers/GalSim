@@ -1866,6 +1866,28 @@ def get_omp_threads():
 class single_threaded:
     """A context manager that turns off (or down) OpenMP threading e.g. during multiprocessing.
 
+    Usage:
+
+    .. code::
+
+        with single_threaded():
+            # Code where you don't want to use any OpenMP threads in the C++ layer
+            # E.g. starting a multiprocessing pool, where you don't want each process
+            # to use multiple threads, potentially ending up with n_cpu^2 threads
+            # running at once, which would generally be bad for performance.
+
+    .. note::
+
+        This is especaily important when your compiler is gcc and you are using the
+        "fork" context in multiprocessing.  There is a bug in gcc that can cause an
+        OpenMP parallel block to hang after forking.
+        cf. `make it possible to use OMP on both sides of a fork <https://patchwork.ozlabs.org/project/gcc/patch/CAPJVwBkOF5GnrMr=4d1ehEKRGkY0tHzJzfXAYBguawu9y5wxXw@mail.gmail.com/#712883>`_
+        for more discussion about this issue.
+
+    It can also be used to set a particular number of threads other than 1, using the
+    optional parameter ``num_threads``, although the original intent of this class is
+    to leave that as 1 (the default).
+
     Parameters:
         num_threads:    The number of threads you want during the context [default: 1]
     """

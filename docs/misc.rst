@@ -13,6 +13,16 @@ Decorators
 .. autoclass:: galsim.utilities.doc_inherit
 
 
+OpenMP Utilties
+---------------
+
+.. autofunction:: galsim.utilities.get_omp_threads
+
+.. autofunction:: galsim.utilities.set_omp_threads
+
+.. autoclass:: galsim.utilities.single_threaded
+
+
 LRU Cache
 ---------
 
