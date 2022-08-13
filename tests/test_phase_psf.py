@@ -1220,20 +1220,24 @@ def test_shared_memory():
             Pool = mp.get_context(ctx).Pool
         else:
             Pool = ctx.Pool
-        with Pool(None,
-                  initializer=galsim.phase_screens.initWorker,
-                  initargs=galsim.phase_screens.initWorkerArgs()
-                 ) as pool:
+        # See https://patchwork.ozlabs.org/project/gcc/patch/CAPJVwBkOF5GnrMr=4d1ehEKRGkY0tHzJzfXAYBguawu9y5wxXw@mail.gmail.com/#712883
+        # for discussion about why this is recommended especially if in fork context and using
+        # gcc compiler.
+        with galsim.utilities.single_threaded():
+            with Pool(None,
+                    initializer=galsim.phase_screens.initWorker,
+                    initargs=galsim.phase_screens.initWorkerArgs()
+                    ) as pool:
 
-            # Instantiate using the pool:
-            atmPar.instantiate(pool=pool, kmax=kmax)
+                # Instantiate using the pool:
+                atmPar.instantiate(pool=pool, kmax=kmax)
 
-            resultsParallel = []
-            for i in range(10):
-                resultsParallel.append(pool.apply_async(dummyWork, (i, atmPar)))
-            for r in resultsParallel:
-                r.wait()
-            resultsParallel = [r.get() for r in resultsParallel]
+                resultsParallel = []
+                for i in range(10):
+                    resultsParallel.append(pool.apply_async(dummyWork, (i, atmPar)))
+                for r in resultsParallel:
+                    r.wait()
+                resultsParallel = [r.get() for r in resultsParallel]
 
         # Serial comparison, also reinstantiate the atm here without using the pool
         atmSer.instantiate(pool=None, kmax=kmax)
@@ -1254,15 +1258,16 @@ def test_shared_memory():
                                 mp_context=ctx)
         psf = atm.makePSF(diam=1.1, lam=1000.0)
         kmax = psf.screen_kmax
-        with Pool(None,
-                  initializer=galsim.phase_screens.initWorker,
-                  initargs=galsim.phase_screens.initWorkerArgs()
-                 ) as pool:
-            results = []
-            for _ in range(10):
-                results.append(pool.apply_async(atm[0].instantiate, kwds={'kmax':kmax}))
-            for r in results:
-                r.wait()
+        with galsim.utilities.single_threaded():
+            with Pool(None,
+                    initializer=galsim.phase_screens.initWorker,
+                    initargs=galsim.phase_screens.initWorkerArgs()
+                    ) as pool:
+                results = []
+                for _ in range(10):
+                    results.append(pool.apply_async(atm[0].instantiate, kwds={'kmax':kmax}))
+                for r in results:
+                    r.wait()
 
     ctx = mp.get_context("spawn")
     with assert_raises(galsim.GalSimNotImplementedError):
