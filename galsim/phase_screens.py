@@ -130,18 +130,23 @@ class AtmosphericScreen:
 
         atm = galsim.Atmosphere(..., mp_context=ctx)  # internally calls AtmosphericScreen ctor
         nProc = 4  # Note, can set this to None to get a good default
-        with ctx.Pool(
-            nProc,
-            initializer=galsim.phase_screens.initWorker,
-            initargs=galsim.phase_screens.initWorkerArgs()
-        ) as pool:
-            results = []
-            # First submit
-            for i in range(10):
-                results.append(pool.apply_async(work, (i, atm)))
-            # Then wait to finish
-            for r in results:
-                r.wait()
+
+        # Note: Especially if you are using "fork" context, then you want to make sure to run
+        #       your Pool in a single_threaded context.  Even if not, it's probably a good idea
+        #       so each process isn't spawning lots of OpenMP (or other) threads.
+        with galsim.utilities.single_threaded():
+            with ctx.Pool(
+                nProc,
+                initializer=galsim.phase_screens.initWorker,
+                initargs=galsim.phase_screens.initWorkerArgs()
+            ) as pool:
+                results = []
+                # First submit
+                for i in range(10):
+                    results.append(pool.apply_async(work, (i, atm)))
+                # Then wait to finish
+                for r in results:
+                    r.wait()
         # Turn future objects into actual returned images.
         results = [r.get() for r in results]
 
@@ -150,14 +155,15 @@ class AtmosphericScreen:
     truncate the screen at::
 
         atm = galsim.Atmosphere(..., mp_context=ctx)
-        with ctx.Pool(
-            nProc,
-            initializer=galsim.phase_screens.initWorker,
-            initargs=galsim.phase_screens.initWorkerArgs()
-        ) as pool:
-            dummyPSF = atm.makePSF(...)
-            kmax = dummyPSF.screen_kmax
-            atm.instantiate(pool=pool, kmax=kmax)
+        with galsim.utilities.single_threaded():
+            with ctx.Pool(
+                nProc,
+                initializer=galsim.phase_screens.initWorker,
+                initargs=galsim.phase_screens.initWorkerArgs()
+            ) as pool:
+                dummyPSF = atm.makePSF(...)
+                kmax = dummyPSF.screen_kmax
+                atm.instantiate(pool=pool, kmax=kmax)
 
     Finally, the above multiprocessing shared memory tricks are only currently supported for
     non-time-evolving screens (alpha=1).
