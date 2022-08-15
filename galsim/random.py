@@ -20,6 +20,7 @@ import numpy as np
 
 from . import _galsim
 from .errors import GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError
+from .errors import galsim_warn
 from .utilities import isinteger
 
 class BaseDeviate:
@@ -167,9 +168,27 @@ class BaseDeviate:
         """
         self._rng.clearCache()
 
-    def discard(self, n):
+    def discard(self, n, suppress_warnings=False):
         """Discard n values from the current sequence of pseudo-random numbers.
+
+        This is typically used to keep two random number generators in sync when one of them
+        is used to generate some random values.  The other can quickly discard the same number
+        of random values to stay in sync with the first one.
+
+        Parameters:
+            n:                  The number of raw random numbers to discard.
+            suppress_warnings:  Whether to suppress warnings related to detecting when this
+                                action is not likely to reliably keep two random number
+                                generators in sync. [default: False]
         """
+        if not self.has_reliable_discard and not suppress_warnings:
+            galsim_warn(self.__class__.__name__ +
+                        " does not use a consistent number of randoms per generated value, " +
+                        "so discard cannot be guaranteed to keep two random deviates in sync.")
+        if n%2 == 1 and self.generates_in_pairs and not suppress_warnings:
+            galsim_warn(self.__class__.__name__ +
+                        " uses two randoms per pair of generated values, so discarding " +
+                        "an odd number of randoms probably doesn't make sense.")
         self._rng.discard(int(n))
 
     @property

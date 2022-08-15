@@ -325,12 +325,17 @@ def test_gaussian():
     assert v1 == v2
     # Note: For Gaussian, this only works if nvals is even.
     g2 = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
-    g2.discard(nvals+1)
+    g2.discard(nvals+1, suppress_warnings=True)
     v1,v2 = g(),g2()
     print('after %d vals, next one is %s, %s'%(nvals+1,v1,v2))
     assert v1 != v2
     assert g.has_reliable_discard
     assert g.generates_in_pairs
+
+    # If don't explicitly suppress the warning, then a warning is emitted when n is odd.
+    g2 = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
+    with assert_warns(galsim.GalSimWarning):
+        g2.discard(nvals+1)
 
     # Check seed, reset
     g.seed(testseed)
@@ -413,7 +418,7 @@ def test_gaussian():
     np.testing.assert_array_almost_equal(
             test_array, np.array(gResult)-gMean, precision,
             err_msg='Wrong Gaussian random number sequence from generate_from_variance.')
-    # After running generate_from_variance, it shoudl be back to using the specified mean, sigma.
+    # After running generate_from_variance, it should be back to using the specified mean, sigma.
     # Note: need to round up to even number for discard, since gd generates 2 at a time.
     g3.discard((len(test_array)+1)//2 * 2)
     print('g2,g3 = ',g2(),g3())
@@ -677,7 +682,7 @@ def test_poisson():
 
     # Check discard
     p2 = galsim.PoissonDeviate(testseed, mean=pMean)
-    p2.discard(nvals)
+    p2.discard(nvals, suppress_warnings=True)
     v1,v2 = p(),p2()
     print('With mean = %d, after %d vals, next one is %s, %s'%(pMean,nvals,v1,v2))
     assert v1 == v2
@@ -689,12 +694,17 @@ def test_poisson():
     p = galsim.PoissonDeviate(testseed, mean=high_mean)
     p2 = galsim.PoissonDeviate(testseed, mean=high_mean)
     vals = [p() for i in range(nvals)]
-    p2.discard(nvals)
+    p2.discard(nvals, suppress_warnings=True)
     v1,v2 = p(),p2()
     print('With mean = %d, after %d vals, next one is %s, %s'%(high_mean,nvals,v1,v2))
     assert v1 != v2
     assert not p.has_reliable_discard
     assert not p.generates_in_pairs
+
+    # Discard normally emits a warning for Poisson
+    p2 = galsim.PoissonDeviate(testseed, mean=pMean)
+    with assert_warns(galsim.GalSimWarning):
+        p2.discard(nvals)
 
     # Check seed, reset
     p = galsim.PoissonDeviate(testseed, mean=pMean)
@@ -879,7 +889,7 @@ def test_poisson_highmean():
 
         # Check discard
         p2 = galsim.PoissonDeviate(testseed, mean=mean)
-        p2.discard(nvals)
+        p2.discard(nvals, suppress_warnings=True)
         v1,v2 = p(),p2()
         print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
         if mean > 2**30:
@@ -1178,13 +1188,18 @@ def test_gamma():
 
     # Check discard
     g2 = galsim.GammaDeviate(testseed, k=gammaK, theta=gammaTheta)
-    g2.discard(nvals)
+    g2.discard(nvals, suppress_warnings=True)
     v1,v2 = g(),g2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     # Gamma uses at least 2 rngs per value, but can use arbitrarily more than this.
     assert v1 != v2
     assert not g.has_reliable_discard
     assert not g.generates_in_pairs
+
+    # Discard normally emits a warning for Gamma
+    g2 = galsim.GammaDeviate(testseed, k=gammaK, theta=gammaTheta)
+    with assert_warns(galsim.GalSimWarning):
+        g2.discard(nvals)
 
     # Check seed, reset
     g.seed(testseed)
@@ -1320,13 +1335,18 @@ def test_chi2():
 
     # Check discard
     c2 = galsim.Chi2Deviate(testseed, n=chi2N)
-    c2.discard(nvals)
+    c2.discard(nvals, suppress_warnings=True)
     v1,v2 = c(),c2()
     print('after %d vals, next one is %s, %s'%(nvals,v1,v2))
     # Chi2 uses at least 2 rngs per value, but can use arbitrarily more than this.
     assert v1 != v2
     assert not c.has_reliable_discard
     assert not c.generates_in_pairs
+
+    # Discard normally emits a warning for Chi2
+    c2 = galsim.Chi2Deviate(testseed, n=chi2N)
+    with assert_warns(galsim.GalSimWarning):
+        c2.discard(nvals)
 
     # Check seed, reset
     c.seed(testseed)
