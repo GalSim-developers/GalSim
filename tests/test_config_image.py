@@ -148,7 +148,7 @@ def test_single():
     config['stamp'] = { 'dtype': 'invalid' }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
-    config['stamp'] = { 'dtype': 'np.float128' }
+    config['stamp'] = { 'dtype': 'np.float100' }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     config['stamp'] = { 'n_photons' : 200 }    # These next few require draw_method = phot
@@ -952,7 +952,7 @@ def test_scattered():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     config['image'].pop('index_convention')
-    config['image']['dtype'] = 'np.float128'  # Invalid dtype
+    config['image']['dtype'] = 'np.float100'  # Invalid dtype
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
@@ -1409,7 +1409,7 @@ def test_tiled():
     config['image']['yborder'] = -yborder
 
     # Test invalid dtype
-    config['image']['dtype'] = 'np.float128'
+    config['image']['dtype'] = 'np.float100'
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
