@@ -120,6 +120,34 @@ class BaseDeviate:
         """
         self._rng = self._rng_type(rng._rng, *self._rng_args)
 
+    @property
+    def np(self):
+        """Shorthand for self.as_numpy_generator()
+        """
+        return self.as_numpy_generator()
+
+    def as_numpy_generator(self):
+        """Return a numpy.random.Generator object that uses the current BaseDeviate for the
+        underlying bit generations.
+
+        This allows you to use the (probably) more familiar numpy functions, while maintaining
+        GalSim's guarantees about random number stability across platforms.
+
+        Example::
+
+            >>> rng = galsim.BaseDeviate(1234)
+            >>> gen = rng.as_numpy_generator()
+            >>> uniform = gen.uniform(1, 10, size=10)
+            >>> norm = gen.normal(0, 3, size=20)
+
+        There is also a shorthand syntax that may be convenient.
+        The property `np` is equivalent to this method, so you can also write::
+
+            >>> uniform = rng.np.uniform(1, 10, size=10)
+            >>> norm = rng.np.normal(0, 3, size=20)
+        """
+        return np.random.Generator(GalSimBitGenerator(self))
+
     def duplicate(self):
         """Create a duplicate of the current `BaseDeviate` object.
 
@@ -902,6 +930,18 @@ class DistDeviate(BaseDeviate):
                  self._interpolant == other._interpolant and
                  self._npoints == other._npoints))
 
+
+class GalSimBitGenerator(np.random.BitGenerator):
+    """A numpy.random.BitGenerator that uses the GalSim C++-layer random number generator
+    for the random bit generation.
+
+    Parameters:
+        rng:    The galsim.BaseDeviate object to use for the underlying bit generation.
+    """
+    def __init__(self, rng):
+        super().__init__(0)
+        self.rng = rng
+        self.rng._rng.setup_bitgen(self.capsule)
 
 def permute(rng, *args):
     """Randomly permute one or more lists.

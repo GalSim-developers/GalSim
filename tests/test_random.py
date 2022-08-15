@@ -1969,6 +1969,38 @@ def test_int64():
         rng2 = galsim.BaseDeviate(i)
         assert rng2 == rng1
 
+@timer
+def test_numpy_generator():
+    rng = galsim.BaseDeviate(1234)
+    gen = galsim.BaseDeviate(1234).as_numpy_generator()
+
+    # The regular (and somewhat cumbersome) GalSim way:
+    a1 = np.empty(10, dtype=float)
+    galsim.UniformDeviate(rng).generate(a1)
+    a1 *= 9.
+    a1 += 1.
+
+    # The nicer numpy syntax
+    a2 = gen.uniform(1.,10., size=10)
+    print('a1 = ',a1)
+    print('a2 = ',a1)
+    np.testing.assert_allclose(a1, a2, atol=1.e-8)  # Small rounding differences
+
+    # Can also use the np property as a quick shorthand
+    a1 = rng.np.normal(0, 10, size=20)
+    a2 = gen.normal(0, 10, size=20)
+    print('a1 = ',a1)
+    print('a2 = ',a1)
+    np.testing.assert_array_equal(a1, a2)
+
+    # Check that normal gives statistically the right mean/var.
+    # (Numpy's normal uses the next_uint64 function, so this is a non-trivial test of that
+    # code, which I originally got wrong.)
+    a3 = gen.normal(17, 23, size=1_000_000)
+    print('mean = ',np.mean(a3))
+    print('std = ',np.std(a3))
+    assert np.isclose(np.mean(a3), 17, rtol=1.e-3)
+    assert np.isclose(np.std(a3), 23, rtol=3.e-3)
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
