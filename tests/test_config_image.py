@@ -148,7 +148,7 @@ def test_single():
     config['stamp'] = { 'dtype': 'invalid' }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
-    config['stamp'] = { 'dtype': 'float64' }   # Need np. or numpy.
+    config['stamp'] = { 'dtype': 'np.float128' }
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     config['stamp'] = { 'n_photons' : 200 }    # These next few require draw_method = phot
@@ -952,7 +952,7 @@ def test_scattered():
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
     config['image'].pop('index_convention')
-    config['image']['dtype'] = 'float32'  # numpy types need np. or numpy. prefix.
+    config['image']['dtype'] = 'np.float128'  # Invalid dtype
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
@@ -971,7 +971,7 @@ def test_scattered():
                                     galsim.PositionD(x2,y2),
                                     galsim.PositionD(x3,y3) ]
                       },
-        'dtype' : 'float',
+        'dtype' : 'float64',  # Can also use the type name without np if it's a valid numpy type.
         'nobjects' : 3
     }
 
@@ -1408,8 +1408,8 @@ def test_tiled():
         galsim.config.BuildImage(config)
     config['image']['yborder'] = -yborder
 
-    # numpy types need np. or numpy. prefix.
-    config['image']['dtype'] = 'float64'
+    # Test invalid dtype
+    config['image']['dtype'] = 'np.float128'
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
 
