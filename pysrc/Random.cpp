@@ -20,7 +20,46 @@
 #include "PyBind11Helper.h"
 #include "Random.h"
 
+// From numpy/random/bitgen.h
+typedef struct bitgen {
+  void *state;
+  uint64_t (*next_uint64)(void *st);
+  uint32_t (*next_uint32)(void *st);
+  double (*next_double)(void *st);
+  uint64_t (*next_raw)(void *st);
+} bitgen_t;
+typedef bitgen bitgen_t;
+
 namespace galsim {
+
+    uint32_t next_uint32(void* st)
+    {
+        BaseDeviate* rng = static_cast<BaseDeviate*>(st);
+        return (uint32_t) rng->raw();
+    }
+
+    uint64_t next_uint64(void* st)
+    {
+        uint32_t i1 = next_uint32(st);
+        uint32_t i2 = next_uint32(st);
+        return ((uint64_t) i1 << 32) + i2;
+    }
+
+    double next_double(void* st)
+    {
+        BaseDeviate* rng = static_cast<BaseDeviate*>(st);
+        return (uint32_t) rng->raw() / (double) std::numeric_limits<uint32_t>::max();
+    }
+
+    void SetupBitGen(BaseDeviate* rng, py::capsule capsule)
+    {
+        bitgen_t* bg(capsule);
+        bg->state = rng;
+        bg->next_uint64 = next_uint64;
+        bg->next_uint32 = next_uint32;
+        bg->next_double = next_double;
+        bg->next_raw = next_uint64;
+    };
 
     void Generate(BaseDeviate& rng, size_t N, size_t idata)
     {
@@ -60,7 +99,9 @@ namespace galsim {
             .def("discard", &BaseDeviate::discard)
             .def("raw", &BaseDeviate::raw)
             .def("generate", &Generate)
-            .def("add_generate", &AddGenerate);
+            .def("add_generate", &AddGenerate)
+            .def("setup_bitgen", &SetupBitGen)
+            ;
 
         py::class_<UniformDeviate, BaseDeviate>(
             _galsim, "UniformDeviateImpl")
