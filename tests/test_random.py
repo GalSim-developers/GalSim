@@ -1983,14 +1983,14 @@ def test_numpy_generator():
     # The nicer numpy syntax
     a2 = gen.uniform(1.,10., size=10)
     print('a1 = ',a1)
-    print('a2 = ',a1)
-    np.testing.assert_allclose(a1, a2, atol=1.e-8)  # Small rounding differences
+    print('a2 = ',a2)
+    np.testing.assert_array_equal(a1, a2)
 
     # Can also use the np property as a quick shorthand
     a1 = rng.np.normal(0, 10, size=20)
     a2 = gen.normal(0, 10, size=20)
     print('a1 = ',a1)
-    print('a2 = ',a1)
+    print('a2 = ',a2)
     np.testing.assert_array_equal(a1, a2)
 
     # Check that normal gives statistically the right mean/var.
