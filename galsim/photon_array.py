@@ -790,8 +790,7 @@ class FRatioAngles(PhotonOp):
                             bundle in case the operator needs this information.  [default: None]
             rng:            A random number generator to use if needed. [default: None]
         """
-        rng = rng if rng is not None else self.rng
-        ud = UniformDeviate(rng)
+        gen = BaseDeviate(rng).as_numpy_generator()
 
         dxdz = photon_array.dxdz
         dydz = photon_array.dydz
@@ -804,16 +803,11 @@ class FRatioAngles(PhotonOp):
         obscuration_angle = np.arctan(0.5 * self.obscuration / self.fratio)
 
         # Generate azimuthal angles for the photons
-        phi = np.empty(n_photons)
-        ud.generate(phi)
-        phi *= (2 * np.pi)
+        phi = gen.uniform(0, 2*np.pi, size=n_photons)
 
         # Generate inclination angles for the photons, which are uniform in sin(theta) between
         # the sine of the obscuration angle and the sine of the pupil radius
-        sintheta = np.empty(n_photons)
-        ud.generate(sintheta)
-        sintheta = np.sin(obscuration_angle) + (np.sin(pupil_angle) - np.sin(obscuration_angle)) \
-            * sintheta
+        sintheta = gen.uniform(np.sin(obscuration_angle), np.sin(pupil_angle), size=n_photons)
 
         # Assign the directions to the arrays. In this class the convention for the
         # zero of phi does not matter but it would if the obscuration is dependent on
@@ -1180,15 +1174,10 @@ class PupilAnnulusSampler(PhotonOp):
                             bundle in case the operator needs this information.  [default: None]
             rng:            A random number generator to use if needed. [default: None]
         """
-        ud = UniformDeviate(rng)
-        r = np.empty((len(photon_array),), dtype=float)
-        phi = np.empty((len(photon_array),), dtype=float)
-        ud.generate(r)
-        r *= self.R_outer**2 - self.R_inner**2
-        r += self.R_inner**2
+        gen = BaseDeviate(rng).as_numpy_generator()
+        r = gen.uniform(self.R_inner**2, self.R_outer**2, size=len(photon_array))
         np.sqrt(r, out=r)
-        ud.generate(phi)
-        phi *= 2*np.pi
+        phi = gen.uniform(0, 2*np.pi, size=len(photon_array))
         photon_array.pupil_u = r * np.cos(phi)
         photon_array.pupil_v = r * np.sin(phi)
 
@@ -1222,10 +1211,8 @@ class TimeSampler(PhotonOp):
                             bundle in case the operator needs this information.  [default: None]
             rng:            A random number generator to use if needed. [default: None]
         """
-        ud = UniformDeviate(rng)
-        t = np.empty(len(photon_array))
-        ud.generate(t)
-        t *= self.exptime
+        gen = BaseDeviate(rng).as_numpy_generator()
+        t = gen.uniform(0, self.exptime, size=len(photon_array))
         t += self.t0
         photon_array.time = t
 
