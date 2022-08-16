@@ -28,7 +28,6 @@ typedef struct bitgen {
   double (*next_double)(void *st);
   uint64_t (*next_raw)(void *st);
 } bitgen_t;
-typedef bitgen bitgen_t;
 
 namespace galsim {
 
