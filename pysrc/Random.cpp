@@ -47,7 +47,7 @@ namespace galsim {
     double next_double(void* st)
     {
         BaseDeviate* rng = static_cast<BaseDeviate*>(st);
-        return (uint32_t) rng->raw() / (double) std::numeric_limits<uint32_t>::max();
+        return (uint32_t) rng->raw() / ((double) std::numeric_limits<uint32_t>::max()+1.);
     }
 
     void SetupBitGen(BaseDeviate* rng, py::capsule capsule)
