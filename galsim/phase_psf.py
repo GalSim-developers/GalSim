@@ -629,27 +629,15 @@ class Aperture:
         n_photons = len(photons)
         u = self.u_illuminated
         v = self.v_illuminated
-        ud = UniformDeviate(rng)
-        pick = np.empty((n_photons,), dtype=float)
-        ud.generate(pick)
-        pick *= len(u)
-        pickint = pick.astype(int)
-        photons.pupil_u = u[pickint]
-        photons.pupil_v = v[pickint]
+        gen = rng.as_numpy_generator()
+        pick = gen.choice(len(u), size=n_photons).astype(int)
+        photons.pupil_u = u[pick]
+        photons.pupil_v = v[pick]
         # Make continuous by adding +/- 0.5 pixels shifts.
         uscale = self.u[0, 1] - self.u[0, 0]
         vscale = self.v[1, 0] - self.v[0, 0]
-        # Reuse pick but rename for clarity
-        du = pick
-        ud.generate(du)
-        du -= 0.5
-        du *= uscale
-        photons.pupil_u += du
-        dv = pick
-        ud.generate(dv)
-        dv -= 0.5
-        dv *= vscale
-        photons.pupil_v += dv
+        photons.pupil_u += gen.uniform(-uscale/2.,uscale/2.,size=n_photons)
+        photons.pupil_v += gen.uniform(-vscale/2.,vscale/2.,size=n_photons)
 
     # Some quick notes for Josh:
     # - Relation between real-space grid with size theta and pitch dtheta (dimensions of angle)
