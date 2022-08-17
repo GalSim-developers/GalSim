@@ -778,6 +778,9 @@ def add_dirs(builder, output=False):
     builder.include_dirs.append('include')
     builder.include_dirs.append('include/galsim')
 
+    import numpy
+    builder.include_dirs.append(numpy.get_include())
+
     # Look for fftw3.
     fftw_lib = find_fftw_lib(output=output)
     fftw_libpath, fftw_libname = os.path.split(fftw_lib)
@@ -1239,8 +1242,8 @@ ext=Extension("galsim._galsim",
               depends = cpp_sources + headers + inst,
               undef_macros = undef_macros)
 
-build_dep = ['setuptools>=38', 'pybind11>=2.2']
-run_dep = ['numpy', 'astropy', 'LSSTDESC.Coord']
+build_dep = ['setuptools>=38', 'pybind11>=2.2', 'numpy>=1.17']
+run_dep = ['astropy', 'LSSTDESC.Coord']
 test_dep = ['pytest', 'pytest-xdist', 'pytest-timeout', 'nose', 'scipy', 'pyyaml']
 # Note: Even though we don't use nosetests, nose is required for some tests to work.
 #       cf. https://gist.github.com/dannygoldstein/e18866ebb9c39a2739f7b9f16440e2f5

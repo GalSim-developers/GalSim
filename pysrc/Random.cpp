@@ -19,8 +19,10 @@
 
 #include "PyBind11Helper.h"
 #include "Random.h"
+#include <numpy/random/bitgen.h>  // For bitgen_t struct
 
-// From numpy/random/bitgen.h
+// For reference:
+/*
 typedef struct bitgen {
   void *state;
   uint64_t (*next_uint64)(void *st);
@@ -28,6 +30,7 @@ typedef struct bitgen {
   double (*next_double)(void *st);
   uint64_t (*next_raw)(void *st);
 } bitgen_t;
+*/
 
 namespace galsim {
 
