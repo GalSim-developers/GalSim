@@ -1106,18 +1106,44 @@ namespace galsim {
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
-        
+
         // map all data to the GPU
-        #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], _changedGPU[0:nxny])
+#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], _changedGPU[0:nxny])
     }
 
     template <typename T>
     void Silicon::finalizeGPU(ImageView<T> target)
     {
+        Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
+        Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
+
+        Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
+        Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
+        Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
+        Position<float>* verticalDistortionsData = _verticalDistortions.data();
+
+        Bounds<int> b = target.getBounds();
+        const int nx = b.getXMax() - b.getXMin() + 1;
+        const int ny = b.getYMax() - b.getYMin() + 1;
+        int nxny = nx * ny;
+
+        int pixelInnerBoundsSize = _pixelInnerBounds.size();
+
+        int hbpSize = _horizontalBoundaryPoints.size();
+        int vbpSize = _verticalBoundaryPoints.size();
+
+        int hdSize = _horizontalDistortions.size();
+        int vdSize = _verticalDistortions.size();
+        
+	int emptypolySize = _emptypoly.size();
+
+        double* deltaData = _delta.getData();
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
         T* targetData = target.getData();
-#pragma omp target exit data map(from: targetData[0:imageDataSize])
+#pragma omp target update from(targetData[0:imageDataSize])
 
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], _changedGPU[0:nxny])
+        
         delete[] _abs_length_table_GPU;
         delete[] _emptypolyGPU;
         delete[] _changedGPU;
@@ -1652,7 +1678,7 @@ namespace galsim {
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
-        
+
         // Loop through the boundary arrays and update any points affected by nearby pixels
         // Horizontal array first
         // map image data and changed array throughout all GPU loops
