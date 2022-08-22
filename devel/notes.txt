@@ -1,6 +1,8 @@
 
 Checklist for making a new release:
 
+For new major or minor releases:
+
 - Run test suite on as many machines as possible.
 - On each machine, run:
   - python setup.py test
@@ -8,12 +10,15 @@ Checklist for making a new release:
   - check_yaml (in examples directory)
   - check_json (in examples directory)
   - check_des (in examples directory)
-- Make the release branch for the new minor version. (or switch to it if doing a bugfix release)
+- Update any docs that might need updating.
+- Make the release branch for the new minor version.
     git checkout -b releases/M.m
     git push -u origin releases/M.m
+
+For all releases:
+
 - Update the version number to the new M.m.r value in galsim/_version.py
 - Read over the CHANGELOG.rst file and edit as needed.
-- Update any docs that might need updating.
 - Make sure the current code is installed:
     python setup.py install
 - Generate current docs
@@ -37,9 +42,19 @@ Checklist for making a new release:
   - Check the logs to make sure things seem to have completed correctly.
 - Once that action is complete, check pip locally
   - pip install -U galsim
+
+For major and minor releases:
+
 - Back in master, update version number to M.(m+1) (i.e. no .r)
-- Cherry-pick any commits that were needed on releases/2.3 that are relevant for main branch.
+- Cherry-pick any commits that were needed on releases/M.m that are relevant for main branch.
   - Note: no need to cherry-pick "update docs" commits.
 - Move the CHANGELOG information into docs/history.rst and clear out the current CHANGELOG.rst
   file for the next version.
 - Email galsim-announce list about the new version.
+- Change github home page to point to releases/M.m
+  - Settings - Branches - Default branch
+  - Click left/right arrows (Switch to another branch)
+  - Select the new releases/M.m branch
+- Change branch for pages deployment
+  - Settings - Pages - Build and deployment
+  - Change branch to releases/M.m
