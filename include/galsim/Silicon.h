@@ -299,11 +299,15 @@ namespace galsim
         Table _abs_length_table;
         bool _transpose;
         ImageAlloc<double> _delta;
+        std::shared_ptr<bool> _changed;
 
 	// GPU data
-	double* _abs_length_table_GPU;
-	PointDGPU* _emptypolyGPU;
-        bool* _changedGPU;
+        std::vector<double> _abs_length_table_GPU;
+        std::vector<Position<double> > _emptypolyGPU;
+    
+    //double* _abs_length_table_GPU;
+    //PointDGPU* _emptypolyGPU;
+    //bool* _changedGPU;
     };
 
     PUBLIC_API int SetOMPThreads(int num_threads);
