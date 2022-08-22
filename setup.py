@@ -584,14 +584,6 @@ int main() {
             pass
         else:
             success = try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
-    if success:
-        # Also see if adding -msse2 works (and doesn't give a warning)
-        extra_cflags = copt[cc_type]
-        extra_cflags.append('-msse2')
-        if try_compile(cpp_code, compiler, extra_cflags, extra_lflags, check_warning=True):
-            print('Using cflag -msse2')
-        else:
-            extra_cflags.remove('-msse2')
     return success
 
 
@@ -613,7 +605,7 @@ def try_cpp(compiler, cflags=[], lflags=[], prepend=None):
     """)
     return try_compile(cpp_code, compiler, cflags, lflags, prepend=prepend)
 
-def try_cpp11(compiler, cflags=[], lflags=[]):
+def try_cpp11(compiler, cflags=[], lflags=[], check_warning=False):
     """Check if compiling c++11 code with the given compiler works properly.
     """
     from textwrap import dedent
@@ -627,7 +619,7 @@ def try_cpp11(compiler, cflags=[], lflags=[]):
         return 0;
     }
     """)
-    return try_compile(cpp_code, compiler, cflags, lflags)
+    return try_compile(cpp_code, compiler, cflags, lflags, check_warning=check_warning)
 
 
 def cpu_count():
@@ -759,6 +751,15 @@ def fix_compiler(compiler, njobs):
         print('The compiler %s with flags %s did not successfully compile C++11 code'%
               (cc, ' '.join(extra_cflags)))
         raise OSError("Compiler is not C++-11 compatible")
+
+    # Also see if adding -msse2 works (and doesn't give a warning)
+    if '-msse2' not in extra_cflags:
+        extra_cflags.append('-msse2')
+    if try_cpp11(compiler, extra_cflags, extra_lflags, check_warning=True):
+        print('Using cflag -msse2')
+    else:
+        print('warning with -msse2.')
+        extra_cflags.remove('-msse2')
 
     # If doing develop installation, it's important for the build directory to be before any
     # other directories.  Particularly ones that might have another version of GalSim installed.
