@@ -71,15 +71,15 @@ inst = all_files_from('src', '.inst')
 shared_data = all_files_from('share')
 
 copt =  {
-    'gcc' : ['-O2','-msse2','-std=c++11','-fvisibility=hidden','-fopenmp'],
-    'icc' : ['-O2','-msse2','-vec-report0','-std=c++11','-openmp'],
-    'clang' : ['-O2','-msse2','-std=c++11',
+    'gcc' : ['-O2','-std=c++11','-fvisibility=hidden','-fopenmp'],
+    'icc' : ['-O2','-vec-report0','-std=c++11','-openmp'],
+    'clang' : ['-O2','-std=c++11',
                '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ OpenMP' : ['-O2','-msse2','-std=c++11','-fopenmp',
+    'clang w/ OpenMP' : ['-O2','-std=c++11','-fopenmp',
                          '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ Intel OpenMP' : ['-O2','-msse2','-std=c++11','-Xpreprocessor','-fopenmp',
+    'clang w/ Intel OpenMP' : ['-O2','-std=c++11','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
-    'clang w/ manual OpenMP' : ['-O2','-msse2','-std=c++11','-Xpreprocessor','-fopenmp',
+    'clang w/ manual OpenMP' : ['-O2','-std=c++11','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'unknown' : [],
 }
@@ -399,7 +399,7 @@ def find_eigen_dir(output=False):
     raise OSError("Could not find Eigen")
 
 
-def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None):
+def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None, check_warning=False):
     """Check if compiling some code with the given compiler and flags works properly.
     """
     # Put the temporary files in a local tmp directory, so that they stick around after failures.
@@ -436,6 +436,10 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None):
             print('Output was:')
             print('   ',b'   '.join(lines).decode())
         returncode = p.returncode
+        if check_warning:
+            output = b' '.join(lines).decode()
+            if 'warning' in output:
+                returncode = 1
     except OSError as e:
         if debug:
             print('Trying compile command:')
@@ -580,6 +584,14 @@ int main() {
             pass
         else:
             success = try_compile(cpp_code, compiler, extra_cflags, extra_lflags)
+    if success:
+        # Also see if adding -msse2 works (and doesn't give a warning)
+        extra_cflags = copt[cc_type]
+        extra_cflags.append('-msse2')
+        if try_compile(cpp_code, compiler, extra_cflags, extra_lflags, check_warning=True):
+            print('Using cflag -msse2')
+        else:
+            extra_cflags.remove('-msse2')
     return success
 
 
