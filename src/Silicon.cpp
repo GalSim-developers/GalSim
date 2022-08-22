@@ -1083,21 +1083,28 @@ namespace galsim {
 	    833333333333.333374, 917431192660.550415, 1058201058201.058228
 	};
 
-	_abs_length_table_GPU = new double[240];
+        _abs_length_table_GPU.resize(240);
+	//_abs_length_table_GPU = new double[240];
 	for (int i = 0; i < 240; i++) {
 	    _abs_length_table_GPU[i] = abs_length_table[i];
 	}
-	
+        double* abs_length_table_data = _abs_length_table_GPU.data();
+        
 	int emptypolySize = _emptypoly.size();
-	_emptypolyGPU = new PointDGPU[emptypolySize];
+        _emptypolyGPU.resize(emptypolySize);
+	//_emptypolyGPU = new PointDGPU[emptypolySize];
 	for (int i = 0; i < emptypolySize; i++) {
 	    _emptypolyGPU[i].x = _emptypoly[i].x;
 	    _emptypolyGPU[i].y = _emptypoly[i].y;
 	}
+        Position<double>* emptypolyData = _emptypolyGPU.data();
         
         int nxny = nx * ny;
-        _changedGPU = new bool[nxny];
-        for (int i = 0; i < nxny; i++) _changedGPU[i] = false;
+        //_changedGPU = new bool[nxny];
+        //for (int i = 0; i < nxny; i++) _changedGPU[i] = false;
+        _changed = std::shared_ptr<bool>(new bool[nxny]);
+        for (int i = 0; i < nxny; i++) _changed[i] = false;
+        bool* changedData = _changed.get();
 
         Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
         Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
@@ -1108,7 +1115,7 @@ namespace galsim {
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
         // map all data to the GPU
-#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], _changedGPU[0:nxny])
+#pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
     }
 
     template <typename T>
@@ -1122,6 +1129,8 @@ namespace galsim {
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
+        double* abs_length_table_data = _abs_length_table_GPU.data();
+        
         Bounds<int> b = target.getBounds();
         const int nx = b.getXMax() - b.getXMin() + 1;
         const int ny = b.getYMax() - b.getYMin() + 1;
@@ -1136,17 +1145,20 @@ namespace galsim {
         int vdSize = _verticalDistortions.size();
         
 	int emptypolySize = _emptypoly.size();
+        Position<double>* emptypolyData = _emptypolyGPU.data();
 
+        bool* changedData = _changed.get();
+        
         double* deltaData = _delta.getData();
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
         T* targetData = target.getData();
 #pragma omp target update from(targetData[0:imageDataSize])
 
-#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], _abs_length_table_GPU[0:240], _emptypolyGPU[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], _changedGPU[0:nxny])
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
         
-        delete[] _abs_length_table_GPU;
-        delete[] _emptypolyGPU;
-        delete[] _changedGPU;
+        //delete[] _abs_length_table_GPU;
+        //delete[] _emptypolyGPU;
+        //delete[] _changedGPU;
     }
     
     bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
@@ -1198,6 +1210,8 @@ namespace galsim {
             const double zfit = 12.0;
             const double zfactor = std::tanh(zconv / zfit);
 
+            Position<double> emptypolyData = _emptypolyGPU.data();
+            
             // new version not using testpoly
             // first compute first point of polygon (index 0)
             double x1, y1, xinters = 0.0;
@@ -1206,8 +1220,8 @@ namespace galsim {
                 double xp = 0.0, yp = 0.0;
                 double epx = 0.0, epy = 0.0;
                 if (n < _nv) {
-                    epx = _emptypolyGPU[n].x;
-                    epy = _emptypolyGPU[n].y;
+                    epx = emptypolyData[n].x;
+                    epy = emptypolyData[n].y;
                 }
                 xp = epx;
                 yp = epy;
@@ -1411,6 +1425,8 @@ namespace galsim {
         Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
+
+        double* abs_length_table_data = _abs_length_table_GPU.data();
         
 #pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1*2:(i2-i1)*2], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
@@ -1429,8 +1445,8 @@ namespace galsim {
 		int tableIdx1 = tableIdx + 1;
                 if (tableIdx > 239) tableIdx = 239;
                 if (tableIdx1 > 239) tableIdx1 = 239;
-		double abs_length = (_abs_length_table_GPU[tableIdx] * (1.0 - alpha)) +
-		    (_abs_length_table_GPU[tableIdx1] * alpha);
+		double abs_length = (abs_length_table_data[tableIdx] * (1.0 - alpha)) +
+		    (abs_length_table_data[tableIdx1] * alpha);
 
 		dz = -abs_length * std::log(1.0 - conversionDepthRandomArray[i - i1]);
 	    }
@@ -1679,6 +1695,8 @@ namespace galsim {
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
         Position<float>* verticalDistortionsData = _verticalDistortions.data();
 
+        bool* changedData = _changed.get();
+        
         // Loop through the boundary arrays and update any points affected by nearby pixels
         // Horizontal array first
         // map image data and changed array throughout all GPU loops
@@ -1731,8 +1749,8 @@ namespace galsim {
             
             // update changed array
             if (change) {
-                if (y < ny) _changedGPU[(x * ny) + y] = true; // pixel above
-                if (y > 0)  _changedGPU[(x * ny) + (y - 1)] = true; // pixel below
+                if (y < ny) changedData[(x * ny) + y] = true; // pixel above
+                if (y > 0)  changedData[(x * ny) + (y - 1)] = true; // pixel below
             }
         }
 
@@ -1781,8 +1799,8 @@ namespace galsim {
 
             // update changed array
             if (change) {
-                if (x < nx) _changedGPU[(x * ny) + y] = true;
-                if (x > 0)  _changedGPU[((x - 1) * ny) + y] = true;
+                if (x < nx) changedData[(x * ny) + y] = true;
+                if (x > 0)  changedData[((x - 1) * ny) + y] = true;
             }
         }
 
@@ -1790,12 +1808,12 @@ namespace galsim {
         Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
 #pragma omp target teams distribute parallel for
         for (size_t k=0; k<nxny; ++k) {
-            if (_changedGPU[k]) {
+            if (changedData[k]) {
                 updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
                                      pixelOuterBoundsData,
                                      horizontalBoundaryPointsData,
                                      verticalBoundaryPointsData);
-                _changedGPU[k] = false;
+                changedData[k] = false;
             }
         }
         
