@@ -1212,9 +1212,7 @@ class TimeSampler(PhotonOp):
             rng:            A random number generator to use if needed. [default: None]
         """
         gen = BaseDeviate(rng).as_numpy_generator()
-        t = gen.uniform(0, self.exptime, size=len(photon_array))
-        t += self.t0
-        photon_array.time = t
+        photon_array.time = gen.uniform(self.t0, self.t0+self.exptime, size=len(photon_array))
 
     def __repr__(self):
         s = "galsim.TimeSampler("
