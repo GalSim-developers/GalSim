@@ -46,9 +46,7 @@ def GenLogNormal(config, base, value_type):
         # seed numpy.random.  This should produce deterministic results.
         import ngmix
 
-        lgn = ngmix.priors.LogNormal(mean, sigma)
-        seed = rng.raw()
-        numpy.random.seed(seed)
+        lgn = ngmix.priors.LogNormal(mean, sigma, rng=rng.np)
         value = lgn.sample()
 
     except ImportError:
