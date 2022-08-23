@@ -12,18 +12,18 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, macos-10.15]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v1.12.0
+        uses: pypa/cibuildwheel@v2.9.0
         env:
-          CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel
-          CIBW_BEFORE_ALL_MACOS: brew install fftw
+          CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel || true
+          CIBW_BEFORE_ALL_MACOS: brew install fftw || true
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -34,11 +34,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v3
         with:
-          python-version: 3.8
+          python-version: 3.10
 
       - name: Install fftw
         run: |
@@ -52,7 +52,7 @@ jobs:
           pip install -U -r requirements.txt
 
       - name: Download wheels
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: ./wheels
 
