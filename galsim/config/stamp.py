@@ -37,7 +37,7 @@ from ..bounds import _BoundsI
 from ..celestial import CelestialCoord
 from ..angle import arcsec
 from ..gsobject import GSObject
-from ..convolve import Convolve
+from ..convolve import Convolve, Convolution
 from ..box import Pixel
 from ..chromatic import ChromaticObject
 from ..bandpass import Bandpass
