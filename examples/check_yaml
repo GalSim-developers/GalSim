@@ -20,8 +20,8 @@
 
 python='/usr/bin/env python'
 
-/bin/rm -rf output
-/bin/rm -rf output_yaml
+/bin/rm -rf output/* || true
+/bin/rm -rf output_yaml/* || true
 
 time $python demo1.py || exit
 time galsim -v2 demo1.yaml || exit

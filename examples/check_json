@@ -20,8 +20,8 @@
 
 python='/usr/bin/env python'  # For python scripts
 
-/bin/rm -rf output
-/bin/rm -rf output_json
+/bin/rm -rf output/* || true
+/bin/rm -rf output_json/* || true
 
 time $python demo1.py || exit
 time galsim -v2 json/demo1.json || exit
