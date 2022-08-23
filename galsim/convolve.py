@@ -121,7 +121,7 @@ class Convolution(GSObject):
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
         if len(args) == 0:
-            raise TypeError("At least one ChromaticObject or GSObject must be provided.")
+            raise TypeError("At least one GSObject must be provided.")
         elif len(args) == 1:
             if isinstance(args[0], GSObject):
                 args = [args[0]]

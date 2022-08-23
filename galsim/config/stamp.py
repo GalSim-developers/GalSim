@@ -38,6 +38,7 @@ from ..celestial import CelestialCoord
 from ..angle import arcsec
 from ..gsobject import GSObject
 from ..convolve import Convolve
+from ..box import Pixel
 from ..chromatic import ChromaticObject
 from ..bandpass import Bandpass
 
@@ -945,6 +946,9 @@ class StampBuilder:
         if isinstance(prof,GSObject) and base.get('current_image',None) is not None:
             if image is None:
                 prof = base['wcs'].toImage(prof, image_pos=base['image_pos'])
+                prof = prof._shift(-0.5+offset.x, -0.5+offset.y)
+                if method in ('auto', 'fft', 'real_space'):
+                    prof = Convolution(prof, Pixel(1.))
                 N = prof.getGoodImageSize(1.)
                 bounds = _BoundsI(1,N,1,N)
             else:
