@@ -4,7 +4,7 @@
 # For C++ dox, you need breath and doxygen.  I use versions 4.33 and 1.9.3 respectively.
 # TL;DR:
 # conda install doxygen=1.9.3 breathe=4.33 sphinx=3.5.4 sphinx_rtd_theme=1.0
-doxyge
+doxygen
 cd docs
 make clean
 make html
