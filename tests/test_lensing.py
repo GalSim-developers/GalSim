@@ -200,8 +200,8 @@ def test_cosmology():
 
         # check internal correctness:
         # g1 = gamma1/(1-kappa), and g2 = 0
-        np.testing.assert_array_equal(g1, gamma1/(1-np.array(kappa)),
-                                      err_msg="Computation of reduced shear g incorrect.")
+        np.testing.assert_allclose(g1, gamma1/(1-np.array(kappa)), rtol=1.e-10,
+                                   err_msg="Computation of reduced shear g incorrect.")
         np.testing.assert_array_equal(g2, np.zeros_like(g2),
                                       err_msg="Computation of reduced shear g2 incorrect.")
 
