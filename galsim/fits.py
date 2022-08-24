@@ -321,8 +321,14 @@ def _check_hdu(hdu, pyfits_compress, header_only=False):
     # Astropy will automatically fix any errors it finds by just accessing the header and data.
     hdu.header
     if not header_only:
-        hdu.verify('silentfix')
-        hdu.data
+        try:
+            hdu.data
+        except pyfits.VerifyError:  # pragma: no cover
+            # If just reading the data raises a VerifyError, try again with fix.
+            # This seems to be OS-specific, and probably astropy-version specific.
+            # But it's at least possible for this to happen and the verify step to help.
+            hdu.verify('fix')
+            hdu.data
 
     # Check that the specified compression is right for the given hdu type.
     if pyfits_compress:
