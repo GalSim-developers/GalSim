@@ -1,7 +1,10 @@
 # Note: Need Sphinx <=3.5.4 or get errors about ambiguous cross-reference targets.
 # It works correctly on 3.5.4, but not yet on 4.x or 5.x up to 5.0.2
 # cf. https://github.com/sphinx-doc/sphinx/issues/4961
-doxygen
+# For C++ dox, you need breath and doxygen.  I use versions 4.33 and 1.9.3 respectively.
+# TL;DR:
+# conda install doxygen=1.9.3 breathe=4.33 sphinx=3.5.4 sphinx_rtd_theme=1.0
+doxyge
 cd docs
 make clean
 make html
