@@ -1203,7 +1203,7 @@ class LocalWCS(UniformWCS):
         if not isinstance(origin, Position):
             raise TypeError("origin must be a PositionD or PositionI argument")
         if not isinstance(world_origin, (Position, type(None))):
-                raise TypeError("world_origin must be a PositionD or PositionI argument")
+            raise TypeError("world_origin must be a PositionD or PositionI argument")
         return self._newOrigin(origin, world_origin)
 
     @property

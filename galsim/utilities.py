@@ -1751,7 +1751,7 @@ class WeakMethod:
             # Hopefully the method itself won't raise an AttributeError for anything else.
             return self.f(self.c(), *args)
         except AttributeError:  # pragma: no cover
-            raise RuntimeError('Method called on dead object')
+            raise GalSimError('Method called on dead object')
 
 def ensure_dir(target):
     """

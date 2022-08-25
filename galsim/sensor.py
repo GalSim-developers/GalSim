@@ -25,7 +25,7 @@ from .position import PositionI, PositionD
 from .table import LookupTable
 from .random import UniformDeviate
 from . import meta_data
-from .errors import GalSimUndefinedBoundsError
+from .errors import GalSimUndefinedBoundsError, GalSimError
 
 class Sensor:
     """
@@ -313,11 +313,11 @@ class SiliconSensor(Sensor):
         """
         if resume and image is not self._last_image:
             if self._last_image is None:
-                raise RuntimeError("accumulate called with resume, but accumulate has not "
-                                   "been been run yet.")
+                raise GalSimError("accumulate called with resume, but accumulate has not "
+                                  "been been run yet.")
             else:
-                raise RuntimeError("accumulate called with resume, but provided image does "
-                                   "not match one used in the previous accumulate call.")
+                raise GalSimError("accumulate called with resume, but provided image does "
+                                  "not match one used in the previous accumulate call.")
         self._last_image = image
         if not image.bounds.isDefined():
             raise GalSimUndefinedBoundsError("Calling accumulate on image with undefined bounds")

@@ -29,7 +29,7 @@ from . import fft
 from . import zernike
 from .utilities import LRU_Cache, lazy_property
 from .errors import (GalSimRangeError, GalSimValueError, GalSimIncompatibleValuesError, galsim_warn,
-    GalSimNotImplementedError)
+    GalSimNotImplementedError, GalSimError)
 
 
 # Two helper functions to cache the calculation required for _getStepK
@@ -1120,7 +1120,7 @@ class OpticalScreen:
 # Used only for testing
 class _DummyScreen(OpticalScreen):
     def _wavefront(self, *args):
-        raise RuntimeError("Shouldn't reach this")
+        raise GalSimError("Shouldn't reach this")
 
 
 class UserScreen:

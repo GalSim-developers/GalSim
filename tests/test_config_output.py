@@ -573,7 +573,7 @@ def test_extra_wt():
     wt = galsim.config.extra.GetFinalExtraOutput('weight', config)
     np.testing.assert_almost_equal(wt[0].array, 1./0.7)
 
-    # If the image is a Scattered type, then the weight adn badpix images are built by a
+    # If the image is a Scattered type, then the weight and badpix images are built by a
     # different code path.
     config = {
         'image' : {
@@ -1212,7 +1212,6 @@ def test_retry_io():
             assert str(e) == "p = 0.285159"
     #print(cl.output)
     assert "File output/test_flaky_fits_0.fits not written." in cl.output
-
 
 
 @timer
