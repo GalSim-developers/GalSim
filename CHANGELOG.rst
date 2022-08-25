@@ -40,13 +40,13 @@ Config Updates
 - Added ``COSMOSValue`` and ``SampleValue`` value types. (#954, #1174)
 - Allowed template file names to be evaluated using the "$" shorthand notation. (#1138)
 - Added `RegisterTemplate` to allow the ability to register templates by name. (#1143)
-- Fixed some errors in ``PhotonDCR`` usage in the config layer. (#1148)
+- Fixed some errors in `PhotonDCR` usage in the config layer. (#1148)
 - Added option to specify a dtype other than np.float32 for images built by config. (#1160)
 - Fixed inconsistent behavior of image.world_pos in image type=Single. (#1160)
 - Let a flux item for an object with an SED normalize the SED for the bandpass being
   simulated. (#1160)
 - Fixed some edge cases where the created image could not have the requested wcs. (#1160)
-- Added option to ``initialize`` input objects in an InputLoader. (#1162, #1163)
+- Added option to ``initialize`` input objects in an `InputLoader`. (#1162, #1163)
 - Fixed error in returned variance for ``CCDNoise`` builder, which was in e- rather than ADU.
   (#1166, #1167)
 - Changed the way the internal random number sequence works so that running multiple simulations
