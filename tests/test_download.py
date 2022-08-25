@@ -20,6 +20,7 @@ import sys
 import logging
 import builtins
 import shutil
+from unittest import mock
 import galsim
 import galsim.download_cosmos  # Not imported automatically
 from galsim_test_helpers import *
@@ -99,8 +100,6 @@ def test_query():
 
     Need to mock the input function for this
     """
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     from galsim.download_cosmos import query_yes_no
 
     def bleh():
@@ -256,8 +255,6 @@ def test_check():
     The latter of these is really the most interesting, and has the most bits
     of anything in the script that are worth checking with unit tests.
     """
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     from galsim.download_cosmos import get_names, get_meta, check_existing
 
     args = galsim.download_cosmos.parse_args(['-d','fake_cosmos','-q','-v','3'])
@@ -386,8 +383,6 @@ def test_download():
     This one is a little silly.  It's almost completely mocked.  But we can at least check
     that there are no bugs that would raise an exception of some sort.
     """
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     from galsim.download_cosmos import get_names, get_meta, download
 
     args = galsim.download_cosmos.parse_args(['-d','output','-q'])
@@ -434,8 +429,6 @@ def test_download():
 def test_unpack():
     """Test the check_unpack and unpack functions
     """
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     from galsim.download_cosmos import get_names, check_unpack, unpack
 
     # If we downloaded the file, then we usually want to unpack
@@ -506,8 +499,6 @@ def test_unpack():
 def test_remove():
     """Test the check_remove and remove_tarball function
     """
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     from galsim.download_cosmos import get_names, check_remove, remove_tarball
 
     args = galsim.download_cosmos.parse_args(['-d','fake_cosmos','-s','23.5','-q'])
@@ -552,8 +543,6 @@ def test_remove():
 def test_link():
     """Test the link_cosmos function
     """
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     from galsim.download_cosmos import get_names, make_link
 
     args = galsim.download_cosmos.parse_args(['-d','fake_cosmos','-q'])
@@ -656,9 +645,6 @@ def test_link():
 def test_full():
     """Test the full script
     """
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
-
     link_dir1 = os.path.join('output', 'COSMOS_23.5_training_sample')
     link_dir2 = os.path.join('output', 'COSMOS_25.2_training_sample')
     if os.path.lexists(link_dir1):

@@ -18,6 +18,7 @@
 
 import numpy as np
 import datetime
+from unittest import mock
 
 import galsim
 import galsim.roman
@@ -921,8 +922,6 @@ def test_config_sca():
     logger.addHandler(logging.StreamHandler(sys.stdout))
     logger.setLevel(logging.DEBUG)
 
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     with mock.patch('galsim.roman.roman_config.n_pix', 64):
 
         config = {

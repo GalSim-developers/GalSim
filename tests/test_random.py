@@ -1827,13 +1827,10 @@ def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
     from multiprocessing import current_process
-    if sys.version_info < (3,0):
-        from multiprocessing import Process, Queue
-    else:
-        from multiprocessing import get_context
-        ctx = get_context('fork')
-        Process = ctx.Process
-        Queue = ctx.Queue
+    from multiprocessing import get_context
+    ctx = get_context('fork')
+    Process = ctx.Process
+    Queue = ctx.Queue
 
     def generate_list(seed):
         """Given a particular seed value, generate a list of random numbers.
@@ -1961,9 +1958,6 @@ def test_int64():
               np.longlong(123),
               np.ulonglong(123),
               np.array(123).astype(np.int64)]
-
-    if sys.version_info < (3,):
-        ivalues.append(long(123))
 
     for i in ivalues:
         rng2 = galsim.BaseDeviate(i)

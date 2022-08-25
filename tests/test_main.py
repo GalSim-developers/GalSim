@@ -18,6 +18,7 @@
 
 import sys
 import logging
+from unittest import mock
 import galsim
 import galsim.main  # Not imported automatically
 import galsim.__main__
@@ -225,8 +226,6 @@ def test_parse_variables():
 
     # Should work correctly if yaml isn't available.
     # Although it doesn't always parse quite as nicely. E.g. requires ", not ' for string quotes.
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     with mock.patch.dict(sys.modules, {'yaml':None}):
         vars = ['psf={"type":"Gaussian","sigma":0.4}', 'output.skip=[0,0,0,0,0,1]']
         new_params = galsim.main.parse_variables(vars, logger)
@@ -287,8 +286,6 @@ def test_process():
     galsim.main.main([config_file,'-v','1'])
     assert os.path.exists(file_name)
 
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     with mock.patch('sys.argv', ['galsim', config_file, '-v', '1']):
         remove_handler()
         os.remove(file_name)

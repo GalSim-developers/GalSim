@@ -20,6 +20,7 @@
 import os
 import numpy as np
 import time
+from unittest import mock
 
 import galsim
 from galsim_test_helpers import *
@@ -164,8 +165,6 @@ def test_init():
         galsim.LookupTable.from_file('table_comparison_files/table_test1_spline.txt')
 
     # The default reader uses pandas, but numpy is used if pandas not available.
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
     with mock.patch.dict(sys.modules, {'pandas':None}):
         tab_ps2 = galsim.LookupTable.from_file('../examples/data/cosmo-fid.zmed1.00_smoothed.out')
         # Not precisely equal. But close enough.

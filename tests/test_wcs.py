@@ -21,6 +21,7 @@ import os
 import sys
 import warnings
 import time
+from unittest import mock
 
 import galsim
 from galsim_test_helpers import *
@@ -2629,8 +2630,6 @@ def test_fitswcs():
     # If some format can't be handled by one of the installed modules,
     # then FitsWCS can end up at the AffineTransform.
     # The easiest way to mock this up is to adjust the fits_wcs_types list.
-    if sys.version_info < (3,): return  # mock only available on python 3
-    from unittest import mock
 
     with mock.patch('galsim.fitswcs.fits_wcs_types', [galsim.GSFitsWCS,]):
         file_name, ref_list = references['ZPX']
