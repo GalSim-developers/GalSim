@@ -18,9 +18,8 @@ pseudo-random number generator using the Boost libraries Mersenne twister.
 
 We have fixed the implementation of this to Boost version 1.48.0, the relevant files of which are
 bundled with the GalSim distribution, so that random numbers produced by GalSim simulations are
-deterministic across different user-installed versions of Boost.  Indeed, we no longer (as of
-version 2.0) include Boost as a dependency at all.  These bundled files are the only parts of
-Boost we use.
+deterministic across different user platforms and operating systems.  These Boost files are
+included with GalSim, so the user does not need to have Boost installed on their system.
 
 There are ways to connect various different deviate objects to use the same underlying
 `BaseDeviate`, which is often important for producing deterministic simulations given a particular

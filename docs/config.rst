@@ -86,6 +86,11 @@ case the default of ``flux=1`` is used.
     :maxdepth: 1
 
     config_top
+    config_objects
+    config_stamp
+    config_image
+    config_input
+    config_output
     config_values
     config_special
     config_galsim

@@ -107,6 +107,18 @@ Options are:
             * ``max_mu`` = *float_value* (default = 5)  The maximum magnification to allow.  If NFWHalo returns a mu value greater than this or less than 0, then use ``max_mu`` instead.  This is a sign of strong lensing, and other approximations are probably breaking down at this point anyway, so this keeps the object profile from going crazy.
             * ``num`` = *int_value* (default = 0)  If ``input.nfw_halo`` is a list, this indicates which number halo to use.
 
+        * 'COSMOSValue'  Gets a value from an input COSMOS catalog. This requires that ``input.cosmos_catalog`` be specified and uses the following fields:
+
+            * ``key`` = *str_value* (required)
+            * ``index`` = *int_value* (required)
+            * ``num`` = *int_value* (default = 0)  If ``input.cosmos_catalog`` is a list, this indicates which number catalog to use.
+
+         * 'SampleValue'  Gets a value from an input galaxy sample. This requires that ``input.galaxy_sample`` be specified and uses the following fields:
+
+            * ``key`` = *str_value* (required)
+            * ``index`` = *int_value* (required)
+            * ``num`` = *int_value* (default = 0)  If ``input.cosmos_catalog`` is a list, this indicates which number catalog to use.
+
         * 'Sequence'  Generate a sequence of values.
 
             * ``first`` = *float_value* (default = 0)

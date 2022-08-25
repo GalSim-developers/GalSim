@@ -125,12 +125,38 @@ E.g. To have a bulge plus disk that have the same kinds of parameters, except th
 
 This would generate different values for the size, flux, and shape of each component.  But the way those numbers are drawn would be the same for each.
 
+It is also possible for modules to register a name for a template file, so users can use that name
+rather than the actual file location.  For instance, if a module has a template yaml file that is
+installed with the python code, it will typically be in an obscure location in a Python
+site-packages directory somewhere.  But the installed module would be able to know this location
+and register it by name.  E.g. "my_default_sim".  Then users who want to
+start with that canonical config file and maybe modify a few things can write:
+
+.. code-block:: yaml
+
+    modules:
+        - my_module
+
+    template: my_default_sim
+
+    image.random_seed: 12345
+    image.nobjects: 500
+    output.file_name: objs_500.fits
+
+To use this feature, the module (i.e. my_module in the example here) should register the name to the correct file name using the `RegisterTemplate` function::
+
+    module_dir = os.path.dirname(__file__)
+    default_sim_file = os.path.join(module_dir, 'my_default_sim.yaml')
+    galsim.config.RegisterTemplate('my_default_sim', default_sim_file)
+
+.. autofunction:: galsim.config.RegisterTemplate
+
 See:
 
 * :download:`rgc.yaml <../examples/great3/rgc.yaml>`
 * :download:`cgc_psf.yaml <../examples/great3/cgc_psf.yaml>`
 
-for examples of this feature.
+for more examples of this feature.
 
 Special Specifications
 ======================

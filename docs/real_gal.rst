@@ -44,6 +44,9 @@ or parametric models based on those images.
 .. autoclass:: galsim.COSMOSCatalog
     :members:
 
+.. autoclass:: galsim.GalaxySample
+    :members:
+
 Downloading the COSMOS Catalog
 ------------------------------
 

@@ -18,3 +18,12 @@ Photon Operators
 
 .. autoclass:: galsim.Refraction
     :members:
+
+.. autoclass:: galsim.PupilImageSampler
+    :members:
+
+.. autoclass:: galsim.PupilAnnulusSampler
+    :members:
+
+.. autoclass:: galsim.TimeSampler
+    :members:

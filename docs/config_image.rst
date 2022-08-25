@@ -13,6 +13,7 @@ Some attributes that are allowed for all image types are:
 * ``sky_level`` = *float_value* (default = 0.0; only one of ``sky_level`` and ``sky_level_pixel`` is allowed)  The background level of the image in ADU/arcsec^2
 * ``sky_level_pixel`` = *float_value* (default = 0.0; only one of ``sky_level`` and ``sky_level_pixel`` is allowed)  The background level of the image in ADU/pixel
 * ``index_convention`` = *str_value* (default = 'FITS')  The convention for what to call the lower left pixel of the image.  The standard FITS convention is to call this pixel (1,1).  However, this can be counter-intuitive to people used to C or python indexing.  So if ``index_convention`` is 'C' or 'python' or '0', then the image origin will be considered (0,0) instead.  (While unnecessary to specify explicitly since it is the default, the (1,1) convention may be called 'FITS', 'Fortran' or '1'.)
+* ``dtype`` = *str_value* (default = 'np.float32')  The data type to use for the output image.  Allowed values include all the Python and numpy types that are allowed for an `Image`.
 * ``random_seed`` = *int_value* or *list* (optional) The random seed to use for random numbers in the simulation.
 
     * The typical use case is that this is a simple integer value. Then, internally we scramble this value in a deterministic way and use a sequence of seeds based on the scrambled value so that the output is deterministic even when using multiple processes to build each image.

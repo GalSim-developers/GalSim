@@ -17,3 +17,11 @@ is mostly to enable unit tests that these C++ function are correct.
 .. autofunction:: galsim.bessel.iv
 .. autofunction:: galsim.bessel.j0_root
 .. autofunction:: galsim.bessel.jv_root
+
+The next few are not really related to Bessel functions, but they are also exposed
+from the C++ layer.
+
+.. autofunction:: galsim.bessel.si
+.. autofunction:: galsim.bessel.ci
+.. autofunction:: galsim.bessel.sinc
+.. autofunction:: galsim.bessel.gammainc

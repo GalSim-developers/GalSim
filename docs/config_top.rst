@@ -89,11 +89,4 @@ The ``output`` field indicates where to write the output files and what kind of 
 should have.
 For a list of all the available ``output`` types, see `Config Output Field`.
 
-.. toctree::
-    :maxdepth: 1
 
-    config_objects
-    config_stamp
-    config_image
-    config_input
-    config_output

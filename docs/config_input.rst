@@ -69,6 +69,29 @@ The ``input`` fields defined by GalSim are:
     * ``min_flux`` *float_value* (optional) Exclude galaxies whose fitted flux is smaller than this value (in arcsec).
     * ``max_flux`` *float_value* (optional) Exclude galaxies whose fitted flux is larger than this value (in arcsec).
 
+* ``galaxy_sample`` is a generalization of ``cosmos_catalog`` that provides similar functionality for arbitrary input sample catalogs.  Connected with 'SampleGalaxy' profile described in `Config Objects`.
+
+    * ``file_name`` = *str_value* (required)  The name of the file with the input catalog.
+    * ``dir`` = *str_value* (optional)  The directory the file is in (along with related image and noise files).
+    * ``preload`` = *bool_value* (default = False)  Whether to preload all the header information from the catalog fits file into memory at the start.  If ``preload=True``, the bulk of the I/O time happens at the start of the processing.  If ``preload=False``, there is approximately the same total I/O time (assuming you eventually use most of the image files referenced in the catalog), but it is spread over the various RealGalaxy objects that get built.
+    * ``orig_exptime`` = *float_value* (default = 1.)  The exposure time (in seconds) of the original observations.
+    * ``orig_area`` = *float_value* (default = 1.)  The effective collecting area (in cm^2) of the original observations.
+    * ``use_real`` = *bool_value* (default = True)  Whether load the RealGalaxy catalog.  If this is True, you can request either real or parametric galaxies from the catalog.  But if you are only going to use parametric galaxies, then you may set this to False, and it will not bother to load the real galaxies.
+    * ``exclusion_level`` = *str_value* (default='none') Level of additional cuts to make on the galaxies based on the quality of postage stamp definition and/or parametric fit quality.  Valid options are:
+
+        * "none": No cuts.
+        * "bad_stamp": Apply cuts to eliminate galaxies that have failures in postage stamp definition.  These cuts may also eliminate a small subset of the good postage stamps as well.
+        * "bad_fits": Apply cuts to eliminate galaxies that have failures in the parametric fits.  These cuts may also eliminate a small subset of the good parametric fits as well.
+        * "marginal": Apply the above cuts, plus ones that eliminate some more marginal cases.
+
+    * ``min_hlr`` = *float_value* (optional) Exclude galaxies whose fitted half-light radius is smaller than this value (in arcsec).
+    * ``max_hlr`` = *float_value* (optional) Exclude galaxies whose fitted half-light radius is larger than this value (in arcsec).
+    * ``min_flux`` = *float_value* (optional) Exclude galaxies whose fitted flux is smaller than this value (in arcsec).
+    * ``max_flux`` = *float_value* (optional) Exclude galaxies whose fitted flux is larger than this value (in arcsec).
+    * ``cut_ratio`` = *float_value* (optional) For the "bad_stamp" exclusions, cut out any stamps with average adjacent pixels larger than this fraction of the peak pixel count.
+    * ``sn_limit`` = *float_value* (default = 10.) For the "bad_stamp" exclusions, cut out any stamps with estimated S/N for an elliptical Gaussian less than this limit.
+    * ``min_mask_dist`` = *float_value* (default = 10.) For the "bad_stamp" exclusions, remove any stamps that have some masked pixels closer to the center than this minimum distance (in pixels).
+
 * ``nfw_halo`` defines an NFW halo.  Connected with 'NFWHaloShear' and 'NFWHaloMagnification' value types described in `Config Values`.
 
     * ``mass`` = *float_value* (required)  The mass of the halo in units of (Msolar / h).
@@ -170,7 +193,7 @@ Also `The DES Module` uses custom inputs for the `DES_PSFEx` and `DES_Shapelet` 
 It may also be helpful to look at the GalSim implementation of our various included input types
 (click on the ``[source]`` links):
 
-.. autoclass:: galsim.config.input_cosmos.COSMOSLoader
+.. autoclass:: galsim.config.input_cosmos.SampleLoader
 
 .. autofunction:: galsim.config.input_cosmos._BuildCOSMOSGalaxy
 

@@ -228,7 +228,7 @@ class BaseDeviate:
 
         This is False for PoissonDeviate, Chi2Deviate, and GammaDeviate.
 
-        See also `generates_in_pairs`.
+        See also `BaseDeviate.generates_in_pairs`.
         """
         return True
 
@@ -236,7 +236,7 @@ class BaseDeviate:
     def generates_in_pairs(self):
         """Indicates whether the generator uses 2 rngs values per 2 returned values.
 
-        GaussianDeviate has a slight wrinkle to the `has_reliable_discard` story.
+        GaussianDeviate has a slight wrinkle to the `BaseDeviate.has_reliable_discard` story.
         It always uses two rng values to generate two Gaussian deviates.  So if the number of
         generated values is even, then discard can keep things in sync.  However, if an odd
         number of values are generated, then you to generate one more value (and discard it)

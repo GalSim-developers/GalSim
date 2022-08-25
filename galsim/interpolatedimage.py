@@ -751,7 +751,7 @@ def _InterpolatedImage(image, x_interpolant=Quintic(), k_interpolant=Quintic(),
     5. The image is not recentered to have its center at (0,0).  The returned profile will be
        centered wherever the (0,0) location is in the image, possibly with an offset governed
        by ``offset`` and ``use_true_center``.  If you want to mimic the behavior of the regular
-       `InterpolatedImage` initializer, you can call `image.setCenter(0,0)` before calling this
+       `InterpolatedImage` initializer, you can call ``image.setCenter(0,0)`` before calling this
        function.
 
     Parameters:

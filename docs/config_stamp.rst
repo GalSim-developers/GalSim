@@ -29,9 +29,10 @@ Some attributes that are allowed for all stamp types are:
 * ``retry_failures`` = *int_value* (default = 0) How many times to retry the construction of a GSObject if there is any kind of failure.  For example, you might have a random shear value that technically may come back with :math:`|g| > 1`, but it should be very rare.  So you might set it to retry once or twice in that case.  If this is > 0, then after a failure, the code will wait 1 second (in case the failure was related to memory usage on the machine), and then try again up to this many times.
 * ``world_pos`` = *pos_value* or *sky_value* (only one of ``world_pos`` and ``image_pos`` is allowed) The position in world coordinates at which to center the object.  This is often defined in the ``image`` field, but it can be overridden in the ``stamp`` field.
 * ``image_pos`` = *pos_value* (only one of ``world_pos`` and ``image_pos`` is allowed) The position on the full image at which to center the object.  This is often defined in the ``image`` field, but it can be overridden in the ``stamp`` field.  Note: the object is always centered as nearly as possible on the postage stamp being drawn (unless an explicit ``offset`` is given), but the ``image_pos`` or ``world_pos`` determines where in the larger image this stamp is placed.
-* ``skip`` = *bool_value* (default=False)  Skip this stamp.
-* ``quick_skip`` = *bool_value* (default=False)  Skip this stamp before doing any work, even making the rng or calculating the position.  (Usually used by some other part of the processing to precalculate objects that are not worth doing for some reason.)
-* ``obj_rng`` = *bool_value* (default=True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.
+* ``sky_pos`` = *sky_value* (default = ``world_pos``) Normally this is just ``world_pos``, but if you are using a Euclidean WCS, then this allows for the ability to specify a location on the sky in case some other type needs it for a calculation.
+* ``skip`` = *bool_value* (default = False)  Skip this stamp.
+* ``quick_skip`` = *bool_value* (default = False)  Skip this stamp before doing any work, even making the rng or calculating the position.  (Usually used by some other part of the processing to precalculate objects that are not worth doing for some reason.)
+* ``obj_rng`` = *bool_value* (default = True) Whether to make a fresh random number generator for each object.  If set to False, all objects will use the same rng, which will be the one used for image-level calculations.
 * ``photon_ops``  See `Photon Operators List` below.
 
 Stamp Types

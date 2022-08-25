@@ -112,8 +112,6 @@ class GalaxySample:
         area:               The effective collecting area (in cm^2) to assume when creating
                             galaxies. [default: None, which means to use orig_area]
 
-
-
     After construction, the following attributes are available:
 
     Attributes:
@@ -769,8 +767,8 @@ class COSMOSCatalog(GalaxySample):
 
     After getting the catalogs, there is a method makeGalaxy() that can make a `GSObject`
     corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
-    `makeGalaxy` for more information.  As an interesting application and example of the usage of
-    these routines, consider the following code::
+    `GalaxySample.makeGalaxy` for more information.  As an interesting application and example of
+    the usage of these routines, consider the following code::
 
         >>> im_size = 64
         >>> pix_scale = 0.05
