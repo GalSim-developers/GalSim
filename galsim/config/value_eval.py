@@ -165,8 +165,6 @@ def _GenerateFromEval(config, base, value_type):
                 #print('fn_str = ',fn_str)
                 fn = eval(fn_str, gdict)
                 config['_fn'] = fn
-        except KeyboardInterrupt:
-            raise
         except Exception as e:
             raise GalSimConfigError(
                 "Unable to evaluate string %r as a %s\n%r"%(string, value_type, e))
@@ -189,8 +187,6 @@ def _GenerateFromEval(config, base, value_type):
         val = fn(**params)
         #print('val = ',val)
         return val, safe
-    except KeyboardInterrupt:
-        raise
     except Exception as e:
         raise GalSimConfigError(
             "Unable to evaluate string %r as a %s\n%r"%(config['str'],value_type, e))

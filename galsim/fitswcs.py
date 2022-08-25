@@ -1765,8 +1765,6 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                 if compression != 'auto':
                     wcs._tag += ', compression=%r'%compression
             return wcs
-        except KeyboardInterrupt:
-            raise
         except Exception as err:
             pass
     else:

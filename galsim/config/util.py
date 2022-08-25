@@ -346,8 +346,6 @@ def UpdateNProc(nproc, ntot, config, logger=None):
             from multiprocessing import cpu_count
             nproc = cpu_count()
             logger.debug("ncpu = %d.",nproc)
-        except KeyboardInterrupt:
-            raise
         except Exception as e:
             logger.warning("nproc <= 0, but unable to determine number of cpus.")
             logger.warning("Caught error: %s",e)
@@ -718,8 +716,6 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     result = job_func(**kwargs)
                     t2 = time.time()
                     results_queue.put( (result, k, t2-t1, proc) )
-            except KeyboardInterrupt:
-                raise
             except Exception as e:
                 tr = traceback.format_exc()
                 logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
@@ -811,7 +807,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                         # k is the index for the job that failed
                         if except_func is not None:  # pragma: no branch
                             except_func(logger, proc, k, res, t)
-                        if except_abort or isinstance(res, KeyboardInterrupt):
+                        if except_abort:
                             for j in range(nproc):
                                 p_list[j].terminate()
                             raise_error = res
@@ -867,13 +863,11 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     if done_func is not None:  # pragma: no branch
                         done_func(logger, None, k, result, t2-t1)
                     results[k] = result
-                except KeyboardInterrupt:
-                    raise
                 except Exception as e:
                     tr = traceback.format_exc()
                     if except_func is not None: # pragma: no branch
                         except_func(logger, None, k, e, tr)
-                    if except_abort or isinstance(e, KeyboardInterrupt):
+                    if except_abort:
                         raise
 
     # If there are any failures, then there will still be some Nones in the results list.

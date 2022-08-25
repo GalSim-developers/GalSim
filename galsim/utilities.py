@@ -1238,8 +1238,6 @@ def dol_to_lod(dol, N=None, scalar_string=True):
                 out[k] = v[0]
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
-            except KeyboardInterrupt:
-                raise
             except Exception:
                 raise GalSimIncompatibleValuesError(
                     "Cannot broadcast kwarg {0}={1}".format(k, v), dol=dol)

@@ -215,8 +215,6 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
 
     try:
         shear = Shear(g1=g1,g2=g2)
-    except KeyboardInterrupt:
-        raise
     except Exception as e:
         logger.warning('obj %d: Warning: PowerSpectrum shear (g1=%f, g2=%f) is invalid. '%(
                        base['obj_num'],g1,g2) + 'Using shear = 0.')
