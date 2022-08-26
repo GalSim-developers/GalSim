@@ -14,6 +14,10 @@ GalSim is supported for the following Python versions: 3.7, 3.8, 3.9, 3.10.
     * Boost Python for C++ bindings
     * SCons builds
 
+A full list of changes in this release are below.  The numbers in parentheses
+are GalSim issue or pull request numbers where the change was implemented.
+
+cf. https://github.com/GalSim-developers/GalSim/milestone/21?closed=1
 
 API Changes
 -----------
