@@ -1607,10 +1607,6 @@ def test_eval_full_word():
 def test_timeout():
     """Test the timeout option
     """
-    # Most of the tests in this file write to the 'output' directory.  Here we write to a different
-    # directory and make sure that it properly creates the directory if necessary.
-    real_gal_dir = os.path.join('..','examples','data')
-    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
     config = {
         'image' : {
             'type' : 'Scattered',
@@ -1645,7 +1641,7 @@ def test_timeout():
 
     logger = logging.getLogger('test_timeout')
     logger.addHandler(logging.StreamHandler(sys.stdout))
-    logger.setLevel(logging.DEBUG)
+    #logger.setLevel(logging.DEBUG)
 
     # Single proc:
     config1 = galsim.config.CopyConfig(config)
