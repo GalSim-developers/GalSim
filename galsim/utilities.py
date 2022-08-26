@@ -171,7 +171,8 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
             x = kwargs.pop(name1)
             y = kwargs.pop(name2)
         except KeyError:
-            raise TypeError('Expecting kwargs %s, %s.  Got %s'%(name1, name2, kwargs.keys()))
+            raise TypeError(
+                'Expecting kwargs %s, %s.  Got %s'%(name1, name2, kwargs.keys())) from None
     elif ( ( isinstance(args[0], PositionI) or
              (not integer and isinstance(args[0], PositionD)) ) and
            len(args) <= 1+len(others) ):
@@ -790,7 +791,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
         try:
             n1,n2 = N
         except (TypeError, ValueError):
-            raise TypeError("N must be an integer or a tuple of two integers")
+            raise TypeError("N must be an integer or a tuple of two integers") from None
 
     if not isinstance(image, Image):
         raise TypeError("image must be an instance of galsim.Image")
@@ -923,7 +924,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         try:
             n1,n2 = N
         except (TypeError, ValueError):
-            raise TypeError("N must be an integer or a tuple of two integers")
+            raise TypeError("N must be an integer or a tuple of two integers") from None
 
     if len(im_list)<2:
         raise GalSimValueError("im_list must have at least two instances of galsim.Image", im_list)
@@ -1234,7 +1235,7 @@ def dol_to_lod(dol, N=None, scalar_string=True):
             except IndexError:  # It's list-like, but too short.
                 if len(v) != 1:
                     raise GalSimIncompatibleValuesError(
-                        "Cannot broadcast kwargs of different non-length-1 lengths.", dol=dol)
+                        "Cannot broadcast kwargs of different non-length-1 lengths.", dol=dol) from None
                 out[k] = v[0]
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v

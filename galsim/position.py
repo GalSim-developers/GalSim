@@ -91,7 +91,7 @@ class Position:
                         self.x, self.y = args[0]
                     except (TypeError, ValueError):
                         raise TypeError("Single argument to %s must be either a Position "
-                                        "or a tuple."%self.__class__)
+                                        "or a tuple."%self.__class__) from None
             else:
                 raise TypeError("%s takes at most 2 arguments (%d given)"%(
                         self.__class__, len(args)))
@@ -103,7 +103,8 @@ class Position:
                 self.x = kwargs.pop('x')
                 self.y = kwargs.pop('y')
             except KeyError:
-                raise TypeError("Keyword arguments x,y are required for %s"%self.__class__)
+                raise TypeError(
+                    "Keyword arguments x,y are required for %s"%self.__class__) from None
             if kwargs:
                 raise TypeError("Got unexpected keyword arguments %s"%kwargs.keys())
 

@@ -1100,7 +1100,7 @@ class ChromaticObject:
                 dx = kwargs.pop('dx')
                 dy = kwargs.pop('dy')
             except KeyError:
-                raise TypeError('shift() requires exactly 2 arguments (dx, dy)')
+                raise TypeError('shift() requires exactly 2 arguments (dx, dy)') from None
             offset = None
         elif len(args) == 1:
             if hasattr(args[0], '__call__'):

@@ -606,7 +606,7 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
         return result
     except RuntimeError as err:
         if (strict == True):
-            raise GalSimHSMError(str(err))
+            raise GalSimHSMError(str(err)) from None
         else:
             return ShapeData(error_message = str(err))
 
@@ -718,7 +718,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         return result
     except RuntimeError as err:
         if (strict == True):
-            raise GalSimHSMError(str(err))
+            raise GalSimHSMError(str(err)) from None
         else:
             return ShapeData(error_message = str(err))
 

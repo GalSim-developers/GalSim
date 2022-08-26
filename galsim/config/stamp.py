@@ -590,7 +590,8 @@ def _ParseDType(config, base):
                 exec('import numpy as np', gdict)
                 dtype = eval(dtype, gdict)
         except Exception:
-            raise GalSimConfigValueError("dtype = %s is invalid."%dtype, Image.valid_dtypes)
+            raise GalSimConfigValueError(
+                "dtype = %s is invalid."%dtype, Image.valid_dtypes) from None
     if dtype is None and base.get('current_image', None) is not None:
         dtype = base['current_image'].dtype
     return dtype

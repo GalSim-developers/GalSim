@@ -2640,7 +2640,7 @@ class UVFunction(EuclideanWCS):
                 try:
                     return np.array([self._ufunc(x1,y1,color) for [x1,y1] in zip(x,y)])
                 except Exception:
-                    raise e  # Raise the original if this fails, since it's probably more relevant.
+                    raise e from None  # Raise the original if this fails, since it's probably more relevant.
         else:
             try:
                 return self._ufunc(x,y)
@@ -2648,7 +2648,7 @@ class UVFunction(EuclideanWCS):
                 try:
                     return np.array([self._ufunc(x1,y1) for [x1,y1] in zip(x,y)])
                 except Exception:
-                    raise e
+                    raise e from None
 
     def _v(self, x, y, color=None):
         if self._uses_color:
@@ -2658,7 +2658,7 @@ class UVFunction(EuclideanWCS):
                 try:
                     return np.array([self._vfunc(x1,y1,color) for [x1,y1] in zip(x,y)])
                 except Exception:
-                    raise e
+                    raise e from None
         else:
             try:
                 return self._vfunc(x,y)
@@ -2666,7 +2666,7 @@ class UVFunction(EuclideanWCS):
                 try:
                     return np.array([self._vfunc(x1,y1) for [x1,y1] in zip(x,y)])
                 except Exception:
-                    raise e
+                    raise e from None
 
     def _x(self, u, v, color=None):
         if self._xfunc is None:
@@ -2680,7 +2680,7 @@ class UVFunction(EuclideanWCS):
                     try:
                         return np.array([self._xfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
                     except Exception:
-                        raise e
+                        raise e from None
             else:
                 try:
                     return self._xfunc(u,v)
@@ -2688,7 +2688,7 @@ class UVFunction(EuclideanWCS):
                     try:
                         return np.array([self._xfunc(u1,v1) for [u1,v1] in zip(u,v)])
                     except Exception:
-                        raise e
+                        raise e from None
 
     def _y(self, u, v, color=None):
         if self._yfunc is None:
@@ -2702,7 +2702,7 @@ class UVFunction(EuclideanWCS):
                     try:
                         return np.array([self._yfunc(u1,v1,color) for [u1,v1] in zip(u,v)])
                     except Exception:
-                        raise e
+                        raise e from None
             else:
                 try:
                     return self._yfunc(u,v)
@@ -2710,7 +2710,7 @@ class UVFunction(EuclideanWCS):
                     try:
                         return np.array([self._yfunc(u1,v1) for [u1,v1] in zip(u,v)])
                     except Exception:
-                        raise e
+                        raise e from None
 
     def _newOrigin(self, origin, world_origin):
         return UVFunction(self._orig_ufunc, self._orig_vfunc, self._orig_xfunc, self._orig_yfunc,
@@ -2871,7 +2871,7 @@ class RaDecFunction(CelestialWCS):
             try:
                 world = [ self._radec(x1,y1) for (x1,y1) in zip(x,y) ]
             except Exception:
-                raise e  # Raise the original one if this fails, since it's probably more relevant.
+                raise e from None  # Raise the original one if this fails, since it's probably more relevant.
             ra = np.array([ w[0] for w in world ])
             dec = np.array([ w[1] for w in world ])
             return ra, dec

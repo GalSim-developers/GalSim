@@ -192,7 +192,7 @@ class RandomKnots(GSObject):
         try:
             self._npoints = int(self._npoints)
         except ValueError as err:
-            raise GalSimValueError("npoints should be a number: %s", str(err))
+            raise GalSimValueError("npoints should be a number: %s", str(err)) from None
 
         if self._npoints <= 0:
             raise GalSimRangeError("npoints must be > 0", self._npoints, 1)
