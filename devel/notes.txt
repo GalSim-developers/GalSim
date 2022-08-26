@@ -48,7 +48,7 @@ For major and minor releases:
 - Back in master, update version number to M.(m+1) (i.e. no .r)
 - Cherry-pick any commits that were needed on releases/M.m that are relevant for main branch.
   - Note: no need to cherry-pick "update docs" commits.
-- Move the CHANGELOG information into docs/history.rst and clear out the current CHANGELOG.rst
+- Move the CHANGELOG information into docs/older.rst and clear out the current CHANGELOG.rst
   file for the next version.
 - Email galsim-announce list about the new version.
 - Change github home page to point to releases/M.m
