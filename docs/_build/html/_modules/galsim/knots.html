@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.knots &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>galsim.knots</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.knots</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimRangeError</span><span class="p">,</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimIncompatibleValuesError</span>
+<span class="kn">from</span> <span class="nn">.gaussian</span> <span class="kn">import</span> <span class="n">Gaussian</span>
+
+<div class="viewcode-block" id="RandomKnots"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots">[docs]</a><span class="k">class</span> <span class="nc">RandomKnots</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class for generating a set of point sources, following either a `Gaussian` profile or a</span>
+<span class="sd">    specified input profile.</span>
+
+<span class="sd">    Uses of this profile include representing an &quot;irregular&quot; galaxy, or</span>
+<span class="sd">    adding this profile to an Exponential to represent knots of star formation.</span>
+
+<span class="sd">    RandomKnots profiles have &quot;shape noise&quot; that depends on the number of point</span>
+<span class="sd">    sources used.  For example, using the default Gaussian distribution, with</span>
+<span class="sd">    100 points, the shape noise is g~0.05, and this will decrease as more</span>
+<span class="sd">    points are added.  The profile can be sheared to give additional</span>
+<span class="sd">    ellipticity, for example to follow that of an associated disk.</span>
+
+<span class="sd">    The requested half light radius (hlr) should be thought of as a rough</span>
+<span class="sd">    value.  With a finite number point sources the actual realized hlr will be</span>
+<span class="sd">    noisy.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        If providing an input ``profile`` object, it must be &quot;shoot-able&quot;.  Objects that</span>
+<span class="sd">        cannot be drawn with ``method=&#39;phot&#39;`` cannot be used as the ``profile`` parameter here.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">         npoints:           Number of point sources to generate.</span>
+<span class="sd">         half_light_radius: Optional half light radius of the distribution of points.  This value</span>
+<span class="sd">                            is used for a Gaussian distribution if an explicit profile is not sent.</span>
+<span class="sd">                            This is the mean half light radius produced by an infinite number of</span>
+<span class="sd">                            points.  A single instance will be noisy.  [default None]</span>
+<span class="sd">         flux:              Optional total flux in all point sources.  This value is used for a</span>
+<span class="sd">                            Gaussian distribution if an explicit profile is not sent. Defaults to</span>
+<span class="sd">                            None if profile is sent, otherwise 1.  [default: None]</span>
+<span class="sd">         profile:           Optional profile to use for drawing points.  If a profile is sent, the</span>
+<span class="sd">                            half_light_radius and flux keywords are invalid.  [default: None]</span>
+<span class="sd">         rng:               Optional random number generator. Can be any `galsim.BaseDeviate`.  If</span>
+<span class="sd">                            None, the rng is created internally.  [default: None]</span>
+<span class="sd">         gsparams:          Optional `GSParams` for the objects representing each point source.</span>
+<span class="sd">                            [default: None]</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        npoints:                    The number of points to use as knots</span>
+<span class="sd">        input_half_light_radius:    The input half_light_radius</span>
+<span class="sd">        flux:                       The flux</span>
+<span class="sd">        points:                     The array of x,y offsets used to create the point sources</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        The algorithm was originally a modified version of that presented in</span>
+<span class="sd">        https://arxiv.org/abs/1312.5514v3.  However, we now use the GalSim photon shooting</span>
+<span class="sd">        mechanism, which allows the knots to trace any profile, not just a `Gaussian`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># these allow use in a galsim configuration context</span>
+
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;npoints&quot;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;flux&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span>
+        <span class="s2">&quot;half_light_radius&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="s2">&quot;profile&quot;</span><span class="p">:</span> <span class="n">GSObject</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="n">_takes_rng</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="n">_has_hard_edges</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_is_axisymmetric</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">npoints</span><span class="p">,</span> <span class="n">half_light_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="o">=</span><span class="n">npoints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span> <span class="o">=</span> <span class="n">half_light_radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="n">flux</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">=</span><span class="n">profile</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_verify</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">BaseDeviate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">=</span><span class="n">rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">BaseDeviate</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;rng must be an instance of galsim.BaseDeviate, got </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">rng</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">=</span><span class="n">rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">()</span>
+            <span class="c1"># We won&#39;t use the rng yet, but make sure the original advances the right number</span>
+            <span class="c1"># of values.</span>
+            <span class="n">rng</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">npoints</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">profile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">=</span> <span class="n">Gaussian</span><span class="p">(</span><span class="n">half_light_radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="o">=</span><span class="n">profile</span><span class="o">.</span><span class="n">flux</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c1"># not all GSObjects have this attribute</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span> <span class="o">=</span> <span class="n">profile</span><span class="o">.</span><span class="n">half_light_radius</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fluxper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span>
+        <span class="n">deltas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBDeltaFunction</span><span class="p">(</span><span class="n">fluxper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBTransform</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+            <span class="n">deltas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBAdd</span><span class="p">(</span><span class="n">deltas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the input half light radius (HLR).</span>
+
+<span class="sd">        Note the input HLR is not necessarily the realized HLR,</span>
+<span class="sd">        due to the finite number of points used in the profile.</span>
+
+<span class="sd">        If a profile is sent, and that profile is a Transformation object (e.g.</span>
+<span class="sd">        it has been sheared, its flux set, etc), then this value will be None.</span>
+
+<span class="sd">        You can get the *calculated* half light radius using the calculateHLR</span>
+<span class="sd">        method.  That value will be valid in all cases.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">npoints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The number of point sources.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A list of the locations (x,y) of the point sources.</span>
+
+<span class="sd">        Technically, this is a numpy array of shape (npoints, 2).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rng</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">()</span>
+        <span class="n">photons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">shoot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span> <span class="n">photons</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">photons</span><span class="o">.</span><span class="n">y</span> <span class="p">])</span>
+
+<div class="viewcode-block" id="RandomKnots.calculateHLR"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.calculateHLR">[docs]</a>    <span class="k">def</span> <span class="nf">calculateHLR</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        calculate the half-light radius of the generated points</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span>
+        <span class="n">my</span><span class="p">,</span><span class="n">mx</span><span class="o">=</span><span class="n">pts</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">r</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="p">(</span><span class="n">pts</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">my</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">pts</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">mx</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">hlr</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">hlr</span></div>
+
+    <span class="k">def</span> <span class="nf">_verify</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        type and range checking on the inputs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">.random</span> <span class="kn">import</span> <span class="n">BaseDeviate</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;npoints should be a number: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span> <span class="kn">from</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;npoints must be &gt; 0&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;half_light_radius required when not providing a profile&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span> <span class="o">&lt;=</span> <span class="mf">0.</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span>
+                    <span class="s2">&quot;half_light_radius must be positive&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="s2">&quot;flux is invalid when providing a profile&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;half_light_radius is invalid when providing a profile&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="n">GSObject</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span><span class="s2">&quot;profile must be a GSObject&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rep</span> <span class="o">=</span> <span class="s1">&#39;galsim.RandomKnots(</span><span class="si">%(npoints)d</span><span class="s1">, profile=</span><span class="si">%(profile)s</span><span class="s1">)&#39;</span>
+        <span class="n">rep</span> <span class="o">=</span> <span class="n">rep</span> <span class="o">%</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">npoints</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span>
+            <span class="n">profile</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">rep</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">rep</span> <span class="o">=</span> <span class="s1">&#39;galsim.RandomKnots(</span><span class="si">%r</span><span class="s1">, profile=</span><span class="si">%r</span><span class="s1">, rng=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rep</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RandomKnots</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_npoints</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_profile</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_profile</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_orig_rng</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.RandomKnots&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_half_light_radius</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_sbp&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_maxk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">maxK</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_stepk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">stepK</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_centroid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PositionD</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">centroid</span><span class="p">())</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_positive_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">getPositiveFlux</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_negative_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">getNegativeFlux</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">maxSB</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">kValue</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">shoot</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">_pa</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">_rng</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span>
+
+    <span class="c1"># For all the transformations methods, apply to the internal profile, and remake points</span>
+    <span class="c1"># in the correct locations.  This makes fft drawing much faster than the normal way</span>
+    <span class="c1"># of applying the transformation to the k-space image.</span>
+<div class="viewcode-block" id="RandomKnots.withFlux"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="n">flux</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RandomKnots.withScaledFlux"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.withScaledFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withScaledFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">flux_ratio</span><span class="p">,</span> <span class="s1">&#39;__call__&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">GSObject</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux_ratio</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">withScaledFlux</span><span class="p">(</span><span class="n">flux_ratio</span><span class="p">),</span>
+                               <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RandomKnots.expand"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.expand">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">expand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">scale</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RandomKnots.dilate"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.dilate">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">dilate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scale</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">dilate</span><span class="p">(</span><span class="n">scale</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RandomKnots.shear"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.shear">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">shear</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_shear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shear</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">_shear</span><span class="p">(</span><span class="n">shear</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RandomKnots.rotate"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.rotate">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theta</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">theta</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RandomKnots.transform"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.transform">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span><span class="n">dudy</span><span class="p">,</span><span class="n">dvdx</span><span class="p">,</span><span class="n">dvdy</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RandomKnots.shift"><a class="viewcode-back" href="../../gal.html#galsim.RandomKnots.shift">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_shift</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RandomKnots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_npoints</span><span class="p">,</span> <span class="n">profile</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profile</span><span class="o">.</span><span class="n">_shift</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span><span class="n">dy</span><span class="p">),</span>
+                           <span class="n">rng</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_orig_rng</span><span class="o">.</span><span class="n">duplicate</span><span class="p">(),</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

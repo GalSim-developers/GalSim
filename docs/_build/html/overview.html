@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Overview &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation Instructions" href="install.html" />
+    <link rel="prev" title="Indices and tables" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-installation">Basic Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-distribution">Source Distribution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#keeping-up-to-date-with-galsim">Keeping up-to-date with GalSim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#how-to-communicate-with-the-galsim-developers">How to communicate with the GalSim developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#demonstration-scripts">Demonstration scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary-of-current-capabilities">Summary of current capabilities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#planned-future-development">Planned future development</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/overview.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="overview">
+<h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="https://github.com/GalSim-developers/GalSim"><img alt="https://github.com/GalSim-developers/GalSim/workflows/GalSim%20CI/badge.svg" src="https://github.com/GalSim-developers/GalSim/workflows/GalSim%20CI/badge.svg" /></a>
+<a class="reference external image-reference" href="https://codecov.io/gh/GalSim-developers/GalSim"><img alt="https://codecov.io/gh/GalSim-developers/GalSim/branch/master/graph/badge.svg" src="https://codecov.io/gh/GalSim-developers/GalSim/branch/master/graph/badge.svg" /></a>
+<a class="reference external image-reference" href="https://arxiv.org/abs/1407.7676"><img alt="https://img.shields.io/badge/astro--ph.IM-1407.7676-B31B1B.svg" src="https://img.shields.io/badge/astro--ph.IM-1407.7676-B31B1B.svg" /></a>
+<a class="reference external image-reference" href="http://adsabs.harvard.edu/abs/2015A%26C....10..121R"><img alt="https://img.shields.io/badge/ADS-Rowe%20et%20al%2C%202015-blue.svg" src="https://img.shields.io/badge/ADS-Rowe%20et%20al%2C%202015-blue.svg" /></a>
+<p>GalSim is open-source software for simulating images of astronomical objects
+(stars, galaxies) in a variety of ways.  The bulk of the calculations are
+carried out in C++, and the user interface is in Python.  In addition, the code
+can operate directly on “config” files, for those users who prefer not to work
+in Python.  The impetus for the software package was a weak lensing community
+data challenge, called GREAT3:</p>
+<blockquote>
+<div><p><a class="reference external" href="http://great3challenge.info/">http://great3challenge.info/</a></p>
+</div></blockquote>
+<p>However, the code has numerous additional capabilities beyond those needed for
+the challenge, and has been useful for a number of projects that needed to
+simulate high-fidelity galaxy images with accurate sizes and shears.  At the
+end of this file, there is a list of the code capabilities and plans for future
+development.  For details of algorithms and code validation, please see</p>
+<blockquote>
+<div><p><a class="reference external" href="http://adsabs.harvard.edu/abs/2015A%26C....10..121R">http://adsabs.harvard.edu/abs/2015A%26C….10..121R</a></p>
+</div></blockquote>
+<p>The GalSim version numbering tries to follow <a class="reference external" href="https://semver.org/">Semantic Versioning</a>
+This means that releases are numbered as M.m.r, where M is a major version number,
+m is the minor version, and r is the revision (or patch or bugfix) number.</p>
+<p>The public API is preserved within a given major version number.  So code that works
+with version 2.2.3 (say) should continue to work for all subsequent 2.x.x versions.
+Minor versions indicate new features being added to the API.  Revision versions
+don’t add any new features, but fix bugs in the previous release.</p>
+<div class="section" id="basic-installation">
+<h2>Basic Installation<a class="headerlink" href="#basic-installation" title="Permalink to this headline">¶</a></h2>
+<p>Normally, to install GalSim, you should just need to run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+<p>Depending on your setup, you may need to add either sudo to the start
+or –user to the end of this command as you normally do when pip installing
+packages.</p>
+<p>See <a class="reference internal" href="install.html#installation-instructions"><span class="std std-ref">Installation Instructions</span></a> for full details including one dependency (FFTW) that is not
+pip installable, so you may need to install before running this command.</p>
+<p>You can also use conda via conda-forge:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">c</span> <span class="n">conda</span><span class="o">-</span><span class="n">forge</span> <span class="n">galsim</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="source-distribution">
+<h2>Source Distribution<a class="headerlink" href="#source-distribution" title="Permalink to this headline">¶</a></h2>
+<p>To get the latest version of the code, you can grab the tarball (or zip file) from</p>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/releases/">https://github.com/GalSim-developers/GalSim/releases/</a></p>
+<p>Also, feel free to fork the repository:</p>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/fork">https://github.com/GalSim-developers/GalSim/fork</a></p>
+<p>Or clone the repository with either of the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">git</span><span class="nd">@github</span><span class="o">.</span><span class="n">com</span><span class="p">:</span><span class="n">GalSim</span><span class="o">-</span><span class="n">developers</span><span class="o">/</span><span class="n">GalSim</span><span class="o">.</span><span class="n">git</span>
+<span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">GalSim</span><span class="o">-</span><span class="n">developers</span><span class="o">/</span><span class="n">GalSim</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>The code is also distributed via Fink, Macports, and Homebrew for Mac users.
+See <a class="reference internal" href="install.html#installation-instructions"><span class="std std-ref">Installation Instructions</span></a> (in INSTALL.rst) for more information.</p>
+<p>The code is licensed under a BSD-style license.  See the file LICENSE for more
+details.</p>
+</div>
+<div class="section" id="keeping-up-to-date-with-galsim">
+<h2>Keeping up-to-date with GalSim<a class="headerlink" href="#keeping-up-to-date-with-galsim" title="Permalink to this headline">¶</a></h2>
+<p>There is a GalSim mailing list, organized through the Google Group
+galsim-announce.  Members of the group will receive news and updates about the
+GalSim code, including notifications of major version releases, new features
+and bugfixes.</p>
+<p>You do not need a Google Account to subscribe to the group, simply send any
+email to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">-</span><span class="n">announce</span><span class="o">+</span><span class="n">subscribe</span><span class="nd">@googlegroups</span><span class="o">.</span><span class="n">com</span>
+</pre></div>
+</div>
+<p>If you receive a confirmation request (check junk mail filters!) simply reply
+directly to that email, with anything, to confirm.  You may also click the link
+in the confirmation request, but you may be asked for a Google Account login.</p>
+<p>To unsubscribe, simply send any email to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">-</span><span class="n">announce</span><span class="o">+</span><span class="n">unsubscribe</span><span class="nd">@googlegroups</span><span class="o">.</span><span class="n">com</span>
+</pre></div>
+</div>
+<p>You should receive notification that your unsubscription was successful.</p>
+</div>
+<div class="section" id="how-to-communicate-with-the-galsim-developers">
+<h2>How to communicate with the GalSim developers<a class="headerlink" href="#how-to-communicate-with-the-galsim-developers" title="Permalink to this headline">¶</a></h2>
+<p>Currently, the lead developers for GalSim are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Mike Jarvis (mikejarvis17 at gmail)</p></li>
+<li><p>Rachel Mandelbaum (rmandelb at andrew dot cmu dot edu)</p></li>
+<li><p>Josh Meyers (jmeyers314 at gmail)</p></li>
+</ul>
+</div></blockquote>
+<p>However, many others have contributed to GalSim over the years as well, for
+which we are very grateful.</p>
+<p>If you have a question about how to use GalSim, a good place to ask it is at
+<a class="reference external" href="http://stackoverflow.com/">StackOverflow</a>.  Some of the GalSim developers
+have alerts set up to be automatically notified about questions with the
+‘galsim’ tag, so there is a good chance that your question will be answered.</p>
+<p>If you have any trouble installing or using the code, or find a bug, or have a
+suggestion for a new feature, please open up an Issue on our <a class="reference external" href="https://github.com/GalSim-developers/GalSim/issues">GitHub
+repository</a>.  We also accept
+pull requests if you have something you’d like to contribute to the code base.</p>
+<p>If none of these communication avenues seem appropriate, you can also contact
+us directly at the above email addresses.</p>
+</div>
+<div class="section" id="demonstration-scripts">
+<h2>Demonstration scripts<a class="headerlink" href="#demonstration-scripts" title="Permalink to this headline">¶</a></h2>
+<p>There are a number of scripts in <code class="docutils literal notranslate"><span class="pre">examples/</span></code> that demonstrate how the code can
+be used.  These are called <code class="docutils literal notranslate"><span class="pre">demo1.py</span></code> … <code class="docutils literal notranslate"><span class="pre">demo13.py</span></code>.  You can run them by
+typing (e.g.) <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">demo1.py</span></code> while sitting in <code class="docutils literal notranslate"><span class="pre">examples/</span></code>, All demo scripts
+are designed to be run in the <code class="docutils literal notranslate"><span class="pre">examples/</span></code> directory.  Some of them access
+files in subdirectories of the <code class="docutils literal notranslate"><span class="pre">examples/</span></code> directory, so they would not work
+correctly from other locations.</p>
+<p>A completely parallel sequence of configuration files, called <code class="docutils literal notranslate"><span class="pre">demo1.yaml</span></code> …
+<code class="docutils literal notranslate"><span class="pre">demo13.yaml</span></code>, demonstrates how to make the same set of simulations using
+config files that are parsed by the executable <code class="docutils literal notranslate"><span class="pre">bin/galsim</span></code>.</p>
+<p>Two other scripts in the <code class="docutils literal notranslate"><span class="pre">examples/</span></code> directory that may be of interest, but
+are not part of the GalSim tutorial series, are <code class="docutils literal notranslate"><span class="pre">make_coadd.py</span></code>, which
+demonstrates the use of the FourierSqrt transformation to optimally coadd
+images, and <code class="docutils literal notranslate"><span class="pre">psf_wf_movie.py</span></code>, which demonstrates the realistic atmospheric
+PSF code by making a movie of a time-variable PSF and wavefront.</p>
+<p>As the project develops through further versions, and adds further
+capabilities to the software, more demo scripts may be added to <code class="docutils literal notranslate"><span class="pre">examples/</span></code>
+to illustrate what GalSim can do.</p>
+</div>
+<div class="section" id="summary-of-current-capabilities">
+<h2>Summary of current capabilities<a class="headerlink" href="#summary-of-current-capabilities" title="Permalink to this headline">¶</a></h2>
+<p>Currently, GalSim has the following capabilities:</p>
+<ul>
+<li><p>Can generate PSFs from a variety of simple parametric models such as Moffat,
+Kolmogorov, and Airy, as well as an optical PSF model that includes Zernike
+aberrations to arbitrary order, and an optional central obscuration and
+struts.</p></li>
+<li><p>Can simulate galaxies from a variety of simple parametric models as well as
+from real HST data.  For information about downloading a suite of COSMOS
+images, see</p>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data">https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data</a></p>
+</li>
+<li><p>Can simulate atmospheric PSFs from realistic turbulent phase screens.</p></li>
+<li><p>Can make the images either via i) Fourier transform, ii) real-space
+convolution (real-space being occasionally faster than Fourier), or
+iii) photon-shooting.  The exception is that objects that include a
+deconvolution (such as RealGalaxy objects) must be carried out using Fourier
+methods only.</p></li>
+<li><p>Can handle wavelength-dependent profiles and integrate over filter
+bandpasses appropriately, including handling wavlengths properly when
+photon shooting.</p></li>
+<li><p>Can apply shear, magnification, dilation, or rotation to a galaxy profile
+including lensing-based models from a power spectrum or NFW halo profile.</p></li>
+<li><p>Can draw galaxy images into arbitrary locations within a larger image.</p></li>
+<li><p>Can add noise using a variety of noise models, including correlated noise.</p></li>
+<li><p>Can whiten or apply N-fold symmetry to existing correlated noise that is
+already in an image.</p></li>
+<li><p>Can read in input values from a catalog, a dictionary file (such as a JSON
+or YAML file), or a fits header.</p></li>
+<li><p>Can write images in a variety of formats: regular FITS files, FITS data
+cubes, or multi-extension FITS files.  It can also compress the output files
+using various compressions including gzip, bzip2, and rice.</p></li>
+<li><p>Can carry out nearly any simulation that a user might want using two parallel
+methods: directly using Python code, or by specifying the simulation
+properties in an input configuration script.  See the demo scripts in
+the examples/ directory for examples of each.</p></li>
+<li><p>Supports a variety of possible WCS options from a simple pixel scale factor
+of arcsec/pixel to affine transforms to arbitrary functions of (x,y),
+including a variety of common FITS WCS specifications.</p></li>
+<li><p>Can include a range of simple detector effects such as nonlinearity,
+brighter-fatter effect, etc.</p></li>
+<li><p>Has a module that is particularly meant to simulate images for the Roman
+Space Telescope.</p></li>
+</ul>
+<div class="section" id="planned-future-development">
+<h3>Planned future development<a class="headerlink" href="#planned-future-development" title="Permalink to this headline">¶</a></h3>
+<p>We plan to add the following additional capabilities in future versions of
+GalSim:</p>
+<ul class="simple">
+<li><p>Simulating more sophisticated detector defects and image artifacts.  E.g.
+vignetting, fringing, cosmic rays, saturation, bleeding, … (cf. Issues
+#553, #828)</p></li>
+<li><p>Proper modeling of extinction due to dust. (cf. Issues #541, #550)</p></li>
+<li><p>More kinds of realistic galaxies. (cf. Issues #669, #795, #808)</p></li>
+<li><p>Various speed improvements.  (cf. Issues #205, #566, #875)</p></li>
+</ul>
+<p>There are many others as well.  Please see</p>
+<p><a class="reference external" href="https://github.com/GalSim-developers/GalSim/issues">https://github.com/GalSim-developers/GalSim/issues</a></p>
+<p>for a list of the current open issues.  And feel free to add an issue if there
+is something useful that you think should be possible, but is not currently
+implemented.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Indices and tables" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="install.html" class="btn btn-neutral float-right" title="Installation Instructions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

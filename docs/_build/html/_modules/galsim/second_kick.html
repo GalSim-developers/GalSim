@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.second_kick &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>galsim.second_kick</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.second_kick</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
+<span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">AngleUnit</span><span class="p">,</span> <span class="n">radians</span>
+<span class="kn">from</span> <span class="nn">.deltafunction</span> <span class="kn">import</span> <span class="n">DeltaFunction</span>
+
+<div class="viewcode-block" id="SecondKick"><a class="viewcode-back" href="../../phase_psf.html#galsim.SecondKick">[docs]</a><span class="k">class</span> <span class="nc">SecondKick</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class describing the expectation value of the high-k turbulence portion of an atmospheric</span>
+<span class="sd">    PSF convolved by an `Airy` PSF.</span>
+
+<span class="sd">    The power spectrum of atmospheric phase fluctuations is assumed to follow the von Karman</span>
+<span class="sd">    prescription, but possibly modified by the addition of a critical scale below which the power</span>
+<span class="sd">    is zero.  (See the `VonKarman` docstring for more details).</span>
+
+<span class="sd">    As an expectation value, this profile is formally only exact in the infinite-exposure limit.</span>
+<span class="sd">    However, at least for large apertures, we have found that this expectation value is approached</span>
+<span class="sd">    rapidly, and can be applied for even fairly small exposure times.</span>
+
+<span class="sd">    The intended use for this profile is as a correction to applying the geometric approximation to</span>
+<span class="sd">    `PhaseScreenPSF` objects when drawing using geometric photon shooting. In this case, the</span>
+<span class="sd">    `PhaseScreenPSF` will simulate the effects of the low frequency turbulence modes, which can be</span>
+<span class="sd">    treated purely using refraction, while the SecondKick handles the high frequency modes.</span>
+
+<span class="sd">    The geometric approximation is only valid for length scales larger than some critical scale</span>
+<span class="sd">    where the effects of interference are unimportant.  For smaller length scales, interference</span>
+<span class="sd">    (diffraction) must be handled using an optical paradigm that acknowledges the wave nature of</span>
+<span class="sd">    light, such as Fourier optics.</span>
+
+<span class="sd">    Fourier optics calculations are many orders of magnitude slower than geometric optics</span>
+<span class="sd">    calculations for typical flux levels, however, so we implement a scale-splitting algorithm first</span>
+<span class="sd">    described in Peterson et al. (2015) for the LSST PhoSim package.  Essentially, phase</span>
+<span class="sd">    fluctuations below a critical mode in Fourier space, labeled ``kcrit``, are handled by the fast</span>
+<span class="sd">    geometric optics calculations present in `PhaseScreenPSF`.  Fluctuations for Fourier modes above</span>
+<span class="sd">    ``kcrit`` are then calculated analytically by SecondKick.  Because very many oscillations of</span>
+<span class="sd">    these high-k modes both fit within a given telescope aperture and pass by the aperture during a</span>
+<span class="sd">    moderate length exposure time, we can use the same analytic expectation value calculation for</span>
+<span class="sd">    the high-k component of all PSFs across a field of view, thus incurring the somewhat expensive</span>
+<span class="sd">    calculation for Fourier optics only once.</span>
+
+<span class="sd">    There are two limiting cases for this profile that may helpful for readers trying to understand</span>
+<span class="sd">    how this class works.  When kcrit = 0, then all turbulent modes are included, and this surface</span>
+<span class="sd">    brightness profile becomes identical to the convolution of an `Airy` profile and a Von Karman</span>
+<span class="sd">    profile.  In contrast, when kcrit = inf, then none of the turbulent modes are included, and this</span>
+<span class="sd">    surface brightness profile is just an `Airy` profile.  In other words, the full effect of an</span>
+<span class="sd">    `Airy` profile, and additionally some portion (which depends on kcrit) of a `VonKarman` profile</span>
+<span class="sd">    are modeled.</span>
+
+<span class="sd">    For more details, we refer the reader to the original implementation described in</span>
+
+<span class="sd">        Peterson et al.  2015  ApJSS  vol. 218</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        lam:            Wavelength in nanometers</span>
+<span class="sd">        r0:             Fried parameter in meters.</span>
+<span class="sd">        diam:           Aperture diameter in meters.</span>
+<span class="sd">        obscuration:    Linear dimension of central obscuration as fraction of aperture</span>
+<span class="sd">                        linear dimension. [0., 1.).  [default: 0.0]</span>
+<span class="sd">        kcrit:          Critical Fourier mode (in units of 1/r0) below which the turbulence</span>
+<span class="sd">                        power spectrum will be truncated.  [default: 0.2]</span>
+<span class="sd">        flux:           The flux (in photons/cm^2/s) of the profile. [default: 1]</span>
+<span class="sd">        scale_unit:     Units assumed when drawing this profile or evaluating xValue, kValue,</span>
+<span class="sd">                        etc.  Should be a `galsim.AngleUnit` or a string that can be used to</span>
+<span class="sd">                        construct one (e.g., &#39;arcsec&#39;, &#39;radians&#39;, etc.). [default: galsim.arcsec]</span>
+<span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;lam&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;r0&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;diam&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;obscuration&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;kcrit&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;flux&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;scale_unit&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+
+    <span class="n">_has_hard_edges</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_is_axisymmetric</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">r0</span><span class="p">,</span> <span class="n">diam</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">kcrit</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">scale_unit</span><span class="o">=</span><span class="n">arcsec</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span> <span class="o">=</span> <span class="n">scale_unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">radians</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">r0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_diam</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">diam</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obscuration</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">obscuration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kcrit</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kcrit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lam_over_r0</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.e-9</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBSecondKick</span><span class="p">(</span><span class="n">lam_over_r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kcrit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sba</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">lam_over_diam</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.e-9</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_lam</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">_diam</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBAiry</span><span class="p">(</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obscuration</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sbd</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBDeltaFunction</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sbs</span><span class="o">.</span><span class="n">getDelta</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">full_sbs</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBAdd</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_sbs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbd</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBConvolve</span><span class="p">([</span><span class="n">full_sbs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sba</span><span class="p">],</span> <span class="kc">False</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input lam value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lam</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">r0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input r0 value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_r0</span><span class="p">;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">diam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input diam value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_diam</span><span class="p">;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obscuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input obscuration value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obscuration</span><span class="p">;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kcrit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input kcrit value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kcrit</span><span class="p">;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">scale_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input scale_unit value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale_unit</span>
+
+    <span class="k">def</span> <span class="nf">_structure_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbs</span><span class="o">.</span><span class="n">structureFunction</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">SecondKick</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">lam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">lam</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">r0</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">r0</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">diam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">diam</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">obscuration</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">kcrit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">kcrit</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">scale_unit</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.SecondKick&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">kcrit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="s2">&quot;galsim.SecondKick(&quot;</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;lam=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, r0=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, diam=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, obscuration=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, kcrit=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">kcrit</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, flux=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span> <span class="o">!=</span> <span class="n">arcsec</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, scale_unit=</span><span class="si">%r</span><span class="s2">&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span>
+        <span class="n">out</span> <span class="o">+=</span> <span class="s2">&quot;, gsparams=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;galsim.SecondKick(lam=</span><span class="si">%r</span><span class="s2">, r0=</span><span class="si">%r</span><span class="s2">, kcrit=</span><span class="si">%r</span><span class="s2">)&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kcrit</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_sbp&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_sba&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_sbd&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_sbs&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_maxk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">maxK</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_stepk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">stepK</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DeltaFunction</span><span class="o">.</span><span class="n">_mock_inf</span>
+
+    <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">xValue</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">kValue</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">shoot</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">_pa</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">_rng</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SecondKick.withFlux"><a class="viewcode-back" href="../../phase_psf.html#galsim.SecondKick.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SecondKick</span><span class="p">(</span><span class="n">lam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lam</span><span class="p">,</span> <span class="n">r0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">r0</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">diam</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span>
+                          <span class="n">kcrit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">kcrit</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">scale_unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_unit</span><span class="p">,</span>
+                          <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

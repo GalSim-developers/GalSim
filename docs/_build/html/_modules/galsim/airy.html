@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.airy &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>galsim.airy</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.airy</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+<span class="kn">from</span> <span class="nn">.gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">.gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">.utilities</span> <span class="kn">import</span> <span class="n">lazy_property</span><span class="p">,</span> <span class="n">doc_inherit</span>
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">,</span> <span class="n">GalSimNotImplementedError</span>
+
+
+<div class="viewcode-block" id="Airy"><a class="viewcode-back" href="../../psf.html#galsim.Airy">[docs]</a><span class="k">class</span> <span class="nc">Airy</span><span class="p">(</span><span class="n">GSObject</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A class describing the surface brightness profile for an Airy disk (perfect</span>
+<span class="sd">    diffraction-limited PSF for a circular aperture), with an optional central obscuration.</span>
+
+<span class="sd">    For more information, refer to</span>
+
+<span class="sd">    http://en.wikipedia.org/wiki/Airy_disc</span>
+
+<span class="sd">    The Airy profile is defined in terms of the diffraction angle, which is a function of the</span>
+<span class="sd">    ratio lambda / D, where lambda is the wavelength of the light (say in the middle of the</span>
+<span class="sd">    bandpass you are using) and D is the diameter of the telescope.</span>
+
+<span class="sd">    The natural units for this value is radians, which is not normally a convenient unit to use for</span>
+<span class="sd">    other `GSObject` dimensions.  Assuming that the other sky coordinates you are using are all in</span>
+<span class="sd">    arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you</span>
+<span class="sd">    should convert this to arcsec as well::</span>
+
+<span class="sd">        &gt;&gt;&gt; lam = 700  # nm</span>
+<span class="sd">        &gt;&gt;&gt; diam = 4.0    # meters</span>
+<span class="sd">        &gt;&gt;&gt; lam_over_diam = (lam * 1.e-9) / diam  # radians</span>
+<span class="sd">        &gt;&gt;&gt; lam_over_diam *= 206265  # Convert to arcsec</span>
+<span class="sd">        &gt;&gt;&gt; airy = galsim.Airy(lam_over_diam)</span>
+
+<span class="sd">    To make this process a bit simpler, we recommend instead providing the wavelength and diameter</span>
+<span class="sd">    separately using the parameters ``lam`` (in nm) and ``diam`` (in m).  GalSim will then convert</span>
+<span class="sd">    this to any of the normal kinds of angular units using the ``scale_unit`` parameter::</span>
+
+<span class="sd">        &gt;&gt;&gt; airy = galsim.Airy(lam=lam, diam=diam, scale_unit=galsim.arcsec)</span>
+
+<span class="sd">    When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.</span>
+<span class="sd">    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as ``pixel_scale=0.2``.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        lam_over_diam:  The parameter that governs the scale size of the profile.</span>
+<span class="sd">                        See above for details about calculating it.</span>
+<span class="sd">        lam:            Lambda (wavelength) in units of nanometers.  Must be supplied with</span>
+<span class="sd">                        ``diam``, and in this case, image scales (``scale``) should be specified</span>
+<span class="sd">                        in units of ``scale_unit``.</span>
+<span class="sd">        diam:           Telescope diameter in units of meters.  Must be supplied with</span>
+<span class="sd">                        ``lam``, and in this case, image scales (``scale``) should be specified</span>
+<span class="sd">                        in units of ``scale_unit``.</span>
+<span class="sd">        obscuration:    The linear dimension of a central obscuration as a fraction of the</span>
+<span class="sd">                        pupil dimension.  [default: 0]</span>
+<span class="sd">        flux:           The flux (in photons/cm^2/s) of the profile. [default: 1]</span>
+<span class="sd">        scale_unit:     Units to use for the sky coordinates when calculating lam/diam if these</span>
+<span class="sd">                        are supplied separately.  Note that the results of using properties like</span>
+<span class="sd">                        `fwhm` will be returned in units of ``scale_unit`` as well.  Should</span>
+<span class="sd">                        be either a `galsim.AngleUnit` or a string that can be used to construct</span>
+<span class="sd">                        one (e.g., &#39;arcsec&#39;, &#39;radians&#39;, etc.).  [default: galsim.arcsec]</span>
+<span class="sd">        gsparams:       An optional `GSParams` argument. [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span> <span class="p">}</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;flux&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s2">&quot;obscuration&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s2">&quot;diam&quot;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+                    <span class="s2">&quot;scale_unit&quot;</span> <span class="p">:</span> <span class="nb">str</span> <span class="p">}</span>
+    <span class="c1"># Note that this is not quite right; it&#39;s true that either lam_over_diam or lam should be</span>
+    <span class="c1"># supplied, but if lam is supplied then diam is required.  Errors in which parameters are used</span>
+    <span class="c1"># may be caught either by config or by the python code itself, depending on the particular</span>
+    <span class="c1"># error.</span>
+    <span class="n">_single_params</span> <span class="o">=</span> <span class="p">[{</span> <span class="s2">&quot;lam_over_diam&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s2">&quot;lam&quot;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span> <span class="p">]</span>
+
+    <span class="c1"># For an unobscured Airy, we have the following factor which can be derived using the</span>
+    <span class="c1"># integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),</span>
+    <span class="c1"># solved for half total flux using the free online tool Wolfram Alpha.</span>
+    <span class="c1"># At www.wolframalpha.com:</span>
+    <span class="c1"># Type &quot;Solve[BesselJ0(x)^2+BesselJ1(x)^2=1/2]&quot; ... and divide the result by pi</span>
+    <span class="n">_hlr_factor</span> <span class="o">=</span> <span class="mf">0.5348321477242647</span>
+    <span class="n">_fwhm_factor</span> <span class="o">=</span> <span class="mf">1.028993969962188</span>
+
+    <span class="n">_has_hard_edges</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">_is_axisymmetric</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">_is_analytic_x</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">_is_analytic_k</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lam_over_diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">flux</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+                 <span class="n">scale_unit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">arcsec</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">AngleUnit</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obscuration</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">obscuration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+
+        <span class="c1"># Parse arguments: either lam_over_diam in arbitrary units, or lam in nm and diam in m.</span>
+        <span class="c1"># If the latter, then get lam_over_diam in units of scale_unit, as specified in</span>
+        <span class="c1"># docstring.</span>
+        <span class="k">if</span> <span class="n">lam_over_diam</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lam</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">diam</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;If specifying lam_over_diam, then do not specify lam or diam&quot;</span><span class="p">,</span>
+                    <span class="n">lam_over_diam</span><span class="o">=</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="n">diam</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">lam_over_diam</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">lam</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">diam</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                    <span class="s2">&quot;If not specifying lam_over_diam, then specify lam AND diam&quot;</span><span class="p">,</span>
+                    <span class="n">lam_over_diam</span><span class="o">=</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="n">lam</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="n">diam</span><span class="p">)</span>
+            <span class="c1"># In this case we&#39;re going to use scale_unit, so parse it in case of string input:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">scale_unit</span> <span class="o">=</span> <span class="n">AngleUnit</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="n">scale_unit</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">scale_unit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">scale_unit</span> <span class="o">=</span> <span class="n">arcsec</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.e-9</span><span class="o">*</span><span class="nb">float</span><span class="p">(</span><span class="n">lam</span><span class="p">)</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="n">diam</span><span class="p">))</span><span class="o">*</span><span class="p">(</span><span class="n">radians</span><span class="o">/</span><span class="n">scale_unit</span><span class="p">)</span>
+
+    <span class="nd">@lazy_property</span>
+    <span class="k">def</span> <span class="nf">_sbp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">SBAiry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lod</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obscuration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="o">.</span><span class="n">_gsp</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">lam_over_diam</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input lambda/diam value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">obscuration</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The input obscuration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obscuration</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">half_light_radius</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The half light radius of this Airy profile (only supported for obscuration = 0.).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span> <span class="o">*</span> <span class="n">Airy</span><span class="o">.</span><span class="n">_hlr_factor</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># In principle can find the half light radius as a function of lam_over_diam and</span>
+            <span class="c1"># obscuration too, but it will be much more involved...!</span>
+            <span class="k">raise</span> <span class="n">GalSimNotImplementedError</span><span class="p">(</span>
+                    <span class="s2">&quot;Half light radius calculation not implemented for Airy &quot;</span>
+                    <span class="s2">&quot;objects with non-zero obscuration.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fwhm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The FWHM of this Airy profile (only supported for obscuration = 0.).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># As above, likewise, FWHM only easy to define for unobscured Airy</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span> <span class="o">*</span> <span class="n">Airy</span><span class="o">.</span><span class="n">_fwhm_factor</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># In principle can find the FWHM as a function of lam_over_diam and obscuration too,</span>
+            <span class="c1"># but it will be much more involved...!</span>
+            <span class="k">raise</span> <span class="n">GalSimNotImplementedError</span><span class="p">(</span>
+                    <span class="s2">&quot;FWHM calculation not implemented for Airy &quot;</span>
+                    <span class="s2">&quot;objects with non-zero obscuration.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Airy</span><span class="p">)</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">lam_over_diam</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">obscuration</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">flux</span> <span class="ow">and</span>
+                 <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">((</span><span class="s2">&quot;galsim.Airy&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span>
+                     <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.Airy(lam_over_diam=</span><span class="si">%r</span><span class="s1">, obscuration=</span><span class="si">%r</span><span class="s1">, flux=</span><span class="si">%r</span><span class="s1">, gsparams=</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;galsim.Airy(lam_over_diam=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, obscuration=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;, flux=</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
+        <span class="n">s</span> <span class="o">+=</span> <span class="s1">&#39;)&#39;</span>
+        <span class="k">return</span> <span class="n">s</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_sbp&#39;</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">d</span>
+
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">=</span> <span class="n">d</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_maxk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">2.</span><span class="o">*</span><span class="n">math</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lod</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_stepk</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">stepK</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_max_sb</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">maxSB</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_xValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">xValue</span><span class="p">(</span><span class="n">pos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_kValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kpos</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">kValue</span><span class="p">(</span><span class="n">kpos</span><span class="o">.</span><span class="n">_p</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_drawReal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span> <span class="n">flux_scaling</span><span class="o">=</span><span class="mf">1.</span><span class="p">):</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dx</span><span class="p">,</span><span class="n">dy</span> <span class="o">=</span> <span class="n">offset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">flux_scaling</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_shoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photons</span><span class="p">,</span> <span class="n">rng</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">shoot</span><span class="p">(</span><span class="n">photons</span><span class="o">.</span><span class="n">_pa</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">_rng</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_drawKImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">image</span><span class="p">,</span> <span class="n">jac</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">_jac</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">jac</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">jac</span><span class="o">.</span><span class="n">__array_interface__</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sbp</span><span class="o">.</span><span class="n">drawK</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">_image</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">_jac</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Airy.withFlux"><a class="viewcode-back" href="../../psf.html#galsim.Airy.withFlux">[docs]</a>    <span class="nd">@doc_inherit</span>
+    <span class="k">def</span> <span class="nf">withFlux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flux</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Airy</span><span class="p">(</span><span class="n">lam_over_diam</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lam_over_diam</span><span class="p">,</span> <span class="n">obscuration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obscuration</span><span class="p">,</span>
+                    <span class="n">flux</span><span class="o">=</span><span class="n">flux</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gsparams</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interpolation Tools &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="HSM Implementation" href="cpp_hsm.html" />
+    <link rel="prev" title="Photons and Sensor Effects" href="cpp_photon.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cpp.html">C++ Layer</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cpp_image.html">C++ Images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_sb.html">C++ Surface Brightness Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_bounds.html">Positions and Bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_noise.html">Noise-related Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_photon.html">Photons and Sensor Effects</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Interpolation Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#c-interpolants">C++ Interpolants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c-lookup-tables">C++ Lookup Tables</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_hsm.html">HSM Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_math.html">Math</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#linking-your-code">Linking Your Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#version-control">Version control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="cpp.html">C++ Layer</a> &raquo;</li>
+      <li>Interpolation Tools</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cpp_interp.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="interpolation-tools">
+<h1>Interpolation Tools<a class="headerlink" href="#interpolation-tools" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="c-interpolants">
+<h2>C++ Interpolants<a class="headerlink" href="#c-interpolants" title="Permalink to this headline">¶</a></h2>
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim11InterpolantE">
+<span id="_CPPv3N6galsim11InterpolantE"></span><span id="_CPPv2N6galsim11InterpolantE"></span><span id="galsim::Interpolant"></span><span class="target" id="classgalsim_1_1_interpolant"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Interpolant</span></code><a class="headerlink" href="#_CPPv4N6galsim11InterpolantE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Base class representing one-dimensional interpolant functions. </p>
+<p>One-dimensional interpolant function. X units are in pixels and the frequency-domain u values are in cycles per pixel. This differs from the usual definition of k in radians per arcsec, hence the different letter variable.</p>
+<p>All Interpolants are assumed symmetric so that frequency-domain values are real. </p>
+<p>Subclassed by <a class="reference internal" href="#classgalsim_1_1_cubic"><span class="std std-ref">galsim::Cubic</span></a>, <a class="reference internal" href="#classgalsim_1_1_delta"><span class="std std-ref">galsim::Delta</span></a>, <a class="reference internal" href="#classgalsim_1_1_lanczos"><span class="std std-ref">galsim::Lanczos</span></a>, <a class="reference internal" href="#classgalsim_1_1_linear"><span class="std std-ref">galsim::Linear</span></a>, <a class="reference internal" href="#classgalsim_1_1_nearest"><span class="std std-ref">galsim::Nearest</span></a>, <a class="reference internal" href="#classgalsim_1_1_quintic"><span class="std std-ref">galsim::Quintic</span></a>, <a class="reference internal" href="#classgalsim_1_1_sinc_interpolant"><span class="std std-ref">galsim::SincInterpolant</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim11Interpolant11InterpolantERK8GSParams">
+<span id="_CPPv3N6galsim11Interpolant11InterpolantERK8GSParams"></span><span id="_CPPv2N6galsim11Interpolant11InterpolantERK8GSParams"></span><span id="galsim::Interpolant::Interpolant__GSParamsCR"></span><span class="target" id="classgalsim_1_1_interpolant_1ae9975e47c929b2c7d039b48159c7d31a"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Interpolant</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim8GSParamsE" title="galsim::GSParams"><span class="pre">GSParams</span></a> <span class="pre">&amp;</span><em><span class="pre">gsparams</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Interpolant11InterpolantERK8GSParams" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gsparams</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_sb.html#structgalsim_1_1_g_s_params"><span class="std std-ref">GSParams</span></a> object storing constants that control the accuracy of operations, if different from the default. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim11Interpolant11InterpolantERK11Interpolant">
+<span id="_CPPv3N6galsim11Interpolant11InterpolantERK11Interpolant"></span><span id="_CPPv2N6galsim11Interpolant11InterpolantERK11Interpolant"></span><span id="galsim::Interpolant::Interpolant__InterpolantCR"></span><span class="target" id="classgalsim_1_1_interpolant_1aadcdc7a3b920290867f370d82976fd35"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Interpolant</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4N6galsim11Interpolant11InterpolantERK11Interpolant" title="galsim::Interpolant::Interpolant"><span class="pre">Interpolant</span></a> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11Interpolant11InterpolantERK11Interpolant" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Copy constructor: does not copy photon sampler, will need to rebuild. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim11InterpolantD0Ev">
+<span id="_CPPv3N6galsim11InterpolantD0Ev"></span><span id="_CPPv2N6galsim11InterpolantD0Ev"></span><span id="galsim::Interpolant::~Interpolant"></span><span class="target" id="classgalsim_1_1_interpolant_1a60d75d58eed81b3064872c64adf8cdcb"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <code class="sig-name descname"><span class="pre">~Interpolant</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim11InterpolantD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Destructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant6xrangeEv">
+<span id="_CPPv3NK6galsim11Interpolant6xrangeEv"></span><span id="_CPPv2NK6galsim11Interpolant6xrangeEv"></span><span id="galsim::Interpolant::xrangeC"></span><span class="target" id="classgalsim_1_1_interpolant_1a700240500435a2dad54f0a72c2ff604e"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant6xrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in x space (pixels) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant7ixrangeEv">
+<span id="_CPPv3NK6galsim11Interpolant7ixrangeEv"></span><span id="_CPPv2NK6galsim11Interpolant7ixrangeEv"></span><span id="galsim::Interpolant::ixrangeC"></span><span class="target" id="classgalsim_1_1_interpolant_1a77a070b92ce48f3f05eee733ffd994fb"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">ixrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant7ixrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The total range as an integer. Typically <a class="reference internal" href="#classgalsim_1_1_interpolant_1a700240500435a2dad54f0a72c2ff604e"><span class="std std-ref">xrange()</span></a> == 0.5 * <a class="reference internal" href="#classgalsim_1_1_interpolant_1a77a070b92ce48f3f05eee733ffd994fb"><span class="std std-ref">ixrange()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant6urangeEv">
+<span id="_CPPv3NK6galsim11Interpolant6urangeEv"></span><span id="_CPPv2NK6galsim11Interpolant6urangeEv"></span><span id="galsim::Interpolant::urangeC"></span><span class="target" id="classgalsim_1_1_interpolant_1aa75275dce4c0ea81de6d5172e902ee0c"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">urange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant6urangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in u space (cycles per pixel) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant in u space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant4xvalEd">
+<span id="_CPPv3NK6galsim11Interpolant4xvalEd"></span><span id="_CPPv2NK6galsim11Interpolant4xvalEd"></span><span id="galsim::Interpolant::xval__doubleC"></span><span class="target" id="classgalsim_1_1_interpolant_1a4e1de0781f317461a53ff0ea463454ae"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant4xvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in real space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant11xvalWrappedEdi">
+<span id="_CPPv3NK6galsim11Interpolant11xvalWrappedEdi"></span><span id="_CPPv2NK6galsim11Interpolant11xvalWrappedEdi"></span><span id="galsim::Interpolant::xvalWrapped__double.iC"></span><span class="target" id="classgalsim_1_1_interpolant_1a3706921c072409117197406e4d02b006"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xvalWrapped</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant11xvalWrappedEdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant, wrapped at period N. </p>
+<p>This returns sum_{j=-inf}^{inf} xval(x + jN): </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p></li>
+<li><p><strong>N</strong> – <strong>[in]</strong> Wrapping period (pixels) </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant after wrapping </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant8xvalManyEPdi">
+<span id="_CPPv3NK6galsim11Interpolant8xvalManyEPdi"></span><span id="_CPPv2NK6galsim11Interpolant8xvalManyEPdi"></span><span id="galsim::Interpolant::xvalMany__doubleP.iC"></span><span class="target" id="classgalsim_1_1_interpolant_1acbce9a4d5fb6a20e1ccf3fefc751598c"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">xvalMany</span></code><span class="sig-paren">(</span><span class="pre">double</span> <span class="pre">*</span><em><span class="pre">x</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant8xvalManyEPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Calculate xval for array of input values x. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>[in/out]</strong> – Each x[i] is replaces by xval[x[i]] </p></li>
+<li><p><strong>How</strong> – <strong>[in]</strong> many x values to calculate </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant4uvalEd">
+<span id="_CPPv3NK6galsim11Interpolant4uvalEd"></span><span id="_CPPv2NK6galsim11Interpolant4uvalEd"></span><span id="galsim::Interpolant::uval__doubleC"></span><span class="target" id="classgalsim_1_1_interpolant_1a79ea4025b2d035114ff49ac0a079de5d"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">uval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">u</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant4uvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in frequency space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – <strong>[in]</strong> Frequency for evaluation (cycles per pixel) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant8uvalManyEPdi">
+<span id="_CPPv3NK6galsim11Interpolant8uvalManyEPdi"></span><span id="_CPPv2NK6galsim11Interpolant8uvalManyEPdi"></span><span id="galsim::Interpolant::uvalMany__doubleP.iC"></span><span class="target" id="classgalsim_1_1_interpolant_1adfbeb4a5d55619138c79c2b1f681fd36"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">uvalMany</span></code><span class="sig-paren">(</span><span class="pre">double</span> <span class="pre">*</span><em><span class="pre">u</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant8uvalManyEPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Calculate uval for array of input values u. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>[in/out]</strong> – Each u[i] is replaces by uval[u[i]] </p></li>
+<li><p><strong>How</strong> – <strong>[in]</strong> many u values to calculate </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant14isExactAtNodesEv">
+<span id="_CPPv3NK6galsim11Interpolant14isExactAtNodesEv"></span><span id="_CPPv2NK6galsim11Interpolant14isExactAtNodesEv"></span><span id="galsim::Interpolant::isExactAtNodesC"></span><span class="target" id="classgalsim_1_1_interpolant_1a8f2b88c16cb2077debfec5cc7c14e326"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">isExactAtNodes</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant14isExactAtNodesEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Report whether interpolation will reproduce values at samples. </p>
+<p>This will return true if the interpolant is exact at nodes, meaning that F(0)=1 and F(n)=0 for non-zero integer n. Right now this is true for every implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True if samples are returned exactly. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant15getPositiveFluxEv">
+<span id="_CPPv3NK6galsim11Interpolant15getPositiveFluxEv"></span><span id="_CPPv2NK6galsim11Interpolant15getPositiveFluxEv"></span><span id="galsim::Interpolant::getPositiveFluxC"></span><span class="target" id="classgalsim_1_1_interpolant_1a8fbeab8f7dbbd6423ae155ec694d9579"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getPositiveFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant15getPositiveFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the integral of the positive portions of the kernel. </p>
+<p>Should return 1 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of positive portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant15getNegativeFluxEv">
+<span id="_CPPv3NK6galsim11Interpolant15getNegativeFluxEv"></span><span id="_CPPv2NK6galsim11Interpolant15getNegativeFluxEv"></span><span id="galsim::Interpolant::getNegativeFluxC"></span><span class="target" id="classgalsim_1_1_interpolant_1a830ce282c1952f7caa0e9699d17a8087"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getNegativeFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant15getNegativeFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the (absolute value of) integral of the negative portions of the kernel. </p>
+<p>Should return 0 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of abs value of negative portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant17getPositiveFlux2dEv">
+<span id="_CPPv3NK6galsim11Interpolant17getPositiveFlux2dEv"></span><span id="_CPPv2NK6galsim11Interpolant17getPositiveFlux2dEv"></span><span id="galsim::Interpolant::getPositiveFlux2dC"></span><span class="target" id="classgalsim_1_1_interpolant_1a2b1f9456eae4556d79d8f50c0fcfce17"></span><span class="pre">double</span> <code class="sig-name descname"><span class="pre">getPositiveFlux2d</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant17getPositiveFlux2dEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the positive and negative flux for a 2d application of the interpolant. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant17getNegativeFlux2dEv">
+<span id="_CPPv3NK6galsim11Interpolant17getNegativeFlux2dEv"></span><span id="_CPPv2NK6galsim11Interpolant17getNegativeFlux2dEv"></span><span id="galsim::Interpolant::getNegativeFlux2dC"></span><span class="target" id="classgalsim_1_1_interpolant_1a5dff3dcb5b87cadb79e9ec3581de1927"></span><span class="pre">double</span> <code class="sig-name descname"><span class="pre">getNegativeFlux2d</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant17getNegativeFlux2dEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant5shootER11PhotonArray14UniformDeviate">
+<span id="_CPPv3NK6galsim11Interpolant5shootER11PhotonArray14UniformDeviate"></span><span id="_CPPv2NK6galsim11Interpolant5shootER11PhotonArray14UniformDeviate"></span><span id="galsim::Interpolant::shoot__PhotonArrayR.UniformDeviateC"></span><span class="target" id="classgalsim_1_1_interpolant_1a91c3a12bb9fdc0f54528fc0d2c286788"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">shoot</span></code><span class="sig-paren">(</span><a class="reference internal" href="cpp_photon.html#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="pre">PhotonArray</span></a> <span class="pre">&amp;</span><em><span class="pre">photons</span></em>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim14UniformDeviateE" title="galsim::UniformDeviate"><span class="pre">UniformDeviate</span></a> <em><span class="pre">ud</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant5shootER11PhotonArray14UniformDeviate" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return array of displacements drawn from this kernel. </p>
+<p>Since <a class="reference internal" href="#classgalsim_1_1_interpolant"><span class="std std-ref">Interpolant</span></a> is 1d, will use only x array of <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a>. It will be assumed that photons returned are randomly ordered (no need to shuffle them). Also assumed that all photons will have nearly equal absolute value of flux. Total flux returned may not equal 1 due to shot noise in negative/positive photons, and small fluctuations in photon weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – <strong>[in]</strong> number of photons to shoot </p></li>
+<li><p><strong>ud</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_noise.html#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a> used to generate random values </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> containing the vector of displacements for interpolation kernel. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim11Interpolant7makeStrEv">
+<span id="_CPPv3NK6galsim11Interpolant7makeStrEv"></span><span id="_CPPv2NK6galsim11Interpolant7makeStrEv"></span><span id="galsim::Interpolant::makeStrC"></span><span class="target" id="classgalsim_1_1_interpolant_1a6043498deca16f05d697846d766be1c1"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <code class="sig-name descname"><span class="pre">makeStr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em> <span class="pre">=</span> <span class="pre">0</span><a class="headerlink" href="#_CPPv4NK6galsim11Interpolant7makeStrEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim5DeltaE">
+<span id="_CPPv3N6galsim5DeltaE"></span><span id="_CPPv2N6galsim5DeltaE"></span><span id="galsim::Delta"></span><span class="target" id="classgalsim_1_1_delta"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Delta</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a><a class="headerlink" href="#_CPPv4N6galsim5DeltaE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Delta-function interpolant in 1d. </p>
+<p>The interpolant for when you do not want to interpolate between samples. It is not really intended to be used for any analytic drawing because it is infinite in the x domain at the location of samples, and it extends to infinity in the u domain. But it could be useful for photon-shooting, where it is trivially implemented as no displacements. The argument in the constructor is used to make a crude box approximation to the x-space delta function and to give a large but finite urange. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim5Delta5DeltaERK8GSParams">
+<span id="_CPPv3N6galsim5Delta5DeltaERK8GSParams"></span><span id="_CPPv2N6galsim5Delta5DeltaERK8GSParams"></span><span id="galsim::Delta::Delta__GSParamsCR"></span><span class="target" id="classgalsim_1_1_delta_1a091731375703f20b4eadbbd8ba706dda"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Delta</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim8GSParamsE" title="galsim::GSParams"><span class="pre">GSParams</span></a> <span class="pre">&amp;</span><em><span class="pre">gsparams</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Delta5DeltaERK8GSParams" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gsparams</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_sb.html#structgalsim_1_1_g_s_params"><span class="std std-ref">GSParams</span></a> object storing constants that control the accuracy of operations, if different from the default. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim5DeltaD0Ev">
+<span id="_CPPv3N6galsim5DeltaD0Ev"></span><span id="_CPPv2N6galsim5DeltaD0Ev"></span><span id="galsim::Delta::~Delta"></span><span class="target" id="classgalsim_1_1_delta_1a6af53f327b597b5f52b3f722ad67692a"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">~Delta</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5DeltaD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta6xrangeEv">
+<span id="_CPPv3NK6galsim5Delta6xrangeEv"></span><span id="_CPPv2NK6galsim5Delta6xrangeEv"></span><span id="galsim::Delta::xrangeC"></span><span class="target" id="classgalsim_1_1_delta_1abe636e322d746ba5d58a1508bcaeffde"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta6xrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in x space (pixels) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta7ixrangeEv">
+<span id="_CPPv3NK6galsim5Delta7ixrangeEv"></span><span id="_CPPv2NK6galsim5Delta7ixrangeEv"></span><span id="galsim::Delta::ixrangeC"></span><span class="target" id="classgalsim_1_1_delta_1a7dd1733ad5623e1167b28fb46dead84d"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">ixrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta7ixrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The total range as an integer. Typically <a class="reference internal" href="#classgalsim_1_1_delta_1abe636e322d746ba5d58a1508bcaeffde"><span class="std std-ref">xrange()</span></a> == 0.5 * <a class="reference internal" href="#classgalsim_1_1_delta_1a7dd1733ad5623e1167b28fb46dead84d"><span class="std std-ref">ixrange()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta6urangeEv">
+<span id="_CPPv3NK6galsim5Delta6urangeEv"></span><span id="_CPPv2NK6galsim5Delta6urangeEv"></span><span id="galsim::Delta::urangeC"></span><span class="target" id="classgalsim_1_1_delta_1a9b2b41b8bf5dabf307f0c9102fd252a7"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">urange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta6urangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in u space (cycles per pixel) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant in u space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta4xvalEd">
+<span id="_CPPv3NK6galsim5Delta4xvalEd"></span><span id="_CPPv2NK6galsim5Delta4xvalEd"></span><span id="galsim::Delta::xval__doubleC"></span><span class="target" id="classgalsim_1_1_delta_1a5e17b710a39bb54c3a51d00c093fffc2"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta4xvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in real space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta4uvalEd">
+<span id="_CPPv3NK6galsim5Delta4uvalEd"></span><span id="_CPPv2NK6galsim5Delta4uvalEd"></span><span id="galsim::Delta::uval__doubleC"></span><span class="target" id="classgalsim_1_1_delta_1a6f021991a05fdd9a92e59ae48fa9bf2f"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">uval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">u</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta4uvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in frequency space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – <strong>[in]</strong> Frequency for evaluation (cycles per pixel) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta15getPositiveFluxEv">
+<span id="_CPPv3NK6galsim5Delta15getPositiveFluxEv"></span><span id="_CPPv2NK6galsim5Delta15getPositiveFluxEv"></span><span id="galsim::Delta::getPositiveFluxC"></span><span class="target" id="classgalsim_1_1_delta_1a85ecfa3831b564c36045b60c18586949"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getPositiveFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta15getPositiveFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the integral of the positive portions of the kernel. </p>
+<p>Should return 1 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of positive portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta15getNegativeFluxEv">
+<span id="_CPPv3NK6galsim5Delta15getNegativeFluxEv"></span><span id="_CPPv2NK6galsim5Delta15getNegativeFluxEv"></span><span id="galsim::Delta::getNegativeFluxC"></span><span class="target" id="classgalsim_1_1_delta_1a771147ef783d0f6edcdcc11dd880e531"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getNegativeFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta15getNegativeFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the (absolute value of) integral of the negative portions of the kernel. </p>
+<p>Should return 0 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of abs value of negative portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta5shootER11PhotonArray14UniformDeviate">
+<span id="_CPPv3NK6galsim5Delta5shootER11PhotonArray14UniformDeviate"></span><span id="_CPPv2NK6galsim5Delta5shootER11PhotonArray14UniformDeviate"></span><span id="galsim::Delta::shoot__PhotonArrayR.UniformDeviateC"></span><span class="target" id="classgalsim_1_1_delta_1a2fe91d37a5641741e8cba17657946e7a"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">shoot</span></code><span class="sig-paren">(</span><a class="reference internal" href="cpp_photon.html#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="pre">PhotonArray</span></a> <span class="pre">&amp;</span><em><span class="pre">photons</span></em>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim14UniformDeviateE" title="galsim::UniformDeviate"><span class="pre">UniformDeviate</span></a> <em><span class="pre">ud</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta5shootER11PhotonArray14UniformDeviate" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return array of displacements drawn from this kernel. </p>
+<p>Since <a class="reference internal" href="#classgalsim_1_1_interpolant"><span class="std std-ref">Interpolant</span></a> is 1d, will use only x array of <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a>. It will be assumed that photons returned are randomly ordered (no need to shuffle them). Also assumed that all photons will have nearly equal absolute value of flux. Total flux returned may not equal 1 due to shot noise in negative/positive photons, and small fluctuations in photon weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – <strong>[in]</strong> number of photons to shoot </p></li>
+<li><p><strong>ud</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_noise.html#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a> used to generate random values </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> containing the vector of displacements for interpolation kernel. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Delta7makeStrEv">
+<span id="_CPPv3NK6galsim5Delta7makeStrEv"></span><span id="_CPPv2NK6galsim5Delta7makeStrEv"></span><span id="galsim::Delta::makeStrC"></span><span class="target" id="classgalsim_1_1_delta_1a7fedc4d500e36ba506e0b495c324e449"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <code class="sig-name descname"><span class="pre">makeStr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Delta7makeStrEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim7NearestE">
+<span id="_CPPv3N6galsim7NearestE"></span><span id="_CPPv2N6galsim7NearestE"></span><span id="galsim::Nearest"></span><span class="target" id="classgalsim_1_1_nearest"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Nearest</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a><a class="headerlink" href="#_CPPv4N6galsim7NearestE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Nearest-neighbor interpolation: boxcar. </p>
+<p>The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for <a class="reference internal" href="cpp_sb.html#classgalsim_1_1_s_b_interpolated_image"><span class="std std-ref">SBInterpolatedImage</span></a>. (See paper by Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.) The objection to its use in Fourier space does not apply when shooting photons to generate an image; in that case, the nearest-neighbor interpolant is quite efficient (but not necessarily the best choice in terms of accuracy).</p>
+<p>Tolerance determines how far onto sinc wiggles the uval will go. Very far, by default! </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7Nearest7NearestERK8GSParams">
+<span id="_CPPv3N6galsim7Nearest7NearestERK8GSParams"></span><span id="_CPPv2N6galsim7Nearest7NearestERK8GSParams"></span><span id="galsim::Nearest::Nearest__GSParamsCR"></span><span class="target" id="classgalsim_1_1_nearest_1a54ed57f94c95fea948c0198bd19c39b0"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Nearest</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim8GSParamsE" title="galsim::GSParams"><span class="pre">GSParams</span></a> <span class="pre">&amp;</span><em><span class="pre">gsparams</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Nearest7NearestERK8GSParams" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gsparams</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_sb.html#structgalsim_1_1_g_s_params"><span class="std std-ref">GSParams</span></a> object storing constants that control the accuracy of operations, if different from the default. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7NearestD0Ev">
+<span id="_CPPv3N6galsim7NearestD0Ev"></span><span id="_CPPv2N6galsim7NearestD0Ev"></span><span id="galsim::Nearest::~Nearest"></span><span class="target" id="classgalsim_1_1_nearest_1a2442c76040c21cae2eaff1301f77618e"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">~Nearest</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7NearestD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest6xrangeEv">
+<span id="_CPPv3NK6galsim7Nearest6xrangeEv"></span><span id="_CPPv2NK6galsim7Nearest6xrangeEv"></span><span id="galsim::Nearest::xrangeC"></span><span class="target" id="classgalsim_1_1_nearest_1a104a2b2606bb75ceda1dda8e9a5bc3b5"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest6xrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in x space (pixels) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest7ixrangeEv">
+<span id="_CPPv3NK6galsim7Nearest7ixrangeEv"></span><span id="_CPPv2NK6galsim7Nearest7ixrangeEv"></span><span id="galsim::Nearest::ixrangeC"></span><span class="target" id="classgalsim_1_1_nearest_1a96dce461eca59a179c518807fcb60c74"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">ixrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest7ixrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The total range as an integer. Typically <a class="reference internal" href="#classgalsim_1_1_nearest_1a104a2b2606bb75ceda1dda8e9a5bc3b5"><span class="std std-ref">xrange()</span></a> == 0.5 * <a class="reference internal" href="#classgalsim_1_1_nearest_1a96dce461eca59a179c518807fcb60c74"><span class="std std-ref">ixrange()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest6urangeEv">
+<span id="_CPPv3NK6galsim7Nearest6urangeEv"></span><span id="_CPPv2NK6galsim7Nearest6urangeEv"></span><span id="galsim::Nearest::urangeC"></span><span class="target" id="classgalsim_1_1_nearest_1a0218362fb2dd21b71ca359b4a876d688"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">urange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest6urangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in u space (cycles per pixel) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant in u space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest4xvalEd">
+<span id="_CPPv3NK6galsim7Nearest4xvalEd"></span><span id="_CPPv2NK6galsim7Nearest4xvalEd"></span><span id="galsim::Nearest::xval__doubleC"></span><span class="target" id="classgalsim_1_1_nearest_1a4cdce56e3012ad5290b7371ebee2a02d"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest4xvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in real space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest4uvalEd">
+<span id="_CPPv3NK6galsim7Nearest4uvalEd"></span><span id="_CPPv2NK6galsim7Nearest4uvalEd"></span><span id="galsim::Nearest::uval__doubleC"></span><span class="target" id="classgalsim_1_1_nearest_1a72241961a1ef2fbde651c5e2ab4ae4f8"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">uval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">u</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest4uvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in frequency space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – <strong>[in]</strong> Frequency for evaluation (cycles per pixel) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest15getPositiveFluxEv">
+<span id="_CPPv3NK6galsim7Nearest15getPositiveFluxEv"></span><span id="_CPPv2NK6galsim7Nearest15getPositiveFluxEv"></span><span id="galsim::Nearest::getPositiveFluxC"></span><span class="target" id="classgalsim_1_1_nearest_1adbe786e76d389a5534d7cd07e1307c0c"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getPositiveFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest15getPositiveFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the integral of the positive portions of the kernel. </p>
+<p>Should return 1 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of positive portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest15getNegativeFluxEv">
+<span id="_CPPv3NK6galsim7Nearest15getNegativeFluxEv"></span><span id="_CPPv2NK6galsim7Nearest15getNegativeFluxEv"></span><span id="galsim::Nearest::getNegativeFluxC"></span><span class="target" id="classgalsim_1_1_nearest_1a5150d55bf274a79ba56fed05f4ea9e6b"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getNegativeFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest15getNegativeFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the (absolute value of) integral of the negative portions of the kernel. </p>
+<p>Should return 0 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of abs value of negative portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest5shootER11PhotonArray14UniformDeviate">
+<span id="_CPPv3NK6galsim7Nearest5shootER11PhotonArray14UniformDeviate"></span><span id="_CPPv2NK6galsim7Nearest5shootER11PhotonArray14UniformDeviate"></span><span id="galsim::Nearest::shoot__PhotonArrayR.UniformDeviateC"></span><span class="target" id="classgalsim_1_1_nearest_1a7eb9fbd85be212dffe9287b4bc6f3958"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">shoot</span></code><span class="sig-paren">(</span><a class="reference internal" href="cpp_photon.html#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="pre">PhotonArray</span></a> <span class="pre">&amp;</span><em><span class="pre">photons</span></em>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim14UniformDeviateE" title="galsim::UniformDeviate"><span class="pre">UniformDeviate</span></a> <em><span class="pre">ud</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest5shootER11PhotonArray14UniformDeviate" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return array of displacements drawn from this kernel. </p>
+<p>Since <a class="reference internal" href="#classgalsim_1_1_interpolant"><span class="std std-ref">Interpolant</span></a> is 1d, will use only x array of <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a>. It will be assumed that photons returned are randomly ordered (no need to shuffle them). Also assumed that all photons will have nearly equal absolute value of flux. Total flux returned may not equal 1 due to shot noise in negative/positive photons, and small fluctuations in photon weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – <strong>[in]</strong> number of photons to shoot </p></li>
+<li><p><strong>ud</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_noise.html#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a> used to generate random values </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> containing the vector of displacements for interpolation kernel. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Nearest7makeStrEv">
+<span id="_CPPv3NK6galsim7Nearest7makeStrEv"></span><span id="_CPPv2NK6galsim7Nearest7makeStrEv"></span><span id="galsim::Nearest::makeStrC"></span><span class="target" id="classgalsim_1_1_nearest_1a07492cf7b81c2de13a08cd4996f10f33"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <code class="sig-name descname"><span class="pre">makeStr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Nearest7makeStrEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim6LinearE">
+<span id="_CPPv3N6galsim6LinearE"></span><span id="_CPPv2N6galsim6LinearE"></span><span id="galsim::Linear"></span><span class="target" id="classgalsim_1_1_linear"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Linear</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a><a class="headerlink" href="#_CPPv4N6galsim6LinearE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classgalsim_1_1_linear"><span class="std std-ref">Linear</span></a> interpolant. </p>
+<p>The linear interpolant is a poor choice for FFT-based operations on <a class="reference internal" href="cpp_sb.html#classgalsim_1_1_s_b_interpolated_image"><span class="std std-ref">SBInterpolatedImage</span></a>, as it rings to high frequencies. (See paper by Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.) This objection does not apply when shooting photons, in which case the linear interpolant is quite efficient (but not necessarily the best choice in terms of accuracy). </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Linear6LinearERK8GSParams">
+<span id="_CPPv3N6galsim6Linear6LinearERK8GSParams"></span><span id="_CPPv2N6galsim6Linear6LinearERK8GSParams"></span><span id="galsim::Linear::Linear__GSParamsCR"></span><span class="target" id="classgalsim_1_1_linear_1af274839c9b013cd24f1ed41338290e38"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Linear</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim8GSParamsE" title="galsim::GSParams"><span class="pre">GSParams</span></a> <span class="pre">&amp;</span><em><span class="pre">gsparams</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Linear6LinearERK8GSParams" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gsparams</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_sb.html#structgalsim_1_1_g_s_params"><span class="std std-ref">GSParams</span></a> object storing constants that control the accuracy of operations, if different from the default. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6LinearD0Ev">
+<span id="_CPPv3N6galsim6LinearD0Ev"></span><span id="_CPPv2N6galsim6LinearD0Ev"></span><span id="galsim::Linear::~Linear"></span><span class="target" id="classgalsim_1_1_linear_1ac8669149decfef8785c6e612d8a3c786"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">~Linear</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6LinearD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear6xrangeEv">
+<span id="_CPPv3NK6galsim6Linear6xrangeEv"></span><span id="_CPPv2NK6galsim6Linear6xrangeEv"></span><span id="galsim::Linear::xrangeC"></span><span class="target" id="classgalsim_1_1_linear_1a4881f9b7fb82f3e3d9e1067157231af5"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear6xrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in x space (pixels) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear7ixrangeEv">
+<span id="_CPPv3NK6galsim6Linear7ixrangeEv"></span><span id="_CPPv2NK6galsim6Linear7ixrangeEv"></span><span id="galsim::Linear::ixrangeC"></span><span class="target" id="classgalsim_1_1_linear_1a712cf4c93cd8fdb821d8830eb40b6e50"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">ixrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear7ixrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The total range as an integer. Typically <a class="reference internal" href="#classgalsim_1_1_linear_1a4881f9b7fb82f3e3d9e1067157231af5"><span class="std std-ref">xrange()</span></a> == 0.5 * <a class="reference internal" href="#classgalsim_1_1_linear_1a712cf4c93cd8fdb821d8830eb40b6e50"><span class="std std-ref">ixrange()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear6urangeEv">
+<span id="_CPPv3NK6galsim6Linear6urangeEv"></span><span id="_CPPv2NK6galsim6Linear6urangeEv"></span><span id="galsim::Linear::urangeC"></span><span class="target" id="classgalsim_1_1_linear_1a7c0175d385b3c39a8c58285af895421f"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">urange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear6urangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in u space (cycles per pixel) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant in u space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear4xvalEd">
+<span id="_CPPv3NK6galsim6Linear4xvalEd"></span><span id="_CPPv2NK6galsim6Linear4xvalEd"></span><span id="galsim::Linear::xval__doubleC"></span><span class="target" id="classgalsim_1_1_linear_1aaaf25f281cd7fa1283a18f8b4fd8b137"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear4xvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in real space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear4uvalEd">
+<span id="_CPPv3NK6galsim6Linear4uvalEd"></span><span id="_CPPv2NK6galsim6Linear4uvalEd"></span><span id="galsim::Linear::uval__doubleC"></span><span class="target" id="classgalsim_1_1_linear_1a199c3af80e06e7a5835aee7623400a78"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">uval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">u</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear4uvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in frequency space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – <strong>[in]</strong> Frequency for evaluation (cycles per pixel) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear15getPositiveFluxEv">
+<span id="_CPPv3NK6galsim6Linear15getPositiveFluxEv"></span><span id="_CPPv2NK6galsim6Linear15getPositiveFluxEv"></span><span id="galsim::Linear::getPositiveFluxC"></span><span class="target" id="classgalsim_1_1_linear_1a2646e917aac5edf1096652a19e4e522d"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getPositiveFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear15getPositiveFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the integral of the positive portions of the kernel. </p>
+<p>Should return 1 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of positive portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear15getNegativeFluxEv">
+<span id="_CPPv3NK6galsim6Linear15getNegativeFluxEv"></span><span id="_CPPv2NK6galsim6Linear15getNegativeFluxEv"></span><span id="galsim::Linear::getNegativeFluxC"></span><span class="target" id="classgalsim_1_1_linear_1a4e8c4b5c4ef610f1ff490fdbce8dfb80"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getNegativeFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear15getNegativeFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the (absolute value of) integral of the negative portions of the kernel. </p>
+<p>Should return 0 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of abs value of negative portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear5shootER11PhotonArray14UniformDeviate">
+<span id="_CPPv3NK6galsim6Linear5shootER11PhotonArray14UniformDeviate"></span><span id="_CPPv2NK6galsim6Linear5shootER11PhotonArray14UniformDeviate"></span><span id="galsim::Linear::shoot__PhotonArrayR.UniformDeviateC"></span><span class="target" id="classgalsim_1_1_linear_1a2ce4ab2d28352751dfcede38fb447572"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">shoot</span></code><span class="sig-paren">(</span><a class="reference internal" href="cpp_photon.html#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="pre">PhotonArray</span></a> <span class="pre">&amp;</span><em><span class="pre">photons</span></em>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim14UniformDeviateE" title="galsim::UniformDeviate"><span class="pre">UniformDeviate</span></a> <em><span class="pre">ud</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear5shootER11PhotonArray14UniformDeviate" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return array of displacements drawn from this kernel. </p>
+<p>Since <a class="reference internal" href="#classgalsim_1_1_interpolant"><span class="std std-ref">Interpolant</span></a> is 1d, will use only x array of <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a>. It will be assumed that photons returned are randomly ordered (no need to shuffle them). Also assumed that all photons will have nearly equal absolute value of flux. Total flux returned may not equal 1 due to shot noise in negative/positive photons, and small fluctuations in photon weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – <strong>[in]</strong> number of photons to shoot </p></li>
+<li><p><strong>ud</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_noise.html#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a> used to generate random values </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> containing the vector of displacements for interpolation kernel. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Linear7makeStrEv">
+<span id="_CPPv3NK6galsim6Linear7makeStrEv"></span><span id="_CPPv2NK6galsim6Linear7makeStrEv"></span><span id="galsim::Linear::makeStrC"></span><span class="target" id="classgalsim_1_1_linear_1a74c8380c1ccad2cdb0117f22ad5b1f8b"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <code class="sig-name descname"><span class="pre">makeStr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Linear7makeStrEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim5CubicE">
+<span id="_CPPv3N6galsim5CubicE"></span><span id="_CPPv2N6galsim5CubicE"></span><span id="galsim::Cubic"></span><span class="target" id="classgalsim_1_1_cubic"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Cubic</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a><a class="headerlink" href="#_CPPv4N6galsim5CubicE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classgalsim_1_1_cubic"><span class="std std-ref">Cubic</span></a> interpolator exact to 3rd order Taylor expansion. </p>
+<p>From R. G. Keys, IEEE Trans. Acoustics, Speech, &amp; Signal Proc 29, p 1153, 1981</p>
+<p>The cubic interpolant is a reasonable choice for a four-point interpolant for <a class="reference internal" href="cpp_sb.html#classgalsim_1_1_s_b_interpolated_image"><span class="std std-ref">SBInterpolatedImage</span></a>. (See paper by Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.) </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim5Cubic5CubicERK8GSParams">
+<span id="_CPPv3N6galsim5Cubic5CubicERK8GSParams"></span><span id="_CPPv2N6galsim5Cubic5CubicERK8GSParams"></span><span id="galsim::Cubic::Cubic__GSParamsCR"></span><span class="target" id="classgalsim_1_1_cubic_1a8d4cc001828a8b3291eb8de1da77bd19"></span><code class="sig-name descname"><span class="pre">Cubic</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim8GSParamsE" title="galsim::GSParams"><span class="pre">GSParams</span></a> <span class="pre">&amp;</span><em><span class="pre">gsparams</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Cubic5CubicERK8GSParams" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gsparams</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_sb.html#structgalsim_1_1_g_s_params"><span class="std std-ref">GSParams</span></a> object storing constants that control the accuracy of operations, if different from the default. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim5CubicD0Ev">
+<span id="_CPPv3N6galsim5CubicD0Ev"></span><span id="_CPPv2N6galsim5CubicD0Ev"></span><span id="galsim::Cubic::~Cubic"></span><span class="target" id="classgalsim_1_1_cubic_1a31657a457f441ded282e1546abe5ae8c"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">~Cubic</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5CubicD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Cubic6xrangeEv">
+<span id="_CPPv3NK6galsim5Cubic6xrangeEv"></span><span id="_CPPv2NK6galsim5Cubic6xrangeEv"></span><span id="galsim::Cubic::xrangeC"></span><span class="target" id="classgalsim_1_1_cubic_1ad4f8f9c213511bb988e468c4f8b5e4d7"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Cubic6xrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in x space (pixels) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Cubic7ixrangeEv">
+<span id="_CPPv3NK6galsim5Cubic7ixrangeEv"></span><span id="_CPPv2NK6galsim5Cubic7ixrangeEv"></span><span id="galsim::Cubic::ixrangeC"></span><span class="target" id="classgalsim_1_1_cubic_1abda48129fbb1b9b17c521beff2e66938"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">ixrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Cubic7ixrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The total range as an integer. Typically <a class="reference internal" href="#classgalsim_1_1_cubic_1ad4f8f9c213511bb988e468c4f8b5e4d7"><span class="std std-ref">xrange()</span></a> == 0.5 * <a class="reference internal" href="#classgalsim_1_1_cubic_1abda48129fbb1b9b17c521beff2e66938"><span class="std std-ref">ixrange()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Cubic6urangeEv">
+<span id="_CPPv3NK6galsim5Cubic6urangeEv"></span><span id="_CPPv2NK6galsim5Cubic6urangeEv"></span><span id="galsim::Cubic::urangeC"></span><span class="target" id="classgalsim_1_1_cubic_1a3dea1f8c0d80cb5a6de0b56d2334920c"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">urange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Cubic6urangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in u space (cycles per pixel) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant in u space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Cubic4xvalEd">
+<span id="_CPPv3NK6galsim5Cubic4xvalEd"></span><span id="_CPPv2NK6galsim5Cubic4xvalEd"></span><span id="galsim::Cubic::xval__doubleC"></span><span class="target" id="classgalsim_1_1_cubic_1a7f6249384a13a2ab3e4aa988844922bd"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Cubic4xvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in real space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Cubic4uvalEd">
+<span id="_CPPv3NK6galsim5Cubic4uvalEd"></span><span id="_CPPv2NK6galsim5Cubic4uvalEd"></span><span id="galsim::Cubic::uval__doubleC"></span><span class="target" id="classgalsim_1_1_cubic_1a86c31d2acc3aaeba59d80c9a7474531e"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">uval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">u</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Cubic4uvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in frequency space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – <strong>[in]</strong> Frequency for evaluation (cycles per pixel) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Cubic15getPositiveFluxEv">
+<span id="_CPPv3NK6galsim5Cubic15getPositiveFluxEv"></span><span id="_CPPv2NK6galsim5Cubic15getPositiveFluxEv"></span><span id="galsim::Cubic::getPositiveFluxC"></span><span class="target" id="classgalsim_1_1_cubic_1a0dd216d5c2cd9e313927afb047740423"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getPositiveFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Cubic15getPositiveFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the integral of the positive portions of the kernel. </p>
+<p>Should return 1 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of positive portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Cubic15getNegativeFluxEv">
+<span id="_CPPv3NK6galsim5Cubic15getNegativeFluxEv"></span><span id="_CPPv2NK6galsim5Cubic15getNegativeFluxEv"></span><span id="galsim::Cubic::getNegativeFluxC"></span><span class="target" id="classgalsim_1_1_cubic_1a8e64fce321ba9455a93f5ce44f69963b"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getNegativeFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Cubic15getNegativeFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the (absolute value of) integral of the negative portions of the kernel. </p>
+<p>Should return 0 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of abs value of negative portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Cubic7makeStrEv">
+<span id="_CPPv3NK6galsim5Cubic7makeStrEv"></span><span id="_CPPv2NK6galsim5Cubic7makeStrEv"></span><span id="galsim::Cubic::makeStrC"></span><span class="target" id="classgalsim_1_1_cubic_1acd53f69a2cedf8cdd49b772e2b12ab55"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <code class="sig-name descname"><span class="pre">makeStr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Cubic7makeStrEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim7QuinticE">
+<span id="_CPPv3N6galsim7QuinticE"></span><span id="_CPPv2N6galsim7QuinticE"></span><span id="galsim::Quintic"></span><span class="target" id="classgalsim_1_1_quintic"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Quintic</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a><a class="headerlink" href="#_CPPv4N6galsim7QuinticE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Piecewise-quintic polynomial interpolant, ideal for Fourier-space interpolation. </p>
+<p>See paper by Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7Quintic7QuinticERK8GSParams">
+<span id="_CPPv3N6galsim7Quintic7QuinticERK8GSParams"></span><span id="_CPPv2N6galsim7Quintic7QuinticERK8GSParams"></span><span id="galsim::Quintic::Quintic__GSParamsCR"></span><span class="target" id="classgalsim_1_1_quintic_1a469adc6bffef0a3208fb65a3230aef92"></span><code class="sig-name descname"><span class="pre">Quintic</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim8GSParamsE" title="galsim::GSParams"><span class="pre">GSParams</span></a> <span class="pre">&amp;</span><em><span class="pre">gsparams</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Quintic7QuinticERK8GSParams" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gsparams</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_sb.html#structgalsim_1_1_g_s_params"><span class="std std-ref">GSParams</span></a> object storing constants that control the accuracy of operations, if different from the default. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7QuinticD0Ev">
+<span id="_CPPv3N6galsim7QuinticD0Ev"></span><span id="_CPPv2N6galsim7QuinticD0Ev"></span><span id="galsim::Quintic::~Quintic"></span><span class="target" id="classgalsim_1_1_quintic_1ab22becfadba4c0ed418247d9876f35d0"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">~Quintic</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7QuinticD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Quintic6xrangeEv">
+<span id="_CPPv3NK6galsim7Quintic6xrangeEv"></span><span id="_CPPv2NK6galsim7Quintic6xrangeEv"></span><span id="galsim::Quintic::xrangeC"></span><span class="target" id="classgalsim_1_1_quintic_1a68b90c833a3c90e225a1c26b3411a7ff"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Quintic6xrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in x space (pixels) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Quintic7ixrangeEv">
+<span id="_CPPv3NK6galsim7Quintic7ixrangeEv"></span><span id="_CPPv2NK6galsim7Quintic7ixrangeEv"></span><span id="galsim::Quintic::ixrangeC"></span><span class="target" id="classgalsim_1_1_quintic_1a77261a9fce7de472f805c48f51a0f9a8"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">ixrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Quintic7ixrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The total range as an integer. Typically <a class="reference internal" href="#classgalsim_1_1_quintic_1a68b90c833a3c90e225a1c26b3411a7ff"><span class="std std-ref">xrange()</span></a> == 0.5 * <a class="reference internal" href="#classgalsim_1_1_quintic_1a77261a9fce7de472f805c48f51a0f9a8"><span class="std std-ref">ixrange()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Quintic6urangeEv">
+<span id="_CPPv3NK6galsim7Quintic6urangeEv"></span><span id="_CPPv2NK6galsim7Quintic6urangeEv"></span><span id="galsim::Quintic::urangeC"></span><span class="target" id="classgalsim_1_1_quintic_1a94ef9d2071e7b6adc6a7e5ddcb0cb80a"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">urange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Quintic6urangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in u space (cycles per pixel) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant in u space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Quintic4xvalEd">
+<span id="_CPPv3NK6galsim7Quintic4xvalEd"></span><span id="_CPPv2NK6galsim7Quintic4xvalEd"></span><span id="galsim::Quintic::xval__doubleC"></span><span class="target" id="classgalsim_1_1_quintic_1a87caecec62d844238800acb9cfdd2696"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Quintic4xvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in real space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Quintic4uvalEd">
+<span id="_CPPv3NK6galsim7Quintic4uvalEd"></span><span id="_CPPv2NK6galsim7Quintic4uvalEd"></span><span id="galsim::Quintic::uval__doubleC"></span><span class="target" id="classgalsim_1_1_quintic_1a1d0354232ec90f3ab318b2293f0ba5a5"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">uval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">u</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Quintic4uvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in frequency space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – <strong>[in]</strong> Frequency for evaluation (cycles per pixel) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Quintic15getPositiveFluxEv">
+<span id="_CPPv3NK6galsim7Quintic15getPositiveFluxEv"></span><span id="_CPPv2NK6galsim7Quintic15getPositiveFluxEv"></span><span id="galsim::Quintic::getPositiveFluxC"></span><span class="target" id="classgalsim_1_1_quintic_1a02647e78e704f565863e7c590a31ffa3"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getPositiveFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Quintic15getPositiveFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the integral of the positive portions of the kernel. </p>
+<p>Should return 1 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of positive portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Quintic15getNegativeFluxEv">
+<span id="_CPPv3NK6galsim7Quintic15getNegativeFluxEv"></span><span id="_CPPv2NK6galsim7Quintic15getNegativeFluxEv"></span><span id="galsim::Quintic::getNegativeFluxC"></span><span class="target" id="classgalsim_1_1_quintic_1a48d2cbb62709ea56bff9ee22ef37b239"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">getNegativeFlux</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Quintic15getNegativeFluxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the (absolute value of) integral of the negative portions of the kernel. </p>
+<p>Should return 0 unless the kernel has negative portions. Default is to ask the numerical sampler for its stored value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Integral of abs value of negative portions of kernel </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Quintic7makeStrEv">
+<span id="_CPPv3NK6galsim7Quintic7makeStrEv"></span><span id="_CPPv2NK6galsim7Quintic7makeStrEv"></span><span id="galsim::Quintic::makeStrC"></span><span class="target" id="classgalsim_1_1_quintic_1ae64e2969c230b29fab9ee84d7e7aea85"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <code class="sig-name descname"><span class="pre">makeStr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Quintic7makeStrEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim15SincInterpolantE">
+<span id="_CPPv3N6galsim15SincInterpolantE"></span><span id="_CPPv2N6galsim15SincInterpolantE"></span><span id="galsim::SincInterpolant"></span><span class="target" id="classgalsim_1_1_sinc_interpolant"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">SincInterpolant</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a><a class="headerlink" href="#_CPPv4N6galsim15SincInterpolantE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Sinc interpolation: inverse of Nearest-neighbor. </p>
+<p>The Sinc interpolant (K(x) = sin(pi x)/(pi x)) is mathematically perfect for band-limited data, introducing no spurious frequency content beyond kmax = pi/dx for input data with pixel scale dx. However, it is formally infinite in extent and, even with reasonable trunction, is still quite large. It will give exact results in <a class="reference internal" href="cpp_sb.html#classgalsim_1_1_s_b_profile_1a1bfdded9d9c4779246743102860bcc4d"><span class="std std-ref">SBInterpolatedImage::kValue()</span></a> when it is used as a k-space interpolant, but is extremely slow. The usual compromise between sinc accuracy vs. speed is the <a class="reference internal" href="#classgalsim_1_1_lanczos"><span class="std std-ref">Lanczos</span></a> interpolant (see its documentation for details). </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim15SincInterpolant15SincInterpolantERK8GSParams">
+<span id="_CPPv3N6galsim15SincInterpolant15SincInterpolantERK8GSParams"></span><span id="_CPPv2N6galsim15SincInterpolant15SincInterpolantERK8GSParams"></span><span id="galsim::SincInterpolant::SincInterpolant__GSParamsCR"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1a478415fe8025a0a1b7e430821679f60e"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">SincInterpolant</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim8GSParamsE" title="galsim::GSParams"><span class="pre">GSParams</span></a> <span class="pre">&amp;</span><em><span class="pre">gsparams</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15SincInterpolant15SincInterpolantERK8GSParams" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gsparams</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_sb.html#structgalsim_1_1_g_s_params"><span class="std std-ref">GSParams</span></a> object storing constants that control the accuracy of operations, if different from the default. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim15SincInterpolantD0Ev">
+<span id="_CPPv3N6galsim15SincInterpolantD0Ev"></span><span id="_CPPv2N6galsim15SincInterpolantD0Ev"></span><span id="galsim::SincInterpolant::~SincInterpolant"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1a1a3a68f170e56475a2e5e7eb2f69d4b5"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">~SincInterpolant</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim15SincInterpolantD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim15SincInterpolant6xrangeEv">
+<span id="_CPPv3NK6galsim15SincInterpolant6xrangeEv"></span><span id="_CPPv2NK6galsim15SincInterpolant6xrangeEv"></span><span id="galsim::SincInterpolant::xrangeC"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1a82724db11dfc433ee5a416afc1a89374"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim15SincInterpolant6xrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in x space (pixels) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim15SincInterpolant7ixrangeEv">
+<span id="_CPPv3NK6galsim15SincInterpolant7ixrangeEv"></span><span id="_CPPv2NK6galsim15SincInterpolant7ixrangeEv"></span><span id="galsim::SincInterpolant::ixrangeC"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1a06f175cebac9f4ad593d5407e9590e7f"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">ixrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim15SincInterpolant7ixrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The total range as an integer. Typically <a class="reference internal" href="#classgalsim_1_1_sinc_interpolant_1a82724db11dfc433ee5a416afc1a89374"><span class="std std-ref">xrange()</span></a> == 0.5 * <a class="reference internal" href="#classgalsim_1_1_sinc_interpolant_1a06f175cebac9f4ad593d5407e9590e7f"><span class="std std-ref">ixrange()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim15SincInterpolant6urangeEv">
+<span id="_CPPv3NK6galsim15SincInterpolant6urangeEv"></span><span id="_CPPv2NK6galsim15SincInterpolant6urangeEv"></span><span id="galsim::SincInterpolant::urangeC"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1a794b93fa74364705ca5f13e1621436fb"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">urange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim15SincInterpolant6urangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in u space (cycles per pixel) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant in u space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim15SincInterpolant4xvalEd">
+<span id="_CPPv3NK6galsim15SincInterpolant4xvalEd"></span><span id="_CPPv2NK6galsim15SincInterpolant4xvalEd"></span><span id="galsim::SincInterpolant::xval__doubleC"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1a89a76df99b48de20ae711e97f21b7236"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim15SincInterpolant4xvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in real space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim15SincInterpolant11xvalWrappedEdi">
+<span id="_CPPv3NK6galsim15SincInterpolant11xvalWrappedEdi"></span><span id="_CPPv2NK6galsim15SincInterpolant11xvalWrappedEdi"></span><span id="galsim::SincInterpolant::xvalWrapped__double.iC"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1a0ed21c5cc6cb3373eafbf71c06b8ff75"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xvalWrapped</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim15SincInterpolant11xvalWrappedEdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant, wrapped at period N. </p>
+<p>This returns sum_{j=-inf}^{inf} xval(x + jN): </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p></li>
+<li><p><strong>N</strong> – <strong>[in]</strong> Wrapping period (pixels) </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant after wrapping </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim15SincInterpolant4uvalEd">
+<span id="_CPPv3NK6galsim15SincInterpolant4uvalEd"></span><span id="_CPPv2NK6galsim15SincInterpolant4uvalEd"></span><span id="galsim::SincInterpolant::uval__doubleC"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1aea49095e28d62859a07fe88629c36530"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">uval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">u</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim15SincInterpolant4uvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in frequency space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – <strong>[in]</strong> Frequency for evaluation (cycles per pixel) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim15SincInterpolant5shootER11PhotonArray14UniformDeviate">
+<span id="_CPPv3NK6galsim15SincInterpolant5shootER11PhotonArray14UniformDeviate"></span><span id="_CPPv2NK6galsim15SincInterpolant5shootER11PhotonArray14UniformDeviate"></span><span id="galsim::SincInterpolant::shoot__PhotonArrayR.UniformDeviateC"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1a8cc9270139b5d95d6b3e369436c70164"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">shoot</span></code><span class="sig-paren">(</span><a class="reference internal" href="cpp_photon.html#_CPPv4N6galsim11PhotonArrayE" title="galsim::PhotonArray"><span class="pre">PhotonArray</span></a> <span class="pre">&amp;</span><em><span class="pre">photons</span></em>, <a class="reference internal" href="cpp_noise.html#_CPPv4N6galsim14UniformDeviateE" title="galsim::UniformDeviate"><span class="pre">UniformDeviate</span></a> <em><span class="pre">ud</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim15SincInterpolant5shootER11PhotonArray14UniformDeviate" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return array of displacements drawn from this kernel. </p>
+<p>Since <a class="reference internal" href="#classgalsim_1_1_interpolant"><span class="std std-ref">Interpolant</span></a> is 1d, will use only x array of <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a>. It will be assumed that photons returned are randomly ordered (no need to shuffle them). Also assumed that all photons will have nearly equal absolute value of flux. Total flux returned may not equal 1 due to shot noise in negative/positive photons, and small fluctuations in photon weights.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – <strong>[in]</strong> number of photons to shoot </p></li>
+<li><p><strong>ud</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_noise.html#classgalsim_1_1_uniform_deviate"><span class="std std-ref">UniformDeviate</span></a> used to generate random values </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="cpp_photon.html#classgalsim_1_1_photon_array"><span class="std std-ref">PhotonArray</span></a> containing the vector of displacements for interpolation kernel. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim15SincInterpolant7makeStrEv">
+<span id="_CPPv3NK6galsim15SincInterpolant7makeStrEv"></span><span id="_CPPv2NK6galsim15SincInterpolant7makeStrEv"></span><span id="galsim::SincInterpolant::makeStrC"></span><span class="target" id="classgalsim_1_1_sinc_interpolant_1af4a8819e8422fb8112bbc992a71252fd"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <code class="sig-name descname"><span class="pre">makeStr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim15SincInterpolant7makeStrEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim7LanczosE">
+<span id="_CPPv3N6galsim7LanczosE"></span><span id="_CPPv2N6galsim7LanczosE"></span><span id="galsim::Lanczos"></span><span class="target" id="classgalsim_1_1_lanczos"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Lanczos</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a><a class="headerlink" href="#_CPPv4N6galsim7LanczosE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The <a class="reference internal" href="#classgalsim_1_1_lanczos"><span class="std std-ref">Lanczos</span></a> interpolation filter, nominally sinc(x)*sinc(x/n), truncated at +/-n. </p>
+<p>The <a class="reference internal" href="#classgalsim_1_1_lanczos"><span class="std std-ref">Lanczos</span></a> filter is an approximation to the band-limiting sinc filter with a smooth cutoff at high x. Order n <a class="reference internal" href="#classgalsim_1_1_lanczos"><span class="std std-ref">Lanczos</span></a> has a range of +/- n pixels. It typically is a good compromise between kernel size and accuracy.</p>
+<p>Note that pure <a class="reference internal" href="#classgalsim_1_1_lanczos"><span class="std std-ref">Lanczos</span></a>, when interpolating a set of constant-valued samples, does not return this constant. Setting conserve_dc in the constructor tweaks the function so that it approximately conserves the value of constant (DC) input data (accurate to better than 1.e-5 when used in two dimensions). </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7Lanczos7LanczosEibRK8GSParams">
+<span id="_CPPv3N6galsim7Lanczos7LanczosEibRK8GSParams"></span><span id="_CPPv2N6galsim7Lanczos7LanczosEibRK8GSParams"></span><span id="galsim::Lanczos::Lanczos__i.b.GSParamsCR"></span><span class="target" id="classgalsim_1_1_lanczos_1a0ad893ca7482ce6ece33f310b1c86eff"></span><code class="sig-name descname"><span class="pre">Lanczos</span></code><span class="sig-paren">(</span><span class="pre">int</span> <em><span class="pre">n</span></em>, <span class="pre">bool</span> <em><span class="pre">conserve_dc</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="cpp_sb.html#_CPPv4N6galsim8GSParamsE" title="galsim::GSParams"><span class="pre">GSParams</span></a> <span class="pre">&amp;</span><em><span class="pre">gsparams</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Lanczos7LanczosEibRK8GSParams" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> – <strong>[in]</strong> Filter order; must be given on input and cannot be changed. </p></li>
+<li><p><strong>conserve_dc</strong> – <strong>[in]</strong> Set true to adjust filter to be more nearly correct for constant inputs. </p></li>
+<li><p><strong>gsparams</strong> – <strong>[in]</strong> <a class="reference internal" href="cpp_sb.html#structgalsim_1_1_g_s_params"><span class="std std-ref">GSParams</span></a> object storing constants that control the accuracy of operations, if different from the default. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7LanczosD0Ev">
+<span id="_CPPv3N6galsim7LanczosD0Ev"></span><span id="_CPPv2N6galsim7LanczosD0Ev"></span><span id="galsim::Lanczos::~Lanczos"></span><span class="target" id="classgalsim_1_1_lanczos_1a5e462cccaa59c2b4210ad516c975aaf3"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">~Lanczos</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7LanczosD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Lanczos6xrangeEv">
+<span id="_CPPv3NK6galsim7Lanczos6xrangeEv"></span><span id="_CPPv2NK6galsim7Lanczos6xrangeEv"></span><span id="galsim::Lanczos::xrangeC"></span><span class="target" id="classgalsim_1_1_lanczos_1a1e4dd4119ec70f663c784d7bb3f55771"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Lanczos6xrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in x space (pixels) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Lanczos7ixrangeEv">
+<span id="_CPPv3NK6galsim7Lanczos7ixrangeEv"></span><span id="_CPPv2NK6galsim7Lanczos7ixrangeEv"></span><span id="galsim::Lanczos::ixrangeC"></span><span class="target" id="classgalsim_1_1_lanczos_1aee8576de7e6011717d3fd57d43643f72"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">ixrange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Lanczos7ixrangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>The total range as an integer. Typically <a class="reference internal" href="#classgalsim_1_1_lanczos_1a1e4dd4119ec70f663c784d7bb3f55771"><span class="std std-ref">xrange()</span></a> == 0.5 * <a class="reference internal" href="#classgalsim_1_1_lanczos_1aee8576de7e6011717d3fd57d43643f72"><span class="std std-ref">ixrange()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Lanczos6urangeEv">
+<span id="_CPPv3NK6galsim7Lanczos6urangeEv"></span><span id="_CPPv2NK6galsim7Lanczos6urangeEv"></span><span id="galsim::Lanczos::urangeC"></span><span class="target" id="classgalsim_1_1_lanczos_1af079794bf6f296cf331201b674eb7a8a"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">urange</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Lanczos6urangeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Maximum extent of interpolant from origin in u space (cycles per pixel) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Range of non-zero values of interpolant in u space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Lanczos4getNEv">
+<span id="_CPPv3NK6galsim7Lanczos4getNEv"></span><span id="_CPPv2NK6galsim7Lanczos4getNEv"></span><span id="galsim::Lanczos::getNC"></span><span class="target" id="classgalsim_1_1_lanczos_1a08f1f8893d84856f5b2c66027c8c7d5b"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">int</span> <code class="sig-name descname"><span class="pre">getN</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Lanczos4getNEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Lanczos11conservesDCEv">
+<span id="_CPPv3NK6galsim7Lanczos11conservesDCEv"></span><span id="_CPPv2NK6galsim7Lanczos11conservesDCEv"></span><span id="galsim::Lanczos::conservesDCC"></span><span class="target" id="classgalsim_1_1_lanczos_1a7e48923d5669c1048a4c4cbec0092fa9"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">conservesDC</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Lanczos11conservesDCEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Lanczos4xvalEd">
+<span id="_CPPv3NK6galsim7Lanczos4xvalEd"></span><span id="_CPPv2NK6galsim7Lanczos4xvalEd"></span><span id="galsim::Lanczos::xval__doubleC"></span><span class="target" id="classgalsim_1_1_lanczos_1a3a21c46fd645543e6fdac0fb47ad3fce"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Lanczos4xvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in real space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – <strong>[in]</strong> Distance from sample (pixels) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Lanczos4uvalEd">
+<span id="_CPPv3NK6galsim7Lanczos4uvalEd"></span><span id="_CPPv2NK6galsim7Lanczos4uvalEd"></span><span id="galsim::Lanczos::uval__doubleC"></span><span class="target" id="classgalsim_1_1_lanczos_1ab37d30a49e0f00e0b25aa4b224283189"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">uval</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">u</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Lanczos4uvalEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Value of interpolant in frequency space. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>u</strong> – <strong>[in]</strong> Frequency for evaluation (cycles per pixel) </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Value of interpolant, normalized so uval(0) = 1 for flux-conserving interpolation. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Lanczos7makeStrEv">
+<span id="_CPPv3NK6galsim7Lanczos7makeStrEv"></span><span id="_CPPv2NK6galsim7Lanczos7makeStrEv"></span><span id="galsim::Lanczos::makeStrC"></span><span class="target" id="classgalsim_1_1_lanczos_1a457f467fb16226855a3bd44b340d3d68"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">std</span><span class="pre">::</span><span class="pre">string</span> <code class="sig-name descname"><span class="pre">makeStr</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Lanczos7makeStrEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="c-lookup-tables">
+<h2>C++ Lookup Tables<a class="headerlink" href="#c-lookup-tables" title="Permalink to this headline">¶</a></h2>
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim5TableE">
+<span id="_CPPv3N6galsim5TableE"></span><span id="_CPPv2N6galsim5TableE"></span><span id="galsim::Table"></span><span class="target" id="classgalsim_1_1_table"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Table</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><span class="pre">FluxDensity</span><a class="headerlink" href="#_CPPv4N6galsim5TableE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>A class to represent lookup tables for a function y = f(x). </p>
+<p>Subclassed by <a class="reference internal" href="#classgalsim_1_1_table_builder"><span class="std std-ref">galsim::TableBuilder</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp enum">
+<dt id="_CPPv4N6galsim5Table11interpolantE">
+<span id="_CPPv3N6galsim5Table11interpolantE"></span><span id="_CPPv2N6galsim5Table11interpolantE"></span><span class="target" id="classgalsim_1_1_table_1af129c714797baab6f6b976ea485d055f"></span><em class="property"><span class="pre">enum</span> </em><code class="sig-name descname"><span class="pre">interpolant</span></code><a class="headerlink" href="#_CPPv4N6galsim5Table11interpolantE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim5Table11interpolant6linearE">
+<span id="_CPPv3N6galsim5Table11interpolant6linearE"></span><span id="_CPPv2N6galsim5Table11interpolant6linearE"></span><span class="target" id="classgalsim_1_1_table_1af129c714797baab6f6b976ea485d055faac6a9b34f4c9bbf735f027a9661fca1a"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">linear</span></code><a class="headerlink" href="#_CPPv4N6galsim5Table11interpolant6linearE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim5Table11interpolant5floorE">
+<span id="_CPPv3N6galsim5Table11interpolant5floorE"></span><span id="_CPPv2N6galsim5Table11interpolant5floorE"></span><span class="target" id="classgalsim_1_1_table_1af129c714797baab6f6b976ea485d055fa4d777a2bb46d6cb9ccc06ef63d7de822"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">floor</span></code><a class="headerlink" href="#_CPPv4N6galsim5Table11interpolant5floorE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim5Table11interpolant4ceilE">
+<span id="_CPPv3N6galsim5Table11interpolant4ceilE"></span><span id="_CPPv2N6galsim5Table11interpolant4ceilE"></span><span class="target" id="classgalsim_1_1_table_1af129c714797baab6f6b976ea485d055fafc6a5153f09d9330c22e91f17dc13352"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">ceil</span></code><a class="headerlink" href="#_CPPv4N6galsim5Table11interpolant4ceilE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim5Table11interpolant7nearestE">
+<span id="_CPPv3N6galsim5Table11interpolant7nearestE"></span><span id="_CPPv2N6galsim5Table11interpolant7nearestE"></span><span class="target" id="classgalsim_1_1_table_1af129c714797baab6f6b976ea485d055faf47d8a7580ca4f648e4deada3bb553bd"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">nearest</span></code><a class="headerlink" href="#_CPPv4N6galsim5Table11interpolant7nearestE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim5Table11interpolant6splineE">
+<span id="_CPPv3N6galsim5Table11interpolant6splineE"></span><span id="_CPPv2N6galsim5Table11interpolant6splineE"></span><span class="target" id="classgalsim_1_1_table_1af129c714797baab6f6b976ea485d055fa2e8b9e271eb4c0b7aada0ad974990273"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">spline</span></code><a class="headerlink" href="#_CPPv4N6galsim5Table11interpolant6splineE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim5Table11interpolant8gsinterpE">
+<span id="_CPPv3N6galsim5Table11interpolant8gsinterpE"></span><span id="_CPPv2N6galsim5Table11interpolant8gsinterpE"></span><span class="target" id="classgalsim_1_1_table_1af129c714797baab6f6b976ea485d055fabab2e46d3fe373f90bb671f9615a7cb8"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">gsinterp</span></code><a class="headerlink" href="#_CPPv4N6galsim5Table11interpolant8gsinterpE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim5Table5TableEPKdPKdi11interpolant">
+<span id="_CPPv3N6galsim5Table5TableEPKdPKdi11interpolant"></span><span id="_CPPv2N6galsim5Table5TableEPKdPKdi11interpolant"></span><span id="galsim::Table::Table__doubleCP.doubleCP.i.interpolant"></span><span class="target" id="classgalsim_1_1_table_1a0a85a04ccfd3ed1fb5b0b1e80fbe2474"></span><code class="sig-name descname"><span class="pre">Table</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">args</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">vals</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em>, <a class="reference internal" href="#_CPPv4N6galsim5Table11interpolantE" title="galsim::Table::interpolant"><span class="pre">interpolant</span></a> <em><span class="pre">in</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Table5TableEPKdPKdi11interpolant" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classgalsim_1_1_table"><span class="std std-ref">Table</span></a> from args, vals. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim5Table5TableEPKdPKdiPK11Interpolant">
+<span id="_CPPv3N6galsim5Table5TableEPKdPKdiPK11Interpolant"></span><span id="_CPPv2N6galsim5Table5TableEPKdPKdiPK11Interpolant"></span><span id="galsim::Table::Table__doubleCP.doubleCP.i.InterpolantCP"></span><span class="target" id="classgalsim_1_1_table_1abf905c7c2e1a1576dc957f010a7bdb3c"></span><code class="sig-name descname"><span class="pre">Table</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">args</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">vals</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a> <span class="pre">*</span><em><span class="pre">gsinterp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim5Table5TableEPKdPKdiPK11Interpolant" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Table6argMinEv">
+<span id="_CPPv3NK6galsim5Table6argMinEv"></span><span id="_CPPv2NK6galsim5Table6argMinEv"></span><span id="galsim::Table::argMinC"></span><span class="target" id="classgalsim_1_1_table_1af0c6391bccad9fd0f9c0b488f05db132"></span><span class="pre">double</span> <code class="sig-name descname"><span class="pre">argMin</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Table6argMinEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Table6argMaxEv">
+<span id="_CPPv3NK6galsim5Table6argMaxEv"></span><span id="_CPPv2NK6galsim5Table6argMaxEv"></span><span id="galsim::Table::argMaxC"></span><span class="target" id="classgalsim_1_1_table_1a389b198497ec9143e4c379fdf89b2961"></span><span class="pre">double</span> <code class="sig-name descname"><span class="pre">argMax</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Table6argMaxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Table4sizeEv">
+<span id="_CPPv3NK6galsim5Table4sizeEv"></span><span id="_CPPv2NK6galsim5Table4sizeEv"></span><span id="galsim::Table::sizeC"></span><span class="target" id="classgalsim_1_1_table_1a9fd66abf7dcdd7a3f2d1e870fdf32dbf"></span><span class="pre">size_t</span> <code class="sig-name descname"><span class="pre">size</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Table4sizeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5TableclEd">
+<span id="_CPPv3NK6galsim5TableclEd"></span><span id="_CPPv2NK6galsim5TableclEd"></span><span id="galsim::Table::call-operator__doubleC"></span><span class="target" id="classgalsim_1_1_table_1aa1b442acaa6cb4b9973cf053ac8078f4"></span><em class="property"><span class="pre">virtual</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">operator()</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">a</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5TableclEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>interp, return double(0) if beyond bounds This is a virtual function from FluxDensity, which lets a <a class="reference internal" href="#classgalsim_1_1_table"><span class="std std-ref">Table</span></a> be a FluxDensity. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Table6lookupEd">
+<span id="_CPPv3NK6galsim5Table6lookupEd"></span><span id="_CPPv2NK6galsim5Table6lookupEd"></span><span id="galsim::Table::lookup__doubleC"></span><span class="target" id="classgalsim_1_1_table_1a9b04e7f3d3252730b45fd5bbe05be5b6"></span><span class="pre">double</span> <code class="sig-name descname"><span class="pre">lookup</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">a</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Table6lookupEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>interp, but exception if beyond bounds </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Table10interpManyEPKdPdi">
+<span id="_CPPv3NK6galsim5Table10interpManyEPKdPdi"></span><span id="_CPPv2NK6galsim5Table10interpManyEPKdPdi"></span><span id="galsim::Table::interpMany__doubleCP.doubleP.iC"></span><span class="target" id="classgalsim_1_1_table_1a2eacf636ba349ce08bacd52a5b689756"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">interpMany</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">argvec</span></em>, <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">valvec</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Table10interpManyEPKdPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>interp many values at once </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Table9integrateEdd">
+<span id="_CPPv3NK6galsim5Table9integrateEdd"></span><span id="_CPPv2NK6galsim5Table9integrateEdd"></span><span id="galsim::Table::integrate__double.doubleC"></span><span class="target" id="classgalsim_1_1_table_1af04bdbc3c5f3ad679d812d0cd85b120b"></span><span class="pre">double</span> <code class="sig-name descname"><span class="pre">integrate</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">xmin</span></em>, <span class="pre">double</span> <em><span class="pre">xmax</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Table9integrateEdd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim5Table16integrateProductERK5Tableddd">
+<span id="_CPPv3NK6galsim5Table16integrateProductERK5Tableddd"></span><span id="_CPPv2NK6galsim5Table16integrateProductERK5Tableddd"></span><span id="galsim::Table::integrateProduct__TableCR.double.double.doubleC"></span><span class="target" id="classgalsim_1_1_table_1af64c7d979bed0b291b05970b5411f525"></span><span class="pre">double</span> <code class="sig-name descname"><span class="pre">integrateProduct</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4N6galsim5TableE" title="galsim::Table"><span class="pre">Table</span></a> <span class="pre">&amp;</span><em><span class="pre">g</span></em>, <span class="pre">double</span> <em><span class="pre">xmin</span></em>, <span class="pre">double</span> <em><span class="pre">xmax</span></em>, <span class="pre">double</span> <em><span class="pre">xfact</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim5Table16integrateProductERK5Tableddd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim12TableBuilderE">
+<span id="_CPPv3N6galsim12TableBuilderE"></span><span id="_CPPv2N6galsim12TableBuilderE"></span><span id="galsim::TableBuilder"></span><span class="target" id="classgalsim_1_1_table_builder"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">TableBuilder</span></code> <span class="pre">:</span> <em class="property"><span class="pre">public</span></em> <span class="pre">galsim</span><span class="pre">::</span><a class="reference internal" href="#_CPPv4N6galsim5TableE" title="galsim::Table"><span class="pre">Table</span></a><a class="headerlink" href="#_CPPv4N6galsim12TableBuilderE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim12TableBuilder12TableBuilderE11interpolant">
+<span id="_CPPv3N6galsim12TableBuilder12TableBuilderE11interpolant"></span><span id="_CPPv2N6galsim12TableBuilder12TableBuilderE11interpolant"></span><span id="galsim::TableBuilder::TableBuilder__interpolant"></span><span class="target" id="classgalsim_1_1_table_builder_1a0d25f54bfa33f52b5762e345609024b1"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">TableBuilder</span></code><span class="sig-paren">(</span><span class="pre">interpolant</span> <em><span class="pre">in</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12TableBuilder12TableBuilderE11interpolant" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim12TableBuilder12TableBuilderEPK11Interpolant">
+<span id="_CPPv3N6galsim12TableBuilder12TableBuilderEPK11Interpolant"></span><span id="_CPPv2N6galsim12TableBuilder12TableBuilderEPK11Interpolant"></span><span id="galsim::TableBuilder::TableBuilder__InterpolantCP"></span><span class="target" id="classgalsim_1_1_table_builder_1ac1584328e0afa130e68d3b054f7a7f47"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">TableBuilder</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a> <span class="pre">*</span><em><span class="pre">gsinterp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12TableBuilder12TableBuilderEPK11Interpolant" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim12TableBuilder9finalizedEv">
+<span id="_CPPv3NK6galsim12TableBuilder9finalizedEv"></span><span id="_CPPv2NK6galsim12TableBuilder9finalizedEv"></span><span id="galsim::TableBuilder::finalizedC"></span><span class="target" id="classgalsim_1_1_table_builder_1a3bfe7566f3841a288d3ea854ff008027"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">finalized</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim12TableBuilder9finalizedEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim12TableBuilder6lookupEd">
+<span id="_CPPv3NK6galsim12TableBuilder6lookupEd"></span><span id="_CPPv2NK6galsim12TableBuilder6lookupEd"></span><span id="galsim::TableBuilder::lookup__doubleC"></span><span class="target" id="classgalsim_1_1_table_builder_1a0f7335ad3f9ea87f6d358d7ea12168c3"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">double</span> <code class="sig-name descname"><span class="pre">lookup</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">a</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim12TableBuilder6lookupEd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim12TableBuilder8addEntryEdd">
+<span id="_CPPv3N6galsim12TableBuilder8addEntryEdd"></span><span id="_CPPv2N6galsim12TableBuilder8addEntryEdd"></span><span id="galsim::TableBuilder::addEntry__double.double"></span><span class="target" id="classgalsim_1_1_table_builder_1a003c4e471a075a1d932c8770f25e53be"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">addEntry</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em>, <span class="pre">double</span> <em><span class="pre">f</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12TableBuilder8addEntryEdd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Insert an (x, y(x)) pair into the table. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim12TableBuilder8finalizeEv">
+<span id="_CPPv3N6galsim12TableBuilder8finalizeEv"></span><span id="_CPPv2N6galsim12TableBuilder8finalizeEv"></span><span id="galsim::TableBuilder::finalize"></span><span class="target" id="classgalsim_1_1_table_builder_1ae106bfabfe8a75039b01a310aed9255f"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">finalize</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim12TableBuilder8finalizeEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4N6galsim7Table2DE">
+<span id="_CPPv3N6galsim7Table2DE"></span><span id="_CPPv2N6galsim7Table2DE"></span><span id="galsim::Table2D"></span><span class="target" id="classgalsim_1_1_table2_d"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Table2D</span></code><a class="headerlink" href="#_CPPv4N6galsim7Table2DE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>A class to represent lookup tables for a function z = f(x, y). </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp enum">
+<dt id="_CPPv4N6galsim7Table2D11interpolantE">
+<span id="_CPPv3N6galsim7Table2D11interpolantE"></span><span id="_CPPv2N6galsim7Table2D11interpolantE"></span><span class="target" id="classgalsim_1_1_table2_d_1ac9857e74de7ebd48b87059febb9c7859"></span><em class="property"><span class="pre">enum</span> </em><code class="sig-name descname"><span class="pre">interpolant</span></code><a class="headerlink" href="#_CPPv4N6galsim7Table2D11interpolantE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim7Table2D11interpolant6linearE">
+<span id="_CPPv3N6galsim7Table2D11interpolant6linearE"></span><span id="_CPPv2N6galsim7Table2D11interpolant6linearE"></span><span class="target" id="classgalsim_1_1_table2_d_1ac9857e74de7ebd48b87059febb9c7859a0f22c40340c7dce5734c5946ab4dc5e9"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">linear</span></code><a class="headerlink" href="#_CPPv4N6galsim7Table2D11interpolant6linearE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim7Table2D11interpolant5floorE">
+<span id="_CPPv3N6galsim7Table2D11interpolant5floorE"></span><span id="_CPPv2N6galsim7Table2D11interpolant5floorE"></span><span class="target" id="classgalsim_1_1_table2_d_1ac9857e74de7ebd48b87059febb9c7859ab65d4b03211fe4910167a0e934a57840"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">floor</span></code><a class="headerlink" href="#_CPPv4N6galsim7Table2D11interpolant5floorE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim7Table2D11interpolant4ceilE">
+<span id="_CPPv3N6galsim7Table2D11interpolant4ceilE"></span><span id="_CPPv2N6galsim7Table2D11interpolant4ceilE"></span><span class="target" id="classgalsim_1_1_table2_d_1ac9857e74de7ebd48b87059febb9c7859a0b4f11e57551909f25b376125274d20d"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">ceil</span></code><a class="headerlink" href="#_CPPv4N6galsim7Table2D11interpolant4ceilE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim7Table2D11interpolant7nearestE">
+<span id="_CPPv3N6galsim7Table2D11interpolant7nearestE"></span><span id="_CPPv2N6galsim7Table2D11interpolant7nearestE"></span><span class="target" id="classgalsim_1_1_table2_d_1ac9857e74de7ebd48b87059febb9c7859ae8ceac3f56d880fc7cbd5de6ded1b3ca"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">nearest</span></code><a class="headerlink" href="#_CPPv4N6galsim7Table2D11interpolant7nearestE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim7Table2D11interpolant6splineE">
+<span id="_CPPv3N6galsim7Table2D11interpolant6splineE"></span><span id="_CPPv2N6galsim7Table2D11interpolant6splineE"></span><span class="target" id="classgalsim_1_1_table2_d_1ac9857e74de7ebd48b87059febb9c7859ada29d67dd289f164ef5e3e5a72316dce"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">spline</span></code><a class="headerlink" href="#_CPPv4N6galsim7Table2D11interpolant6splineE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt id="_CPPv4N6galsim7Table2D11interpolant8gsinterpE">
+<span id="_CPPv3N6galsim7Table2D11interpolant8gsinterpE"></span><span id="_CPPv2N6galsim7Table2D11interpolant8gsinterpE"></span><span class="target" id="classgalsim_1_1_table2_d_1ac9857e74de7ebd48b87059febb9c7859a1ca7031fdf5ba75a2f99b2fb5c68058a"></span><em class="property"><span class="pre">enumerator</span> </em><code class="sig-name descname"><span class="pre">gsinterp</span></code><a class="headerlink" href="#_CPPv4N6galsim7Table2D11interpolant8gsinterpE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7Table2D7Table2DEPKdPKdPKdii11interpolant">
+<span id="_CPPv3N6galsim7Table2D7Table2DEPKdPKdPKdii11interpolant"></span><span id="_CPPv2N6galsim7Table2D7Table2DEPKdPKdPKdii11interpolant"></span><span id="galsim::Table2D::Table2D__doubleCP.doubleCP.doubleCP.i.i.interpolant"></span><span class="target" id="classgalsim_1_1_table2_d_1a3a9d5223680aadedec9d0c9e9f8df77e"></span><code class="sig-name descname"><span class="pre">Table2D</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">xargs</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">yargs</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">vals</span></em>, <span class="pre">int</span> <em><span class="pre">Nx</span></em>, <span class="pre">int</span> <em><span class="pre">Ny</span></em>, <a class="reference internal" href="#_CPPv4N6galsim7Table2D11interpolantE" title="galsim::Table2D::interpolant"><span class="pre">interpolant</span></a> <em><span class="pre">in</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Table2D7Table2DEPKdPKdPKdii11interpolant" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classgalsim_1_1_table"><span class="std std-ref">Table</span></a> from xargs, yargs, vals. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7Table2D7Table2DEPKdPKdPKdiiPKdPKdPKd">
+<span id="_CPPv3N6galsim7Table2D7Table2DEPKdPKdPKdiiPKdPKdPKd"></span><span id="_CPPv2N6galsim7Table2D7Table2DEPKdPKdPKdiiPKdPKdPKd"></span><span id="galsim::Table2D::Table2D__doubleCP.doubleCP.doubleCP.i.i.doubleCP.doubleCP.doubleCP"></span><span class="target" id="classgalsim_1_1_table2_d_1a0ad599d46697d5b381c75bf640bb89db"></span><code class="sig-name descname"><span class="pre">Table2D</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">xargs</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">yargs</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">vals</span></em>, <span class="pre">int</span> <em><span class="pre">Nx</span></em>, <span class="pre">int</span> <em><span class="pre">Ny</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">dfdx</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">dfdy</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">d2fdxdy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Table2D7Table2DEPKdPKdPKdiiPKdPKdPKd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim7Table2D7Table2DEPKdPKdPKdiiPK11Interpolant">
+<span id="_CPPv3N6galsim7Table2D7Table2DEPKdPKdPKdiiPK11Interpolant"></span><span id="_CPPv2N6galsim7Table2D7Table2DEPKdPKdPKdiiPK11Interpolant"></span><span id="galsim::Table2D::Table2D__doubleCP.doubleCP.doubleCP.i.i.InterpolantCP"></span><span class="target" id="classgalsim_1_1_table2_d_1ad91df402cb553d6a2b1a907649fd233d"></span><code class="sig-name descname"><span class="pre">Table2D</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">xargs</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">yargs</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">vals</span></em>, <span class="pre">int</span> <em><span class="pre">Nx</span></em>, <span class="pre">int</span> <em><span class="pre">Ny</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4N6galsim11InterpolantE" title="galsim::Interpolant"><span class="pre">Interpolant</span></a> <span class="pre">*</span><em><span class="pre">gsinterp</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim7Table2D7Table2DEPKdPKdPKdiiPK11Interpolant" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Table2D6lookupEdd">
+<span id="_CPPv3NK6galsim7Table2D6lookupEdd"></span><span id="_CPPv2NK6galsim7Table2D6lookupEdd"></span><span id="galsim::Table2D::lookup__double.doubleC"></span><span class="target" id="classgalsim_1_1_table2_d_1a16e770e7eff1ac69f186c434e74ba8d7"></span><span class="pre">double</span> <code class="sig-name descname"><span class="pre">lookup</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em>, <span class="pre">double</span> <em><span class="pre">y</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Table2D6lookupEdd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>interp </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Table2D10interpManyEPKdPKdPdi">
+<span id="_CPPv3NK6galsim7Table2D10interpManyEPKdPKdPdi"></span><span id="_CPPv2NK6galsim7Table2D10interpManyEPKdPKdPdi"></span><span id="galsim::Table2D::interpMany__doubleCP.doubleCP.doubleP.iC"></span><span class="target" id="classgalsim_1_1_table2_d_1a15cb4c544e87fbcd2863b5b2517bf4a1"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">interpMany</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">xvec</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">yvec</span></em>, <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">valvec</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Table2D10interpManyEPKdPKdPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>interp many values at once </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Table2D10interpGridEPKdPKdPdii">
+<span id="_CPPv3NK6galsim7Table2D10interpGridEPKdPKdPdii"></span><span id="_CPPv2NK6galsim7Table2D10interpGridEPKdPKdPdii"></span><span id="galsim::Table2D::interpGrid__doubleCP.doubleCP.doubleP.i.iC"></span><span class="target" id="classgalsim_1_1_table2_d_1a60c4d6fe37a6ad7e0bf89a3c4348a8e1"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">interpGrid</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">xvec</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">yvec</span></em>, <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">valvec</span></em>, <span class="pre">int</span> <em><span class="pre">Nx</span></em>, <span class="pre">int</span> <em><span class="pre">Ny</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Table2D10interpGridEPKdPKdPdii" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Table2D8gradientEddRdRd">
+<span id="_CPPv3NK6galsim7Table2D8gradientEddRdRd"></span><span id="_CPPv2NK6galsim7Table2D8gradientEddRdRd"></span><span id="galsim::Table2D::gradient__double.double.doubleR.doubleRC"></span><span class="target" id="classgalsim_1_1_table2_d_1a93b64e1f5c6c7c992c26a99c6c60ef6d"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">gradient</span></code><span class="sig-paren">(</span><span class="pre">double</span> <em><span class="pre">x</span></em>, <span class="pre">double</span> <em><span class="pre">y</span></em>, <span class="pre">double</span> <span class="pre">&amp;</span><em><span class="pre">dfdx</span></em>, <span class="pre">double</span> <span class="pre">&amp;</span><em><span class="pre">dfdy</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Table2D8gradientEddRdRd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Estimate df/dx, df/dy at a single location. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Table2D12gradientManyEPKdPKdPdPdi">
+<span id="_CPPv3NK6galsim7Table2D12gradientManyEPKdPKdPdPdi"></span><span id="_CPPv2NK6galsim7Table2D12gradientManyEPKdPKdPdPdi"></span><span id="galsim::Table2D::gradientMany__doubleCP.doubleCP.doubleP.doubleP.iC"></span><span class="target" id="classgalsim_1_1_table2_d_1ab3c90ce8bdf82587ca6a4a9c5a46e06e"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">gradientMany</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">xvec</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">yvec</span></em>, <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">dfdxvec</span></em>, <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">dfdyvec</span></em>, <span class="pre">int</span> <em><span class="pre">N</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Table2D12gradientManyEPKdPKdPdPdi" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Estimate many df/dx and df/dy values. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim7Table2D12gradientGridEPKdPKdPdPdii">
+<span id="_CPPv3NK6galsim7Table2D12gradientGridEPKdPKdPdPdii"></span><span id="_CPPv2NK6galsim7Table2D12gradientGridEPKdPKdPdPdii"></span><span id="galsim::Table2D::gradientGrid__doubleCP.doubleCP.doubleP.doubleP.i.iC"></span><span class="target" id="classgalsim_1_1_table2_d_1aeb44712fe8367816f81ac2c5f5f10ee2"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">gradientGrid</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">xvec</span></em>, <em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">yvec</span></em>, <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">dfdxvec</span></em>, <span class="pre">double</span> <span class="pre">*</span><em><span class="pre">dfdyvec</span></em>, <span class="pre">int</span> <em><span class="pre">Nx</span></em>, <span class="pre">int</span> <em><span class="pre">Ny</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim7Table2D12gradientGridEPKdPKdPdPdii" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cpp_photon.html" class="btn btn-neutral float-left" title="Photons and Sensor Effects" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cpp_hsm.html" class="btn btn-neutral float-right" title="HSM Implementation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

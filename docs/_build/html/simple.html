@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Profiles &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Point-spread functions" href="psf.html" />
+    <link rel="prev" title="The GSObject base class" href="gsobject.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gsobject.html">The GSObject base class</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Simple Profiles</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gaussian-profile">Gaussian Profile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pixel-profile">Pixel Profile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#box-profile">Box Profile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tophat-profile">TopHat Profile</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delta-function">Delta Function</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="psf.html">Point-spread functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gal.html">Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arbitrary.html">Aribtrary Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="phase_psf.html">Phase-screen PSFs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="real_gal.html">“Real” Galaxies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite.html">Composite Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transform.html">Transformed Profiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gsparams.html">The GSParams class</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="sb.html">Surface Brightness Profiles</a> &raquo;</li>
+      <li>Simple Profiles</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/simple.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="simple-profiles">
+<h1>Simple Profiles<a class="headerlink" href="#simple-profiles" title="Permalink to this headline">¶</a></h1>
+<p>We have a few profiles that are just simple shapes.</p>
+<div class="section" id="gaussian-profile">
+<h2>Gaussian Profile<a class="headerlink" href="#gaussian-profile" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="galsim.Gaussian">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Gaussian</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">half_light_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fwhm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gaussian.html#Gaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Gaussian" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing a 2D Gaussian surface brightness profile.</p>
+<p>The Gaussian surface brightness profile is characterized by two properties, its <code class="docutils literal notranslate"><span class="pre">flux</span></code>
+and the characteristic size <code class="docutils literal notranslate"><span class="pre">sigma</span></code> where the radial profile of the circular Gaussian
+drops off as</p>
+<div class="math notranslate nohighlight">
+\[I(r) \sim e^{-\frac{r^2}{2 \sigma^2}}\]</div>
+<p>A Gaussian can be initialized using one (and only one) of three possible size parameters:
+<code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>, or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code>.  Exactly one of these three is required.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sigma</strong> – The value of sigma of the profile.  Typically given in arcsec.
+[One of <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>, or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required.]</p></li>
+<li><p><strong>fwhm</strong> – The full-width-half-max of the profile.  Typically given in arcsec.
+[One of <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>, or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required.]</p></li>
+<li><p><strong>half_light_radius</strong> – The half-light radius of the profile.  Typically given in arcsec.
+[One of <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, <code class="docutils literal notranslate"><span class="pre">fwhm</span></code>, or <code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> is required.]</p></li>
+<li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Gaussian.fwhm">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">fwhm</span></code><a class="headerlink" href="#galsim.Gaussian.fwhm" title="Permalink to this definition">¶</a></dt>
+<dd><p>The FWHM of this Gaussian profile</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Gaussian.half_light_radius">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">half_light_radius</span></code><a class="headerlink" href="#galsim.Gaussian.half_light_radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The half-light radius of this Gaussian profile</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Gaussian.sigma">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">sigma</span></code><a class="headerlink" href="#galsim.Gaussian.sigma" title="Permalink to this definition">¶</a></dt>
+<dd><p>The sigma of this Gaussian profile</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Gaussian.withFlux">
+<code class="sig-name descname"><span class="pre">withFlux</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/gaussian.html#Gaussian.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Gaussian.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="pixel-profile">
+<h2>Pixel Profile<a class="headerlink" href="#pixel-profile" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="galsim.Pixel">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Pixel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Pixel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Pixel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.box.Box</span></code></p>
+<p>A class describing a pixel profile.  This is just a 2D square top-hat function.</p>
+<p>This class is typically used to represent a pixel response function.  It is used internally by
+the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> function, but there may be cases where the user would want to use
+this profile directly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scale</strong> – The linear scale size of the pixel.  Typically given in arcsec.</p></li>
+<li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile.  This should almost
+certainly be left at the default value of 1. [default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Pixel.scale">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">scale</span></code><a class="headerlink" href="#galsim.Pixel.scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>The linear scale size of the <a class="reference internal" href="#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Pixel.withFlux">
+<code class="sig-name descname"><span class="pre">withFlux</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Pixel.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Pixel.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="box-profile">
+<h2>Box Profile<a class="headerlink" href="#box-profile" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="galsim.Box">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Box</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">width</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing a box profile.  This is just a 2D top-hat function, where the
+width and height are allowed to be different.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> – The width of the Box.</p></li>
+<li><p><strong>height</strong> – The height of the Box.</p></li>
+<li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Box.height">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">height</span></code><a class="headerlink" href="#galsim.Box.height" title="Permalink to this definition">¶</a></dt>
+<dd><p>The height of the <a class="reference internal" href="#galsim.Box" title="galsim.Box"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Box</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Box.width">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">width</span></code><a class="headerlink" href="#galsim.Box.width" title="Permalink to this definition">¶</a></dt>
+<dd><p>The width of the <a class="reference internal" href="#galsim.Box" title="galsim.Box"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Box</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Box.withFlux">
+<code class="sig-name descname"><span class="pre">withFlux</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#Box.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Box.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="tophat-profile">
+<h2>TopHat Profile<a class="headerlink" href="#tophat-profile" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="galsim.TopHat">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">TopHat</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">radius</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#TopHat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TopHat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing a radial tophat profile.  This profile is a constant value within some
+radius, and zero outside this radius.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>radius</strong> – The radius of the TopHat, where the surface brightness drops to 0.</p></li>
+<li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.TopHat.radius">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">radius</span></code><a class="headerlink" href="#galsim.TopHat.radius" title="Permalink to this definition">¶</a></dt>
+<dd><p>The radius of the <a class="reference internal" href="#galsim.TopHat" title="galsim.TopHat"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TopHat</span></code></a> profile.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.TopHat.withFlux">
+<code class="sig-name descname"><span class="pre">withFlux</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/box.html#TopHat.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TopHat.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="delta-function">
+<h2>Delta Function<a class="headerlink" href="#delta-function" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="galsim.DeltaFunction">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">DeltaFunction</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/deltafunction.html#DeltaFunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DeltaFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.gsobject.GSObject</span></code></p>
+<p>A class describing a DeltaFunction surface brightness profile.</p>
+<p>The DeltaFunction surface brightness profile is characterized by a single property,
+its <code class="docutils literal notranslate"><span class="pre">flux</span></code>.</p>
+<p>A DeltaFunction can be initialized with a specified flux.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>flux</strong> – The flux (in photons/cm^2/s) of the profile. [default: 1]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.DeltaFunction.withFlux">
+<code class="sig-name descname"><span class="pre">withFlux</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flux</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/deltafunction.html#DeltaFunction.withFlux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.DeltaFunction.withFlux" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with a different flux.</p>
+<p>This function is equivalent to <code class="docutils literal notranslate"><span class="pre">obj.withScaledFlux(flux</span> <span class="pre">/</span> <span class="pre">obj.flux)</span></code>.</p>
+<p>It creates a new object that has the same profile as the original, but with the
+surface brightness at every location rescaled such that the total flux will be
+the given value.  Note that if <code class="docutils literal notranslate"><span class="pre">flux</span></code> is an <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>, the return value will be a
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a> with specified <a class="reference internal" href="sed.html#galsim.SED" title="galsim.SED"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SED</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>flux</strong> – The new flux for the object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the object with the new flux</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gsobject.html" class="btn btn-neutral float-left" title="The GSObject base class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="psf.html" class="btn btn-neutral float-right" title="Point-spread functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

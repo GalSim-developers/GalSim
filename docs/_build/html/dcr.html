@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Differential Chromatic Refraction &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Charge Deflection Model" href="cd.html" />
+    <link rel="prev" title="Zernike Functions" href="zernike.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpolant.html">Interpolants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fits.html">Interfacing with FITS Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html">Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html">Charge Deflection Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="utilities.html">Helper Functions and Classes</a> &raquo;</li>
+      <li>Differential Chromatic Refraction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/dcr.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="differential-chromatic-refraction">
+<h1>Differential Chromatic Refraction<a class="headerlink" href="#differential-chromatic-refraction" title="Permalink to this headline">¶</a></h1>
+<p>These utilities are used for our various classes and functions that implement differential
+chromatic refraction (DCR).</p>
+<dl class="py function">
+<dt id="galsim.dcr.air_refractive_index_minus_one">
+<code class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></code><code class="sig-name descname"><span class="pre">air_refractive_index_minus_one</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wave</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">69.328</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">293.15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H2O_pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.067</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#air_refractive_index_minus_one"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.air_refractive_index_minus_one" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the refractive index of air as function of wavelength.</p>
+<p>Uses the formulae given in Filippenko (1982), which appear to come from Edlen (1953),
+and Coleman, Bozman, and Meggers (1960).  The units of the original formula are non-SI,
+being mmHg for pressure (and water vapor pressure), and degrees C for temperature.  This
+function accepts SI units, however, and transforms them when plugging into the formula.</p>
+<p>The default values for temperature, pressure and water vapor pressure are expected to be
+appropriate for LSST at Cerro Pachon, Chile, but they are broadly reasonable for most
+observatories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wave</strong> – Wavelength array in nanometers</p></li>
+<li><p><strong>pressure</strong> – Air pressure in kiloPascals.</p></li>
+<li><p><strong>temperature</strong> – Temperature in Kelvins.</p></li>
+<li><p><strong>H2O_pressure</strong> – Water vapor pressure in kiloPascals.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the refractive index minus 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="galsim.dcr.get_refraction">
+<code class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></code><code class="sig-name descname"><span class="pre">get_refraction</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wave</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_angle</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#get_refraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.get_refraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the angle of refraction for a photon entering the atmosphere.</p>
+<p>Photons refract when transitioning from space, where the refractive index n = 1.0 exactly, to
+air, where the refractive index is slightly greater than 1.0.  This function computes the
+change in zenith angle for a photon with a given wavelength.  Output is a positive number of
+radians, even though the apparent zenith angle technically decreases due to this effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wave</strong> – Wavelength array in nanometers</p></li>
+<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments to pass to air_refractive_index() to override default
+pressure, temperature, and/or H2O_pressure.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the absolute value of change in zenith angle in radians.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="galsim.dcr.zenith_parallactic_angles">
+<code class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></code><code class="sig-name descname"><span class="pre">zenith_parallactic_angles</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith_coord</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">HA</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">latitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#zenith_parallactic_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.zenith_parallactic_angles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the zenith angle and parallactic angle of a celestial coordinate, given either
+the celestial coordinate of the zenith, or equivalently, the hour angle of the coordinate and
+the latitude of the observer.  This is useful for the function <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAtmosphere" title="galsim.ChromaticAtmosphere"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAtmosphere</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj_coord</strong> – A <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> object for which the zenith and parallactic
+angles will be computed.</p></li>
+<li><p><strong>zenith_coord</strong> – A <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> indicating the coordinates of the zenith.</p></li>
+<li><p><strong>HA</strong> – The hour angle (as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>) of the coordinate for which the
+zenith and parallactic angles will be computed.</p></li>
+<li><p><strong>latitude</strong> – The observer’s latitude, as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the tuple (zenith_angle, parallactic_angle), each of which is an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="galsim.dcr.parse_dcr_angles">
+<code class="sig-prename descclassname"><span class="pre">galsim.dcr.</span></code><code class="sig-name descname"><span class="pre">parse_dcr_angles</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/dcr.html#parse_dcr_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.dcr.parse_dcr_angles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse the various options for specifying the zenith angle and parallactic angle
+in <a class="reference internal" href="chromaticobject.html#galsim.ChromaticAtmosphere" title="galsim.ChromaticAtmosphere"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticAtmosphere</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>zenith_angle</strong> – <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> from object to zenith [default: 0]</p></li>
+<li><p><strong>parallactic_angle</strong> – Parallactic angle, i.e. the position angle of the zenith, measured
+from North through East.  [default: 0]</p></li>
+<li><p><strong>obj_coord</strong> – Celestial coordinates of the object being drawn as a
+<a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>. [default: None]</p></li>
+<li><p><strong>zenith_coord</strong> – Celestial coordinates of the zenith as a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a>.
+[default: None]</p></li>
+<li><p><strong>HA</strong> – Hour angle of the object as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>latitude</strong> – Latitude of the observer as an <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a>. [default: None]</p></li>
+<li><p><strong>**kwargs</strong> – For convenience, any other kwargs are returned back for further
+processing.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>zenith_angle, parallactic_angle, kw, where kw is any other kwargs that aren’t relevant.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="zernike.html" class="btn btn-neutral float-left" title="Zernike Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cd.html" class="btn btn-neutral float-right" title="Charge Deflection Model" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

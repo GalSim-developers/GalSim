@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Positions and Bounds &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Noise-related Functionality" href="cpp_noise.html" />
+    <link rel="prev" title="C++ Surface Brightness Profiles" href="cpp_sb.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="cpp.html">C++ Layer</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="cpp_image.html">C++ Images</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_sb.html">C++ Surface Brightness Profiles</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Positions and Bounds</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_noise.html">Noise-related Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_photon.html">Photons and Sensor Effects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_interp.html">Interpolation Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_hsm.html">HSM Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp_math.html">Math</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#linking-your-code">Linking Your Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cpp.html#version-control">Version control</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="cpp.html">C++ Layer</a> &raquo;</li>
+      <li>Positions and Bounds</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/cpp_bounds.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="positions-and-bounds">
+<h1>Positions and Bounds<a class="headerlink" href="#positions-and-bounds" title="Permalink to this headline">¶</a></h1>
+<dl class="cpp class">
+<dt id="_CPPv4I0EN6galsim8PositionE">
+<span id="_CPPv3I0EN6galsim8PositionE"></span><span id="_CPPv2I0EN6galsim8PositionE"></span><span class="pre">template&lt;</span><span class="pre">class</span> <code class="sig-name descname"><span class="pre">T</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_position"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Position</span></code><a class="headerlink" href="#_CPPv4I0EN6galsim8PositionE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Class for storing 2d position vectors in an (x, y) format. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim8Position8PositionEv">
+<span id="_CPPv3N6galsim8Position8PositionEv"></span><span id="_CPPv2N6galsim8Position8PositionEv"></span><span id="galsim::Position::Position"></span><span class="target" id="classgalsim_1_1_position_1ac5a94ab8c07be8f487f66e100fa40383"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Position</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8Position8PositionEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Default Constructor = (0,0) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim8Position8PositionEK1TK1T">
+<span id="_CPPv3N6galsim8Position8PositionEK1TK1T"></span><span id="_CPPv2N6galsim8Position8PositionEK1TK1T"></span><span id="galsim::Position::Position__TC.TC"></span><span class="target" id="classgalsim_1_1_position_1a927f42664bbcbc51a563d86780f548e9"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Position</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <em><span class="pre">xin</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <em><span class="pre">yin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8Position8PositionEK1TK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim8Position8PositionERK8PositionI1TE">
+<span id="_CPPv3N6galsim8Position8PositionERK8PositionI1TE"></span><span id="_CPPv2N6galsim8Position8PositionERK8PositionI1TE"></span><span id="galsim::Position::Position__Position:T:CR"></span><span class="target" id="classgalsim_1_1_position_1a4a78916d24bf9db846f37acaa9a756a5"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Position</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4N6galsim8Position8PositionERK8PositionI1TE" title="galsim::Position::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8Position8PositionERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Copy Constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0EN6galsim8Position8PositionERK8PositionI2T2E">
+<span id="_CPPv3I0EN6galsim8Position8PositionERK8PositionI2T2E"></span><span id="_CPPv2I0EN6galsim8Position8PositionERK8PositionI2T2E"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T2</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_position_1a6e18b092a04654da39f8d0ff84b299da"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Position</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8Position8PositionERK8PositionI2T2E" title="galsim::Position::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8Position8PositionERK8PositionI2T2E" title="galsim::Position::Position::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim8Position8PositionERK8PositionI2T2E" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim8PositionaSERK8PositionI1TE">
+<span id="_CPPv3N6galsim8PositionaSERK8PositionI1TE"></span><span id="_CPPv2N6galsim8PositionaSERK8PositionI1TE"></span><span id="galsim::Position::assign-operator__Position:T:CR"></span><span class="target" id="classgalsim_1_1_position_1ae6ccc0a30e4933df215b1ed67a3c0e09"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">operator=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8PositionaSERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Assignment. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0EN6galsim8PositionaSER8PositionRK8PositionI2T2E">
+<span id="_CPPv3I0EN6galsim8PositionaSERK8PositionI2T2E"></span><span id="_CPPv2I0EN6galsim8PositionaSERK8PositionI2T2E"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T2</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_position_1a11dda1de759cbc5f620d8a25b3025a57"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">operator=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionaSER8PositionRK8PositionI2T2E" title="galsim::Position::operator=::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim8PositionaSER8PositionRK8PositionI2T2E" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0EN6galsim8PositionpLER8PositionIN13SelfPromotionI1T2T2E4typeEERK8PositionI2T2E">
+<span id="_CPPv3I0EN6galsim8PositionpLERK8PositionI2T2E"></span><span id="_CPPv2I0EN6galsim8PositionpLERK8PositionI2T2E"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T2</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_position_1adab81019b571ad40d6e219342770c8fd"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><em class="property"><span class="pre">typename</span></em> <span class="pre">SelfPromotion</span><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">,</span> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionpLER8PositionIN13SelfPromotionI1T2T2E4typeEERK8PositionI2T2E" title="galsim::Position::operator+=::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span><span class="pre">::</span><span class="pre">type</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">operator+=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionpLER8PositionIN13SelfPromotionI1T2T2E4typeEERK8PositionI2T2E" title="galsim::Position::operator+=::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim8PositionpLER8PositionIN13SelfPromotionI1T2T2E4typeEERK8PositionI2T2E" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded += operator, following standard vector algebra rules. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0EN6galsim8PositionmIER8PositionIN13SelfPromotionI1T2T2E4typeEERK8PositionI2T2E">
+<span id="_CPPv3I0EN6galsim8PositionmIERK8PositionI2T2E"></span><span id="_CPPv2I0EN6galsim8PositionmIERK8PositionI2T2E"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T2</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_position_1a4e4cadf53a2bf2ef1cf7e474ee4916f1"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><em class="property"><span class="pre">typename</span></em> <span class="pre">SelfPromotion</span><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">,</span> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionmIER8PositionIN13SelfPromotionI1T2T2E4typeEERK8PositionI2T2E" title="galsim::Position::operator-=::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span><span class="pre">::</span><span class="pre">type</span><span class="pre">&gt;</span> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">operator-=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionmIER8PositionIN13SelfPromotionI1T2T2E4typeEERK8PositionI2T2E" title="galsim::Position::operator-=::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN6galsim8PositionmIER8PositionIN13SelfPromotionI1T2T2E4typeEERK8PositionI2T2E" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded -= operator, following standard vector algebra rules. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim8PositionmLEK1T">
+<span id="_CPPv3N6galsim8PositionmLEK1T"></span><span id="_CPPv2N6galsim8PositionmLEK1T"></span><span id="galsim::Position::mul-assign-operator__TC"></span><span class="target" id="classgalsim_1_1_position_1ab3aa51cb50dea98c8560f0b36b212165"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">operator*=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8PositionmLEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded *= operator for scalar multiplication. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim8PositiondVEK1T">
+<span id="_CPPv3N6galsim8PositiondVEK1T"></span><span id="_CPPv2N6galsim8PositiondVEK1T"></span><span id="galsim::Position::div-assign-operator__TC"></span><span class="target" id="classgalsim_1_1_position_1a02133ff25b3ed1407189b5d52ff27f7f"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><code class="sig-name descname"><span class="pre">operator/=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8PositiondVEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded /= operator for scalar division. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim8PositionmlEK1T">
+<span id="_CPPv3NK6galsim8PositionmlEK1T"></span><span id="_CPPv2NK6galsim8PositionmlEK1T"></span><span id="galsim::Position::mul-operator__TCC"></span><span class="target" id="classgalsim_1_1_position_1a080542e55713f7289f7554947e4b8dd5"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator*</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim8PositionmlEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded * operator for scalar on rhs. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim8PositiondvEK1T">
+<span id="_CPPv3NK6galsim8PositiondvEK1T"></span><span id="_CPPv2NK6galsim8PositiondvEK1T"></span><span id="galsim::Position::div-operator__TCC"></span><span class="target" id="classgalsim_1_1_position_1a0bd2305dacb2a66f58befe5742a9b6e1"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator/</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim8PositiondvEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded / operator for scalar on rhs. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim8PositionmiEv">
+<span id="_CPPv3NK6galsim8PositionmiEv"></span><span id="_CPPv2NK6galsim8PositionmiEv"></span><span id="galsim::Position::sub-operatorC"></span><span class="target" id="classgalsim_1_1_position_1a4da03471a38fe09ecc3fb7b0b60490f5"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator-</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim8PositionmiEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Unary negation (x, y) -&gt; (-x, -y). </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0ENK6galsim8PositionplE8PositionIN9PromotionI1T2T2E4typeEERK8PositionI2T2E">
+<span id="_CPPv3I0ENK6galsim8PositionplERK8PositionI2T2E"></span><span id="_CPPv2I0ENK6galsim8PositionplERK8PositionI2T2E"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T2</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_position_1a708e36b4676ceaaa7c96e5779ea94ac2"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><em class="property"><span class="pre">typename</span></em> <span class="pre">Promotion</span><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">,</span> <a class="reference internal" href="#_CPPv4I0ENK6galsim8PositionplE8PositionIN9PromotionI1T2T2E4typeEERK8PositionI2T2E" title="galsim::Position::operator+::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span><span class="pre">::</span><span class="pre">type</span><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator+</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0ENK6galsim8PositionplE8PositionIN9PromotionI1T2T2E4typeEERK8PositionI2T2E" title="galsim::Position::operator+::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4I0ENK6galsim8PositionplE8PositionIN9PromotionI1T2T2E4typeEERK8PositionI2T2E" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded vector + addition operator with a <a class="reference internal" href="#classgalsim_1_1_position"><span class="std std-ref">Position</span></a> on the rhs. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0ENK6galsim8PositionmiE8PositionIN9PromotionI1T2T2E4typeEERK8PositionI2T2E">
+<span id="_CPPv3I0ENK6galsim8PositionmiERK8PositionI2T2E"></span><span id="_CPPv2I0ENK6galsim8PositionmiERK8PositionI2T2E"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T2</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_position_1a2b8c0a7bc5981b8ae7455eff227d3426"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><em class="property"><span class="pre">typename</span></em> <span class="pre">Promotion</span><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">,</span> <a class="reference internal" href="#_CPPv4I0ENK6galsim8PositionmiE8PositionIN9PromotionI1T2T2E4typeEERK8PositionI2T2E" title="galsim::Position::operator-::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span><span class="pre">::</span><span class="pre">type</span><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator-</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0ENK6galsim8PositionmiE8PositionIN9PromotionI1T2T2E4typeEERK8PositionI2T2E" title="galsim::Position::operator-::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4I0ENK6galsim8PositionmiE8PositionIN9PromotionI1T2T2E4typeEERK8PositionI2T2E" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded vector - subtraction operator with a <a class="reference internal" href="#classgalsim_1_1_position"><span class="std std-ref">Position</span></a> on the rhs. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim8PositioneqERK8PositionI1TE">
+<span id="_CPPv3NK6galsim8PositioneqERK8PositionI1TE"></span><span id="_CPPv2NK6galsim8PositioneqERK8PositionI1TE"></span><span id="galsim::Position::eq-operator__Position:T:CRC"></span><span class="target" id="classgalsim_1_1_position_1a8ad208a48b77fbb0f55fafa60379e801"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">operator==</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim8PositioneqERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded == relational equality operator. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim8PositionneERK8PositionI1TE">
+<span id="_CPPv3NK6galsim8PositionneERK8PositionI1TE"></span><span id="_CPPv2NK6galsim8PositionneERK8PositionI1TE"></span><span id="galsim::Position::neq-operator__Position:T:CRC"></span><span class="target" id="classgalsim_1_1_position_1a1afade24790e3e02beccb62883753b92"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">operator!=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim8PositionneERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Overloaded != relational non-equality operator. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim8Position5writeERNSt7ostreamE">
+<span id="_CPPv3NK6galsim8Position5writeERNSt7ostreamE"></span><span id="_CPPv2NK6galsim8Position5writeERNSt7ostreamE"></span><span id="galsim::Position::write__osRC"></span><span class="target" id="classgalsim_1_1_position_1a8a8a6e46a675d4353847cc7cb01368de"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">write</span></code><span class="sig-paren">(</span><span class="pre">std</span><span class="pre">::</span><span class="pre">ostream</span> <span class="pre">&amp;</span><em><span class="pre">fout</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim8Position5writeERNSt7ostreamE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Write (x, y) position to output stream. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim8Position4readERNSt7istreamE">
+<span id="_CPPv3N6galsim8Position4readERNSt7istreamE"></span><span id="_CPPv2N6galsim8Position4readERNSt7istreamE"></span><span id="galsim::Position::read__isR"></span><span class="target" id="classgalsim_1_1_position_1a0a3973e0bd944085589b2ace7f8d342d"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">read</span></code><span class="sig-paren">(</span><span class="pre">std</span><span class="pre">::</span><span class="pre">istream</span> <span class="pre">&amp;</span><em><span class="pre">fin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8Position4readERNSt7istreamE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Read (x, y) position from input istream. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt id="_CPPv4N6galsim8Position1xE">
+<span id="_CPPv3N6galsim8Position1xE"></span><span id="_CPPv2N6galsim8Position1xE"></span><span id="galsim::Position::x__T"></span><span class="target" id="classgalsim_1_1_position_1a72119dac27085a678d8e05c2dfc2cd53"></span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <code class="sig-name descname"><span class="pre">x</span></code><a class="headerlink" href="#_CPPv4N6galsim8Position1xE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Publicly visible x &amp; y attributes of the position. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt id="_CPPv4N6galsim8Position1yE">
+<span id="_CPPv3N6galsim8Position1yE"></span><span id="_CPPv2N6galsim8Position1yE"></span><span id="galsim::Position::y__T"></span><span class="target" id="classgalsim_1_1_position_1a8ed148d357d3c824eefcf759f561f096"></span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <code class="sig-name descname"><span class="pre">y</span></code><a class="headerlink" href="#_CPPv4N6galsim8Position1yE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-friends">Friends</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim8PositionmlEK1TRK8PositionI1TE">
+<span id="_CPPv3N6galsim8PositionmlEK1TRK8PositionI1TE"></span><span id="_CPPv2N6galsim8PositionmlEK1TRK8PositionI1TE"></span><span id="galsim::Position::mul-operator__TC.Position:T:CR"></span><span class="target" id="classgalsim_1_1_position_1aeb2cd425bc9908772a8f4b3d2c640919"></span><em class="property"><span class="pre">inline</span></em> <em class="property"><span class="pre">friend</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator*</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a> <em><span class="pre">lhs</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim8PositionmlEK1TRK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Allow T * <a class="reference internal" href="#classgalsim_1_1_position"><span class="std std-ref">Position</span></a> as well. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt id="_CPPv4I0EN6galsim6BoundsE">
+<span id="_CPPv3I0EN6galsim6BoundsE"></span><span id="_CPPv2I0EN6galsim6BoundsE"></span><span class="pre">template&lt;</span><span class="pre">class</span> <code class="sig-name descname"><span class="pre">T</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_bounds"></span><em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim</span><code class="sig-prename descclassname"><span class="pre">::</span></code></code><code class="sig-name descname"><span class="pre">Bounds</span></code><a class="headerlink" href="#_CPPv4I0EN6galsim6BoundsE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Class for storing image bounds, essentially the vertices of a rectangle. </p>
+<p>This is used to keep track of the bounds of catalogs and fields. You can set values, but generally you just keep including positions of each galaxy or the bounds of each catalog respectively using the += operators.</p>
+<p>The bounds are stored as four numbers in each instance, (xmin, ymin, xmax, ymax), with an additional boolean switch to say whether or not the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle has been defined.</p>
+<p>Rectangle is undefined if min&gt;max in either direction. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds6BoundsEK1TK1TK1TK1T">
+<span id="_CPPv3N6galsim6Bounds6BoundsEK1TK1TK1TK1T"></span><span id="_CPPv2N6galsim6Bounds6BoundsEK1TK1TK1TK1T"></span><span id="galsim::Bounds::Bounds__TC.TC.TC.TC"></span><span class="target" id="classgalsim_1_1_bounds_1a613daa4693589f3a127850dc41999755"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Bounds</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">x1</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">x2</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">y1</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">y2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds6BoundsEK1TK1TK1TK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor using four scalar positions (xmin, xmax, ymin, ymax). </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds6BoundsERK8PositionI1TE">
+<span id="_CPPv3N6galsim6Bounds6BoundsERK8PositionI1TE"></span><span id="_CPPv2N6galsim6Bounds6BoundsERK8PositionI1TE"></span><span id="galsim::Bounds::Bounds__Position:T:CR"></span><span class="target" id="classgalsim_1_1_bounds_1a2abf14b466a899ea8fd0bee23ead2d6a"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Bounds</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">pos</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds6BoundsERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor using a single <a class="reference internal" href="#classgalsim_1_1_position"><span class="std std-ref">Position</span></a> vector x/ymin = x/ymax. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds6BoundsERK8PositionI1TERK8PositionI1TE">
+<span id="_CPPv3N6galsim6Bounds6BoundsERK8PositionI1TERK8PositionI1TE"></span><span id="_CPPv2N6galsim6Bounds6BoundsERK8PositionI1TERK8PositionI1TE"></span><span id="galsim::Bounds::Bounds__Position:T:CR.Position:T:CR"></span><span class="target" id="classgalsim_1_1_bounds_1a4f3e34f5c5a7ddc4efded9c5db5ea739"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Bounds</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">pos1</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">pos2</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds6BoundsERK8PositionI1TERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor using two Positions, first for x/ymin, second for x/ymax. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds6BoundsEv">
+<span id="_CPPv3N6galsim6Bounds6BoundsEv"></span><span id="_CPPv2N6galsim6Bounds6BoundsEv"></span><span id="galsim::Bounds::Bounds"></span><span class="target" id="classgalsim_1_1_bounds_1ab4dc60f2d657147b2d1dcf201a2453b4"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">Bounds</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds6BoundsEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Constructor for empty <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a>, .<a class="reference internal" href="#classgalsim_1_1_bounds_1aa91a609321672bd84c9b18d991297b0b"><span class="std std-ref">isDefined()</span></a> method will return false. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6BoundsD0Ev">
+<span id="_CPPv3N6galsim6BoundsD0Ev"></span><span id="_CPPv2N6galsim6BoundsD0Ev"></span><span id="galsim::Bounds::~Bounds"></span><span class="target" id="classgalsim_1_1_bounds_1ab6db50d88e421d0b04e851f1cedbc4d2"></span><em class="property"><span class="pre">inline</span></em> <code class="sig-name descname"><span class="pre">~Bounds</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6BoundsD0Ev" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Destructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds4copyEv">
+<span id="_CPPv3NK6galsim6Bounds4copyEv"></span><span id="_CPPv2NK6galsim6Bounds4copyEv"></span><span id="galsim::Bounds::copyC"></span><span class="target" id="classgalsim_1_1_bounds_1a0b04fbb5fcbd73a5c7b020825c485efa"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">copy</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds4copyEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Make a copy of this <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds7setXMinEK1T">
+<span id="_CPPv3N6galsim6Bounds7setXMinEK1T"></span><span id="_CPPv2N6galsim6Bounds7setXMinEK1T"></span><span id="galsim::Bounds::setXMin__TC"></span><span class="target" id="classgalsim_1_1_bounds_1ae037006b9d974170231f14c13b916ebe"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setXMin</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds7setXMinEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the xmin of the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds7setXMaxEK1T">
+<span id="_CPPv3N6galsim6Bounds7setXMaxEK1T"></span><span id="_CPPv2N6galsim6Bounds7setXMaxEK1T"></span><span id="galsim::Bounds::setXMax__TC"></span><span class="target" id="classgalsim_1_1_bounds_1a87f3416557ae7b12046d275ea2bf976b"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setXMax</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">x</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds7setXMaxEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the xmax of the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds7setYMinEK1T">
+<span id="_CPPv3N6galsim6Bounds7setYMinEK1T"></span><span id="_CPPv2N6galsim6Bounds7setYMinEK1T"></span><span id="galsim::Bounds::setYMin__TC"></span><span class="target" id="classgalsim_1_1_bounds_1a390ac6b24dffc68f51431bcad3841168"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setYMin</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds7setYMinEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the ymin of the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds7setYMaxEK1T">
+<span id="_CPPv3N6galsim6Bounds7setYMaxEK1T"></span><span id="_CPPv2N6galsim6Bounds7setYMaxEK1T"></span><span id="galsim::Bounds::setYMax__TC"></span><span class="target" id="classgalsim_1_1_bounds_1a860730fbe0de5b145a6a9c0f9a01b867"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">setYMax</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds7setYMaxEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Set the ymax of the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds7getXMinEv">
+<span id="_CPPv3NK6galsim6Bounds7getXMinEv"></span><span id="_CPPv2NK6galsim6Bounds7getXMinEv"></span><span id="galsim::Bounds::getXMinC"></span><span class="target" id="classgalsim_1_1_bounds_1a409070eafebe40db658c8a42ea9196d7"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <code class="sig-name descname"><span class="pre">getXMin</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds7getXMinEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the xmin of the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds7getXMaxEv">
+<span id="_CPPv3NK6galsim6Bounds7getXMaxEv"></span><span id="_CPPv2NK6galsim6Bounds7getXMaxEv"></span><span id="galsim::Bounds::getXMaxC"></span><span class="target" id="classgalsim_1_1_bounds_1a948c43b820af9e0267b8e38898f2eb6a"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <code class="sig-name descname"><span class="pre">getXMax</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds7getXMaxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the xmax of the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds7getYMinEv">
+<span id="_CPPv3NK6galsim6Bounds7getYMinEv"></span><span id="_CPPv2NK6galsim6Bounds7getYMinEv"></span><span id="galsim::Bounds::getYMinC"></span><span class="target" id="classgalsim_1_1_bounds_1a503e4ab9bb76bf31d0561f9349092caa"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <code class="sig-name descname"><span class="pre">getYMin</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds7getYMinEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the ymin of the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds7getYMaxEv">
+<span id="_CPPv3NK6galsim6Bounds7getYMaxEv"></span><span id="_CPPv2NK6galsim6Bounds7getYMaxEv"></span><span id="galsim::Bounds::getYMaxC"></span><span class="target" id="classgalsim_1_1_bounds_1a7faa090727121bcdf9e1de86573965c5"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <code class="sig-name descname"><span class="pre">getYMax</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds7getYMaxEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Get the ymax of the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds9isDefinedEv">
+<span id="_CPPv3NK6galsim6Bounds9isDefinedEv"></span><span id="_CPPv2NK6galsim6Bounds9isDefinedEv"></span><span id="galsim::Bounds::isDefinedC"></span><span class="target" id="classgalsim_1_1_bounds_1aa91a609321672bd84c9b18d991297b0b"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">isDefined</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds9isDefinedEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Query whether the <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> rectangle is defined. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds6originEv">
+<span id="_CPPv3NK6galsim6Bounds6originEv"></span><span id="_CPPv2NK6galsim6Bounds6originEv"></span><span id="galsim::Bounds::originC"></span><span class="target" id="classgalsim_1_1_bounds_1ae7e30ee280dd6ec698d4dfa1347599d6"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">origin</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds6originEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the origin of the image (xmin, ymin) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds6centerEv">
+<span id="_CPPv3NK6galsim6Bounds6centerEv"></span><span id="_CPPv2NK6galsim6Bounds6centerEv"></span><span id="galsim::Bounds::centerC"></span><span class="target" id="classgalsim_1_1_bounds_1a3ea51308b4e264a611665f3238944fa6"></span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">center</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds6centerEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the nominal center of the image. </p>
+<p>This is the position of the pixel that is considered to be (0,0) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds10trueCenterEv">
+<span id="_CPPv3NK6galsim6Bounds10trueCenterEv"></span><span id="_CPPv2NK6galsim6Bounds10trueCenterEv"></span><span id="galsim::Bounds::trueCenterC"></span><span class="target" id="classgalsim_1_1_bounds_1a7fe607833620a6c82e714f8756cb3f0a"></span><a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><span class="pre">double</span><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">trueCenter</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds10trueCenterEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the true center of the image. </p>
+<p>For even-sized, integer bounds, this will not be an integer, since the center in that case falls between two pixels. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6BoundspLERK8PositionI1TE">
+<span id="_CPPv3N6galsim6BoundspLERK8PositionI1TE"></span><span id="_CPPv2N6galsim6BoundspLERK8PositionI1TE"></span><span id="galsim::Bounds::add-assign-operator__Position:T:CR"></span><span class="target" id="classgalsim_1_1_bounds_1a284d1e1a8070425a8cf064e737b2e72a"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">operator+=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">pos</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6BoundspLERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>expand bounds to include this point </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6BoundsplERK8PositionI1TE">
+<span id="_CPPv3NK6galsim6BoundsplERK8PositionI1TE"></span><span id="_CPPv2NK6galsim6BoundsplERK8PositionI1TE"></span><span id="galsim::Bounds::add-operator__Position:T:CRC"></span><span class="target" id="classgalsim_1_1_bounds_1af51ee62f3a08c0e4c1c3c593f892b4a9"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator+</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">pos</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6BoundsplERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6BoundspLERK6BoundsI1TE">
+<span id="_CPPv3N6galsim6BoundspLERK6BoundsI1TE"></span><span id="_CPPv2N6galsim6BoundspLERK6BoundsI1TE"></span><span id="galsim::Bounds::add-assign-operator__Bounds:T:CR"></span><span class="target" id="classgalsim_1_1_bounds_1a0714ae4bfef1f74cbe1db81852b70422"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">operator+=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6BoundspLERK6BoundsI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>expand bounds to include these bounds </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6BoundsplERK6BoundsI1TE">
+<span id="_CPPv3NK6galsim6BoundsplERK6BoundsI1TE"></span><span id="_CPPv2NK6galsim6BoundsplERK6BoundsI1TE"></span><span id="galsim::Bounds::add-operator__Bounds:T:CRC"></span><span class="target" id="classgalsim_1_1_bounds_1ab28395f95d8d922b2ea9190cff06da08"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator+</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rec</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6BoundsplERK6BoundsI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds9addBorderEK1T">
+<span id="_CPPv3N6galsim6Bounds9addBorderEK1T"></span><span id="_CPPv2N6galsim6Bounds9addBorderEK1T"></span><span id="galsim::Bounds::addBorder__TC"></span><span class="target" id="classgalsim_1_1_bounds_1a6b2643e69e48b7e8c05e50f2f513474e"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">addBorder</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">d</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds9addBorderEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>add a border of size d around existing bounds </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6BoundspLEK1T">
+<span id="_CPPv3N6galsim6BoundspLEK1T"></span><span id="_CPPv2N6galsim6BoundspLEK1T"></span><span id="galsim::Bounds::add-assign-operator__TC"></span><span class="target" id="classgalsim_1_1_bounds_1a0c09dc33707561a514c4169bf9967a76"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">operator+=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">d</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6BoundspLEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds10withBorderEK1T">
+<span id="_CPPv3NK6galsim6Bounds10withBorderEK1T"></span><span id="_CPPv2NK6galsim6Bounds10withBorderEK1T"></span><span id="galsim::Bounds::withBorder__TCC"></span><span class="target" id="classgalsim_1_1_bounds_1ab40f3282ae0e5d57bf49cd8e92c25f34"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">withBorder</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">d</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds10withBorderEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6BoundsplEK1T">
+<span id="_CPPv3NK6galsim6BoundsplEK1T"></span><span id="_CPPv2NK6galsim6BoundsplEK1T"></span><span id="galsim::Bounds::add-operator__TCC"></span><span class="target" id="classgalsim_1_1_bounds_1a72efc5b6c35754445470faf67e0964d1"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator+</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">d</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6BoundsplEK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds6expandEKd">
+<span id="_CPPv3N6galsim6Bounds6expandEKd"></span><span id="_CPPv2N6galsim6Bounds6expandEKd"></span><span id="galsim::Bounds::expand__doubleC"></span><span class="target" id="classgalsim_1_1_bounds_1a491239e823fc257356a6b1481eb2b7eb"></span><span class="pre">void</span> <code class="sig-name descname"><span class="pre">expand</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <em><span class="pre">m</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds6expandEKd" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>expand bounds by a factor m around the current center. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds12makeExpandedEKd">
+<span id="_CPPv3NK6galsim6Bounds12makeExpandedEKd"></span><span id="_CPPv2NK6galsim6Bounds12makeExpandedEKd"></span><span id="galsim::Bounds::makeExpanded__doubleCC"></span><span class="target" id="classgalsim_1_1_bounds_1ad0d32c69e773f4b8f05148c6144622f7"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">makeExpanded</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <span class="pre">double</span> <em><span class="pre">m</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds12makeExpandedEKd" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6BoundsanERK6BoundsI1TE">
+<span id="_CPPv3NK6galsim6BoundsanERK6BoundsI1TE"></span><span id="_CPPv2NK6galsim6BoundsanERK6BoundsI1TE"></span><span id="galsim::Bounds::and-operator__Bounds:T:CRC"></span><span class="target" id="classgalsim_1_1_bounds_1a8dc606e81cae54efa207f955eaa29cfa"></span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">operator&amp;</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6BoundsanERK6BoundsI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>find the intersection of two bounds </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds5shiftEK1TK1T">
+<span id="_CPPv3N6galsim6Bounds5shiftEK1TK1T"></span><span id="_CPPv2N6galsim6Bounds5shiftEK1TK1T"></span><span id="galsim::Bounds::shift__TC.TC"></span><span class="target" id="classgalsim_1_1_bounds_1adde9c54a2681c66f9f8ed80e0679f5c6"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">shift</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">dx</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">dy</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds5shiftEK1TK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>shift the bounding box by some amount. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds5shiftERK8PositionI1TE">
+<span id="_CPPv3N6galsim6Bounds5shiftERK8PositionI1TE"></span><span id="_CPPv2N6galsim6Bounds5shiftERK8PositionI1TE"></span><span id="galsim::Bounds::shift__Position:T:CR"></span><span class="target" id="classgalsim_1_1_bounds_1a5b2586c3e0e16d853edb43cfda4ded39"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">shift</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">delta</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds5shiftERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds11makeShiftedEK1TK1T">
+<span id="_CPPv3NK6galsim6Bounds11makeShiftedEK1TK1T"></span><span id="_CPPv2NK6galsim6Bounds11makeShiftedEK1TK1T"></span><span id="galsim::Bounds::makeShifted__TC.TCC"></span><span class="target" id="classgalsim_1_1_bounds_1ab3d582986e16585fbdc73250022dd054"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">makeShifted</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">dx</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <em><span class="pre">dy</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds11makeShiftedEK1TK1T" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds11makeShiftedERK8PositionI1TE">
+<span id="_CPPv3NK6galsim6Bounds11makeShiftedERK8PositionI1TE"></span><span id="_CPPv2NK6galsim6Bounds11makeShiftedERK8PositionI1TE"></span><span id="galsim::Bounds::makeShifted__Position:T:CRC"></span><span class="target" id="classgalsim_1_1_bounds_1ad2db27380e61c9f31c345f1367257e95"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">makeShifted</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">delta</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds11makeShiftedERK8PositionI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0ENK6galsim6Bounds8includesEbRK8PositionI2T2E">
+<span id="_CPPv3I0ENK6galsim6Bounds8includesERK8PositionI2T2E"></span><span id="_CPPv2I0ENK6galsim6Bounds8includesERK8PositionI2T2E"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T2</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_bounds_1ad7a9368d48ff6d7ec1fa28bb9f416462"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">includes</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim8PositionE" title="galsim::Position"><span class="pre">Position</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0ENK6galsim6Bounds8includesEbRK8PositionI2T2E" title="galsim::Bounds::includes::T2"><span class="pre">T2</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">pos</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4I0ENK6galsim6Bounds8includesEbRK8PositionI2T2E" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>return whether the bounded region includes a given point </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4I0ENK6galsim6Bounds8includesEbK2T2K2T2">
+<span id="_CPPv3I0ENK6galsim6Bounds8includesEK2T2K2T2"></span><span id="_CPPv2I0ENK6galsim6Bounds8includesEK2T2K2T2"></span><span class="pre">template&lt;</span><span class="pre">typename</span> <code class="sig-name descname"><span class="pre">T2</span></code><span class="pre">&gt;</span><br /><span class="target" id="classgalsim_1_1_bounds_1ac636f7b2e5ec1ed8ba39f566f21a599e"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">includes</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0ENK6galsim6Bounds8includesEbK2T2K2T2" title="galsim::Bounds::includes::T2"><span class="pre">T2</span></a> <em><span class="pre">x</span></em>, <em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0ENK6galsim6Bounds8includesEbK2T2K2T2" title="galsim::Bounds::includes::T2"><span class="pre">T2</span></a> <em><span class="pre">y</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4I0ENK6galsim6Bounds8includesEbK2T2K2T2" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds8includesERK6BoundsI1TE">
+<span id="_CPPv3NK6galsim6Bounds8includesERK6BoundsI1TE"></span><span id="_CPPv2NK6galsim6Bounds8includesERK6BoundsI1TE"></span><span id="galsim::Bounds::includes__Bounds:T:CRC"></span><span class="target" id="classgalsim_1_1_bounds_1a9febfb8825f755d35599e2ffe161668c"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">includes</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds8includesERK6BoundsI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>return whether the bounded region includes all of the given bounds </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6BoundseqERK6BoundsI1TE">
+<span id="_CPPv3NK6galsim6BoundseqERK6BoundsI1TE"></span><span id="_CPPv2NK6galsim6BoundseqERK6BoundsI1TE"></span><span id="galsim::Bounds::eq-operator__Bounds:T:CRC"></span><span class="target" id="classgalsim_1_1_bounds_1a2dc18e7978ce71cbcac7151f2ba72516"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">operator==</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6BoundseqERK6BoundsI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>check equality of two bounds </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6BoundsneERK6BoundsI1TE">
+<span id="_CPPv3NK6galsim6BoundsneERK6BoundsI1TE"></span><span id="_CPPv2NK6galsim6BoundsneERK6BoundsI1TE"></span><span id="galsim::Bounds::neq-operator__Bounds:T:CRC"></span><span class="target" id="classgalsim_1_1_bounds_1ad2cd22d6ea2c6a64b1da8c48b158c145"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">operator!=</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6BoundsneERK6BoundsI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds13isSameShapeAsERK6BoundsI1TE">
+<span id="_CPPv3NK6galsim6Bounds13isSameShapeAsERK6BoundsI1TE"></span><span id="_CPPv2NK6galsim6Bounds13isSameShapeAsERK6BoundsI1TE"></span><span id="galsim::Bounds::isSameShapeAs__Bounds:T:CRC"></span><span class="target" id="classgalsim_1_1_bounds_1ae4763977b8c4724a76930df124a829a3"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">bool</span> <code class="sig-name descname"><span class="pre">isSameShapeAs</span></code><span class="sig-paren">(</span><em class="property"><span class="pre">const</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span> <span class="pre">&amp;</span><em><span class="pre">rhs</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds13isSameShapeAsERK6BoundsI1TE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Check if two bounds have same shape, but maybe different origin. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds4areaEv">
+<span id="_CPPv3NK6galsim6Bounds4areaEv"></span><span id="_CPPv2NK6galsim6Bounds4areaEv"></span><span id="galsim::Bounds::areaC"></span><span class="target" id="classgalsim_1_1_bounds_1aff8bd3b4a44e6b17daf390d44d311b46"></span><em class="property"><span class="pre">inline</span></em> <a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a> <code class="sig-name descname"><span class="pre">area</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds4areaEv" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>Return the area of the enclosed region. </p>
+<p>The area is a bit different for integer-type <a class="reference internal" href="#classgalsim_1_1_bounds"><span class="std std-ref">Bounds</span></a> and float-type bounds. For floating point types, it is simply (xmax-xmin)*(ymax-ymin). However, for integer type, we need to add 1 to each size to correctly count the number of pixels being described by the bounding box. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds6divideEii">
+<span id="_CPPv3NK6galsim6Bounds6divideEii"></span><span id="_CPPv2NK6galsim6Bounds6divideEii"></span><span id="galsim::Bounds::divide__i.iC"></span><span class="target" id="classgalsim_1_1_bounds_1a7ca38dcab7e419e1c8ee11904b9b365a"></span><span class="pre">std</span><span class="pre">::</span><span class="pre">vector</span><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds"><span class="pre">Bounds</span></a><span class="pre">&lt;</span><a class="reference internal" href="#_CPPv4I0EN6galsim6BoundsE" title="galsim::Bounds::T"><span class="pre">T</span></a><span class="pre">&gt;</span><span class="pre">&gt;</span> <code class="sig-name descname"><span class="pre">divide</span></code><span class="sig-paren">(</span><span class="pre">int</span> <em><span class="pre">nx</span></em>, <span class="pre">int</span> <em><span class="pre">ny</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds6divideEii" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>divide the current bounds into (nx x ny) sub-regions </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4NK6galsim6Bounds5writeERNSt7ostreamE">
+<span id="_CPPv3NK6galsim6Bounds5writeERNSt7ostreamE"></span><span id="_CPPv2NK6galsim6Bounds5writeERNSt7ostreamE"></span><span id="galsim::Bounds::write__osRC"></span><span class="target" id="classgalsim_1_1_bounds_1a162a058277fb183422721119a2797e20"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">write</span></code><span class="sig-paren">(</span><span class="pre">std</span><span class="pre">::</span><span class="pre">ostream</span> <span class="pre">&amp;</span><em><span class="pre">fout</span></em><span class="sig-paren">)</span> <em class="property"><span class="pre">const</span></em><a class="headerlink" href="#_CPPv4NK6galsim6Bounds5writeERNSt7ostreamE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>write out to a file </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt id="_CPPv4N6galsim6Bounds4readERNSt7istreamE">
+<span id="_CPPv3N6galsim6Bounds4readERNSt7istreamE"></span><span id="_CPPv2N6galsim6Bounds4readERNSt7istreamE"></span><span id="galsim::Bounds::read__isR"></span><span class="target" id="classgalsim_1_1_bounds_1a300f0e05a3ef7a645d13140a555f6332"></span><em class="property"><span class="pre">inline</span></em> <span class="pre">void</span> <code class="sig-name descname"><span class="pre">read</span></code><span class="sig-paren">(</span><span class="pre">std</span><span class="pre">::</span><span class="pre">istream</span> <span class="pre">&amp;</span><em><span class="pre">fin</span></em><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6galsim6Bounds4readERNSt7istreamE" title="Permalink to this definition">¶</a><br /></dt>
+<dd><p>read in from a file </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<p>.</p>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="cpp_sb.html" class="btn btn-neutral float-left" title="C++ Surface Brightness Profiles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cpp_noise.html" class="btn btn-neutral float-right" title="Noise-related Functionality" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

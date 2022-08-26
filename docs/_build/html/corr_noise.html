@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Correlated Noise &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Weak Lensing" href="wl.html" />
+    <link rel="prev" title="Noise Generators" href="noise.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="random.html">Noise and Random Values</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="deviate.html">Random Deviates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="noise.html">Noise Generators</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Correlated Noise</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="random.html">Noise and Random Values</a> &raquo;</li>
+      <li>Correlated Noise</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/corr_noise.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="correlated-noise">
+<h1>Correlated Noise<a class="headerlink" href="#correlated-noise" title="Permalink to this headline">¶</a></h1>
+<p>The pixel noise in real astronomical images can be correlated, so we have some functionality
+to enable simulating this effect in GalSim.</p>
+<ul>
+<li><p><a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> defines the correlated noise according to an input <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.  This is
+the base class for the other ways of defining correlated noise, and implements most of the
+useful methods of these classes.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> profile <strong>must</strong> have two-fold rotational symmetry to represent a physical
+correlation function, and this requirement is not enforced by GalSim.  Users need to
+ensure this fact in their calling code.</p>
+</div>
+</li>
+<li><p><a class="reference internal" href="#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a> computes the correlated noise of in input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, e.g. a blank patch of sky
+in an image similar to the one you want to simulate.</p></li>
+<li><p><a class="reference internal" href="#galsim.UncorrelatedNoise" title="galsim.UncorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UncorrelatedNoise</span></code></a> is a <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> that start with no correlations.  This can then
+be sheared or convolved with other profiles to induce correlations.</p></li>
+<li><p><a class="reference internal" href="#galsim.getCOSMOSNoise" title="galsim.getCOSMOSNoise"><code class="xref any py py-func docutils literal notranslate"><span class="pre">getCOSMOSNoise</span></code></a> is a function the returns a <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> corresponding to the
+correlated noise found in the HST COSMOS F814W coadd images used by <a class="reference internal" href="real_gal.html#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a>.</p></li>
+</ul>
+<p>While adding correlated noise to images is a useful feature, this functionality was originally
+implemented in GalSim in order to <em>remove</em> correlations.  Specifically, the <a class="reference internal" href="real_gal.html#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> class
+treats HST images as surface brightness profiles.  These images have correlated noise that resulted
+from the drizzle image processing.  Furthermore, when sheared or convolved by a PSF, the
+noise in these images becomes even more correlated.  If uncorrected, these pixel correlations
+can lead to biases in weak lensing shear estimates of the rendered galaxies.</p>
+<p>To produce more accurate image simulations using these galaxies as the underlying models (and
+especially avoid the weak lensing shear biases), it is often useful to “whiten” the correlated
+noise that results form these manipulations.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="image_class.html#galsim.Image.whitenNoise" title="galsim.Image.whitenNoise"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Image.whitenNoise</span></code></a> takes a <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance as the estimate of the correlated
+noise already in an image, and attempts to add more noise to result in uncorrelated “white”
+noise.</p></li>
+<li><p><a class="reference internal" href="image_class.html#galsim.Image.symmetrizeNoise" title="galsim.Image.symmetrizeNoise"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Image.symmetrizeNoise</span></code></a> similarly adds noise, but only attempts to produce a noise profile with
+4-fold (or generically any order) symmetry, which results in less added noise while still
+achieving the goal of not having correlated noise bias weak lensing shear measurements.</p></li>
+</ul>
+<dl class="py class">
+<dt id="galsim.BaseCorrelatedNoise">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">BaseCorrelatedNoise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsobject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">galsim.PixelScale(1.0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A Base Class describing 2D correlated Gaussian random noise fields.</p>
+<p>A BaseCorrelatedNoise will not generally be instantiated directly.  This is recommended as the
+current <code class="docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.__init__</span></code> interface does not provide any guarantee that the input
+<a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> represents a physical correlation function, e.g. a profile that is an even function
+(two-fold rotationally symmetric in the plane) and peaked at the origin.  The proposed pattern
+is that users instead instantiate derived classes, such as the <a class="reference internal" href="#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a>, which are
+able to guarantee the above.</p>
+<p>If you have the correlation function as an image on file, you can use the class  method
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.from_file" title="galsim.BaseCorrelatedNoise.from_file"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">from_file</span></code></a>, which does confirm that the file has the appropriate symmetry.</p>
+<p>The BaseCorrelatedNoise is therefore here primarily to define the way in which derived classes
+(currently only <a class="reference internal" href="#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a> and <a class="reference internal" href="#galsim.UncorrelatedNoise" title="galsim.UncorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UncorrelatedNoise</span></code></a>) store the random deviate, noise
+correlation function profile and allow operations with it, generate images containing noise with
+these correlation properties, and generate covariance matrices according to the correlation
+function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rng</strong> – A <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> instance to use for generating the random numbers.</p></li>
+<li><p><strong>gsobject</strong> – <p>The <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> defining the correlation function.</p>
+</p></li>
+<li><p><strong>wcs</strong> – The wcs for the image to define the phyical relationship between the pixels.
+[default: PixelScale(1.0)]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.applyTo">
+<code class="sig-name descname"><span class="pre">applyTo</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.applyTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply this correlated Gaussian random noise field to an input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
+<p>To add deviates to every element of an image, the syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">correlated_noise</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>is preferred.  However, this is equivalent to calling this instance’s <a class="reference internal" href="#galsim.BaseCorrelatedNoise.applyTo" title="galsim.BaseCorrelatedNoise.applyTo"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">applyTo</span></code></a> method as
+follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">correlated_noise</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>On output the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instance <code class="docutils literal notranslate"><span class="pre">image</span></code> will have been given additional noise according to
+the given <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance <code class="docutils literal notranslate"><span class="pre">correlated_noise</span></code>.  Normally, <code class="docutils literal notranslate"><span class="pre">image.scale</span></code>
+is used to determine the input pixel separation, and if <code class="docutils literal notranslate"><span class="pre">image.scale</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code> a pixel scale
+of 1 is assumed.  If the image has a non-uniform WCS, the local uniform approximation at
+the center of the image will be used.</p>
+<p>Note that the correlations defined in a correlated_noise object are defined in terms of
+world coordinates (i.e. typically arcsec on the sky).  Some care is thus required if you
+apply correlated noise to an image with a non-trivial WCS.  The correlations will have a
+specific direction and scale in world coordinates, so if you apply them to an image with
+a WCS that has a rotation or a different pixel scale than the original, the resulting
+correlations will have the correct direction and scale in world coordinates, but a
+different direction and/or scale in image coordinates.</p>
+<p>If you want to override this behavior, you can view your image with the WCS of the
+correlation function and apply the noise to that.  For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">complicated_wcs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">noise</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">getCOSMOSNoise</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">wcs</span><span class="o">=</span><span class="n">noise</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">noise</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will create noise whose pixel-to-pixel correlations match those of the original
+correlated noise image (in this case, the COSMOS images).  If the input image has no WCS
+set, then it will be treated as having the same WCS as the noise.</p>
+<p>Note that the correlated noise field in <code class="docutils literal notranslate"><span class="pre">image</span></code> will be periodic across its boundaries:
+this is due to the fact that the internals of the <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> currently use a
+relatively simple implementation of noise generation using the Fast Fourier Transform.
+If you wish to avoid this property being present in your final <code class="docutils literal notranslate"><span class="pre">image</span></code> you should add the
+noise to an <code class="docutils literal notranslate"><span class="pre">image</span></code> of greater extent than you need, and take a subset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – The input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.convolvedWith">
+<code class="sig-name descname"><span class="pre">convolvedWith</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsobject</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.convolvedWith"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.convolvedWith" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convolve the correlated noise model with an input <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.</p>
+<p>The resulting correlated noise model will then give a statistical description of the noise
+field that would result from convolving noise generated according to the initial correlated
+noise with a kernel represented by <code class="docutils literal notranslate"><span class="pre">gsobject</span></code> (e.g. a PSF).</p>
+<p>The practical purpose of this method is that it allows us to model what is happening to
+noise in the images from Hubble Space Telescope that we use for simulating PSF convolved
+galaxies with the <a class="reference internal" href="real_gal.html#galsim.RealGalaxy" title="galsim.RealGalaxy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RealGalaxy</span></code></a> class.</p>
+<p>This modifies the representation of the correlation function, but leaves the random number
+generator unchanged.</p>
+<p><strong>Examples</strong>:</p>
+<p>The following command simply applies a Moffat PSF with slope parameter beta=3. and
+FWHM=0.7:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">convolvedWith</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">Moffat</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="mf">0.7</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Often we will want to convolve with more than one function.  For example, if we wanted to
+simulate how a noise field would look if convolved with a ground-based PSF (such as the
+Moffat above) and then rendered onto a new (typically larger) pixel grid, the following
+example command demonstrates the syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">convolvedWith</span><span class="p">(</span>
+<span class="gp">... </span>   <span class="n">galsim</span><span class="o">.</span><span class="n">Convolve</span><span class="p">([</span><span class="n">galsim</span><span class="o">.</span><span class="n">Deconvolve</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">Pixel</span><span class="p">(</span><span class="mf">0.03</span><span class="p">)),</span>
+<span class="gp">... </span>                    <span class="n">galsim</span><span class="o">.</span><span class="n">Pixel</span><span class="p">(</span><span class="mf">0.2</span><span class="p">),</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Moffat</span><span class="p">(</span><span class="mf">3.</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="mf">0.7</span><span class="p">),</span>
+</pre></div>
+</div>
+<p>Note, we also deconvolve by the original pixel, which should be the pixel size of the
+image from which the <code class="docutils literal notranslate"><span class="pre">correlated_noise</span></code> was made.  This command above is functionally
+equivalent to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">convolvedWith</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">Deconvolve</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">Pixel</span><span class="p">(</span><span class="mf">0.03</span><span class="p">)))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">convolvedWith</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">Pixel</span><span class="p">(</span><span class="mf">0.2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">convolvedWith</span><span class="p">(</span><span class="n">galsim</span><span class="o">.</span><span class="n">Moffat</span><span class="p">(</span><span class="n">beta</span><span class="o">=</span><span class="mf">3.</span><span class="p">,</span> <span class="n">fwhm</span><span class="o">=</span><span class="mf">0.7</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>as is demanded for a linear operation such as convolution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gsobject</strong> – A <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> or derived class instance representing the function
+with which the user wants to convolve the correlated noise model.</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> of the convolved profile.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.copy">
+<code class="sig-name descname"><span class="pre">copy</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a copy of the correlated noise model.</p>
+<p>By default, the copy will share the <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> random number generator with the parent
+instance.  However, you can provide a new rng to use in the copy if you want with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn_copy</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">new_rng</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.dilate">
+<code class="sig-name descname"><span class="pre">dilate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.dilate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.dilate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the appropriate changes to the scale and variance for when the object has
+an applied dilation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scale</strong> – The linear dilation scale factor.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the specified dilation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.drawImage">
+<code class="sig-name descname"><span class="pre">drawImage</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_to_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.drawImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.drawImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method for drawing profiles storing correlation functions.</p>
+<p>This is a mild reimplementation of the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method.  The <code class="docutils literal notranslate"><span class="pre">method</span></code> is
+automatically set to ‘sb’ and cannot be changed, and the <code class="docutils literal notranslate"><span class="pre">gain</span></code> is set to unity.
+Also, not all the normal parameters of the <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> method are available.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">scale</span></code> and <code class="docutils literal notranslate"><span class="pre">wcs</span></code> are not set, and the <code class="docutils literal notranslate"><span class="pre">image</span></code> has no <code class="docutils literal notranslate"><span class="pre">wcs</span></code> attribute, then this
+will use the wcs of the <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – If provided, this will be the image on which to draw the profile.
+If <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, then an automatically-sized <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> will be
+created.  If <code class="docutils literal notranslate"><span class="pre">image</span></code> is given, but its bounds are undefined (e.g. if
+it was constructed with <code class="docutils literal notranslate"><span class="pre">image</span> <span class="pre">=</span> <span class="pre">galsim.Image()</span></code>), then it will be
+resized appropriately based on the profile’s size [default: None].</p></li>
+<li><p><strong>scale</strong> – If provided, use this as the pixel scale for the image.  [default: None]</p></li>
+<li><p><strong>wcs</strong> – If provided, use this as the wcs for the image (possibly overriding any
+existing <code class="docutils literal notranslate"><span class="pre">image.wcs</span></code>).  At most one of <code class="docutils literal notranslate"><span class="pre">scale</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs</span></code> may be
+provided.  [default: None]  Note: If no WCS is provided either via
+<code class="docutils literal notranslate"><span class="pre">scale</span></code>, <code class="docutils literal notranslate"><span class="pre">wcs</span></code> or <code class="docutils literal notranslate"><span class="pre">image.wcs</span></code>, then the noise object’s wcs will
+be used.</p></li>
+<li><p><strong>dtype</strong> – The data type to use for an automatically constructed image.  Only
+valid if <code class="docutils literal notranslate"><span class="pre">image</span></code> is None. [default: None, which means to use
+numpy.float32]</p></li>
+<li><p><strong>add_to_image</strong> – Whether to add flux to the existing image rather than clear out
+anything in the image before drawing.
+Note: This requires that <code class="docutils literal notranslate"><span class="pre">image</span></code> be provided and that it have defined
+bounds. [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> of the correlation function.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.drawKImage">
+<code class="sig-name descname"><span class="pre">drawKImage</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ny</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bounds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_to_image</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.drawKImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.drawKImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>A method for drawing profiles storing correlation functions (i.e., power spectra) in
+Fourier space.</p>
+<p>This is a mild reimplementation of the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawKImage" title="galsim.GSObject.drawKImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawKImage</span></code></a> method.  The <code class="docutils literal notranslate"><span class="pre">gain</span></code> is
+automatically set to unity and cannot be changed.  Also, not all the normal parameters of
+the <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> method are available.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">scale</span></code> is not set, and <code class="docutils literal notranslate"><span class="pre">image</span></code> has no <code class="docutils literal notranslate"><span class="pre">wcs</span></code> attribute, then this will use the
+wcs of the <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object, which must be a <a class="reference internal" href="wcs.html#galsim.PixelScale" title="galsim.PixelScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PixelScale</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – If provided, this will be the <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> onto which to draw the k-space
+image.  If <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, then an automatically-sized image will be
+created.  If <code class="docutils literal notranslate"><span class="pre">image</span></code> is given, but its bounds are undefined, then it
+will be resized appropriately based on the profile’s size.
+[default: None]</p></li>
+<li><p><strong>nx</strong> – If provided and <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, use to set the x-direction size of
+the image.  Must be accompanied by <code class="docutils literal notranslate"><span class="pre">ny</span></code>.</p></li>
+<li><p><strong>ny</strong> – If provided and <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, use to set the y-direction size of
+the image.  Must be accompanied by <code class="docutils literal notranslate"><span class="pre">nx</span></code>.</p></li>
+<li><p><strong>bounds</strong> – If provided and <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, use to set the bounds of the image.</p></li>
+<li><p><strong>scale</strong> – If provided, use this as the pixel scale, dk, for the images.
+If <code class="docutils literal notranslate"><span class="pre">scale</span></code> is None and <code class="docutils literal notranslate"><span class="pre">image</span></code> is given, then take the provided
+images’ pixel scale (which must be equal).
+If <code class="docutils literal notranslate"><span class="pre">scale</span></code> is None and <code class="docutils literal notranslate"><span class="pre">image</span></code> is None, then use the Nyquist scale.
+If <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">&lt;=</span> <span class="pre">0</span></code> (regardless of <code class="docutils literal notranslate"><span class="pre">image</span></code>), then use the Nyquist scale.
+[default: None]</p></li>
+<li><p><strong>add_to_image</strong> – Whether to add to the existing images rather than clear out
+anything in the image before drawing.
+Note: This requires that <code class="docutils literal notranslate"><span class="pre">image</span></code> be provided and that it has defined
+bounds. [default: False]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the tuple of <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> instances, <code class="docutils literal notranslate"><span class="pre">(re,</span> <span class="pre">im)</span></code> (created if necessary)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.expand">
+<code class="sig-name descname"><span class="pre">expand</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.expand"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.expand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale the linear scale of correlations in this noise model by <code class="docutils literal notranslate"><span class="pre">scale</span></code>.</p>
+<p>Scales the linear dimensions of the image by the factor <code class="docutils literal notranslate"><span class="pre">scale</span></code>, e.g.
+<code class="docutils literal notranslate"><span class="pre">half_light_radius</span></code> &lt;– <code class="docutils literal notranslate"><span class="pre">half_light_radius</span> <span class="pre">*</span> <span class="pre">scale</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>scale</strong> – The linear rescaling factor to apply.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the specified expansion.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.from_file">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_file</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pixel_scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a correlated noise profile from a file.</p>
+<p>The file should contain an image of the correlation.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The image should be square with odd size in each direction.</p></li>
+<li><p>The central pixel corresponds to the zero-lag correlation, i.e. the variance.
+Call this pixel element (0,0).</p></li>
+<li><p>The other pixels (i,j) give the cross-correlation of the noise for pixels separated
+by i pixels in the x direction (columns) and j pixels in the y direction (rows).</p></li>
+<li><p>The image therefore must be 180 degree rotationally symmetric.  i.e. the value at
+(i,j) must be the same as at (-i,-j).</p></li>
+</ul>
+</div></blockquote>
+<p>The pixel_scale is also required and defines the pixel scale of the original image.</p>
+<p>The default <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> is a <code class="docutils literal notranslate"><span class="pre">galsim.Linear()</span></code>, which uses bilinear interpolation.
+The use of this interpolant is an approximation that gives good empirical results without
+requiring internal convolution of the correlation function profile by a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> object when
+applying correlated noise to images: such an internal convolution has been found to be
+computationally costly in practice, requiring the Fourier transform of very large arrays.</p>
+<p>The use of the bilinear interpolants means that the representation of correlated noise will
+be noticeably inaccurate in at least the following two regimes:</p>
+<ol class="arabic simple">
+<li><p>If the pixel scale of the desired final output (e.g. the target image of
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.drawImage" title="galsim.BaseCorrelatedNoise.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.drawImage</span></code></a>, <a class="reference internal" href="#galsim.BaseCorrelatedNoise.applyTo" title="galsim.BaseCorrelatedNoise.applyTo"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.applyTo</span></code></a> or
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.whitenImage" title="galsim.BaseCorrelatedNoise.whitenImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.whitenImage</span></code></a>) is small relative to the separation between pixels in
+the <code class="docutils literal notranslate"><span class="pre">image</span></code> used to instantiate <code class="docutils literal notranslate"><span class="pre">cn</span></code> as shown above.</p></li>
+<li><p>If the <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance <code class="docutils literal notranslate"><span class="pre">cn</span></code> was instantiated with an image of scale
+comparable to that in the final output, and <code class="docutils literal notranslate"><span class="pre">cn</span></code> has been rotated or otherwise
+transformed (e.g.  via the <a class="reference internal" href="#galsim.BaseCorrelatedNoise.rotate" title="galsim.BaseCorrelatedNoise.rotate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.rotate</span></code></a>, <a class="reference internal" href="#galsim.BaseCorrelatedNoise.shear" title="galsim.BaseCorrelatedNoise.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.shear</span></code></a>
+methods; see below).</p></li>
+</ol>
+<p>Conversely, the approximation will work best in the case where the correlated noise used to
+instantiate the <code class="docutils literal notranslate"><span class="pre">cn</span></code> is taken from an input image for which <code class="docutils literal notranslate"><span class="pre">image.scale</span></code> is smaller
+than that in the desired output.  This is the most common use case in the practical
+treatment of correlated noise when simulating galaxies from space as observed in
+ground-based surveys.</p>
+<p>Changing from the default bilinear interpolant is made possible, but not recommended.
+In our validation tests, we found that the Linear interpolant usually gave the most
+accurate results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The name of the file to read.</p></li>
+<li><p><strong>pixel_scale</strong> – The pixel scale of the original image.</p></li>
+<li><p><strong>rng</strong> – If provided, a random number generator to use as the random number
+generator of the resulting noise object. (may be any kind of
+<a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object) [default: None, in which case, one will be
+automatically created, using the time as a seed.]</p></li>
+<li><p><strong>variance</strong> – Scales the correlation function so that its point variance, equivalent
+to its value at zero separation distance, matches this value.
+[default: 0., which means to use the variance in the original file.]</p></li>
+<li><p><strong>x_interpolant</strong> – Forces use of a non-default interpolant for interpolation of the
+internal lookup table in real space.  See below for more details.
+[default: galsim.Linear()]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.getVariance">
+<code class="sig-name descname"><span class="pre">getVariance</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.getVariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.getVariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the point variance of this noise field, equal to its correlation function value at
+zero distance.</p>
+<p>This is the variance of values in an image filled with noise according to this model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.gsparams">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">gsparams</span></code><a class="headerlink" href="#galsim.BaseCorrelatedNoise.gsparams" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for this object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.lens">
+<code class="sig-name descname"><span class="pre">lens</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.lens"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.lens" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the appropriate changes for when the object has an applied shear and magnification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>g1</strong> – First component of lensing (reduced) shear to apply to the object.</p></li>
+<li><p><strong>g2</strong> – Second component of lensing (reduced) shear to apply to the object.</p></li>
+<li><p><strong>mu</strong> – Lensing magnification to apply to the object.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the specified shear and magnification.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.magnify">
+<code class="sig-name descname"><span class="pre">magnify</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mu</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.magnify"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.magnify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the appropriate changes to the scale and variance for when the object has
+an applied magnification <code class="docutils literal notranslate"><span class="pre">mu</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mu</strong> – The lensing magnification</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the specified magnification.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.rng">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">rng</span></code><a class="headerlink" href="#galsim.BaseCorrelatedNoise.rng" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> for this object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.rotate">
+<code class="sig-name descname"><span class="pre">rotate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">theta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.rotate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a rotation <code class="docutils literal notranslate"><span class="pre">theta</span></code> to this correlated noise model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>theta</strong> – Rotation angle (<a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> object, positive means anticlockwise).</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the specified rotation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.shear">
+<code class="sig-name descname"><span class="pre">shear</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.shear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.shear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply a shear to this correlated noise model, where arguments are either a <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a>,
+or arguments that will be used to initialize one.</p>
+<p>For more details about the allowed keyword arguments, see the <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> docstring.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>shear</strong> – The shear to be applied. Or, as described above, you may instead supply
+parameters do construct a shear directly.  eg. <code class="docutils literal notranslate"><span class="pre">corr.shear(g1=g1,g2=g2)</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the specified shear.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.symmetrizeImage">
+<code class="sig-name descname"><span class="pre">symmetrizeImage</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.symmetrizeImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.symmetrizeImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply noise designed to impose N-fold symmetry on the existing noise in a (square) input
+<a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
+<p>On input, The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, <code class="docutils literal notranslate"><span class="pre">image</span></code>, is assumed to have correlated noise described by this
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance.</p>
+<p>On output <code class="docutils literal notranslate"><span class="pre">image</span></code> will have been given additional (correlated) noise designed to
+symmetrize the noise profile.</p>
+<p>When called for a non-square image, this method will raise an exception, unlike the noise
+whitening routines.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">order</span></code> of the symmetry can be supplied as a keyword argument, with the default being
+4 because this is presumably the minimum required for the anisotropy of noise correlations
+to not affect shear statistics.</p>
+<p>Note: the syntax <code class="docutils literal notranslate"><span class="pre">image.symmetrizeNoise(noise,</span> <span class="pre">order)</span></code> is preferred, but it is equivalent
+to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">correlated_noise</span><span class="o">.</span><span class="n">symmetrizeImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the <code class="docutils literal notranslate"><span class="pre">image</span></code> originally contained noise with a correlation function described by the
+<code class="docutils literal notranslate"><span class="pre">correlated_noise</span></code> instance, the combined noise after using the symmetrizeImage() method
+will have a noise correlation function with N-fold symmetry, where <code class="docutils literal notranslate"><span class="pre">N=order</span></code>.</p>
+<p>Note that the code doesn’t check that the “if” above is true: the user MUST make sure this
+is the case for the final noise correlation function to be symmetric in the requested way.</p>
+<p>Normally, <code class="docutils literal notranslate"><span class="pre">image.scale</span></code> is used to determine the input pixel separation, and if
+<code class="docutils literal notranslate"><span class="pre">image.wcs</span></code> is None, it will use the wcs of the noise.  If the image has a non-uniform
+WCS, the local uniform approximation at the center of the image will be used.</p>
+<p>If you are interested in a theoretical calculation of the variance in the final noise field
+after imposing symmetry, the symmetrizeImage() method in fact returns this variance.
+For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">variance</span> <span class="o">=</span> <span class="n">correlated_noise</span><span class="o">.</span><span class="n">symmetrizeImage</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For context, in comparison with the <a class="reference internal" href="#galsim.BaseCorrelatedNoise.whitenImage" title="galsim.BaseCorrelatedNoise.whitenImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">whitenImage</span></code></a> method for the case of noise
+correlation functions that are roughly like those in the COSMOS HST data, the amount of
+noise added to impose N-fold symmetry is usually much less than what is added to fully
+whiten the noise.  The usage of symmetrizeImage() is totally analogous to the usage of
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.whitenImage" title="galsim.BaseCorrelatedNoise.whitenImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">whitenImage</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The square input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> object.</p></li>
+<li><p><strong>order</strong> – The order at which to require the noise to be symmetric.  All noise fields
+are already 2-fold symmetric, so <code class="docutils literal notranslate"><span class="pre">order</span></code> should be an even integer &gt;2.
+[default: 4].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the theoretically calculated variance of the combined noise fields in the updated image.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.transform">
+<code class="sig-name descname"><span class="pre">transform</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dudx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dudy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dvdy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply an arbitrary jacobian transformation to this correlated noise model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dudx</strong> – du/dx, where (x,y) are the current coords, and (u,v) are the new coords.</p></li>
+<li><p><strong>dudy</strong> – du/dy, where (x,y) are the current coords, and (u,v) are the new coords.</p></li>
+<li><p><strong>dvdx</strong> – dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.</p></li>
+<li><p><strong>dvdy</strong> – dv/dy, where (x,y) are the current coords, and (u,v) are the new coords.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a new <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the specified transformation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.whitenImage">
+<code class="sig-name descname"><span class="pre">whitenImage</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.whitenImage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.whitenImage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply noise designed to whiten correlated Gaussian random noise in an input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
+<p>On input, The <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>, <code class="docutils literal notranslate"><span class="pre">image</span></code>, is assumed to have correlated noise described by this
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance.</p>
+<p>On output <code class="docutils literal notranslate"><span class="pre">image</span></code> will have been given additional (correlated) noise designed to whiten
+the noise profile.</p>
+<p>Note: the syntax <code class="docutils literal notranslate"><span class="pre">image.whitenNoise(noise)</span></code> is normally preferred, but it is equivalent
+to:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">correlated_noise</span><span class="o">.</span><span class="n">whitenImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If the <code class="docutils literal notranslate"><span class="pre">image</span></code> originally contained noise with a correlation function described by the
+<code class="docutils literal notranslate"><span class="pre">correlated_noise</span></code> instance, the combined noise after using the whitenImage() method
+will be approximately uncorrelated.  Tests using COSMOS noise fields suggest ~0.3% residual
+off-diagonal covariances after whitening, relative to the variance, although results may
+vary depending on the precise correlation function of the noise field.
+(See <code class="docutils literal notranslate"><span class="pre">devel/external/hst/compare_whitening_subtraction.py</span></code> for the COSMOS tests.)</p>
+<p>Note that the code doesn’t check that the “if” above is true: the user MUST make sure this
+is the case for the final noise to be uncorrelated.</p>
+<p>Normally, <code class="docutils literal notranslate"><span class="pre">image.scale</span></code> is used to determine the input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> pixel separation, and if
+<code class="docutils literal notranslate"><span class="pre">image.wcs</span></code> is None, it will use the wcs of the noise.  If the image has a non-uniform
+WCS, the local uniform approximation at the center of the image will be used.</p>
+<p>If you are interested in a theoretical calculation of the variance in the final noise field
+after whitening, the whitenImage() method in fact returns this variance.  For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">variance</span> <span class="o">=</span> <span class="n">correlated_noise</span><span class="o">.</span><span class="n">whitenImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Example</strong>:</p>
+<p>To see noise whitening in action, let us use a model of the correlated noise in COSMOS
+as returned by the <a class="reference internal" href="#galsim.getCOSMOSNoise" title="galsim.getCOSMOSNoise"><code class="xref any py py-func docutils literal notranslate"><span class="pre">getCOSMOSNoise</span></code></a> function.  Let’s initialize and add noise to an image:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">getCOSMOSNoise</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageD</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The scale should match the COSMOS default since didn&#39;t specify another</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">cn</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">image</span></code> will then contain a realization of a random noise field with COSMOS-like
+correlation.  Using the whitenImage() method, we can now add more noise to <code class="docutils literal notranslate"><span class="pre">image</span></code>
+with a power spectrum specifically designed to make the combined noise fields uncorrelated:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span><span class="o">.</span><span class="n">whitenImage</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Of course, this whitening comes at the cost of adding further noise to the image, but
+the algorithm is designed to make this additional noise (nearly) as small as possible.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>image</strong> – The input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a> object.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the theoretically calculated variance of the combined noise fields in the updated image.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.withGSParams">
+<code class="sig-name descname"><span class="pre">withGSParams</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.withGSParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.withScaledVariance">
+<code class="sig-name descname"><span class="pre">withScaledVariance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance_ratio</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.withScaledVariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.withScaledVariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scale the entire correlated noise field by the given factor.</p>
+<p>This is equivalent to cn * variance_ratio.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>variance_ratio</strong> – The factor by which to scale the variance of the correlation
+function profile.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object whose variance and covariances have been scaled up by
+the given factor.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.BaseCorrelatedNoise.withVariance">
+<code class="sig-name descname"><span class="pre">withVariance</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#BaseCorrelatedNoise.withVariance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.BaseCorrelatedNoise.withVariance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the point variance of the noise field, equal to its correlation function value at
+zero distance, to an input <code class="docutils literal notranslate"><span class="pre">variance</span></code>.  The rest of the correlated noise field is scaled
+proportionally.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>variance</strong> – The desired point variance in the noise.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> object with the new variance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.CorrelatedNoise">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">CorrelatedNoise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correct_periodicity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtract_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#CorrelatedNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.CorrelatedNoise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.correlatednoise.BaseCorrelatedNoise</span></code></p>
+<p>A class that represents 2D correlated noise fields calculated from an input <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
+<p>This class stores an internal representation of a 2D, discrete correlation function, and allows
+a number of subsequent operations including interpolation, shearing, magnification and rendering
+of the correlation function profile into an output <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>.</p>
+<p>The class also allows correlated Gaussian noise fields to be generated according to the
+correlation function, and added to an <a class="reference internal" href="image_class.html#galsim.Image" title="galsim.Image"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Image</span></code></a>: see <a class="reference internal" href="#galsim.BaseCorrelatedNoise.applyTo" title="galsim.BaseCorrelatedNoise.applyTo"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.applyTo</span></code></a>.</p>
+<p>It also provides methods for whitening or imposing N-fold symmetry on pre-existing noise that
+shares the same spatial correlations: see <a class="reference internal" href="#galsim.BaseCorrelatedNoise.whitenImage" title="galsim.BaseCorrelatedNoise.whitenImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.whitenImage</span></code></a> and
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.symmetrizeImage" title="galsim.BaseCorrelatedNoise.symmetrizeImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.symmetrizeImage</span></code></a>, respectively.</p>
+<p>It also allows the combination of multiple correlation functions by addition, and for the
+scaling of the total variance they represent by scalar factors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image</strong> – The image from which to derive the correlated noise profile</p></li>
+<li><p><strong>rng</strong> – A <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> instance to use for generating the random numbers.</p></li>
+<li><p><strong>scale</strong> – If provided, use this as the pixel scale.  Normally, the scale (or wcs)
+is taken from the image.wcs field, but you may override that by
+providing either scale or wcs.  [default: use image.wcs if defined,
+else 1.0, unless <code class="docutils literal notranslate"><span class="pre">wcs</span></code> is provided]</p></li>
+<li><p><strong>wcs</strong> – If provided, use this as the wcs for the image.  At most one of
+<code class="docutils literal notranslate"><span class="pre">scale</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs</span></code> may be provided. [default: None]</p></li>
+<li><p><strong>x_interpolant</strong> – The interpolant to use for interpolating the image of the correlation
+function. (See below.) [default: galsim.Linear()]</p></li>
+<li><p><strong>correct_periodicity</strong> – Whether to correct for the effects of periodicity.  (See below.)
+[default: True]</p></li>
+<li><p><strong>subtract_mean</strong> – Whether to subtract off the mean value from the image before computing
+the correlation function. [default: False]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Basic example</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CorrelatedNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Instantiates a CorrelatedNoise using the pixel scale information contained in <code class="docutils literal notranslate"><span class="pre">image.scale</span></code>
+(assumes the scale is unity if <code class="docutils literal notranslate"><span class="pre">image.scale</span> <span class="pre">&lt;=</span> <span class="pre">0.</span></code>) by calculating the correlation function
+in the input <code class="docutils literal notranslate"><span class="pre">image</span></code>.  The input <code class="docutils literal notranslate"><span class="pre">rng</span></code> must be a <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> or derived class instance,
+setting the random number generation for the noise.</p>
+<p><strong>Optional Inputs</strong>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CorrelatedNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The example above instantiates a CorrelatedNoise, but forces the use of the pixel scale
+<code class="docutils literal notranslate"><span class="pre">scale</span></code> to set the units of the internal lookup table.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CorrelatedNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">x_interpolant</span><span class="o">=</span><span class="n">galsim</span><span class="o">.</span><span class="n">Lanczos</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The example above instantiates a CorrelatedNoise, but forces use of a non-default interpolant
+for interpolation of the internal lookup table in real space.</p>
+<p>The default <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> is <code class="docutils literal notranslate"><span class="pre">galsim.Linear()</span></code>, which uses bilinear interpolation.
+The use of this interpolant is an approximation that gives good empirical results without
+requiring internal convolution of the correlation function profile by a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> object when
+applying correlated noise to images: such an internal convolution has been found to be
+computationally costly in practice, requiring the Fourier transform of very large arrays.</p>
+<p>The use of the bilinear interpolants means that the representation of correlated noise will be
+noticeably inaccurate in at least the following two regimes:</p>
+<blockquote>
+<div><ol class="lowerroman simple">
+<li><p>If the pixel scale of the desired final output (e.g. the target image of
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.drawImage" title="galsim.BaseCorrelatedNoise.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.drawImage</span></code></a>, <a class="reference internal" href="#galsim.BaseCorrelatedNoise.applyTo" title="galsim.BaseCorrelatedNoise.applyTo"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.applyTo</span></code></a> or
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.whitenImage" title="galsim.BaseCorrelatedNoise.whitenImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.whitenImage</span></code></a>) is small relative to the separation between pixels
+in the <code class="docutils literal notranslate"><span class="pre">image</span></code> used to instantiate <code class="docutils literal notranslate"><span class="pre">cn</span></code> as shown above.</p></li>
+<li><p>If the CorrelatedNoise instance <code class="docutils literal notranslate"><span class="pre">cn</span></code> was instantiated with an image of scale comparable
+to that in the final output, and <code class="docutils literal notranslate"><span class="pre">cn</span></code> has been rotated or otherwise transformed (e.g.
+via the <a class="reference internal" href="#galsim.BaseCorrelatedNoise.rotate" title="galsim.BaseCorrelatedNoise.rotate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.rotate</span></code></a>, <a class="reference internal" href="#galsim.BaseCorrelatedNoise.shear" title="galsim.BaseCorrelatedNoise.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.shear</span></code></a> methods; see below).</p></li>
+</ol>
+</div></blockquote>
+<p>Conversely, the approximation will work best in the case where the correlated noise used to
+instantiate the <code class="docutils literal notranslate"><span class="pre">cn</span></code> is taken from an input image for which <code class="docutils literal notranslate"><span class="pre">image.scale</span></code> is smaller than
+that in the desired output.  This is the most common use case in the practical treatment of
+correlated noise when simulating galaxies from space telescopes, such as COSMOS.</p>
+<p>Changing from the default bilinear interpolant is made possible, but not recommended.
+In our validation tests, we found that the Linear interpolant usually gave the most
+accurate results.</p>
+<p>There is also an option to switch off an internal correction for assumptions made about the
+periodicity in the input noise image.  If you wish to turn this off you may, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CorrelatedNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">correct_periodicity</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The default and generally recommended setting is <code class="docutils literal notranslate"><span class="pre">correct_periodicity=True</span></code>.</p>
+<p>Users should note that the internal calculation of the discrete correlation function in
+<code class="docutils literal notranslate"><span class="pre">image</span></code> will assume that <code class="docutils literal notranslate"><span class="pre">image</span></code> is periodic across its boundaries, introducing a dilution
+bias in the estimate of inter-pixel correlations that increases with separation.  Unless you
+know that the noise in <code class="docutils literal notranslate"><span class="pre">image</span></code> is indeed periodic (perhaps because you generated it to be so),
+you will not generally wish to use the <code class="docutils literal notranslate"><span class="pre">correct_periodicity=False</span></code> option.</p>
+<p>By default, the image is not mean subtracted before the correlation function is estimated.  To
+do an internal mean subtraction, you can set the <code class="docutils literal notranslate"><span class="pre">subtract_mean</span></code> keyword to <code class="docutils literal notranslate"><span class="pre">True</span></code>, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">CorrelatedNoise</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span> <span class="n">subtract_mean</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">subtract_mean</span></code> option will introduce a small underestimation of variance and other
+correlation function values due to a bias on the square of the sample mean.  This bias reduces
+as the input image becomes larger, and in the limit of uncorrelated noise tends to the constant
+term <code class="docutils literal notranslate"><span class="pre">variance/N**2</span></code> for an N x N sized <code class="docutils literal notranslate"><span class="pre">image</span></code>.</p>
+<p>It is therefore recommended that a background/sky subtraction is applied to the <code class="docutils literal notranslate"><span class="pre">image</span></code> before
+it is given as an input to the <a class="reference internal" href="#galsim.CorrelatedNoise" title="galsim.CorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CorrelatedNoise</span></code></a>, allowing the default <code class="docutils literal notranslate"><span class="pre">subtract_mean=False</span></code>.
+If such a background model is global or based on large regions on sky then assuming that the
+image has a zero population mean will be reasonable, and won’t introduce a bias in covariances
+from an imperfectly-estimated sample mean subtraction.  If this is not possible, just be aware
+that <code class="docutils literal notranslate"><span class="pre">subtract_mean=True</span></code> will bias the correlation function low to some level.</p>
+<p>You may also specify a gsparams argument.  See the docstring for <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for more
+information about this option.</p>
+<p><strong>Methods</strong>:</p>
+<p>The main way that a CorrelatedNoise is used is to add correlated noise to an image.
+The syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">cn</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>is preferred, although:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">image</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>is equivalent.  See the <a class="reference internal" href="image_class.html#galsim.Image.addNoise" title="galsim.Image.addNoise"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Image.addNoise</span></code></a> method docstring for more information.  The
+<code class="docutils literal notranslate"><span class="pre">image.scale</span></code> is used to get the pixel scale of the input image unless this is &lt;= 0, in which
+case a scale of 1 is assumed.</p>
+<p>A number of methods familiar from <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances have also been implemented directly as
+<code class="docutils literal notranslate"><span class="pre">cn</span></code> methods, so that the following commands are all legal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">drawImage</span><span class="p">(</span><span class="n">im</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">shear</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">theta</span> <span class="o">*</span> <span class="n">galsim</span><span class="o">.</span><span class="n">degrees</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dudx</span><span class="p">,</span> <span class="n">dudy</span><span class="p">,</span> <span class="n">dvdx</span><span class="p">,</span> <span class="n">dvdy</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>See the individual method docstrings for more details.  The <code class="docutils literal notranslate"><span class="pre">shift</span></code> method is not available
+since a correlation function must always be centred and peaked at the origin.</p>
+<p>The methods:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">var</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">getVariance</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn1</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">withVariance</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn2</span> <span class="o">=</span> <span class="n">cn</span><span class="o">.</span><span class="n">withScaledVariance</span><span class="p">(</span><span class="n">variance_ratio</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>can be used to get and set the point variance of the correlated noise, equivalent to the zero
+separation distance correlation function value.</p>
+<p>The <a class="reference internal" href="#galsim.BaseCorrelatedNoise.withVariance" title="galsim.BaseCorrelatedNoise.withVariance"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.withVariance</span></code></a> method scales the whole internal correlation function so
+that its point variance matches <code class="docutils literal notranslate"><span class="pre">variance</span></code>.</p>
+<p>Similarly, <a class="reference internal" href="#galsim.BaseCorrelatedNoise.withScaledVariance" title="galsim.BaseCorrelatedNoise.withScaledVariance"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.withScaledVariance</span></code></a> scales the entire function by the given
+factor.</p>
+<p><strong>Arithmetic Operators</strong>:</p>
+<p>Addition, multiplication and division operators are defined to work in an intuitive way for
+correlation functions.</p>
+<p>Addition works simply to add the internally-stored correlation functions, so that:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn3</span> <span class="o">=</span> <span class="n">cn2</span> <span class="o">+</span> <span class="n">cn1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn4</span> <span class="o">+=</span> <span class="n">cn5</span>
+</pre></div>
+</div>
+<p>provides a representation of the correlation function of two linearly summed fields represented
+by the individual correlation function operands.</p>
+<p>What happens to the internally stored random number generators in the examples above?  For all
+addition operations it is the <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> belonging to the instance on the <em>left-hand side</em>
+of the operator that is retained.</p>
+<p>In the example above therefore, it is the random number generator from <code class="docutils literal notranslate"><span class="pre">cn2</span></code> that will be
+stored and used by <code class="docutils literal notranslate"><span class="pre">cn3</span></code>, and <code class="docutils literal notranslate"><span class="pre">cn4</span></code> will retain its random number generator after in-place
+addition of <code class="docutils literal notranslate"><span class="pre">cn5</span></code>.  The random number generator of <code class="docutils literal notranslate"><span class="pre">cn5</span></code> is not affected by the operation.</p>
+<p>The multiplication and division operators, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cn1</span> <span class="o">/=</span> <span class="mf">3.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cn2</span> <span class="o">=</span> <span class="n">cn1</span> <span class="o">*</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<p>scale the overall correlation function by a scalar operand.  The random number generators are
+not affected by these scaling operations.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.UncorrelatedNoise">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">UncorrelatedNoise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#UncorrelatedNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.UncorrelatedNoise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.correlatednoise.BaseCorrelatedNoise</span></code></p>
+<p>A class that represents 2D correlated noise fields that are actually (at least initially)
+uncorrelated.  Subsequent applications of things like <a class="reference internal" href="#galsim.BaseCorrelatedNoise.shear" title="galsim.BaseCorrelatedNoise.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.shear</span></code></a> or
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.convolvedWith" title="galsim.BaseCorrelatedNoise.convolvedWith"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.convolvedWith</span></code></a> will induce correlations.</p>
+<p>The noise is characterized by a variance in each image pixel and a pixel size and shape.
+The <code class="docutils literal notranslate"><span class="pre">variance</span></code> value refers to the noise variance in each pixel.  If the pixels are square
+(the usual case), you can specify the size using the <code class="docutils literal notranslate"><span class="pre">scale</span></code> parameter.  If not, they
+are effectively specified using the local wcs function that defines the pixel shape.  i.e.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">world_pix</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">Pixel</span><span class="p">(</span><span class="mf">1.</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>should return the pixel profile in world coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variance</strong> – The noise variance value to model as being uniform and uncorrelated
+over the whole image.</p></li>
+<li><p><strong>rng</strong> – If provided, a random number generator to use as the random number
+generator of the resulting noise object. (may be any kind of
+<a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object) [default: None, in which case, one will be
+automatically created, using the time as a seed.]</p></li>
+<li><p><strong>scale</strong> – If provided, use this as the pixel scale.  [default: 1.0, unless <code class="docutils literal notranslate"><span class="pre">wcs</span></code> is
+provided]</p></li>
+<li><p><strong>wcs</strong> – If provided, use this as the wcs for the image.  At most one of <code class="docutils literal notranslate"><span class="pre">scale</span></code>
+or <code class="docutils literal notranslate"><span class="pre">wcs</span></code> may be provided. [default: None]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.UncorrelatedNoise.withGSParams">
+<code class="sig-name descname"><span class="pre">withGSParams</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#UncorrelatedNoise.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.UncorrelatedNoise.withGSParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current object with the given <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="galsim.getCOSMOSNoise">
+<code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">getCOSMOSNoise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cosmos_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.03</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_interpolant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/correlatednoise.html#getCOSMOSNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.getCOSMOSNoise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a representation of correlated noise in the HST COSMOS F814W unrotated science coadd
+images.</p>
+<p>See <a class="reference external" href="http://cosmos.astro.caltech.edu/astronomer/hst.html">http://cosmos.astro.caltech.edu/astronomer/hst.html</a> for information about the COSMOS survey,
+and Leauthaud et al (2007) for detailed information about the unrotated F814W coadds used for
+weak lensing science.</p>
+<p>This function uses a stacked estimate of the correlation function in COSMOS noise fields.
+The correlation function was computed by the GalSim team as described in:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">GalSim</span><span class="o">/</span><span class="n">devel</span><span class="o">/</span><span class="n">external</span><span class="o">/</span><span class="n">hst</span><span class="o">/</span><span class="n">make_cosmos_cfimage</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>The resulting file is distributed with GalSim as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;galsim.meta_data.share_dir&#39;</span><span class="p">,</span> <span class="s1">&#39;acs_I_unrot_sci_20_cf.fits&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – If provided, override the usual location of the file with the given
+file name.  [default: None]</p></li>
+<li><p><strong>rng</strong> – If provided, a random number generator to use as the random number
+generator of the resulting noise object. (may be any kind of
+<a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseDeviate</span></code></a> object) [default: None, in which case, one will be
+automatically created, using the time as a seed.]</p></li>
+<li><p><strong>cosmos_scale</strong> – COSMOS ACS F814W coadd image pixel scale in the units you are using to
+describe <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a> instances and image scales in GalSim. [default: 0.03
+(arcsec), see below for more information.]</p></li>
+<li><p><strong>variance</strong> – Scales the correlation function so that its point variance, equivalent
+to its value at zero separation distance, matches this value.
+[default: 0., which means to use the variance in the original COSMOS
+noise fields.]</p></li>
+<li><p><strong>x_interpolant</strong> – Forces use of a non-default interpolant for interpolation of the
+internal lookup table in real space.  See below for more details.
+[default: galsim.Linear()]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance representing correlated noise in F814W COSMOS images.</p>
+</dd>
+</dl>
+<p>The default <code class="docutils literal notranslate"><span class="pre">x_interpolant</span></code> is a <code class="docutils literal notranslate"><span class="pre">galsim.Linear()</span></code>, which uses bilinear interpolation.
+The use of this interpolant is an approximation that gives good empirical results without
+requiring internal convolution of the correlation function profile by a <a class="reference internal" href="simple.html#galsim.Pixel" title="galsim.Pixel"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Pixel</span></code></a> object when
+applying correlated noise to images: such an internal convolution has been found to be
+computationally costly in practice, requiring the Fourier transform of very large arrays.</p>
+<p>The use of the bilinear interpolants means that the representation of correlated noise will be
+noticeably inaccurate in at least the following two regimes:</p>
+<ol class="arabic simple">
+<li><p>If the pixel scale of the desired final output (e.g. the target image of
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.drawImage" title="galsim.BaseCorrelatedNoise.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.drawImage</span></code></a>, <a class="reference internal" href="#galsim.BaseCorrelatedNoise.applyTo" title="galsim.BaseCorrelatedNoise.applyTo"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.applyTo</span></code></a> or
+<a class="reference internal" href="#galsim.BaseCorrelatedNoise.whitenImage" title="galsim.BaseCorrelatedNoise.whitenImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.whitenImage</span></code></a>) is small relative to the separation between pixels in
+the <code class="docutils literal notranslate"><span class="pre">image</span></code> used to instantiate <code class="docutils literal notranslate"><span class="pre">cn</span></code> as shown above.</p></li>
+<li><p>If the <a class="reference internal" href="#galsim.BaseCorrelatedNoise" title="galsim.BaseCorrelatedNoise"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseCorrelatedNoise</span></code></a> instance <code class="docutils literal notranslate"><span class="pre">cn</span></code> was instantiated with an image of scale
+comparable to that in the final output, and <code class="docutils literal notranslate"><span class="pre">cn</span></code> has been rotated or otherwise transformed
+(e.g.  via the <a class="reference internal" href="#galsim.BaseCorrelatedNoise.rotate" title="galsim.BaseCorrelatedNoise.rotate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.rotate</span></code></a>, <a class="reference internal" href="#galsim.BaseCorrelatedNoise.shear" title="galsim.BaseCorrelatedNoise.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseCorrelatedNoise.shear</span></code></a> methods; see below).</p></li>
+</ol>
+<p>Conversely, the approximation will work best in the case where the correlated noise used to
+instantiate the <code class="docutils literal notranslate"><span class="pre">cn</span></code> is taken from an input image for which <code class="docutils literal notranslate"><span class="pre">image.scale</span></code> is smaller than
+that in the desired output.  This is the most common use case in the practical treatment of
+correlated noise when simulating galaxies from COSMOS, for which this function is expressly
+designed.</p>
+<p>Changing from the default bilinear interpolant is made possible, but not recommended.
+In our validation tests, we found that the Linear interpolant usually gave the most
+accurate results.</p>
+<p>You may also specify a gsparams argument.  See the docstring for <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> for more
+information about this option.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The ACS coadd images in COSMOS have a pixel scale of 0.03 arcsec, and so the pixel scale
+<code class="docutils literal notranslate"><span class="pre">cosmos_scale</span></code> adopted in the representation of of the correlation function takes a
+default value <code class="docutils literal notranslate"><span class="pre">cosmos_scale</span> <span class="pre">=</span> <span class="pre">0.03</span></code></p>
+<p>If you wish to use other units, ensure that the input keyword <code class="docutils literal notranslate"><span class="pre">cosmos_scale</span></code> takes the
+value corresponding to 0.03 arcsec in your chosen system.</p>
+</div>
+<p><strong>Example</strong>:</p>
+<p>The following commands use this function to generate a 300 pixel x 300 pixel image of noise with
+HST COSMOS correlation properties (substitute in your own file and path for the <code class="docutils literal notranslate"><span class="pre">filestring</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">rng</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">BaseDeviate</span><span class="p">(</span><span class="mi">123456</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">noise</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">getCOSMOSNoise</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">ImageD</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">cf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If your image has some other pixel scale or a complicated WCS, then the applied noise will
+have the correct correlations in world coordinates, which may not be what you wanted if you
+expected the pixel-to-pixel correlations to match the COSMOS noise profile.  However, in
+this case, you would want to view your image with the COSMOS pixel scale when you apply
+the noise:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">image</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">Image</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="n">complicated_wcs</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">noise</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">getCOSMOSNoise</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">wcs</span><span class="o">=</span><span class="n">noise</span><span class="o">.</span><span class="n">wcs</span><span class="p">)</span><span class="o">.</span><span class="n">addNoise</span><span class="p">(</span><span class="n">noise</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The FITS file <code class="docutils literal notranslate"><span class="pre">out.fits</span></code> should then contain an image of randomly-generated, COSMOS-like noise.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="noise.html" class="btn btn-neutral float-left" title="Noise Generators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="wl.html" class="btn btn-neutral float-right" title="Weak Lensing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

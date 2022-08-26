@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interpolants &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Interfacing with FITS Files" href="fits.html" />
+    <link rel="prev" title="Catalogs and Input Dictionaries" href="catalog.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="table.html">Lookup Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="catalog.html">Catalogs and Input Dictionaries</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Interpolants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fits.html">Interfacing with FITS Files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integ.html">Integration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bessel.html">Bessel Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fft.html">Fourier Transforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zernike.html">Zernike Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcr.html">Differential Chromatic Refraction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cd.html">Charge Deflection Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">Miscellaneous Utilities</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="utilities.html">Helper Functions and Classes</a> &raquo;</li>
+      <li>Interpolants</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/interpolant.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="interpolants">
+<h1>Interpolants<a class="headerlink" href="#interpolants" title="Permalink to this headline">¶</a></h1>
+<p>These classes are principally used by <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>.  They define how the surface
+brightness between pixel centers is defined from the values at the centers.</p>
+<dl class="py class">
+<dt id="galsim.Interpolant">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Interpolant</span></code><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Interpolant" title="Permalink to this definition">¶</a></dt>
+<dd><p>A base class that defines how interpolation should be done.</p>
+<p>An Interpolant is needed for an <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a> to define how interpolation should be done
+an locations in between the integer pixel centers.</p>
+<dl class="py method">
+<dt id="galsim.Interpolant.from_name">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">from_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.from_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Interpolant.from_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>A factory function to create an <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> of the correct type according to
+the (string) name of the <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a>.</p>
+<p>This is mostly used to simplify how config files specify the <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> to use.</p>
+<p>Valid names are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘delta’ = <a class="reference internal" href="#galsim.Delta" title="galsim.Delta"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Delta</span></code></a></p></li>
+<li><p>‘nearest’ = <a class="reference internal" href="#galsim.Nearest" title="galsim.Nearest"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Nearest</span></code></a></p></li>
+<li><p>‘sinc’ = <a class="reference internal" href="#galsim.SincInterpolant" title="galsim.SincInterpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SincInterpolant</span></code></a></p></li>
+<li><p>‘linear’ = <a class="reference internal" href="#galsim.Linear" title="galsim.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a></p></li>
+<li><p>‘cubic’ = <a class="reference internal" href="#galsim.Cubic" title="galsim.Cubic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Cubic</span></code></a></p></li>
+<li><p>‘quintic’ = <a class="reference internal" href="#galsim.Quintic" title="galsim.Quintic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Quintic</span></code></a></p></li>
+<li><p>‘lanczosN’ = <a class="reference internal" href="#galsim.Lanczos" title="galsim.Lanczos"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Lanczos</span></code></a>  (where N is an integer, given the <code class="docutils literal notranslate"><span class="pre">n</span></code> parameter)</p></li>
+</ul>
+</div></blockquote>
+<p>In addition, if you want to specify the <code class="docutils literal notranslate"><span class="pre">conserve_dc</span></code> option for <a class="reference internal" href="#galsim.Lanczos" title="galsim.Lanczos"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Lanczos</span></code></a>, you can
+append either T or F to represent <code class="docutils literal notranslate"><span class="pre">conserve_dc</span> <span class="pre">=</span> <span class="pre">True/False</span></code> (respectively).  Otherwise,
+the default <code class="docutils literal notranslate"><span class="pre">conserve_dc=True</span></code> is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – The name of the interpolant to create.</p></li>
+<li><p><strong>tol</strong> – [deprecated]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Interpolant.gsparams">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">gsparams</span></code><a class="headerlink" href="#galsim.Interpolant.gsparams" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> of the <a class="reference internal" href="#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Interpolant.kval">
+<code class="sig-name descname"><span class="pre">kval</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.kval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Interpolant.kval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the value of the interpolant kernel in Fourier space at one or more k values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>k</strong> – The value (as a float) or values (as a np.array) at which to compute the
+amplitude of the Interpolant kernel in Fourier space.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The k-value(s) at the k location(s).  If k was an array, then this is also</dt><dd><p>an array.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>kval</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Interpolant.negative_flux">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">negative_flux</span></code><a class="headerlink" href="#galsim.Interpolant.negative_flux" title="Permalink to this definition">¶</a></dt>
+<dd><p>The negative-flux fraction of the interpolation kernel.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Interpolant.positive_flux">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">positive_flux</span></code><a class="headerlink" href="#galsim.Interpolant.positive_flux" title="Permalink to this definition">¶</a></dt>
+<dd><p>The positive-flux fraction of the interpolation kernel.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Interpolant.unit_integrals">
+<code class="sig-name descname"><span class="pre">unit_integrals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.unit_integrals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Interpolant.unit_integrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unit integrals of the real-space kernel.</p>
+<p>integrals[i] = int(xval(x), i-0.5, i+0.5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_len</strong> – The maximum length of the returned array.  This is usually only relevant
+for SincInterpolant, where xrange = inf.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An array of unit integrals of length max_len or smaller.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>integrals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Interpolant.withGSParams">
+<code class="sig-name descname"><span class="pre">withGSParams</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.withGSParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Interpolant.withGSParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a version of the current interpolant with the given gsparams</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Interpolant.xval">
+<code class="sig-name descname"><span class="pre">xval</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Interpolant.xval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Interpolant.xval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the value of the interpolant kernel at one or more x values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>x</strong> – The value (as a float) or values (as a np.array) at which to compute the
+amplitude of the Interpolant kernel.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>The value(s) at the x location(s).  If x was an array, then this is also</dt><dd><p>an array.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>xval</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.Delta">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Delta</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Delta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
+<p>Delta-function interpolation.</p>
+<p>The interpolant for when you do not want to interpolate between samples.  It is not really
+intended to be used for any analytic drawing because it is infinite in the x domain at the
+location of samples, and it extends to infinity in the u domain.  But it could be useful for
+photon-shooting, where it is trivially implemented as no displacements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – [deprecated]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Delta.ixrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">ixrange</span></code><a class="headerlink" href="#galsim.Delta.ixrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Delta.krange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">krange</span></code><a class="headerlink" href="#galsim.Delta.krange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Delta.unit_integrals">
+<code class="sig-name descname"><span class="pre">unit_integrals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Delta.unit_integrals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Delta.unit_integrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unit integrals of the real-space kernel.</p>
+<p>integrals[i] = int(xval(x), i-0.5, i+0.5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_len</strong> – The maximum length of the returned array. (ignored)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An array of unit integrals of length max_len or smaller.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>integrals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Delta.xrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">xrange</span></code><a class="headerlink" href="#galsim.Delta.xrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.Nearest">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Nearest</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Nearest"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Nearest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
+<p>Nearest-neighbor interpolation (boxcar).</p>
+<p>The nearest-neighbor interpolant performs poorly as a k-space or x-space interpolant for
+interpolated images.  (See paper by “Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.)
+The objection to its use in Fourier space does not apply when shooting photons to generate
+an image; in that case, the nearest-neighbor interpolant is quite efficient (but not
+necessarily the best choice in terms of accuracy).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – [deprecated]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Nearest.ixrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">ixrange</span></code><a class="headerlink" href="#galsim.Nearest.ixrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Nearest.krange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">krange</span></code><a class="headerlink" href="#galsim.Nearest.krange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Nearest.unit_integrals">
+<code class="sig-name descname"><span class="pre">unit_integrals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Nearest.unit_integrals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Nearest.unit_integrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unit integrals of the real-space kernel.</p>
+<p>integrals[i] = int(xval(x), i-0.5, i+0.5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_len</strong> – The maximum length of the returned array. (ignored)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An array of unit integrals of length max_len or smaller.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>integrals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Nearest.xrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">xrange</span></code><a class="headerlink" href="#galsim.Nearest.xrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.Linear">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Linear</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Linear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Linear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
+<p>Linear interpolation</p>
+<p>The linear interpolant is a poor choice for FFT-based operations on interpolated images, as
+it rings to high frequencies.  (See Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.)
+This objection does not apply when shooting photons, in which case the linear interpolant is
+quite efficient (but not necessarily the best choice in terms of accuracy).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – [deprecated]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Linear.ixrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">ixrange</span></code><a class="headerlink" href="#galsim.Linear.ixrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Linear.krange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">krange</span></code><a class="headerlink" href="#galsim.Linear.krange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Linear.unit_integrals">
+<code class="sig-name descname"><span class="pre">unit_integrals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Linear.unit_integrals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Linear.unit_integrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unit integrals of the real-space kernel.</p>
+<p>integrals[i] = int(xval(x), i-0.5, i+0.5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_len</strong> – The maximum length of the returned array.  This is usually only relevant
+for SincInterpolant, where xrange = inf.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An array of unit integrals of length max_len or smaller.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>integrals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Linear.xrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">xrange</span></code><a class="headerlink" href="#galsim.Linear.xrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.Cubic">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Cubic</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Cubic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Cubic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
+<p>Cubic interpolation</p>
+<p>The cubic interpolant is exact to 3rd order Taylor expansion (from R. G. Keys, IEEE Trans.
+Acoustics, Speech, &amp; Signal Proc 29, p 1153, 1981).  It is a reasonable choice for a four-point
+interpolant for interpolated images.  (See Bernstein &amp; Gruen, <a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – [deprecated]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Cubic.ixrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">ixrange</span></code><a class="headerlink" href="#galsim.Cubic.ixrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Cubic.krange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">krange</span></code><a class="headerlink" href="#galsim.Cubic.krange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Cubic.unit_integrals">
+<code class="sig-name descname"><span class="pre">unit_integrals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Cubic.unit_integrals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Cubic.unit_integrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unit integrals of the real-space kernel.</p>
+<p>integrals[i] = int(xval(x), i-0.5, i+0.5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_len</strong> – The maximum length of the returned array.  This is usually only relevant
+for SincInterpolant, where xrange = inf.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An array of unit integrals of length max_len or smaller.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>integrals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Cubic.xrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">xrange</span></code><a class="headerlink" href="#galsim.Cubic.xrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.Quintic">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Quintic</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Quintic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Quintic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
+<p>Fifth order interpolation</p>
+<p>The quintic interpolant is exact to 5th order in the Taylor expansion and was found by
+Bernstein &amp; Gruen (<a class="reference external" href="http://arxiv.org/abs/1401.2636">http://arxiv.org/abs/1401.2636</a>) to give optimal results as a k-space
+interpolant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – [deprecated]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Quintic.ixrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">ixrange</span></code><a class="headerlink" href="#galsim.Quintic.ixrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Quintic.krange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">krange</span></code><a class="headerlink" href="#galsim.Quintic.krange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Quintic.xrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">xrange</span></code><a class="headerlink" href="#galsim.Quintic.xrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.SincInterpolant">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">SincInterpolant</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#SincInterpolant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.SincInterpolant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
+<p>Sinc interpolation (inverse of nearest-neighbor).</p>
+<p>The Sinc interpolant (K(x) = sin(pi x)/(pi x)) is mathematically perfect for band-limited
+data, introducing no spurious frequency content beyond kmax = pi/dx for input data with pixel
+scale dx.  However, it is formally infinite in extent and, even with reasonable trunction, is
+still quite large.  It will give exact results in <a class="reference internal" href="gsobject.html#galsim.GSObject.kValue" title="galsim.GSObject.kValue"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.kValue</span></code></a> for <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>
+when it is used as a k-space interpolant, but is extremely slow.  The usual compromise between
+sinc accuracy vs. speed is the <a class="reference internal" href="#galsim.Lanczos" title="galsim.Lanczos"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Lanczos</span></code></a> interpolant (see its documentation for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tol</strong> – [deprecated]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.SincInterpolant.ixrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">ixrange</span></code><a class="headerlink" href="#galsim.SincInterpolant.ixrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.SincInterpolant.krange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">krange</span></code><a class="headerlink" href="#galsim.SincInterpolant.krange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.SincInterpolant.unit_integrals">
+<code class="sig-name descname"><span class="pre">unit_integrals</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#SincInterpolant.unit_integrals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.SincInterpolant.unit_integrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the unit integrals of the real-space kernel.</p>
+<p>integrals[i] = int(xval(x), i-0.5, i+0.5)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_len</strong> – The maximum length of the returned array.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An array of unit integrals of length max_len or smaller.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>integrals</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.SincInterpolant.xrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">xrange</span></code><a class="headerlink" href="#galsim.SincInterpolant.xrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.Lanczos">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">Lanczos</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conserve_dc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/interpolant.html#Lanczos"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.Lanczos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.interpolant.Interpolant</span></code></p>
+<p>The Lanczos interpolation filter, nominally sinc(x)*sinc(x/n)</p>
+<p>The Lanczos filter is an approximation to the band-limiting sinc filter with a smooth cutoff
+at high x.  Order n Lanczos has a range of +/- n pixels.  It typically is a good compromise
+between kernel size and accuracy.</p>
+<p>Note that pure Lanczos, when interpolating a set of constant-valued samples, does not return
+this constant.  Setting <code class="docutils literal notranslate"><span class="pre">conserve_dc</span></code> in the constructor tweaks the function so that it
+approximately conserves the value of constant (DC) input data (accurate to better than 1.e-5
+when used in two dimensions).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> – The order of the Lanczos function</p></li>
+<li><p><strong>conserve_dc</strong> – Whether to add the first order correction to flatten out the flux response
+to a constant input. [default: True, see above]</p></li>
+<li><p><strong>tol</strong> – [deprecated]</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> argument. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.Lanczos.conserve_dc">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">conserve_dc</span></code><a class="headerlink" href="#galsim.Lanczos.conserve_dc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether this interpolant is modified to improve flux conservation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Lanczos.ixrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">ixrange</span></code><a class="headerlink" href="#galsim.Lanczos.ixrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The total integral range of the interpolant.  Typically 2 * xrange.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Lanczos.krange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">krange</span></code><a class="headerlink" href="#galsim.Lanczos.krange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant in Fourier space (in 1/pixels).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Lanczos.n">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">n</span></code><a class="headerlink" href="#galsim.Lanczos.n" title="Permalink to this definition">¶</a></dt>
+<dd><p>The order of the Lanczos function.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.Lanczos.xrange">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">xrange</span></code><a class="headerlink" href="#galsim.Lanczos.xrange" title="Permalink to this definition">¶</a></dt>
+<dd><p>The maximum extent of the interpolant from the origin (in pixels).</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="catalog.html" class="btn btn-neutral float-left" title="Catalogs and Input Dictionaries" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="fits.html" class="btn btn-neutral float-right" title="Interfacing with FITS Files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

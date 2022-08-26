@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.gsparams &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>galsim.gsparams</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.gsparams</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_galsim</span>
+
+<div class="viewcode-block" id="GSParams"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams">[docs]</a><span class="k">class</span> <span class="nc">GSParams</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;GSParams stores a set of numbers that govern how a `GSObject` makes various speed/accuracy</span>
+<span class="sd">    tradeoff decisions.</span>
+
+<span class="sd">    All `GSObject` classes can take an optional parameter named ``gsparams``, which would be an</span>
+<span class="sd">    instance of this class.  e.g.::</span>
+
+<span class="sd">        &gt;&gt;&gt; gsp = galsim.GSParams(folding_threshold=1.e-3)</span>
+<span class="sd">        &gt;&gt;&gt; gal = galsim.Sersic(n=3.4, half_light_radius=3.2, flux=200, gsparams=gsp)</span>
+
+<span class="sd">    Note that ``gsparams`` needs to be provided when the object is initialized, rather than when the</span>
+<span class="sd">    object is drawn (as would perhaps be slightly more intuitive), because most of the relevant</span>
+<span class="sd">    approximations happen during the initialization of the object, rather than during the actual</span>
+<span class="sd">    rendering.</span>
+
+<span class="sd">    All parameters have reasonable default values.  You only need to specify the ones you want</span>
+<span class="sd">    to change.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        minimum_fft_size:   The minimum size of any FFT that may need to be performed.</span>
+<span class="sd">                            [default: 128]</span>
+<span class="sd">        maximum_fft_size:   The maximum allowed size of an image for performing an FFT.  This</span>
+<span class="sd">                            is more about memory use than accuracy.  We have this maximum</span>
+<span class="sd">                            value to help prevent the user from accidentally trying to perform</span>
+<span class="sd">                            an extremely large FFT that crashes the program. Instead, GalSim</span>
+<span class="sd">                            will raise an exception indicating that the image is too large,</span>
+<span class="sd">                            which is often a sign of an error in the user&#39;s code. However, if</span>
+<span class="sd">                            you have the memory to handle it, you can raise this limit to</span>
+<span class="sd">                            allow the calculation to happen. [default: 8192]</span>
+<span class="sd">        folding_threshold:  This sets a maximum amount of real space folding that is allowed,</span>
+<span class="sd">                            an effect caused by the periodic nature of FFTs.  FFTs implicitly</span>
+<span class="sd">                            use periodic boundary conditions, and a profile specified on a</span>
+<span class="sd">                            finite grid in Fourier space corresponds to a real space image</span>
+<span class="sd">                            that will have some overlap with the neighboring copies of the real</span>
+<span class="sd">                            space profile.  As the step size in k increases, the spacing</span>
+<span class="sd">                            between neighboring aliases in real space decreases, increasing the</span>
+<span class="sd">                            amount of folded, overlapping flux.  ``folding_threshold`` is used</span>
+<span class="sd">                            to set an appropriate step size in k to allow at most this</span>
+<span class="sd">                            fraction of the flux to be folded.</span>
+<span class="sd">                            This parameter is also relevant when you let GalSim decide how</span>
+<span class="sd">                            large an image to use for your object.  The image is made to be</span>
+<span class="sd">                            large enough that at most a fraction ``folding_threshold`` of the</span>
+<span class="sd">                            total flux is allowed to fall off the edge of the image.</span>
+<span class="sd">                            [default: 5.e-3]</span>
+<span class="sd">        stepk_minimum_hlr:  In addition to the above constraint for aliasing, also set stepk</span>
+<span class="sd">                            such that pi/stepk is at least ``stepk_minimum_hlr`` times the</span>
+<span class="sd">                            profile&#39;s half-light radius (for profiles that have a well-defined</span>
+<span class="sd">                            half-light radius). [default: 5]</span>
+<span class="sd">        maxk_threshold:     This sets the maximum amplitude of the high frequency modes in</span>
+<span class="sd">                            Fourier space that are excluded by truncating the FFT at some</span>
+<span class="sd">                            maximum k value. Lowering this parameter can help minimize the</span>
+<span class="sd">                            effect of &quot;ringing&quot; if you see that in your images.</span>
+<span class="sd">                            [default: 1.e-3]</span>
+<span class="sd">        kvalue_accuracy:    This sets the accuracy of values in Fourier space. Whenever there</span>
+<span class="sd">                            is some kind of approximation to be made in the calculation of a</span>
+<span class="sd">                            Fourier space value, the error in the approximation is constrained</span>
+<span class="sd">                            to be no more than this value times the total flux.</span>
+<span class="sd">                            [default: 1.e-5]</span>
+<span class="sd">        xvalue_accuracy:    This sets the accuracy of values in real space. Whenever there is</span>
+<span class="sd">                            some kind of approximation to be made in the calculation of a</span>
+<span class="sd">                            real space value, the error in the approximation is constrained</span>
+<span class="sd">                            to be no more than this value times the total flux.</span>
+<span class="sd">                            [default: 1.e-5]</span>
+<span class="sd">        table_spacing:      Several profiles use lookup tables for either the Hankel transform</span>
+<span class="sd">                            (`Sersic`, `Moffat`) or the real space radial function (`Kolmogorov`).</span>
+<span class="sd">                            We try to estimate a good spacing between values in the lookup</span>
+<span class="sd">                            tables based on either ``xvalue_accuracy`` or ``kvalue_accuracy`` as</span>
+<span class="sd">                            appropriate. However, you may change the spacing with this</span>
+<span class="sd">                            parameter. Using ``table_spacing &lt; 1`` will use a spacing value that</span>
+<span class="sd">                            is that much smaller than the default, which should produce more</span>
+<span class="sd">                            accurate interpolations. [default: 1]</span>
+<span class="sd">        realspace_relerr:   This sets the relative error tolerance for real-space integration.</span>
+<span class="sd">                            [default: 1.e-4]</span>
+<span class="sd">        realspace_abserr:   This sets the absolute error tolerance for real-space integration.</span>
+<span class="sd">                            [default: 1.e-6]</span>
+<span class="sd">                            The estimated integration error for the flux value in each pixel</span>
+<span class="sd">                            when using the real-space rendering method (either explicitly with</span>
+<span class="sd">                            ``method=&#39;real_space&#39;`` or if it is triggered automatically with</span>
+<span class="sd">                            ``method=&#39;auto&#39;``) is constrained to be no larger than either</span>
+<span class="sd">                            ``realspace_relerr`` times the pixel flux or ``realspace_abserr``</span>
+<span class="sd">                            times the object&#39;s total flux.</span>
+<span class="sd">        integration_relerr: The relative error tolerance for integrations other than real-space</span>
+<span class="sd">                            rendering. [default: 1.e-6]</span>
+<span class="sd">        integration_abserr: The absolute error tolerance for integrations other than real-space</span>
+<span class="sd">                            rendering. [default: 1.e-8]</span>
+<span class="sd">        shoot_accuracy:     This sets the relative accuracy on the total flux when photon</span>
+<span class="sd">                            shooting.  The photon shooting algorithm at times needs to make</span>
+<span class="sd">                            approximations, such as how high in radius it needs to sample the</span>
+<span class="sd">                            radial profile. When such approximations need to be made, it makes</span>
+<span class="sd">                            sure that the resulting fractional error in the flux will be at</span>
+<span class="sd">                            most this much. [default: 1.e-5]</span>
+
+<span class="sd">    After construction, all of the above parameters are available as read-only attributes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum_fft_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">maximum_fft_size</span><span class="o">=</span><span class="mi">8192</span><span class="p">,</span>
+                 <span class="n">folding_threshold</span><span class="o">=</span><span class="mf">5.e-3</span><span class="p">,</span> <span class="n">stepk_minimum_hlr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">maxk_threshold</span><span class="o">=</span><span class="mf">1.e-3</span><span class="p">,</span>
+                 <span class="n">kvalue_accuracy</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">xvalue_accuracy</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">table_spacing</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                 <span class="n">realspace_relerr</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">,</span> <span class="n">realspace_abserr</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span>
+                 <span class="n">integration_relerr</span><span class="o">=</span><span class="mf">1.e-6</span><span class="p">,</span> <span class="n">integration_abserr</span><span class="o">=</span><span class="mf">1.e-8</span><span class="p">,</span>
+                 <span class="n">shoot_accuracy</span><span class="o">=</span><span class="mf">1.e-5</span><span class="p">,</span> <span class="n">allowed_flux_variation</span><span class="o">=</span><span class="mf">0.81</span><span class="p">,</span>
+                 <span class="n">range_division_for_extrema</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">small_fraction_of_flux</span><span class="o">=</span><span class="mf">1.e-4</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_fft_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">minimum_fft_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maximum_fft_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">maximum_fft_size</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folding_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">folding_threshold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stepk_minimum_hlr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">stepk_minimum_hlr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maxk_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">maxk_threshold</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kvalue_accuracy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kvalue_accuracy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_xvalue_accuracy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">xvalue_accuracy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_table_spacing</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">table_spacing</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_realspace_relerr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">realspace_relerr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_realspace_abserr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">realspace_abserr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_integration_relerr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">integration_relerr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_integration_abserr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">integration_abserr</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_shoot_accuracy</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">shoot_accuracy</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">allowed_flux_variation</span> <span class="o">!=</span> <span class="mf">0.81</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;allowed_flux_variation&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;This parameter is no longer used.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">range_division_for_extrema</span> <span class="o">!=</span> <span class="mi">32</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;range_division_for_extrema&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;This parameter is no longer used.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">small_fraction_of_flux</span> <span class="o">!=</span> <span class="mf">1.e-4</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;small_fraction_of_flux&#39;</span><span class="p">,</span> <span class="mf">2.1</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;This parameter is no longer used.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_gsp</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">())</span>
+
+    <span class="c1"># Make all the attributes read-only</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">minimum_fft_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minimum_fft_size</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maximum_fft_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maximum_fft_size</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">folding_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folding_threshold</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stepk_minimum_hlr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stepk_minimum_hlr</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">maxk_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maxk_threshold</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">kvalue_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kvalue_accuracy</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">xvalue_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_xvalue_accuracy</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">table_spacing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_table_spacing</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">realspace_relerr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realspace_relerr</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">realspace_abserr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_realspace_abserr</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">integration_relerr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integration_relerr</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">integration_abserr</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integration_abserr</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">shoot_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_shoot_accuracy</span>
+
+<div class="viewcode-block" id="GSParams.check"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.check">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks that gsparams is either a valid GSParams instance or None.</span>
+
+<span class="sd">        In the former case, it returns gsparams, in the latter it returns default</span>
+<span class="sd">        (GSParams.default if no other default specified).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">gsparams</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">gsparams</span> <span class="o">=</span> <span class="n">default</span> <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">default</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">GSParams</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid GSParams: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">gsparams</span><span class="o">.</span><span class="n">withParams</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GSParams.withParams"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.withParams">[docs]</a>    <span class="k">def</span> <span class="nf">withParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a `GSParams` that is identical to the current one except for any keyword</span>
+<span class="sd">        arguments given here, which supersede the current value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span> <span class="nn">copy</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">k</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;parameter </span><span class="si">%s</span><span class="s1"> is invalid&#39;</span><span class="o">%</span><span class="n">k</span><span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">k</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">_gsp</span> <span class="o">=</span> <span class="n">_galsim</span><span class="o">.</span><span class="n">GSParams</span><span class="p">(</span><span class="o">*</span><span class="n">ret</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">())</span>
+            <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="GSParams.combine"><a class="viewcode-back" href="../../gsparams.html#galsim.GSParams.combine">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">combine</span><span class="p">(</span><span class="n">gsp_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Combine a list of `GSParams` instances using the most restrictive parameter from each.</span>
+
+<span class="sd">        Uses the minimum value for most parameters. For the following parameters, it uses the</span>
+<span class="sd">        maximum numerical value: minimum_fft_size, maximum_fft_size, stepk_minimum_hlr.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gsp_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">gsp_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">all</span><span class="p">(</span><span class="n">g</span> <span class="o">==</span> <span class="n">gsp_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="k">return</span> <span class="n">gsp_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">GSParams</span><span class="p">(</span>
+                <span class="nb">max</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">minimum_fft_size</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">max</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">maximum_fft_size</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">folding_threshold</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">max</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">stepk_minimum_hlr</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">maxk_threshold</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">kvalue_accuracy</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">xvalue_accuracy</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">table_spacing</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">realspace_relerr</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">realspace_abserr</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">integration_relerr</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">integration_abserr</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]),</span>
+                <span class="nb">min</span><span class="p">([</span><span class="n">g</span><span class="o">.</span><span class="n">shoot_accuracy</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">gsp_list</span> <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]))</span></div>
+
+    <span class="c1"># Define once the order of args in __init__, since we use it a few times.</span>
+    <span class="k">def</span> <span class="nf">_getinitargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">minimum_fft_size</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maximum_fft_size</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">folding_threshold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stepk_minimum_hlr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">maxk_threshold</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kvalue_accuracy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">xvalue_accuracy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">table_spacing</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">realspace_relerr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">realspace_abserr</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">integration_relerr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">integration_abserr</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shoot_accuracy</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">state</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;galsim.GSParams(</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">,</span><span class="si">%r</span><span class="s1">)&#39;</span><span class="o">%</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="ow">is</span> <span class="n">other</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">GSParams</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_getinitargs</span><span class="p">()))</span>
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__eq__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span></div>
+
+<span class="c1"># We use the default a lot, so make it a class attribute.</span>
+<span class="n">GSParams</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

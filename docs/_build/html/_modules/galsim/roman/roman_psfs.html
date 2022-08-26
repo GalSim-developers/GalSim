@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.roman.roman_psfs &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>galsim.roman.roman_psfs</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.roman.roman_psfs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">LRU_Cache</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">@file roman_psfs.py</span>
+
+<span class="sd">Part of the Roman Space Telescope module.  This file includes routines needed to define a realistic</span>
+<span class="sd">PSF for Roman.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># Define a default set of bandpasses for which this routine works.</span>
+<span class="n">default_bandpass_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;J129&#39;</span><span class="p">,</span> <span class="s1">&#39;F184&#39;</span><span class="p">,</span> <span class="s1">&#39;W149&#39;</span><span class="p">,</span> <span class="s1">&#39;Y106&#39;</span><span class="p">,</span> <span class="s1">&#39;Z087&#39;</span><span class="p">,</span> <span class="s1">&#39;H158&#39;</span><span class="p">]</span>
+<span class="c1"># Prefix for files containing information about Zernikes for each SCA for cycle 7.</span>
+<span class="n">zemax_filepref</span> <span class="o">=</span> <span class="s2">&quot;Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727&quot;</span>
+<span class="n">zemax_filesuff</span> <span class="o">=</span> <span class="s1">&#39;.txt&#39;</span>
+<span class="n">zemax_wavelength</span> <span class="o">=</span> <span class="mf">1293.</span> <span class="c1">#nm</span>
+
+<span class="c1"># These need &#39;SCA*&#39; prepended to the start to get the file name, and they live in</span>
+<span class="c1"># the share/roman directory.</span>
+<span class="n">pupil_plane_file_longwave</span> <span class="o">=</span> <span class="s1">&#39;_full_mask.fits.gz&#39;</span>
+<span class="n">pupil_plane_file_shortwave</span> <span class="o">=</span> <span class="s1">&#39;_rim_mask.fits.gz&#39;</span>
+
+<div class="viewcode-block" id="getPSF"><a class="viewcode-back" href="../../../roman.html#galsim.roman.getPSF">[docs]</a><span class="k">def</span> <span class="nf">getPSF</span><span class="p">(</span><span class="n">SCA</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span>
+           <span class="n">SCA_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pupil_bin</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">wcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">n_waves</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">extra_aberrations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">wavelength</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+           <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">high_accuracy</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">approximate_struts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get a single PSF for Roman ST observations.</span>
+
+<span class="sd">    The user must provide the SCA and bandpass; the latter is used when setting up the pupil</span>
+<span class="sd">    plane configuration and when interpolating chromatic information, if requested.</span>
+
+<span class="sd">    This routine carries out linear interpolation of the aberrations within a given SCA, based on</span>
+<span class="sd">    the Roman (then WFIRST) Cycle 7 specification of the aberrations as a function of focal plane</span>
+<span class="sd">    position, more specifically from ``Roman_Phase-A_SRR_WFC_Zernike_and_Field_Data_170727.xlsm``</span>
+<span class="sd">    downloaded from https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.  Phase</span>
+<span class="sd">    B updates that became available in mid-2019 have not yet been incorporated into this module.</span>
+<span class="sd">    (Note: the files at that url still use the old WFIRST name.  We have renamed them to use the</span>
+<span class="sd">    new name of the telescope, Roman, after downloading.)</span>
+
+<span class="sd">    The mask images for the Roman pupil plane are available at the Roman Reference Information</span>
+<span class="sd">    page: https://roman.gsfc.nasa.gov/science/Roman_Reference_Information.html.</span>
+<span class="sd">    There are separate files for each SCA, since the view of the spider pattern varies somewhat</span>
+<span class="sd">    across the field of view of the wide field camera. Furthermore, the effect of the obscuration</span>
+<span class="sd">    is somewhat different at longer wavelengths, so F184 has a different set of files than the</span>
+<span class="sd">    other filters.  cf. the ``galsm.roman.longwave_bands`` and ``galsim.roman.shortwave_bands``</span>
+<span class="sd">    attributes, which define which bands use which pupil plane images.  Users usually don&#39;t need</span>
+<span class="sd">    to worry about any of this, as GalSim will select the correct pupil image automatically based</span>
+<span class="sd">    on the SCA and bandpass provided.</span>
+
+<span class="sd">    The full pupil plane images are 4096 x 4096, which use a lot of memory and are somewhat slow</span>
+<span class="sd">    to use, so we normally bin them by a factor of 4 (resulting in 1024 x 1024 images). This</span>
+<span class="sd">    provides enough detail for most purposes and is much faster to render than using the full pupil</span>
+<span class="sd">    plane images.  This bin factor is a settable parameter, called ``pupil_bin``.  If you want the</span>
+<span class="sd">    more accurate, slower calculation using the full images, you can set it to 1. In the other</span>
+<span class="sd">    direction, using pupil_bin=8 (resulting in a 512 x 512 image) still provides fairly reasonable</span>
+<span class="sd">    results and is even faster to render.  It is not generally recommended to use higher binning</span>
+<span class="sd">    than that, as the diffraction spikes will become noticeably degraded.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        This function will cache the aperture calculation, so repeated calls with the same</span>
+<span class="sd">        SCA and bandpass should be much faster after the first call, as the pupil plane will</span>
+<span class="sd">        already be loaded.  If you need to clear the cache for memory reasons, you may call::</span>
+
+<span class="sd">            galsim.roman.roman_psfs._make_aperture.clear()</span>
+
+<span class="sd">        to recover any memory currently being used for this cache.  Of course, subsequent calls to</span>
+<span class="sd">        `getPSF` will need to rebuild the aperture at that point.</span>
+
+<span class="sd">    The PSF that is returned by default will be oriented with respect to the SCA coordinates,</span>
+<span class="sd">    not world coordinates as is typical in GalSim.  The pupil plane has a fixed orientation</span>
+<span class="sd">    with respect to the focal plane, so the PSF rotates with the telescope.  To obtain a</span>
+<span class="sd">    PSF in world coordinates, which can be convolved with galaxies (that are normally described</span>
+<span class="sd">    in world coordinates), you may pass in a ``wcs`` parameter to this function.  This will</span>
+<span class="sd">    project the PSF into world coordinates according to that WCS before returning it.  Otherwise,</span>
+<span class="sd">    the return value is equivalent to using ``wcs=galim.PixelScale(galsim.roman.pixel_scale)``.</span>
+
+<span class="sd">    The calculation takes advantage of the fact that the diffraction limit and aberrations have a</span>
+<span class="sd">    simple, understood wavelength-dependence.  (The Roman project webpage for Cycle 7 does in fact</span>
+<span class="sd">    provide aberrations as a function of wavelength, but the deviation from the expected chromatic</span>
+<span class="sd">    dependence is sub-percent so we neglect it here.)  For reference, the script used to parse the</span>
+<span class="sd">    Zernikes given on the webpage and create the files in the GalSim repository can be found in</span>
+<span class="sd">    ``devel/external/parse_roman_zernikes_1217.py``.  The resulting chromatic object can be used to</span>
+<span class="sd">    draw into any of the Roman bandpasses, though the pupil plane configuration will only be</span>
+<span class="sd">    correct for those bands in the same range (i.e., long- or short-wavelength bands).</span>
+
+<span class="sd">    For applications that require very high accuracy in the modeling of the PSF, with very limited</span>
+<span class="sd">    aliasing, you may want to lower the folding_threshold in the gsparams.  Otherwise very bright</span>
+<span class="sd">    stars will show some reflections in the spider pattern and possibly some boxiness at the</span>
+<span class="sd">    outskirts of the PSF.  Using ``gsparams = GSParams(folding_threshold=2.e-3)`` generally</span>
+<span class="sd">    provides good results even for very bright (e.g. mag=10) stars.  In these cases, you probably</span>
+<span class="sd">    also want to reduce ``pupil_bin`` somewhat from the default value of 4.</span>
+
+<span class="sd">    By default, no additional aberrations are included above the basic design.  However, users can</span>
+<span class="sd">    provide an optional keyword ``extra_aberrations`` that will be included on top of those that are</span>
+<span class="sd">    part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,</span>
+<span class="sd">    with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order</span>
+<span class="sd">    22 (Noll convention) are simulated.  For Roman, the tolerance for additional</span>
+<span class="sd">    aberrations was a total of 90 nanometers RMS as of mid-2015, distributed largely among coma,</span>
+<span class="sd">    astigmatism, trefoil, and spherical aberrations (NOT defocus).  This information might serve as</span>
+<span class="sd">    a guide for reasonable ``extra_aberrations`` inputs.  The reference for that number is</span>
+<span class="sd">    an earlier Cycle 5 document:</span>
+
+<span class="sd">    http://roman.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf</span>
+
+<span class="sd">    However, the default (non-extra) aberrations are from Cycle 7 material linked earlier in this</span>
+<span class="sd">    docstring.</span>
+
+<span class="sd">    Jitter and charge diffusion are, by default, not included.  Users who wish to include these can</span>
+<span class="sd">    find some guidelines for typical length scales of the Gaussians that can represent these</span>
+<span class="sd">    effects, and convolve the ChromaticOpticalPSF with appropriate achromatic Gaussians.</span>
+
+<span class="sd">    The PSFs are always defined assuming the user will specify length scales in arcsec.</span>
+
+<span class="sd">    Users may find they do not have to call `getPSF` for all objects in their simulations; for a</span>
+<span class="sd">    given SCA and position within the SCA, and a given pupil plane configuration and wavelength</span>
+<span class="sd">    information, it should be possible to reuse the PSFs.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        SCA:                Single value specifying the SCA for which the PSF should be</span>
+<span class="sd">                            loaded.</span>
+<span class="sd">        bandpass:           Single string specifying the bandpass to use when defining the</span>
+<span class="sd">                            pupil plane configuration and/or interpolation of chromatic PSFs.</span>
+<span class="sd">                            You may also pass a string &#39;long&#39; or &#39;short&#39; for this argument, in</span>
+<span class="sd">                            which case, the correct pupil plane configuration will be used for</span>
+<span class="sd">                            long- or short-wavelength bands (F184 is long, all else is short).</span>
+<span class="sd">                            In this case, no interpolation can be used, since it is defined</span>
+<span class="sd">                            using the extent of the chosen bandpass. If ``wavelength`` is given,</span>
+<span class="sd">                            then bandpass may be None, which will use the short-wavelength pupil</span>
+<span class="sd">                            plane image.</span>
+<span class="sd">        SCA_pos:            Single galsim.PositionD indicating the position within the SCA</span>
+<span class="sd">                            for which the PSF should be created. If None, the exact center of</span>
+<span class="sd">                            the SCA is chosen. [default: None]</span>
+<span class="sd">        pupil_bin:          The binning to apply to the pupil plane image. (See discussion above.)</span>
+<span class="sd">                            [default: 4]</span>
+<span class="sd">        wcs:                The WCS to use to project the PSF into world coordinates.</span>
+<span class="sd">                            [default: galsim.PixelScale(galsim.roman.pixel_scale)]</span>
+<span class="sd">        n_waves:            Number of wavelengths to use for setting up interpolation of the</span>
+<span class="sd">                            chromatic PSF objects, which can lead to much faster image</span>
+<span class="sd">                            rendering.  If None, then no interpolation is used. Note that</span>
+<span class="sd">                            users who want to interpolate can always set up the interpolation</span>
+<span class="sd">                            later on even if they do not do so when calling `getPSF`.</span>
+<span class="sd">                            [default: None]</span>
+<span class="sd">        extra_aberrations:  Array of extra aberrations to include in the PSF model, on top of</span>
+<span class="sd">                            those that are part of the Roman design.  These should be</span>
+<span class="sd">                            provided in units of waves at the fiducial wavelength of 1293 nm,</span>
+<span class="sd">                            as an array of length 23 with entries 4 through 22 corresponding</span>
+<span class="sd">                            to defocus through the 22nd Zernike in the Noll convention.</span>
+<span class="sd">                            [default: None]</span>
+<span class="sd">        wavelength:         An option to get an achromatic PSF for a single wavelength, for</span>
+<span class="sd">                            users who do not care about chromaticity of the PSF.  If None,</span>
+<span class="sd">                            then the fully chromatic PSF is returned.  Alternatively the user</span>
+<span class="sd">                            should supply either (a) a wavelength in nanometers, and they</span>
+<span class="sd">                            will get achromatic OpticalPSF objects for that wavelength, or</span>
+<span class="sd">                            (b) a bandpass object, in which case they will get achromatic</span>
+<span class="sd">                            OpticalPSF objects defined at the effective wavelength of that</span>
+<span class="sd">                            bandpass.  [default: False]</span>
+<span class="sd">        gsparams:           An optional GSParams argument.  See the docstring for GSParams</span>
+<span class="sd">                            for details. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A single PSF object (either a ChromaticOpticalPSF or an OpticalPSF depending on the</span>
+<span class="sd">        inputs).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+    <span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimValueError</span><span class="p">,</span> <span class="n">GalSimRangeError</span>
+    <span class="kn">from</span> <span class="nn">..bandpass</span> <span class="kn">import</span> <span class="n">Bandpass</span>
+    <span class="kn">from</span> <span class="nn">..wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">n_sca</span><span class="p">,</span> <span class="n">longwave_bands</span><span class="p">,</span> <span class="n">shortwave_bands</span><span class="p">,</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">pixel_scale_mm</span>
+
+    <span class="c1"># Deprecated options</span>
+    <span class="k">if</span> <span class="n">high_accuracy</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">approximate_struts</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">..deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;high_accuracy=True,approximate_struts=True&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span>
+                 <span class="s1">&#39;pupil_bin=4, gsparams=galsim.GSParams(folding_threshold=2.e-3)&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Note: this is not actually equivalent to the old behavior, but it should &#39;</span>
+                 <span class="s1">&#39;be both faster and more accurate than the corresponding PSF in v2.2.&#39;</span><span class="p">)</span>
+            <span class="c1"># Set folding_threshold 2.5x smaller than default.</span>
+            <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">folding_threshold</span><span class="o">=</span><span class="mf">2.e-3</span><span class="p">)</span>
+            <span class="n">pupil_bin</span> <span class="o">=</span> <span class="mi">4</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">..deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+            <span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+            <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;high_accuracy=True&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span>
+                 <span class="s1">&#39;pupil_bin=1, gsparams=galsim.GSParams(folding_threshold=2.e-3)&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;Note: this is not actually equivalent to the old behavior, but it should &#39;</span>
+                 <span class="s1">&#39;be both faster and more accurate than the corresponding PSF in v2.2.&#39;</span><span class="p">)</span>
+            <span class="c1"># Set folding_threshold 2.5x smaller than default.</span>
+            <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="o">.</span><span class="n">check</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">folding_threshold</span><span class="o">=</span><span class="mf">2.e-3</span><span class="p">)</span>
+            <span class="n">pupil_bin</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="n">approximate_struts</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">..deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+        <span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+        <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;approximate_struts=True&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span> <span class="s1">&#39;pupil_bin=8&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;Note: this is not actually equivalent to the old behavior, but it should &#39;</span>
+             <span class="s1">&#39;be both faster and more accurate than the corresponding PSF in v2.2.&#39;</span><span class="p">)</span>
+        <span class="n">pupil_bin</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="k">elif</span> <span class="n">approximate_struts</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">or</span> <span class="n">high_accuracy</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="c1"># If they are explicitly given, rather than default (None), then trigger this.</span>
+        <span class="kn">from</span> <span class="nn">..deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
+        <span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+        <span class="n">depr</span><span class="p">(</span><span class="s1">&#39;approximate_struts=False, high_accuracy=False&#39;</span><span class="p">,</span> <span class="mf">2.3</span><span class="p">,</span> <span class="s1">&#39;pupil_bin=4&#39;</span><span class="p">,</span>
+             <span class="s1">&#39;Note: this is not actually equivalent to the old behavior, but it should &#39;</span>
+             <span class="s1">&#39;be both faster and more accurate than the corresponding PSF in v2.2.&#39;</span><span class="p">)</span>
+        <span class="n">pupil_bin</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="k">if</span> <span class="n">SCA</span> <span class="o">&lt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">SCA</span> <span class="o">&gt;</span> <span class="n">n_sca</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimRangeError</span><span class="p">(</span><span class="s2">&quot;Invalid SCA.&quot;</span><span class="p">,</span> <span class="n">SCA</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_sca</span><span class="p">)</span>
+
+    <span class="c1"># SCA_pos: if None, then all should just be center of the SCA.</span>
+    <span class="k">if</span> <span class="n">SCA_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">SCA_pos</span> <span class="o">=</span> <span class="n">PositionD</span><span class="p">(</span><span class="n">n_pix</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_pix</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Parse the bandpasses to see which pupil plane image is needed</span>
+    <span class="n">pupil_plane_type</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">bandpass</span> <span class="ow">in</span> <span class="n">longwave_bands</span> <span class="ow">or</span> <span class="n">bandpass</span><span class="o">==</span><span class="s1">&#39;long&#39;</span><span class="p">:</span>
+        <span class="n">pupil_plane_type</span> <span class="o">=</span> <span class="s1">&#39;long&#39;</span>
+    <span class="k">elif</span> <span class="n">bandpass</span> <span class="ow">in</span> <span class="n">shortwave_bands</span> <span class="ow">or</span> <span class="n">bandpass</span><span class="o">==</span><span class="s1">&#39;short&#39;</span><span class="p">:</span>
+        <span class="n">pupil_plane_type</span> <span class="o">=</span> <span class="s1">&#39;short&#39;</span>
+    <span class="k">elif</span> <span class="n">bandpass</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">n_waves</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">pupil_plane_type</span> <span class="o">=</span> <span class="s1">&#39;short&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Bandpass not a valid Roman bandpass or &#39;short&#39;/&#39;long&#39;.&quot;</span><span class="p">,</span>
+                               <span class="n">bandpass</span><span class="p">,</span> <span class="n">default_bandpass_list</span><span class="p">)</span>
+
+    <span class="c1"># If bandpass is &#39;short&#39;/&#39;long&#39;, then make sure that interpolation is not called for, since that</span>
+    <span class="c1"># requires an actual bandpass.</span>
+    <span class="k">if</span> <span class="n">bandpass</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;short&#39;</span><span class="p">,</span><span class="s1">&#39;long&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="n">n_waves</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Cannot use bandpass=&#39;short&#39;/&#39;long&#39; with interpolation.&quot;</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wavelength</span><span class="p">,</span> <span class="p">(</span><span class="n">Bandpass</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="kc">None</span><span class="p">))):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;wavelength should either be a Bandpass, float, or None.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Now call _get_single_PSF().</span>
+    <span class="n">psf</span> <span class="o">=</span> <span class="n">_get_single_PSF</span><span class="p">(</span><span class="n">SCA</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">SCA_pos</span><span class="p">,</span> <span class="n">pupil_bin</span><span class="p">,</span>
+                          <span class="n">n_waves</span><span class="p">,</span> <span class="n">extra_aberrations</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span>
+                          <span class="n">pupil_plane_type</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="c1"># Apply WCS.</span>
+    <span class="c1"># The current version is in arcsec units, but oriented parallel to the image coordinates.</span>
+    <span class="c1"># So to apply the right WCS, project to pixels using the Roman mean pixel_scale, then</span>
+    <span class="c1"># project back to world coordinates with the provided wcs.</span>
+    <span class="k">if</span> <span class="n">wcs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">PixelScale</span><span class="p">(</span><span class="n">pixel_scale</span><span class="p">)</span>
+        <span class="n">psf</span> <span class="o">=</span> <span class="n">wcs</span><span class="o">.</span><span class="n">toWorld</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">toImage</span><span class="p">(</span><span class="n">psf</span><span class="p">),</span> <span class="n">image_pos</span><span class="o">=</span><span class="n">SCA_pos</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">psf</span></div>
+
+<span class="k">def</span> <span class="nf">__make_aperture</span><span class="p">(</span><span class="n">SCA</span><span class="p">,</span> <span class="n">pupil_plane_type</span><span class="p">,</span> <span class="n">pupil_bin</span><span class="p">,</span> <span class="n">wave</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">diameter</span><span class="p">,</span> <span class="n">obscuration</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">fits</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
+    <span class="kn">from</span> <span class="nn">..phase_psf</span> <span class="kn">import</span> <span class="n">Aperture</span>
+
+    <span class="c1"># Load the pupil plane image.</span>
+    <span class="k">if</span> <span class="n">pupil_plane_type</span> <span class="o">==</span> <span class="s1">&#39;long&#39;</span><span class="p">:</span>
+        <span class="n">pupil_plane_im</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;roman&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;SCA</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">SCA</span> <span class="o">+</span> <span class="n">pupil_plane_file_longwave</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pupil_plane_im</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;roman&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;SCA</span><span class="si">%d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">SCA</span> <span class="o">+</span> <span class="n">pupil_plane_file_shortwave</span><span class="p">)</span>
+    <span class="n">pupil_plane_im</span> <span class="o">=</span> <span class="n">fits</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">pupil_plane_im</span><span class="p">,</span> <span class="n">read_header</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># Native pixel scale in the file is for the exit pupil.  We want the scale of the</span>
+    <span class="c1"># entrance pupil.  Fortunately, they provide the conversion as PUPILMAG in the header.</span>
+    <span class="c1"># They also use microns for units, and we want meters, hence the extra 1.e-6.</span>
+    <span class="n">pupil_plane_im</span><span class="o">.</span><span class="n">scale</span> <span class="o">*=</span> <span class="n">pupil_plane_im</span><span class="o">.</span><span class="n">header</span><span class="p">[</span><span class="s1">&#39;PUPILMAG&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.e-6</span>
+
+    <span class="n">pupil_plane_im</span> <span class="o">=</span> <span class="n">pupil_plane_im</span><span class="o">.</span><span class="n">bin</span><span class="p">(</span><span class="n">pupil_bin</span><span class="p">,</span><span class="n">pupil_bin</span><span class="p">)</span>
+
+    <span class="n">aper</span> <span class="o">=</span> <span class="n">Aperture</span><span class="p">(</span><span class="n">lam</span><span class="o">=</span><span class="n">wave</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="n">diameter</span><span class="p">,</span>
+                    <span class="n">obscuration</span><span class="o">=</span><span class="n">obscuration</span><span class="p">,</span>
+                    <span class="n">pupil_plane_im</span><span class="o">=</span><span class="n">pupil_plane_im</span><span class="p">,</span>
+                    <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">aper</span>
+
+<span class="c1"># Usually a given run will only need one or a few different apertures for repeated getPSF calls.</span>
+<span class="c1"># So cache those apertures here to avoid having to remake them.</span>
+<span class="n">_make_aperture</span> <span class="o">=</span> <span class="n">LRU_Cache</span><span class="p">(</span><span class="n">__make_aperture</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_get_single_PSF</span><span class="p">(</span><span class="n">SCA</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">,</span> <span class="n">SCA_pos</span><span class="p">,</span> <span class="n">pupil_bin</span><span class="p">,</span>
+                    <span class="n">n_waves</span><span class="p">,</span> <span class="n">extra_aberrations</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">,</span>
+                    <span class="n">pupil_plane_type</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Routine for making a single PSF.  This gets called by `getPSF` after it parses all the</span>
+<span class="sd">       options that were passed in.  Users will not directly interact with this routine.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">OpticalPSF</span><span class="p">,</span> <span class="n">ChromaticOpticalPSF</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">diameter</span>
+    <span class="kn">from</span> <span class="nn">..bandpass</span> <span class="kn">import</span> <span class="n">Bandpass</span>
+    <span class="kn">from</span> <span class="nn">.roman_bandpass</span> <span class="kn">import</span> <span class="n">getBandpasses</span>
+
+    <span class="k">if</span> <span class="n">wavelength</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">wave</span> <span class="o">=</span> <span class="n">zemax_wavelength</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wavelength</span><span class="p">,</span> <span class="n">Bandpass</span><span class="p">):</span>
+        <span class="n">wave</span> <span class="o">=</span> <span class="n">wavelength</span> <span class="o">=</span> <span class="n">wavelength</span><span class="o">.</span><span class="n">effective_wavelength</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wave</span> <span class="o">=</span> <span class="n">wavelength</span>
+
+    <span class="c1"># All parameters relevant to the aperture.  We may be able to use a cached version.</span>
+    <span class="n">aper</span> <span class="o">=</span> <span class="n">_make_aperture</span><span class="p">(</span><span class="n">SCA</span><span class="p">,</span> <span class="n">pupil_plane_type</span><span class="p">,</span> <span class="n">pupil_bin</span><span class="p">,</span> <span class="n">wave</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="c1"># Start reading in the aberrations for that SCA</span>
+    <span class="n">aberrations</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span> <span class="o">=</span> <span class="n">_read_aberrations</span><span class="p">(</span><span class="n">SCA</span><span class="p">)</span>
+    <span class="c1"># Do bilinear interpolation, unless we&#39;re exactly at the center (default).</span>
+    <span class="n">use_aberrations</span> <span class="o">=</span> <span class="n">_interp_aberrations_bilinear</span><span class="p">(</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">SCA_pos</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">extra_aberrations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">use_aberrations</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">extra_aberrations</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">extra_aberrations</span>
+    <span class="c1"># We don&#39;t want to use piston, tip, or tilt aberrations.  The former doesn&#39;t affect the</span>
+    <span class="c1"># appearance of the PSF, and the latter cause centroid shifts.  So, we set the first 4</span>
+    <span class="c1"># numbers (corresponding to a place-holder, piston, tip, and tilt) to zero.</span>
+    <span class="n">use_aberrations</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.</span>
+
+    <span class="c1"># Now set up the PSF, including the option to interpolate over waves</span>
+    <span class="k">if</span> <span class="n">wavelength</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">PSF</span> <span class="o">=</span> <span class="n">ChromaticOpticalPSF</span><span class="p">(</span><span class="n">lam</span><span class="o">=</span><span class="n">zemax_wavelength</span><span class="p">,</span>
+                                  <span class="n">diam</span><span class="o">=</span><span class="n">diameter</span><span class="p">,</span> <span class="n">aberrations</span><span class="o">=</span><span class="n">use_aberrations</span><span class="p">,</span>
+                                  <span class="n">aper</span><span class="o">=</span><span class="n">aper</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n_waves</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># To decide the range of wavelengths to use, check the bandpass.</span>
+            <span class="n">bp_dict</span> <span class="o">=</span> <span class="n">getBandpasses</span><span class="p">()</span>
+            <span class="n">bp</span> <span class="o">=</span> <span class="n">bp_dict</span><span class="p">[</span><span class="n">bandpass</span><span class="p">]</span>
+            <span class="n">PSF</span> <span class="o">=</span> <span class="n">PSF</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">waves</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">bp</span><span class="o">.</span><span class="n">blue_limit</span><span class="p">,</span> <span class="n">bp</span><span class="o">.</span><span class="n">red_limit</span><span class="p">,</span> <span class="n">n_waves</span><span class="p">),</span>
+                                  <span class="n">oversample_fac</span><span class="o">=</span><span class="mf">1.5</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tmp_aberrations</span> <span class="o">=</span> <span class="n">use_aberrations</span> <span class="o">*</span> <span class="n">zemax_wavelength</span> <span class="o">/</span> <span class="n">wavelength</span>
+        <span class="n">PSF</span> <span class="o">=</span> <span class="n">OpticalPSF</span><span class="p">(</span><span class="n">lam</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span> <span class="n">diam</span><span class="o">=</span><span class="n">diameter</span><span class="p">,</span>
+                         <span class="n">aberrations</span><span class="o">=</span><span class="n">tmp_aberrations</span><span class="p">,</span>
+                         <span class="n">aper</span><span class="o">=</span><span class="n">aper</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">PSF</span>
+
+<span class="k">def</span> <span class="nf">_read_aberrations</span><span class="p">(</span><span class="n">SCA</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a helper routine that reads in aberrations for a particular SCA and wavelength (given as</span>
+<span class="sd">    galsim.roman.roman_psfs.zemax_wavelength) from stored files, and returns them along with the</span>
+<span class="sd">    field positions.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        SCA:        The identifier for the SCA, from 1-18.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        NumPy arrays containing the aberrations, and x and y field positions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">meta_data</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pixel_scale</span><span class="p">,</span> <span class="n">n_pix</span><span class="p">,</span> <span class="n">pixel_scale_mm</span>
+
+    <span class="c1"># Construct filename.</span>
+    <span class="n">sca_str</span> <span class="o">=</span> <span class="s1">&#39;_</span><span class="si">%02d</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">SCA</span>
+    <span class="n">infile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">meta_data</span><span class="o">.</span><span class="n">share_dir</span><span class="p">,</span> <span class="s1">&#39;roman&#39;</span><span class="p">,</span>
+                          <span class="n">zemax_filepref</span> <span class="o">+</span> <span class="n">sca_str</span> <span class="o">+</span> <span class="n">zemax_filesuff</span><span class="p">)</span>
+
+    <span class="c1"># Read in data.</span>
+    <span class="n">dat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">infile</span><span class="p">)</span>
+    <span class="c1"># It actually has 5 field positions, not just 1, to allow us to make position-dependent PSFs</span>
+    <span class="c1"># within an SCA eventually.  Put it in the required format: an array of length (5 field</span>
+    <span class="c1"># positions, 23 Zernikes), with the first entry empty (Zernike polynomials are 1-indexed so we</span>
+    <span class="c1"># use entries 1-22).  The units are waves.</span>
+    <span class="n">aberrations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span><span class="mi">23</span><span class="p">))</span>
+    <span class="n">aberrations</span><span class="p">[:,</span><span class="mi">1</span><span class="p">:]</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[:,</span><span class="mi">5</span><span class="p">:]</span>
+    <span class="c1"># Also get the field position.  The file gives it in mm with respect to the center, but we</span>
+    <span class="c1"># want it in pixels with respect to the corner. The pixel size of the detector is 0.01 mm/pixel</span>
+    <span class="c1"># The y-coordinates have the opposite signs to the corresponding WFI location, explained </span>
+    <span class="c1"># in the Roman file.</span>
+
+    <span class="n">x_sca_pos</span> <span class="o">=</span> <span class="n">dat</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span><span class="o">/</span><span class="n">pixel_scale_mm</span> <span class="o">+</span> <span class="n">n_pix</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">y_sca_pos</span> <span class="o">=</span> <span class="n">n_pix</span><span class="o">/</span><span class="mi">2</span> <span class="o">-</span> <span class="n">dat</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span><span class="o">/</span><span class="n">pixel_scale_mm</span>
+    <span class="k">return</span> <span class="n">aberrations</span><span class="p">,</span> <span class="n">x_sca_pos</span><span class="p">,</span> <span class="n">y_sca_pos</span>
+
+<span class="k">def</span> <span class="nf">_interp_aberrations_bilinear</span><span class="p">(</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">x_pos</span><span class="p">,</span> <span class="n">y_pos</span><span class="p">,</span> <span class="n">SCA_pos</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a helper routine to do bilinear interpolation of aberrations defined at 4 field</span>
+<span class="sd">    positions: the four corners.  Note that we also have aberrations at the center position,</span>
+<span class="sd">    but these are generally quite close (within a few percent) of what would come from this bilinear</span>
+<span class="sd">    interpolation.  So for simplicity, we just do the bilinear interpolation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">min_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span>
+    <span class="n">min_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span>
+    <span class="n">max_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">x_pos</span><span class="p">)</span>
+    <span class="n">max_y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">y_pos</span><span class="p">)</span>
+    <span class="n">x_frac</span> <span class="o">=</span> <span class="p">(</span><span class="n">SCA_pos</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">min_x</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_x</span> <span class="o">-</span> <span class="n">min_x</span><span class="p">)</span>
+    <span class="n">y_frac</span> <span class="o">=</span> <span class="p">(</span><span class="n">SCA_pos</span><span class="o">.</span><span class="n">y</span> <span class="o">-</span> <span class="n">min_y</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">max_y</span> <span class="o">-</span> <span class="n">min_y</span><span class="p">)</span>
+    <span class="n">lower_x_lower_y_ab</span> <span class="o">=</span> <span class="n">aberrations</span><span class="p">[(</span><span class="n">x_pos</span><span class="o">==</span><span class="n">min_x</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pos</span><span class="o">==</span><span class="n">min_y</span><span class="p">),</span> <span class="p">:]</span>
+    <span class="n">lower_x_upper_y_ab</span> <span class="o">=</span> <span class="n">aberrations</span><span class="p">[(</span><span class="n">x_pos</span><span class="o">==</span><span class="n">min_x</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pos</span><span class="o">==</span><span class="n">max_y</span><span class="p">),</span> <span class="p">:]</span>
+    <span class="n">upper_x_lower_y_ab</span> <span class="o">=</span> <span class="n">aberrations</span><span class="p">[(</span><span class="n">x_pos</span><span class="o">==</span><span class="n">max_x</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pos</span><span class="o">==</span><span class="n">min_y</span><span class="p">),</span> <span class="p">:]</span>
+    <span class="n">upper_x_upper_y_ab</span> <span class="o">=</span> <span class="n">aberrations</span><span class="p">[(</span><span class="n">x_pos</span><span class="o">==</span><span class="n">max_x</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">y_pos</span><span class="o">==</span><span class="n">max_y</span><span class="p">),</span> <span class="p">:]</span>
+    <span class="n">interp_ab</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">x_frac</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">y_frac</span><span class="p">)</span><span class="o">*</span><span class="n">lower_x_lower_y_ab</span> <span class="o">+</span> \
+        <span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">x_frac</span><span class="p">)</span><span class="o">*</span><span class="n">y_frac</span><span class="o">*</span><span class="n">lower_x_upper_y_ab</span> <span class="o">+</span> \
+        <span class="n">x_frac</span><span class="o">*</span><span class="p">(</span><span class="mf">1.0</span><span class="o">-</span><span class="n">y_frac</span><span class="p">)</span><span class="o">*</span><span class="n">upper_x_lower_y_ab</span> <span class="o">+</span> \
+        <span class="n">x_frac</span><span class="o">*</span><span class="n">y_frac</span><span class="o">*</span><span class="n">upper_x_upper_y_ab</span>
+
+    <span class="k">return</span> <span class="n">interp_ab</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

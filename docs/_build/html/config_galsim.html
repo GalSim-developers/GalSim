@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The galsim Executable &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Config Processing From Python" href="config_process.html" />
+    <link rel="prev" title="Special Fields" href="config_special.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_objects.html">Config Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_output.html">Config Output Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_values.html">Config Values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">The galsim Executable</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#changing-or-adding-parameters">Changing or adding parameters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#splitting-up-a-config-job">Splitting up a config job</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-command-line-options">Other command line options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="config.html">The Config Module</a> &raquo;</li>
+      <li>The galsim Executable</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_galsim.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="the-galsim-executable">
+<h1>The galsim Executable<a class="headerlink" href="#the-galsim-executable" title="Permalink to this headline">¶</a></h1>
+<p>The normal way to run a GalSim simulation using a config file is <code class="docutils literal notranslate"><span class="pre">galsim</span> <span class="pre">config.yaml</span></code>, where
+<code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> is the name of the config file to be parsed.  For instance, to run demo1 (given
+above), you would type:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span> <span class="n">demo1</span><span class="o">.</span><span class="n">yaml</span>
+</pre></div>
+</div>
+<div class="section" id="changing-or-adding-parameters">
+<h2>Changing or adding parameters<a class="headerlink" href="#changing-or-adding-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes it is convenient to be able to change some of the configuration parameters from the
+command line, rather than edit the config file.  For instance, you might want to make a number
+of simulations, which are nearly identical but differ in one or two specific attribute.</p>
+<p>To enable this, you can provide the changed (or new) parameters on the command line after the
+name of the config file.  E.g.
+to make several simulations that are identical except for the flux of the galaxy and the output
+file, one could do:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span> <span class="n">demo1</span><span class="o">.</span><span class="n">yaml</span> <span class="n">gal</span><span class="o">.</span><span class="n">flux</span><span class="o">=</span><span class="mf">1.e4</span> <span class="n">output</span><span class="o">.</span><span class="n">file_name</span><span class="o">=</span><span class="n">demo1_1e4</span><span class="o">.</span><span class="n">fits</span>
+<span class="n">galsim</span> <span class="n">demo1</span><span class="o">.</span><span class="n">yaml</span> <span class="n">gal</span><span class="o">.</span><span class="n">flux</span><span class="o">=</span><span class="mf">2.e4</span> <span class="n">output</span><span class="o">.</span><span class="n">file_name</span><span class="o">=</span><span class="n">demo1_2e4</span><span class="o">.</span><span class="n">fits</span>
+<span class="n">galsim</span> <span class="n">demo1</span><span class="o">.</span><span class="n">yaml</span> <span class="n">gal</span><span class="o">.</span><span class="n">flux</span><span class="o">=</span><span class="mf">3.e4</span> <span class="n">output</span><span class="o">.</span><span class="n">file_name</span><span class="o">=</span><span class="n">demo1_3e4</span><span class="o">.</span><span class="n">fits</span>
+<span class="n">galsim</span> <span class="n">demo1</span><span class="o">.</span><span class="n">yaml</span> <span class="n">gal</span><span class="o">.</span><span class="n">flux</span><span class="o">=</span><span class="mf">4.e4</span> <span class="n">output</span><span class="o">.</span><span class="n">file_name</span><span class="o">=</span><span class="n">demo1_4e4</span><span class="o">.</span><span class="n">fits</span>
+</pre></div>
+</div>
+<p>Notice that the <code class="docutils literal notranslate"><span class="pre">.</span></code> is used to separate levels within the config hierarchy.
+So <code class="docutils literal notranslate"><span class="pre">gal.flux</span></code> represents <code class="docutils literal notranslate"><span class="pre">config['gal']['flux']</span></code>.</p>
+</div>
+<div class="section" id="splitting-up-a-config-job">
+<h2>Splitting up a config job<a class="headerlink" href="#splitting-up-a-config-job" title="Permalink to this headline">¶</a></h2>
+<p>For large simulations, one will typically want to split the job up into multiple smaller jobs,
+each of which can be run on a single node or core.  The natural way to split this up is by
+parceling some number of output files into each sub-job.  We make this splitting very easy using
+the command line options <code class="docutils literal notranslate"><span class="pre">-n</span></code> and <code class="docutils literal notranslate"><span class="pre">-j</span></code>.  The total number of jobs you want should be given
+with <code class="docutils literal notranslate"><span class="pre">-n</span></code>, and each separate job should be given a different <code class="docutils literal notranslate"><span class="pre">-j</span></code>.  So to divide a run across
+5 machines, you would run one of the following commands on each of the 5 different machines
+(or more typically send these 5 commands as jobs in a queue system):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span> <span class="n">config</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">n</span> <span class="mi">5</span> <span class="o">-</span><span class="n">j</span> <span class="mi">1</span>
+<span class="n">galsim</span> <span class="n">config</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">n</span> <span class="mi">5</span> <span class="o">-</span><span class="n">j</span> <span class="mi">2</span>
+<span class="n">galsim</span> <span class="n">config</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">n</span> <span class="mi">5</span> <span class="o">-</span><span class="n">j</span> <span class="mi">3</span>
+<span class="n">galsim</span> <span class="n">config</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">n</span> <span class="mi">5</span> <span class="o">-</span><span class="n">j</span> <span class="mi">4</span>
+<span class="n">galsim</span> <span class="n">config</span><span class="o">.</span><span class="n">yaml</span> <span class="o">-</span><span class="n">n</span> <span class="mi">5</span> <span class="o">-</span><span class="n">j</span> <span class="mi">5</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="other-command-line-options">
+<h2>Other command line options<a class="headerlink" href="#other-command-line-options" title="Permalink to this headline">¶</a></h2>
+<p>There are few other command line options that we describe here for completeness.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-h</span></code> or <code class="docutils literal notranslate"><span class="pre">--help</span></code> gives the help message.  This is really the definitive information about the
+<code class="docutils literal notranslate"><span class="pre">galsim</span></code> executable, so if that message disagrees with anything here, you should trust that
+information over what is written here.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">{0,1,2,3}</span></code> or <code class="docutils literal notranslate"><span class="pre">--verbosity</span> <span class="pre">{0,1,2,3}</span></code> sets how verbose the logging output should be.
+The default is <code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">1</span></code>, which provides some modest amount of output about each file being built.
+<code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">2</span></code> give more information about the progress within each output file, including one line of
+information about each object that is drawn.
+<code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">3</span></code> (debug mode) gives a lot of output and should be reserved for diagnosing runtime problems.
+<code class="docutils literal notranslate"><span class="pre">-v</span> <span class="pre">0</span></code> turns off all logging output except for error messages.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-l</span> <span class="pre">LOG_FILE</span></code> or <code class="docutils literal notranslate"><span class="pre">--log_file</span> <span class="pre">LOG_FILE</span></code> gives a file name for writing the logging output.  If
+omitted, the default is to write to stdout.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">{yaml,json}</span></code> or <code class="docutils literal notranslate"><span class="pre">--file_type</span> <span class="pre">{yaml,json}</span></code> defines what type of configuration file to parse.
+The default is to determine this from the file name extension, so it is not normally needed,
+but if you have non-standard file names, you might need to set this.
+* <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">MODULE</span></code> or <code class="docutils literal notranslate"><span class="pre">--module</span> <span class="pre">MODULE</span></code> gives a python module to import before parsing the config
+file.  This has been superseded by the <code class="docutils literal notranslate"><span class="pre">modules</span></code> top level field, which is normally more
+convenient.  However, this option is still allowed for backwards compatibility.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-p</span></code> or <code class="docutils literal notranslate"><span class="pre">--profile</span></code> turns on profiling information that gets output at the end of the run
+(or when multi-processing, at the end of execution of a process).  This can be useful for
+diagnosing where a simulation is spending most of its computation time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-n</span> <span class="pre">NJOBS</span></code> or <code class="docutils literal notranslate"><span class="pre">--njobs</span> <span class="pre">NJOBS</span></code> sets the total number of jobs that this run is a part of. Used in conjunction with -j (–job).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">JOB</span></code> or <code class="docutils literal notranslate"><span class="pre">--job</span> <span class="pre">JOB</span></code> sets the job number for this particular run. Must be in [1,njobs]. Used in conjunction with -n (–njobs).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-x</span></code> or <code class="docutils literal notranslate"><span class="pre">--except_abort</span></code> aborts the whole job whenever any file raises an exception rather than continuing on. (new in version 1.5)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--version</span></code> shows the version of GalSim.</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config_special.html" class="btn btn-neutral float-left" title="Special Fields" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_process.html" class="btn btn-neutral float-right" title="Config Processing From Python" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

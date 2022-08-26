@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The DES Module &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="The Roman Space Telescope Module" href="roman.html" />
+    <link rel="prev" title="The HSM Module" href="hsm.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The DES Module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#des-psf-models">DES PSF models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#writing-to-meds-files">Writing to MEDS Files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>The DES Module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/des.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="the-des-module">
+<h1>The DES Module<a class="headerlink" href="#the-des-module" title="Permalink to this headline">¶</a></h1>
+<p>The galsim.des module contains some functionality specific developed for the use of GalSim in
+simulations of the Dark Energy Survey.  However, both PSFEx and MEDS files are used for other
+surveys besides DES, so both <a class="reference internal" href="#galsim.des.DES_PSFEx" title="galsim.des.DES_PSFEx"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DES_PSFEx</span></code></a> and <a class="reference internal" href="#galsim.des.MEDSBuilder" title="galsim.des.MEDSBuilder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MEDSBuilder</span></code></a> may be relevant to users outside of
+DES.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To use this module, you must separately <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">galsim.des</span></code>.  These functions are
+not automatically imported when you <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">galsim</span></code>.</p>
+</div>
+<div class="section" id="des-psf-models">
+<h2>DES PSF models<a class="headerlink" href="#des-psf-models" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="galsim.des.DES_PSFEx">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">DES_PSFEx</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_PSFEx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that handles DES files describing interpolated principal component images
+of the PSF.  These are usually stored as *_psfcat.psf files.</p>
+<p>PSFEx is software written by Emmanuel Bertin.  If you want more detail about PSFEx, please
+check out the web site:</p>
+<p><a class="reference external" href="http://www.astromatic.net/software/psfex">http://www.astromatic.net/software/psfex</a></p>
+<p>It builds PSF objects from images of stars in a given exposure, finds a reasonable basis
+set to describe those images, and then fits the coefficient of these bases as a function
+of the <code class="docutils literal notranslate"><span class="pre">(x,y)</span></code> position on the image.</p>
+<p>Note that while the interpolation is done in image coordinates, GalSim usually deals with
+object profiles in world coordinates.  However, PSFEx does not consider the WCS of the
+image when building its bases.  The bases are built in image coordinates.  So there are
+two options to get GalSim to handle this difference.</p>
+<ol class="arabic">
+<li><p>Ignore the WCS of the original image.  In this case, the *.psf files have all the
+information you need:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">des_psfex</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">des</span><span class="o">.</span><span class="n">DES_PSFEx</span><span class="p">(</span><span class="n">fitpsf_file_name</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image_pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="n">image_x</span><span class="p">,</span> <span class="n">image_y</span><span class="p">)</span>    <span class="c1"># position in pixels on the image</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                  <span class="c1"># NOT in arcsec on the sky!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">des_psfex</span><span class="o">.</span><span class="n">getPSF</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>      <span class="c1"># profile is in image coordinates</span>
+</pre></div>
+</div>
+<p>The psf profile that is returned will be in image coordinates.  Therefore, it should be
+drawn onto an image with no wcs.  (Or equivalently, one with <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">=</span> <span class="pre">1</span></code>.)  If you want
+to use this to convolve a galaxy profile, you would want to either project the galaxy
+(typically constructed in world coordinates) to the correct image coordinates or project
+the PSF up into world coordinates.</p>
+</li>
+<li><p>Build the PSF in world coordinates directly.  The DES_PSFEx constructor can take an
+extra argument, either <code class="docutils literal notranslate"><span class="pre">image_file_name</span></code> or <code class="docutils literal notranslate"><span class="pre">wcs</span></code>, to tell GalSim what WCS to use for
+the coversion between image and world coordinates.  The former option is the name of
+the file from which to read the WCS, which will often be more convenient, but you can
+also just pass in a WCS object directly.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">des_psfex</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">des</span><span class="o">.</span><span class="n">DES_PSFEx</span><span class="p">(</span><span class="n">fitpsf_file_name</span><span class="p">,</span> <span class="n">image_file_name</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image_pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="n">image_x</span><span class="p">,</span> <span class="n">image_y</span><span class="p">)</span>    <span class="c1"># position in pixels on the image</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                  <span class="c1"># NOT in arcsec on the sky!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">des_psfex</span><span class="o">.</span><span class="n">getPSF</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>      <span class="c1"># profile is in world coordinates</span>
+</pre></div>
+</div>
+<p>This time the psf profile that is returned will already be in world coordinates as
+GalSim normally expects, so you can use it in the normal ways.  If you want to draw it
+(or a convolved object) onto an image with the original WCS at that location, you can use
+<code class="docutils literal notranslate"><span class="pre">des_psfex.getLocalWCS(image_pos)</span></code> for the local wcs at the location of the PSF.</p>
+</li>
+</ol>
+<p>Note that the returned psf here already includes the pixel.  This is what is sometimes
+called an “effective PSF”.  Thus, you should not convolve by the pixel profile again
+(nor integrate over the pixel).  This would effectively include the pixel twice!</p>
+<p>In GalSim, you should always pass <code class="docutils literal notranslate"><span class="pre">method='no_pixel'</span></code> when drawing images of objects
+convolved with PSFs produced with this class.  Other drawing methods, such as photon shooting
+(<code class="docutils literal notranslate"><span class="pre">method='phot'</span></code>) or an FFT (<code class="docutils literal notranslate"><span class="pre">method='fft'</span></code>), will result in convolving the pixel twice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The file name to be read in, or a pyfits HDU in which case it is
+used directly instead of being opened.</p></li>
+<li><p><strong>image_file_name</strong> – The name of the fits file of the original image (needed for the
+WCS information in the header).  If unavailable, you may omit this
+(or use None), but then the returned profiles will be in image
+coordinates, not world coordinates. [default: None]</p></li>
+<li><p><strong>wcs</strong> – Optional way to provide the WCS if you already have it loaded from
+the image file. [default: None]</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if the <code class="docutils literal notranslate"><span class="pre">file_name</span></code>
+does not already include it.  (The image file is assumed to be in
+the same directory.) [default: None].</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.des.DES_PSFEx.getLocalWCS">
+<code class="sig-name descname"><span class="pre">getLocalWCS</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getLocalWCS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getLocalWCS" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the original image was provided to the constructor, this will return the local
+WCS at a given location in that original image.  If not, this will return None.</p>
+<dl class="simple">
+<dt>Parameter:</dt><dd><p>image_pos (Position):    The position in pixels in the image.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A LocalWCS or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.des.DES_PSFEx.getPSF">
+<code class="sig-name descname"><span class="pre">getPSF</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getPSF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the PSF at position <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_pos</strong> – The position in image coordinates at which to build the PSF.</p></li>
+<li><p><strong>gsparams</strong> – A <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> instance to pass to the constructed <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a>.
+[defualt: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the PSF as a <a class="reference internal" href="gsobject.html#galsim.GSObject" title="galsim.GSObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSObject</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.des.DES_PSFEx.getPSFArray">
+<code class="sig-name descname"><span class="pre">getPSFArray</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_psfex.html#DES_PSFEx.getPSFArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_PSFEx.getPSFArray" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the PSF image as a numpy array at position image_pos in image coordinates.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.des.DES_Shapelet">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">DES_Shapelet</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_Shapelet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class that handles DES files describing interpolated polar shapelet decompositions.
+These are stored as <code class="docutils literal notranslate"><span class="pre">*_fitpsf.fits</span></code> files.  They are not used in DES anymore, so this
+class is at best of historical interest</p>
+<p>The shapelet PSFs measure a shapelet decomposition of each star and interpolate the shapelet
+coefficients over the image positions.</p>
+<p>Unlike PSFEx, these PSF models are built directly in world coordinates.  The shapelets know
+about the WCS, so they are able to fit the shapelet model directly in terms of arcsec.
+Thus, the getPSF function always returns a profile in world coordinates.</p>
+<p>Typical usage:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">des_shapelet</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">des</span><span class="o">.</span><span class="n">DES_Shapelet</span><span class="p">(</span><span class="n">fitpsf_file_name</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">image_pos</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">PositionD</span><span class="p">(</span><span class="n">image_x</span><span class="p">,</span> <span class="n">image_y</span><span class="p">)</span>    <span class="c1"># position in pixels on the image</span>
+<span class="gp">&gt;&gt;&gt; </span>                                                  <span class="c1"># NOT in arcsec on the sky!</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">psf</span> <span class="o">=</span> <span class="n">des_shapelet</span><span class="o">.</span><span class="n">getPSF</span><span class="p">(</span><span class="n">image_pos</span><span class="p">)</span>   <span class="c1"># profile is in world coordinates</span>
+</pre></div>
+</div>
+<p>Note that the returned psf here already includes the pixel.  This is what is sometimes
+called an “effective PSF”.  Thus, you should not convolve by the pixel profile again
+(nor integrate over the pixel).  This would effectively include the pixel twice!</p>
+<p>This class will only interpolate within the defining bounds.  It won’t extrapolate
+beyond the bounding box of where the stars defined the interpolation.
+If you try to use it with an invalid position, it will throw an IndexError.
+You can check whether a position is valid with</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="n">des_shapelet</span><span class="o">.</span><span class="n">bounds</span><span class="o">.</span><span class="n">includes</span><span class="p">(</span><span class="n">pos</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="n">psf</span> <span class="o">=</span> <span class="n">des_shapelet</span><span class="o">.</span><span class="n">getPSF</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">else</span><span class="p">:</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="p">[</span><span class="o">...</span><span class="n">skip</span> <span class="n">this</span> <span class="nb">object</span><span class="o">...</span><span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> – The name of the file to be read in.</p></li>
+<li><p><strong>dir</strong> – Optionally a directory name can be provided if the file names do not
+already include it. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="galsim.des.DES_Shapelet.getB">
+<code class="sig-name descname"><span class="pre">getB</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.getB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.getB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the B vector as a numpy array at position pos</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.des.DES_Shapelet.getPSF">
+<code class="sig-name descname"><span class="pre">getPSF</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_pos</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gsparams</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.getPSF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.getPSF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the PSF at position image_pos</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>image_pos</strong> – The position in pixel units for which to build the PSF.</p></li>
+<li><p><strong>gsparams</strong> – An optional <a class="reference internal" href="gsparams.html#galsim.GSParams" title="galsim.GSParams"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSParams</span></code></a> instance to pass to the constructed GSObject.
+[default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the PSF as a galsim.Shapelet instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.des.DES_Shapelet.read_fits">
+<code class="sig-name descname"><span class="pre">read_fits</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_shapelet.html#DES_Shapelet.read_fits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.DES_Shapelet.read_fits" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read in a DES_Shapelet stored in FITS file.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="writing-to-meds-files">
+<h2>Writing to MEDS Files<a class="headerlink" href="#writing-to-meds-files" title="Permalink to this headline">¶</a></h2>
+<p>This module defines the <a class="reference internal" href="#galsim.des.MultiExposureObject" title="galsim.des.MultiExposureObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MultiExposureObject</span></code></a> class for representing multiple exposure data for a single object. The <a class="reference internal" href="#galsim.des.WriteMEDS" title="galsim.des.WriteMEDS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">WriteMEDS</span></code></a> function can be used to write a list of <a class="reference internal" href="#galsim.des.MultiExposureObject" title="galsim.des.MultiExposureObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MultiExposureObject</span></code></a> instances to a single MEDS file.</p>
+<p>Importing this module also adds these data structures to the config framework, so that MEDS file output can subsequently be simulated directly using a config file.</p>
+<dl class="py class">
+<dt id="galsim.des.MultiExposureObject">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">MultiExposureObject</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">images</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">badpix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">psf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutout_row</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutout_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MultiExposureObject"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MultiExposureObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class containing exposures for single object, along with other information.</p>
+<p>The MultiExposureObject class represents multiple exposure data for a single object for the
+purpose of writing the images to a MEDS file.</p>
+<p>The <a class="reference internal" href="#galsim.des.WriteMEDS" title="galsim.des.WriteMEDS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">WriteMEDS</span></code></a> function can be used to write a list of MultiExposureObjects to a MEDS file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>images</strong> – List of images of the object.</p></li>
+<li><p><strong>weight</strong> – List of weight images. [default: None]</p></li>
+<li><p><strong>badpix</strong> – List of bad pixel masks. [default: None]</p></li>
+<li><p><strong>seg</strong> – List of segmentation maps. [default: None]</p></li>
+<li><p><strong>psf</strong> – List of psf images. [default: None]</p></li>
+<li><p><strong>wcs</strong> – List of WCS transformations. [default: None]</p></li>
+<li><p><strong>id</strong> – Galaxy id. [default: 0]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>self.images</strong> – List of images of the object.</p></li>
+<li><p><strong>self.weight</strong> – List of weight maps.</p></li>
+<li><p><strong>self.seg</strong> – List of segmentation maps.</p></li>
+<li><p><strong>self.psf</strong> – List of psf images.</p></li>
+<li><p><strong>self.wcs</strong> – List of WCS transformations.</p></li>
+<li><p><strong>self.n_cutouts</strong> – Number of exposures.</p></li>
+<li><p><strong>self.box_size</strong> – Size of each exposure image.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.des.MEDSBuilder">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">MEDSBuilder</span></code><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MEDSBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.output.OutputBuilder</span></code></p>
+<p>This class lets you use the <a class="reference internal" href="#galsim.des.MultiExposureObject" title="galsim.des.MultiExposureObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MultiExposureObject</span></code></a> very simply as a special <code class="docutils literal notranslate"><span class="pre">output</span></code>
+type when using config processing.</p>
+<p>It requires the use of <code class="docutils literal notranslate"><span class="pre">galsim.des</span></code> in the config files <code class="docutils literal notranslate"><span class="pre">modules</span></code> section.</p>
+<dl class="py method">
+<dt id="galsim.des.MEDSBuilder.buildImages">
+<code class="sig-name descname"><span class="pre">buildImages</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.buildImages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.buildImages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a meds file as specified in config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>file_num</strong> – The current file_num.</p></li>
+<li><p><strong>image_num</strong> – The current image_num.</p></li>
+<li><p><strong>obj_num</strong> – The current obj_num.</p></li>
+<li><p><strong>ignore</strong> – A list of parameters that are allowed to be in config that we can ignore
+here.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A list of MultiExposureObjects.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.des.MEDSBuilder.getNImages">
+<code class="sig-name descname"><span class="pre">getNImages</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.getNImages"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.getNImages" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of images to be built for a given <code class="docutils literal notranslate"><span class="pre">file_num</span></code>.</p>
+<p>In the base class, we only build a single image, so it returns 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>file_num</strong> – The current file number.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the number of images to build.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.des.MEDSBuilder.writeFile">
+<code class="sig-name descname"><span class="pre">writeFile</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#MEDSBuilder.writeFile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.MEDSBuilder.writeFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the data to a file.  In this case a MEDS file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – The data to write.  Here, this is a list of <a class="reference internal" href="#galsim.des.MultiExposureObject" title="galsim.des.MultiExposureObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MultiExposureObject</span></code></a>.</p></li>
+<li><p><strong>file_name</strong> – The file_name to write to.</p></li>
+<li><p><strong>config</strong> – The configuration dict for the output field.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="galsim.des.OffsetBuilder">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">OffsetBuilder</span></code><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.OffsetBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">galsim.config.extra.ExtraOutputBuilder</span></code></p>
+<p>This “extra” output builder saves the stamp offset values for later use.</p>
+<p>It is used as a <code class="docutils literal notranslate"><span class="pre">meds_get_offset</span></code> field in the <code class="docutils literal notranslate"><span class="pre">output</span></code> section.</p>
+<dl class="py method">
+<dt id="galsim.des.OffsetBuilder.finalize">
+<code class="sig-name descname"><span class="pre">finalize</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">main_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.OffsetBuilder.finalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform any final processing at the end of all the image processing.</p>
+<p>This function will be called after all images have been built.</p>
+<p>It returns some sort of final version of the object.  In the base class, it just returns
+self.data, but depending on the meaning of the output object, something else might be
+more appropriate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>main_data</strong> – The main file data in case it is needed.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The final version of the object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="galsim.des.OffsetBuilder.processStamp">
+<code class="sig-name descname"><span class="pre">processStamp</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_num</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#OffsetBuilder.processStamp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.OffsetBuilder.processStamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform any necessary processing at the end of each stamp construction.</p>
+<p>This function will be called after each stamp is built, but before the noise is added,
+so the existing stamp image has the true surface brightness profile (unless photon shooting
+was used, in which case there will necessarily be noise from that process).</p>
+<p>Remember, these stamps may be processed out of order.  Saving data to the scratch dict
+is safe, even if multiprocessing is being used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj_num</strong> – The object number</p></li>
+<li><p><strong>config</strong> – The configuration field for this output object.</p></li>
+<li><p><strong>base</strong> – The base configuration dict.</p></li>
+<li><p><strong>logger</strong> – If given, a logger object to log progress. [default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="galsim.des.WriteMEDS">
+<code class="sig-prename descclassname"><span class="pre">galsim.des.</span></code><code class="sig-name descname"><span class="pre">WriteMEDS</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clobber</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/des/des_meds.html#WriteMEDS"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.des.WriteMEDS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes a MEDS file from a list of <a class="reference internal" href="#galsim.des.MultiExposureObject" title="galsim.des.MultiExposureObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MultiExposureObject</span></code></a> instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj_list</strong> – List of <a class="reference internal" href="#galsim.des.MultiExposureObject" title="galsim.des.MultiExposureObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MultiExposureObject</span></code></a> instances</p></li>
+<li><p><strong>file_name</strong> – Name of meds file to be written</p></li>
+<li><p><strong>clobber</strong> – Setting <code class="docutils literal notranslate"><span class="pre">clobber=True</span></code> when <code class="docutils literal notranslate"><span class="pre">file_name</span></code> is given will silently overwrite
+existing files. [default True]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="hsm.html" class="btn btn-neutral float-left" title="The HSM Module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="roman.html" class="btn btn-neutral float-right" title="The Roman Space Telescope Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.input_nfw &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>galsim.config.input_nfw</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.input_nfw</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">InputLoader</span><span class="p">,</span> <span class="n">GetInputObj</span><span class="p">,</span> <span class="n">RegisterInputType</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">GetCurrentValue</span><span class="p">,</span> <span class="n">CheckAllParams</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">RegisterValueType</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..shear</span> <span class="kn">import</span> <span class="n">Shear</span>
+<span class="kn">from</span> <span class="nn">..nfw_halo</span> <span class="kn">import</span> <span class="n">NFWHalo</span>
+
+<span class="c1"># This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.</span>
+
+<div class="viewcode-block" id="NFWLoader"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_nfw.NFWLoader">[docs]</a><span class="k">class</span> <span class="nc">NFWLoader</span><span class="p">(</span><span class="n">InputLoader</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">setupImage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_obj</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Just attach the logger to the input_obj so we can use it when evaluating values.</span>
+        <span class="n">input_obj</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span></div>
+
+<span class="c1"># Register this as a valid input type</span>
+<span class="n">RegisterInputType</span><span class="p">(</span><span class="s1">&#39;nfw_halo&#39;</span><span class="p">,</span> <span class="n">NFWLoader</span><span class="p">(</span><span class="n">NFWHalo</span><span class="p">))</span>
+
+<div class="viewcode-block" id="_GenerateFromNFWHaloShear"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_nfw._GenerateFromNFWHaloShear">[docs]</a><span class="k">def</span> <span class="nf">_GenerateFromNFWHaloShear</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a shear calculated from an NFWHalo object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nfw_halo</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;nfw_halo&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;NFWHaloShear&#39;</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">nfw_halo</span><span class="o">.</span><span class="n">logger</span>
+
+    <span class="k">if</span> <span class="s1">&#39;uv_pos&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;NFWHaloShear requested, but no position defined.&quot;</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;uv_pos&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="s1">&#39;gal&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">or</span> <span class="s1">&#39;redshift&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;gal&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;NFWHaloShear requested, but no gal.redshift defined.&quot;</span><span class="p">)</span>
+    <span class="n">redshift</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;redshift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;gal&#39;</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+
+    <span class="c1"># There aren&#39;t any parameters for this, so just make sure num is the only (optional)</span>
+    <span class="c1"># one present.</span>
+    <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="p">{</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">})</span>
+
+    <span class="n">g1</span><span class="p">,</span><span class="n">g2</span> <span class="o">=</span> <span class="n">nfw_halo</span><span class="o">.</span><span class="n">getShear</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span><span class="n">redshift</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">shear</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="n">g1</span><span class="o">=</span><span class="n">g1</span><span class="p">,</span><span class="n">g2</span><span class="o">=</span><span class="n">g2</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Warning: NFWHalo shear (g1=</span><span class="si">%f</span><span class="s1">, g2=</span><span class="si">%f</span><span class="s1">) is invalid. &#39;</span><span class="o">%</span><span class="p">(</span>
+                       <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">g1</span><span class="p">,</span><span class="n">g2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;Using shear = 0.&#39;</span><span class="p">)</span>
+        <span class="n">shear</span> <span class="o">=</span> <span class="n">Shear</span><span class="p">(</span><span class="n">g1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">g2</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: NFWHalo shear = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">shear</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">shear</span><span class="p">,</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="_GenerateFromNFWHaloMagnification"><a class="viewcode-back" href="../../../config_input.html#galsim.config.input_nfw._GenerateFromNFWHaloMagnification">[docs]</a><span class="k">def</span> <span class="nf">_GenerateFromNFWHaloMagnification</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a magnification calculated from an NFWHalo object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nfw_halo</span> <span class="o">=</span> <span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;nfw_halo&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;NFWHaloMagnification&#39;</span><span class="p">)</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">nfw_halo</span><span class="o">.</span><span class="n">logger</span>
+
+    <span class="k">if</span> <span class="s1">&#39;uv_pos&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;NFWHaloMagnification requested, but no position defined.&quot;</span><span class="p">)</span>
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;uv_pos&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="s1">&#39;gal&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">or</span> <span class="s1">&#39;redshift&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;gal&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;NFWHaloMagnification requested, but no gal.redshift defined.&quot;</span><span class="p">)</span>
+    <span class="n">redshift</span> <span class="o">=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;redshift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;gal&#39;</span><span class="p">],</span> <span class="nb">float</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;max_mu&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="s1">&#39;num&#39;</span> <span class="p">:</span> <span class="nb">int</span> <span class="p">}</span>
+    <span class="n">kwargs</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">max_mu</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_mu&#39;</span><span class="p">,</span> <span class="mf">25.</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">max_mu</span> <span class="o">&gt;</span> <span class="mf">0.</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Invalid max_mu for type = NFWHaloMagnification (must be &gt; 0)&quot;</span><span class="p">,</span> <span class="n">max_mu</span><span class="p">)</span>
+
+    <span class="n">mu</span> <span class="o">=</span> <span class="n">nfw_halo</span><span class="o">.</span><span class="n">getMagnification</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span><span class="n">redshift</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mu</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">mu</span> <span class="o">&gt;</span> <span class="n">max_mu</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Warning: NFWHalo mu = </span><span class="si">%f</span><span class="s1"> means strong lensing. &#39;</span><span class="o">%</span><span class="p">(</span>
+                       <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">mu</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;Using mu = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">max_mu</span><span class="p">)</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">max_mu</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: NFWHalo mu = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">],</span><span class="n">mu</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mu</span><span class="p">,</span> <span class="kc">False</span></div>
+
+
+<span class="c1"># Register these as valid value types</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;NFWHaloShear&#39;</span><span class="p">,</span> <span class="n">_GenerateFromNFWHaloShear</span><span class="p">,</span> <span class="p">[</span> <span class="n">Shear</span> <span class="p">],</span>
+                  <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;nfw_halo&#39;</span><span class="p">)</span>
+<span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;NFWHaloMagnification&#39;</span><span class="p">,</span> <span class="n">_GenerateFromNFWHaloMagnification</span><span class="p">,</span> <span class="p">[</span> <span class="nb">float</span> <span class="p">],</span>
+                  <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;nfw_halo&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

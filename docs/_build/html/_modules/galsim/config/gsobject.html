@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.config.gsobject &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>galsim.config.gsobject</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.config.gsobject</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">GetIndex</span><span class="p">,</span> <span class="n">GetRNG</span><span class="p">,</span> <span class="n">get_cls_params</span>
+<span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">ParseValue</span><span class="p">,</span> <span class="n">GetCurrentValue</span><span class="p">,</span> <span class="n">GetAllParams</span><span class="p">,</span> <span class="n">CheckAllParams</span><span class="p">,</span> <span class="n">SetDefaultIndex</span>
+<span class="kn">from</span> <span class="nn">.input</span> <span class="kn">import</span> <span class="n">RegisterInputConnectedType</span>
+<span class="kn">from</span> <span class="nn">.sed</span> <span class="kn">import</span> <span class="n">BuildSED</span>
+<span class="kn">from</span> <span class="nn">..errors</span> <span class="kn">import</span> <span class="n">GalSimConfigError</span><span class="p">,</span> <span class="n">GalSimConfigValueError</span>
+<span class="kn">from</span> <span class="nn">..position</span> <span class="kn">import</span> <span class="n">PositionD</span>
+<span class="kn">from</span> <span class="nn">..sum</span> <span class="kn">import</span> <span class="n">Add</span>
+<span class="kn">from</span> <span class="nn">..convolve</span> <span class="kn">import</span> <span class="n">Convolve</span>
+<span class="kn">from</span> <span class="nn">..phase_psf</span> <span class="kn">import</span> <span class="n">OpticalPSF</span>
+<span class="kn">from</span> <span class="nn">..shear</span> <span class="kn">import</span> <span class="n">Shear</span>
+<span class="kn">from</span> <span class="nn">..angle</span> <span class="kn">import</span> <span class="n">Angle</span>
+<span class="kn">from</span> <span class="nn">..gsobject</span> <span class="kn">import</span> <span class="n">GSObject</span>
+<span class="kn">from</span> <span class="nn">..chromatic</span> <span class="kn">import</span> <span class="n">ChromaticObject</span><span class="p">,</span> <span class="n">ChromaticOpticalPSF</span>
+<span class="kn">from</span> <span class="nn">..gsparams</span> <span class="kn">import</span> <span class="n">GSParams</span>
+<span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">basestring</span>
+
+<span class="c1"># This file handles the building of GSObjects in the config[&#39;psf&#39;] and config[&#39;gal&#39;] fields.</span>
+<span class="c1"># This file includes many of the simple object types.  Additional types are defined in</span>
+<span class="c1"># gsobject_ring.py, input_real.py, and input_cosmos.py.</span>
+
+<span class="c1"># This module-level dict will store all the registered gsobject types.</span>
+<span class="c1"># See the RegisterObjectType function at the end of this file.</span>
+<span class="c1"># The keys will be the (string) names of the object types, and the values are the function</span>
+<span class="c1"># to call to build an object of that type.</span>
+<span class="n">valid_gsobject_types</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="SkipThisObject"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SkipThisObject">[docs]</a><span class="k">class</span> <span class="nc">SkipThisObject</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class that a builder can throw to indicate that nothing went wrong, but for some</span>
+<span class="sd">    reason, this particular object should be skipped and just move onto the next object.</span>
+<span class="sd">    The constructor takes an optional message that will be output to the logger if</span>
+<span class="sd">    logging is active.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Using self.message gives a deprecation warning.  Avoid this by using a different name.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">message</span></div>
+
+
+<div class="viewcode-block" id="BuildGSObject"><a class="viewcode-back" href="../../../config_process.html#galsim.config.BuildGSObject">[docs]</a><span class="k">def</span> <span class="nf">BuildGSObject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gsparams</span><span class="o">=</span><span class="p">{},</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a GSObject from the parameters in config[key].</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        config:     A dict with the configuration information.</span>
+<span class="sd">        key:        The key name in config indicating which object to build.</span>
+<span class="sd">        base:       The base dict of the configuration. [default: config]</span>
+<span class="sd">        gsparams:   Optionally, provide non-default GSParams items.  Any ``gsparams`` specified</span>
+<span class="sd">                    at this level will be added to the list.  This should be a dict with</span>
+<span class="sd">                    whatever kwargs should be used in constructing the GSParams object.</span>
+<span class="sd">                    [default: {}]</span>
+<span class="sd">        logger:     Optionally, provide a logger for logging debug statements.</span>
+<span class="sd">                    [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the tuple (gsobject, safe), where ``gsobject`` is the built object, and ``safe`` is</span>
+<span class="sd">        a bool that says whether it is safe to use this object again next time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="vm">__dict__</span> <span class="k">as</span> <span class="n">galsim_dict</span>
+
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">base</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">config</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Start BuildGSObject </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="c1"># If key isn&#39;t in config, then just return None.</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">param</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">True</span>
+
+    <span class="c1"># Check what index key we want to use for this object.</span>
+    <span class="c1"># Note: this call will also set base[&#39;index_key&#39;] and base[&#39;rng&#39;] to the right values</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+
+    <span class="c1"># Get the type to be parsed.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="s1">&#39;type&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;type attribute required in config.</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">key</span><span class="p">)</span>
+    <span class="n">type_name</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+
+    <span class="c1"># If we are repeating, then we get to use the current object for repeat times.</span>
+    <span class="k">if</span> <span class="s1">&#39;repeat&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="n">repeat</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">repeat</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="c1"># Check if we need to skip this object</span>
+    <span class="k">if</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="n">skip</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">skip</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Skipping because field skip=True&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">SkipThisObject</span><span class="p">()</span>
+
+    <span class="c1"># Check if we can use the current cached object</span>
+    <span class="k">if</span> <span class="s1">&#39;current&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="c1"># NB. &quot;current&quot; tuple is (obj, safe, None, index, index_type)</span>
+        <span class="n">cobj</span><span class="p">,</span> <span class="n">csafe</span><span class="p">,</span> <span class="n">cvalue_type</span><span class="p">,</span> <span class="n">cindex</span><span class="p">,</span> <span class="n">cindex_type</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">csafe</span> <span class="ow">or</span> <span class="n">cindex</span><span class="o">//</span><span class="n">repeat</span> <span class="o">==</span> <span class="n">index</span><span class="o">//</span><span class="n">repeat</span><span class="p">:</span>
+            <span class="c1"># If logging, explain why we are using the current object.</span>
+            <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">csafe</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: current is safe&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">repeat</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: repeat = </span><span class="si">%d</span><span class="s1">, index = </span><span class="si">%d</span><span class="s1">, use current object&#39;</span><span class="p">,</span>
+                                <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">repeat</span><span class="p">,</span><span class="n">index</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: This object is already current&#39;</span><span class="p">,</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+
+            <span class="k">return</span> <span class="n">cobj</span><span class="p">,</span> <span class="n">csafe</span>
+
+    <span class="c1"># Set up the initial default list of attributes to ignore while building the object:</span>
+    <span class="n">ignore</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;dilate&#39;</span><span class="p">,</span> <span class="s1">&#39;dilation&#39;</span><span class="p">,</span> <span class="s1">&#39;ellip&#39;</span><span class="p">,</span> <span class="s1">&#39;rotate&#39;</span><span class="p">,</span> <span class="s1">&#39;rotation&#39;</span><span class="p">,</span> <span class="s1">&#39;scale_flux&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;magnify&#39;</span><span class="p">,</span> <span class="s1">&#39;magnification&#39;</span><span class="p">,</span> <span class="s1">&#39;shear&#39;</span><span class="p">,</span> <span class="s1">&#39;lens&#39;</span><span class="p">,</span> <span class="s1">&#39;shift&#39;</span><span class="p">,</span> <span class="s1">&#39;sed&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;gsparams&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;current&#39;</span><span class="p">,</span> <span class="s1">&#39;index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;repeat&#39;</span>
+    <span class="p">]</span>
+    <span class="c1"># There are a few more that are specific to which key we have.</span>
+    <span class="c1"># Note: some custom stamp builders may have fields besides just gal and psf.</span>
+    <span class="c1"># Using &#39;gal&#39; in key rather than key == &#39;gal&#39;, we make it easier for them, since the</span>
+    <span class="c1"># keys can be e.g. blue_gal, red_gal, or halo_gal, field_gal, etc.  Anything with gal</span>
+    <span class="c1"># somewhere in the name will be treated as a gal.  Likewise ground_psf, space_psf or</span>
+    <span class="c1"># similar will all be treated as psf.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">basestring</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;gal&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+        <span class="n">ignore</span> <span class="o">+=</span> <span class="p">[</span> <span class="s1">&#39;resolution&#39;</span><span class="p">,</span> <span class="s1">&#39;signal_to_noise&#39;</span><span class="p">,</span> <span class="s1">&#39;redshift&#39;</span><span class="p">,</span> <span class="s1">&#39;re_from_res&#39;</span> <span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">basestring</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;psf&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+        <span class="n">ignore</span> <span class="o">+=</span> <span class="p">[</span> <span class="s1">&#39;saved_re&#39;</span> <span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># As long as key isn&#39;t psf, allow resolution.</span>
+        <span class="c1"># Ideally, we&#39;d like to check that it&#39;s something within the gal hierarchy, but</span>
+        <span class="c1"># I don&#39;t know an easy way to do that.</span>
+        <span class="n">ignore</span> <span class="o">+=</span> <span class="p">[</span> <span class="s1">&#39;resolution&#39;</span> <span class="p">,</span> <span class="s1">&#39;re_from_res&#39;</span> <span class="p">]</span>
+
+    <span class="c1"># Allow signal_to_noise for PSFs only if there is not also a galaxy.</span>
+    <span class="k">if</span> <span class="s1">&#39;gal&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">basestring</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">&#39;psf&#39;</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+        <span class="n">ignore</span> <span class="o">+=</span> <span class="p">[</span> <span class="s1">&#39;signal_to_noise&#39;</span><span class="p">]</span>
+
+    <span class="c1"># If we are specifying the size according to a resolution, then we</span>
+    <span class="c1"># need to get the PSF&#39;s half_light_radius.</span>
+    <span class="k">if</span> <span class="s1">&#39;resolution&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;psf&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Cannot use gal.resolution if no psf is set.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;saved_re&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s1">&#39;Cannot use gal.resolution with psf.type = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">])</span>
+        <span class="n">psf_re</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;psf&#39;</span><span class="p">][</span><span class="s1">&#39;saved_re&#39;</span><span class="p">]</span>
+        <span class="n">resolution</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;resolution&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">gal_re</span> <span class="o">=</span> <span class="n">resolution</span> <span class="o">*</span> <span class="n">psf_re</span>
+        <span class="k">if</span> <span class="s1">&#39;re_from_res&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+            <span class="c1"># The first time, check that half_light_radius isn&#39;t also specified.</span>
+            <span class="k">if</span> <span class="s1">&#39;half_light_radius&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                    <span class="s1">&#39;Cannot specify both gal.resolution and gal.half_light_radius&#39;</span><span class="p">)</span>
+            <span class="n">param</span><span class="p">[</span><span class="s1">&#39;re_from_res&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">param</span><span class="p">[</span><span class="s1">&#39;half_light_radius&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gal_re</span>
+
+    <span class="k">if</span> <span class="s1">&#39;gsparams&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="n">gsparams</span> <span class="o">=</span> <span class="n">UpdateGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">param</span><span class="p">[</span><span class="s1">&#39;gsparams&#39;</span><span class="p">],</span> <span class="n">base</span><span class="p">)</span>
+
+    <span class="c1"># See if this type is registered as a valid type.</span>
+    <span class="k">if</span> <span class="n">type_name</span> <span class="ow">in</span> <span class="n">valid_gsobject_types</span><span class="p">:</span>
+        <span class="n">build_func</span> <span class="o">=</span> <span class="n">valid_gsobject_types</span><span class="p">[</span><span class="n">type_name</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">type_name</span> <span class="ow">in</span> <span class="n">galsim_dict</span><span class="p">:</span>
+        <span class="n">gdict</span> <span class="o">=</span> <span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">exec</span><span class="p">(</span><span class="s1">&#39;import galsim&#39;</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+        <span class="n">build_func</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s2">&quot;galsim.&quot;</span><span class="o">+</span><span class="n">type_name</span><span class="p">,</span> <span class="n">gdict</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognised gsobject type&quot;</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">build_func</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">build_func</span><span class="p">,</span> <span class="p">(</span><span class="n">GSObject</span><span class="p">,</span> <span class="n">ChromaticObject</span><span class="p">)):</span>
+        <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">_BuildSimple</span><span class="p">(</span><span class="n">build_func</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">build_func</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+    <span class="c1"># Apply any SED and redshift that might be present.</span>
+    <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ApplySED</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ApplyRedshift</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">param</span><span class="p">:</span>
+        <span class="n">flux</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="s1">&#39;flux&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: flux == </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">flux</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;sed&#39;</span> <span class="ow">in</span> <span class="n">param</span> <span class="ow">and</span> <span class="s1">&#39;bandpass&#39;</span> <span class="ow">in</span> <span class="n">base</span><span class="p">:</span>
+            <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="n">flux</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">=</span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;bandpass&#39;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="c1"># If this is a psf, try to save the half_light_radius in case gal uses resolution.</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;psf&#39;</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">param</span><span class="p">[</span><span class="s1">&#39;saved_re&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">half_light_radius</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">pass</span>
+
+    <span class="c1"># Apply any dilation, ellip, shear, etc. modifications.</span>
+    <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">TransformObject</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="c1"># Re-get index and index_key in case something changed when building the object.</span>
+    <span class="c1"># (cf. Roman PSF for an example of why this might be useful.)</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span> <span class="o">=</span> <span class="n">GetIndex</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">base</span><span class="p">)</span>
+    <span class="n">param</span><span class="p">[</span><span class="s1">&#39;current&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">index_key</span>
+
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span></div>
+
+
+<div class="viewcode-block" id="UpdateGSParams"><a class="viewcode-back" href="../../../config_process.html#galsim.config.UpdateGSParams">[docs]</a><span class="k">def</span> <span class="nf">UpdateGSParams</span><span class="p">(</span><span class="n">gsparams</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add additional items to the ``gsparams`` dict based on config[&#39;gsparams&#39;].</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        gsparams:   A dict with whatever kwargs should be used in constructing the GSParams object.</span>
+<span class="sd">        config:     A dict with the configuration information.</span>
+<span class="sd">        base:       The base dict of the configuration.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        an updated gsparams dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="n">GSObject</span><span class="o">.</span><span class="n">_gsparams_opt</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">)</span>
+    <span class="c1"># When we update gsparams, we don&#39;t want to corrupt the original, so we need to</span>
+    <span class="c1"># make a copy first, then update with kwargs.</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="n">ret</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+<span class="k">def</span> <span class="nf">ApplySED</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read and apply an SED to the base gsobject</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        gsobject:   The base GSObject</span>
+<span class="sd">        config:     A dict with the configuration information.</span>
+<span class="sd">        base:       The base dict of the configuration.</span>
+<span class="sd">        logger:     A logger for logging debug statements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;sed&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">sed</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">BuildSED</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;sed&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">gsobject</span> <span class="o">*</span> <span class="n">sed</span><span class="p">,</span> <span class="n">safe</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="kc">True</span>
+
+<span class="k">def</span> <span class="nf">ApplyRedshift</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="k">if</span> <span class="s1">&#39;redshift&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">redshift</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;redshift&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">atRedshift</span><span class="p">(</span><span class="n">redshift</span><span class="p">),</span> <span class="n">safe</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="kc">True</span>
+
+<span class="c1">#</span>
+<span class="c1"># The following are private functions to implement the simpler GSObject types.</span>
+<span class="c1"># These are not imported into galsim.config namespace.</span>
+<span class="c1">#</span>
+
+<span class="k">def</span> <span class="nf">_BuildSimple</span><span class="p">(</span><span class="n">build_func</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a simple GSObject (i.e. one without a specialized _Build function) or</span>
+<span class="sd">    any other GalSim object that defines _req_params, _opt_params and _single_params.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Build the kwargs according to the various params objects in the class definition.</span>
+    <span class="n">type_name</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: BuildSimple for type = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">type_name</span><span class="p">)</span>
+
+    <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">takes_rng</span> <span class="o">=</span> <span class="n">get_cls_params</span><span class="p">(</span><span class="n">build_func</span><span class="p">)</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="o">=</span><span class="n">single</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;gsparams&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">takes_rng</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GetRNG</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: kwargs = </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="c1"># Finally, after pulling together all the params, try making the GSObject.</span>
+    <span class="k">return</span> <span class="n">build_func</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+
+<span class="k">def</span> <span class="nf">_BuildNone</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Special type=None returns None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">True</span>
+
+
+<div class="viewcode-block" id="_BuildAdd"><a class="viewcode-back" href="../../../config_objects.html#galsim.config._BuildAdd">[docs]</a><span class="k">def</span> <span class="nf">_BuildAdd</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a Sum object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;flux&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="c1"># Only Check, not Get.  We need to handle items a bit differently, since it&#39;s a list.</span>
+    <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+
+    <span class="n">gsobjects</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;items entry for type=Add is not a list.&quot;</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)):</span>
+        <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="c1"># Skip items with flux=0</span>
+        <span class="k">if</span> <span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">and</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">items</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="nb">float</span><span class="p">,</span><span class="n">base</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Not including component with flux == 0&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+            <span class="k">continue</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+        <span class="n">gsobjects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gsobject</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gsobjects</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;No valid items for type=Add&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">gsobjects</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobjects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Special: if the last item in a Sum doesn&#39;t specify a flux, we scale it</span>
+        <span class="c1"># to bring the total flux up to 1.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="s1">&#39;flux&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="s1">&#39;flux&#39;</span> <span class="ow">in</span> <span class="n">item</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">sum_flux</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">sum_flux</span> <span class="o">+=</span> <span class="n">GetCurrentValue</span><span class="p">(</span><span class="s1">&#39;flux&#39;</span><span class="p">,</span><span class="n">item</span><span class="p">,</span><span class="nb">float</span><span class="p">,</span><span class="n">base</span><span class="p">)</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="n">sum_flux</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">f</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;Warning: Automatic flux for the last item in Sum (to make the total flux=1) &quot;</span>
+                    <span class="s2">&quot;resulted in negative flux = </span><span class="si">%f</span><span class="s2"> for that item&quot;</span><span class="o">%</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: Rescaling final object in sum to have flux = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span>
+                         <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span> <span class="n">f</span><span class="p">)</span>
+            <span class="n">gsobjects</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">gsobjects</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">withFlux</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">gsobject</span> <span class="o">=</span> <span class="n">Add</span><span class="p">(</span><span class="n">gsobjects</span><span class="p">,</span><span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span></div>
+
+<div class="viewcode-block" id="_BuildConvolve"><a class="viewcode-back" href="../../../config_objects.html#galsim.config._BuildConvolve">[docs]</a><span class="k">def</span> <span class="nf">_BuildConvolve</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a Convolution object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;flux&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="c1"># Only Check, not Get.  We need to handle items a bit differently, since it&#39;s a list.</span>
+    <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+
+    <span class="n">gsobjects</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">items</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;items entry for type=Convolve is not a list.&quot;</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">)):</span>
+        <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+        <span class="n">gsobjects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gsobject</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gsobjects</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;No valid items for type=Convolve&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">gsobjects</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobjects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span> <span class="n">gsparams</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">gsobject</span> <span class="o">=</span> <span class="n">Convolve</span><span class="p">(</span><span class="n">gsobjects</span><span class="p">,</span><span class="n">gsparams</span><span class="o">=</span><span class="n">gsparams</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span></div>
+
+<div class="viewcode-block" id="_BuildList"><a class="viewcode-back" href="../../../config_objects.html#galsim.config._BuildList">[docs]</a><span class="k">def</span> <span class="nf">_BuildList</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a GSObject selected from a List.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;items&#39;</span> <span class="p">:</span> <span class="nb">list</span> <span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;index&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">,</span> <span class="s1">&#39;flux&#39;</span> <span class="p">:</span> <span class="nb">float</span> <span class="p">}</span>
+    <span class="c1"># Only Check, not Get.  We need to handle items a bit differently, since it&#39;s a list.</span>
+    <span class="n">CheckAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+
+    <span class="n">items</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;items&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">items</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;items entry for type=List is not a list.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Setup the indexing sequence if it hasn&#39;t been specified using the length of items.</span>
+    <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">))</span>
+    <span class="n">index</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;index </span><span class="si">%d</span><span class="s2"> out of bounds for List&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
+
+    <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">items</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span></div>
+
+<span class="k">def</span> <span class="nf">ParseAberrations</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse a possible aberrations list in config dict.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        key:        The key name with the aberrations list.</span>
+<span class="sd">        config:     A dict with the tranformation information for this object.</span>
+<span class="sd">        base:       The base dict of the configuration.</span>
+<span class="sd">        name:       The name of the source object being parsed (only used for error reporting).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        aberrations list or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="n">aber_list</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span> <span class="o">*</span> <span class="mi">4</span>  <span class="c1"># Initial 4 values are ignored.</span>
+        <span class="n">aberrations</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">aberrations</span><span class="p">,</span><span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
+                <span class="s2">&quot;aberrations entry for config.</span><span class="si">%s</span><span class="s2"> entry is not a list.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">aberrations</span><span class="p">)):</span>
+            <span class="n">value</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">aberrations</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+            <span class="n">aber_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+        <span class="k">return</span> <span class="n">aber_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+<span class="k">def</span> <span class="nf">_BuildJointOpticalPSF</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">get_cls_params</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="p">,</span> <span class="n">single</span><span class="p">,</span> <span class="n">ignore</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;aberrations&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">ignore</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">gsparams</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;gsparams&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">GSParams</span><span class="p">(</span><span class="o">**</span><span class="n">gsparams</span><span class="p">)</span>
+    <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;aberrations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ParseAberrations</span><span class="p">(</span><span class="s1">&#39;aberrations&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="n">safe</span>
+
+<div class="viewcode-block" id="_BuildOpticalPSF"><a class="viewcode-back" href="../../../config_objects.html#galsim.config._BuildOpticalPSF">[docs]</a><span class="k">def</span> <span class="nf">_BuildOpticalPSF</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build an OpticalPSF.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_BuildJointOpticalPSF</span><span class="p">(</span><span class="n">OpticalPSF</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
+
+<span class="k">def</span> <span class="nf">_BuildChromaticOpticalPSF</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a ChromaticOpticalPSF.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># All the code for this is the same as for OpticalPSF, so use a shared implementation above.</span>
+    <span class="k">return</span> <span class="n">_BuildJointOpticalPSF</span><span class="p">(</span><span class="n">ChromaticOpticalPSF</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">_BuildChromaticAtmosphere</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">ignore</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a ChromaticAtmosphere.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">..chromatic</span> <span class="kn">import</span> <span class="n">ChromaticAtmosphere</span>
+    <span class="kn">from</span> <span class="nn">..celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
+    <span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">CleanConfig</span>
+
+    <span class="n">req</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;base_wavelength&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">}</span>
+    <span class="n">opt</span> <span class="o">=</span> <span class="p">{</span>
+           <span class="s1">&#39;alpha&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+           <span class="s1">&#39;zenith_angle&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span>
+           <span class="s1">&#39;parallactic_angle&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span>
+           <span class="s1">&#39;zenith_coord&#39;</span> <span class="p">:</span> <span class="n">CelestialCoord</span><span class="p">,</span>
+           <span class="s1">&#39;HA&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span>
+           <span class="s1">&#39;latitude&#39;</span> <span class="p">:</span> <span class="n">Angle</span><span class="p">,</span>
+           <span class="s1">&#39;pressure&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+           <span class="s1">&#39;temperature&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+           <span class="s1">&#39;H2O_pressure&#39;</span> <span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+          <span class="p">}</span>
+    <span class="n">ignore</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;base_profile&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">ignore</span>
+    <span class="n">kwargs</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">GetAllParams</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">req</span><span class="o">=</span><span class="n">req</span><span class="p">,</span> <span class="n">opt</span><span class="o">=</span><span class="n">opt</span><span class="p">,</span> <span class="n">ignore</span><span class="o">=</span><span class="n">ignore</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;base_profile&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Attribute base_profile is required for type=ChromaticAtmosphere&quot;</span><span class="p">)</span>
+    <span class="n">base_profile</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">BuildGSObject</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s1">&#39;base_profile&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">gsparams</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+
+    <span class="k">if</span> <span class="s1">&#39;zenith_angle&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">sky_pos</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sky_pos&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sky_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span><span class="s2">&quot;Using zenith_angle with type=ChromaticAtmosphere requires &quot;</span>
+                                    <span class="s2">&quot;that sky_pos be available to use as the object coord.&quot;</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;obj_coord&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sky_pos</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="n">psf</span> <span class="o">=</span> <span class="n">ChromaticAtmosphere</span><span class="p">(</span><span class="n">base_profile</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">psf</span><span class="p">,</span> <span class="n">safe</span>
+
+
+<span class="c1">#</span>
+<span class="c1"># Now the functions for performing transformations</span>
+<span class="c1">#</span>
+
+<div class="viewcode-block" id="TransformObject"><a class="viewcode-back" href="../../../config_process.html#galsim.config.TransformObject">[docs]</a><span class="k">def</span> <span class="nf">TransformObject</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Applies ellipticity, rotation, gravitational shearing and centroid shifting to a</span>
+<span class="sd">    supplied GSObject, in that order.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        gsobject:   The GSObject to be transformed.</span>
+<span class="sd">        config:     A dict with the tranformation information for this object.</span>
+<span class="sd">        base:       The base dict of the configuration.</span>
+<span class="sd">        logger:     A logger for logging debug statements.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        transformed GSObject.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">LoggerWrapper</span><span class="p">(</span><span class="n">logger</span><span class="p">)</span>
+    <span class="c1"># The transformations are applied in the following order:</span>
+    <span class="n">_transformation_list</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s1">&#39;dilate&#39;</span><span class="p">,</span> <span class="n">_Dilate</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;dilation&#39;</span><span class="p">,</span> <span class="n">_Dilate</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;ellip&#39;</span><span class="p">,</span> <span class="n">_Shear</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;rotate&#39;</span><span class="p">,</span> <span class="n">_Rotate</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;rotation&#39;</span><span class="p">,</span> <span class="n">_Rotate</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;scale_flux&#39;</span><span class="p">,</span> <span class="n">_ScaleFlux</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;lens&#39;</span><span class="p">,</span> <span class="n">_Lens</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;shear&#39;</span><span class="p">,</span> <span class="n">_Shear</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;magnify&#39;</span><span class="p">,</span> <span class="n">_Magnify</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;magnification&#39;</span><span class="p">,</span> <span class="n">_Magnify</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;shift&#39;</span><span class="p">,</span> <span class="n">_Shift</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">safe</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">_transformation_list</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span>
+            <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span></div>
+
+<span class="k">def</span> <span class="nf">_Shear</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="n">shear</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">Shear</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: shear = </span><span class="si">%f</span><span class="s1">,</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">shear</span><span class="o">.</span><span class="n">g1</span><span class="p">,</span><span class="n">shear</span><span class="o">.</span><span class="n">g2</span><span class="p">)</span>
+    <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">_shear</span><span class="p">(</span><span class="n">shear</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_Rotate</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="n">theta</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">Angle</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: theta = </span><span class="si">%f</span><span class="s1"> rad&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">theta</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span>
+    <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_ScaleFlux</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="n">flux_ratio</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: flux_ratio  = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">flux_ratio</span><span class="p">)</span>
+    <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span> <span class="o">*</span> <span class="n">flux_ratio</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_Dilate</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="n">scale</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: scale  = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">scale</span><span class="p">)</span>
+    <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">dilate</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_Lens</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="n">shear</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;shear&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">Shear</span><span class="p">)</span>
+    <span class="n">mu</span><span class="p">,</span> <span class="n">safe1</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;mu&#39;</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">safe</span> <span class="ow">and</span> <span class="n">safe1</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: shear = </span><span class="si">%f</span><span class="s1">,</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">shear</span><span class="o">.</span><span class="n">g1</span><span class="p">,</span><span class="n">shear</span><span class="o">.</span><span class="n">g2</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: mu  = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">mu</span><span class="p">)</span>
+    <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">_lens</span><span class="p">(</span><span class="n">shear</span><span class="o">.</span><span class="n">g1</span><span class="p">,</span> <span class="n">shear</span><span class="o">.</span><span class="n">g2</span><span class="p">,</span> <span class="n">mu</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_Magnify</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="n">mu</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: mu  = </span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">mu</span><span class="p">)</span>
+    <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">magnify</span><span class="p">(</span><span class="n">mu</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
+
+<span class="k">def</span> <span class="nf">_Shift</span><span class="p">(</span><span class="n">gsobject</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="p">):</span>
+    <span class="n">shift</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">ParseValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">PositionD</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;obj </span><span class="si">%d</span><span class="s1">: shift  = </span><span class="si">%f</span><span class="s1">,</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">),</span><span class="n">shift</span><span class="o">.</span><span class="n">x</span><span class="p">,</span><span class="n">shift</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+    <span class="n">gsobject</span> <span class="o">=</span> <span class="n">gsobject</span><span class="o">.</span><span class="n">_shift</span><span class="p">(</span><span class="n">shift</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">shift</span><span class="o">.</span><span class="n">y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">gsobject</span><span class="p">,</span> <span class="n">safe</span>
+
+<div class="viewcode-block" id="RegisterObjectType"><a class="viewcode-back" href="../../../config_objects.html#galsim.config.RegisterObjectType">[docs]</a><span class="k">def</span> <span class="nf">RegisterObjectType</span><span class="p">(</span><span class="n">type_name</span><span class="p">,</span> <span class="n">build_func</span><span class="p">,</span> <span class="n">input_type</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Register an object type for use by the config apparatus.</span>
+
+<span class="sd">    A few notes about the signature of the build functions:</span>
+
+<span class="sd">    1. The config parameter is the dict for the current object to be generated.  So it should</span>
+<span class="sd">       be the case that config[&#39;type&#39;] == type_name.</span>
+<span class="sd">    2. The base parameter is the original config dict being processed.</span>
+<span class="sd">    3. The ignore parameter  is a list of items that should be ignored in the config dict if they</span>
+<span class="sd">       are present and not valid for the object being built.</span>
+<span class="sd">    4. The gsparams parameter is a dict of kwargs that should be used to build a GSParams object</span>
+<span class="sd">       to use when building this object.</span>
+<span class="sd">    5. The logger parameter is a logging.Logger object to use for logging progress if desired.</span>
+<span class="sd">    6. The return value of build_func should be a tuple consisting of the object and a boolean,</span>
+<span class="sd">       safe, which indicates whether the generated object is safe to use again rather than</span>
+<span class="sd">       regenerate for subsequent postage stamps. e.g. if a PSF has all constant values, then it</span>
+<span class="sd">       can be used for all the galaxies in a simulation, which lets it keep any FFTs that it has</span>
+<span class="sd">       performed internally.  OpticalPSF is a good example of where this can have a significant</span>
+<span class="sd">       speed up.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        type_name:      The name of the &#39;type&#39; specification in the config dict.</span>
+<span class="sd">        build_func:     A function to build a GSObject from the config information.</span>
+<span class="sd">                        The call signature is::</span>
+
+<span class="sd">                            obj, safe = Build(config, base, ignore, gsparams, logger)</span>
+
+<span class="sd">        input_type:     If the type requires an input object, give the key name of the input</span>
+<span class="sd">                        type here.  (If it uses more than one, this may be a list.)</span>
+<span class="sd">                        [default: None]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">valid_gsobject_types</span><span class="p">[</span><span class="n">type_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">build_func</span>
+    <span class="n">RegisterInputConnectedType</span><span class="p">(</span><span class="n">input_type</span><span class="p">,</span> <span class="n">type_name</span><span class="p">)</span></div>
+
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">_BuildNone</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;Add&#39;</span><span class="p">,</span> <span class="n">_BuildAdd</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;Sum&#39;</span><span class="p">,</span> <span class="n">_BuildAdd</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;Convolve&#39;</span><span class="p">,</span> <span class="n">_BuildConvolve</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;Convolution&#39;</span><span class="p">,</span> <span class="n">_BuildConvolve</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;List&#39;</span><span class="p">,</span> <span class="n">_BuildList</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;OpticalPSF&#39;</span><span class="p">,</span> <span class="n">_BuildOpticalPSF</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;ChromaticOpticalPSF&#39;</span><span class="p">,</span> <span class="n">_BuildChromaticOpticalPSF</span><span class="p">)</span>
+<span class="n">RegisterObjectType</span><span class="p">(</span><span class="s1">&#39;ChromaticAtmosphere&#39;</span><span class="p">,</span> <span class="n">_BuildChromaticAtmosphere</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

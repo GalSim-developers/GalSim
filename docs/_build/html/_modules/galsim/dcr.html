@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.dcr &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>galsim.dcr</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.dcr</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">.errors</span> <span class="kn">import</span> <span class="n">GalSimIncompatibleValuesError</span>
+
+<div class="viewcode-block" id="air_refractive_index_minus_one"><a class="viewcode-back" href="../../dcr.html#galsim.dcr.air_refractive_index_minus_one">[docs]</a><span class="k">def</span> <span class="nf">air_refractive_index_minus_one</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">pressure</span><span class="o">=</span><span class="mf">69.328</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">293.15</span><span class="p">,</span> <span class="n">H2O_pressure</span><span class="o">=</span><span class="mf">1.067</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the refractive index of air as function of wavelength.</span>
+
+<span class="sd">    Uses the formulae given in Filippenko (1982), which appear to come from Edlen (1953),</span>
+<span class="sd">    and Coleman, Bozman, and Meggers (1960).  The units of the original formula are non-SI,</span>
+<span class="sd">    being mmHg for pressure (and water vapor pressure), and degrees C for temperature.  This</span>
+<span class="sd">    function accepts SI units, however, and transforms them when plugging into the formula.</span>
+
+<span class="sd">    The default values for temperature, pressure and water vapor pressure are expected to be</span>
+<span class="sd">    appropriate for LSST at Cerro Pachon, Chile, but they are broadly reasonable for most</span>
+<span class="sd">    observatories.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        wave:             Wavelength array in nanometers</span>
+<span class="sd">        pressure:         Air pressure in kiloPascals.</span>
+<span class="sd">        temperature:      Temperature in Kelvins.</span>
+<span class="sd">        H2O_pressure:     Water vapor pressure in kiloPascals.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the refractive index minus 1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">pressure</span> <span class="o">*</span> <span class="mf">7.50061683</span> <span class="c1"># kPa -&gt; mmHg</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="n">temperature</span> <span class="o">-</span> <span class="mf">273.15</span> <span class="c1"># K -&gt; C</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">H2O_pressure</span> <span class="o">*</span> <span class="mf">7.50061683</span> <span class="c1"># kPa -&gt; mmHg</span>
+
+    <span class="n">sigma_squared</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">wave</span> <span class="o">*</span> <span class="mf">1.e-3</span><span class="p">)</span><span class="o">**</span><span class="mf">2.0</span> <span class="c1"># inverse wavenumber squared in micron^-2</span>
+    <span class="n">n_minus_one</span> <span class="o">=</span> <span class="p">(</span><span class="mf">64.328</span> <span class="o">+</span> <span class="p">(</span><span class="mf">29498.1</span> <span class="o">/</span> <span class="p">(</span><span class="mf">146.0</span> <span class="o">-</span> <span class="n">sigma_squared</span><span class="p">))</span>
+                   <span class="o">+</span> <span class="p">(</span><span class="mf">255.4</span> <span class="o">/</span> <span class="p">(</span><span class="mf">41.0</span> <span class="o">-</span> <span class="n">sigma_squared</span><span class="p">)))</span> <span class="o">*</span> <span class="mf">1.e-6</span>
+    <span class="n">n_minus_one</span> <span class="o">*=</span> <span class="n">P</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.049</span> <span class="o">-</span> <span class="mf">0.0157</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.e-6</span> <span class="o">*</span> <span class="n">P</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">720.883</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.003661</span> <span class="o">*</span> <span class="n">T</span><span class="p">))</span>
+    <span class="n">n_minus_one</span> <span class="o">-=</span> <span class="p">(</span><span class="mf">0.0624</span> <span class="o">-</span> <span class="mf">0.000680</span> <span class="o">*</span> <span class="n">sigma_squared</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.003661</span> <span class="o">*</span> <span class="n">T</span><span class="p">)</span> <span class="o">*</span> <span class="n">W</span> <span class="o">*</span> <span class="mf">1.e-6</span>
+    <span class="k">return</span> <span class="n">n_minus_one</span></div>
+
+<div class="viewcode-block" id="get_refraction"><a class="viewcode-back" href="../../dcr.html#galsim.dcr.get_refraction">[docs]</a><span class="k">def</span> <span class="nf">get_refraction</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the angle of refraction for a photon entering the atmosphere.</span>
+
+<span class="sd">    Photons refract when transitioning from space, where the refractive index n = 1.0 exactly, to</span>
+<span class="sd">    air, where the refractive index is slightly greater than 1.0.  This function computes the</span>
+<span class="sd">    change in zenith angle for a photon with a given wavelength.  Output is a positive number of</span>
+<span class="sd">    radians, even though the apparent zenith angle technically decreases due to this effect.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        wave:            Wavelength array in nanometers</span>
+<span class="sd">        zenith_angle:    `Angle` from object to zenith</span>
+<span class="sd">        **kwargs:        Keyword arguments to pass to air_refractive_index() to override default</span>
+<span class="sd">                         pressure, temperature, and/or H2O_pressure.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the absolute value of change in zenith angle in radians.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nm1</span> <span class="o">=</span> <span class="n">air_refractive_index_minus_one</span><span class="p">(</span><span class="n">wave</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="c1"># The following line is equivalent to:</span>
+    <span class="c1"># n_squared = (nm1 + 1)**2</span>
+    <span class="c1"># r0 = (n_squared - 1.0) / (2.0 * n_squared)</span>
+    <span class="n">r0</span> <span class="o">=</span> <span class="n">nm1</span> <span class="o">*</span> <span class="p">(</span><span class="n">nm1</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="p">(</span><span class="n">nm1</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">nm1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">r0</span> <span class="o">*</span> <span class="n">zenith_angle</span><span class="o">.</span><span class="n">tan</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="zenith_parallactic_angles"><a class="viewcode-back" href="../../dcr.html#galsim.dcr.zenith_parallactic_angles">[docs]</a><span class="k">def</span> <span class="nf">zenith_parallactic_angles</span><span class="p">(</span><span class="n">obj_coord</span><span class="p">,</span> <span class="n">zenith_coord</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">HA</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the zenith angle and parallactic angle of a celestial coordinate, given either</span>
+<span class="sd">    the celestial coordinate of the zenith, or equivalently, the hour angle of the coordinate and</span>
+<span class="sd">    the latitude of the observer.  This is useful for the function `ChromaticAtmosphere`.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        obj_coord:       A `CelestialCoord` object for which the zenith and parallactic</span>
+<span class="sd">                         angles will be computed.</span>
+<span class="sd">        zenith_coord:    A `CelestialCoord` indicating the coordinates of the zenith.</span>
+<span class="sd">        HA:              The hour angle (as an `Angle`) of the coordinate for which the</span>
+<span class="sd">                         zenith and parallactic angles will be computed.</span>
+<span class="sd">        latitude:        The observer&#39;s latitude, as an `Angle`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the tuple (zenith_angle, parallactic_angle), each of which is an `Angle`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.celestial</span> <span class="kn">import</span> <span class="n">CelestialCoord</span>
+    <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">degrees</span>
+    <span class="k">if</span> <span class="n">zenith_coord</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">HA</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">latitude</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                <span class="s2">&quot;Must provide either zenith_coord or (HA, latitude).&quot;</span><span class="p">,</span>
+                <span class="n">HA</span><span class="o">=</span><span class="n">HA</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="n">latitude</span><span class="p">,</span> <span class="n">zenith_coord</span><span class="o">=</span><span class="n">zenith_coord</span><span class="p">)</span>
+        <span class="n">zenith_coord</span> <span class="o">=</span> <span class="n">CelestialCoord</span><span class="p">(</span><span class="n">HA</span> <span class="o">+</span> <span class="n">obj_coord</span><span class="o">.</span><span class="n">ra</span><span class="p">,</span> <span class="n">latitude</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">HA</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">latitude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot provide both zenith_coord and (HA, latitude).&quot;</span><span class="p">,</span>
+                <span class="n">HA</span><span class="o">=</span><span class="n">HA</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="n">latitude</span><span class="p">,</span> <span class="n">zenith_coord</span><span class="o">=</span><span class="n">zenith_coord</span><span class="p">)</span>
+    <span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">obj_coord</span><span class="o">.</span><span class="n">distanceTo</span><span class="p">(</span><span class="n">zenith_coord</span><span class="p">)</span>
+    <span class="n">NCP</span> <span class="o">=</span> <span class="n">CelestialCoord</span><span class="p">(</span><span class="mf">0.0</span><span class="o">*</span><span class="n">degrees</span><span class="p">,</span> <span class="mi">90</span><span class="o">*</span><span class="n">degrees</span><span class="p">)</span>
+    <span class="n">parallactic_angle</span> <span class="o">=</span> <span class="n">obj_coord</span><span class="o">.</span><span class="n">angleBetween</span><span class="p">(</span><span class="n">NCP</span><span class="p">,</span> <span class="n">zenith_coord</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">parallactic_angle</span></div>
+
+<div class="viewcode-block" id="parse_dcr_angles"><a class="viewcode-back" href="../../dcr.html#galsim.dcr.parse_dcr_angles">[docs]</a><span class="k">def</span> <span class="nf">parse_dcr_angles</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the various options for specifying the zenith angle and parallactic angle</span>
+<span class="sd">    in `ChromaticAtmosphere`.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        zenith_angle:       `Angle` from object to zenith [default: 0]</span>
+<span class="sd">        parallactic_angle:  Parallactic angle, i.e. the position angle of the zenith, measured</span>
+<span class="sd">                            from North through East.  [default: 0]</span>
+<span class="sd">        obj_coord:          Celestial coordinates of the object being drawn as a</span>
+<span class="sd">                            `CelestialCoord`. [default: None]</span>
+<span class="sd">        zenith_coord:       Celestial coordinates of the zenith as a `CelestialCoord`.</span>
+<span class="sd">                            [default: None]</span>
+<span class="sd">        HA:                 Hour angle of the object as an `Angle`. [default: None]</span>
+<span class="sd">        latitude:           Latitude of the observer as an `Angle`. [default: None]</span>
+<span class="sd">        **kwargs:           For convenience, any other kwargs are returned back for further</span>
+<span class="sd">                            processing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        zenith_angle, parallactic_angle, kw, where kw is any other kwargs that aren&#39;t relevant.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.angle</span> <span class="kn">import</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">Angle</span>
+    <span class="k">if</span> <span class="s1">&#39;zenith_angle&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">zenith_angle</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;zenith_angle&#39;</span><span class="p">)</span>
+        <span class="n">parallactic_angle</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;parallactic_angle&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="o">*</span><span class="n">degrees</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">zenith_angle</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;zenith_angle must be a galsim.Angle.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parallactic_angle</span><span class="p">,</span> <span class="n">Angle</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;parallactic_angle must be a galsim.Angles.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s1">&#39;obj_coord&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">obj_coord</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;obj_coord&#39;</span><span class="p">)</span>
+        <span class="n">zenith_coord</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;zenith_coord&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">HA</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;HA&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">latitude</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;latitude&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">parallactic_angle</span> <span class="o">=</span> <span class="n">zenith_parallactic_angles</span><span class="p">(</span>
+            <span class="n">obj_coord</span><span class="o">=</span><span class="n">obj_coord</span><span class="p">,</span> <span class="n">zenith_coord</span><span class="o">=</span><span class="n">zenith_coord</span><span class="p">,</span> <span class="n">HA</span><span class="o">=</span><span class="n">HA</span><span class="p">,</span> <span class="n">latitude</span><span class="o">=</span><span class="n">latitude</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Need to specify zenith_angle and parallactic_angle.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">zenith_angle</span><span class="p">,</span> <span class="n">parallactic_angle</span><span class="p">,</span> <span class="n">kwargs</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

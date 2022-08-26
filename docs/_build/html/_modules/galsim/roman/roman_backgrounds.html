@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>galsim.roman.roman_backgrounds &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>galsim.roman.roman_backgrounds</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for galsim.roman.roman_backgrounds</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2012-2022 by the GalSim developers team on GitHub</span>
+<span class="c1"># https://github.com/GalSim-developers</span>
+<span class="c1">#</span>
+<span class="c1"># This file is part of GalSim: The modular galaxy image simulation toolkit.</span>
+<span class="c1"># https://github.com/GalSim-developers/GalSim</span>
+<span class="c1">#</span>
+<span class="c1"># GalSim is free software: redistribution and use in source and binary forms,</span>
+<span class="c1"># with or without modification, are permitted provided that the following</span>
+<span class="c1"># conditions are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright notice, this</span>
+<span class="c1">#    list of conditions, and the disclaimer given in the accompanying LICENSE</span>
+<span class="c1">#    file.</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above copyright notice,</span>
+<span class="c1">#    this list of conditions, and the disclaimer given in the documentation</span>
+<span class="c1">#    and/or other materials provided with the distribution.</span>
+<span class="c1">#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">@file roman_backgrounds.py</span>
+
+<span class="sd">Part of the Roman Space Telescope module.  This file includes any routines needed to define the</span>
+<span class="sd">background level, for which the main contribution is zodiacal light.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="getSkyLevel"><a class="viewcode-back" href="../../../roman.html#galsim.roman.getSkyLevel">[docs]</a><span class="k">def</span> <span class="nf">getSkyLevel</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="n">world_pos</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">2025</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the expected sky level for a Roman ST observation due to zodiacal light for this bandpass</span>
+<span class="sd">    and position.</span>
+
+<span class="sd">    This routine requires Bandpass objects that were loaded by galsim.roman.getBandpasses().  That</span>
+<span class="sd">    routine will have stored tables containing the sky background as a function of position on the</span>
+<span class="sd">    sky for that bandpass.  This routine then interpolates between the values in those tables to</span>
+<span class="sd">    arbitrary positions on the sky.</span>
+
+<span class="sd">    The numbers that are stored in the Bandpass object ``bandpass`` are background level in units of</span>
+<span class="sd">    e-/m^2/s/arcsec^2.  To get rid of the m^2, this routine multiplies by the total effective</span>
+<span class="sd">    collecting area in m^2.  Multiplying by the exposure time gives a result in e-/arcsec^2.  The</span>
+<span class="sd">    result can either be multiplied by the approximate pixel area to get e-/pix, or the result can</span>
+<span class="sd">    be used with wcs.makeSkyImage() to make an image of the sky that properly includes the actual</span>
+<span class="sd">    pixel area as a function of position on the detector.</span>
+
+<span class="sd">    The source of the tables that are being interpolated is Chris Hirata&#39;s publicly-available Roman</span>
+<span class="sd">    exposure time calculator (ETC):</span>
+
+<span class="sd">        http://www.tapir.caltech.edu/~chirata/web/software/space-etc/</span>
+
+<span class="sd">    It nominally returns photons/m^2/s/arcsec^2, but the input bandpasses used internally by the ETC</span>
+<span class="sd">    code include the quantum efficiency, to effectively convert to e-/m^2/s/arcsec^2.  Note that in</span>
+<span class="sd">    general results will depend on the adopted model for zodiacal light, and these are uncertain at</span>
+<span class="sd">    the ~10% level.</span>
+
+<span class="sd">    Positions should be specified with the ``world_pos`` keyword, which must be a CelestialCoord</span>
+<span class="sd">    object.  If no ``world_pos`` is supplied, then the routine will use a default position that</span>
+<span class="sd">    looks sensibly away from the sun.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        bandpass:   A Bandpass object.</span>
+<span class="sd">        world_pos:  A position, given as a CelestialCoord object.  If None, then the routine</span>
+<span class="sd">                    will use an ecliptic longitude of 90 degrees with respect to the sun</span>
+<span class="sd">                    position (as a fair compromise between 0 and 180), and an ecliptic latitude</span>
+<span class="sd">                    of 30 degrees with respect to the sun position (decently out of the plane</span>
+<span class="sd">                    of the Earth-sun orbit). [default: None]</span>
+<span class="sd">        exptime:    Exposure time in seconds.  If None, use the default Roman exposure time.</span>
+<span class="sd">                    [default: None]</span>
+<span class="sd">        epoch:      The epoch to be used for estimating the obliquity of the ecliptic when</span>
+<span class="sd">                    converting ``world_pos`` to ecliptic coordinates.  This keyword is only used</span>
+<span class="sd">                    if ``date`` is None, otherwise ``date`` is used to determine the ``epoch``.</span>
+<span class="sd">                    [default: 2025]</span>
+<span class="sd">        date:       The date of the observation, provided as a python datetime object.  If None,</span>
+<span class="sd">                    then the conversion to ecliptic coordinates assumes the sun is at ecliptic</span>
+<span class="sd">                    coordinates of (0,0), as it is at the vernal equinox. [default: None]</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        the expected sky level in e-/arcsec^2.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">degrees</span><span class="p">,</span> <span class="n">radians</span><span class="p">,</span> <span class="n">CelestialCoord</span>
+    <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">GalSimValueError</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">diameter</span><span class="p">,</span> <span class="n">obscuration</span>
+
+    <span class="k">if</span> <span class="n">exptime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">exptime</span>
+
+    <span class="c1"># Check for cached sky level information for this filter.  If not, raise exception</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bandpass</span><span class="p">,</span> <span class="s1">&#39;_sky_level&#39;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;Only bandpasses returned from galsim.roman.getBandpasses() are &quot;</span>
+                               <span class="s2">&quot;allowed here!&quot;</span><span class="p">,</span> <span class="n">bandpass</span><span class="p">)</span>
+
+    <span class="c1"># Check for proper type for position, and extract the ecliptic coordinates.</span>
+    <span class="k">if</span> <span class="n">world_pos</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Use our defaults for the case of unspecified position.</span>
+        <span class="n">ecliptic_lat</span> <span class="o">=</span> <span class="mf">30.</span><span class="o">*</span><span class="n">degrees</span>
+        <span class="n">ecliptic_lon</span> <span class="o">=</span> <span class="mf">90.</span><span class="o">*</span><span class="n">degrees</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world_pos</span><span class="p">,</span> <span class="n">CelestialCoord</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;world_pos must be supplied as a CelestialCoord.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">epoch</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span>
+        <span class="n">ecliptic_lon</span><span class="p">,</span> <span class="n">ecliptic_lat</span> <span class="o">=</span> <span class="n">world_pos</span><span class="o">.</span><span class="n">ecliptic</span><span class="p">(</span><span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="n">date</span><span class="p">)</span>
+
+    <span class="c1"># Check the position in our table, and make sure to take advantage of the latitude / longitude</span>
+    <span class="c1"># symmetries:</span>
+    <span class="c1"># The table only includes positive values of latitude, because there is symmetry about zero.  So</span>
+    <span class="c1"># we take the absolute value of the input ecliptic latitude.</span>
+    <span class="c1"># The table only includes longitude in the range [0, 180] because there is symmetry in that a</span>
+    <span class="c1"># negative longitude in the range[-180, 0] should have the same sky level as at the positive</span>
+    <span class="c1"># value of longitude (given that the Sun is at 0).</span>
+    <span class="n">ecliptic_lon</span> <span class="o">=</span> <span class="n">ecliptic_lon</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span>
+    <span class="n">ecliptic_lon</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ecliptic_lon</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span><span class="o">*</span><span class="n">radians</span>
+    <span class="n">ecliptic_lat</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ecliptic_lat</span><span class="o">.</span><span class="n">rad</span><span class="p">)</span><span class="o">*</span><span class="n">radians</span>
+    <span class="n">sin_ecliptic_lat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ecliptic_lat</span><span class="p">)</span>
+
+    <span class="c1"># Take the lookup table, and turn negative numbers (indicating failure because of proximity to</span>
+    <span class="c1"># sun) to large positive values so that we can identify them as bad after interpolation.</span>
+    <span class="n">max_sky</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">bandpass</span><span class="o">.</span><span class="n">_sky_level</span><span class="p">)</span>
+    <span class="n">sky_level</span> <span class="o">=</span> <span class="n">bandpass</span><span class="o">.</span><span class="n">_sky_level</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">sky_level</span><span class="p">[</span><span class="n">sky_level</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.e6</span>
+
+    <span class="c1"># Interpolate in 2d on the table.</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">sky_level</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">46</span><span class="p">,</span><span class="mi">42</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">()</span>
+    <span class="n">xlat</span> <span class="o">=</span> <span class="n">sin_ecliptic_lat</span><span class="o">*</span><span class="mi">41</span>
+    <span class="n">xlon</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ecliptic_lon</span><span class="o">.</span><span class="n">wrap</span><span class="p">()</span> <span class="o">/</span> <span class="n">degrees</span><span class="p">)</span><span class="o">/</span><span class="mf">4.</span>
+    <span class="n">ilat</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xlat</span><span class="p">)</span>
+    <span class="n">ilon</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">xlon</span><span class="p">)</span>
+    <span class="n">xlat</span> <span class="o">-=</span> <span class="n">ilat</span>
+    <span class="n">xlon</span> <span class="o">-=</span> <span class="n">ilon</span>
+    <span class="n">sky_val</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="n">ilat</span><span class="p">,</span> <span class="n">ilon</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">xlat</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">xlon</span><span class="p">)</span> <span class="o">+</span>
+               <span class="n">s</span><span class="p">[</span><span class="n">ilat</span><span class="p">,</span> <span class="n">ilon</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">xlat</span><span class="p">)</span><span class="o">*</span><span class="n">xlon</span> <span class="o">+</span>
+               <span class="n">s</span><span class="p">[</span><span class="n">ilat</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ilon</span><span class="p">]</span> <span class="o">*</span> <span class="n">xlat</span><span class="o">*</span><span class="p">(</span><span class="mf">1.</span><span class="o">-</span><span class="n">xlon</span><span class="p">)</span> <span class="o">+</span>
+               <span class="n">s</span><span class="p">[</span><span class="n">ilat</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">ilon</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">xlat</span><span class="o">*</span><span class="n">xlon</span><span class="p">)</span>
+
+    <span class="c1"># If the result is too large, then raise an exception: we should not look at this position!</span>
+    <span class="k">if</span> <span class="n">sky_val</span> <span class="o">&gt;</span> <span class="n">max_sky</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">GalSimValueError</span><span class="p">(</span><span class="s2">&quot;world_pos is too close to sun. Would not observe here.&quot;</span><span class="p">,</span> <span class="n">world_pos</span><span class="p">)</span>
+
+    <span class="c1"># Now, convert to the right units, and return.  (See docstring for explanation.)</span>
+    <span class="c1"># First, multiply by the effective collecting area in m^2.</span>
+    <span class="n">eff_area</span> <span class="o">=</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">diameter</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="mf">1.</span> <span class="o">-</span> <span class="n">obscuration</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">sky_val</span> <span class="o">*=</span> <span class="n">eff_area</span>
+    <span class="c1"># Multiply by exposure time.</span>
+    <span class="n">sky_val</span> <span class="o">*=</span> <span class="n">exptime</span>
+
+    <span class="c1"># The result is now the sky level in e-/arcsec^2.</span>
+    <span class="k">return</span> <span class="n">sky_val</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

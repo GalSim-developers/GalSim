@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config Values &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Special Fields" href="config_special.html" />
+    <link rel="prev" title="Config Output Field" href="config_output.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="config.html">The Config Module</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="config_top.html">Top Level Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_objects.html">Config Objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_stamp.html">Config Stamp Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_image.html">Config Image Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_input.html">Config Input Field</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_output.html">Config Output Field</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Config Values</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#float-value">float_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#int-value">int_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bool-value">bool_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#str-value">str_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#angle-value">angle_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shear-value">shear_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pos-value">pos_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sky-value">sky_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#table-value">table_value</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#eval-type">Eval type</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#preset-variables">Preset variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#available-modules">Available Modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#user-defined-variables">User-defined variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#the-eval-variables-field">The eval-variables field</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#module-defined-variables">Module-defined variables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#shorthand-notation">Shorthand notation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#custom-value-types">Custom Value Types</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html">Special Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_special.html#special-specifications">Special Specifications</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_galsim.html">The galsim Executable</a></li>
+<li class="toctree-l2"><a class="reference internal" href="config_process.html">Config Processing From Python</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="history.html">Revision History</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="config.html">The Config Module</a> &raquo;</li>
+      <li>Config Values</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/config_values.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="config-values">
+<h1>Config Values<a class="headerlink" href="#config-values" title="Permalink to this headline">¶</a></h1>
+<p>There are seven kinds of values that are used within the configuration apparatus, which we
+have been designating using the following italic names:</p>
+<ul class="simple">
+<li><p><em>float_value</em> corresponds to a Python <code class="docutils literal notranslate"><span class="pre">float</span></code> value.  See <a class="reference internal" href="#float-value"><span class="std std-ref">float_value</span></a></p></li>
+<li><p><em>int_value</em> corresponds to a Python <code class="docutils literal notranslate"><span class="pre">int</span></code> value.  See <a class="reference internal" href="#int-value"><span class="std std-ref">int_value</span></a></p></li>
+<li><p><em>bool_value</em> corresponds to a Python <code class="docutils literal notranslate"><span class="pre">bool</span></code> value.  See <a class="reference internal" href="#bool-value"><span class="std std-ref">bool_value</span></a></p></li>
+<li><p><em>str_value</em> corresponds to a Python <code class="docutils literal notranslate"><span class="pre">str</span></code> value.  See <a class="reference internal" href="#str-value"><span class="std std-ref">str_value</span></a></p></li>
+<li><p><em>angle_value</em> corresponds to a GalSim <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> instance.  See <a class="reference internal" href="#angle-value"><span class="std std-ref">angle_value</span></a></p></li>
+<li><p><em>shear_value</em> corresponds to a GalSim <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> instance.  See <a class="reference internal" href="#shear-value"><span class="std std-ref">shear_value</span></a></p></li>
+<li><p><em>pos_value</em> corresponds to a GalSim <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> instance.  See <a class="reference internal" href="#pos-value"><span class="std std-ref">pos_value</span></a></p></li>
+<li><p><em>sky_value</em> corresponds to a GalSim <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> instance.  See <a class="reference internal" href="#sky-value"><span class="std std-ref">sky_value</span></a></p></li>
+<li><p><em>table_value</em> corresponds to a GalSim <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> instance.  See <a class="reference internal" href="#table-value"><span class="std std-ref">table_value</span></a></p></li>
+</ul>
+<p>Each of the Python types can be given as a constant value using the normal Python conventions
+for how to specify such a value.  The GalSim <em>angle_value</em> and <em>pos_value</em> also have
+direct specification options.  In addition, all of them may be a dict with a <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute
+defining how to generate the value in question.  These are defined below for each kind of
+value.</p>
+<p>One special <code class="docutils literal notranslate"><span class="pre">type</span></code> that any value may use is ‘Eval’, which uses the Python <code class="docutils literal notranslate"><span class="pre">eval</span></code> function
+to evaluate a string.  The <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a> is described in its own section.</p>
+<p>In addition to all of these, you can also write your own <a class="reference internal" href="#custom-value-types"><span class="std std-ref">Custom Value Types</span></a>
+and register them to be used by the config parser.</p>
+<div class="section" id="float-value">
+<h2>float_value<a class="headerlink" href="#float-value" title="Permalink to this headline">¶</a></h2>
+<p>Options are:</p>
+<ul>
+<li><p>A normal float value (e.g. 1.8)</p></li>
+<li><p>Anything that python can convert into a float (e.g. ‘1.8’)</p></li>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘Catalog’  Read the value from an input catalog. This requires that <code class="docutils literal notranslate"><span class="pre">input.catalog</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">col</span></code> = <em>int_value</em> for ASCII catalog or <em>str_value</em> for FITS catalog (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to <code class="docutils literal notranslate"><span class="pre">input_cat.nobjects</span></code>-1)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Dict’  Read the value from an input dictionary. This requires that <code class="docutils literal notranslate"><span class="pre">input.dict</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  For specifying keys below the first level of the dictionary, the <code class="docutils literal notranslate"><span class="pre">key</span></code> string is split using the <code class="docutils literal notranslate"><span class="pre">input.dict.key_split</span></code> value (default = ‘.’) into multiple keys.  e.g. <code class="docutils literal notranslate"><span class="pre">key</span> <span class="pre">:</span> <span class="pre">galaxy_constants.redshift</span></code> would be parsed as <code class="docutils literal notranslate"><span class="pre">dict['galaxy_constants']['redshift']</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.dict</span></code> is a list, this indicates which number dictionary to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FitsHeader’  Read the value from an input FITS header. This requires that <code class="docutils literal notranslate"><span class="pre">input.fits_header</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.fits_header</span></code> is a list, this indicates which number file to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Random’  Generate random values uniformly distributed within a range.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">min</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max</span></code> = <em>float_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomGaussian’  Generate random values from a Gaussian deviate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sigma</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code> = <em>float_value</em> (default = 0)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">min</span></code> = <em>float_value</em> (optional) Clip the distribution at some minimum.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max</span></code> = <em>float_value</em> (optional) Clip the distribution at some maximum.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomPoisson’  Generate random values from a Poisson deviate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code> = <em>int_value</em> (required) The mean value of the Poisson distribution.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomBinomial’  Generate random values from a Binomial deviate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> = <em>int_value</em> (required) The number of “coin flips” for the distribution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">p</span></code> = <em>float_value</em> (default = 0.5) The probability of “heads” for each “coin flip”.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomWeibull’  Generate random values from a Weibull deviate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">a</span></code> = <em>float_value</em> (required) (Equivalent to k in the Wikipedia article)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">b</span></code> = <em>float_value</em> (required) (Equivalent to lambda in the Wikipedia article)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomGamma’  Generate random values from a Gamma deviate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">k</span></code> = <em>float_value</em> (required) The shape parameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">theta</span></code> = <em>float_value</em> (required) The scale parameter.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomChi2’  Generate random values from a Chi-square deviate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> = <em>float_value</em> (required) The number of degreed of freedom.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomDistribution’  Generate random values from a given probability distribution.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">function</span></code> = <em>str_value</em> (required) A string describing the function of x to use for the probability distribution.  e.g. <code class="docutils literal notranslate"><span class="pre">x**2.3</span></code>.  Alternatively, it may be a file name from which a tabulated function (with columns of x, p(x)) is read in.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_min</span></code> = <em>float_value</em> (required unless <code class="docutils literal notranslate"><span class="pre">function</span></code> is a file name) The minimum value of x to use for the distribution.  (If <code class="docutils literal notranslate"><span class="pre">function</span></code> is a file name, the minimum value read in is taken as <code class="docutils literal notranslate"><span class="pre">x_min</span></code>.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_max</span></code> = <em>float_value</em> (required unless <code class="docutils literal notranslate"><span class="pre">function</span></code> is a file name) The maximum value of x to use for the distribution.  (If <code class="docutils literal notranslate"><span class="pre">function</span></code> is a file name, the maximum value read in is taken as <code class="docutils literal notranslate"><span class="pre">x_max</span></code>.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">npoints</span></code> = <em>int_value</em> (default = 256) How many points to use for the cumulative probability distribution (CDF), which is used to map from a uniform deviate to the given distribution.  More points will be more accurate, but slower.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interpolant</span></code> = <em>str_value</em> (default = ‘Linear’)  What to use for interpolating between tabulated points in the CDF.  Options are ‘Nearest’, ‘Linear’, ‘Cubic’ or ‘Quintic’.  (Technically, ‘Sinc’ and ‘LanczosN’ are also possible, but they do not make sense here.)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘PowerSpectrumMagnification’  Calculate a magnification from a given power spectrum.  This requires that <code class="docutils literal notranslate"><span class="pre">input.power_spectrum</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_mu</span></code> = <em>float_value</em> (default = 5)  The maximum magnification to allow.  If the power spectrum returns a mu value greater than this or less than 0, then use <code class="docutils literal notranslate"><span class="pre">max_mu</span></code> instead.  This is a sign of strong lensing, and other approximations are probably breaking down at this point anyway, so this keeps the object profile from going crazy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.power_spectrum</span></code> is a list, this indicates which number power spectrum to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘NFWHaloMagnification’  Calculate a magnification from an NFW Halo mass.  This requires that <code class="docutils literal notranslate"><span class="pre">input.nfw_halo</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gal.redshift</span></code> = <em>float_value</em> (required)  Special: The <code class="docutils literal notranslate"><span class="pre">redshift</span></code> item must be in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field, not <code class="docutils literal notranslate"><span class="pre">magnification</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_mu</span></code> = <em>float_value</em> (default = 5)  The maximum magnification to allow.  If NFWHalo returns a mu value greater than this or less than 0, then use <code class="docutils literal notranslate"><span class="pre">max_mu</span></code> instead.  This is a sign of strong lensing, and other approximations are probably breaking down at this point anyway, so this keeps the object profile from going crazy.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.nfw_halo</span></code> is a list, this indicates which number halo to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘COSMOSValue’  Gets a value from an input COSMOS catalog. This requires that <code class="docutils literal notranslate"><span class="pre">input.cosmos_catalog</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.cosmos_catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><ul>
+<li><p>‘SampleValue’  Gets a value from an input galaxy sample. This requires that <code class="docutils literal notranslate"><span class="pre">input.galaxy_sample</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.cosmos_catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p>‘Sequence’  Generate a sequence of values.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">first</span></code> = <em>float_value</em> (default = 0)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span></code> = <em>float_value</em> (default = 1) The step size between items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">repeat</span></code> = <em>int_value</em> (default = 1) How many times to repeat the same value before moving on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">last</span></code> = <em>float_value</em> (optional; at most one of <code class="docutils literal notranslate"><span class="pre">last</span></code> and <code class="docutils literal notranslate"><span class="pre">nitems</span></code> is allowed)</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">last</span></code> is provided, once a value passes <code class="docutils literal notranslate"><span class="pre">last</span></code>, the sequence will
+repeat starting with <code class="docutils literal notranslate"><span class="pre">first</span></code> again.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nitems</span></code> = <em>int_value</em> (optional; at most one of <code class="docutils literal notranslate"><span class="pre">last</span></code> and <code class="docutils literal notranslate"><span class="pre">nitems</span></code> is allowed)  The number of items in the sequence before starting over again at <code class="docutils literal notranslate"><span class="pre">first</span></code>.  The default is to just keep incrementing forever.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index_key</span></code> = <em>str_value</em> (optional; see the option descriptions below for which index is used by default)  Which number to use for indexing in the sequence. Valid options are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>‘file_num’  Index according to the running file number being worked on.  This is the default for items in the <code class="docutils literal notranslate"><span class="pre">input</span></code> and <code class="docutils literal notranslate"><span class="pre">output</span></code> fields.</p></li>
+<li><p>‘image_num’  Index according to the running image number.  This index number does not start back at 0 with each file, but rather keeps incrementing.  This is the default for items in the <code class="docutils literal notranslate"><span class="pre">image</span></code> field that apply to the full image (i.e. not including <code class="docutils literal notranslate"><span class="pre">random_seed</span></code>, <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>, etc.).</p></li>
+<li><p>‘obj_num’  Index according to the running object number. This index number does not start back at 0 with each file or image, but rather keeps incrementing.  This is the default for <code class="docutils literal notranslate"><span class="pre">image.random_seed</span></code>.</p></li>
+<li><p>‘obj_num_in_file’  Index according to the object number within the current file (i.e. start back at 0 again for each new file).  This is the default for items in <code class="docutils literal notranslate"><span class="pre">image</span></code> that apply to the object – <code class="docutils literal notranslate"><span class="pre">image_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>, <code class="docutils literal notranslate"><span class="pre">offset</span></code>, <code class="docutils literal notranslate"><span class="pre">stamp_size</span></code> and related, or <code class="docutils literal notranslate"><span class="pre">border</span></code> and related – and also to items in <code class="docutils literal notranslate"><span class="pre">psf</span></code> or <code class="docutils literal notranslate"><span class="pre">gal</span></code>.  Resetting the count back to zero at the start of each file is generally what you want when the files have different numbers of objects. E.g., when you are reading from input catalogs that contain different numbers of objects, you normally want to start back at 0 for each new catalog.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>float_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Current’  Use the current value of some other item in the config file.  This is especially useful if you need to use a value from some other calculation, but the value is a random variate, so you cannot just reproduce it.  You need the actual value returned by the random number generator.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.  The nested layers in the dictionary should be separated by ‘.’ characters.  e.g. To access the current half-light radius of the galaxy, use ‘gal.half_light_radius’.  For list items, use the number in the list as a key (using the normal python 0-based counting convention).  e.g. for the half-light radius of the third item in a galaxy <code class="docutils literal notranslate"><span class="pre">List</span></code> type, use ‘gal.items.2.half_light_radius’.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sum’  The sum of two other <em>float_value</em> items.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>float_value</em> items to be added together.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="int-value">
+<h2>int_value<a class="headerlink" href="#int-value" title="Permalink to this headline">¶</a></h2>
+<p>Options are:</p>
+<ul>
+<li><p>A normal int value (e.g. 8)</p></li>
+<li><p>Anything that python can convert into an int (e.g. 8.0, ‘8’)</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>float values will silently drop any fractional part, so 8.7 will become 8.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘Catalog’  Read the value from an input catalog. This requires that <code class="docutils literal notranslate"><span class="pre">input.catalog</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">col</span></code> = <em>int_value</em> for ASCII catalog or <em>str_value</em> for FITS catalog (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to <code class="docutils literal notranslate"><span class="pre">input_cat.nobjects</span></code>-1)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Dict’  Read the value from an input dictionary. This requires that <code class="docutils literal notranslate"><span class="pre">input.dict</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  For specifying keys below the first level of the dictionary, the <code class="docutils literal notranslate"><span class="pre">key</span></code> string is split using the <code class="docutils literal notranslate"><span class="pre">input.dict.key_split</span></code> value (default = ‘.’) into multiple keys.  e.g. <code class="docutils literal notranslate"><span class="pre">key</span> <span class="pre">:</span> <span class="pre">galaxy_constants.redshift</span></code> would be parsed as <code class="docutils literal notranslate"><span class="pre">dict['galaxy_constants']['redshift']</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.dict</span></code> is a list, this indicates which number dictionary to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FitsHeader’  Read the value from an input FITS header. This requires that <code class="docutils literal notranslate"><span class="pre">input.fits_header</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.fits_header</span></code> is a list, this indicates which number file to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Random’  Generate a random value uniformly distributed within a range.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">min</span></code> = <em>int_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max</span></code> = <em>int_value</em> (required)  Note: the range includes both <code class="docutils literal notranslate"><span class="pre">min</span></code> and <code class="docutils literal notranslate"><span class="pre">max</span></code>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomPoisson’  Generate random values from a Poisson deviate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mean</span></code> = <em>int_value</em> (required) The mean value of the Poisson distribution.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomBinomial’  Generate random values from a Binomial deviate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> = <em>int_value</em> (required) The number of “coin flips” for the distribution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">p</span></code> = <em>float_value</em> (default = 0.5) The probability of “heads” for each “coin flip”.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sequence’  Generate a sequence of values.</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">first</span></code> = <em>int_value</em> (default = 0)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span></code> = <em>int_value</em> (default = 1) The step size between items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">repeat</span></code> = <em>int_value</em> (default = 1) How many times to repeat the same value before moving on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">last</span></code> = <em>float_value</em> (optional; at most one of <code class="docutils literal notranslate"><span class="pre">last</span></code> and <code class="docutils literal notranslate"><span class="pre">nitems</span></code> is allowed)</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>if <code class="docutils literal notranslate"><span class="pre">last</span></code> is provided, once a value passes <code class="docutils literal notranslate"><span class="pre">last</span></code>, the sequence will
+repeat starting with <code class="docutils literal notranslate"><span class="pre">first</span></code> again.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nitems</span></code> = <em>int_value</em> (optional; at most one of <code class="docutils literal notranslate"><span class="pre">last</span></code> and <code class="docutils literal notranslate"><span class="pre">nitems</span></code> is allowed)  The number of items in the sequence before starting over again at <code class="docutils literal notranslate"><span class="pre">first</span></code>.  The default is to just keep incrementing forever.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index_key</span></code> = <em>str_value</em> (optional) Which number to use for indexing in the sequence. (See the description of this for <em>float_value</em> for more details.)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<blockquote>
+<div><ul>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>int_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p>‘Current’  Use the current value of some other item in the config file.  (See the description of this for <em>float_value</em> for more details.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sum’  The sum of two other <em>int_value</em> items.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>int_value</em> items to be added together.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="bool-value">
+<h2>bool_value<a class="headerlink" href="#bool-value" title="Permalink to this headline">¶</a></h2>
+<p>Options are:</p>
+<ul>
+<li><p>A normal bool value (i.e. True or False)</p></li>
+<li><p>Anything that python can convert into a bool (e.g. 1, 0.0)</p></li>
+<li><p>Some reasonable (case-insensitive) strings: ‘true’/’false’, ‘yes’/’no’, ‘1’/’0’</p></li>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘Catalog’  Read the value from an input catalog. This requires that <code class="docutils literal notranslate"><span class="pre">input.catalog</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">col</span></code> = <em>int_value</em> for ASCII catalog or <em>str_value</em> for FITS catalog (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to <code class="docutils literal notranslate"><span class="pre">input_cat.nobjects</span></code>-1)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Dict’  Read the value from an input dictionary. This requires that <code class="docutils literal notranslate"><span class="pre">input.dict</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  For specifying keys below the first level of the dictionary, the <code class="docutils literal notranslate"><span class="pre">key</span></code> string is split using the <code class="docutils literal notranslate"><span class="pre">input.dict.key_split</span></code> value (default = ‘.’) into multiple keys.  e.g. <code class="docutils literal notranslate"><span class="pre">key</span> <span class="pre">:</span> <span class="pre">galaxy_constants.redshift</span></code> would be parsed as <code class="docutils literal notranslate"><span class="pre">dict['galaxy_constants']['redshift']</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.dict</span></code> is a list, this indicates which number dictionary to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FitsHeader’  Read the value from an input FITS header. This requires that <code class="docutils literal notranslate"><span class="pre">input.fits_header</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.fits_header</span></code> is a list, this indicates which number file to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Random’  Generate a random bool value.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">p</span></code> = <em>float_value</em> (default = 0.5)  The probability of getting True.  [New in v1.5]</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomBinomial’  Generate random values from a Binomial deviate with N=1.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The default case with <code class="docutils literal notranslate"><span class="pre">p</span></code> = 0.5 is equivalent to the ‘Random’ type.  So this
+would normally be used for random booleans with a different probability of True.</p>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">p</span></code> = <em>float_value</em> (default = 0.5) The probability of True.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sequence’  Generate a sequence of values.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">first</span></code> = <em>bool_value</em> (default = False)  For bool, the only two values in the sequence are False and True, so <code class="docutils literal notranslate"><span class="pre">step</span></code> and <code class="docutils literal notranslate"><span class="pre">last</span></code> are not needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">repeat</span></code> = <em>int_value</em> (default = 1) How many times to repeat the same value before moving on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index_key</span></code> = <em>str_value</em> (optional) Which number to use for indexing in the sequence. (See the description of this for <em>float_value</em> for more details.)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>bool_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Current’  Use the current value of some other item in the config file.  (See the description of this for <em>float_value</em> for more details.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="str-value">
+<h2>str_value<a class="headerlink" href="#str-value" title="Permalink to this headline">¶</a></h2>
+<p>Options are:</p>
+<ul>
+<li><p>A normal str value (e.g. ‘out.fits’)</p></li>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘Catalog’  Read the value from an input catalog. This requires that <code class="docutils literal notranslate"><span class="pre">input.catalog</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">col</span></code> = <em>int_value</em> for ASCII catalog or <em>str_value</em> for FITS catalog (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to <code class="docutils literal notranslate"><span class="pre">input_cat.nobjects</span></code>-1)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.catalog</span></code> is a list, this indicates which number catalog to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Dict’  Read the value from an input dictionary. This requires that <code class="docutils literal notranslate"><span class="pre">input.dict</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  For specifying keys below the first level of the dictionary, the <code class="docutils literal notranslate"><span class="pre">key</span></code> string is split using the <code class="docutils literal notranslate"><span class="pre">input.dict.key_split</span></code> value (default = ‘.’) into multiple keys.  e.g. <code class="docutils literal notranslate"><span class="pre">key</span> <span class="pre">:</span> <span class="pre">galaxy_constants.redshift</span></code> would be parsed as <code class="docutils literal notranslate"><span class="pre">dict['galaxy_constants']['redshift']</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.dict</span></code> is a list, this indicates which number dictionary to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FitsHeader’  Read the value from an input FITS header. This requires that <code class="docutils literal notranslate"><span class="pre">input.fits_header</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.fits_header</span></code> is a list, this indicates which number file to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘NumberedFile’  Build a string that includes a number portion: rootNNNNext.  e.g. file0001.fits, file0002.fits, etc.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">root</span></code> = <em>str_value</em> (required)  The part of the string that comes before the number.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = ‘Sequence’ starting with 0)  The number to use in the string.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">digits</span></code> = <em>int_value</em> (default = 0)  How many digits to use (minimum) to write the number.  The number will be left-padded with 0s as needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ext</span></code> = <em>str_value</em> (default = ‘.fits’ for <code class="docutils literal notranslate"><span class="pre">output.file_name</span></code> and the <code class="docutils literal notranslate"><span class="pre">file_name</span></code> entries for sub-items within output – <code class="docutils literal notranslate"><span class="pre">psf</span></code>, <code class="docutils literal notranslate"><span class="pre">weight</span></code>, <code class="docutils literal notranslate"><span class="pre">badpix</span></code> –, and ‘’ for all other uses)  An extension to place after the number.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘FormattedStr’  Build a string using a format akin to the normal python %-style formatting or C/C++ printf-style formatting.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">format</span></code> = <em>str_value</em> (required)  The formatting string to use.  (e.g. ‘image_%f_%d.fits’)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of items to insert into the corresponding % items in the format string.  The letter after the % indicates what kind of value each item is.  So for the above example, the first item in the string should be a <em>float_value</em> to put into the %f spot.  The second should be an <em>int_value</em> to put into the %d spot.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>str_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Current’  Use the current value of some other item in the config file.  (See the description of this for <em>float_value</em> for more details.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="angle-value">
+<h2>angle_value<a class="headerlink" href="#angle-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Angle</span></code></a> values.</p>
+<p>Options are:</p>
+<ul>
+<li><p>A string consisting of a float followed by one of the following angle units: radians, degrees, hours, arcminutes, arcseconds. These may be abbreviated as rad, deg, hr, arcmin, arcsec. (e.g. ‘45 deg’)</p></li>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘Radians’ or ‘Rad’  Use a <em>float_value</em> as an angle in radians.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">theta</span></code> = <em>float_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Degrees’ or ‘Deg’  Use a <em>float_value</em> as an angle in degrees.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">theta</span></code> = <em>float_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Random’  Generate a random angle uniformly distributed from 0 to 2pi radians.</p></li>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>angle_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Current’  Use the current value of some other item in the config file.  (See the description of this for <em>float_value</em> for more details.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sum’  The sum of two other <em>angle_value</em> items.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>angle_value</em> items to be added together.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="shear-value">
+<h2>shear_value<a class="headerlink" href="#shear-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Shear</span></code></a> values.</p>
+<p>Options are:</p>
+<ul>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘E1E2’ Specify as a distortion in cartesian coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">e1</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">e2</span></code> = <em>float_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘EBeta’ Specify as a distortion in polar coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">e</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> = <em>angle_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘G1G2’ Specify as a reduced shear in cartesian coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">g1</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g2</span></code> = <em>float_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘GBeta’ Specify as a reduced shear in polar coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">g</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> = <em>angle_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eta1Eta2’ Specify as a conformal shear in cartesian coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">eta1</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eta2</span></code> = <em>float_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘EtaBeta’ Specify as a conformal shear in polar coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">eta</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> = <em>angle_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘QBeta’ Specify as an axis ratio and position angle.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">q</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">beta</span></code> = <em>angle_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘PowerSpectrumShear’  Calculate a shear from a given power spectrum.  This requires that <code class="docutils literal notranslate"><span class="pre">input.power_spectrum</span></code> be specified and uses the following field:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.power_spectrum</span></code> is a list, this indicates which number power spectrum to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘NFWHaloShear’  Calculate a shear from an NFW Halo mass.  This requires that <code class="docutils literal notranslate"><span class="pre">input.nfw_halo</span></code> be specified and uses the following fields:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">gal.redshift</span></code> = <em>float_value</em> (required)  Special: The <code class="docutils literal notranslate"><span class="pre">redshift</span></code> item must be in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field, not <code class="docutils literal notranslate"><span class="pre">shear</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">num</span></code> = <em>int_value</em> (default = 0)  If <code class="docutils literal notranslate"><span class="pre">input.nfw_halo</span></code> is a list, this indicates which number halo to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <code class="docutils literal notranslate"><span class="pre">list</span></code> (required)  A list of <em>shear_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Current’  Use the current value of some other item in the config file.  (See the description of this for <em>float_value</em> for more details.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sum’  The sum of two other <em>shear_value</em> items.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Unlike the other kinds of values, shears addition is not commutative.
+<code class="docutils literal notranslate"><span class="pre">g_a</span> <span class="pre">+</span> <span class="pre">g_b</span></code> is not the same as <code class="docutils literal notranslate"><span class="pre">g_b</span> <span class="pre">+</span> <span class="pre">g_a</span></code>.  Thus, the order of the elements
+in the <code class="docutils literal notranslate"><span class="pre">items</span></code> list matters.  The shear effects are applied from last to first,
+so the effects should be listed in order from closest to the observer to farthest
+along the light path.  This is a <em>somewhat</em> standard convention for what
+<code class="docutils literal notranslate"><span class="pre">g_a</span> <span class="pre">+</span> <span class="pre">g_b</span></code> means when applied to a galaxy.  <code class="docutils literal notranslate"><span class="pre">g_b</span></code> would be a shear that is
+close to the galaxy, and then <code class="docutils literal notranslate"><span class="pre">g_a</span></code> would be another shear closer to the
+observer (perhaps within the telescope).</p>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>shear_value</em> items to be added together.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="pos-value">
+<h2>pos_value<a class="headerlink" href="#pos-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PositionD</span></code></a> values, usually for a location on the image.</p>
+<p>Options are:</p>
+<ul>
+<li><p>A string consisting of two floats separated by a comma and possibly white space. (e.g. ‘1.7, 3.0’)</p></li>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘XY’ Specify x and y separately.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code> = <em>float_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RTheta’ Specify using polar coordinate.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">r</span></code> = <em>float_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">theta</span></code> = <em>angle_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘RandomCircle’  Generate a random value uniformly distributed within a circle of a given radius.</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is different from ‘RTheta’ with each one random, since that would
+preferentially pick locations near the center of the circle.</p>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">radius</span></code> = <em>float_value</em> (required)  The size of the circle within which to draw a random value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inner_radius</span></code> = <em>float_value</em> (default = 0)  If desired, an inner circle may be excluded, making this an annulus rather than a full circle.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">center</span></code> = <em>pos_value</em> (default = 0,0)  The center of the circle.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>pos_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Current’  Use the current value of some other item in the config file.  (See the description of this for <em>float_value</em> for more details.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Sum’  The sum of two other <em>pos_value</em> items.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>pos_value</em> items to be added together.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="sky-value">
+<h2>sky_value<a class="headerlink" href="#sky-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CelestialCoord</span></code></a> values for a location in the sky.</p>
+<p>Options are:</p>
+<ul>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  There is currently only one valid option:</p>
+<blockquote>
+<div><ul>
+<li><p>‘RaDec’ Specify x and y separately.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ra</span></code> = <em>angle_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dec</span></code> = <em>angle_value</em> (required)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="table-value">
+<h2>table_value<a class="headerlink" href="#table-value" title="Permalink to this headline">¶</a></h2>
+<p>These represent <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> values to provide some kind of unary function, although in some
+cases you may be able to provide a regular function instead, e.g. via an Eval type using a lambda
+function.</p>
+<p>Options are:</p>
+<ul>
+<li><p>A dict with:</p>
+<blockquote>
+<div><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> = <em>str</em> (required)  Valid options are:</p>
+<blockquote>
+<div><ul>
+<li><p>‘File’  Read a <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable</span></code></a> from a file.  cf. <a class="reference internal" href="table.html#galsim.LookupTable.from_file" title="galsim.LookupTable.from_file"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LookupTable.from_file</span></code></a>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file_name</span></code> = <em>str_value</em> (required)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interpolant</span></code> = <em>str_value</em> (default = ‘spline’) Which interpolant to use.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">x_log</span></code> = <em>bool_value</em> (default = False) Whether to use log(x) for the abscissae.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">f_log</span></code> = <em>bool_value</em> (default = False) Whether to use log(f) for the ordinates.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">amplitude</span></code> = <em>float_value</em> (default = 1.0) An optional scaling to apply to the
+ordinates.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘List’  Select items from a list.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">items</span></code> = <em>list</em> (required)  A list of <em>table_value</em> items.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">index</span></code> = <em>int_value</em> (default = ‘Sequence’ from 0 to len(items)-1)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Current’  Use the current value of some other item in the config file.  (See the description of this for <em>float_value</em> for more details.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">key</span></code> = <em>str_value</em> (required)  The key name of the item to use.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘Eval’  Evaluate a string.  See <a class="reference internal" href="#eval-type"><span class="std std-ref">Eval type</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A string that starts with ‘$’ or ‘&#64;’.  See <a class="reference internal" href="#shorthand-notation"><span class="std std-ref">Shorthand notation</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="eval-type">
+<h2>Eval type<a class="headerlink" href="#eval-type" title="Permalink to this headline">¶</a></h2>
+<p>Every kind of value has ‘Eval’ as one of its allowed types.  This works a little bit differently
+than the other types, so we describe it here in its own section.</p>
+<p>The only required attribute to go along with an ‘Eval’ is <code class="docutils literal notranslate"><span class="pre">str</span></code>, which is the string to be
+evaluated using the python <code class="docutils literal notranslate"><span class="pre">eval</span></code> function.</p>
+<p>For example <code class="docutils literal notranslate"><span class="pre">str</span> <span class="pre">:</span> <span class="pre">'800</span> <span class="pre">*</span> <span class="pre">1.e-9</span> <span class="pre">/</span> <span class="pre">4</span> <span class="pre">*</span> <span class="pre">206265'</span></code> will evaluate to 0.041253.  (This example is taken from demo3.yaml.)  This might either be easier than doing a calculation
+yourself or perhaps be clearer as to how the number was formed.  For example, this example
+calculates <code class="docutils literal notranslate"><span class="pre">lam_over_diam</span></code> using lambda = 800 nm, D = 4 m, converting the result into arcsec.
+If you later wanted to change to a 6.5m telescope, it would be very clear what to change,
+as opposed to if the value were listed as 0.041253.</p>
+<div class="section" id="preset-variables">
+<h3>Preset variables<a class="headerlink" href="#preset-variables" title="Permalink to this headline">¶</a></h3>
+<p>The ‘Eval’ type gets even more powerful when you use variables.  The file demo10.yaml has some
+examples that use the <code class="docutils literal notranslate"><span class="pre">pos</span></code> variable, the position of the galaxy relative to the center of the
+image, which GalSim will make available for you for any
+‘Tiled’ or ‘Scattered’ image.  The PSF <code class="docutils literal notranslate"><span class="pre">fwhm</span></code> is given as
+<code class="docutils literal notranslate"><span class="pre">'0.9</span> <span class="pre">+</span> <span class="pre">0.5</span> <span class="pre">*</span> <span class="pre">(world_pos.x**2</span> <span class="pre">+</span> <span class="pre">world_pos.y**2)</span> <span class="pre">/</span> <span class="pre">100**2'</span></code>, which calculates the PSF size as a function of
+position on the image.</p>
+<p>Variables that GalSim will provide for you to use:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_pos</span></code> = the position of the object on the image in pixels.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Available if image <code class="docutils literal notranslate"><span class="pre">type</span></code> is ‘Tiled’ or ‘Scattered’</p></li>
+<li><p>Available if <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> is explicitly given in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.</p></li>
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_pos</span></code> = the position of the object in world coordinates.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Available if image <code class="docutils literal notranslate"><span class="pre">type</span></code> is ‘Tiled’ or ‘Scattered’</p></li>
+<li><p>Available if <code class="docutils literal notranslate"><span class="pre">image_pos</span></code> or <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> is explicitly given in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.</p></li>
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance if the wcs is a <a class="reference internal" href="wcs.html#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.wcs.EuclideanWCS</span></code></a> or a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> if the wcs is a <a class="reference internal" href="wcs.html#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> = the position of the object in sky coordinates (RA, Dec)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Available if <code class="docutils literal notranslate"><span class="pre">sky_pos</span></code> is explicitly given in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field.</p></li>
+<li><p>Available if <code class="docutils literal notranslate"><span class="pre">world_pos</span></code> is defined (as per above) and the WCS is a CelestialWCS.</p></li>
+<li><p>A <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">uv_pos</span></code> = the position of the object in a tangent plane projection relative to <code class="docutils literal notranslate"><span class="pre">world_center</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Available if either image_pos or world_pos is defined and the wcs is defined.</p></li>
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_center</span></code> = the center of the image in pixels.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">world_center</span></code> = the world position of <code class="docutils literal notranslate"><span class="pre">image_center</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Computed automatically from <code class="docutils literal notranslate"><span class="pre">image_center</span></code> and the wcs.</p></li>
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a> instance if the wcs is a <a class="reference internal" href="wcs.html#galsim.wcs.EuclideanWCS" title="galsim.wcs.EuclideanWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.wcs.EuclideanWCS</span></code></a> or a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> if the wcs is a <a class="reference internal" href="wcs.html#galsim.wcs.CelestialWCS" title="galsim.wcs.CelestialWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.wcs.CelestialWCS</span></code></a>.</p></li>
+<li><p>May also be provided directly if you want something different for this, by specifically including a <code class="docutils literal notranslate"><span class="pre">world_center</span></code> item in the <code class="docutils literal notranslate"><span class="pre">image</span></code> field.  In this case, it should be a <a class="reference internal" href="wcs.html#galsim.CelestialCoord" title="galsim.CelestialCoord"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.CelestialCoord</span></code></a> value.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_origin</span></code> = the origin of the image in pixels.  This is the position on the image that corresponds to the lower-leftmost pixel</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A <a class="reference internal" href="pos.html#galsim.PositionI" title="galsim.PositionI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionI</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_xsize</span></code>, <code class="docutils literal notranslate"><span class="pre">image_ysize</span></code> = the size of the image in pixels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_bounds</span></code> = the bounds of the current image.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A <a class="reference internal" href="bounds.html#galsim.BoundsI" title="galsim.BoundsI"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.BoundsI</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stamp_xsize</span></code>, <code class="docutils literal notranslate"><span class="pre">stamp_ysize</span></code> = the size of the postage stamp in pixels if available.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Not always available, since the postage stamp is allowed to be automatically sized based on the size of final object profile.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pixel_scale</span></code> = the pixel scale of the current image or postage stamp</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Only available if the WCS is a simple pixel scale.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wcs</span></code> = the WCS of the current image or postage stamp</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A <a class="reference internal" href="wcs.html#galsim.BaseWCS" title="galsim.BaseWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.BaseWCS</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bandpass</span></code> = the bandpass of the current image if defined.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A <a class="reference internal" href="bandpass.html#galsim.Bandpass" title="galsim.Bandpass"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Bandpass</span></code></a> instance</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file_num</span></code> = the number of the file currently being worked on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">image_num</span></code> = the number of the image currently being worked on.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If parsing a value in <code class="docutils literal notranslate"><span class="pre">input</span></code> or <code class="docutils literal notranslate"><span class="pre">output</span></code>, this may be set to 0 or the last image number from the previous file (if any).</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obj_num</span></code> = the number of the object currently being worked on.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If parsing a value in <code class="docutils literal notranslate"><span class="pre">input</span></code>, <code class="docutils literal notranslate"><span class="pre">output</span></code>, or <code class="docutils literal notranslate"><span class="pre">image</span></code>, this may be set to 0 or the last object number from the previous image (if any).</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_obj_num</span></code> = the number of the first object in the current file.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rng</span></code> = the random number generator being used for this object.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>A <a class="reference internal" href="deviate.html#galsim.BaseDeviate" title="galsim.BaseDeviate"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.BaseDeviate</span></code></a> instance</p></li>
+<li><p>You can convert it to whatever deviate you need.  e.g. <code class="docutils literal notranslate"><span class="pre">galsim.GaussianDeviate(rng,1.0,0.2)()</span></code></p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="available-modules">
+<h3>Available Modules<a class="headerlink" href="#available-modules" title="Permalink to this headline">¶</a></h3>
+<p>Python modules that GalSim will import for you to use:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">math</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">numpy</span></code> or <code class="docutils literal notranslate"><span class="pre">np</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">os</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">galsim</span></code> (obviously)</p></li>
+<li><p>Anything in the <code class="docutils literal notranslate"><span class="pre">modules</span></code> field of your configuration file.</p></li>
+</ul>
+</div>
+<div class="section" id="user-defined-variables">
+<h3>User-defined variables<a class="headerlink" href="#user-defined-variables" title="Permalink to this headline">¶</a></h3>
+<p>It is also possible to define your own variables to use in your expression simply by
+defining more attributes in addition to <code class="docutils literal notranslate"><span class="pre">str</span></code>.  The first letter of the attribute
+declares what type it should be evaluated to.  Then the rest of the attribute name is
+the name of your variable.</p>
+<p>For example, we do not have a specific type for drawing from a Log-Normal distribution.
+If you want the flux, say, to be log-normally distributed, you can write something like
+the following:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">flux </span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eval</span><span class="w"></span>
+<span class="w">    </span><span class="nt">str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;1.e5</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">math.exp(normal)&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">fnormal </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">RandomGaussian</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> sigma </span><span class="p">:</span><span class="w"> </span><span class="nv">0.2</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">f</span></code> at the start of <code class="docutils literal notranslate"><span class="pre">fnormal</span></code> indicates that the variable <code class="docutils literal notranslate"><span class="pre">normal</span></code> should be
+evaluated as a <em>float_value</em>.  In this case using <code class="docutils literal notranslate"><span class="pre">type</span></code> = ‘RandomGaussian’.</p>
+<p>Another example appears in demo10.yaml.  There, we define the magnitude of the ellipticity as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">e</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Eval</span><span class="w"></span>
+<span class="w">    </span><span class="nt">fr </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Eval</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;(world_pos.x**2</span><span class="nv"> </span><span class="s">+</span><span class="nv"> </span><span class="s">world_pos.y**2)**0.5&#39;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">    </span><span class="nt">str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;0.4</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">(r/100)**1.5&#39;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>So this declares a float variable <code class="docutils literal notranslate"><span class="pre">r</span></code> that evaluates as the radial distance from the center.  Then the ellipticity is defined in terms of <code class="docutils literal notranslate"><span class="pre">r</span></code> directly rather than via <code class="docutils literal notranslate"><span class="pre">world_pos</span></code>.</p>
+<p>Initial letters of user-defined variables for ‘Eval’:</p>
+<ul class="simple">
+<li><p>‘f’ = <code class="docutils literal notranslate"><span class="pre">float</span></code></p></li>
+<li><p>‘i’ = <code class="docutils literal notranslate"><span class="pre">int</span></code></p></li>
+<li><p>‘b’ = <code class="docutils literal notranslate"><span class="pre">bool</span></code></p></li>
+<li><p>‘s’ = <code class="docutils literal notranslate"><span class="pre">str</span></code></p></li>
+<li><p>‘a’ = <a class="reference internal" href="units.html#galsim.Angle" title="galsim.Angle"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Angle</span></code></a></p></li>
+<li><p>‘p’ = <a class="reference internal" href="pos.html#galsim.PositionD" title="galsim.PositionD"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.PositionD</span></code></a></p></li>
+<li><p>‘g’ = <a class="reference internal" href="shear.html#galsim.Shear" title="galsim.Shear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.Shear</span></code></a></p></li>
+<li><p>‘t’ = <a class="reference internal" href="table.html#galsim.LookupTable" title="galsim.LookupTable"><code class="xref any py py-class docutils literal notranslate"><span class="pre">galsim.LookupTable</span></code></a></p></li>
+<li><p>‘d’ = <code class="docutils literal notranslate"><span class="pre">dict</span></code>  (This takes a dict as a literal, rather than evaluating it.)</p></li>
+<li><p>‘l’ = <code class="docutils literal notranslate"><span class="pre">list</span></code>  (Similarly, this allows for a literal list in the config file.)</p></li>
+</ul>
+</div>
+<div class="section" id="the-eval-variables-field">
+<h3>The eval-variables field<a class="headerlink" href="#the-eval-variables-field" title="Permalink to this headline">¶</a></h3>
+<p>Sometimes it is useful to have the same variable used by multiple Eval calculations.  For such cases, Eval will look for a top-level field called <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code>.  If this field is present, then anything defined there will be accessible in all Eval calculations in addition to whatever variables are defined for each specific Eval item.</p>
+<p>This is similar to the functionality that YAML provides where a value can be named by putting a variable name with an <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> before it before any value.  Then later, you can refer to the value by that name preceded by a <code class="docutils literal notranslate"><span class="pre">*</span></code>, rather than write the value again.  This can lead to more maintainable config files.</p>
+<p>It can be convenient to combine the YAML naming scheme with our <code class="docutils literal notranslate"><span class="pre">eval_variables</span></code> setup in the following way:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">eval_variables </span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">fpixel_scale </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;pixel_scale</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span><span class="w"></span>
+<span class="w">    </span><span class="nt">istamp_size </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;stamp_size</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w"></span>
+<span class="w">    </span><span class="nt">infiles </span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;nfiles</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">[</span><span class="w"> </span><span class="nv">...</span><span class="w"> </span><span class="p p-Indicator">]</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This can be put near the top of the YAML file to put the important values all in one place with appropriate names.  Then in the rest of the file, the variables can be used with the YAML <code class="docutils literal notranslate"><span class="pre">*</span></code> notation:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">image</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">pixel_scale </span><span class="p">:</span><span class="w"> </span><span class="nv">*pixel_scale</span><span class="w"></span>
+</pre></div>
+</div>
+<p>or as part of an <code class="docutils literal notranslate"><span class="pre">Eval</span></code> item:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">shift </span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RTheta</span><span class="w"></span>
+<span class="w">    </span><span class="nt">r </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Eval</span><span class="w"> </span><span class="p p-Indicator">,</span><span class="nt"> str </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;pixel_scale</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">0.5&#39;</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+<span class="w">    </span><span class="nt">theta </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type </span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="module-defined-variables">
+<h3>Module-defined variables<a class="headerlink" href="#module-defined-variables" title="Permalink to this headline">¶</a></h3>
+<p>If you are using any user-defined modules (loaded in the <code class="docutils literal notranslate"><span class="pre">modules</span></code> field), then they are
+allowed to add to the list of <a class="reference internal" href="#preset-variables"><span class="std std-ref">Preset variables</span></a>. The mechanism for this is to append items
+to the list <code class="docutils literal notranslate"><span class="pre">galsim.config.eval_base_variables</span></code>.  This list includes all of the variables
+that an Eval type will load into the local namespace before evaluating.  For instance,
+if a user-defined module wants to make available a variable called, say, <code class="docutils literal notranslate"><span class="pre">coadd_wcs</span></code>,
+then the module could add this name to the list of avilable variables as folllows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">eval_base_variables</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;coadd_wcs&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This should be done at module scope, since you only want to add it once.  So probably best
+to add it when your module is imported.</p>
+<p>Then in some processing step, you could set this variable as</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">base</span><span class="p">[</span><span class="s1">&#39;coadd_wcs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">coadd_wcs</span>
+</pre></div>
+</div>
+<p>Then any subsequent Eval field could use this variable as a local variable, just like the
+ones listed in <a class="reference internal" href="#preset-variables"><span class="std std-ref">Preset variables</span></a>.</p>
+</div>
+<div class="section" id="shorthand-notation">
+<h3>Shorthand notation<a class="headerlink" href="#shorthand-notation" title="Permalink to this headline">¶</a></h3>
+<p>It can be a bit cumbersome at times to write out a full dict with <code class="docutils literal notranslate"><span class="pre">type</span> <span class="pre">:</span> <span class="pre">Eval</span></code> and the
+<code class="docutils literal notranslate"><span class="pre">str</span></code> item you want to evaluate.  To streamline this, we also allow for a shorthand notation
+for both Eval and Current types.</p>
+<ul class="simple">
+<li><p>Any string that starts with ‘$’ is taken to mean an Eval type with the rest of the string
+being used as the <code class="docutils literal notranslate"><span class="pre">str</span></code> field.</p></li>
+<li><p>Any string that starts with ‘&#64;’ is taken to mean a Current type with the rest of the string
+being used as the <code class="docutils literal notranslate"><span class="pre">key</span></code> field.</p></li>
+</ul>
+<p>Furthermore, you may use ‘&#64;’ style Current specifications within an Eval string, where the
+text after the ‘&#64;’ up to the next white space is used for the key.
+So for the above example of a half pixel shift in some random direction, you could write:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">shift</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">type </span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RTheta</span><span class="w"></span>
+<span class="w">    </span><span class="nt">r </span><span class="p">:</span><span class="w"> </span><span class="s">&#39;$0.5</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">@image.pixel_scale&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="nt">theta </span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt"> type</span><span class="p">:</span><span class="w"> </span><span class="nv">Random</span><span class="w"> </span><span class="p p-Indicator">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>In many situations, this shorthand notation aids readability.  However, because there is
+no dict, you cannot define any variables with this notation.  If you need to define any
+variables, you will need to use the regular dict notation.</p>
+</div>
+</div>
+<div class="section" id="custom-value-types">
+<h2>Custom Value Types<a class="headerlink" href="#custom-value-types" title="Permalink to this headline">¶</a></h2>
+<p>To define your own value type, you will need to write an importable Python module
+(typically a file in the current directory where you are running <code class="docutils literal notranslate"><span class="pre">galsim</span></code>, but it could also
+be something you have installed in your Python distro) with a function that will be used
+to generate the value you want from the parameters in the config dict.</p>
+<p>The generator function should have the following functional form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">GenerateCustomValue</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generate some kind of custom value given some configuration parameters</span>
+
+<span class="sd">    @param config       The configuration dict of the value being generated.</span>
+<span class="sd">    @param base         The base configuration dict.</span>
+<span class="sd">    @param value_type   The desired output type.</span>
+
+<span class="sd">    @returns value, safe</span>
+
+<span class="sd">    The returned value should be something of type value_type, and safe is a bool</span>
+<span class="sd">    value that indicates whether the value is safe to reuse for future stamps</span>
+<span class="sd">    (i.e. it is a constant value that will not change for later stamps).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># If you need a random number generator, this is the one to use.</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">base</span><span class="p">[</span><span class="s1">&#39;rng&#39;</span><span class="p">]</span>
+
+    <span class="c1"># Generate the desired value.</span>
+    <span class="c1"># Probably something complicated that you want this function to do.</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="o">...</span><span class="p">]</span>
+
+    <span class="n">safe</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># typically, but set to True if this value is safe to reuse.</span>
+    <span class="k">return</span> <span class="n">value</span><span class="p">,</span> <span class="n">safe</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">base</span></code> parameter is the original full configuration dict that is being used for running the
+simulation.  The <code class="docutils literal notranslate"><span class="pre">config</span></code> parameter is the local portion of the full dict that defines the value
+being generated, e.g. <code class="docutils literal notranslate"><span class="pre">config</span></code> might be <code class="docutils literal notranslate"><span class="pre">base['gal']['flux']</span></code>.</p>
+<p>Normally a generator function can only produce a single kind of output type (float for instance),
+in which case you can probably ignore the <code class="docutils literal notranslate"><span class="pre">value_type</span></code> parameter.  However, if your generator
+can be used for multiple kinds of values (int, float and bool maybe), then you might want
+to do something different depending on what <code class="docutils literal notranslate"><span class="pre">value_type</span></code> is given.</p>
+<p>Then, in the Python module, you need to register this function with some type name, which will
+be the value of the <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute that triggers running this function.  You also need to
+give a list of all valid value types that are allowed for this function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;CustomValue&#39;</span><span class="p">,</span> <span class="n">GenerateCustomValue</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="py function">
+<dt id="galsim.config.RegisterValueType">
+<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">RegisterValueType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/value.html#RegisterValueType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.RegisterValueType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a value type for use by the config apparatus.</p>
+<p>A few notes about the signature of the generating function:</p>
+<ol class="arabic simple">
+<li><p>The config parameter is the dict for the current value to be generated.  So it should
+be the case that config[‘type’] == type_name.</p></li>
+<li><p>The base parameter is the original config dict being processed.</p></li>
+<li><p>The value_type parameter is the intended type of the generated value.  It should
+be one of the values that you specify as valid in valid_types.</p></li>
+<li><p>The return value of gen_func should be a tuple consisting of the value and a boolean,
+safe, which indicates whether the generated value is safe to use again rather than
+regenerate for subsequent objects.  This will be used upstream to determine if
+objects constructed using this value are safe to keep or if they have to be rebuilt.</p></li>
+</ol>
+<p>The allowed types to include in valid_types are: float, int, bool, str, galsim.Angle,
+galsim.Shear, galsim.PositionD.  In addition, including None in this list means that
+it is valid to use this type if you don’t necessarily know what type you are expecting.
+This happens when building a truth catalog where each item should already be generated
+and the current value and type stored, so currently the only two types that allow
+None as a valid type are Current and Eval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type_name</strong> – The name of the ‘type’ specification in the config dict.</p></li>
+<li><p><strong>gen_func</strong> – <p>A function to generate a value from the config information.
+The call signature is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">value</span><span class="p">,</span> <span class="n">safe</span> <span class="o">=</span> <span class="n">Generate</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">value_type</span><span class="p">)</span>
+</pre></div>
+</div>
+</p></li>
+<li><p><strong>valid_types</strong> – A list of types for which this type name is valid.</p></li>
+<li><p><strong>input_type</strong> – If the generator utilises an input object, give the key name of the
+input type here.  (If it uses more than one, this may be a list.)
+[default: None]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>If the generator will use a particular input type, you should let GalSim know this by specifying
+the <code class="docutils literal notranslate"><span class="pre">input_type</span></code> when registering.  E.g. if the generator expects to use an input <code class="docutils literal notranslate"><span class="pre">catalog</span></code>
+to access some ancillary information for each object, you would register this fact using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">RegisterValueType</span><span class="p">(</span><span class="s1">&#39;CustomValue&#39;</span><span class="p">,</span> <span class="n">GenerateCustomValue</span><span class="p">,</span> <span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+                                <span class="n">input_type</span><span class="o">=</span><span class="s1">&#39;catalog&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The input object can be accessed in the build function as e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">input_cat</span> <span class="o">=</span> <span class="n">galsim</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">GetInputObj</span><span class="p">(</span><span class="s1">&#39;catalog&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="s1">&#39;CustomValue&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The last argument is just used to help give sensible error messages if there is some problem,
+but it should typically be the name of the value type being built.</p>
+<p>Finally, to use this custom type in your config file, you need to tell the config parser the
+name of the module to load at the start of processing.  e.g. if this function is defined in the
+file <code class="docutils literal notranslate"><span class="pre">my_custom_value.py</span></code>, then you would use the following top-level <code class="docutils literal notranslate"><span class="pre">modules</span></code> field
+in the config file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">modules</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my_custom_value</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This <code class="docutils literal notranslate"><span class="pre">modules</span></code> field is a list, so it can contain more than one module to load if you want.
+Then before processing anything, the code will execute the command <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">my_custom_value</span></code>,
+which will read your file and execute the registration command to add your type to the list
+of valid value types.</p>
+<p>Then you can use this as a valid value type:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">gal</span><span class="p">:</span><span class="w"></span>
+<span class="w">    </span><span class="nt">flux</span><span class="p">:</span><span class="w"></span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CustomValue</span><span class="w"></span>
+<span class="w">        </span><span class="l l-Scalar l-Scalar-Plain">...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>For examples of custom values, see:</p>
+<ul class="simple">
+<li><p><a class="reference download internal" download="" href="_downloads/1737a601c25c75e9f9b0d094623726b3/log_normal.py"><code class="xref download docutils literal notranslate"><span class="pre">log_normal.py</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/bc94768c9d2f9706b2d023770899b648/hsm_shape_measure.py"><code class="xref download docutils literal notranslate"><span class="pre">hsm_shape_measure.py</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/63439d5c29c2bf8116006cbfd597cf1e/excluded_random.py"><code class="xref download docutils literal notranslate"><span class="pre">excluded_random.py</span></code></a></p></li>
+<li><p><a class="reference download internal" download="" href="_downloads/f7da6f537e4ea271cac073d7468fe0ad/great3_reject.py"><code class="xref download docutils literal notranslate"><span class="pre">great3_reject</span></code></a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="config_output.html" class="btn btn-neutral float-left" title="Config Output Field" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config_special.html" class="btn btn-neutral float-right" title="Special Fields" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
