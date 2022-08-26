@@ -5,6 +5,66 @@ listed here for brevity.  See the CHANGELOG files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
+v2.4
+----
+
+*API Changes*
+
+- Removed CppEllipse, AstronomicalConstants.h in C++ layer. (#1129)
+- Removed AttributeDict. (#1129)
+- Changed `SincInterpolant.ixrange` to be consistent with the value of xrange. (#1154)
+- Changed ``galsim.scene`` namespace name to ``galsim.galaxy_sample``. (#1174)
+
+
+*Config Updates*
+
+- Added ``Correlated`` noise type. (#731, #1174)
+- Added ``galaxy_sample`` input type and ``SampleGalaxy`` GSObject type. (#795, #1174)
+- Added ``COSMOSValue`` and ``SampleValue`` value types. (#954, #1174)
+- Allowed template file names to be evaluated using the "$" shorthand notation. (#1138)
+- Added `RegisterTemplate`. (#1143)
+- Fixed some errors in `PhotonDCR` usage in the config layer. (#1148)
+- Added option to specify the dtype for images built by config. (#1160)
+- Fixed inconsistent behavior of image.world_pos in image type=Single. (#1160)
+- Let a flux item for an object with an SED normalize the SED. (#1160)
+- Fixed some edge cases where the created image could not have the requested wcs. (#1160)
+- Added option to ``initialize`` input objects in an `InputLoader`. (#1162, #1163)
+- Fixed error in returned variance for ``CCDNoise`` builder. (#1166, #1167)
+- Changed the way the internal random number sequence works. (#1169)
+
+
+*New Features*
+
+- Added `BaseCorrelatedNoise.from_file` class method. (#731, #1174)
+- Added `GalaxySample` class. (#795, #1174)
+- Added methods `Image.transpose`, `Image.flip_ud`, `Image.flip_lr`, `Image.rot_cw`,
+  `Image.rot_ccw`, and `Image.rot_180`. (#1139)
+- Exposed our Si, Ci, sinc, and gammainc functions from C++. (#1146)
+- Added pupil_u and pupil_v to `PhotonArray`. (#1147)
+- Added `Image.depixelize` and ``depixelize=True`` option for `InterpolatedImage`. (#1154)
+- Let `Bounds.expand` scale differently in different directions. (#1153, #1155)
+- Added `BaseWCS.shearToWorld` and `BaseWCS.shearToImage`. (#1158, #1172)
+- Added `PupilImageSampler` and `PupilAnnulusSampler` photon operators. (#1176)
+- Added `TimeSampler` photon operator. (#1178)
+- Added `BaseDeviate.as_numpy_generator`. (#1067, $1179)
+- Added ``timeout`` option to control multiprocessing timeout limit and increased the default. (#1180)
+
+
+*Performance Improvements*
+
+- Made Silicon sensor  use ~half as many points for the pixels. (#1118, #1137)
+- Use single precision for Silicon pixel boundaries. (#1140)
+- Moved some of the logic related to the Silicon sensor to the python layer. (#1141)
+- Let `BaseDeviate.generate` use multiple threads in C++ layer. (#1177)
+
+
+*Bug Fixes*
+
+- Fixed some cases where HSM would fail to converge. (#1132, #1149)
+- Fixed error in `InterpolatedImage.withGSParams` not updating stepk and maxk. (#1154)
+- Fixed error in `ChromaticSum` photon shooting when ``n_photons`` is given. (#1156, #1157)
+- Fixed some rounding errors that could happen with integer-typed images. (#1160)
+
 v2.3
 ----
 
@@ -30,6 +90,7 @@ v2.3
   constructor to be the transpose of what it was. (#1103)
 - Changed the behavior of `PhaseScreenPSF`, `OpticalPSF`, and
   `ChromaticOpticalPSF` by adding the kwarg ``fft_sign``. (#1104)
+- Changed `_InterpolatedImage` to not recenter the image to (0,0) as `InterpolatedImage` does. (#1151)
 
 
 *Config Updates*
