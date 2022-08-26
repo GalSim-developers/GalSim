@@ -73,6 +73,7 @@ New Features
 - Added `PupilImageSampler` and `PupilAnnulusSampler` photon operators. (#1176)
 - Added `TimeSampler` photon operator. (#1178)
 - Added `BaseDeviate.as_numpy_generator`. (#1067, $1179)
+- Added ``timeout`` option to control multiprocessing timeout limit and increased the default. (#1180)
 
 
 Performance Improvements
