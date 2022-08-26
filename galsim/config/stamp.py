@@ -96,6 +96,11 @@ def BuildStamps(nobjects, config, obj_num=0,
     else:
         nproc = 1
 
+    if 'image' in config and 'timeout' in config['image']:
+        timeout = ParseValue(config['image'], 'timeout', config, float)[0]
+    else:
+        timeout = 900
+
     jobs = []
     for k in range(nobjects):
         kwargs = {
@@ -128,8 +133,9 @@ def BuildStamps(nobjects, config, obj_num=0,
     # Each task is a list of (job, k) tuples.
     tasks = MakeStampTasks(config, jobs, logger)
 
-    results = MultiProcess(nproc, config, BuildStamp, tasks, 'stamp', logger,
-                           done_func = done_func, except_func = except_func)
+    results = MultiProcess(nproc, config, BuildStamp, tasks, 'stamp',
+                           logger=logger, timeout=timeout,
+                           done_func=done_func, except_func=except_func)
 
     images, current_vars = zip(*results)
 

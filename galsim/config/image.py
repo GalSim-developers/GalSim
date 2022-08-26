@@ -79,6 +79,11 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     else:
         nproc = 1
 
+    if 'timeout' in image:
+        timeout = ParseValue(image, 'timeout', config, float)[0]
+    else:
+        timeout = 900
+
     jobs = []
     for k in range(nimages):
         kwargs = { 'image_num' : image_num, 'obj_num' : obj_num }
@@ -106,8 +111,9 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     # Convert to the tasks structure we need for MultiProcess
     tasks = MakeImageTasks(config, jobs, logger)
 
-    images = MultiProcess(nproc, config, BuildImage, tasks, 'image', logger,
-                          done_func = done_func, except_func = except_func)
+    images = MultiProcess(nproc, config, BuildImage, tasks, 'image',
+                          logger=logger, timeout=timeout,
+                          done_func=done_func, except_func=except_func)
 
     logger.debug('file %d: Done making images',config.get('file_num',0))
     if len(images) == 0:
@@ -223,7 +229,7 @@ def SetupConfigImageSize(config, xsize, ysize, logger=None):
 # Ignore these when parsing the parameters for specific Image types:
 from .stamp import stamp_image_keys
 image_ignore = [ 'random_seed', 'noise', 'pixel_scale', 'wcs', 'sky_level', 'sky_level_pixel',
-                 'world_center', 'index_convention', 'nproc', 'bandpass', 'sensor',
+                 'world_center', 'index_convention', 'nproc', 'timeout', 'bandpass', 'sensor',
                  'use_flux_sky_areas'
                ] + stamp_image_keys
 

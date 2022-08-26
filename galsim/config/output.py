@@ -92,6 +92,11 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         nproc = 1
     orig_config = CopyConfig(config)
 
+    if 'timeout' in output:
+        timeout = ParseValue(output, 'timeout', config, float)[0]
+    else:
+        timeout = 3600
+
     if nfiles == 0:
         logger.error("No files were made, since nfiles == 0.")
         return orig_config
@@ -157,9 +162,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     tasks = [ [ (job, k) ] for (k, job) in enumerate(jobs) ]
 
     results = MultiProcess(nproc, orig_config, BuildFile, tasks, 'file',
-                           logger, done_func = done_func,
-                           except_func = except_func,
-                           except_abort = except_abort)
+                           logger=logger, timeout=timeout,
+                           done_func=done_func, except_func=except_func,
+                           except_abort=except_abort)
     t2 = time.time()
 
     if len(results) == 0:
@@ -180,7 +185,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
     #save information here in e.g. custom output types
     return orig_config
 
-output_ignore = [ 'nproc', 'skip', 'noclobber', 'retry_io' ]
+output_ignore = [ 'nproc', 'timeout', 'skip', 'noclobber', 'retry_io' ]
 
 def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     """

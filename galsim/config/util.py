@@ -24,7 +24,7 @@ from multiprocessing.managers import BaseManager
 
 from ..utilities import SimpleGenerator, single_threaded
 from ..random import BaseDeviate
-from ..errors import GalSimConfigError, GalSimConfigValueError
+from ..errors import GalSimConfigError, GalSimConfigValueError, GalSimError
 
 max_queue_size = 32767  # This is where multiprocessing.Queue starts to have trouble.
                         # We make it a settable parameter here really for unit testing.
@@ -630,7 +630,7 @@ def UpdateConfig(config, new_params):
         SetInConfig(config, key, value)
 
 
-def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
+def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,
                  done_func=None, except_func=None, except_abort=True):
     """A helper function for performing a task using multiprocessing.
 
@@ -657,6 +657,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                         a tuple (kwargs, k).
         item:           A string indicating what is being worked on.
         logger:         If given, a logger object to log progress. [default: None]
+        timeout:        How many seconds to allow for each task before timing out. [default: 900]
         done_func:      A function to run upon completion of each job.  It will be called as::
 
                             done_func(logger, proc, k, result, t)
@@ -738,8 +739,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
     if nproc > 1:
         logger.warning("Using %d processes for %s processing",nproc,item)
 
-        from multiprocessing import current_process
-        from multiprocessing import get_context
+        from multiprocessing import current_process, get_context
+        from queue import Empty
         ctx = get_context('fork')
         Process = ctx.Process
         Queue = ctx.Queue
@@ -801,7 +802,15 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 # This loop is happening while the other processes are still working on their tasks.
                 results = [ None for k in range(njobs) ]
                 for kk in range(njobs):
-                    res, k, t, proc = results_queue.get(timeout=300)
+                    try:
+                        res, k, t, proc = results_queue.get(timeout=timeout)
+                    except Empty:
+                        # If timeout, then a queue.Empty is raised, which is pretty uninformative.
+                        # So reraise with a better description of what happened.
+                        logger.error("Multiprocessing timed out waiting for a task to finish.")
+                        logger.error("If you expect very long jobs, consider raising the value"
+                                     "of timeout.  Currently set to %s",timeout)
+                        raise GalSimError("Multiprocessing timed out") from None
                     if isinstance(res, Exception):
                         # res is really the exception, e
                         # t is really the traceback
@@ -819,7 +828,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                             done_func(logger, proc, k, res, t)
                         results[k] = res
 
-            except BaseException as e:  # pragma: no cover
+            except BaseException as e:
                 # I'm actually not sure how to make this happen.  We do a good job of catching
                 # all the normal kinds of exceptions that might occur and dealing with them cleanly.
                 # However, if something happens that we didn't anticipate, this should make an
