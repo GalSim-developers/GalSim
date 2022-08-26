@@ -1603,6 +1603,106 @@ def test_eval_full_word():
     assert 13.5 < np.std(im10.array - im11.array) < 15
     assert np.max(np.abs(im10.array)) > 200
 
+@timer
+def test_timeout():
+    """Test the timeout option
+    """
+    # Most of the tests in this file write to the 'output' directory.  Here we write to a different
+    # directory and make sure that it properly creates the directory if necessary.
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    config = {
+        'image' : {
+            'type' : 'Scattered',
+            'random_seed' : 1234,
+            'nobjects' : 5,
+            'pixel_scale' : 0.3,
+            'size' : 128,
+            'image_pos' : { 'type' : 'XY',
+                            'x' : { 'type': 'Random', 'min': 10, 'max': 54 },
+                            'y' : { 'type': 'Random', 'min': 10, 'max': 54 } },
+        },
+        'gal' : {
+            'type' : 'Sersic',
+            'flux' : 100,
+            'n' : { 'type': 'Random', 'min': 1, 'max': 6 },
+            'half_light_radius' : { 'type': 'Random', 'min': 1, 'max': 2 },
+        },
+        'psf' : {
+            'type' : 'Moffat',
+            'fwhm' : { 'type': 'Random', 'min': 0.3, 'max': 0.6 },
+            'beta' : { 'type': 'Random', 'min': 1.5, 'max': 6 },
+        },
+        'output' : {
+            'type' : 'Fits',
+            'nfiles' : 6,
+            'file_name' : "$'output_fits/test_timeout_%d.fits'%file_num",
+        },
+    }
+
+    logger = logging.getLogger('test_timeout')
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+    logger.setLevel(logging.DEBUG)
+
+    # Single proc:
+    config1 = galsim.config.CopyConfig(config)
+    galsim.config.Process(config1, logger=logger)
+
+    # nproc in output field.
+    config2 = galsim.config.CopyConfig(config)
+    config2['output']['nproc'] = 3
+    config2['output']['timeout'] = 30  # Still plenty large enough not to timeout.
+    config2['output']['file_name'] = "$'output_fits/test_timeout_nproc1_%d.fits'%file_num"
+    galsim.config.Process(config2, logger=logger)
+    for n in range(6):
+        im1 = galsim.fits.read('output_fits/test_timeout_%d.fits'%n)
+        im2 = galsim.fits.read('output_fits/test_timeout_nproc1_%d.fits'%n)
+        assert im1 == im2
+
+    # Check that it behaves sensibly if it hits timeout limit.
+    config2 = galsim.config.CleanConfig(config2)
+    config2['output']['timeout'] = 0.001
+    with CaptureLog() as cl:
+        with assert_raises(galsim.GalSimError):
+            galsim.config.Process(config2, logger=cl.logger)
+    assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
+
+    # nproc in image field.
+    config2 = galsim.config.CopyConfig(config)
+    config2['image']['nproc'] = 3
+    config2['image']['timeout'] = 30
+    config2['output']['file_name'] = "$'output_fits/test_timeout_nproc2_%d.fits'%file_num"
+    galsim.config.Process(config2, logger=logger)
+    for n in range(6):
+        im1 = galsim.fits.read('output_fits/test_timeout_%d.fits'%n)
+        im2 = galsim.fits.read('output_fits/test_timeout_nproc2_%d.fits'%n)
+        assert im1 == im2
+
+    # If you use BuildImages, it uses the image nproc and timeout specs, but parallelizes
+    # over images rather than stamps.  So check that.
+    config2 = galsim.config.CleanConfig(config2)
+    images = galsim.config.BuildImages(6, config2, logger=logger)
+    for n, im in enumerate(images):
+        im1 = galsim.fits.read('output_fits/test_timeout_%d.fits'%n)
+        assert im1 == im
+
+    # Check that it behaves sensibly if it hits timeout limit.
+    # This time, it will continue on after each error, but report the error in the log.
+    config2 = galsim.config.CleanConfig(config2)
+    config2['image']['timeout'] = 0.0001
+    with CaptureLog() as cl:
+        galsim.config.Process(config2, logger=cl.logger)
+    assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
+    assert 'File output_fits/test_timeout_nproc2_1.fits not written! Continuing on...' in cl.output
+    assert 'No files were written.  All were either skipped or had errors.' in cl.output
+
+    # If you want this to abort, use except_abort=True
+    config2 = galsim.config.CleanConfig(config2)
+    with CaptureLog() as cl:
+        with assert_raises(galsim.GalSimError):
+            galsim.config.Process(config2, logger=cl.logger, except_abort=True)
+    assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]

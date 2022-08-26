@@ -31,6 +31,7 @@ Some attributes that are allowed for all image types are:
     * The default behavior, if ``random_seed`` is not given, is to get a seed from the system (/dev/urandom if possible, otherwise based on the time).
 
 * ``nproc`` = *int_value*  (default = 1)  Specify the number of processors to use when drawing images. If nproc <= 0, then this means to try to automatically figure out the number of cpus and use that.
+* ``timeout`` = *float_value*  (default = 900)  Specify the number of seconds to allow for each job when multiprocessing before the multiprocessing queue times out.  The default is generally appropriate to prevent jobs from hanging forever from some kind of multiprocessing snafu, but if your jobs are expected to take more than 15 minutes per image, you might need to increase this.
 * ``wcs`` See `WCS Field` below.
 * ``bandpass`` See `Bandpass Field` below.
 * ``sensor``  See `Sensor Field` below.
