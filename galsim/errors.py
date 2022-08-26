@@ -408,7 +408,7 @@ def convert_cpp_errors(error_type=GalSimError):
     try:
         yield
     except RuntimeError as err:
-        raise error_type(str(err))
+        raise error_type(str(err)) from None
 
 def galsim_warn(message):
     """A helper function for emitting a GalSimWarning with the given message

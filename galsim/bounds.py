@@ -139,7 +139,7 @@ class Bounds:
                 self.ymax = kwargs.pop('ymax')
             except KeyError:
                 raise TypeError("Keyword arguments, xmin, xmax, ymin, ymax are required for %s"%(
-                                self.__class__.__name__))
+                                self.__class__.__name__)) from None
             if kwargs:
                 raise TypeError("Got unexpected keyword arguments %s"%kwargs.keys())
 

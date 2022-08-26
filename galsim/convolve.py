@@ -386,7 +386,7 @@ class Convolution(GSObject):
                 return self._sbp.xValue(pos._p)
             except (AttributeError, RuntimeError):
                 raise GalSimError(
-                    "At least one profile in %s does not implement real-space convolution"%self)
+                    "At least one profile in %s does not implement real-space convolution"%self) from None
         else:
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 
@@ -404,7 +404,7 @@ class Convolution(GSObject):
                 self._sbp.draw(image._image, image.scale, _jac, dx, dy, flux_scaling)
             except (AttributeError, RuntimeError):
                 raise GalSimError(
-                    "At least one profile in %s does not implement real-space convolution"%self)
+                    "At least one profile in %s does not implement real-space convolution"%self) from None
         else:
             raise GalSimError("Cannot use real_space convolution for >2 profiles")
 

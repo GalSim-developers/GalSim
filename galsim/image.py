@@ -499,7 +499,8 @@ class Image:
             return self.wcs.scale
         except Exception:
             if self.wcs:
-                raise GalSimError("image.wcs is not a simple PixelScale; scale is undefined.")
+                raise GalSimError(
+                    "image.wcs is not a simple PixelScale; scale is undefined.") from None
             else:
                 return None
 

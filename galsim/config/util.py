@@ -566,7 +566,7 @@ def ParseExtendedKey(config, key):
             # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
             # KeyError for the case where d is a dict, but k is not a valid key.
             raise GalSimConfigError(
-                "Unable to parse extended key %s.  Field %s is invalid."%(key,k))
+                "Unable to parse extended key %s.  Field %s is invalid."%(key,k)) from None
     return d, k
 
 def GetFromConfig(config, key):
@@ -587,7 +587,8 @@ def GetFromConfig(config, key):
     try:
         value = d[k]
     except Exception as e:
-        raise GalSimConfigError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
+        raise GalSimConfigError(
+            "Unable to parse extended key %s.  Field %s is invalid."%(key,k)) from None
     return value
 
 def SetInConfig(config, key, value):
@@ -613,7 +614,7 @@ def SetInConfig(config, key, value):
             d[k] = value
         except Exception as e:
             raise GalSimConfigError(
-                "Unable to parse extended key %s.  Field %s is invalid."%(key,k))
+                "Unable to parse extended key %s.  Field %s is invalid."%(key,k)) from None
 
 
 def UpdateConfig(config, new_params):
