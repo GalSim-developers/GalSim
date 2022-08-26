@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>v2.3 &mdash; GalSim 2.4.0 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Revision History" href="history.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> GalSim
+          </a>
+              <div class="version">
+                2.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="image.html">Images and Related Concepts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sb.html">Surface Brightness Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="chromatic.html">Wavelength-dependent Profiles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="units.html">Units</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wcs.html">World Coordinate Systems</a></li>
+<li class="toctree-l1"><a class="reference internal" href="random.html">Noise and Random Values</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wl.html">Weak Lensing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="photon.html">Photon Shooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="utilities.html">Helper Functions and Classes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="errors.html">Errors and Warnings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">The Config Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hsm.html">The HSM Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="des.html">The DES Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="roman.html">The Roman Space Telescope Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cpp.html">C++ Layer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shared.html">Shared Data</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="history.html">Revision History</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="history.html#changes-from-v2-3-to-v2-4">Changes from v2.3 to v2.4</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="history.html#older-versions">Older Versions</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">v2.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v2-2">v2.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v2-1">v2.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v2-0">v2.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v1-6">v1.6</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v1-5">v1.5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v1-4">v1.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v1-3">v1.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v1-2">v1.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v1-1">v1.1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v1-0">v1.0</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v0-5">v0.5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v0-4">v0.4</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v0-3">v0.3</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v0-2">v0.2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#v0-1">v0.1</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">GalSim</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="history.html">Revision History</a> &raquo;</li>
+      <li>v2.3</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/older.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <p>Below is a summary of the major changes with each new tagged version of GalSim.
+Each version may also include various other minor changes and bug fixes not
+listed here for brevity.  See the CHANGELOG files associated with each
+version for a more complete list.  Issue numbers related to each change are
+given in parentheses.</p>
+<div class="section" id="v2-3">
+<h1>v2.3<a class="headerlink" href="#v2-3" title="Permalink to this headline">¶</a></h1>
+<p><em>Dependency Changes</em></p>
+<ul class="simple">
+<li><p>Removed future as a dependency. (#1082)</p></li>
+<li><p>Download eigen automatically if not found on your system. (#1086)</p></li>
+</ul>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Deprecated the <code class="docutils literal notranslate"><span class="pre">rng</span></code> parameter of <a class="reference internal" href="photon_ops.html#galsim.WavelengthSampler" title="galsim.WavelengthSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WavelengthSampler</span></code></a> and <a class="reference internal" href="photon_ops.html#galsim.FRatioAngles" title="galsim.FRatioAngles"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FRatioAngles</span></code></a>. (#540)</p></li>
+<li><p>Deprecated <code class="docutils literal notranslate"><span class="pre">withOrigin</span></code> method for non-local WCS types. (#1073)</p></li>
+<li><p>Updated numerical details of the <a class="reference internal" href="psf.html#galsim.Kolmogorov" title="galsim.Kolmogorov"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Kolmogorov</span></code></a> class. (#1084)</p></li>
+<li><p>Changed <code class="docutils literal notranslate"><span class="pre">galsim.wfirst</span></code> module to <code class="docutils literal notranslate"><span class="pre">galsim.roman</span></code>. (#1088)</p></li>
+<li><p>Changed default <code class="docutils literal notranslate"><span class="pre">ii_pad_factor</span></code> for <a class="reference internal" href="phase_psf.html#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a>, <a class="reference internal" href="psf.html#galsim.OpticalPSF" title="galsim.OpticalPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalPSF</span></code></a> to 1.5. (#1089)</p></li>
+<li><p>Deprecated the <code class="docutils literal notranslate"><span class="pre">high_accuracy</span></code> and <code class="docutils literal notranslate"><span class="pre">approximate_struts</span></code> parameters for the
+<a class="reference internal" href="roman.html#galsim.roman.getPSF" title="galsim.roman.getPSF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.getPSF</span></code></a> function. (#1089)</p></li>
+<li><p>Changed <code class="docutils literal notranslate"><span class="pre">surface_ops</span></code> parameter to <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> to <code class="docutils literal notranslate"><span class="pre">photon_ops</span></code>. (#1093)</p></li>
+<li><p>Added logger option to some config functions and methods. (#1095)</p></li>
+<li><p>Deprecated <code class="docutils literal notranslate"><span class="pre">galsim.integ.trapz</span></code> and <code class="docutils literal notranslate"><span class="pre">galsim.integ.midpt</span></code>. (#1098)</p></li>
+<li><p>Changed the convention for the <code class="docutils literal notranslate"><span class="pre">f</span></code> array passed to the <a class="reference internal" href="table.html#galsim.LookupTable2D" title="galsim.LookupTable2D"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LookupTable2D</span></code></a>
+constructor to be the transpose of what it was. (#1103)</p></li>
+<li><p>Changed the behavior of <a class="reference internal" href="phase_psf.html#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a>, <a class="reference internal" href="psf.html#galsim.OpticalPSF" title="galsim.OpticalPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalPSF</span></code></a>, and
+<a class="reference internal" href="chromaticobject.html#galsim.ChromaticOpticalPSF" title="galsim.ChromaticOpticalPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticOpticalPSF</span></code></a> by adding the kwarg <code class="docutils literal notranslate"><span class="pre">fft_sign</span></code>. (#1104)</p></li>
+</ul>
+<p><em>Config Updates</em></p>
+<ul class="simple">
+<li><p>Added ability to draw chromatic objects with config files. (#510)</p></li>
+<li><p>Added demo12.yaml and demo13.yaml to the demo suite. (#510, #1121)</p></li>
+<li><p>Fixed a issues with using a <code class="docutils literal notranslate"><span class="pre">Current</span></code> item before it was parsed. (#1083)</p></li>
+<li><p>Added value-type-specific type names (e.g. <code class="docutils literal notranslate"><span class="pre">Random_float</span></code>, etc.) (#1083)</p></li>
+<li><p>Fixed a subtle issue in <code class="docutils literal notranslate"><span class="pre">Eval</span></code> string processing. (#1083)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">photon_ops</span></code> and <code class="docutils literal notranslate"><span class="pre">sensor</span></code> as options in the stamp processing. (#1093)</p></li>
+<li><p>Removed the <code class="docutils literal notranslate"><span class="pre">_nobjects_only</span></code> mechanism from input objects. (#1095)</p></li>
+<li><p>Allowed <code class="docutils literal notranslate"><span class="pre">Eval</span></code> fields to use any modules that are listed in the top-level
+<code class="docutils literal notranslate"><span class="pre">modules</span></code> field. (#1121)</p></li>
+<li><p>Added Roman config types: <code class="docutils literal notranslate"><span class="pre">RomanSCA</span></code>, <code class="docutils literal notranslate"><span class="pre">RomanBandpass</span></code>, and <code class="docutils literal notranslate"><span class="pre">RomanPSF</span></code>. (#1121)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">atRedshift</span></code> method for <a class="reference internal" href="chromaticobject.html#galsim.ChromaticObject" title="galsim.ChromaticObject"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ChromaticObject</span></code></a>. (#510)</p></li>
+<li><p>Added <a class="reference internal" href="misc.html#galsim.utilities.pickle_shared" title="galsim.utilities.pickle_shared"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.utilities.pickle_shared</span></code></a> context. (#1057)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">force_stepk</span></code> option to <a class="reference internal" href="psf.html#galsim.VonKarman" title="galsim.VonKarman"><code class="xref any py py-class docutils literal notranslate"><span class="pre">VonKarman</span></code></a>. (#1059)</p></li>
+<li><p>Added <a class="reference internal" href="photon_ops.html#galsim.Refraction" title="galsim.Refraction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Refraction</span></code></a> and <a class="reference internal" href="photon_ops.html#galsim.FocusDepth" title="galsim.FocusDepth"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FocusDepth</span></code></a> photon ops. (#1065, #1069)</p></li>
+<li><p>Updated LSST sensor files to match new lab measurements and use improved
+Poisson code calculations. (#1077, #1081)</p></li>
+<li><p>Added <a class="reference internal" href="gsobject.html#galsim.GSObject.makePhot" title="galsim.GSObject.makePhot"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.makePhot</span></code></a> method. (#1078)</p></li>
+<li><p>Added individual kwargs syntax to <a class="reference internal" href="gsobject.html#galsim.GSObject.withGSParams" title="galsim.GSObject.withGSParams"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.withGSParams</span></code></a>. (#1089)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">pupil_bin</span></code> option to the <a class="reference internal" href="roman.html#galsim.roman.getPSF" title="galsim.roman.getPSF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.getPSF</span></code></a> function. (#1089)</p></li>
+<li><p>Added <a class="reference internal" href="wcs.html#galsim.FittedSIPWCS" title="galsim.FittedSIPWCS"><code class="xref any py py-func docutils literal notranslate"><span class="pre">FittedSIPWCS</span></code></a>. (#1092)</p></li>
+<li><p>Extended <a class="reference internal" href="wcs.html#galsim.GSFitsWCS" title="galsim.GSFitsWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSFitsWCS</span></code></a> to support -SIP distortions for non-TAN WCSs. (#1092)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">wcs</span></code> option to <a class="reference internal" href="roman.html#galsim.roman.getPSF" title="galsim.roman.getPSF"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.roman.getPSF</span></code></a>. (#1094)</p></li>
+<li><p>Added <a class="reference internal" href="pos.html#galsim.Position.shear" title="galsim.Position.shear"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Position.shear</span></code></a> method. (#1090)</p></li>
+<li><p>Added <a class="reference internal" href="table.html#galsim.LookupTable.integrate" title="galsim.LookupTable.integrate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LookupTable.integrate</span></code></a>, <a class="reference internal" href="table.html#galsim.LookupTable.integrate_product" title="galsim.LookupTable.integrate_product"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">LookupTable.integrate_product</span></code></a>, and <a class="reference internal" href="table.html#galsim.trapz" title="galsim.trapz"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.trapz</span></code></a>. (#1098)</p></li>
+<li><p>Added <a class="reference internal" href="integ.html#galsim.integ.hankel" title="galsim.integ.hankel"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.integ.hankel</span></code></a> function. (#1099)</p></li>
+<li><p>Added <a class="reference internal" href="bessel.html#galsim.bessel.jv_root" title="galsim.bessel.jv_root"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.bessel.jv_root</span></code></a> function. (#1099)</p></li>
+<li><p>Added support for TPV WCS files with order &gt; 3. (#1101)</p></li>
+<li><p>Added <a class="reference internal" href="phase_psf.html#galsim.UserScreen" title="galsim.UserScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UserScreen</span></code></a> for arbitrary user-supplied phase screens (#1102)</p></li>
+<li><p>Added <a class="reference internal" href="zernike.html#galsim.zernike.describe_zernike" title="galsim.zernike.describe_zernike"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.zernike.describe_zernike</span></code></a>. (#1104)</p></li>
+<li><p>Added option to emit WCS warnings when reading a file via <a class="reference internal" href="fits.html#galsim.fits.read" title="galsim.fits.read"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.fits.read</span></code></a>. (#1120)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">area</span></code> and <code class="docutils literal notranslate"><span class="pre">exptime</span></code> parameters to <a class="reference internal" href="real_gal.html#galsim.COSMOSCatalog" title="galsim.COSMOSCatalog"><code class="xref any py py-class docutils literal notranslate"><span class="pre">COSMOSCatalog</span></code></a> constructor. (#1121)</p></li>
+</ul>
+<p><em>Performance Improvements</em></p>
+<ul class="simple">
+<li><p>Implemented <code class="docutils literal notranslate"><span class="pre">Transformation._drawReal</span></code> and <code class="docutils literal notranslate"><span class="pre">Transformation._drawKImage</span></code> in python. (#934)</p></li>
+<li><p>Sped up the draw routines for <a class="reference internal" href="arbitrary.html#galsim.InterpolatedImage" title="galsim.InterpolatedImage"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InterpolatedImage</span></code></a>. (#935)</p></li>
+<li><p>Improved the quality and speed of Roman PSFs. (#1089)</p></li>
+<li><p>Sped up <a class="reference internal" href="wcs.html#galsim.GSFitsWCS" title="galsim.GSFitsWCS"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GSFitsWCS</span></code></a> calculations for SIP and PV distorted WCSs. (#1092)</p></li>
+<li><p>Various speed improvements in config processing. (#1095, #1098)</p></li>
+<li><p>Sped up <a class="reference internal" href="sed.html#galsim.SED.calculateFlux" title="galsim.SED.calculateFlux"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SED.calculateFlux</span></code></a> and some other SED and Bandpass calculations. (#1098)</p></li>
+<li><p>Sped up the Hankel transforms in several classes. (#1099)</p></li>
+<li><p>Improved the accuracy of <code class="docutils literal notranslate"><span class="pre">stepk</span></code> for <a class="reference internal" href="psf.html#galsim.Kolmogorov" title="galsim.Kolmogorov"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Kolmogorov</span></code></a> profiles. (#1110)</p></li>
+<li><p>Sped up Zernike arithmetic. (#1124)</p></li>
+<li><p>Removed some overhead in some “leading underscore” methods. (#1126)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Fixed <a class="reference internal" href="misc.html#galsim.utilities.horner" title="galsim.utilities.horner"><code class="xref any py py-func docutils literal notranslate"><span class="pre">horner</span></code></a> and <a class="reference internal" href="misc.html#galsim.utilities.horner2d" title="galsim.utilities.horner2d"><code class="xref any py py-func docutils literal notranslate"><span class="pre">horner2d</span></code></a> when inputs are complex. (#1054)</p></li>
+<li><p>Fixed <a class="reference internal" href="psf.html#galsim.VonKarman" title="galsim.VonKarman"><code class="xref any py py-class docutils literal notranslate"><span class="pre">VonKarman</span></code></a> integration to be more reliable. (#1058)</p></li>
+<li><p>Fixed minor bug in repr of <a class="reference internal" href="psf.html#galsim.OpticalPSF" title="galsim.OpticalPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OpticalPSF</span></code></a> class. (#1061)</p></li>
+<li><p>Fixed bug in <a class="reference internal" href="gal.html#galsim.RandomKnots" title="galsim.RandomKnots"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomKnots</span></code></a> when multiplied by an SED. (#1064)</p></li>
+<li><p>Fixed bug in <a class="reference internal" href="fits.html#galsim.fits.writeMulti" title="galsim.fits.writeMulti"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.fits.writeMulti</span></code></a> not writing headers. (#1091)</p></li>
+</ul>
+</div>
+<div class="section" id="v2-2">
+<h1>v2.2<a class="headerlink" href="#v2-2" title="Permalink to this headline">¶</a></h1>
+<p><em>Deprecated Features</em></p>
+<ul class="simple">
+<li><p>Deprecated <code class="docutils literal notranslate"><span class="pre">galsim.correlatednoise._BaseCorrelatedNoise</span></code>. (#160)</p></li>
+<li><p>Deprecated <code class="docutils literal notranslate"><span class="pre">RandomWalk</span></code> in favor of <a class="reference internal" href="gal.html#galsim.RandomKnots" title="galsim.RandomKnots"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomKnots</span></code></a>. (#977)</p></li>
+<li><p>Deprecated the <code class="docutils literal notranslate"><span class="pre">tol</span></code> parameter of the various Interpolant classes. (#1038)</p></li>
+</ul>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Removed functionality to store/reload WFIRST PSFs, and to get multiple WFIRST PSFs (#919)</p></li>
+<li><p>Changed the function signature of StampBuilder.addNoise. (#1048)</p></li>
+</ul>
+<p><em>Changes to Shared Files</em></p>
+<ul class="simple">
+<li><p>Added option to set the <a class="reference internal" href="shared.html#galsim.meta_data.share_dir" title="galsim.meta_data.share_dir"><code class="xref any py py-data docutils literal notranslate"><span class="pre">galsim.meta_data.share_dir</span></code></a> via GALSIM_SHARE_DIR. (#1014)</p></li>
+<li><p>Changed hosting of COSMOS catalog to <a class="reference external" href="https://zenodo.org/record/3242143">Zenodo</a> (#1033)</p></li>
+</ul>
+<p><em>Config Updates</em></p>
+<ul class="simple">
+<li><p>Added some more customization hooks in the StampBuilder class. (#1048)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">quick_skip</span></code>, <code class="docutils literal notranslate"><span class="pre">obj_rng=False</span></code>, <code class="docutils literal notranslate"><span class="pre">rng_index_key</span></code> options. (#1048)</p></li>
+</ul>
+<p><em>Documentation Updates</em></p>
+<ul class="simple">
+<li><p>Switched docs to <a class="reference external" href="http://galsim-developers.github.io/GalSim/">Sphinx</a>.  (#160)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added <a class="reference internal" href="fits.html#galsim.fits.FitsHeader.extend" title="galsim.fits.FitsHeader.extend"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">FitsHeader.extend</span></code></a> method.  Also, read_header option to <a class="reference internal" href="fits.html#galsim.fits.read" title="galsim.fits.read"><code class="xref any py py-func docutils literal notranslate"><span class="pre">galsim.fits.read</span></code></a>. (#877)</p></li>
+<li><p>Updated lots of WFIRST module to use Cycle 7 specifications. (#919)</p></li>
+<li><p>Extended WFIRST aberrations to 22 Zernike coefficients and vary them across FOV. (#919)</p></li>
+<li><p>Improved efficiency of drawing <a class="reference internal" href="gal.html#galsim.RandomKnots" title="galsim.RandomKnots"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomKnots</span></code></a> objects when transformed. (#977)</p></li>
+<li><p>Added WFIRST fermi persistence model. (#992)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">r0_500</span></code> argument to VonKarman. (#1005)</p></li>
+<li><p>Improved ability of <a class="reference internal" href="phase_psf.html#galsim.AtmosphericScreen" title="galsim.AtmosphericScreen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtmosphericScreen</span></code></a> to use shared memory in multiprocessing context. (#1006)</p></li>
+<li><p>Use OpenMP when appropriate in <a class="reference internal" href="sensor.html#galsim.SiliconSensor.accumulate" title="galsim.SiliconSensor.accumulate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">SiliconSensor.accumulate</span></code></a> (#1008)</p></li>
+<li><p>Added array versions of <a class="reference internal" href="wcs.html#galsim.BaseWCS.toWorld" title="galsim.BaseWCS.toWorld"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.toWorld</span></code></a> and <a class="reference internal" href="wcs.html#galsim.BaseWCS.toImage" title="galsim.BaseWCS.toImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.toImage</span></code></a>. (#1026)</p></li>
+<li><p>Exposed some methods of <a class="reference internal" href="interpolant.html#galsim.Interpolant" title="galsim.Interpolant"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Interpolant</span></code></a> classes that had only been in the C++ layer. (#1038)</p></li>
+<li><p>Added Zernike polynomial +, -, and * operators. (#1047)</p></li>
+<li><p>Added Zernike polynomial properties .laplacian and .hessian. (#1047)</p></li>
+<li><p>Added <code class="docutils literal notranslate"><span class="pre">center</span></code> option to the <a class="reference internal" href="gsobject.html#galsim.GSObject.drawImage" title="galsim.GSObject.drawImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">GSObject.drawImage</span></code></a> method. (#1053)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Fixed a couple places where negative fluxes were not working correctly. (#472)</p></li>
+<li><p>Fixed FITS I/O to write out comments of header items properly. (#877)</p></li>
+<li><p>Fixed error in the serialization of <a class="reference internal" href="gal.html#galsim.RandomKnots" title="galsim.RandomKnots"><code class="xref any py py-class docutils literal notranslate"><span class="pre">RandomKnots</span></code></a> instances. (#977)</p></li>
+<li><p>Fixed error in <a class="reference internal" href="phase_psf.html#galsim.PhaseScreenPSF" title="galsim.PhaseScreenPSF"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhaseScreenPSF</span></code></a> when aberrations has len=1. (#1006, #1029)</p></li>
+<li><p>Fixed error in <a class="reference internal" href="wcs.html#galsim.BaseWCS.makeSkyImage" title="galsim.BaseWCS.makeSkyImage"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">BaseWCS.makeSkyImage</span></code></a> when crossing ra=0 line for some WCS classes. (#1030)</p></li>
+<li><p>Fixed slight error in the realized flux of some profiles when using photon shooting. (#1036)</p></li>
+<li><p>Fixed error in <a class="reference internal" href="gal.html#galsim.Sersic" title="galsim.Sersic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sersic</span></code></a> class when n is very, very close to 0.5. (#1041)</p></li>
+</ul>
+</div>
+<div class="section" id="v2-1">
+<h1>v2.1<a class="headerlink" href="#v2-1" title="Permalink to this headline">¶</a></h1>
+<p><em>Deprecated Features</em></p>
+<ul class="simple">
+<li><p>Deprecated PhaseScreenPSF attributes img and finalized. (#990)</p></li>
+<li><p>Deprecated GSParams items allowed_flux_variation, small_fraction_of_flux,
+and range_division_for_extreama. (#993)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added RandomWalk profile option. (#821)</p></li>
+<li><p>Added spline as LookupTable2D interpolant. (#982)</p></li>
+<li><p>Added ability to use an Interpolant in LookupTable and LookupTable2D. (#982)</p></li>
+<li><p>Added option for faster grid interpolation of LookupTable2D. (#982)</p></li>
+<li><p>Added offset and flux_ratio options to WCS.toWorld and toImage. (#993)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Corrected the diffusion functional form in SiliconSensor. (#981)</p></li>
+<li><p>Fixed a bug in the PhaseScreenPSF withGSParams function. (#990)</p></li>
+<li><p>Fixed a seg fault bug when PoissonDeviate is given mean=0. (#996)</p></li>
+<li><p>Fixed the galsim executable to work correctly when installed by SCons.</p></li>
+<li><p>Fixed Convolve and Sum sometimes making unnecessary copies.</p></li>
+<li><p>Fixed error when using non-int integer types as seed of BaseDeviate (#1009)</p></li>
+<li><p>Fixed error in use of non-integer grid_spacing in PowerSpectrum (#1020)</p></li>
+<li><p>Fixed FitsHeader to not unnecessarily read data of fits file. (#1024)</p></li>
+<li><p>Switched to yaml.safe_load to avoid PyYAML v5.0 warnings (#1025)</p></li>
+<li><p>Fixed cases where numpy objected to subtracting floats from ints. (#1025)</p></li>
+</ul>
+</div>
+<div class="section" id="v2-0">
+<h1>v2.0<a class="headerlink" href="#v2-0" title="Permalink to this headline">¶</a></h1>
+<p><em>Installation Changes</em></p>
+<ul class="simple">
+<li><p>Now installable via pip or setup.py install. (#809)</p></li>
+</ul>
+<p><em>Dependency Changes</em></p>
+<ul class="simple">
+<li><p>Officially no longer support Python 2.6 or 3.4. (#755)</p></li>
+<li><p>No longer support pre-astropy versions of pyfits or astropy &lt;v1.0 (#755)</p></li>
+<li><p>No longer support pre-2016 version of the COSMOS catalog. (#755)</p></li>
+<li><p>Added dependency on LSSTDESC.Coord. (#809)</p></li>
+<li><p>Removed dependency on boost. (#809)</p></li>
+<li><p>Removed dependency on TMV. (#809)</p></li>
+<li><p>Added dependency on pybind11 for setup.py installations. (#809)</p></li>
+<li><p>Added dependency on Eigen for setup.py installations. (#809)</p></li>
+</ul>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Changed the default maximum_fft_size to 8192 from 4096. (#755)</p></li>
+<li><p>Changed the order of arguments of galsim.wfirst.allDetectorEffects. (#755)</p></li>
+<li><p>Changed how CelestialCoord.project and deproject work. (#809)</p></li>
+<li><p>Changed name of InclinedExponential.disk_half_light_radius. (#809)</p></li>
+<li><p>Removed galsim_yaml and galsim_json scripts. (#809)</p></li>
+<li><p>Removed lsst module, which was broken. (#964)</p></li>
+<li><p>Changed how gsparams work for objects that wrap other objects. (#968)</p></li>
+</ul>
+<p><em>Deprecated Features</em></p>
+<ul class="simple">
+<li><p>Removed all features deprecated in 1.x versions.</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Changed errors to raise a GalSimError or a subclass thereof. (#755)</p></li>
+<li><p>Changed the type of warnings raised by GalSim to GalSimWarning. (#755)</p></li>
+<li><p>Added the withGSParams() method for all GSObjects. (#968)</p></li>
+</ul>
+</div>
+<div class="section" id="v1-6">
+<h1>v1.6<a class="headerlink" href="#v1-6" title="Permalink to this headline">¶</a></h1>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Delayed AtmosphericScreen instantiation until its first use. (#864)</p></li>
+<li><p>Simplified return values of NFWHalo and PowerSpectrum methods. (#855)</p></li>
+<li><p>Simplified return value of LookupTable, SED and Bandpass access. (#955)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Fixed error in amplitude of phase screens created by AtmosphericScreen (#864)</p></li>
+<li><p>Fixed a bug in the DES MEDS writer setting the cutout row/col wrong. (#928)</p></li>
+<li><p>Fixed some small bugs in complicated uses of config processing. (#928)</p></li>
+<li><p>Fixed memory leak when drawing PhaseScreenPSFs using photon-shooting (#942)</p></li>
+<li><p>Fixed a few minor bugs in the Silicon code. (#963)</p></li>
+<li><p>Fixed a bug in the SED.thin() rel_err value. (#963)</p></li>
+</ul>
+<p><em>Deprecated Features</em></p>
+<ul class="simple">
+<li><p>Deprecated passing Image arguments to kappaKaiserSquires function. (#855)</p></li>
+<li><p>Deprecated the interpolant argument for PowerSpectrum methods getShear,
+getConvergence, getMagnification, and getLensing. (#855)</p></li>
+<li><p>Deprecated PowerSpectrum.subsampleGrid. (#855)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added Zernike submodule. (#832, #951)</p></li>
+<li><p>Updated PhaseScreen to accept None as a valid time argument. (#864)</p></li>
+<li><p>Added SecondKick profile GSObject. (#864)</p></li>
+<li><p>Updated PhaseScreenPSFs to use SecondKick with geometric_shooting. (#864)</p></li>
+<li><p>Added VonKarman profile GSObject. (#940)</p></li>
+<li><p>Added PhotonDCR surface op. (#955)</p></li>
+<li><p>Added astropy units as allowed values of wave_type in Bandpass. (#955)</p></li>
+<li><p>Added SiliconSensor.calculate_pixel_area. (#963)</p></li>
+<li><p>Added transpose option in SiliconSensor. (#963)</p></li>
+</ul>
+</div>
+<div class="section" id="v1-5">
+<h1>v1.5<a class="headerlink" href="#v1-5" title="Permalink to this headline">¶</a></h1>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Simplified the return value of galsim.config.ReadConfig. (#580)</p></li>
+<li><p>Changed return type of RealGalaxyCatalog.getGal and getPSF. (#640)</p></li>
+<li><p>Reorganized files in share/galsim directory. (#640)</p></li>
+<li><p>Changed SED objects to have real dimensions. (#789)</p></li>
+<li><p>Changed drawKImage to return a single ImageCD. (#799)</p></li>
+<li><p>Changed InterpolatedKImage to take an ImageCD. (#799)</p></li>
+<li><p>Dynamic PhaseScreenPSFs require an explicit start time and time step. (#824)</p></li>
+<li><p>OpticalScreen now requires diam argument. (#824)</p></li>
+<li><p>Switched galsim.Image(image) to make a copy rather than a view. (#873)</p></li>
+<li><p>Changed the behavior of RealGalaxyCatalog.preload (#884)</p></li>
+</ul>
+<p><em>Dependency Changes</em></p>
+<ul class="simple">
+<li><p>Added astropy as a required dependency for chromatic functionality. (#789)</p></li>
+<li><p>Switched scons tests test runner from nosetests to pytest. (#892)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Fixed parity mistake in configuration of WFIRST focal plane. (#675)</p></li>
+<li><p>Fixed an error in the magnification calculated by NFWHalo.getLensing(). (#580)</p></li>
+<li><p>Fixed bug when whitening noise in images based on COSMOS training datasets
+using the config functionality. (#792)</p></li>
+<li><p>Fixed bug in image.subImage that could cause seg faults in some cases. (#848)</p></li>
+<li><p>Fixed bug in GSFitsWCS that made toImage sometimes fail to converge. (#880)</p></li>
+<li><p>Fixed bug that could cause Kolmogorov to go into an endless loop. (#952)</p></li>
+</ul>
+<p><em>Deprecated Features</em></p>
+<ul>
+<li><p>Deprecated simReal function. (#787)</p></li>
+<li><p>Deprecated Chromatic class. (#789)</p></li>
+<li><p>Deprecated .copy() methods for immutable classes, including GSObject,
+ChromaticObject, SED, and Bandpass. (#789)</p></li>
+<li><p>Deprecated wmult parameter of drawImage. (#799)</p></li>
+<li><p>Deprecated Image.at method. (#799)</p></li>
+<li><p>Deprecated gain parameter of drawKImage.  (#799)</p></li>
+<li><p>Deprecated ability to create multiple PhaseScreenPSFs with single call
+to makePSF. (#824)</p></li>
+<li><p>Deprecated the use of np.trapz and galsim.integ.mipdt as valid
+integration rules for use by ImageIntegrators. (#887)</p></li>
+<li><p>Changed the Angle.rad method to a property. (#904)</p></li>
+<li><p>Deprecated the functions HMS_Angle and DMS_Angle. (#904)</p></li>
+<li><p>Deprecated the function ShapeletSize and FitShapelet. (#904)</p></li>
+<li><p>Deprecated using Interpolant base class as a factory function. (#904)</p></li>
+<li><p>Deprecated use of the SBProfile attribute of GSObject. (#904)</p></li>
+<li><p>Deprecated making a GSObject directly. (#904)</p></li>
+<li><p>Deprecated use of the image attribute of Image. (#904)</p></li>
+<li><p>PhotonArray.addTo(image) now takes a regular galsim.Image argument. (#904)</p></li>
+<li><p>Deprecated the various PhotonArray.get* functions. (#904)</p></li>
+<li><p>Deprecated calculateFlux(bandpass=None). (#905)</p></li>
+<li><p>Deprecated the various get* methods that are equivalent to a property.
+e.g. obj.getFlux() -&gt; obj.flux, etc. (#904)</p></li>
+<li><p>Deprecated ChromaticObject.obj.  (#904)</p></li>
+<li><p>Changed the objlist attribute of ChromaticSum and ChromaticConvolution to
+obj_list. (#904)</p></li>
+<li><p>Deprecated OpticalScreen.coef_array. (#904)</p></li>
+<li><p>Changed a number of GSObject methods to properties. (#904)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>obj.stepK() -&gt; obj.stepk</p></li>
+<li><p>obj.maxK() -&gt; obj.maxk</p></li>
+<li><p>obj.nyquistScale() -&gt; obj.nyquist_scale</p></li>
+<li><p>obj.centroid() -&gt; obj.centroid</p></li>
+<li><p>obj.getPositiveFlux() -&gt; obj.positive_flux</p></li>
+<li><p>obj.getNegativeFlux() -&gt; obj.negative_flux</p></li>
+<li><p>obj.maxSB() -&gt; obj.max_sb</p></li>
+<li><p>obj.isAxisymmetric() -&gt; obj.is_axisymmetric</p></li>
+<li><p>obj.isAnalyticX() -&gt; obj.is_analytic_x</p></li>
+<li><p>obj.isAnalyticK() -&gt; obj.is_analytic_k</p></li>
+<li><p>obj.hasHardEdges() -&gt; obj.has_hard_edges</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Renamed ChromaticObject.centroid(bandpass) to calculateCentroid. (#904)</p></li>
+<li><p>Changed a few Image methods to properties. (#904)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>image.center() -&gt; image.center</p></li>
+<li><p>image.trueCenter() -&gt; image.true_center</p></li>
+<li><p>image.origin() -&gt; image.origin</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added DeltaFunction. (#533)</p></li>
+<li><p>Added ChromaticRealGalaxy. (#640)</p></li>
+<li><p>Added CovarianceSpectrum. (#640)</p></li>
+<li><p>Added HST bandpasses covering AEGIS and CANDELS surveys (#640)</p></li>
+<li><p>Added drawKImage method for ChromaticObject and CorrelatedNoise (#640)</p></li>
+<li><p>Updated WFIRST WCS some other basic numbers to Cycle 7 design. (#675)</p></li>
+<li><p>Added support for unsigned int Images. (#715)</p></li>
+<li><p>Added a new Sensor class hierarchy, including SiliconSensor. (#722)</p></li>
+<li><p>Added save_photons option to drawImage. (#722)</p></li>
+<li><p>Added image.bin and image.subsample methods. (#722)</p></li>
+<li><p>Added annular Zernike option for optical aberration coefficients. (#771)</p></li>
+<li><p>Added ability to use numpy, np, or math in all places where we evaluate
+user input. (#776)</p></li>
+<li><p>Added keywords exptime and area to drawImage(). (#789)</p></li>
+<li><p>Added ability to use astropy.units for units of SEDs. (#789).</p></li>
+<li><p>Added InclinedExponential and InclinedSersic. (#782, #811)</p></li>
+<li><p>Added ability to select from a RealGalaxyCatalog or COSMOSCatalog using
+the ‘weight’ entries to account for selection effects. (#787)</p></li>
+<li><p>Added complex Image dtypes (aka ImageCD and ImageCF). (#799, #873)</p></li>
+<li><p>Added maxSB() method to GSObjects. (#799)</p></li>
+<li><p>Added im[x,y] = value and value = im[x,y] syntax. (#799)</p></li>
+<li><p>Added ability to do FFTs directly on images. (#799)</p></li>
+<li><p>Added galsim.RandomWalk. (#819)</p></li>
+<li><p>Added generate function to BaseDeviate and sed.sampleWavelength. (#822)</p></li>
+<li><p>Added function assignPhotonAngles (#823)</p></li>
+<li><p>Added geometric optics approximation for photon-shooting PhaseScreenPSFs.
+(#824)</p></li>
+<li><p>Added gradient method to LookupTable2D. (#824)</p></li>
+<li><p>Added surface_ops option to drawImage function. (#827)</p></li>
+<li><p>Added ii_pad_factor kwarg to PhaseScreenPSF and OpticalPSF. (#835)</p></li>
+<li><p>Added galsim.fft module. (#840)</p></li>
+<li><p>Added a hook to the WCS classes to allow them to vary with color. (#865)</p></li>
+<li><p>Added optional variance parameter to PowerSpectrum.buildGrid. (#865)</p></li>
+<li><p>Added CelestialCoord.get_xyz() and CeletialCoord.from_xyz(). (#865)</p></li>
+<li><p>Added an optional center argument for Angle.wrap(). (#865)</p></li>
+<li><p>Added recenter option to drawKImage. (#873)</p></li>
+<li><p>Added option to use circular weight function in HSM moments. (#917)</p></li>
+</ul>
+<p><em>New config features</em></p>
+<ul class="simple">
+<li><p>Changed galsim.config.CalculateNoiseVar to CalculateNoiseVariance. (#820)</p></li>
+<li><p>Setting config[‘rng’] is no longer required when manually running commands
+like galsim.config.BuildGSObject.  (#820)</p></li>
+<li><p>Allow PoissonNoise and CCDNoise without any sky level. (#820)</p></li>
+<li><p>Let ‘None’ in the config file mean None. (#820)</p></li>
+<li><p>Remove default value for ‘max_extra_noise’ for photon shooting. (#820)</p></li>
+<li><p>Added –except_abort option to galsim executable. (#820)</p></li>
+<li><p>Added optional probability parameter ‘p’ for Random bool values. (#820)</p></li>
+<li><p>Added ability to specify world_pos in celestial coordinates. (#865)</p></li>
+<li><p>Added the ability to have multiple rngs. (#865)</p></li>
+<li><p>Added ngrid, center, variance, index options to power_spectrum input field.
+(#865)</p></li>
+<li><p>Added skip option in stamp field. (#865)</p></li>
+<li><p>Added ‘:field’ syntax for templates. (#865)</p></li>
+</ul>
+</div>
+<div class="section" id="v1-4">
+<h1>v1.4<a class="headerlink" href="#v1-4" title="Permalink to this headline">¶</a></h1>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Changed the galsim.Bandpass and galsim.SED classes to require formerly
+optional keywords wave_type and flux_type. (#745)</p></li>
+</ul>
+<p><em>Dependency Changes</em></p>
+<ul class="simple">
+<li><p>Added future module as a dependency. (#534)</p></li>
+<li><p>Changed PyYAML to a non-optional dependency. (#768)</p></li>
+</ul>
+<p><em>Bug Fixes</em></p>
+<ul class="simple">
+<li><p>Improved ability of galsim.fits.read to handle invalid FITS headers. (#602)</p></li>
+<li><p>Fixed bug in des module, building meds file with wcs from input images. (#654)</p></li>
+<li><p>Fixed a bug in the way Images are instantiated for certain combinations of
+ChromaticObjects and image-setup keyword arguments (#683)</p></li>
+<li><p>Added ability to manipulate the width of the moment-measuring weight function
+for the KSB shear estimation method of the galsim.hsm package. (#686)</p></li>
+<li><p>Fixed an error in the CCDNoise.getVariance() function. (#713)</p></li>
+<li><p>Fixed an assert failure in InterpolatedImage if image is all zeros. (#720)</p></li>
+<li><p>Updated ups table file so that setup command is setup galsim. (#724)</p></li>
+<li><p>Improved algorithm for thinning SEDs and Bandpasses. (#739)</p></li>
+<li><p>Fixed a bug in how DistDeviate handles nearly flat pdfs. (#741)</p></li>
+<li><p>Fixed a bug in chromatic parametric COSMOS galaxy models. (#745)</p></li>
+<li><p>Fixed a bug in the Sum and Convolution constructors when list has only a
+single element. (#763)</p></li>
+<li><p>Fixed a bug related to boost-v1.60 python shared_ptr registration. (#764)</p></li>
+<li><p>Changed an assert in the HSM module to an exception. (#784)</p></li>
+</ul>
+<p><em>Deprecated Features</em></p>
+<ul class="simple">
+<li><p>Deprecated the gal.type=Ring option in the config files. (#698)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added OutputCatalog class. (#301, #691)</p></li>
+<li><p>Added methods calculateHLR, calculateMomentRadius, and calculateFWHM. (#308)</p></li>
+<li><p>Added LookupTable2D. (#465)</p></li>
+<li><p>Added support for Python 3. (#534)</p></li>
+<li><p>Added AtmosphericScreen, OpticalScreen, and PhaseScreenList. (#549)</p></li>
+<li><p>Added PhaseScreenPSF. (#549)</p></li>
+<li><p>Added Atmosphere function. (#549)</p></li>
+<li><p>Rewrote OpticalPSF using new PhaseScreen framework. (#549)</p></li>
+<li><p>Extended OpticalPSF to handle arbitrary Zernike order. (#549)</p></li>
+<li><p>Added a simple, linear model for persistence. (#554)</p></li>
+<li><p>Added BoundsI.numpyShape(). (#654)</p></li>
+<li><p>Enabled FITS files with unsigned integer to read as ImageI or ImageS. (#654)</p></li>
+<li><p>Made COSMOSCatalog write an index parameter. (#654, #694)</p></li>
+<li><p>Added ability to specify lambda and r0 separately for Kolmogorov. (#657)</p></li>
+<li><p>Enabled initializing an InterpolatedImage from a user-specified HDU. (#660)</p></li>
+<li><p>Changed galsim.fits.writeMulti to allow hdus in “image” list. (#691)</p></li>
+<li><p>Added wcs argument to Image.resize(). (#691)</p></li>
+<li><p>Added BaseDeviate.discard(n) and BaseDeviate.raw(). (#691)</p></li>
+<li><p>Added sersic_prec option to COSMOSCatalog.makeGalaxy(). (#691)</p></li>
+<li><p>Enabled image quality cuts in the COSMOSCatalog class. (#693)</p></li>
+<li><p>Added convergence_threshold in HSMParams. (#709)</p></li>
+<li><p>Improved the readability of Image and BaseDeviate reprs. (#723)</p></li>
+<li><p>Sped up Bandpass, SED, and LookupTable classes. (#735)</p></li>
+<li><p>Added the FourierSqrt operator. (#748)</p></li>
+<li><p>Made Bandpass.thin() and truncate() preserve the zeropoint. (#711)</p></li>
+<li><p>Added version information to the compiled C++ library. (#750)</p></li>
+</ul>
+<p><em>Updates to galsim executable</em></p>
+<ul class="simple">
+<li><p>Dropped default verbosity from 2 to 1. (#691)</p></li>
+<li><p>Added galsim -n njobs -j jobnum to split run into multiple jobs. (#691)</p></li>
+<li><p>Added galsim -p to perform profiling on the run. (#691)</p></li>
+</ul>
+<p><em>New config features</em></p>
+<ul class="simple">
+<li><p>Added ability to write truth catalogs using output.truth field. (#301, #691)</p></li>
+<li><p>Improved the extensibility of the config parsing. (#691, #774)</p></li>
+<li><p>Added the ‘template’ option. (#691)</p></li>
+<li><p>Made ‘$’ and ‘&#64;’ shorthand for Eval and Current. (#691)</p></li>
+<li><p>Allowed gsobjects to be referenced from Current types. (#691)</p></li>
+<li><p>Added x,f specification for a RandomDistribution. (#691)</p></li>
+<li><p>Added a new ‘stamp’ top level field. (#691)</p></li>
+<li><p>Added new stamp type=Ring to effect ring tests. (#698)</p></li>
+</ul>
+</div>
+<div class="section" id="v1-3">
+<h1>v1.3<a class="headerlink" href="#v1-3" title="Permalink to this headline">¶</a></h1>
+<p><em>Installation Changes</em></p>
+<ul class="simple">
+<li><p>Require functionality in TMV 0.72. (#616)</p></li>
+</ul>
+<p><em>API Changes</em></p>
+<ul class="simple">
+<li><p>Changed the name of the bounds.addBorder() method to withBorder. (#218)</p></li>
+<li><p>Removed (from the python layer) Interpolant2d and InterpolantXY. (#218)</p></li>
+<li><p>Removed the MultipleImage way of constructing an SBInterpolatedImage. (#218, #642)</p></li>
+<li><p>Made the default tolerance for all Interpolants equal to 1.e-4.. (#218)</p></li>
+<li><p>Deprecated the __rdiv__ operator from Bandpass and SED. (#218)</p></li>
+<li><p>Made all returned matrices consistently use numpy.array, rather than
+numpy.matrix. (#218)</p></li>
+<li><p>Made the classes PositionI, PositionD, GSParams, and HSMParams immutable.
+(#218, #643)</p></li>
+<li><p>Deprecated CorrelatedNoise.calculateCovarianceMatrix. (#630)</p></li>
+<li><p>Officially deprecated the methods and functions that had been described as
+having been removed or changed to a different name. (#643)</p></li>
+<li><p>Added function to interleave a set of dithered images into a single
+higher-resolution image. (#666)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Made all GalSim objects picklable unless they use fundamentally unpicklable
+things such as lambda expressions, improved str and repr representations,
+made __eq__, __ne__, and __hash__ work better. (#218)</p></li>
+<li><p>Added ability to set the zeropoint of a bandpass to a numeric value on
+construction. (#218)</p></li>
+<li><p>Added ability to set the redshift of an SED on construction. (#218)</p></li>
+<li><p>Updated CorrelatedNoise to work with images that have a non-trivial WCS.
+(#501)</p></li>
+<li><p>Added new methods of the image class to simulate detector effects (#555, #558).</p></li>
+<li><p>Enabled constructing a FitsHeader object from a dict, and allow
+FitsHeader to be default constructed with no keys. (#590)</p></li>
+<li><p>Added a module, galsim.wfirst, that includes information about the planned
+WFIRST mission, along with helper routines for constructing appropriate PSFs,
+bandpasses, WCS, etc.  (#590)</p></li>
+<li><p>Added native support for the TAN-SIP WCS type using GSFitsWCS. (#590)</p></li>
+<li><p>Added a helper program, galsim_download_cosmos, that downloads the COSMOS
+RealGalaxy catalog. (#590)</p></li>
+<li><p>Added new class with methods for making realistic galaxy samples using COSMOS:
+the COSMOSCatalog class and its method makeObj(). (#590 / #635).</p></li>
+<li><p>Added information about PSF to the data returned by EstimateShear(). (#612)</p></li>
+<li><p>Added Spergel(2010) profile GSObject (#616).</p></li>
+<li><p>Added an option to the ChromaticObject class that allows for faster image
+rendering via interpolation between stored images.  (#618)</p></li>
+<li><p>Added new ChromaticAiry and ChromaticOpticalPSF classes for representing
+chromatic optical PSFs. (#618)</p></li>
+<li><p>Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
+of a filename. (#626)</p></li>
+<li><p>Added TopHat class implementing a circular tophat profile. (#639)</p></li>
+<li><p>Added ability of Noise objects to take a new random number generator (a
+BaseDeviate instance) when being copied. (#643)</p></li>
+<li><p>Added InterpolatedKImage GSObject for constructing a surface brightness
+profile out of samples of its Fourier transform. (#642)</p></li>
+<li><p>Enabled constructing a FitsHeader object from a list of (key, value) pairs,
+which preserves the order of the items in the header. (#672)</p></li>
+</ul>
+<p><em>Bug Fixes and Improvements</em></p>
+<ul class="simple">
+<li><p>Fixed a bug in the normalization of SEDs that use wave_type=’A’. (#218)</p></li>
+<li><p>Switched the sign of the angle returned by CelestialCoord.angleBetween.
+(#590)</p></li>
+<li><p>Fixed a bug in UncorrelatedNoise where the variance was set incorrectly.
+(#630)</p></li>
+<li><p>Changed the implementation of drawing Box and Pixel profiles in real space
+(i.e. without being convolved by anything) to actually draw the surface
+brightness at the center of each pixel. (#639)</p></li>
+<li><p>Fixed a bug where InterpolatedImage and Box profiles were not correctly
+rendered when transformed by something that includes a flip. (#645)</p></li>
+<li><p>Fixed a bug in rendering profiles that involve two separate shifts. (#645)</p></li>
+<li><p>Fixed a bug if drawImage was given odd nx, ny parameters, the drawn profile
+was not correctly centered in the image. (#645)</p></li>
+<li><p>Added intermediate results cache to ChromaticObject.drawImage and
+ChromaticConvolution.drawImage to speed up the rendering of groups
+of similar (same SED, same Bandpass, same PSF) chromatic profiles. (#670)</p></li>
+</ul>
+<p><em>Updates to config options</em></p>
+<ul class="simple">
+<li><p>Added COSMOSGalaxy type, with corresponding cosmos_catalog input type. (#590)</p></li>
+<li><p>Added Spergel type. (#616)</p></li>
+<li><p>Added lam, diam, scale_units options to Airy and OpticalPSF types. (#618)</p></li>
+<li><p>Added TopHat type. (#639)</p></li>
+</ul>
+</div>
+<div class="section" id="v1-2">
+<h1>v1.2<a class="headerlink" href="#v1-2" title="Permalink to this headline">¶</a></h1>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Changed name of noise whitening routine from noise.applyWhiteningTo(image)
+to image.whitenNoise(noise). (#529)</p></li>
+<li><p>Added image.symmetrizeNoise. (#529)</p></li>
+<li><p>Added magnitudes as a method to set the flux of SED objects. (#547)</p></li>
+<li><p>Added SED.calculateDCRMomentShifts, SED.calculateChromaticSeeingRatio. (#547)</p></li>
+<li><p>Added image.applyNonlinearity and image.addReciprocityFaiure. (#552)</p></li>
+<li><p>Renamed alias_threshold to folding_threshold. (#562)</p></li>
+<li><p>Extended to the rotate, shear, and transform methods of ChromaticObject
+the ability to take functions of wavelength for the arguments. (#581)</p></li>
+<li><p>Added cdmodel module to describe charge deflection in CCD pixels. (#524)</p></li>
+<li><p>Added pupil_plane_im option to OpticalPSF. (#601)</p></li>
+<li><p>Added nx, ny, and bounds keywords to drawImage() and drawKImage()
+methods. (#603)</p></li>
+</ul>
+<p><em>Bug Fixes and Improvements</em></p>
+<ul class="simple">
+<li><p>Improved efficiency of noise generation by correlated noise models. (#563)</p></li>
+<li><p>Modified BoundsI and PositionI initialization to ensure that integer elements
+in NumPy arrays with dtype==int are handled without error. (#486)</p></li>
+<li><p>Changed the default seed used for Deviate objects when no seed is given to
+use /dev/urandom if it is available. (#537)</p></li>
+<li><p>Changed SED and Bandpass methods to preserve type when returning a new object
+when possible. (#547)</p></li>
+<li><p>Made file_name argument to CorrelatedNoise.getCOSMOSNoise() be able
+to have a default value in the repo. (#548)</p></li>
+<li><p>Fixed the dtype= kwarg of Image constructor on some platforms. (#571)</p></li>
+<li><p>Added workaround for bug in pyfits 3.0 in galsim.fits.read. (#572)</p></li>
+<li><p>Fixed a bug in the Image constructor when passed a NumPy array with the
+opposite byteorder as the system native one. (#594)</p></li>
+<li><p>Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)</p></li>
+<li><p>Updated the code to account for a planned change in NumPy 1.9. (#604)</p></li>
+<li><p>Fixed a bug where the dtype of an Image could change when resizing. (#604)</p></li>
+<li><p>Defined a hidden __version__ attribute according to PEP 8 standards. (#610)</p></li>
+</ul>
+<p><em>Updates to config options</em></p>
+<ul class="simple">
+<li><p>Moved noise whitening option from being an attribute of the RealGalaxy class,
+to being a part of the description of the noise. (#529)</p></li>
+<li><p>Added RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, and
+RandomChi2 random number generators. (#537)</p></li>
+</ul>
+</div>
+<div class="section" id="v1-1">
+<h1>v1.1<a class="headerlink" href="#v1-1" title="Permalink to this headline">¶</a></h1>
+<p><em>Non-backward-compatible API changes</em></p>
+<ul class="simple">
+<li><p>Changed Pixel to take a single scale parameter. (#364)</p></li>
+<li><p>Added new Box class. (#364)</p></li>
+<li><p>Changed Angle.wrap() to return the wrapped angle. (#364)</p></li>
+<li><p>Changed Bounds methods addBorder, shift, and expand to return new
+Bounds objects. (#364)</p></li>
+<li><p>Merged the GSParams parameters shoot_relerr and shoot_abserr into the
+parameters integration_relerr and integration_abserr. (#535)</p></li>
+</ul>
+<p><em>Other changes to the API</em></p>
+<ul class="simple">
+<li><p>Changed the name of the dx parameter in various places to scale. (#364)</p></li>
+<li><p>Combined the old Image, ImageView and ConstImageView arrays of class
+names into a single python layer Image class. (#364)</p></li>
+<li><p>Changed the methods createSheared, createRotated, etc. to more succinct
+names shear, rotate, etc. (#511)</p></li>
+<li><p>Changed the setFlux and scaleFlux methods to return new objects. (#511)</p></li>
+<li><p>Changed the Shapelet.fitImage method to FitShapelet (#511)</p></li>
+<li><p>Changed the nyquistDx method to nyquistScale. (#511)</p></li>
+<li><p>Moved as many classes as possible toward an immutable design. (#511)</p></li>
+<li><p>Combined the draw and drawShoot methods into a single drawImage method
+with more options about how the profile should be rendered. (#535)</p></li>
+<li><p>Changed the name of drawK to drawKImage. (#535)</p></li>
+</ul>
+<p><em>New Features</em></p>
+<ul class="simple">
+<li><p>Added new set of WCS classes. (#364)</p></li>
+<li><p>Added CelestialCoord class to represent (ra,dec) coordinates. (#364)</p></li>
+<li><p>Added Bandpass, SED, and ChromaticObject classes. (#467)</p></li>
+<li><p>Added aberrations parameter of OpticalPSF. (#409)</p></li>
+<li><p>Added max_size parameter to OpticalPSF. (#478)</p></li>
+<li><p>Added text_file parameter to FitsHeader and FitsWCS. (#508)</p></li>
+<li><p>Modified addNoiseSNR() method to return the added variance. (#526)</p></li>
+<li><p>Added dtype option to drawImage and drawKImage. (#526)</p></li>
+</ul>
+<p><em>Bug fixes and improvements</em></p>
+<ul class="simple">
+<li><p>Sped up the gzip and bzip2 I/O. (#344)</p></li>
+<li><p>Fixed some bugs in the treatment of correlated noise. (#526, #528)</p></li>
+</ul>
+<p><em>Updates to config options</em></p>
+<ul class="simple">
+<li><p>Added more options for image.wcs field. (#364)</p></li>
+<li><p>Changed the name of sky_pos to world_pos. (#364)</p></li>
+<li><p>Removed pix top layer in config structure.  Add draw_method=no_pixel to
+do what pix : None used to do. (#364)</p></li>
+<li><p>Added draw_method=real_space to try to use real-space convolution. (#364)</p></li>
+<li><p>Added ability to index Sequence types by any running index. (#364, #536)</p></li>
+<li><p>Added Sum type for value types for which it makes sense. (#457)</p></li>
+<li><p>Allowed modification of config parameters from the command line. (#479)</p></li>
+<li><p>Added image.retry_failures. (#482)</p></li>
+<li><p>Added output.retry_io item to retry failed write commands. (#482)</p></li>
+<li><p>Changed the default sequence indexing for most things to be ‘obj_num_in_file’
+rather than ‘obj_num’. (#487)</p></li>
+<li><p>Added draw_method=sb. (#535)</p></li>
+<li><p>Changed the output.psf.real_space option to output.psf.draw_method
+and allow all of the options that exist for image.draw_method. (#535)</p></li>
+<li><p>Added an index item for Ring objects. (#536)</p></li>
+</ul>
+</div>
+<div class="section" id="v1-0">
+<h1>v1.0<a class="headerlink" href="#v1-0" title="Permalink to this headline">¶</a></h1>
+<p><em>Notable bug fixes and improvements</em></p>
+<ul class="simple">
+<li><p>Fixed bug in the rendering of shifted images. (#424)</p></li>
+<li><p>Improved the fidelity of the Lanczos conserve_dc=True option. (#442)</p></li>
+<li><p>Switched default interpolant for RealGalaxy to Quintic, since it was
+found to be more accurate in general. (#442)</p></li>
+<li><p>Fixed a bug in InterpolatedImage calculateStepK function. (#454)</p></li>
+<li><p>Fixed a bug in Image class resize function. (#461)</p></li>
+<li><p>Sped up OpticalPSF and RealGalaxy significantly. (#466, #474)</p></li>
+<li><p>Fixed a bug in the fourier rendering of truncated Sersic profiles. (#470)</p></li>
+<li><p>Fixed some bugs in the config machinery when files have varying numbers
+of objects. (#487)</p></li>
+<li><p>Support astropy.io.fits in lieu of stand-alone pyfits module. (#488)</p></li>
+<li><p>Fixed a bug in config where ‘safe’ objects were not being correctly
+invalidated when a new input item should have invalidated them.</p></li>
+<li><p>Fixed a bug in the drawing of a Pixel all by itself. (#497)</p></li>
+</ul>
+<p><em>New features</em></p>
+<ul class="simple">
+<li><p>Added galsim executable (instead of galsim_yaml, galsim_json). (#460)</p></li>
+<li><p>Updated the allowed range for Sersic n to 0.3 – 6.2. (#325)</p></li>
+<li><p>Made RealGalaxy objects keep track of their (correlated) noise. (#430)</p></li>
+<li><p>Changed noise padding options for RealGalaxy and InterpolatedImage. (#430)</p></li>
+<li><p>Added VariableGaussianNoise class. (#430)</p></li>
+<li><p>Added offset parameter to both draw and drawShoot. (#439)</p></li>
+<li><p>Changed the name of InputCatalog to just Catalog. (#449)</p></li>
+<li><p>Added Dict class. (#449)</p></li>
+<li><p>Added MEDS file output to des module. (#376)</p></li>
+<li><p>Removed des module from default imports of GalSim.  Now need to import
+galsim.des explicitly or load with galsim -m des … (#460)</p></li>
+</ul>
+<p><em>Updates to config options</em></p>
+<ul class="simple">
+<li><p>Added RealGalaxyOriginal galaxy type. (#389)</p></li>
+<li><p>Added whiten option for RealGalaxy objects. (#430)</p></li>
+<li><p>Added Current type. (#430)</p></li>
+<li><p>Added offset option in image field. (#449)</p></li>
+<li><p>Added the ability to have multiple input catalogs, dicts, etc. (#449)</p></li>
+<li><p>Added signal_to_noise option for PSFs when there is no galaxy. (#459)</p></li>
+<li><p>Added output.skip and output.noclobber options. (#474)</p></li>
+</ul>
+</div>
+<div class="section" id="v0-5">
+<h1>v0.5<a class="headerlink" href="#v0-5" title="Permalink to this headline">¶</a></h1>
+<p><em>New features</em></p>
+<ul class="simple">
+<li><p>Added Shapelet class. (#350)</p></li>
+<li><p>Added ability to truncate Sersic profiles. (#388)</p></li>
+<li><p>Added trefoil and struts to OpticalPSF. (#302, #390)</p></li>
+<li><p>Updates to lensing engine:</p>
+<ul>
+<li><p>Added document describing how lensing engine code works. (#248)</p></li>
+<li><p>Added ability to draw (gamma,kappa) from same power spectrum. (#304)</p></li>
+<li><p>Added kmin_factor and kmax_factor parameters to buildGrid. (#377)</p></li>
+<li><p>Added PowerSpectrumEstimator class in pse module. (#382)</p></li>
+</ul>
+</li>
+<li><p>Added GSParams (#343, #426) and HSMParams (#365) classes.</p></li>
+<li><p>Added des module and example scripts. (#350)</p></li>
+<li><p>Added applyWhiteningTo method to CorrelatedNoise class. (#352)</p></li>
+<li><p>Changed the default centering convention for even-sized images to be in the
+actual center, rather than 1/2 pixel off-center. (#380)</p></li>
+<li><p>Enabled InputCatalog to read FITS catalogs. (#350)</p></li>
+<li><p>Added FitsHeader class and config option. (#350)</p></li>
+<li><p>Added the ability to read/write to a specific HDU. (#350)</p></li>
+<li><p>Add new function galsim.fits.writeFile. (#417)</p></li>
+<li><p>Added LINKFLAGS SCons option. (#380)</p></li>
+</ul>
+<p><em>Updates to config</em></p>
+<ul class="simple">
+<li><p>Added index_convention option. (#380)</p></li>
+<li><p>Changed the name of the center item for the Scattered image type to
+image_pos, and added a new sky_pos item. (#380)</p></li>
+</ul>
+<p><em>Bug fixes</em></p>
+<ul class="simple">
+<li><p>Fix some errors related to writing to an HDUList. (#417)</p></li>
+<li><p>Fixed ringing when Sersic objectss were drawn with FFTs. (#426)</p></li>
+<li><p>Fixed bugs in obj.drawK() function. (#407)</p></li>
+<li><p>Fixed bugs with InterpolatedImage objects. (#389, #432)</p></li>
+<li><p>Fixed bug in draw routine for shifted objects. (#380)</p></li>
+<li><p>Fixed bug in the generation of correlated noise fields. (#352)</p></li>
+</ul>
+</div>
+<div class="section" id="v0-4">
+<h1>v0.4<a class="headerlink" href="#v0-4" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p>Added ability to pad images for InterpolatedImage or RealGalaxy with either
+correlated or uncorrelated noise. (#238)</p></li>
+<li><p>Added python-level LookupTable class which wraps the existing C++ Table
+class. (#305)</p></li>
+<li><p>Lensing engine updates: (#305)</p>
+<ul>
+<li><p>Added the option of drawing shears from a tabulated P(k)</p></li>
+<li><p>Added ability to handle conversions between different angular units.</p></li>
+<li><p>Fixed an important bug in the normalization of the generated shears.</p></li>
+</ul>
+</li>
+<li><p>Added a DistDeviate class. (#306)</p></li>
+<li><p>Added galsim.correlatednoise.get_COSMOS_CorrFunc(…). (#345)</p></li>
+<li><p>Added im.addNoiseSNR(). (#349)</p></li>
+<li><p>Made a new Noise hierarchy for CCDNoise (no longer a BaseDeviate),
+GaussianNoise, PoissonNoise, DeviateNoise. (#349)</p></li>
+</ul>
+</div>
+<div class="section" id="v0-3">
+<h1>v0.3<a class="headerlink" href="#v0-3" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p>Fixed several bugs in the Sersic class that had been causing ringing.
+(#319, #330)</p></li>
+<li><p>Added support for reading and writing compressed fits files. (#299)</p></li>
+<li><p>Added InterpolatedImage class to wrap existing C++ level SBInterpolatedImage.
+(#333)</p></li>
+<li><p>Added a new class structure for representing 2D correlation functions, used
+to describe correlated noise in images. (#297).</p></li>
+<li><p>Add FormattedStr option for string values in config files. (#315)</p></li>
+<li><p>Added obj.drawK() to the python layer. (#319)</p></li>
+<li><p>Fixed several sources of memory leaks. (#327)</p></li>
+<li><p>Updated the moments and PSF correction code to use the Image class and TMV;
+to handle weight and bad pixel maps for the input Images; and to run ~2-3
+times faster. (#331, #332)</p></li>
+<li><p>Fixed bug in config RandomCircle when using inner_radius option.</p></li>
+</ul>
+</div>
+<div class="section" id="v0-2">
+<h1>v0.2<a class="headerlink" href="#v0-2" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p>Significant revamping and commenting of demos, including both python and
+config versions (#243, #285, #289).</p></li>
+<li><p>Added python-level int1d function to wrap C++-level integrator, which
+allowed us to remove our dependency on scipy. (#288)</p></li>
+<li><p>Significant expansion in config functionality, using YAML/JSON format
+config files (#291, #295).</p></li>
+<li><p>Fixed some bugs in Image handling (including bugs related to duplicate
+numpy.int32 types), and made Image handling generally more robust (#293, #294).</p></li>
+<li><p>Fixed bug in wrapping of angles (now not automatic – use wrap() explicitly).</p></li>
+</ul>
+</div>
+<div class="section" id="v0-1">
+<h1>v0.1<a class="headerlink" href="#v0-1" title="Permalink to this headline">¶</a></h1>
+<p>Initial version of GalSim with most of the basic functionality.</p>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="history.html" class="btn btn-neutral float-left" title="Revision History" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019, GalSim-developers.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
