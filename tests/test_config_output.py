@@ -1625,7 +1625,10 @@ def test_timeout():
         'gal' : {
             'type' : 'Sersic',
             'flux' : 100,
-            'n' : { 'type': 'Random', 'min': 1, 'max': 6 },
+            # Note: Making n random means the image creation is moderately slow
+            # (since a new Hankel transform is done for each one in SersicInfo)
+            # But don't let max be too large so it's not very slow!
+            'n' : { 'type': 'Random', 'min': 1, 'max': 2 },
             'half_light_radius' : { 'type': 'Random', 'min': 1, 'max': 2 },
         },
         'psf' : {
@@ -1689,7 +1692,7 @@ def test_timeout():
     # Check that it behaves sensibly if it hits timeout limit.
     # This time, it will continue on after each error, but report the error in the log.
     config2 = galsim.config.CleanConfig(config2)
-    config2['image']['timeout'] = 0.0001
+    config2['image']['timeout'] = 0.001
     with CaptureLog() as cl:
         galsim.config.Process(config2, logger=cl.logger)
     assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
