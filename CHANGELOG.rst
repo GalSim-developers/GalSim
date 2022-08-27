@@ -27,6 +27,7 @@ API Changes
 - Removed AstronomicalConstants.h in C++ layer, which we never used. (#1129)
 - Removed AttributeDict, which we had sitting in utilities, but which we have never used.
   (#1129)
+- Some changes to the C++ Image constructors to include a maxptr value. (#1149)
 - Documented an API change, which was actually introduced in v2.3, that `_InterpolatedImage` does
   not recenter the image to (0,0) as `InterpolatedImage` does. (#1151)
 - Changed `SincInterpolant.ixrange` to be consistent with the value of xrange, rather than inf.
