@@ -12,6 +12,7 @@ v2.4
 
 - Removed CppEllipse, AstronomicalConstants.h in C++ layer. (#1129)
 - Removed AttributeDict. (#1129)
+- Some changes to the C++ Image constructors to include a maxptr value. (#1149)
 - Changed `SincInterpolant.ixrange` to be consistent with the value of xrange. (#1154)
 - Changed ``galsim.scene`` namespace name to ``galsim.galaxy_sample``. (#1174)
 
