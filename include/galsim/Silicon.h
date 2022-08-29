@@ -34,14 +34,6 @@
 
 namespace galsim
 {
-    struct BoundsIGPU {
-	int xmin, xmax, ymin, ymax;
-    };
-	
-    struct PointDGPU {
-	double x, y;
-    };
-
     class PUBLIC_API Silicon
     {
     public:
@@ -55,12 +47,13 @@ namespace galsim
                          ImageView<T> target, bool* off_edge=0) const;
 
 	bool insidePixelGPU(int ix, int iy, double x, double y, double zconv,
-			    BoundsIGPU& targetBounds, bool* off_edge,
+			    Bounds<int>& targetBounds, bool* off_edge,
                             int emptypolySize,
                             Bounds<double>* pixelInnerBoundsData,
                             Bounds<double>* pixelOuterBoundsData,
                             Position<float>* horizontalBoundaryPointsData,
-                            Position<float>* verticalBoundaryPointsData) const;
+                            Position<float>* verticalBoundaryPointsData,
+                            Position<double>* emptypolyData) const;
 
 	void scaleBoundsToPoly(int i, int j, int nx, int ny,
                                const Polygon& emptypoly, Polygon& result,
@@ -304,10 +297,6 @@ namespace galsim
 	// GPU data
         std::vector<double> _abs_length_table_GPU;
         std::vector<Position<double> > _emptypolyGPU;
-    
-    //double* _abs_length_table_GPU;
-    //PointDGPU* _emptypolyGPU;
-    //bool* _changedGPU;
     };
 
     PUBLIC_API int SetOMPThreads(int num_threads);
