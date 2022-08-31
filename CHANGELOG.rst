@@ -104,3 +104,9 @@ Bug Fixes
   (#1156, #1157)
 - Fixed some rounding errors that could happen when rendering integer-typed images
   (e.g. ImageI) that could cause values to be off by 1. (#1160)
+
+
+Changes from v2.4.0 to v2.4.1
+=============================
+
+- Fixed the pip installation to include the galsim/share directory, which was missing.
