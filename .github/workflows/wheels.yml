@@ -7,20 +7,53 @@ on:
       - published
 
 jobs:
-  build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-
+  build_linux_wheels:
+    name: Build wheels on standard linux
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.9.0
         env:
-          CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel || apk add --upgrade fftw-dev || apt-get install libfftw3-dev || true
+          CIBW_BUILD: "*manylinux*"
+          CIBW_SKIP: cp36* pp*
+          # I think yum might always work here.  But leave all options available.
+          CIBW_BEFORE_ALL_LINUX: yum install -y fftw-devel || apt-get install libfftw3-dev || apk add --upgrade fftw-dev
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+  build_musl_wheels:
+    name: Build wheels on musl linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.9.0
+        env:
+          CIBW_BUILD: "*musllinux*"
+          CIBW_SKIP: cp36* pp*
+          # I think musl always uses apk, but keep all options available.
+          CIBW_BEFORE_ALL: apk add --upgrade fftw-dev || apt-get install libfftw3-dev || yum install -y fftw-devel
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
+  build_macosx_wheels:
+    name: Build wheels on macosx
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.9.0
+        env:
+          CIBW_BUILD: "*macosx*"
+          CIBW_SKIP: cp36* pp*
           CIBW_BEFORE_ALL_MACOS: brew install fftw || true
 
       - uses: actions/upload-artifact@v3
@@ -29,7 +62,7 @@ jobs:
 
   build_sdist:
     name: Build sdist and upload to PyPI
-    needs: build_wheels
+    needs: [build_linux_wheels, build_musl_wheels, build_macosx_wheels]
     # Just need to build sdist on a single machine
     runs-on: ubuntu-latest
 
