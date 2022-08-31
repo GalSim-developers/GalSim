@@ -4,4 +4,5 @@ include LICENSE
 recursive-include include *.h *.hpp
 recursive-include src *.cpp *.inst *.h
 recursive-include pysrc *.cpp *.h
+recursive-include share *
 global-exclude .gitignore SCons* __pycache__
