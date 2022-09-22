@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Photon Operators &mdash; GalSim 2.4.1 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Photon Operators &mdash; GalSim 2.4.2 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -435,7 +435,14 @@ bundle in case the operator needs this information.  [default: None]</p></li>
 <dt id="galsim.TimeSampler">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">galsim.</span></code><code class="sig-name descname"><span class="pre">TimeSampler</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exptime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#TimeSampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TimeSampler" title="Permalink to this definition">¶</a></dt>
 <dd><p>A photon operator that uniformly samples photon time stamps within some interval.</p>
-<p>Parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>t0</strong> – The nominal start time of the observation in seconds. [default: 0]</p></li>
+<li><p><strong>exptime</strong> – The exposure time in seconds. [default: 0]</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt id="galsim.TimeSampler.applyTo">
 <code class="sig-name descname"><span class="pre">applyTo</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">photon_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_wcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/photon_array.html#TimeSampler.applyTo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.TimeSampler.applyTo" title="Permalink to this definition">¶</a></dt>

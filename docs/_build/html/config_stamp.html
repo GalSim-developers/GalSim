@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Stamp Field &mdash; GalSim 2.4.1 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Config Stamp Field &mdash; GalSim 2.4.2 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -179,6 +179,7 @@ See <a class="reference download internal" download="" href="_downloads/3e7227e2
 <li><p><code class="docutils literal notranslate"><span class="pre">min_snr</span></code> = <em>float_value</em> (optional) Equivalent to Basic, but only applies to the first stamp in the ring.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">max_snr</span></code> = <em>float_value</em> (optional) Equivalent to Basic, but only applies to the first stamp in the ring.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">reject</span></code> = <em>bool_value</em> (optional) Equivalent to Basic, but only applies to the first stamp in the ring.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shear</span></code> = <em>shear_value</em> (optional) Shear the galaxy profile by a given shear.  Normally <code class="docutils literal notranslate"><span class="pre">shear</span></code> goes in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field.  But for ring simulations, where we rotate the base galaxy by some amount, one typically want the shear to be applied after the rotation.  So any <code class="docutils literal notranslate"><span class="pre">shear</span></code> (or other transformation) item that is in the <code class="docutils literal notranslate"><span class="pre">gal</span></code> field is applied <em>before</em> the ring rotation.  Then any <code class="docutils literal notranslate"><span class="pre">shear</span></code> (or again, any other transformation) that is in the <code class="docutils literal notranslate"><span class="pre">stamp</span></code> field is applied <em>after</em> the ring rotation.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -714,6 +715,44 @@ below the surface of the sensor where the photons actually come to a focus.</p>
 sensor material to that of the air.</p></li>
 </ul>
 </div>
+</li>
+<li><p>‘PupilImageSampler’ assigns pupil positions to the photons randomly given an image of the
+pupil plane.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">diam</span></code> = <em>float_value</em> (required) The diameter of the pupil aperture.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lam</span></code> = <em>float_value</em> (optional).  The wavelength in nanometers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">circular_pupil</span></code> = <em>bool_value</em> (default = True) Whether the pupil should be circular (True, the default) or square (False).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">obscuration</span></code> = <em>float_value</em> (default = 0) The linear dimension of a central obscuration as a fraction of the pupil linear dimension.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">oversampling</span></code> = <em>float_value</em> (default = 1.5) How much oversampling of the internal image is needed relative to the Nyquist scale of the corresponding Airy profile.  The more aberrated the PSF, the higher this needs to be.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pad_factor</span></code> = <em>float_value</em> (default = 1.5) How much padding to put around the edge of the internal image of the PSF.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nstruts</span></code> = <em>int_value</em> (default = 0) How many support struts to include.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strut_thick</span></code> = <em>float_value</em> (default = 0.05) How thick the struts should be as a fraction of the pupil diameter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">strut_angle</span></code> = <em>angle_value</em> (default = 0 degrees) The counter-clockwise angle between the vertical and one of the struts.  The rest will be spaced equally from there.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_plane_im</span></code> = <em>str_value</em> (optional) Instead of using strut-related parameters to define the pupil plane geometry, you can use this parameter to specify a file-name containing an image of the pupil plane.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_angle</span></code> = <em>angle_value</em> (default = 0 degrees) When specifying a pupil_plane_im, use this parameter to rotate it by some angle defined counter-clockwise with respect to the vertical.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_plane_scale</span></code> = <em>float_value</em> (optional) Sampling interval in meters to use for the pupil plane array.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pupil_plane_size</span></code> = <em>float_value</em> (optional) Size in meters to use for the pupil plane array.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li></li>
+<li><p>‘PupilAnnulusSampler’ assigns pupil positions to the photons randomly within an annular
+entrance pupil.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">R_outer</span></code> = <em>float_value</em> (required) The outer radius of the pupil annulus in meters.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">R_inner</span></code> = <em>float_value</em> (default = 0) The inner radius in meters.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>‘TimeSampler’ gives the photons random time values uniformly within some interval.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">t0</span></code> = <em>float_value</em> (default = 0) The nominal start time of the observation in seconds.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exptime</span></code> = <em>float_value</em> (default = 0) The exposure time in seconds.</p></li>
+</ul>
+</div></blockquote>
 </li>
 </ul>
 <p>You may also define your own custom <a class="reference internal" href="photon_ops.html#galsim.PhotonOp" title="galsim.PhotonOp"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PhotonOp</span></code></a> type in the usual way

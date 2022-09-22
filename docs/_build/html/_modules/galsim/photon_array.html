@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.photon_array &mdash; GalSim 2.4.1 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.photon_array &mdash; GalSim 2.4.2 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -1277,9 +1277,11 @@
 <div class="viewcode-block" id="TimeSampler"><a class="viewcode-back" href="../../photon_ops.html#galsim.TimeSampler">[docs]</a><span class="k">class</span> <span class="nc">TimeSampler</span><span class="p">(</span><span class="n">PhotonOp</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A photon operator that uniformly samples photon time stamps within some interval.</span>
 
-<span class="sd">    Parameters</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        t0:         The nominal start time of the observation in seconds. [default: 0]</span>
+<span class="sd">        exptime:    The exposure time in seconds. [default: 0]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_req_params</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">_opt_params</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;t0&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
         <span class="s2">&quot;exptime&quot;</span><span class="p">:</span> <span class="nb">float</span>
     <span class="p">}</span>

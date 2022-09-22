@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.photon_ops &mdash; GalSim 2.4.1 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.photon_ops &mdash; GalSim 2.4.2 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -111,6 +111,7 @@
 <span class="kn">from</span> <span class="nn">..utilities</span> <span class="kn">import</span> <span class="n">basestring</span>
 <span class="kn">from</span> <span class="nn">..photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span><span class="p">,</span> <span class="n">PhotonOp</span>
 <span class="kn">from</span> <span class="nn">..photon_array</span> <span class="kn">import</span> <span class="n">WavelengthSampler</span><span class="p">,</span> <span class="n">FRatioAngles</span><span class="p">,</span> <span class="n">PhotonDCR</span><span class="p">,</span> <span class="n">Refraction</span><span class="p">,</span> <span class="n">FocusDepth</span>
+<span class="kn">from</span> <span class="nn">..photon_array</span> <span class="kn">import</span> <span class="n">TimeSampler</span><span class="p">,</span> <span class="n">PupilImageSampler</span><span class="p">,</span> <span class="n">PupilAnnulusSampler</span>
 
 <span class="c1"># This file handles the construction of photon_ops in config[&#39;stamp&#39;][&#39;photon_ops&#39;].</span>
 
@@ -347,6 +348,9 @@
 <span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;Refraction&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">Refraction</span><span class="p">))</span>
 <span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;FocusDepth&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">FocusDepth</span><span class="p">))</span>
 <span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;List&#39;</span><span class="p">,</span> <span class="n">ListPhotonOpBuilder</span><span class="p">())</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;PupilImageSampler&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">PupilImageSampler</span><span class="p">))</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;PupilAnnulusSampler&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">PupilAnnulusSampler</span><span class="p">))</span>
+<span class="n">RegisterPhotonOpType</span><span class="p">(</span><span class="s1">&#39;TimeSampler&#39;</span><span class="p">,</span> <span class="n">SimplePhotonOpBuilder</span><span class="p">(</span><span class="n">TimeSampler</span><span class="p">))</span>
 </pre></div>
 
            </div>
