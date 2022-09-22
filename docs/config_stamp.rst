@@ -65,6 +65,7 @@ to customize any aspect of the stamp-building process.
     * ``min_snr`` = *float_value* (optional) Equivalent to Basic, but only applies to the first stamp in the ring.
     * ``max_snr`` = *float_value* (optional) Equivalent to Basic, but only applies to the first stamp in the ring.
     * ``reject`` = *bool_value* (optional) Equivalent to Basic, but only applies to the first stamp in the ring.
+    * ``shear`` = *shear_value* (optional) Shear the galaxy profile by a given shear.  Normally ``shear`` goes in the ``gal`` field.  But for ring simulations, where we rotate the base galaxy by some amount, one typically want the shear to be applied after the rotation.  So any ``shear`` (or other transformation) item that is in the ``gal`` field is applied *before* the ring rotation.  Then any ``shear`` (or again, any other transformation) that is in the ``stamp`` field is applied *after* the ring rotation.
 
 
 Custom Stamp Types
