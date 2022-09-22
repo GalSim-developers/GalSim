@@ -110,3 +110,9 @@ Changes from v2.4.0 to v2.4.1
 =============================
 
 - Fixed the pip installation to include the galsim/share directory, which was missing.
+
+Changes from v2.4.1 to v2.4.2
+=============================
+
+- Registered the new photon operators (`TimeSampler`, `PupilImageSampler`, and
+  `PupilAnnulusSampler`) in the config layer.
