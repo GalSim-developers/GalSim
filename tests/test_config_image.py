@@ -2914,6 +2914,7 @@ def test_chromatic():
 @timer
 def test_photon_ops():
     # Test photon ops in config
+    pupil_plane_im = os.path.join("Optics_comparison_images", "sample_pupil_rolled.fits")
     config = {
         'stamp' : {
             'photon_ops' : [
@@ -2949,7 +2950,23 @@ def test_photon_ops():
                 },
                 {
                     'type' : 'Refraction',
-                    'index_ratio' : 3.9
+                    'index_ratio' : 3.9,
+                },
+                {
+                    'type' : 'PupilImageSampler',
+                    'diam' : 2.4,
+                    'lam' : 900,
+                    'pupil_plane_im' : pupil_plane_im,
+                },
+                {
+                    'type' : 'PupilAnnulusSampler',
+                    'R_outer' : 1.0,
+                    'R_inner' : 0.3,
+                },
+                {
+                    'type' : 'TimeSampler',
+                    't0' : 10,
+                    'exptime' : 30,
                 },
             ],
             'sky_pos' : {
@@ -2998,7 +3015,11 @@ def test_photon_ops():
                            obj_coord=sky_pos, HA=-1.48 * galsim.hours)
     depth = galsim.FocusDepth(-0.6)
     ref = galsim.Refraction(3.9)
-    photon_ops = [frat, wave, dcr, depth, ref]
+    pupil_image = galsim.PupilImageSampler(diam=2.4, lam=900.,
+                                           pupil_plane_im=pupil_plane_im)
+    pupil_annulus = galsim.PupilAnnulusSampler(R_outer=1.0, R_inner=0.3)
+    time = galsim.TimeSampler(t0=10., exptime=30.)
+    photon_ops = [frat, wave, dcr, depth, ref, pupil_image, pupil_annulus, time]
 
     im1 = obj.drawImage(scale=0.2, method='phot', rng=rng, photon_ops=photon_ops)
     im2 = galsim.config.BuildImage(config)
@@ -3036,7 +3057,7 @@ def test_photon_ops():
     galsim.config.RemoveCurrent(config)
     ops4 = galsim.config.BuildPhotonOps(config, 'photon_ops_orig', config)
     ops5 = galsim.config.BuildPhotonOps(config['stamp'], 'photon_ops', config)
-    assert ops4 == ops5
+    assert ops4[:5] == ops5
 
     galsim.config.RemoveCurrent(config)
     galsim.config.BuildPhotonOps(config, 'photon_ops_orig', config)
