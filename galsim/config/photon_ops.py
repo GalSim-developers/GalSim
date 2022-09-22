@@ -26,6 +26,7 @@ from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..utilities import basestring
 from ..photon_array import PhotonArray, PhotonOp
 from ..photon_array import WavelengthSampler, FRatioAngles, PhotonDCR, Refraction, FocusDepth
+from ..photon_array import TimeSampler, PupilImageSampler, PupilAnnulusSampler
 
 # This file handles the construction of photon_ops in config['stamp']['photon_ops'].
 
@@ -262,3 +263,6 @@ RegisterPhotonOpType('PhotonDCR', PhotonDCRBuilder())
 RegisterPhotonOpType('Refraction', SimplePhotonOpBuilder(Refraction))
 RegisterPhotonOpType('FocusDepth', SimplePhotonOpBuilder(FocusDepth))
 RegisterPhotonOpType('List', ListPhotonOpBuilder())
+RegisterPhotonOpType('PupilImageSampler', SimplePhotonOpBuilder(PupilImageSampler))
+RegisterPhotonOpType('PupilAnnulusSampler', SimplePhotonOpBuilder(PupilAnnulusSampler))
+RegisterPhotonOpType('TimeSampler', SimplePhotonOpBuilder(TimeSampler))
