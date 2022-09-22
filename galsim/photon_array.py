@@ -1192,9 +1192,11 @@ class PupilAnnulusSampler(PhotonOp):
 class TimeSampler(PhotonOp):
     """A photon operator that uniformly samples photon time stamps within some interval.
 
-    Parameters
+    Parameters:
+        t0:         The nominal start time of the observation in seconds. [default: 0]
+        exptime:    The exposure time in seconds. [default: 0]
     """
-    _req_params = {
+    _opt_params = {
         "t0": float,
         "exptime": float
     }
