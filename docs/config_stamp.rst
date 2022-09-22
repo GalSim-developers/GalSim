@@ -190,8 +190,8 @@ The photon operator types defined by GalSim are:
   negative, since the best focus is generally somewhere in the bulk of the sensor (although for
   short wavelengths it is often very close to the surface).
 
-   * ``depth`` = *float_value* (required)  The distance above the surface where the photons are
-     nominally in focus.  A negative value means the focus in below the surface of the sensor.
+    * ``depth`` = *float_value* (required)  The distance above the surface where the photons are
+      nominally in focus.  A negative value means the focus in below the surface of the sensor.
 
 * 'Refraction' adjusts the incidence angles to account for refraction at the surface of the
   sensor.
@@ -204,8 +204,37 @@ The photon operator types defined by GalSim are:
         If FocusDepth is after Refraction, then the depth refers to the physical distance
         below the surface of the sensor where the photons actually come to a focus.
 
-   * ``index_ratio`` = *float_value* (required) The ratio of the index of refraction of the
-     sensor material to that of the air.
+    * ``index_ratio`` = *float_value* (required) The ratio of the index of refraction of the
+      sensor material to that of the air.
+
+* 'PupilImageSampler' assigns pupil positions to the photons randomly given an image of the
+  pupil plane.
+
+    * ``diam`` = *float_value* (required) The diameter of the pupil aperture.
+    * ``lam`` = *float_value* (optional).  The wavelength in nanometers.
+    * ``circular_pupil`` = *bool_value* (default = True) Whether the pupil should be circular (True, the default) or square (False).
+    * ``obscuration`` = *float_value* (default = 0) The linear dimension of a central obscuration as a fraction of the pupil linear dimension.
+    * ``oversampling`` = *float_value* (default = 1.5) How much oversampling of the internal image is needed relative to the Nyquist scale of the corresponding Airy profile.  The more aberrated the PSF, the higher this needs to be.
+    * ``pad_factor`` = *float_value* (default = 1.5) How much padding to put around the edge of the internal image of the PSF.
+    * ``nstruts`` = *int_value* (default = 0) How many support struts to include.
+    * ``strut_thick`` = *float_value* (default = 0.05) How thick the struts should be as a fraction of the pupil diameter.
+    * ``strut_angle`` = *angle_value* (default = 0 degrees) The counter-clockwise angle between the vertical and one of the struts.  The rest will be spaced equally from there.
+    * ``pupil_plane_im`` = *str_value* (optional) Instead of using strut-related parameters to define the pupil plane geometry, you can use this parameter to specify a file-name containing an image of the pupil plane.
+    * ``pupil_angle`` = *angle_value* (default = 0 degrees) When specifying a pupil_plane_im, use this parameter to rotate it by some angle defined counter-clockwise with respect to the vertical.
+    * ``pupil_plane_scale`` = *float_value* (optional) Sampling interval in meters to use for the pupil plane array.
+    * ``pupil_plane_size`` = *float_value* (optional) Size in meters to use for the pupil plane array.
+
+*
+* 'PupilAnnulusSampler' assigns pupil positions to the photons randomly within an annular
+  entrance pupil.
+
+   * ``R_outer`` = *float_value* (required) The outer radius of the pupil annulus in meters.
+   * ``R_inner`` = *float_value* (default = 0) The inner radius in meters.
+
+* 'TimeSampler' gives the photons random time values uniformly within some interval.
+
+   * ``t0`` = *float_value* (default = 0) The nominal start time of the observation in seconds.
+   * ``exptime`` = *float_value* (default = 0) The exposure time in seconds.
 
 You may also define your own custom `PhotonOp` type in the usual way
 with an importable module where you define a custom Builder class and register it with GalSim.
