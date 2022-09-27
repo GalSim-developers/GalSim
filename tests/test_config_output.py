@@ -1706,6 +1706,67 @@ def test_timeout():
                 galsim.config.Process(config2, logger=cl.logger, except_abort=True)
         assert 'Multiprocessing timed out waiting for a task to finish.' in cl.output
 
+def test_direct_extra_output():
+    # Test the ability to get extra output directly after calling BuildImage, but
+    # not the usual higher level functions (Process or BuildFile).
+    # Thanks to Sid Mau for finding this problem in version 2.4.2.
+    config = {
+        'gal': {
+            'type': 'Exponential',
+            'half_light_radius': 0.5,
+            'signal_to_noise': 100,
+        },
+        'psf': {
+            'type': 'Gaussian',
+            'fwhm': 0.7,
+        },
+        'image': {
+            'type': 'Tiled',
+            'nx_tiles': 10,
+            'ny_tiles': 10,
+            'stamp_size': 32,
+
+            'pixel_scale': 0.2,
+            'noise': {
+                'type': 'Gaussian',
+                'sigma': 0.02,
+            },
+            'random_seed': 1234,
+        },
+        'output': {
+            'dir': 'output',
+            'file_name': 'test_direct_extra.fits',
+            'weight': {
+                'hdu': 1
+            },
+            'badpix': {
+                'hdu': 2
+            },
+            'psf': {
+                'hdu': 3
+            },
+        },
+    }
+
+    # First, get the extras without running the whole file processing.
+    image = galsim.config.BuildImage(config)
+    weight = galsim.config.GetFinalExtraOutput('weight', config)[0]
+    badpix = galsim.config.GetFinalExtraOutput('badpix', config)[0]
+    psf = galsim.config.GetFinalExtraOutput('psf', config)[0]
+
+    # These should be the same as what you get from running BuildFile.
+    galsim.config.BuildFile(config)
+    fname = os.path.join('output', 'test_direct_extra.fits')
+    image1 = galsim.fits.read(fname, hdu=0)
+    weight1 = galsim.fits.read(fname, hdu=1)
+    badpix1 = galsim.fits.read(fname, hdu=2)
+    psf1 = galsim.fits.read(fname, hdu=3)
+
+    assert image == image1
+    assert weight == weight1
+    assert badpix == badpix1
+    assert psf == psf1
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
