@@ -157,6 +157,7 @@ def ProcessExtraOutputsForImage(config, logger=None):
         config:     The configuration dict.
         logger:     If given, a logger object to log progress. [default: None]
     """
+    from .image import GetNObjForImage
     if 'output' in config:
         obj_nums = None
         for key, builder in config.get('extra_builder',{}).items():
@@ -166,7 +167,7 @@ def ProcessExtraOutputsForImage(config, logger=None):
                 # Figure out which obj_nums were used for this image.
                 file_num = config.get('file_num',0)
                 start_obj_num = config.get('start_obj_num',0)
-                nobj = config.get('nobj', [1])
+                nobj = config.get('nobj', [GetNObjForImage(config,image_num)])
                 k = image_num - start_image_num
                 for i in range(k):
                     start_obj_num += nobj[i]
