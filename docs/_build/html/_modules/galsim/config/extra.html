@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.extra &mdash; GalSim 2.4.2 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.extra &mdash; GalSim 2.4.3 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -242,6 +242,7 @@
 <span class="sd">        config:     The configuration dict.</span>
 <span class="sd">        logger:     If given, a logger object to log progress. [default: None]</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.image</span> <span class="kn">import</span> <span class="n">GetNObjForImage</span>
     <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="n">obj_nums</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">builder</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;extra_builder&#39;</span><span class="p">,{})</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -251,7 +252,7 @@
                 <span class="c1"># Figure out which obj_nums were used for this image.</span>
                 <span class="n">file_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;file_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
                 <span class="n">start_obj_num</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_obj_num&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
-                <span class="n">nobj</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;nobj&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">nobj</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;nobj&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">GetNObjForImage</span><span class="p">(</span><span class="n">config</span><span class="p">,</span><span class="n">image_num</span><span class="p">)])</span>
                 <span class="n">k</span> <span class="o">=</span> <span class="n">image_num</span> <span class="o">-</span> <span class="n">start_image_num</span>
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
                     <span class="n">start_obj_num</span> <span class="o">+=</span> <span class="n">nobj</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
