@@ -116,3 +116,9 @@ Changes from v2.4.1 to v2.4.2
 
 - Registered the new photon operators (`TimeSampler`, `PupilImageSampler`, and
   `PupilAnnulusSampler`) in the config layer.
+
+Changes from v2.4.2 to v2.4.3
+=============================
+
+- Fixed error in default nobj calculation for extra_object output when not doing the
+  normal BuildFile processing.
