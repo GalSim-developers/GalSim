@@ -81,6 +81,9 @@ copt =  {
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
     'clang w/ manual OpenMP' : ['-O2','-std=c++11','-Xpreprocessor','-fopenmp',
                                 '-Wno-shorten-64-to-32','-fvisibility=hidden','-stdlib=libc++'],
+    'clang w/ GPU' : ['-O2','-msse2','-std=c++11','-fopenmp','-fopenmp-targets=nvptx64',
+                      '-Wno-openmp-mapping','-Wno-unknown-cuda-version',
+                      '-Wno-shorten-64-to-32','-fvisibility=hidden'],
     'unknown' : [],
 }
 lopt =  {
@@ -90,6 +93,8 @@ lopt =  {
     'clang w/ OpenMP' : ['-stdlib=libc++','-fopenmp'],
     'clang w/ Intel OpenMP' : ['-stdlib=libc++','-liomp5'],
     'clang w/ manual OpenMP' : ['-stdlib=libc++','-lomp'],
+    'clang w/ GPU' : ['-fopenmp','-fopenmp-targets=nvptx64',
+                      '-Wno-openmp-mapping','-Wno-unknown-cuda-version'],
     'unknown' : [],
 }
 
@@ -143,7 +148,11 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
         # with the openmp flag and see if it works.
         if output:
             print('Compiler is Clang.  Checking if it is a version that supports OpenMP.')
-        if try_openmp(compiler, 'clang w/ OpenMP'):
+        if supports_gpu(compiler):
+            if output:
+                print("Yay! This version of clang supports GPU!")
+            return 'clang w/ GPU'
+        elif try_openmp(compiler, 'clang w/ OpenMP'):
             if output:
                 print("Yay! This version of clang supports OpenMP!")
             return 'clang w/ OpenMP'
@@ -192,6 +201,23 @@ def get_compiler_type(compiler, check_unknown=True, output=False):
         return 'unknown'
     else:
         return 'unknown'
+
+# Check whether this build of Clang supports offloading to GPU via OpenMP
+def supports_gpu(compiler):
+    # Print out compiler's targets
+    cc = compiler.compiler_so[0]
+    if cc == 'ccache':
+        cc = compiler.compiler_so[1]
+    cmd = [cc,'-print-targets']
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    lines = p.stdout.readlines()
+    # Look for 'nvptx' in the output. May need a more general check in future to support
+    # other GPU architectures
+    for line in lines:
+        line = line.decode().strip()
+        if 'nvptx' in line:
+            return True
+    return False
 
 # Check for the fftw3 library in some likely places
 def find_fftw_lib(output=False):
@@ -435,7 +461,7 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None, check_wa
         cpp_name = cpp_file.name
 
     # Just get a named temporary file to write to:
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.os', dir=local_tmp) as o_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.o', dir=local_tmp) as o_file:
         o_name = o_file.name
 
     # Another named temporary file for the executable
