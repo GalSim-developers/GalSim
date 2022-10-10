@@ -2374,7 +2374,16 @@ def test_template():
                 # Omitting the file name before : means use the current config file instead.
                 { "template" : ":psf.items.1", "sigma" : 0.4 },
             ]
-        }
+        },
+
+        # Check setting a list element
+        "input.power_spectrum.0": {
+            "e_power_function": "(k**2 + (1./180)**2)**(-11./6.)",
+            "units": "arcsec",
+            "grid_spacing": 1,
+            "ngrid": 50,
+            "variance": 0.2,
+        },
     }
     config = config1.copy()  # Leave config1 as the original given above.
     config2 = galsim.config.ReadConfig('config_input/multirng.yaml')[0]
@@ -2398,6 +2407,11 @@ def test_template():
                                           "ellip": { "type" : "PowerSpectrumShear", "num" : 0 } }
     assert config['psf']['items'][1] == { "type": "Gaussian", "sigma" : 0.3 }
     assert config['psf']['items'][2] == { "type": "Gaussian", "sigma" : 0.4 }
+
+    assert config['input']['power_spectrum'][1]['grid_spacing'] == 2
+    assert config['input']['power_spectrum'][0]['grid_spacing'] == 1
+    assert config['input']['power_spectrum'][0]['ngrid'] == 50
+    assert config['input']['power_spectrum'][0]['variance'] == 0.2
 
     assert config['modules'] == ['numpy', 'astropy']
 
@@ -2425,6 +2439,23 @@ def test_template():
     galsim.config.ProcessAllTemplates(config5)
     for key in config:
         assert config5[key] == config[key]
+
+    # Check deleting a list element
+    config6 = config1.copy()
+    config6['image.random_seed.1'] = ""
+    galsim.config.ProcessAllTemplates(config6)
+    assert config6['image']['random_seed'] == [config2['image']['random_seed'][0]]
+
+    # Further adjustments must use the new index.
+    config7 = config1.copy()
+    config7['image.random_seed.0'] = ""
+    config7['image.random_seed.0.str'] = '123 + (image_num//3) * @image.nobjects'
+    with CaptureLog() as cl:
+        galsim.config.ProcessAllTemplates(config7, cl.logger)
+    assert config7['image']['random_seed'][0]['type'] == 'Eval'
+    assert config7['image']['random_seed'][0]['str'] == '123 + (image_num//3) * @image.nobjects'
+    print(cl.output)
+    assert "Removing item 0 from image.random_seed." in cl.output
 
 
 @timer
