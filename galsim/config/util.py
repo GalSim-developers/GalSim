@@ -591,7 +591,7 @@ def GetFromConfig(config, key):
             "Unable to parse extended key %s.  Field %s is invalid."%(key,k)) from None
     return value
 
-def SetInConfig(config, key, value):
+def SetInConfig(config, key, value, logger=None):
     """Set the value of a (possibly extended) key in a config dict.
 
     If key is a simple string, then this is equivalent to config[key] = value.
@@ -608,7 +608,17 @@ def SetInConfig(config, key, value):
     d, k = ParseExtendedKey(config, key)
     if value == '':
         # This means remove it, if it is there.
-        d.pop(k,None)
+        try:
+            d.pop(k,None)
+        except TypeError:
+            # Then d was really a list.
+            # This has some potentially counter-intuitive consequences, so let the user
+            # know about them.
+            if logger:
+                logger.warning("Warnign: Removing item %d from %s. "%(k,key[:key.rfind('.')]) +
+                               "Any further adjustments to this list must use the new "+
+                               "list index values, not the original indices.")
+            del d[k]
     else:
         try:
             d[k] = value
@@ -617,7 +627,7 @@ def SetInConfig(config, key, value):
                 "Unable to parse extended key %s.  Field %s is invalid."%(key,k)) from None
 
 
-def UpdateConfig(config, new_params):
+def UpdateConfig(config, new_params, logger=None):
     """Update the given config dict with additional parameters/values.
 
     Parameters:
@@ -627,7 +637,7 @@ def UpdateConfig(config, new_params):
                         parsed to update config['gal']['first']['dilate'].
     """
     for key, value in new_params.items():
-        SetInConfig(config, key, value)
+        SetInConfig(config, key, value, logger)
 
 
 def MultiProcess(nproc, config, job_func, tasks, item, logger=None, timeout=900,

@@ -187,7 +187,7 @@ def ProcessTemplate(config, base, logger=None):
             config['modules'].extend(new_params.pop('modules', []))
 
         # Update the config with the requested changes
-        UpdateConfig(config, new_params)
+        UpdateConfig(config, new_params, logger)
 
 
 def ProcessAllTemplates(config, logger=None, base=None):
@@ -254,7 +254,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None, except_abort=F
 
     # Update using any new_params that are given:
     if new_params is not None:
-        UpdateConfig(config, new_params)
+        UpdateConfig(config, new_params, logger)
 
     # Do this again in case any new modules were added by the templates or command line params.
     ImportModules(config)
