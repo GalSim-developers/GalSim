@@ -615,7 +615,7 @@ def SetInConfig(config, key, value, logger=None):
             # This has some potentially counter-intuitive consequences, so let the user
             # know about them.
             if logger:
-                logger.warning("Warnign: Removing item %d from %s. "%(k,key[:key.rfind('.')]) +
+                logger.warning("Warning: Removing item %d from %s. "%(k,key[:key.rfind('.')]) +
                                "Any further adjustments to this list must use the new "+
                                "list index values, not the original indices.")
             del d[k]
