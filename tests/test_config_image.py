@@ -2538,9 +2538,6 @@ def test_variable_cat_size():
     galsim.config.Process(config1, logger=logger)
     cfg_images2 = galsim.fits.readMulti('output/test_variable_input.fits')
     assert cfg_images2[0] == ref_images[0]
-    cfg_images2[0].write('junk0.fits')
-    cfg_images2[1].write('junk1.fits')
-    ref_images[1].write('junk2.fits')
     assert cfg_images2[1] == ref_images[1]
 
 
