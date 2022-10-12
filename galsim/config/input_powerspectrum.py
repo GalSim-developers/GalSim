@@ -78,12 +78,13 @@ class PowerSpectrumLoader(InputLoader):
                         'ips_index' : config['index'] })
             config['rng_num'] = len(rs) - 1
             base['image']['random_seed'] = rs
+            orig_index_key = base.get('index_key', 'file_num')
             base['index_key'] = 'file_num'
             SetupConfigRNG(base, logger=logger)
             if image_num is not None:
                 base['index_key'] = 'image_num'
                 SetupConfigRNG(base, logger=logger)
-            base['index_key'] = 'file_num'  # This is what we want to leave it as.
+            base['index_key'] = orig_index_key
             base['obj_num'] = obj_num
             base['image_num'] = image_num
             base['file_num'] = file_num

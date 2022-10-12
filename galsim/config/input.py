@@ -21,7 +21,7 @@ import logging
 
 from .value import RegisterValueType
 from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
-from .util import SafeManager
+from .util import SafeManager, GetIndex, PropagateIndexKeyRNGNum
 from .value import ParseValue, CheckAllParams, GetAllParams, SetDefaultIndex, _GetBoolValue
 from ..errors import GalSimConfigError, GalSimConfigValueError
 from ..catalog import Catalog, Dict
@@ -148,10 +148,10 @@ def SetupInput(config, logger=None):
         logger:     If given, a logger object to log progress. [default: None]
     """
     if '_input_objs' not in config:
-        orig_index_key = config.get('index_key',None)
-        config['index_key'] = 'file_num'
+        # Make sure any user-set index keys are propagated properly.
+        if 'input' in config:
+            PropagateIndexKeyRNGNum(config['input'])
         ProcessInput(config, logger=logger)
-        config['index_key'] = orig_index_key
 
 def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     """Load a single input object, named key, with definition given by the dict field.
@@ -190,13 +190,15 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     file_num = config.get('file_num',0)
 
     # Check if we already have it loaded.  If so, early exit.
-    input_obj = input_objs[num]
-    _, csafe, _, cindex, _ = field.get('current', (None, False, None, None, None))
-    logger.debug('file %d: Current values for %s are %s, safe = %s, current index = %s',
-                 file_num, key, str(input_obj), csafe, cindex)
-    if input_obj is not None and (csafe or cindex == file_num):
-        logger.debug('file %d: Using %s already read in',file_num,key)
-        return input_obj
+    index, index_key = GetIndex(field, config)
+    if 'current' in field:
+        input_obj = input_objs[num]
+        _, csafe, _, cindex, _ = field['current']
+        logger.debug('file %d: Current values for %s are %s, safe = %s, current index = %s',
+                     file_num, key, str(input_obj), csafe, cindex)
+        if input_obj is not None and (csafe or cindex == index):
+            logger.debug('file %d: Using %s already read in',file_num,key)
+            return input_obj
 
     # Not loaded or not current.
     logger.debug('file %d: Build input type %s',file_num,key)
@@ -217,7 +219,6 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     if safe_only and not safe:
         logger.debug('file %d: Skip %s %d, since not safe',file_num,key,num)
         input_objs[num] = None
-        field['current'] = (None, False, None, file_num, 'file_num')
         return None
 
     logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
@@ -251,7 +252,7 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
                         file_num,value_type)
     # Save the current status of this item in the normal way so we can check for it
     # here and also so it can be used e.g. as @input.catalog in an Eval statement.
-    field['current'] = (input_obj, safe, None, file_num, 'file_num')
+    field['current'] = (input_obj, safe, None, index, index_key)
 
     return input_obj
 
