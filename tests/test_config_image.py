@@ -2488,17 +2488,25 @@ def test_variable_cat_size():
         'input': {
             'catalog': {
                 'dir': 'config_input',
-                'file_name': [ 'cat_3.txt', 'cat_5.txt' ]
+                'file_name': [ 'cat_3.txt', 'cat_5.txt' ],
+                'index_key': 'image_num',
             }
+        },
+        'output': {
+            'type' : 'MultiFits',
+            'file_name' : 'output/test_variable_input.fits',
+            'nimages' : 2,
         }
     }
+
+    config1 = galsim.config.CopyConfig(config)
 
     # This input isn't safe, so it can't load when doing the safe_only load.
     with CaptureLog() as cl:
         galsim.config.ProcessInput(config, safe_only=True, logger=cl.logger)
     assert "Skip catalog 0, since not safe" in cl.output
 
-    logger = logging.getLogger('test_single')
+    logger = logging.getLogger('test_variable_input')
     logger.addHandler(logging.StreamHandler(sys.stdout))
     #logger.setLevel(logging.DEBUG)
     cfg_images = []
@@ -2523,8 +2531,17 @@ def test_variable_cat_size():
             im[stamp.bounds] += stamp
         ref_images.append(im)
 
-    np.testing.assert_array_equal(cfg_images[0], ref_images[0])
-    np.testing.assert_array_equal(cfg_images[1], ref_images[1])
+    assert cfg_images[0] == ref_images[0]
+    assert cfg_images[1] == ref_images[1]
+
+    # Now run with full Process function
+    galsim.config.Process(config1, logger=logger)
+    cfg_images2 = galsim.fits.readMulti('output/test_variable_input.fits')
+    assert cfg_images2[0] == ref_images[0]
+    cfg_images2[0].write('junk0.fits')
+    cfg_images2[1].write('junk1.fits')
+    ref_images[1].write('junk2.fits')
+    assert cfg_images2[1] == ref_images[1]
 
 
 class BlendSetBuilder(galsim.config.StampBuilder):
