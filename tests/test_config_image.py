@@ -1126,8 +1126,6 @@ def test_scattered_noskip():
 
     # Repeat with config
     image2 = galsim.config.BuildImage(config)
-    image.write('junk1.fits')
-    image2.write('junk2.fits')
     np.testing.assert_equal(image2.array, image.array)
 
 @timer
