@@ -347,13 +347,7 @@ def test_exampleimage():
                                                               # other library
     # Calculate the test image
     image_plcd  = cd.applyForward(image_orig)
-    # For debugging: make if True in block below to output difference image.
-    # Compare to fits_files/cdtest[1-2].fits above
-    if False:
-        import pyfits
-        pyfits.writeto(
-            "junk_test_cdmodel_exampleimage_difference.fits", (image_proc - image_plcd).array,
-            clobber=True)
+
     # These images have a large flux per pixel, so make the typical flux per pixel in each image
     # closer to O(1) for a more transparently meaningful decimal order in the test
     norm = 2.64 / np.std(image_orig.array)

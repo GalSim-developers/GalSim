@@ -614,9 +614,6 @@ def test_operations_simple():
     # in fillXImage.
     big_im = galsim.Image(2*im_size,2*im_size, scale=pix_scale)
     test_int_im.drawImage(image=big_im, method='no_pixel')
-    im.write('junk1.fits')
-    big_im.write('junk2.fits')
-    ref_im.write('junk3.fits')
     big_comp_bounds = galsim.BoundsI(1,comp_region,1,comp_region)
     big_comp_bounds = big_comp_bounds.shift(galsim.PositionI((2*im_size-comp_region)/2,
                                                              (2*im_size-comp_region)/2))
