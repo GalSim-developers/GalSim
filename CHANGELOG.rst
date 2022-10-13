@@ -122,3 +122,9 @@ Changes from v2.4.2 to v2.4.3
 
 - Fixed error in default nobj calculation for extra_object output when not doing the
   normal BuildFile processing.
+
+Changes from v2.4.3 to v2.4.4
+=============================
+
+- Made it possible to delete items in a config list. (#1183)
+- Fixed error in how input fields check when they are current. (#1184)
