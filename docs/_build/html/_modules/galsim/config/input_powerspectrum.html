@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.input_powerspectrum &mdash; GalSim 2.4.3 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.input_powerspectrum &mdash; GalSim 2.4.4 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -163,12 +163,13 @@
                         <span class="s1">&#39;ips_index&#39;</span> <span class="p">:</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span> <span class="p">})</span>
             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;rng_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rs</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image&#39;</span><span class="p">][</span><span class="s1">&#39;random_seed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rs</span>
+            <span class="n">orig_index_key</span> <span class="o">=</span> <span class="n">base</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;index_key&#39;</span><span class="p">,</span> <span class="s1">&#39;file_num&#39;</span><span class="p">)</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;file_num&#39;</span>
             <span class="n">SetupConfigRNG</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">image_num</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;image_num&#39;</span>
                 <span class="n">SetupConfigRNG</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="n">logger</span><span class="p">)</span>
-            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;file_num&#39;</span>  <span class="c1"># This is what we want to leave it as.</span>
+            <span class="n">base</span><span class="p">[</span><span class="s1">&#39;index_key&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_index_key</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;obj_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj_num</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;image_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">image_num</span>
             <span class="n">base</span><span class="p">[</span><span class="s1">&#39;file_num&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_num</span>

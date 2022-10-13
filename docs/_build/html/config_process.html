@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Config Processing From Python &mdash; GalSim 2.4.3 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Config Processing From Python &mdash; GalSim 2.4.4 documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
@@ -1473,7 +1473,7 @@ case this function will return config[‘gal’][‘items’][0][‘ellip’][�
 
 <dl class="py function">
 <dt id="galsim.config.SetInConfig">
-<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">SetInConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#SetInConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.SetInConfig" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">SetInConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#SetInConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.SetInConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the value of a (possibly extended) key in a config dict.</p>
 <p>If key is a simple string, then this is equivalent to config[key] = value.
 However, key is allowed to be a chain of keys such as ‘gal.items.0.ellip.e’, in which
@@ -1493,7 +1493,7 @@ case this function will set config[‘gal’][‘items’][0][‘ellip’][‘e�
 
 <dl class="py function">
 <dt id="galsim.config.UpdateConfig">
-<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">UpdateConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#UpdateConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.UpdateConfig" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname"><span class="pre">galsim.config.</span></code><code class="sig-name descname"><span class="pre">UpdateConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/galsim/config/util.html#UpdateConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#galsim.config.UpdateConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the given config dict with additional parameters/values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>

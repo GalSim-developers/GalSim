@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.util &mdash; GalSim 2.4.3 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.util &mdash; GalSim 2.4.4 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -676,7 +676,7 @@
             <span class="s2">&quot;Unable to parse extended key </span><span class="si">%s</span><span class="s2">.  Field </span><span class="si">%s</span><span class="s2"> is invalid.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">k</span><span class="p">))</span> <span class="kn">from</span> <span class="bp">None</span>
     <span class="k">return</span> <span class="n">value</span></div>
 
-<div class="viewcode-block" id="SetInConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetInConfig">[docs]</a><span class="k">def</span> <span class="nf">SetInConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="SetInConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.SetInConfig">[docs]</a><span class="k">def</span> <span class="nf">SetInConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Set the value of a (possibly extended) key in a config dict.</span>
 
 <span class="sd">    If key is a simple string, then this is equivalent to config[key] = value.</span>
@@ -693,7 +693,17 @@
     <span class="n">d</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">ParseExtendedKey</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
         <span class="c1"># This means remove it, if it is there.</span>
-        <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="c1"># Then d was really a list.</span>
+            <span class="c1"># This has some potentially counter-intuitive consequences, so let the user</span>
+            <span class="c1"># know about them.</span>
+            <span class="k">if</span> <span class="n">logger</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Warning: Removing item </span><span class="si">%d</span><span class="s2"> from </span><span class="si">%s</span><span class="s2">. &quot;</span><span class="o">%</span><span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">key</span><span class="p">[:</span><span class="n">key</span><span class="o">.</span><span class="n">rfind</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)])</span> <span class="o">+</span>
+                               <span class="s2">&quot;Any further adjustments to this list must use the new &quot;</span><span class="o">+</span>
+                               <span class="s2">&quot;list index values, not the original indices.&quot;</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">d</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -702,7 +712,7 @@
                 <span class="s2">&quot;Unable to parse extended key </span><span class="si">%s</span><span class="s2">.  Field </span><span class="si">%s</span><span class="s2"> is invalid.&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="n">k</span><span class="p">))</span> <span class="kn">from</span> <span class="bp">None</span></div>
 
 
-<div class="viewcode-block" id="UpdateConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.UpdateConfig">[docs]</a><span class="k">def</span> <span class="nf">UpdateConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">new_params</span><span class="p">):</span>
+<div class="viewcode-block" id="UpdateConfig"><a class="viewcode-back" href="../../../config_process.html#galsim.config.UpdateConfig">[docs]</a><span class="k">def</span> <span class="nf">UpdateConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">new_params</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Update the given config dict with additional parameters/values.</span>
 
 <span class="sd">    Parameters:</span>
@@ -712,7 +722,7 @@
 <span class="sd">                        parsed to update config[&#39;gal&#39;][&#39;first&#39;][&#39;dilate&#39;].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">new_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">SetInConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+        <span class="n">SetInConfig</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">logger</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="MultiProcess"><a class="viewcode-back" href="../../../config_process.html#galsim.config.MultiProcess">[docs]</a><span class="k">def</span> <span class="nf">MultiProcess</span><span class="p">(</span><span class="n">nproc</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">job_func</span><span class="p">,</span> <span class="n">tasks</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">900</span><span class="p">,</span>
