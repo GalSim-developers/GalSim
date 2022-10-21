@@ -47,7 +47,7 @@ except ImportError:
     raise
 
 # Turn this on for more verbose debugging output about compile attempts.
-debug = False
+debug = True
 
 print('Python version = ',sys.version)
 py_version = "%d.%d"%sys.version_info[0:2]  # we check things based on the major.minor version.
@@ -94,7 +94,7 @@ lopt =  {
     'clang w/ Intel OpenMP' : ['-stdlib=libc++','-liomp5'],
     'clang w/ manual OpenMP' : ['-stdlib=libc++','-lomp'],
     'clang w/ GPU' : ['-fopenmp','-fopenmp-targets=nvptx64',
-                      '-Wno-openmp-mapping','-Wno-unknown-cuda-version'],
+                      '-Wno-openmp-mapping','-Wno-unknown-cuda-version','-v'],
     'unknown' : [],
 }
 
@@ -218,7 +218,7 @@ def supports_gpu(compiler):
         if 'nvptx' in line:
             return True
     return False
-
+    
 # Check for the fftw3 library in some likely places
 def find_fftw_lib(output=False):
     import distutils.sysconfig
@@ -512,7 +512,8 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None, check_wa
             print('Trying link command:')
             print(' '.join(cmd))
             print('Output was:')
-            print('   ',b'   '.join(lines).decode())
+            #print('   ',b'   '.join(lines).decode())
+            print('   ',b'   '.join(lines))
         returncode = p.returncode
     except OSError as e:
         if debug:
@@ -564,7 +565,8 @@ def try_compile(cpp_code, compiler, cflags=[], lflags=[], prepend=None, check_wa
                 print('Trying link command:')
                 print(' '.join(cmd))
                 print('Output was:')
-                print('   ',b'   '.join(lines).decode())
+                #print('   ',b'   '.join(lines).decode())
+                print('   ',b'   '.join(lines))
             returncode = p.returncode
         except OSError as e:
             if debug:
