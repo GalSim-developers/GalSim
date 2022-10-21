@@ -919,6 +919,20 @@ def test_very_small():
     assert "Object is too small" in mom.error_message
 
 
+def test_negative_stepstride():
+    """In response to #1185, check that hsm works for arrays with negative step or stride.
+    """
+    img = galsim.Gaussian(fwhm=1).drawImage()
+    result1 = galsim.hsm.FindAdaptiveMom(img)
+    result2 = galsim.hsm.FindAdaptiveMom(galsim.Image(img.array[::-1]))
+    result3 = galsim.hsm.FindAdaptiveMom(galsim.Image(img.array[:,::-1]))
+    result4 = galsim.hsm.FindAdaptiveMom(galsim.Image(img.array[::-1,::-1]))
+
+    assert np.isclose(result1.moments_sigma, result2.moments_sigma)
+    assert np.isclose(result1.moments_sigma, result3.moments_sigma)
+    assert np.isclose(result1.moments_sigma, result4.moments_sigma)
+
+
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
     for testfn in testfns:
