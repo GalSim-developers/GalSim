@@ -128,3 +128,9 @@ Changes from v2.4.3 to v2.4.4
 
 - Made it possible to delete items in a config list. (#1183)
 - Fixed error in how input fields check when they are current. (#1184)
+
+Changes from v2.4.4 to v2.4.5
+=============================
+
+- Fixed an assert error that would trigger if hsm was run on images with negative stride. (#1185)
+
