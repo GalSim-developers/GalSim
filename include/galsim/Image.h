@@ -188,6 +188,14 @@ namespace galsim {
         const T* getData() const { return _data; }
         const T* getMaxPtr() const { return _maxptr; }
 
+        /// Check that the ptr is valid, properly accounting for step, stride
+        // Normally (if step, stride > 0), this check is just _data <= p < _maxptr.
+        // If either step or stride is negative, then p can be > _maxptr and still be valid.
+        // For now, we punt on this if step or stride is < 0.
+        // Also, don't bother checking p >= _data, since that's usually not an issue.
+        // TODO: Maybe worth making this more rigorous at some point?
+        bool ok_ptr(const T* p) const { return p < _maxptr || _step < 0 || _stride < 0; }
+
         /**
          *  @brief Return how many data elements are currently allocated in memory.
          *
