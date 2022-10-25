@@ -382,7 +382,30 @@ def find_eigen_dir(output=False):
         if output:
             print("Downloaded %s.  Unpacking tarball."%fname)
         with tarfile.open(fname) as tar:
-            tar.extractall(dir)
+            
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                # Avoid security vulnerability in tar.extractall function.
+                # This bit of code was added by the Advanced Research Center at Trellix in PR #1188.
+                # For more information about the security vulnerability, see
+                # https://github.com/advisories/GHSA-gw9q-c7gh-j9vm
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+            
+            safe_extract(tar, dir)
         os.remove(fname)
         # This actually extracts into a subdirectory with a name eigen-eigen-5a0156e40feb/
         # I'm not sure if that name is reliable, so use glob to get it.
