@@ -344,6 +344,7 @@ def unpack(do_unpack, target, target_dir, unpack_dir, meta, args, logger):
             tar.list(verbose=True)
         elif args.verbosity >= 2:
             tar.list(verbose=False)
+
         def is_within_directory(directory, target):
             
             abs_directory = os.path.abspath(directory)
@@ -354,14 +355,18 @@ def unpack(do_unpack, target, target_dir, unpack_dir, meta, args, logger):
             return prefix == abs_directory
         
         def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            # This is somewhat gratuitous for our use case, since we directly control the tar file,
+            # but apparently there is a security vulnerability in the tar.extractall function.
+            # This bit of code was added by the Advanced Research Center at Trellix in PR #1188.
+            # For more information about the security vulnerability, see
+            # https://github.com/advisories/GHSA-gw9q-c7gh-j9vm
         
             for member in tar.getmembers():
                 member_path = os.path.join(path, member.name)
-                if not is_within_directory(path, member_path):
+                if not is_within_directory(path, member_path):  # pragma: no cover
                     raise Exception("Attempted Path Traversal in Tar File")
         
             tar.extractall(path, members, numeric_owner=numeric_owner) 
-            
         
         safe_extract(tar, target_dir)
 
