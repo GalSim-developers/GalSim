@@ -527,7 +527,7 @@ Options are:
 
     * ``type`` = *str* (required)  There is currently only one valid option:
 
-        * 'RaDec' Specify x and y separately.
+        * 'RADec' Specify ra and dec separately.
 
             * ``ra`` = *angle_value* (required)
             * ``dec`` = *angle_value* (required)
