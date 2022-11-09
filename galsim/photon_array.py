@@ -245,7 +245,13 @@ class PhotonArray:
     def dxdz(self):
         """The tangent of the inclination angles in the x direction: dx/dz.
         """
-        self.allocateAngles()
+        if not self.hasAllocatedAngles():
+            from .deprecated import depr
+            depr('dxdz accessed before being set.', 2.5,
+                 'Angle arrays should be set or explicitly allocated before being accessed.',
+                 'For now, accessing dxdz allocates an array with all zeros. '
+                 'This will become an error in a future version (probably 3.0).')
+            self.allocateAngles()
         return self._dxdz
     @dxdz.setter
     def dxdz(self, value):
@@ -256,7 +262,13 @@ class PhotonArray:
     def dydz(self):
         """The tangent of the inclination angles in the y direction: dy/dz.
         """
-        self.allocateAngles()
+        if not self.hasAllocatedAngles():
+            from .deprecated import depr
+            depr('dydz accessed before being set.', 2.5,
+                 'Angle arrays should be set or explicitly allocated before being accessed.',
+                 'For now, accessing dydz allocates an array with all zeros. '
+                 'This will become an error in a future version (probably 3.0).')
+            self.allocateAngles()
         return self._dydz
     @dydz.setter
     def dydz(self, value):
@@ -267,7 +279,13 @@ class PhotonArray:
     def wavelength(self):
         """The wavelength of the photons (in nm).
         """
-        self.allocateWavelengths()
+        if not self.hasAllocatedWavelengths():
+            from .deprecated import depr
+            depr('wavelength accessed before being set.', 2.5,
+                 'Wavelength array should be set or explicitly allocated before being accessed.',
+                 'For now, accessing wavelength allocates arrays with all zeros. '
+                 'This will become an error in a future version (probably 3.0).')
+            self.allocateWavelengths()
         return self._wave
     @wavelength.setter
     def wavelength(self, value):
@@ -278,7 +296,13 @@ class PhotonArray:
     def pupil_u(self):
         """Horizontal location of photon as it intersected the entrance pupil plane.
         """
-        self.allocatePupil()
+        if not self.hasAllocatedPupil():
+            from .deprecated import depr
+            depr('pupil_u accessed before being set.', 2.5,
+                 'Pupil arrays should be set or explicitly allocated before being accessed.',
+                 'For now, accessing pupil_u allocates arrays with all zeros. '
+                 'This will become an error in a future version (probably 3.0).')
+            self.allocatePupil()
         return self._pupil_u
     @pupil_u.setter
     def pupil_u(self, value):
@@ -289,7 +313,13 @@ class PhotonArray:
     def pupil_v(self):
         """Vertical location of photon as it intersected the entrance pupil plane.
         """
-        self.allocatePupil()
+        if not self.hasAllocatedPupil():
+            from .deprecated import depr
+            depr('pupil_v accessed before being set.', 2.5,
+                 'Pupil arrays should be set or explicitly allocated before being accessed.',
+                 'For now, accessing pupil_v allocates arrays with all zeros. '
+                 'This will become an error in a future version (probably 3.0).')
+            self.allocatePupil()
         return self._pupil_v
     @pupil_v.setter
     def pupil_v(self, value):
@@ -300,7 +330,13 @@ class PhotonArray:
     def time(self):
         """Time stamp of when photon encounters the pupil plane.
         """
-        self.allocateTimes()
+        if not self.hasAllocatedTimes():
+            from .deprecated import depr
+            depr('time accessed before being set.', 2.5,
+                 'Time array should be set or explicitly allocated before being accessed.',
+                 'For now, accessing time allocates arrays with all zeros. '
+                 'This will become an error in a future version (probably 3.0).')
+            self.allocateTimes()
         return self._time
     @time.setter
     def time(self, value):
@@ -409,14 +445,18 @@ class PhotonArray:
         self.y[s] = rhs.y
         self.flux[s] = rhs.flux
         if rhs.hasAllocatedAngles():
+            self.allocateAngles()
             self.dxdz[s] = rhs.dxdz
             self.dydz[s] = rhs.dydz
         if rhs.hasAllocatedWavelengths():
+            self.allocateWavelengths()
             self.wavelength[s] = rhs.wavelength
         if rhs.hasAllocatedPupil():
+            self.allocatePupil()
             self.pupil_u[s] = rhs.pupil_u
             self.pupil_v[s] = rhs.pupil_v
         if rhs.hasAllocatedTimes():
+            self.allocateTimes()
             self.time[s] = rhs.time
 
     def convolve(self, rhs, rng=None):
@@ -792,9 +832,7 @@ class FRatioAngles(PhotonOp):
         """
         gen = BaseDeviate(rng).as_numpy_generator()
 
-        dxdz = photon_array.dxdz
-        dydz = photon_array.dydz
-        n_photons = len(dxdz)
+        n_photons = len(photon_array)
 
         # The f/ratio is the ratio of the focal length to the diameter of the aperture of
         # the telescope.  The angular radius of the field of view is defined by the
@@ -813,8 +851,8 @@ class FRatioAngles(PhotonOp):
         # zero of phi does not matter but it would if the obscuration is dependent on
         # phi
         tantheta = np.sqrt(np.square(sintheta) / (1. - np.square(sintheta)))
-        dxdz[:] = tantheta * np.sin(phi)
-        dydz[:] = tantheta * np.cos(phi)
+        photon_array.dxdz = tantheta * np.sin(phi)
+        photon_array.dydz = tantheta * np.cos(phi)
 
     def __str__(self):
         return "galsim.FRatioAngles(fratio=%s, obscration=%s, rng=%s)"%(

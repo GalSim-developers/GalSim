@@ -492,6 +492,117 @@ def test_hsm_depr():
     hsmp = check_dep(galsim.hsm.HSMParams, max_moment_nsig2=25.0)
     assert hsmp.max_moment_nsig2 == 0.
 
+@timer
+def test_photon_array_depr():
+    nphotons = 1000
+
+    # First create from scratch
+    photon_array = galsim.PhotonArray(nphotons)
+    assert len(photon_array.x) == nphotons
+    assert len(photon_array.y) == nphotons
+    assert len(photon_array.flux) == nphotons
+    assert not photon_array.hasAllocatedWavelengths()
+    assert not photon_array.hasAllocatedAngles()
+    assert not photon_array.hasAllocatedTimes()
+    assert not photon_array.hasAllocatedPupil()
+
+    # No deprecation warning using setter
+    photon_array.dxdz = 0.17
+    assert photon_array.hasAllocatedAngles()
+    assert len(photon_array.dxdz) == nphotons
+    assert len(photon_array.dydz) == nphotons
+    np.testing.assert_array_equal(photon_array.dxdz, 0.17)
+    np.testing.assert_array_equal(photon_array.dydz, 0.)
+
+    photon_array.dydz = 0.59
+    assert photon_array.hasAllocatedAngles()
+    assert len(photon_array.dxdz) == nphotons
+    assert len(photon_array.dydz) == nphotons
+    np.testing.assert_array_equal(photon_array.dxdz, 0.17)
+    np.testing.assert_array_equal(photon_array.dydz, 0.59)
+
+    photon_array.wavelength = 500.
+    assert photon_array.hasAllocatedWavelengths()
+    assert len(photon_array.wavelength) == nphotons
+    np.testing.assert_array_equal(photon_array.wavelength, 500)
+
+    photon_array.pupil_u = 6.0
+    assert photon_array.hasAllocatedPupil()
+    assert len(photon_array.pupil_u) == nphotons
+    assert len(photon_array.pupil_v) == nphotons
+    np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
+    np.testing.assert_array_equal(photon_array.pupil_v, 0.0)
+
+    photon_array.time = 0.0
+    assert photon_array.hasAllocatedTimes()
+    assert len(photon_array.time) == nphotons
+    np.testing.assert_array_equal(photon_array.time, 0.0)
+
+    # Using the getter is allowed, but deprecated.
+    photon_array = galsim.PhotonArray(nphotons)
+    dxdz = check_dep(getattr, photon_array, 'dxdz')
+    assert photon_array.hasAllocatedAngles()
+    assert photon_array.hasAllocatedAngles()
+    assert len(photon_array.dxdz) == nphotons
+    assert len(photon_array.dydz) == nphotons
+    dxdz[:] = 0.17
+    np.testing.assert_array_equal(photon_array.dxdz, 0.17)
+    np.testing.assert_array_equal(photon_array.dydz, 0.)
+
+    dydz = photon_array.dydz  # Allowed now.
+    dydz[:] = 0.59
+    np.testing.assert_array_equal(photon_array.dydz, 0.59)
+
+    wave = check_dep(getattr, photon_array, 'wavelength')
+    assert photon_array.hasAllocatedWavelengths()
+    assert len(photon_array.wavelength) == nphotons
+    wave[:] = 500.
+    np.testing.assert_array_equal(photon_array.wavelength, 500)
+
+    u = check_dep(getattr, photon_array, 'pupil_u')
+    assert photon_array.hasAllocatedPupil()
+    assert len(photon_array.pupil_u) == nphotons
+    assert len(photon_array.pupil_v) == nphotons
+    u[:] = 6.0
+    np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
+    np.testing.assert_array_equal(photon_array.pupil_v, 0.0)
+    v = photon_array.pupil_v
+    v[:] = 10.0
+    np.testing.assert_array_equal(photon_array.pupil_v, 10.0)
+
+    t = check_dep(getattr, photon_array, 'time')
+    assert photon_array.hasAllocatedTimes()
+    assert len(photon_array.time) == nphotons
+    np.testing.assert_array_equal(photon_array.time, 0.0)
+    t[:] = 10
+    np.testing.assert_array_equal(photon_array.time, 10.0)
+
+    # For coverage, also need to test the two pair ones in other order.
+    photon_array = galsim.PhotonArray(nphotons)
+    dydz = check_dep(getattr, photon_array, 'dydz')
+    assert photon_array.hasAllocatedAngles()
+    assert photon_array.hasAllocatedAngles()
+    assert len(photon_array.dxdz) == nphotons
+    assert len(photon_array.dydz) == nphotons
+    dydz[:] = 0.59
+    np.testing.assert_array_equal(photon_array.dxdz, 0.)
+    np.testing.assert_array_equal(photon_array.dydz, 0.59)
+
+    dxdz = photon_array.dxdz  # Allowed now.
+    dxdz[:] = 0.17
+    np.testing.assert_array_equal(photon_array.dxdz, 0.17)
+
+    v = check_dep(getattr, photon_array, 'pupil_v')
+    assert photon_array.hasAllocatedPupil()
+    assert len(photon_array.pupil_u) == nphotons
+    assert len(photon_array.pupil_v) == nphotons
+    v[:] = 10.0
+    np.testing.assert_array_equal(photon_array.pupil_u, 0.0)
+    np.testing.assert_array_equal(photon_array.pupil_v, 10.0)
+    u = photon_array.pupil_u
+    u[:] = 6.0
+    np.testing.assert_array_equal(photon_array.pupil_u, 6.0)
+
 
 if __name__ == "__main__":
     testfns = [v for k, v in vars().items() if k[:5] == 'test_' and callable(v)]
