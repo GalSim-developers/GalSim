@@ -948,6 +948,22 @@ def test_scattered():
             np.testing.assert_almost_equal(ixy, 0., decimal=3)
             np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
 
+            # Check that image_pos can be in a stamp field, rather than image.
+            config = galsim.config.CleanConfig(config)
+            config['stamp'] = { 'image_pos' : base_config['image']['image_pos'] }
+            del config['image']['image_pos']
+            image2 = galsim.config.BuildImage(config)
+            assert image == image2
+
+            # Can also use world_pos instead.
+            config = galsim.config.CleanConfig(config)
+            del config['stamp']['image_pos']
+            config['stamp']['world_pos'] = [ galsim.PositionD(x1*scale, y1*scale),
+                                             galsim.PositionD(x2*scale, y2*scale),
+                                             galsim.PositionD(x3*scale, y3*scale) ]
+            image2 = galsim.config.BuildImage(config)
+            assert image == image2
+
     config['image']['index_convention'] = 'invalid'
     with assert_raises(galsim.GalSimConfigError):
         galsim.config.BuildImage(config)
