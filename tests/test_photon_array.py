@@ -1129,6 +1129,7 @@ def test_refract():
     ud = galsim.UniformDeviate(57721)
     for _ in range(1000):
         photon_array = galsim.PhotonArray(1000, flux=1)
+        photon_array.allocateAngles()
         ud.generate(photon_array.dxdz)
         ud.generate(photon_array.dydz)
         photon_array.dxdz *= 1.2  # -0.6 to 0.6
@@ -1188,6 +1189,8 @@ def test_refract():
     # Try a wavelength dependent index_ratio
     index_ratio = lambda w: np.where(w < 1, 1.1, 2.2)
     photon_array = galsim.PhotonArray(100)
+    photon_array.allocateWavelengths()
+    photon_array.allocateAngles()
     ud.generate(photon_array.wavelength)
     ud.generate(photon_array.dxdz)
     ud.generate(photon_array.dydz)
@@ -1241,8 +1244,8 @@ def test_focus_depth():
         photon_array2.x = 0.0
         photon_array2.y = 0.0
         galsim.FRatioAngles(1.234, obscuration=0.606).applyTo(photon_array, rng=bd)
-        photon_array2.dxdz[:] = photon_array.dxdz
-        photon_array2.dydz[:] = photon_array.dydz
+        photon_array2.dxdz = photon_array.dxdz
+        photon_array2.dydz = photon_array.dydz
         fd1 = galsim.FocusDepth(1.1)
         fd2 = galsim.FocusDepth(2.2)
         fd3 = galsim.FocusDepth(3.3)
@@ -1283,10 +1286,10 @@ def test_focus_depth():
         photon_array.x -= 0.5
         photon_array.y -= 0.5
         galsim.FRatioAngles(1.234, obscuration=0.606).applyTo(photon_array, rng=bd)
-        photon_array2.x[:] = photon_array.x
-        photon_array2.y[:] = photon_array.y
-        photon_array2.dxdz[:] = photon_array.dxdz
-        photon_array2.dydz[:] = photon_array.dydz
+        photon_array2.x = photon_array.x
+        photon_array2.y = photon_array.y
+        photon_array2.dxdz = photon_array.dxdz
+        photon_array2.dydz = photon_array.dydz
         depth = ud()-0.5
         galsim.FocusDepth(depth).applyTo(photon_array2)
         np.testing.assert_allclose((photon_array2.x - photon_array.x)/photon_array.dxdz, depth)
