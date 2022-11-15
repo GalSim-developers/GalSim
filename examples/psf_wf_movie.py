@@ -30,10 +30,6 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.animation as anim
 
-from distutils.version import LooseVersion
-if LooseVersion(matplotlib.__version__) < LooseVersion('1.2'):
-    raise RuntimeError("This demo requires matplotlib version 1.2 or greater!")
-
 from astropy.utils.console import ProgressBar
 
 def make_movie(args):
