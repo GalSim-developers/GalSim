@@ -393,7 +393,6 @@ def test_drawImage():
     assert_raises(TypeError, obj.drawImage, rng=galsim.BaseDeviate(234))
     assert_raises(TypeError, obj.drawImage, max_extra_noise=23)
     assert_raises(TypeError, obj.drawImage, poisson_flux=True)
-    assert_raises(TypeError, obj.drawImage, photon_ops=('dummy'))
     assert_raises(TypeError, obj.drawImage, maxN=10000)
     assert_raises(TypeError, obj.drawImage, save_photons=True)
 
