@@ -1676,7 +1676,7 @@ class GSObject:
                     method=method, sensor=sensor, poisson_flux=poisson_flux)
 
         # If using photon ops with fft, then need a sensor.
-        if photon_ops != () and method != 'phot':
+        if photon_ops != () and method != 'phot' and sensor is None:
             sensor = Sensor()
 
         # Some parameters are only relevant for either phot or when using a sensor.
@@ -1807,8 +1807,8 @@ class GSObject:
                     niter = 1
 
                 added_photons = 0
+                resume = False
                 for it in range(niter):
-                    resume = False
                     photons = PhotonArray.makeFromImage(draw_image, rng=rng)
 
                     for op in photon_ops:
