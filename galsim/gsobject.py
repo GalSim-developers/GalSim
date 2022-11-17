@@ -1625,6 +1625,7 @@ class GSObject:
         from .box import Pixel
         from .wcs import PixelScale
         from .photon_array import PhotonArray
+        from .sensor import Sensor
 
         if surface_ops is not None:
             from .deprecated import depr
@@ -1660,15 +1661,11 @@ class GSObject:
                     "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
         # Some parameters are only relevant for method == 'phot'
-        if method != 'phot' and sensor is None:
+        if method != 'phot':
             if n_photons != 0.:
                 raise GalSimIncompatibleValuesError(
                     "n_photons is only relevant for method='phot'",
                     method=method, sensor=sensor, n_photons=n_photons)
-            if rng is not None:
-                raise GalSimIncompatibleValuesError(
-                    "rng is only relevant for method='phot'",
-                    method=method, sensor=sensor, rng=rng)
             if max_extra_noise != 0.:
                 raise GalSimIncompatibleValuesError(
                     "max_extra_noise is only relevant for method='phot'",
@@ -1677,17 +1674,24 @@ class GSObject:
                 raise GalSimIncompatibleValuesError(
                     "poisson_flux is only relevant for method='phot'",
                     method=method, sensor=sensor, poisson_flux=poisson_flux)
-            if photon_ops != ():
+
+        # If using photon ops with fft, then need a sensor.
+        if photon_ops != () and method != 'phot':
+            sensor = Sensor()
+
+        # Some parameters are only relevant for either phot or when using a sensor.
+        if method != 'phot' and sensor is None:
+            if rng is not None:
                 raise GalSimIncompatibleValuesError(
-                    "photon_ops are only relevant for method='phot'",
-                    method=method, sensor=sensor, photon_ops=photon_ops)
+                    "rng is only relevant for method='phot' or when using a sensor",
+                    method=method, sensor=sensor, rng=rng)
             if maxN != None:
                 raise GalSimIncompatibleValuesError(
-                    "maxN is only relevant for method='phot'",
+                    "maxN is only relevant for method='phot' or when using a sensor",
                     method=method, sensor=sensor, maxN=maxN)
             if save_photons:
                 raise GalSimIncompatibleValuesError(
-                    "save_photons is only valid for method='phot'",
+                    "save_photons is only valid for method='phot' or when using a sensor",
                     method=method, sensor=sensor, save_photons=save_photons)
         else:
             # If we want to save photons, it doesn't make sense to limit the number per shoot call.
@@ -1796,16 +1800,29 @@ class GSObject:
                 added_photons = prof.drawFFT(draw_image, add)
 
             if sensor is not None:
-                photons = PhotonArray.makeFromImage(draw_image, rng=rng)
-                for op in photon_ops:
-                    op.applyTo(photons, local_wcs, rng)
-                if imview.dtype in (np.float32, np.float64):
-                    added_photons = sensor.accumulate(photons, imview, orig_center)
+                if maxN is not None and maxN < added_photons:
+                    niter = int(np.ceil(added_photons / maxN))
+                    draw_image /= niter
                 else:
-                    # Need a temporary
-                    im1 = ImageD(bounds=imview.bounds)
-                    added_photons = sensor.accumulate(photons, im1, orig_center)
-                    imview += im1
+                    niter = 1
+
+                added_photons = 0
+                for it in range(niter):
+                    resume = False
+                    photons = PhotonArray.makeFromImage(draw_image, rng=rng)
+
+                    for op in photon_ops:
+                        op.applyTo(photons, local_wcs, rng)
+
+                    if imview.dtype in (np.float32, np.float64):
+                        added_photons += sensor.accumulate(photons, imview, orig_center,
+                                                           resume=resume)
+                        resume = True  # Resume from this point if there are any further iterations.
+                    else:
+                        # Need a temporary
+                        im1 = ImageD(bounds=imview.bounds)
+                        added_photons += sensor.accumulate(photons, im1, orig_center)
+                        imview += im1
 
         image.added_flux = added_photons / flux_scale
         if save_photons:

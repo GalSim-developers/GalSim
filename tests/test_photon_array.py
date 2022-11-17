@@ -686,6 +686,35 @@ def test_dcr():
     im2c = galsim.config.BuildImage(config)
     assert im2c == im2
 
+    # Should work with fft, but not quite match (because of inexact photon locations).
+    im3 = galsim.ImageF(50, 50, scale=pixel_scale)
+    achrom.drawImage(image=im3, method='fft', rng=rng, photon_ops=photon_ops)
+    printval(im3, im2, show=False)
+    np.testing.assert_allclose(im3.array, im2.array, atol=0.1 * np.max(im2.array),
+                               err_msg="PhotonDCR on fft image didn't match phot image")
+    # Moments come out less than 1% different.
+    res2 = im2.FindAdaptiveMom()
+    res3 = im3.FindAdaptiveMom()
+    np.testing.assert_allclose(res3.moments_amp, res2.moments_amp, rtol=1.e-2)
+    np.testing.assert_allclose(res3.moments_sigma, res2.moments_sigma, rtol=1.e-2)
+    np.testing.assert_allclose(res3.observed_shape.e1, res2.observed_shape.e1, atol=1.e-2)
+    np.testing.assert_allclose(res3.observed_shape.e2, res2.observed_shape.e2, atol=1.e-2)
+    np.testing.assert_allclose(res3.moments_centroid.x, res2.moments_centroid.x, rtol=1.e-2)
+    np.testing.assert_allclose(res3.moments_centroid.y, res2.moments_centroid.y, rtol=1.e-2)
+
+    # Repeat with maxN < flux
+    achrom.drawImage(image=im3, method='auto', rng=rng, photon_ops=photon_ops, maxN=10**4)
+    printval(im3, im2, show=False)
+    np.testing.assert_allclose(im3.array, im2.array, atol=0.2 * np.max(im2.array),
+                               err_msg="PhotonDCR on fft image with maxN didn't match phot image")
+    res3 = im3.FindAdaptiveMom()
+    np.testing.assert_allclose(res3.moments_amp, res2.moments_amp, rtol=1.e-2)
+    np.testing.assert_allclose(res3.moments_sigma, res2.moments_sigma, rtol=1.e-2)
+    np.testing.assert_allclose(res3.observed_shape.e1, res2.observed_shape.e1, atol=1.e-2)
+    np.testing.assert_allclose(res3.observed_shape.e2, res2.observed_shape.e2, atol=1.e-2)
+    np.testing.assert_allclose(res3.moments_centroid.x, res2.moments_centroid.x, rtol=1.e-2)
+    np.testing.assert_allclose(res3.moments_centroid.y, res2.moments_centroid.y, rtol=1.e-2)
+
     # Compare ChromaticAtmosphere image with PhotonDCR image.
     printval(im2, im1, show=False)
     # tolerace for photon shooting is ~sqrt(flux) = 1.e3
