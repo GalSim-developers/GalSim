@@ -134,3 +134,8 @@ Changes from v2.4.4 to v2.4.5
 
 - Fixed an assert error that would trigger if hsm was run on images with negative stride. (#1185)
 
+Changes from v2.4.5 to v2.4.6
+=============================
+
+- Fixed drawImage to work correctly for method=fft when using photon_ops. (#1193)
+
