@@ -703,6 +703,9 @@ def test_dcr():
     np.testing.assert_allclose(res3.moments_centroid.y, res2.moments_centroid.y, rtol=1.e-2)
 
     # Repeat with maxN < flux
+    # Note: Because of the different way this generates the random positions, it's not identical
+    #       to the above run without maxN.  Both runs are equally valid realizations of photon
+    #       positions corresponding to the FFT image.  But not the same realization.
     achrom.drawImage(image=im3, method='auto', rng=rng, photon_ops=photon_ops, maxN=10**4)
     printval(im3, im2, show=False)
     np.testing.assert_allclose(im3.array, im2.array, atol=0.2 * np.max(im2.array),
