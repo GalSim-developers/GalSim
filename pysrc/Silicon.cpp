@@ -32,6 +32,7 @@ namespace galsim {
                                                  ImageView<T>);
         typedef void (Silicon::*update_fn)(ImageView<T>);
         typedef void (Silicon::*area_fn)(ImageView<T>, Position<int>, bool);
+	typedef void (Silicon::*finalize_fn)(ImageView<T>);
 
         wrapper.def("subtractDelta", (subtract_fn)&Silicon::subtractDelta);
         wrapper.def("addDelta", (add_fn)&Silicon::addDelta);
@@ -39,6 +40,7 @@ namespace galsim {
         wrapper.def("accumulate", (accumulate_fn)&Silicon::accumulate);
         wrapper.def("update", (update_fn)&Silicon::update);
         wrapper.def("fill_with_pixel_areas", (area_fn)&Silicon::fillWithPixelAreas);
+	wrapper.def("finalize", (finalize_fn)&Silicon::finalizeGPU);
     }
 
     static Silicon* MakeSilicon(
