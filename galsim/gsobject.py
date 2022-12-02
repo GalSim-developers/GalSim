@@ -1606,6 +1606,15 @@ class GSObject:
                             [default: 3]
             maxN:           Sets the maximum number of photons that will be added to the image
                             at a time.  (Memory requirements are proportional to this number.)
+
+                            .. note::
+
+                                Using this parameter will not necessarily produce identical
+                                results as when not using it due to potentially different order
+                                of various random number generations in either the photon_ops,
+                                or the sensor, or (for method='fft') the conversion of the FFT
+                                image to photons.
+
                             [default: None, which means no limit]
             save_photons:   If True, save the `PhotonArray` as ``image.photons``. Only valid if
                             method is 'phot' or sensor is not None.  [default: False]
