@@ -44,7 +44,7 @@ namespace galsim
 
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
-                         ImageView<T> target, bool* off_edge=0) const;
+			 ImageView<T> target, bool* off_edge=0) const;
 
 	bool insidePixelGPU(int ix, int iy, double x, double y, double zconv,
 			    Bounds<int>& targetBounds, bool* off_edge,
@@ -80,8 +80,8 @@ namespace galsim
         template <typename T>
         void initialize(ImageView<T> target, Position<int> orig_center);
 
-        template <typename T>
-        void initializeGPU(ImageView<T> target, Position<int> orig_center);
+        /*template <typename T>
+	  void initializeGPU(ImageView<T> target, Position<int> orig_center);*/
 
         template <typename T>
         void finalizeGPU(ImageView<T> target);
@@ -90,15 +90,15 @@ namespace galsim
         double accumulate(const PhotonArray& photons, int i1, int i2,
                           BaseDeviate rng, ImageView<T> target);
 
-	template <typename T>
+	/*template <typename T>
 	double accumulateGPU(const PhotonArray& photons, int i1, int i2,
-			     BaseDeviate rng, ImageView<T> target);
+	BaseDeviate rng, ImageView<T> target);*/
 	
         template <typename T>
         void update(ImageView<T> target);
 
-        template <typename T>
-        void updateGPU(ImageView<T> target);
+        /*template <typename T>
+	  void updateGPU(ImageView<T> target);*/
 
         double pixelArea(int i, int j, int nx, int ny) const;
 

@@ -807,6 +807,7 @@ namespace galsim {
         }
     }
 
+#if 0
     template <typename T>
     void Silicon::initialize(ImageView<T> target, Position<int> orig_center)
     {
@@ -834,31 +835,39 @@ namespace galsim {
         _delta.resize(b);
         _delta.setZero();
     }
-
+#endif
+  
     template <typename T>
     void Silicon::subtractDelta(ImageView<T> target)
     {
-        // both delta and target and stored on GPU so copy them back
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+        // perform update on GPU
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
 
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
-#pragma omp target update from(deltaData[0:imageDataSize], targetData[0:imageDataSize])
-        target -= _delta;
+
+#pragma omp target teams distribute parallel for
+        for (int i = 0; i < imageDataSize; i++) {
+            targetData[i] += deltaData[i];
+        }
     }
 
     template <typename T>
     void Silicon::addDelta(ImageView<T> target)
     {
-        // both delta and target and stored on GPU so copy them back
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+        // perform update on GPU
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
 
         double* deltaData = _delta.getData();
         T* targetData = target.getData();
-#pragma omp target update from(deltaData[0:imageDataSize], targetData[0:imageDataSize])
-        target += _delta;
+
+#pragma omp target teams distribute parallel for
+        for (int i = 0; i < imageDataSize; i++) {
+            targetData[i] += deltaData[i];
+        }
     }
 
+#if 0
     template <typename T>
     double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
                                BaseDeviate rng, ImageView<T> target)
@@ -995,9 +1004,10 @@ namespace galsim {
 #endif
         return addedFlux;
     }
-
+#endif
+  
     template <typename T>
-    void Silicon::initializeGPU(ImageView<T> target, Position<int> orig_center)
+    void Silicon::initialize(ImageView<T> target, Position<int> orig_center)
     {
 	// do GPU-specific stuff
         Bounds<int> b = target.getBounds();
@@ -1027,7 +1037,7 @@ namespace galsim {
 
 	// convert and map data for GPU
         double* deltaData = _delta.getData();
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
 
         T* targetData = target.getData();
         
@@ -1146,7 +1156,7 @@ namespace galsim {
         bool* changedData = _changed.get();
         
         double* deltaData = _delta.getData();
-        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
         T* targetData = target.getData();
 #pragma omp target update from(targetData[0:imageDataSize])
 
@@ -1205,7 +1215,7 @@ namespace galsim {
 
             // new version not using testpoly
             // first compute first point of polygon (index 0)
-            double x1, y1, xinters = 0.0;
+            double x1, y1, xfirst, yfirst, xinters = 0.0;
             inside = false;
             for (int n = 0; n <= _nv; n++) {
                 double xp = 0.0, yp = 0.0;
@@ -1228,7 +1238,7 @@ namespace galsim {
                     // bottom row including corners
                     idx = horizontalPixelIndex(ix - i1, iy - j1, nx) + (n - cornerIndexBottomLeft());
                     double px = horizontalBoundaryPointsData[idx].x;
-                    if (n == cornerIndexBottomRight()) px += 1.0;
+                    //if (n == cornerIndexBottomRight()) px += 1.0;
                     xp += (px - epx) * zfactor;
                     yp += (horizontalBoundaryPointsData[idx].y - epy) * zfactor;
                 }
@@ -1242,7 +1252,7 @@ namespace galsim {
                 else if (n <= cornerIndexTopLeft()) {
                     idx = horizontalPixelIndex(ix - i1, iy - j1 + 1, nx) + (cornerIndexTopLeft() - n);
                     double px = horizontalBoundaryPointsData[idx].x;
-                    if (n == cornerIndexTopRight()) px += 1.0;
+                    //if (n == cornerIndexTopRight()) px += 1.0;
                     xp += (px - epx) * zfactor;
                     yp += ((horizontalBoundaryPointsData[idx].y + 1.0) - epy) * zfactor;
                 }
@@ -1256,14 +1266,16 @@ namespace galsim {
                     // save first point for later
                     x1 = xp;
                     y1 = yp;
+		    xfirst = xp;
+		    yfirst = yp;
                 }
                 else {
                     // shoelace algorithm
                     double x2 = xp;
                     double y2 = yp;
                     if (n == _nv) {
-                        x2 = x1;
-                        y2 = y1;
+                        x2 = xfirst;
+                        y2 = yfirst;
                     }
                     double ymin = y1 < y2 ? y1 : y2;
                     double ymax = y1 > y2 ? y1 : y2;
@@ -1285,7 +1297,7 @@ namespace galsim {
                 }
             }
         }
-        
+
         // If the nominal pixel is on the edge of the image and the photon misses in the
         // direction of falling off the image, (possibly) report that in off_edge.
         if (!inside && off_edge) {
@@ -1340,10 +1352,12 @@ namespace galsim {
     }
 
     template <typename T>
-    double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
-				  BaseDeviate rng, ImageView<T> target)
+    double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
+			       BaseDeviate rng, ImageView<T> target)
     {
         const int nphotons = i2 - i1;
+
+        int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
 
         // Generate random numbers in advance
         std::vector<double> conversionDepthRandom(nphotons);
@@ -1393,7 +1407,7 @@ namespace galsim {
         
 	// random arrays
 	double* diffStepRandomArray = diffStepRandom.data();
-	//double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
+	double* pixelNotFoundRandomArray = pixelNotFoundRandom.data();
 	double* conversionDepthRandomArray = conversionDepthRandom.data();
 	
 	// delta image
@@ -1415,8 +1429,8 @@ namespace galsim {
         double* abs_length_table_data = _abs_length_table_GPU.data();
         
         Position<double>* emptypolyData = _emptypolyGPU.data();
-            
-#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[i1*2:(i2-i1)*2], conversionDepthRandomArray[i1:i2-i1]) reduction(+:addedFlux)
+
+#pragma omp target teams distribute parallel for map(to: photonsX[i1:i2-i1], photonsY[i1:i2-i1], photonsDXDZ[i1:i2-i1], photonsDYDZ[i1:i2-i1], photonsFlux[i1:i2-i1], photonsWavelength[i1:i2-i1], diffStepRandomArray[0:(i2-i1)*2], conversionDepthRandomArray[0:i2-i1], pixelNotFoundRandomArray[0:i2-i1]) reduction(+:addedFlux)
 	for (int i = i1; i < i2; i++) {
 	    double x0 = photonsX[i];
 	    double y0 = photonsY[i];
@@ -1497,8 +1511,15 @@ namespace galsim {
                                                 horizontalBoundaryPointsData,
                                                 verticalBoundaryPointsData,
                                                 emptypolyData);
-		if (!foundPixel) continue; // ignore ones that have rounding errors for now
             }
+
+	    if (!foundPixel) {
+		const int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
+		const int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
+		int n = (pixelNotFoundRandomArray[i-i1] > 0.5) ? 0 : step;
+		ix = ix + xoff[n];
+		iy = iy + yoff[n];
+	    }
 
 	    if ((ix >= b.getXMin()) && (ix <= b.getXMax()) &&
                 (iy >= b.getYMin()) && (iy <= b.getYMax())) {
@@ -1546,7 +1567,6 @@ namespace galsim {
             idx = horizontalPixelIndex(x, y, nx) + (n - cornerIndexBottomLeft());
             double px = horizontalBoundaryPointsData[idx].x;
             double py = horizontalBoundaryPointsData[idx].y;
-            if (n == cornerIndexBottomRight()) px += 1.0;
             if (px < obxmin) obxmin = px;
             if (px > obxmax) obxmax = px;
             if (py < obymin) obymin = py;
@@ -1567,7 +1587,6 @@ namespace galsim {
             idx = horizontalPixelIndex(x, y + 1, nx) + (cornerIndexTopLeft() - n);
             double px = horizontalBoundaryPointsData[idx].x;
             double py = horizontalBoundaryPointsData[idx].y + 1.0;
-            if (n == cornerIndexTopRight()) px += 1.0;
             if (px < obxmin) obxmin = px;
             if (px > obxmax) obxmax = px;
             if (py < obymin) obymin = py;
@@ -1608,7 +1627,6 @@ namespace galsim {
             idx = horizontalPixelIndex(x, y, nx) + (n - cornerIndexBottomLeft());
             double px = horizontalBoundaryPointsData[idx].x;
             double py = horizontalBoundaryPointsData[idx].y;
-            if (n == cornerIndexBottomRight()) px += 1.0;
             if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
             if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
             if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
@@ -1629,7 +1647,6 @@ namespace galsim {
             idx = horizontalPixelIndex(x, y + 1, nx) + (cornerIndexTopLeft() - n);
             double px = horizontalBoundaryPointsData[idx].x;
             double py = horizontalBoundaryPointsData[idx].y + 1.0;
-            if (n == cornerIndexTopRight()) px += 1.0;
             if (px-centerx >= std::abs(py-centery) && px < ibxmax) ibxmax = px;
             if (px-centerx <= -std::abs(py-centery) && px > ibxmin) ibxmin = px;
             if (py-centery >= std::abs(px-centerx) && py < ibymax) ibymax = py;
@@ -1658,8 +1675,9 @@ namespace galsim {
         pixelOuterBoundsData[k].setYMax(obymax);
     }
 
+#if 1
     template <typename T>
-    void Silicon::updateGPU(ImageView<T> target)
+    void Silicon::update(ImageView<T> target)
     {
         int nxCenter = (_nx - 1) / 2;
         int nyCenter = (_ny - 1) / 2;
@@ -1679,7 +1697,8 @@ namespace galsim {
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride();
 
         T* targetData = target.getData();
-        
+        double* deltaData = _delta.getData();
+
         Position<float>* horizontalBoundaryPointsData = _horizontalBoundaryPoints.data();
         Position<float>* verticalBoundaryPointsData = _verticalBoundaryPoints.data();
         Position<float>* horizontalDistortionsData = _horizontalDistortions.data();
@@ -1715,7 +1734,7 @@ namespace galsim {
             for (int j=polyj1; j <= polyj2; j++) {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
-                    double charge = targetData[(j * stride) + (i * step)];
+                    double charge = deltaData[(j * stride) + (i * step)];
 
                     if (charge != 0.0) {
                         change = true;
@@ -1765,7 +1784,7 @@ namespace galsim {
             for (int j=polyj1; j <= polyj2; j++) {
                 for (int i=polyi1; i <= polyi2; i++) {
                     // Check whether this pixel has charge on it
-                    double charge = targetData[(j * stride) + (i * step)];
+                    double charge = deltaData[(j * stride) + (i * step)];
 
                     if (charge != 0.0) {
                         change = true;
@@ -1799,7 +1818,7 @@ namespace galsim {
 #pragma omp target teams distribute parallel for
         for (size_t k=0; k<nxny; ++k) {
             if (changedData[k]) {
-                updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
+	        updatePixelBoundsGPU(nx, ny, k, pixelInnerBoundsData,
                                      pixelOuterBoundsData,
                                      horizontalBoundaryPointsData,
                                      verticalBoundaryPointsData);
@@ -1809,14 +1828,15 @@ namespace galsim {
         
         // update target from delta and zero delta on GPU
         // CPU delta is not zeroed but that shouldn't matter
-        double* deltaData = _delta.getData();
 #pragma omp target teams distribute parallel for
         for (int i = 0; i < imageDataSize; i++) {
             targetData[i] += deltaData[i];
             deltaData[i] = 0.0;
-        }
+	}
     }
-
+#endif
+  
+#if 0
     template <typename T>
     void Silicon::update(ImageView<T> target)
     {
@@ -1824,7 +1844,8 @@ namespace galsim {
         target += _delta;
         _delta.setZero();
     }
-
+#endif
+  
     int SetOMPThreads(int num_threads)
     {
 #ifdef _OPENMP
@@ -1865,8 +1886,8 @@ namespace galsim {
     template void Silicon::initialize(ImageView<double> target, Position<int> orig_center);
     template void Silicon::initialize(ImageView<float> target, Position<int> orig_center);
 
-    template void Silicon::initializeGPU(ImageView<double> target, Position<int> orig_center);
-    template void Silicon::initializeGPU(ImageView<float> target, Position<int> orig_center);
+  //template void Silicon::initializeGPU(ImageView<double> target, Position<int> orig_center);
+  //template void Silicon::initializeGPU(ImageView<float> target, Position<int> orig_center);
 
     template void Silicon::finalizeGPU(ImageView<double> target);
     template void Silicon::finalizeGPU(ImageView<float> target);
@@ -1876,16 +1897,16 @@ namespace galsim {
     template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
                                         BaseDeviate rng, ImageView<float> target);
 
-    template double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
+  /*template double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
 					   BaseDeviate rng, ImageView<double> target);
-    template double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
-					   BaseDeviate rng, ImageView<float> target);
+  template double Silicon::accumulateGPU(const PhotonArray& photons, int i1, int i2,
+  BaseDeviate rng, ImageView<float> target);*/
 
     template void Silicon::update(ImageView<double> target);
     template void Silicon::update(ImageView<float> target);
 
-    template void Silicon::updateGPU(ImageView<double> target);
-    template void Silicon::updateGPU(ImageView<float> target);
+  //template void Silicon::updateGPU(ImageView<double> target);
+  //template void Silicon::updateGPU(ImageView<float> target);
 
     template void Silicon::fillWithPixelAreas(ImageView<double> target, Position<int> orig_center,
                                               bool);
