@@ -42,7 +42,7 @@ jobs:
 
                     # And a pypy system.
                     - os: ubuntu-latest
-                      py: pypy3
+                      py: pypy-3.7
                       CC: gcc
                       CXX: g++
 
@@ -150,7 +150,7 @@ jobs:
                 pip install -U matplotlib astroplan
 
             - name: Install CPython-only dependencies
-              if: matrix.py != 'pypy3'
+              if: matrix.py != 'pypy-3.7'
               run: |
                 # The only one left that doesn't seem to work right on pypy is starlink-pyast.
                 pip install -U starlink-pyast
@@ -205,7 +205,7 @@ jobs:
                 GALSIM_TEST_PY=0 python setup.py test
 
             - name: Upload coverage to codecov
-              if: matrix.py != 'pypy3'
+              if: matrix.py != 'pypy-3.7'
               run: |
                 cd tests
                 pwd -P
