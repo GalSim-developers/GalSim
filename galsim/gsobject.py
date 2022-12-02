@@ -1275,7 +1275,7 @@ class GSObject:
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   center=None, use_true_center=True, offset=None,
                   n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, sensor=None, photon_ops=(), n_subsample=3, maxN=None,
+                  poisson_flux=None, sensor=None, photon_ops=None, n_subsample=3, maxN=None,
                   save_photons=False, bandpass=None, setup_only=False,
                   surface_ops=None):
         """Draws an `Image` of the object.
@@ -1597,7 +1597,7 @@ class GSObject:
                             photons onto the image. [default: None]
             photon_ops:     A list of operators that can modify the photon array that will be
                             applied in order before accumulating the photons on the sensor.
-                            [default: ()]
+                            [default: None]
             n_subsample:    The number of sub-pixels per final pixel to use for fft drawing when
                             using a sensor.  The sensor step needs to know the sub-pixel positions
                             of the photons, which is lost in the fft method.  So using smaller
@@ -1676,8 +1676,11 @@ class GSObject:
                     method=method, sensor=sensor, poisson_flux=poisson_flux)
 
         # If using photon ops with fft, then need a sensor.
-        if photon_ops != () and method != 'phot' and sensor is None:
+        if photon_ops is not None and method != 'phot' and sensor is None:
             sensor = Sensor()
+        if photon_ops is None:
+            # Easier to just make it an empty tuple, rather than deal with None below.
+            photon_ops = ()
 
         # Some parameters are only relevant for either phot or when using a sensor.
         if method != 'phot' and sensor is None:
