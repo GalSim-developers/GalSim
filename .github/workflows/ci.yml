@@ -41,10 +41,13 @@ jobs:
                       CXX: clang++
 
                     # And a pypy system.
-                    - os: ubuntu-latest
-                      py: pypy-3.7
-                      CC: gcc
-                      CXX: g++
+                    # As of 12/1/2022, this is broken for astropy.
+                    # pypy3 used to work, but that's Py 3.6, and GHA no longer supports it.
+                    # Maybe revisit at some point.  Or maybe don't care too much about pypy...
+                    #- os: ubuntu-latest
+                      #py: pypy-3.7
+                      #CC: gcc
+                      #CXX: g++
 
         steps:
             - uses: actions/checkout@v2
