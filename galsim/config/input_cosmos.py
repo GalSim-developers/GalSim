@@ -61,7 +61,7 @@ class SampleLoader(InputLoader):
             if out_str != '':
                 logger.log(log_level, 'Using user-specified %s: %s',self.cls_name, out_str)
             logger.info("file %d: Sample catalog has %d total objects; %d passed initial cuts.",
-                        base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
+                        base['file_num'], cosmos_cat.getNTot(), cosmos_cat.nobjects)
             if base.get('gal',{}).get('gal_type',None) == 'parametric':
                 logger.log(log_level,"Using parametric galaxies.")
             else:
@@ -92,7 +92,7 @@ def _FinishBuildSampleGalaxy(config, base, ignore, gsparams, logger, sample_cat,
     # Special: if galaxies are selected based on index, and index is Sequence or Random, and max
     # isn't set, set it to nobjects-1.
     if 'index' in config:
-        SetDefaultIndex(config, sample_cat.getNObjects())
+        SetDefaultIndex(config, sample_cat.nobjects)
 
     opt = { "index" : int,
             "gal_type" : str,
@@ -126,7 +126,7 @@ def _FinishBuildSampleGalaxy(config, base, ignore, gsparams, logger, sample_cat,
     #     set by a call to selectRandomIndex, explicitly by the user, or due to the call to
     #     SetDefaultIndex.
     index = kwargs['index']
-    if index >= sample_cat.getNObjects():
+    if index >= sample_cat.nobjects:
         raise GalSimConfigError(
             "index=%s has gone past the number of entries in the %s"%(index, cls_name))
 

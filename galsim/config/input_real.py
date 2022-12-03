@@ -41,10 +41,10 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
     # But not if they specify 'id' or have 'random=True', which overrides that.
     if 'id' not in config:
         if 'random' not in config:
-            SetDefaultIndex(config, real_cat.getNObjects())
+            SetDefaultIndex(config, real_cat.nobjects)
         else:
             if not config['random']:
-                SetDefaultIndex(config, real_cat.getNObjects())
+                SetDefaultIndex(config, real_cat.nobjects)
                 # Need to do this to avoid being caught by the GetAllParams() call, which will flag
                 # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
                 del config['random']
@@ -57,7 +57,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
 
     if 'index' in kwargs:
         index = kwargs['index']
-        if index >= real_cat.getNObjects() or index < 0:
+        if index >= real_cat.nobjects or index < 0:
             raise GalSimConfigError(
                 "index=%s has gone past the number of entries in the RealGalaxyCatalog"%index)
 
@@ -88,10 +88,10 @@ def _BuildChromaticRealGalaxy(config, base, ignore, gsparams, logger):
     # But not if they specify 'id' or have 'random=True', which overrides that.
     if 'id' not in config:
         if 'random' not in config:
-            SetDefaultIndex(config, real_cats[0].getNObjects())
+            SetDefaultIndex(config, real_cats[0].nobjects)
         else:
             if not config['random']:
-                SetDefaultIndex(config, real_cats[0].getNObjects())
+                SetDefaultIndex(config, real_cats[0].nobjects)
                 # Need to do this to avoid being caught by the GetAllParams() call, which will flag
                 # it if it has 'index' and 'random' set (but 'random' is False, so really it's OK).
                 del config['random']
@@ -105,7 +105,7 @@ def _BuildChromaticRealGalaxy(config, base, ignore, gsparams, logger):
 
     if 'index' in kwargs:
         index = kwargs['index']
-        if index >= real_cats[0].getNObjects() or index < 0:
+        if index >= real_cats[0].nobjects or index < 0:
             raise GalSimConfigError(
                 "index=%s has gone past the number of entries in the RealGalaxyCatalog"%index)
 
