@@ -18,6 +18,9 @@
 
 import os
 import logging
+import types
+
+from multiprocessing.managers import NamespaceProxy
 
 from .value import RegisterValueType
 from .util import LoggerWrapper, RemoveCurrent, GetRNG, GetLoggerProxy, get_cls_params
@@ -43,6 +46,28 @@ valid_input_types = {}
 # These are registered by the value or gsobject types that use each input object.
 connected_types = {}
 
+# From https://stackoverflow.com/questions/65451457/how-can-i-update-class-members-in-processes
+# This custom proxy lets us access attributes and properties of input objects, not just methods,
+# which are normally the only thing exposed in proxies.
+# Thanks to martineau and shts38, who combined to create this implementation for what (IMO)
+# should be the regular behavior of the AutoProxy class.
+def InputProxy(target):
+    """ Create a derived NamespaceProxy class for `target`. """
+    def __getattr__(self, key):
+        result = self._callmethod('__getattribute__', (key,))
+        if isinstance(result, types.MethodType):
+            def wrapper(*args, **kwargs):
+                return self._callmethod(key, args, kwargs)
+            return wrapper
+        else:
+            return result
+
+    dic = {'types': types, '__getattr__': __getattr__}
+    proxy_name = target.__name__ + "Proxy"
+    ProxyType = type(proxy_name, (NamespaceProxy,), dic)  # Create subclass.
+    ProxyType._exposed_ = tuple(dir(target))
+
+    return ProxyType
 
 def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
     """
@@ -111,7 +136,9 @@ def ProcessInput(config, logger=None, file_scope_only=False, safe_only=False):
                 nfields = len(fields) if isinstance(fields, list) else 1
                 for num in range(nfields):
                     tag = key + str(num)
-                    InputManager.register(tag, valid_input_types[key].init_func)
+                    init_func = valid_input_types[key].init_func
+                    proxy = InputProxy(init_func)
+                    InputManager.register(tag, init_func, proxy)
             # Start up the input_manager
             config['_input_manager'] = InputManager()
             config['_input_manager'].start()
