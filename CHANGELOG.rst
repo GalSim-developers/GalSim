@@ -138,4 +138,4 @@ Changes from v2.4.5 to v2.4.6
 =============================
 
 - Fixed drawImage to work correctly for method=fft when using photon_ops. (#1193)
-
+- Fixed the proxies used by config Input items to allow access to attributes. (#1195)
