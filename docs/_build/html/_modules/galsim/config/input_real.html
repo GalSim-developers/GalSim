@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.input_real &mdash; GalSim 2.4.5 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.input_real &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -126,10 +126,10 @@
     <span class="c1"># But not if they specify &#39;id&#39; or have &#39;random=True&#39;, which overrides that.</span>
     <span class="k">if</span> <span class="s1">&#39;id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;random&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+            <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">nobjects</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">]:</span>
-                <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+                <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">nobjects</span><span class="p">)</span>
                 <span class="c1"># Need to do this to avoid being caught by the GetAllParams() call, which will flag</span>
                 <span class="c1"># it if it has &#39;index&#39; and &#39;random&#39; set (but &#39;random&#39; is False, so really it&#39;s OK).</span>
                 <span class="k">del</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">]</span>
@@ -142,7 +142,7 @@
 
     <span class="k">if</span> <span class="s1">&#39;index&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">()</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">real_cat</span><span class="o">.</span><span class="n">nobjects</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;index=</span><span class="si">%s</span><span class="s2"> has gone past the number of entries in the RealGalaxyCatalog&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
 
@@ -173,10 +173,10 @@
     <span class="c1"># But not if they specify &#39;id&#39; or have &#39;random=True&#39;, which overrides that.</span>
     <span class="k">if</span> <span class="s1">&#39;id&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
         <span class="k">if</span> <span class="s1">&#39;random&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+            <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nobjects</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">]:</span>
-                <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">())</span>
+                <span class="n">SetDefaultIndex</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">real_cats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nobjects</span><span class="p">)</span>
                 <span class="c1"># Need to do this to avoid being caught by the GetAllParams() call, which will flag</span>
                 <span class="c1"># it if it has &#39;index&#39; and &#39;random&#39; set (but &#39;random&#39; is False, so really it&#39;s OK).</span>
                 <span class="k">del</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;random&#39;</span><span class="p">]</span>
@@ -190,7 +190,7 @@
 
     <span class="k">if</span> <span class="s1">&#39;index&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">real_cats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getNObjects</span><span class="p">()</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;=</span> <span class="n">real_cats</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">nobjects</span> <span class="ow">or</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">GalSimConfigError</span><span class="p">(</span>
                 <span class="s2">&quot;index=</span><span class="si">%s</span><span class="s2"> has gone past the number of entries in the RealGalaxyCatalog&quot;</span><span class="o">%</span><span class="n">index</span><span class="p">)</span>
 

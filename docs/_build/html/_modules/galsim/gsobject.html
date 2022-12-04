@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.gsobject &mdash; GalSim 2.4.5 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>galsim.gsobject &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
@@ -1360,7 +1360,7 @@
                   <span class="n">method</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">,</span> <span class="n">area</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">exptime</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">gain</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">add_to_image</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_true_center</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">n_photons</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_extra_noise</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span>
-                  <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">photon_ops</span><span class="o">=</span><span class="p">(),</span> <span class="n">n_subsample</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                  <span class="n">poisson_flux</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">photon_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_subsample</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">maxN</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                   <span class="n">save_photons</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">bandpass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">setup_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                   <span class="n">surface_ops</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Draws an `Image` of the object.</span>
@@ -1682,7 +1682,7 @@
 <span class="sd">                            photons onto the image. [default: None]</span>
 <span class="sd">            photon_ops:     A list of operators that can modify the photon array that will be</span>
 <span class="sd">                            applied in order before accumulating the photons on the sensor.</span>
-<span class="sd">                            [default: ()]</span>
+<span class="sd">                            [default: None]</span>
 <span class="sd">            n_subsample:    The number of sub-pixels per final pixel to use for fft drawing when</span>
 <span class="sd">                            using a sensor.  The sensor step needs to know the sub-pixel positions</span>
 <span class="sd">                            of the photons, which is lost in the fft method.  So using smaller</span>
@@ -1691,6 +1691,15 @@
 <span class="sd">                            [default: 3]</span>
 <span class="sd">            maxN:           Sets the maximum number of photons that will be added to the image</span>
 <span class="sd">                            at a time.  (Memory requirements are proportional to this number.)</span>
+
+<span class="sd">                            .. note::</span>
+
+<span class="sd">                                Using this parameter will not necessarily produce identical</span>
+<span class="sd">                                results as when not using it due to potentially different order</span>
+<span class="sd">                                of various random number generations in either the photon_ops,</span>
+<span class="sd">                                or the sensor, or (for method=&#39;fft&#39;) the conversion of the FFT</span>
+<span class="sd">                                image to photons.</span>
+
 <span class="sd">                            [default: None, which means no limit]</span>
 <span class="sd">            save_photons:   If True, save the `PhotonArray` as ``image.photons``. Only valid if</span>
 <span class="sd">                            method is &#39;phot&#39; or sensor is not None.  [default: False]</span>
@@ -1710,6 +1719,7 @@
         <span class="kn">from</span> <span class="nn">.box</span> <span class="kn">import</span> <span class="n">Pixel</span>
         <span class="kn">from</span> <span class="nn">.wcs</span> <span class="kn">import</span> <span class="n">PixelScale</span>
         <span class="kn">from</span> <span class="nn">.photon_array</span> <span class="kn">import</span> <span class="n">PhotonArray</span>
+        <span class="kn">from</span> <span class="nn">.sensor</span> <span class="kn">import</span> <span class="n">Sensor</span>
 
         <span class="k">if</span> <span class="n">surface_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">.deprecated</span> <span class="kn">import</span> <span class="n">depr</span>
@@ -1745,15 +1755,11 @@
                     <span class="s2">&quot;an _additional_ Pixel, you can suppress this warning by using method=fft.&quot;</span><span class="p">)</span>
 
         <span class="c1"># Some parameters are only relevant for method == &#39;phot&#39;</span>
-        <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">and</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">n_photons</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;n_photons is only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">n_photons</span><span class="o">=</span><span class="n">n_photons</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
-                    <span class="s2">&quot;rng is only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
-                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">max_extra_noise</span> <span class="o">!=</span> <span class="mf">0.</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;max_extra_noise is only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
@@ -1762,17 +1768,27 @@
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
                     <span class="s2">&quot;poisson_flux is only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">poisson_flux</span><span class="o">=</span><span class="n">poisson_flux</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">photon_ops</span> <span class="o">!=</span> <span class="p">():</span>
+
+        <span class="c1"># If using photon ops with fft, then need a sensor.</span>
+        <span class="k">if</span> <span class="n">photon_ops</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">and</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sensor</span> <span class="o">=</span> <span class="n">Sensor</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">photon_ops</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Easier to just make it an empty tuple, rather than deal with None below.</span>
+            <span class="n">photon_ops</span> <span class="o">=</span> <span class="p">()</span>
+
+        <span class="c1"># Some parameters are only relevant for either phot or when using a sensor.</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s1">&#39;phot&#39;</span> <span class="ow">and</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rng</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
-                    <span class="s2">&quot;photon_ops are only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
-                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">photon_ops</span><span class="o">=</span><span class="n">photon_ops</span><span class="p">)</span>
+                    <span class="s2">&quot;rng is only relevant for method=&#39;phot&#39; or when using a sensor&quot;</span><span class="p">,</span>
+                    <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">maxN</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
-                    <span class="s2">&quot;maxN is only relevant for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;maxN is only relevant for method=&#39;phot&#39; or when using a sensor&quot;</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">maxN</span><span class="o">=</span><span class="n">maxN</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">save_photons</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">GalSimIncompatibleValuesError</span><span class="p">(</span>
-                    <span class="s2">&quot;save_photons is only valid for method=&#39;phot&#39;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;save_photons is only valid for method=&#39;phot&#39; or when using a sensor&quot;</span><span class="p">,</span>
                     <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">sensor</span><span class="o">=</span><span class="n">sensor</span><span class="p">,</span> <span class="n">save_photons</span><span class="o">=</span><span class="n">save_photons</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># If we want to save photons, it doesn&#39;t make sense to limit the number per shoot call.</span>
@@ -1881,16 +1897,29 @@
                 <span class="n">added_photons</span> <span class="o">=</span> <span class="n">prof</span><span class="o">.</span><span class="n">drawFFT</span><span class="p">(</span><span class="n">draw_image</span><span class="p">,</span> <span class="n">add</span><span class="p">)</span>
 
             <span class="k">if</span> <span class="n">sensor</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">photons</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="o">.</span><span class="n">makeFromImage</span><span class="p">(</span><span class="n">draw_image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">photon_ops</span><span class="p">:</span>
-                    <span class="n">op</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">imview</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
-                    <span class="n">added_photons</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">imview</span><span class="p">,</span> <span class="n">orig_center</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">maxN</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">maxN</span> <span class="o">&lt;</span> <span class="n">added_photons</span><span class="p">:</span>
+                    <span class="n">niter</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">added_photons</span> <span class="o">/</span> <span class="n">maxN</span><span class="p">))</span>
+                    <span class="n">draw_image</span> <span class="o">/=</span> <span class="n">niter</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># Need a temporary</span>
-                    <span class="n">im1</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="n">imview</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
-                    <span class="n">added_photons</span> <span class="o">=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">im1</span><span class="p">,</span> <span class="n">orig_center</span><span class="p">)</span>
-                    <span class="n">imview</span> <span class="o">+=</span> <span class="n">im1</span>
+                    <span class="n">niter</span> <span class="o">=</span> <span class="mi">1</span>
+
+                <span class="n">added_photons</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">resume</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">niter</span><span class="p">):</span>
+                    <span class="n">photons</span> <span class="o">=</span> <span class="n">PhotonArray</span><span class="o">.</span><span class="n">makeFromImage</span><span class="p">(</span><span class="n">draw_image</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+
+                    <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">photon_ops</span><span class="p">:</span>
+                        <span class="n">op</span><span class="o">.</span><span class="n">applyTo</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">local_wcs</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">imview</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+                        <span class="n">added_photons</span> <span class="o">+=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">imview</span><span class="p">,</span> <span class="n">orig_center</span><span class="p">,</span>
+                                                           <span class="n">resume</span><span class="o">=</span><span class="n">resume</span><span class="p">)</span>
+                        <span class="n">resume</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Resume from this point if there are any further iterations.</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># Need a temporary</span>
+                        <span class="n">im1</span> <span class="o">=</span> <span class="n">ImageD</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="n">imview</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+                        <span class="n">added_photons</span> <span class="o">+=</span> <span class="n">sensor</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">photons</span><span class="p">,</span> <span class="n">im1</span><span class="p">,</span> <span class="n">orig_center</span><span class="p">)</span>
+                        <span class="n">imview</span> <span class="o">+=</span> <span class="n">im1</span>
 
         <span class="n">image</span><span class="o">.</span><span class="n">added_flux</span> <span class="o">=</span> <span class="n">added_photons</span> <span class="o">/</span> <span class="n">flux_scale</span>
         <span class="k">if</span> <span class="n">save_photons</span><span class="p">:</span>

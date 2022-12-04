@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>galsim.config.input &mdash; GalSim 2.4.5 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>galsim.config.input &mdash; GalSim 2.4.6 documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
@@ -103,6 +103,9 @@
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">types</span>
+
+<span class="kn">from</span> <span class="nn">multiprocessing.managers</span> <span class="kn">import</span> <span class="n">NamespaceProxy</span>
 
 <span class="kn">from</span> <span class="nn">.value</span> <span class="kn">import</span> <span class="n">RegisterValueType</span>
 <span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">LoggerWrapper</span><span class="p">,</span> <span class="n">RemoveCurrent</span><span class="p">,</span> <span class="n">GetRNG</span><span class="p">,</span> <span class="n">GetLoggerProxy</span><span class="p">,</span> <span class="n">get_cls_params</span>
@@ -128,6 +131,28 @@
 <span class="c1"># These are registered by the value or gsobject types that use each input object.</span>
 <span class="n">connected_types</span> <span class="o">=</span> <span class="p">{}</span>
 
+<span class="c1"># From https://stackoverflow.com/questions/65451457/how-can-i-update-class-members-in-processes</span>
+<span class="c1"># This custom proxy lets us access attributes and properties of input objects, not just methods,</span>
+<span class="c1"># which are normally the only thing exposed in proxies.</span>
+<span class="c1"># Thanks to martineau and shts38, who combined to create this implementation for what (IMO)</span>
+<span class="c1"># should be the regular behavior of the AutoProxy class.</span>
+<span class="k">def</span> <span class="nf">InputProxy</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Create a derived NamespaceProxy class for `target`. &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callmethod</span><span class="p">(</span><span class="s1">&#39;__getattribute__&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">key</span><span class="p">,))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">MethodType</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callmethod</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">wrapper</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+    <span class="n">dic</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;types&#39;</span><span class="p">:</span> <span class="n">types</span><span class="p">,</span> <span class="s1">&#39;__getattr__&#39;</span><span class="p">:</span> <span class="fm">__getattr__</span><span class="p">}</span>
+    <span class="n">proxy_name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;Proxy&quot;</span>
+    <span class="n">ProxyType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">proxy_name</span><span class="p">,</span> <span class="p">(</span><span class="n">NamespaceProxy</span><span class="p">,),</span> <span class="n">dic</span><span class="p">)</span>  <span class="c1"># Create subclass.</span>
+    <span class="n">ProxyType</span><span class="o">.</span><span class="n">_exposed_</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">dir</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ProxyType</span>
 
 <div class="viewcode-block" id="ProcessInput"><a class="viewcode-back" href="../../../config_process.html#galsim.config.ProcessInput">[docs]</a><span class="k">def</span> <span class="nf">ProcessInput</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">file_scope_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">safe_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -196,7 +221,9 @@
                 <span class="n">nfields</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
                 <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nfields</span><span class="p">):</span>
                     <span class="n">tag</span> <span class="o">=</span> <span class="n">key</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
-                    <span class="n">InputManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">init_func</span><span class="p">)</span>
+                    <span class="n">init_func</span> <span class="o">=</span> <span class="n">valid_input_types</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">init_func</span>
+                    <span class="n">proxy</span> <span class="o">=</span> <span class="n">InputProxy</span><span class="p">(</span><span class="n">init_func</span><span class="p">)</span>
+                    <span class="n">InputManager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="n">init_func</span><span class="p">,</span> <span class="n">proxy</span><span class="p">)</span>
             <span class="c1"># Start up the input_manager</span>
             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_input_manager&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">InputManager</span><span class="p">()</span>
             <span class="n">config</span><span class="p">[</span><span class="s1">&#39;_input_manager&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
