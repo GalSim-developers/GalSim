@@ -877,6 +877,8 @@ def test_resume():
     t_no_resume = 0
 
     all_photons = galsim.PhotonArray(num_photons)
+    all_photons.allocateWavelengths()
+    all_photons.allocateAngles()
     n_added = 0
 
     first = True

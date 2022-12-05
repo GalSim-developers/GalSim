@@ -2489,7 +2489,7 @@ def test_chromatic_invariant():
     do_pickle(galsim.ChromaticObject(gsobj))
     p1 = galsim.PhotonArray(1)
     p2 = galsim.PhotonArray(1)
-    p2.wavelength[:] = 500
+    p2.wavelength = 500
 
     with assert_raises(TypeError):
         galsim.ChromaticObject(bulge_SED)
