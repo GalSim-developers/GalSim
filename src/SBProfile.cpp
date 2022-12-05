@@ -357,7 +357,7 @@ namespace galsim {
             double dy = mA * invdet;
             double dyx = -mC * invdet;
             _pimpl->fillXImage(image, new_x0, dx, dxy, new_y0, dy, dyx);
-            flux_ratio *= std::abs(invdet);
+            flux_ratio *= std::abs(invdet * imscale);
         }
 
         // At this point the "flux" ration is really an amplitude ratio, including det(jac)
