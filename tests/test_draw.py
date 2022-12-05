@@ -1584,37 +1584,62 @@ def test_direct_scale():
     # One possibe use of the specific functions is to not automatically recenter on 0,0.
     # So make sure they work properly if 0,0 is not the center
     im3 = galsim.ImageD(32, 32, scale=scale)  # origin is (1,1)
+    im4 = galsim.ImageD(32, 32, scale=scale)
+    im5 = galsim.ImageD(32, 32, scale=scale)
 
     obj.drawImage(im1, method='no_pixel')
     obj.drawReal(im2)
     obj.drawReal(im3)
+    # Note that cases 4 and 5 have objects that are logically identical (because obj is circularly
+    # symmetric), but the code follows different paths in the SBProfile.draw function due to the
+    # different jacobians in each case.
+    obj.dilate(1.0).drawReal(im4)
+    obj.rotate(0.3*galsim.radians).drawReal(im5)
     print('no_pixel: max diff = ',np.max(np.abs(im1.array - im2.array)))
     np.testing.assert_almost_equal(im1.array, im2.array, 15,
                                    "drawReal made different image than method='no_pixel'")
     np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawReal made different image when off-center")
+    np.testing.assert_almost_equal(im4.array, im2[im3.bounds].array, 15,
+                                   "drawReal made different image when jac is not None")
+    np.testing.assert_almost_equal(im5.array, im2[im3.bounds].array, 15,
+                                   "drawReal made different image when jac is not diagonal")
 
     obj.drawImage(im1, method='sb')
     obj_sb.drawReal(im2)
     obj_sb.drawReal(im3)
+    obj_sb.dilate(1.0).drawReal(im4)
+    obj_sb.rotate(0.3*galsim.radians).drawReal(im5)
     print('sb: max diff = ',np.max(np.abs(im1.array - im2.array)))
     np.testing.assert_almost_equal(im1.array, im2.array, 15,
                                    "drawReal made different image than method='sb'")
     np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawReal made different image when off-center")
+    np.testing.assert_almost_equal(im4.array, im2[im3.bounds].array, 15,
+                                   "drawReal made different image when jac is not None")
+    np.testing.assert_almost_equal(im5.array, im2[im3.bounds].array, 14,
+                                   "drawReal made different image when jac is not diagonal")
 
     obj.drawImage(im1, method='fft')
     obj_with_pixel.drawFFT(im2)
     obj_with_pixel.drawFFT(im3)
+    obj_with_pixel.dilate(1.0).drawFFT(im4)
+    obj_with_pixel.rotate(90 * galsim.degrees).drawFFT(im5)
     print('fft: max diff = ',np.max(np.abs(im1.array - im2.array)))
     np.testing.assert_almost_equal(im1.array, im2.array, 15,
                                    "drawFFT made different image than method='fft'")
     np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 15,
                                    "drawFFT made different image when off-center")
+    np.testing.assert_almost_equal(im4.array, im2[im3.bounds].array, 15,
+                                   "drawFFT made different image when jac is not None")
+    np.testing.assert_almost_equal(im5.array, im2[im3.bounds].array, 14,
+                                   "drawFFT made different image when jac is not diagonal")
 
     obj.drawImage(im1, method='real_space')
     obj_with_pixel.drawReal(im2)
     obj_with_pixel.drawReal(im3)
+    obj_with_pixel.dilate(1.0).drawReal(im4)
+    obj_with_pixel.rotate(90 * galsim.degrees).drawReal(im5)
     print('real_space: max diff = ',np.max(np.abs(im1.array - im2.array)))
     # I'm not sure why this one comes out a bit less precisely equal.  But 12 digits is still
     # plenty accurate enough.
@@ -1622,6 +1647,10 @@ def test_direct_scale():
                                    "drawReal made different image than method='real_space'")
     np.testing.assert_almost_equal(im3.array, im2[im3.bounds].array, 14,
                                    "drawReal made different image when off-center")
+    np.testing.assert_almost_equal(im4.array, im2[im3.bounds].array, 14,
+                                   "drawReal made different image when jac is not None")
+    np.testing.assert_almost_equal(im5.array, im2[im3.bounds].array, 14,
+                                   "drawReal made different image when jac is not diagonal")
 
     obj.drawImage(im1, method='phot', rng=rng.duplicate())
     _, phot1 = obj.drawPhot(im2, rng=rng.duplicate())
