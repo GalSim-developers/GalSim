@@ -96,7 +96,8 @@ namespace galsim {
         _diffStep(diffStep), _pixelSize(pixelSize),
         _sensorThickness(sensorThickness),
         _tr_radial_table(tr_radial_table), _treeRingCenter(treeRingCenter),
-        _abs_length_table(abs_length_table), _transpose(transpose)
+        _abs_length_table(abs_length_table), _transpose(transpose),
+        _targetData(nullptr)
     {
         dbg<<"Silicon constructor\n";
         // This constructor reads in the distorted pixel shapes from the Poisson solver
@@ -217,6 +218,13 @@ namespace galsim {
         }
     }
 
+    Silicon::~Silicon()
+    {
+        if (_targetData != nullptr) {
+            finalize();
+        }
+    }
+    
     void Silicon::updatePixelBounds(int nx, int ny, size_t k)
     {
         // update the bounding rectangles for pixel k
@@ -848,8 +856,10 @@ namespace galsim {
 
 #pragma omp target teams distribute parallel for
         for (int i = 0; i < imageDataSize; i++) {
-            targetData[i] += deltaData[i];
+            targetData[i] -= deltaData[i];
         }
+
+#pragma omp target update from(targetData[0:imageDataSize])
     }
 
     template <typename T>
@@ -865,6 +875,8 @@ namespace galsim {
         for (int i = 0; i < imageDataSize; i++) {
             targetData[i] += deltaData[i];
         }
+        
+#pragma omp target update from(targetData[0:imageDataSize])
     }
 
 #if 0
@@ -1009,7 +1021,15 @@ namespace galsim {
     template <typename T>
     void Silicon::initialize(ImageView<T> target, Position<int> orig_center)
     {
-	// do GPU-specific stuff
+        // release old GPU storage if allocated
+        if (_targetData != nullptr) {
+            finalize();
+        }
+
+        // and store target image pointer and type for later
+        _targetData = static_cast<void*>(target.getData());
+        _targetIsDouble = (sizeof(T) == 8);
+        
         Bounds<int> b = target.getBounds();
         if (!b.isDefined())
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
@@ -1124,8 +1144,7 @@ namespace galsim {
 #pragma omp target enter data map(to: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
     }
 
-    template <typename T>
-    void Silicon::finalizeGPU(ImageView<T> target)
+    void Silicon::finalize()
     {
         Bounds<double>* pixelInnerBoundsData = _pixelInnerBounds.data();
         Bounds<double>* pixelOuterBoundsData = _pixelOuterBounds.data();
@@ -1137,7 +1156,7 @@ namespace galsim {
 
         double* abs_length_table_data = _abs_length_table_GPU.data();
         
-        Bounds<int> b = target.getBounds();
+        Bounds<int> b = _delta.getBounds();
         const int nx = b.getXMax() - b.getXMin() + 1;
         const int ny = b.getYMax() - b.getYMin() + 1;
         int nxny = nx * ny;
@@ -1157,10 +1176,19 @@ namespace galsim {
         
         double* deltaData = _delta.getData();
         int imageDataSize = (_delta.getXMax() - _delta.getXMin()) * _delta.getStep() + (_delta.getYMax() - _delta.getYMin()) * _delta.getStride() + 1;
-        T* targetData = target.getData();
-#pragma omp target update from(targetData[0:imageDataSize])
+
+        if (_targetIsDouble) {
+            double* targetData = static_cast<double*>(_targetData);
+            //#pragma omp target update from(targetData[0:imageDataSize])
 
 #pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+        }
+        else {
+            float* targetData = static_cast<float*>(_targetData);
+            //#pragma omp target update from(targetData[0:imageDataSize])
+
+#pragma omp target exit data map(release: this[:1], deltaData[0:imageDataSize], targetData[0:imageDataSize], pixelInnerBoundsData[0:pixelInnerBoundsSize], pixelOuterBoundsData[0:pixelInnerBoundsSize], horizontalBoundaryPointsData[0:hbpSize], verticalBoundaryPointsData[0:vbpSize], abs_length_table_data[0:240], emptypolyData[0:emptypolySize], horizontalDistortionsData[0:hdSize], verticalDistortionsData[0:vdSize], changedData[0:nxny])
+        }
     }
     
     bool Silicon::insidePixelGPU(int ix, int iy, double x, double y, double zconv,
@@ -1888,9 +1916,6 @@ namespace galsim {
 
   //template void Silicon::initializeGPU(ImageView<double> target, Position<int> orig_center);
   //template void Silicon::initializeGPU(ImageView<float> target, Position<int> orig_center);
-
-    template void Silicon::finalizeGPU(ImageView<double> target);
-    template void Silicon::finalizeGPU(ImageView<float> target);
 
     template double Silicon::accumulate(const PhotonArray& photons, int i1, int i2,
                                         BaseDeviate rng, ImageView<double> target);
