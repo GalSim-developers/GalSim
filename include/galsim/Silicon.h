@@ -41,7 +41,8 @@ namespace galsim
                 double diffStep, double pixelSize, double sensorThickness, double* vertex_data,
                 const Table& tr_radial_table, Position<double> treeRingCenter,
                 const Table& abs_length_table, bool transpose);
-
+        ~Silicon();
+    
         template <typename T>
         bool insidePixel(int ix, int iy, double x, double y, double zconv,
 			 ImageView<T> target, bool* off_edge=0) const;
@@ -83,8 +84,7 @@ namespace galsim
         /*template <typename T>
 	  void initializeGPU(ImageView<T> target, Position<int> orig_center);*/
 
-        template <typename T>
-        void finalizeGPU(ImageView<T> target);
+        void finalize();
     
         template <typename T>
         double accumulate(const PhotonArray& photons, int i1, int i2,
@@ -297,6 +297,11 @@ namespace galsim
 	// GPU data
         std::vector<double> _abs_length_table_GPU;
         std::vector<Position<double> > _emptypolyGPU;
+
+        // need to keep a pointer to the last target image's data and its data type
+        // so we can release it on the GPU later
+        void* _targetData;
+        bool _targetIsDouble;
     };
 
     PUBLIC_API int SetOMPThreads(int num_threads);

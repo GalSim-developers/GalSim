@@ -362,8 +362,6 @@ class SiliconSensor(Sensor):
         # current running delta image to the full image.
         self._silicon.addDelta(image._image)
 
-        self._silicon.finalize(image._image);
-
         return added_flux
 
     def calculate_pixel_areas(self, image, orig_center=PositionI(0,0), use_flux=True):
