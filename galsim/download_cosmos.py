@@ -80,6 +80,7 @@ def parse_args(command_args):
         help="Don't link to the alternate directory from share/galsim")
     args = parser.parse_args(command_args)
     args.log_file = None
+    args.log_format = None
 
     # Return the args
     return args
