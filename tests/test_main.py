@@ -196,6 +196,21 @@ def test_logger():
     with open(args.log_file) as f:
         assert f.readlines() == []
 
+    args.verbosity = 3
+    args.log_format == '%(levelname)s - %(message)s'
+    remove_handler()
+    logger = galsim.main.make_logger(args)
+    print('handlers = ',logger.handlers)
+    assert logger.getEffectiveLevel() == logging.DEBUG
+    logger.warning("Test warning")
+    logger.info("Test info")
+    logger.debug("Test debug")
+
+    with open(args.log_file) as f:
+        assert f.readline().strip() == "WARNING - Test warning"
+        assert f.readline().strip() == "INFO - Test info"
+        assert f.readline().strip() == "DEBUG - Test debug"
+
 @timer
 def test_parse_variables():
     logger = logging.getLogger('test_main')
