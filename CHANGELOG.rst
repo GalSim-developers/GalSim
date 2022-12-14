@@ -139,3 +139,9 @@ Changes from v2.4.5 to v2.4.6
 
 - Fixed drawImage to work correctly for method=fft when using photon_ops. (#1193)
 - Fixed the proxies used by config Input items to allow access to attributes. (#1195)
+
+Changes from v2.4.6 to v2.4.7
+=============================
+
+- Allow input objects with has_nobj=True to return an approximate number of objects for the
+  initial pass, rather than the eventual exact number. (#1202)
