@@ -263,7 +263,10 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     if 'file_name' in kwargs:
         logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
     if loader.has_nobj:
-        logger.info('Input %s has %d objects',key,input_obj.getNObjects())
+        if hasattr(input_obj, 'getApproxNObjects'):
+            logger.info('Input %s has approximately %d objects', key, input_obj.getApproxNObjects())
+        else:
+            logger.info('Input %s has %d objects', key, input_obj.getNObjects())
 
     input_objs[num] = input_obj
     loader.initialize(input_objs, num, config, logger)
@@ -284,7 +287,7 @@ def LoadInputObj(config, key, num=0, safe_only=False, logger=None):
     return input_obj
 
 
-def ProcessInputNObjects(config, logger=None):
+def ProcessInputNObjects(config, logger=None, approx=False):
     """Process the input field, just enough to determine the number of objects.
 
     Some input items are relevant for determining the number of objects in a file or image.
@@ -302,6 +305,7 @@ def ProcessInputNObjects(config, logger=None):
     Parameters:
         config:     The configuration dict to process
         logger:     If given, a logger object to log progress. [default: None]
+        approx:     Whether an approximate count is ok. [default: False]
 
     Returns:
         the number of objects to use.
@@ -314,9 +318,13 @@ def ProcessInputNObjects(config, logger=None):
             if key in config['input'] and loader.has_nobj:
                 # If it's a list, just use the first one.
                 input_obj = LoadInputObj(config, key, num=0, logger=logger)
+                if approx and hasattr(input_obj, 'getApproxNObjects'):
+                    nobj = input_obj.getApproxNObjects()
+                else:
+                    nobj = input_obj.getNObjects()
                 logger.debug('file %d: Found nobjects = %d for %s',
-                             config.get('file_num',0),input_obj.getNObjects(),key)
-                return input_obj.getNObjects()
+                             config.get('file_num',0), nobj, key)
+                return nobj
     # If didn't find anything, return None.
     return None
 
@@ -403,6 +411,12 @@ class InputLoader:
                 method.  The constructor may (if practical) only load enough to figure out
                 how many objects there are.  Other attributes may use lazy properties to delay
                 finishing the read if that is efficient.
+
+                It may optionally also have a ``getApproxNObjects()`` method, which may
+                return an approximate estimate of the number of objects.  This is used for the
+                initial calculation of what object numbers to use for each file/image, and it
+                is generally acceptable if this is an over-estimate, even a pretty egregious
+                over-estimate if necessary.
 
     file_scope
                 Whether the input object might be relevant at file scope when the file and
