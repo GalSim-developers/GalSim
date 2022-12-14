@@ -24,8 +24,7 @@ import sys
 import logging
 
 import galsim
-from galsim_test_helpers import timer
-
+from galsim_test_helpers import timer, CaptureLog
 
 @timer
 def test_input_init():
@@ -72,6 +71,121 @@ def test_input_init():
     file_name = 'output_fits/test_fits.fits'
     im2 = galsim.fits.read(file_name)
     np.testing.assert_array_equal(im2.array, im1.array)
+
+@timer
+def test_approx_nobjects():
+    """Test the getApproxNObjects functionality.
+    """
+    class BigCatalog(galsim.Catalog):
+        def getApproxNObjects(self):
+            return 2*self.getNObjects()
+
+    class SmallCatalog(galsim.Catalog):
+        def getApproxNObjects(self):
+            return self.getNObjects() // 2
+
+    def GenerateFromBigCatalog(config, base, value_type):
+        input_cat = galsim.config.GetInputObj('big_catalog', config, base, 'BigCatalog')
+        galsim.config.SetDefaultIndex(config, input_cat.getNObjects())
+        req = {'col': int, 'index': int}
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
+        col = kwargs['col']
+        index = kwargs['index']
+        return input_cat.getFloat(index, col), safe
+
+    def GenerateFromSmallCatalog(config, base, value_type):
+        input_cat = galsim.config.GetInputObj('small_catalog', config, base, 'SmallCatalog')
+        galsim.config.SetDefaultIndex(config, input_cat.getNObjects())
+        req = {'col': int, 'index': int}
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req)
+        col = kwargs['col']
+        index = kwargs['index']
+        return input_cat.getFloat(index, col), safe
+
+    galsim.config.RegisterInputType('big_catalog',
+                                    galsim.config.InputLoader(BigCatalog, has_nobj=True))
+    galsim.config.RegisterInputType('small_catalog',
+                                    galsim.config.InputLoader(SmallCatalog, has_nobj=True))
+    galsim.config.RegisterValueType('BigCatalog', GenerateFromBigCatalog, [float],
+                                    input_type='big_catalog')
+    galsim.config.RegisterValueType('SmallCatalog', GenerateFromSmallCatalog, [float],
+                                    input_type='small_catalog')
+
+    # FWIW, this is the config dict from test_variable_cat_size in test_config_image.py.
+    config = {
+        'gal': {
+            'type': 'Gaussian',
+            'half_light_radius': { 'type': 'Catalog', 'col': 0 },
+            'shear': {
+                'type': 'G1G2',
+                'g1': { 'type': 'Catalog', 'col': 1 },
+                'g2': { 'type': 'Catalog', 'col': 2 }
+            },
+            'flux': 1.7
+        },
+        'stamp': {
+            'size': 33
+        },
+        'image': {
+            'type': 'Scattered',
+            'size': 256,
+            'image_pos': {
+                'type': 'XY',
+                'x': { 'type': 'Catalog', 'col': 3 },
+                'y': { 'type': 'Catalog', 'col': 4 }
+            }
+        },
+        'input': {
+            'catalog': {
+                'dir': 'config_input',
+                'file_name': [ 'cat_3.txt', 'cat_5.txt' ],
+                'index_key': 'image_num',
+            }
+        },
+        'output': {
+            'type' : 'MultiFits',
+            'file_name' : 'output/test_approx_nobj.fits',
+            'nimages' : 2,
+        }
+    }
+    config1 = galsim.config.CopyConfig(config)
+    config2 = galsim.config.CopyConfig(config)
+    config3 = galsim.config.CopyConfig(config)
+
+    # First regular with normal Catalog.
+    galsim.config.Process(config1)
+    images1 = galsim.fits.readMulti('output/test_approx_nobj.fits')
+
+    # Now with catalogs whose approximate nobj are too big.
+    config2['gal']['half_light_radius']['type'] = 'BigCatalog'
+    config2['gal']['shear']['g1']['type'] = 'BigCatalog'
+    config2['gal']['shear']['g2']['type'] = 'BigCatalog'
+    config2['image']['image_pos']['x']['type'] = 'BigCatalog'
+    config2['image']['image_pos']['y']['type'] = 'BigCatalog'
+    config2['input']['big_catalog'] = galsim.config.CopyConfig(config['input']['catalog'])
+    del config2['input']['catalog']
+    galsim.config.Process(config2)
+    images2 = galsim.fits.readMulti('output/test_approx_nobj.fits')
+    assert images2[0] == images1[0]
+    assert images2[1] == images1[1]
+
+    # Lastly, one where the approx nobj is too small.
+    config3['gal']['half_light_radius']['type'] = 'SmallCatalog'
+    config3['gal']['shear']['g1']['type'] = 'SmallCatalog'
+    config3['gal']['shear']['g2']['type'] = 'SmallCatalog'
+    config3['image']['image_pos']['x']['type'] = 'SmallCatalog'
+    config3['image']['image_pos']['y']['type'] = 'SmallCatalog'
+    config3['input']['small_catalog'] = galsim.config.CopyConfig(config['input']['catalog'])
+    del config3['input']['catalog']
+    with CaptureLog() as cl:
+        galsim.config.Process(config3, logger=cl.logger)
+    # The real numbers are 3 and 5, but the small version guesses them to be 1 and 2 respectively.
+    assert 'Input small_catalog has approximately 1' in cl.output
+    assert 'Input small_catalog has approximately 2' in cl.output
+
+    images3 = galsim.fits.readMulti('output/test_approx_nobj.fits')
+    assert images3[0] == images1[0]
+    assert images3[1] == images1[1]
 
 
 if __name__ == "__main__":

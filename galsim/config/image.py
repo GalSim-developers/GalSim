@@ -314,7 +314,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     return image
 
 
-def GetNObjForImage(config, image_num, logger=None):
+def GetNObjForImage(config, image_num, logger=None, approx=False):
     """
     Get the number of objects that will be made for the image number image_num based on
     the information in the config dict.
@@ -323,6 +323,7 @@ def GetNObjForImage(config, image_num, logger=None):
         config:         The configuration dict.
         image_num:      The current image number.
         logger:         If given, a logger object to log progress.
+        approx:         Whether an approximate/overestimate is ok [default: False]
 
     Returns:
         the number of objects
@@ -332,7 +333,8 @@ def GetNObjForImage(config, image_num, logger=None):
     if image_type not in valid_image_types:
         raise GalSimConfigValueError("Invalid image.type.", image_type,
                                      list(valid_image_types.keys()))
-    return valid_image_types[image_type].getNObj(image,config,image_num,logger=logger)
+    return valid_image_types[image_type].getNObj(image, config, image_num,
+                                                 logger=logger, approx=approx)
 
 
 def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
@@ -568,17 +570,18 @@ class ImageBuilder:
         """
         pass
 
-    def getNObj(self, config, base, image_num, logger=None):
+    def getNObj(self, config, base, image_num, logger=None, approx=False):
         """Get the number of objects that will be built for this image.
 
         For Single, this is just 1, but other image types would figure this out from the
         configuration parameters.
 
         Parameters:
-            config:     The configuration dict for the image field.
-            base:       The base configuration dict.
-            image_num:  The current image number.
-            logger:     If given, a logger object to log progress.
+            config:         The configuration dict for the image field.
+            base:           The base configuration dict.
+            image_num:      The current image number.
+            logger:         If given, a logger object to log progress.
+            approx:         Whether an approximate/overestimate is ok [default: False]
 
         Returns:
             the number of objects

@@ -220,14 +220,15 @@ class TiledImageBuilder(ImageBuilder):
             AddSky(base,image)
             AddNoise(base,image,current_var,logger)
 
-    def getNObj(self, config, base, image_num, logger=None):
+    def getNObj(self, config, base, image_num, logger=None, approx=False):
         """Get the number of objects that will be built for this image.
 
         Parameters:
-            config:     The configuration dict for the image field.
-            base:       The base configuration dict.
-            image_num:  The current image number.
-            logger:     If given, a logger object to log progress.
+            config:         The configuration dict for the image field.
+            base:           The base configuration dict.
+            image_num:      The current image number.
+            logger:         If given, a logger object to log progress.
+            approx:         Whether an approximate/overestimate is ok [default: False]
 
         Returns:
             the number of objects

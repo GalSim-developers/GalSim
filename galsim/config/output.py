@@ -111,7 +111,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None, except_abort=False):
         ProcessInput(config, logger=logger, file_scope_only=True)
 
         # Get the number of objects in each image for this file.
-        nobj = GetNObjForFile(config,file_num,image_num,logger=logger)
+        nobj = GetNObjForFile(config, file_num, image_num, logger=logger, approx=True)
 
         # The kwargs to pass to BuildFile
         kwargs = {
@@ -214,7 +214,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     # Put these values in the config dict so we won't have to run them again later if
     # we need them.  e.g. ExtraOuput processing uses these.
-    nobj = GetNObjForFile(config,file_num,image_num,logger=logger)
+    nobj = GetNObjForFile(config, file_num, image_num, logger=logger)
     nimages = len(nobj)
     config['nimages'] = nimages
     config['nobj'] = nobj
@@ -316,16 +316,17 @@ def GetNImagesForFile(config, file_num, logger=None):
     return valid_output_types[output_type].getNImages(output, config, file_num, logger=logger)
 
 
-def GetNObjForFile(config, file_num, image_num, logger=None):
+def GetNObjForFile(config, file_num, image_num, logger=None, approx=False):
     """
     Get the number of objects that will be made for each image built as part of the file file_num,
     which starts at image number image_num, based on the information in the config dict.
 
     Parameters:
-        config:     The configuration dict.
-        file_num:   The current file number.
-        image_num:  The current image number.
-        logger:     If given, a logger object to log progress. [default: None]
+        config:         The configuration dict.
+        file_num:       The current file number.
+        image_num:      The current image number.
+        logger:         If given, a logger object to log progress. [default: None]
+        approx:         Whether an approximate/overestimate is ok [default: False]
 
     Returns:
         a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
@@ -336,7 +337,7 @@ def GetNObjForFile(config, file_num, image_num, logger=None):
         raise GalSimConfigValueError("Invalid output.type.", output_type,
                                      list(valid_output_types.keys()))
     return valid_output_types[output_type].getNObjPerImage(output, config, file_num, image_num,
-                                                           logger=logger)
+                                                           logger=logger, approx=approx)
 
 
 def SetupConfigFileNum(config, file_num, image_num, obj_num, logger=None):
@@ -500,7 +501,7 @@ class OutputBuilder:
         """
         return 1
 
-    def getNObjPerImage(self, config, base, file_num, image_num, logger=None):
+    def getNObjPerImage(self, config, base, file_num, image_num, logger=None, approx=False):
         """
         Get the number of objects that will be made for each image built as part of the file
         file_num, which starts at image number image_num, based on the information in the config
@@ -512,12 +513,14 @@ class OutputBuilder:
             file_num:       The current file number.
             image_num:      The current image number (the first one for this file).
             logger:         If given, a logger object to log progress.
+            approx:         Whether an approximate/overestimate is ok [default: False]
 
         Returns:
             a list of the number of objects in each image [ nobj0, nobj1, nobj2, ... ]
         """
         nimages = self.getNImages(config, base, file_num, logger=logger)
-        nobj = [ GetNObjForImage(base, image_num+j, logger=logger) for j in range(nimages) ]
+        nobj = [ GetNObjForImage(base, image_num+j, logger=logger, approx=approx)
+                 for j in range(nimages) ]
         base['image_num'] = image_num  # Make sure this is set back to current image num.
         return nobj
 
