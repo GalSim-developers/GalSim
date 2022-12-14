@@ -56,6 +56,7 @@ def test_args():
     assert args.config_file == config_file
     assert args.verbosity == 1
     assert args.log_file is None
+    assert args.log_format == '%(message)s'
     assert args.file_type is None
     assert args.module is None
     assert args.profile is False
@@ -73,6 +74,10 @@ def test_args():
     args = galsim.main.parse_args([config_file, '-l', 'test.log'])
     assert args.config_file == config_file
     assert args.log_file == 'test.log'
+
+    args = galsim.main.parse_args([config_file, '--log_format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'])
+    assert args.config_file == config_file
+    assert args.log_format == '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 
     args = galsim.main.parse_args([config_file, '-f', 'yaml'])
     assert args.config_file == config_file
