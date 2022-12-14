@@ -52,11 +52,11 @@ def parse_args(command_args):
         '-v', '--verbosity', type=int, action='store', default=1, choices=(0, 1, 2, 3),
         help='integer verbosity level: min=0, max=3 [default=1]')
     parser.add_argument(
-        '--log_format', type=str, action='store', default="%(message)s",
-        help='logger format string [default="%(message)s"]')
-    parser.add_argument(
         '-l', '--log_file', type=str, action='store', default=None,
         help='filename for storing logging output [default is to stream to stdout]')
+    parser.add_argument(
+        '--log_format', type=str, action='store', default="%(message)s",
+        help='logger format string [default="%(message)s"]')
     parser.add_argument(
         '-f', '--file_type', type=str, action='store', choices=('yaml','json'),
         default=None,
