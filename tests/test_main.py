@@ -197,7 +197,7 @@ def test_logger():
         assert f.readlines() == []
 
     args.verbosity = 3
-    args.log_format == '%(levelname)s - %(message)s'
+    args.log_format = '%(levelname)s - %(message)s'
     remove_handler()
     logger = galsim.main.make_logger(args)
     print('handlers = ',logger.handlers)
