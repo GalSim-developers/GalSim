@@ -113,7 +113,7 @@ def BuildPhotonOp(config, key, base, logger=None):
     logger.debug('obj %d: Building photon_op type %s', base.get('obj_num',0), op_type)
     builder = valid_photon_op_types[op_type]
     op = builder.buildPhotonOp(param, base, logger)
-    logger.debug('obj %d: photon_op = %s', base.get('obj_num',0), op)
+    logger.debug('obj %d: photon_op = %s', base.get('obj_num',0), str(op))
 
     param['current'] = op, False, None, index, index_key
 
