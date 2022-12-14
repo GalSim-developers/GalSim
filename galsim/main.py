@@ -56,7 +56,7 @@ def parse_args(command_args):
         help='filename for storing logging output [default is to stream to stdout]')
     parser.add_argument(
         '--log_format', type=str, action='store', default="%(message)s",
-        help='logger format string [default="%(message)s"]')
+        help='logger format string [default="%%(message)s"]')
     parser.add_argument(
         '-f', '--file_type', type=str, action='store', choices=('yaml','json'),
         default=None,
