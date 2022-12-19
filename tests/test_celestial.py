@@ -162,7 +162,9 @@ def test_celestialcoord_basic():
 
     x, y, z = c2.get_xyz()
     print('c2 is at x,y,z = ',x,y,z)
-    assert c2 == galsim.CelestialCoord.from_xyz(x,y,z)
+    # This one doesn't always match exactly at the last decimal place.
+    c2x = galsim.CelestialCoord.from_xyz(x,y,z)
+    numpy.testing.assert_almost_equal(c2.distanceTo(c2x).rad, 0., decimal=15)
 
     assert_raises(ValueError, galsim.CelestialCoord.from_xyz, 0, 0, 0)
 
