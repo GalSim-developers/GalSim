@@ -14,7 +14,7 @@ can operate directly on "config" files, for those users who prefer not to work
 in Python.  The impetus for the software package was a weak lensing community
 data challenge, called GREAT3:
 
-    http://great3challenge.info/
+    https://github.com/barnabytprowe/great3-public
 
 However, the code has numerous additional capabilities beyond those needed for
 the challenge, and has been useful for a number of projects that needed to
