@@ -105,9 +105,9 @@ to choose between the two::
     It will still be required to rerun this after reinstalling GalSim, but it will notice that
     you already have the files downloaded and merely update the symbolic link.
 
-A copy of the data is also available on the GREAT3 server at
+Instructions for how to download a copy of the GREAT3 data are found at
 
-http://great3.jb.man.ac.uk/leaderboard/data
+https://github.com/barnabytprowe/great3-public#how-to-get-the-data
 
 HSC Postage Stamp Data
 ----------------------
